@@ -1,0 +1,372 @@
+{% extends "dbase.html" %}
+{% block title %}Взятие материала{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
+                   data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                   placeholder="Введите номер направления" maxlength="13" autofocus
+                   onkeyup="bar_scanner($('#search-field').val())">
+            <span id="searchclear" class="glyphicon glyphicon-remove-circle"></span>
+          <span class="input-group-btn">
+                <button class="btn btn-default" onclick="search($('#search-field').val());" type="button">Поиск</button>
+          </span>
+        </div>
+        <table class="table table-bordered table-condensed" id="dir-tb" style="margin-top: 10px">
+            <tr>
+                <td class="col-md-3">Номер направления:&nbsp;</td>
+                <td class="col-md-9"><h2 id="dir-num" style="margin: 2px;padding: 0;">&nbsp;</h2></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">Дата назначения:&nbsp;</td>
+                <td id="date" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">Лаборатория:&nbsp;</td>
+                <td id="lab" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">ФИО пациента:&nbsp;</td>
+                <td id="fio" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">Пол:&nbsp;</td>
+                <td id="sx" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">Дата рождения:&nbsp;</td>
+                <td id="bth" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">ФИО врача:&nbsp;</td>
+                <td id="doc-fio" class="col-md-9"></td>
+            </tr>
+            <tr>
+                <td class="col-md-3">Отделение:&nbsp;</td>
+                <td id="doc-otd" class="col-md-9"></td>
+            </tr>
+        </table>
+        <div>
+            <h4>Исследования в направлении:</h4>
+
+            <div id="scroll-res" style="position: relative;padding-right: 15px">
+                <table class="table table-bordered" id="researches-tb"></table>
+                <span id="itogo" style="float: right"></span>
+
+                <div style="text-align: right">
+                    <div class="btn btn-success col-md-2" tabindex="10" id="success-b"
+                         style="display: none;float: right" onclick="save_research();">Сохранить
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div>
+            <div class="btn-group" style="margin-bottom: 10px">
+                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary">Печать</a>
+
+                <div class="btn btn-primary" onclick="update_history();">Обновить</div>
+            </div>
+            <div id="scroll-tb" style="position: relative;">
+                <table class="table table-bordered" id="history-tb"></table>
+            </div>
+            <div class="btn-group" style="margin-top: 10px">
+                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary">Печать</a>
+
+                <div class="btn btn-primary" onclick="update_history();">Обновить</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        var dnum = -1;
+        var tubes = {
+        {% for tube in tubes %}{{ tube.pk }}:
+        {
+            color: "{{ tube.color }}",
+                    title
+        :
+            "{{ tube.title }}"
+        }
+        ,{% endfor %}
+        }
+        ;
+        var clear_timer_start = false, input_buffer_scan = "";
+        var SFinFocus = false;
+        $(document).ready(function () {
+            $("#search-field").bind('keydown', 'return', function () {
+                search($('#search-field').val());
+            });
+            $('input, textarea').focus(function () {
+                SFinFocus = true;
+                input_buffer_scan = "";
+            });
+
+            $('input, textarea').blur(function () {
+                SFinFocus = false;
+            });
+            update_history();
+            $(document).on("keypress", function (e) {
+                if (SFinFocus) return;
+                sym = String.fromCharCode(e.which);
+                if (isNaN(sym)) return;
+                console.log("Key: " + sym);
+                console.log("Code: " + e.which);
+                input_buffer_scan += sym;
+                input_buffer_scan = input_buffer_scan.replace("\n", "").trim();
+                bar_scanner(input_buffer_scan);
+                if (input_buffer_scan.length == 13 && input_buffer_scan.substr(0, 3) == "460") {
+                    console.log("ok");
+                    bar_scanner(input_buffer_scan);
+                    input_buffer_scan = "";
+                }
+                else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) != "460") {
+                    console.log("clear buffer " + input_buffer_scan);
+                    input_buffer_scan = "";
+                }
+            });
+            $(window).resize(function () {
+                resize();
+            });
+            $(document).on('keyup', null, 'ctrl+return', function () {
+                save_research();
+            });
+        });
+        function bar_scanner(v) {
+            tdnum = parseInt(v.substr(0, 12)) - 460000000000;
+            if (v.substr(0, 3) == "460" && v.length == 13) {
+                if (dnum != tdnum) {
+                    dnum = tdnum;
+                    search(dnum);
+                }
+            }
+        }
+        var com = false;
+        function search(q) {
+            com = true;
+            input_buffer_scan = "";
+            if (!q || q == "") return;
+            $("#search-field").val("");
+            $(".has-error").removeClass("has-error");
+            $.ajax(
+                    {
+                        url: "/directions/get/one?id=" + q,
+                    }
+            ).done(function (data) {
+                        com = false;
+                        if (data && data.direction && data.direction.pk) {
+
+                            dnum = data.direction.pk
+                            $("#success-b").show();
+                            $(".btn#success-b").removeAttr("disabled");
+                            $("#dir-num").html(data.direction.pk);
+                            $("#date").html(data.direction.date);
+                            $("#fio").html(data.client.fio);
+                            $("#sx").html(data.client.sx);
+                            $("#bth").html(data.client.bth);
+                            $("#doc-fio").html(data.direction.doc.fio);
+                            $("#doc-otd").html(data.direction.doc.otd);
+                            $("#lab").html(data.direction.lab);
+                            $(".last").removeClass("last");
+                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-2'>Тип пробирки</th><th class='col-md-3'>Номер пробирки</th><th style='width: 32px'><i class='glyphicon glyphicon-ok'></i></th></tr>");
+                            n = 0;
+                            fn = 0;
+                            complete = true;
+                            probirki = {}
+                            c = "";
+                            d = "";
+                            $.each(data.tubes, function (k, v) {
+                                if (v.status === true) {
+                                    c = "checked";
+                                    d = "disabled"
+                                }
+                                else {
+                                    c = "";
+                                    complete = false;
+                                }
+                                if (!probirki[v.title])
+                                    probirki[v.title] = 1
+                                else
+                                    probirki[v.title]++;
+                                $("#researches-tb").append("<tr><td>{0}</td><td style='background-color: {1}; color: #fff; text-shadow: 1px 1px 2px #000'>{2}</td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                            });
+
+                            tmpstr = "";
+                            f = true;
+                            all_cnt = 0;
+                            $.each(probirki, function (k, v) {
+                                if (f) {
+                                    tmpstr = k + " &mdash; " + v + " шт";
+                                    f = false;
+                                }
+                                else {
+                                    tmpstr = k + " &mdash; " + v + " шт, " + tmpstr
+                                }
+                                all_cnt += v;
+                            });
+                            $("#researches-tb").append("<tr><td style='text-align:right;' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
+
+                            if (complete) {
+                                com = true;
+                                $(".btn#success-b").attr("disabled", "true");
+                            }
+                            $("input[name=complete-res]").first().focus();
+                        }
+                        else {
+                            $("#dir-num").html("Не найдено");
+                            $("#date").html("");
+                            $("#fio").html("");
+                            $("#sx").html("");
+                            $("#bth").html("");
+                            $("#doc-fio").html("");
+                            $("#doc-otd").html("");
+                            $("#lab").html("");
+                            $("#researches-tb").html("");
+                            $(".btn#success-b").attr("disabled", "true");
+                            $("#search-field").focus();
+                            $("#search-field").parent().addClass("has-error");
+                        }
+
+                    });
+        }
+
+        function save_research() {
+            if (com) return;
+            data = {
+                dir_id: dnum,
+                statuses: {},
+                barcodes: {}
+            }
+            $.each($("input[name=complete-res]"), function (k, v) {
+                data.statuses[$(v).val()] = $(v).is(':checked');
+                data.barcodes[$(v).val()] = $("#barcode-" + $(v).val()).is(':checked');
+            });
+            $.ajax({
+                url: "/direction/researches/update",
+                data: {data: JSON.stringify(data)},
+                type: "json",
+                method: "POST"
+            }).done(function (d) {
+                if (d.r) {
+                    update_history(dnum);
+
+                }
+            });
+        }
+        function clear(num) {
+
+            $("#dir-num").html("");
+            $("#date").html("");
+            $("#fio").html("");
+            $("#sx").html("");
+            $("#bth").html("");
+            $("#doc-fio").html("");
+            $("#doc-otd").html("");
+            $("#lab").html("");
+            $("#researches-tb").html("<tr><td>Материал по направлению {0} занесен в базу</td></tr>".f(num));
+            $(".btn#success-b").attr("disabled", "true");
+            $(".last").removeClass("last");
+            $("#story-" + num + " td").addClass("last");
+            //$("#story-"+num+" td").effect( "highlight", {color:"#D4E6C2"}, 20000 );
+            input_buffer_scan = "";
+            $("#search-field").val("");
+            $("#search-field").focus();
+        }
+        function update_history(clearn) {
+            $.ajax({
+                url: "/direction/researches/update/history",
+                type: "json",
+                method: "GET"
+            }).done(function (d) {
+                $("#history-tb").html("");
+                var array = d.rows;
+                $.each(array, function (k, v) {
+                    f = true;
+                    tmpstr = ""
+                    num = {};
+                    time = ""
+                    dir_id = -1;
+                    $.each(v, function (key, val) {
+                        if (!num[val.title])
+                            num[val.title] = 1
+                        else
+                            num[val.title]++;
+                        time = val.time;
+                        dir_id = val.dir_id
+                    });
+                    $.each(num, function (key, value) {
+                        if (f) {
+                            tmpstr = key + " " + value + " шт";
+                            f = false;
+                        }
+                        else {
+                            tmpstr = key + " " + value + " шт, " + tmpstr
+                        }
+                    });
+                    $("#history-tb").prepend("<tr id='story-{1}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
+                });
+                $("#history-tb").prepend("<tr><th>Время забора</th><th>Направление</th><th>Исследования</th><th>Номер пробирки</th><th>Тип пробирки</th></tr>");
+
+                resize();
+                if (clearn) {
+                    clear(clearn);
+                }
+            });
+        }
+        function resize() {
+            $('#scroll-tb').height($(window).height() - 200);
+            $('#scroll-tb').perfectScrollbar();
+            $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 80);
+            $('#scroll-res').perfectScrollbar();
+        }
+    </script>
+    <style>
+        #searchclear {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        #dir-tb td {
+            vertical-align: middle;
+        }
+
+        #dir-tb tr td:last-child {
+            text-align: left;
+        }
+
+        .container-fluid, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        td label {
+            display: block;
+            cursor: pointer;
+            height: 30px;
+        }
+
+        .last {
+            background-color: #D4E6C2;
+        }
+    </style>
+{% endblock %}

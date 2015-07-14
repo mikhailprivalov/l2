@@ -1,0 +1,15 @@
+django
+selenium
+psycopg2
+dbf
+django-debug-toolbar
+django-debug-panel
+django-cachalot
+jsonfield
+reportlab
+simplejson
+huBarcode
+pytz
+pymongo
+gunicorn
+python3-memcached

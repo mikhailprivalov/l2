@@ -1,0 +1,41 @@
+{% extends "dbase.html" %}
+{% block title %}Добавить подразделение{% endblock %}
+
+{% block content %}
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ mess }}
+        </div>
+    {% endif %}
+    {% if status %}
+        <div class="alert alert-success">
+            Подразделение добавлено
+        </div>
+    {% endif %}
+    <form method="POST">
+        {% csrf_token %}
+        <div class="input-group" style="margin: 0 auto">
+            <h3 style="margin: 0 auto">Форма добавления подразделения</h3>
+            <input type="text" class="form-control" name='title' placeholder="Название"
+                   value="{{ title }}" required autofocus
+                   style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;margin-top: 10px">
+            <input type="submit" class="btn btn-primary form-control" value="Сохранить"
+                   style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
+            <br/>
+
+            <div class="panel panel-default" style="margin-top: 80px">
+                <div class="panel-heading">Существующие подразделения</div>
+                <div class="panel-body">
+                    <table class="table">
+                        {% for v in podr %}
+                            <tr>
+                                <td>{{ v.pk }}</td>
+                                <td>{{ v }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+{% endblock %}

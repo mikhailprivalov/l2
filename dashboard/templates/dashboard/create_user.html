@@ -1,0 +1,114 @@
+{% extends "dbase.html" %}
+{% block title %}Создание пользователя{% endblock %}
+
+{% block content %}
+    {% if error %}
+        <div class="alert alert-danger">
+            {{ mess }}
+        </div>
+    {% endif %}
+    {% if status %}
+        <div class="alert alert-success">
+            Пользователь добавлен
+        </div>
+    {% endif %}
+    <form method="POST">
+        <input style="display:none" type="text" name="fakeusernameremembered"/>
+        <input style="display:none" type="password" name="fakepasswordremembered"/>
+        {% csrf_token %}
+        <div class="input-group" style="margin: 0 auto">
+            <h3>Форма добавления пользователя</h3>
+            <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
+                   value="{{ uname }}" required
+                   style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;">
+            <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
+                   required>
+            <input type="text" id="inputFio" class="form-control" name='fio' placeholder="ФИО" value="{{ fio }}"
+                   required>
+
+            <div class="input-group" style="width: 100%">
+                <span class="input-group-addon" id="basic-addon1"
+                      style="border-radius: 0; width: 135px">Подразделение</span>
+                <select class="form-control" aria-describedby="basic-addon1" name="podr" style="border-radius: 0">
+                    {% for v in podr %}
+                        <option{% if v.pk == podrpost %} selected="selected"{% endif %}
+                                                         value="{{ v.pk }}">{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="input-group" style="width: 100%">
+                <span class="input-group-addon" id="basic-addon2" style="border-radius: 0; width: 135px">Группы</span>
+                <select class="form-control" aria-describedby="basic-addon2" name="groups"
+                        style="border-radius: 0;height: 115px;" multiple>
+                    {% for v in g %}
+                        <option value="{{ v.pk }}">{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="submit" class="btn btn-primary form-control" value="Сохранить"
+                   style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
+        </div>
+        <div class="panel panel-default" style="margin: 0 auto; max-width: 400px;margin-top: 30px">
+            <div class="panel-heading">Генератор паролей</div>
+            <div class="panel-body">
+                Сгенерированый пароль:
+                <input type="password" class="form-control" name="passwordGen" id="passwordGen"/>
+                <a href="#" class="showPassword">Скрыть/Показать (Alt+s)</a>
+                <a href="#" class="generatePassword">Сегенерировать (Alt+g)</a>
+                <a href="#" class="pastePassword">Вставить в форму (Alt+v)</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block scripts %}
+    <script>
+        // Настройка горячих клавиш
+        $(document).on('keydown', null, 'alt+s', function () {
+            toggleShow();
+        });
+        $(document).on('keydown', null, 'alt+g', function () {
+            generate();
+        });
+        $(document).on('keydown', null, 'alt+v', function () {
+            pastePass();
+        });
+        // !Настройка горячих клавиш
+
+        $(document).ready(function () {
+            $('.showPassword').click(function () {
+                toggleShow();
+            });
+            $('.generatePassword').click(function () {
+                generate();
+            });
+            $('.pastePassword').click(function () {
+                pastePass();
+            });
+        });
+        function str_rand() { // Функция генерации пароля
+            var result = '';
+            var words = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
+            var max_position = words.length - 1;
+            for (i = 0; i < 8; ++i) {
+                position = Math.floor(Math.random() * max_position);
+                result = result + words.substring(position, position + 1);
+            }
+            return result;
+        }
+        function generate() {
+            document.getElementById('passwordGen').setAttribute('type', 'text');
+            $('#passwordGen').attr('value', str_rand());
+        }
+        function toggleShow() { // Переключение видимости пароля
+            var inputPsw = $('#passwordGen');
+            if (inputPsw.attr('type') == 'password') {
+                document.getElementById('passwordGen').setAttribute('type', 'text');
+            } else {
+                document.getElementById('passwordGen').setAttribute('type', 'password');
+            }
+        }
+        function pastePass() {
+            $("#inputPassword").val($('#passwordGen').val());
+        }
+    </script>
+{% endblock %}

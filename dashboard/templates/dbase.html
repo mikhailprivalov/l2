@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300&subset=cyrillic,latin' rel='stylesheet'
+          type='text/css'>
+    <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
+    <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
+    <script>
+
+        function getFormattedDate(date) {
+            var year = date.getFullYear();
+            var month = (1 + date.getMonth()).toString();
+            month = month.length > 1 ? month : '0' + month;
+            var day = date.getDate().toString();
+            day = day.length > 1 ? day : '0' + day;
+            return day + '.' + month + '.' + year;
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        a.panel-body {
+            font-size: 16pt;
+            border: #ddd 1px solid;
+            border-radius: 5px;
+            display: block;
+            text-align: center;
+        }
+
+        a.panel-body:hover {
+            text-decoration: none;
+        }
+
+        .twitter-typeahead {
+            width: 100%;
+            vertical-align: bottom;
+        }
+
+        .twitter-typeahead .tt-search-field,
+        .twitter-typeahead .tt-hint {
+            margin-bottom: 0;
+            font-family: 'Open Sans', sans-serif;
+            height: 34px;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+
+            font-weight: 100;
+        }
+
+        .input-group .twitter-typeahead {
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .tt-dropdown-menu {
+            min-width: 160px;
+            margin-top: 2px;
+            padding: 5px 0;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border: 1px solid rgba(0, 0, 0, .2);
+            *border-right-width: 2px;
+            *border-bottom-width: 2px;
+            -webkit-border-radius: 6px;
+            -moz-border-radius: 6px;
+            border-radius: 6px;
+            -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+            -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
+            -webkit-background-clip: padding-box;
+            -moz-background-clip: padding;
+            background-clip: padding-box;
+            width: 100%;
+        }
+
+        .tt-suggestion {
+            display: block;
+            padding: 3px 20px;
+        }
+
+        .tt-suggestion.tt-is-under-cursor {
+            color: #fff;
+            background-color: #0081c2;
+            background-image: -moz-linear-gradient(top, #0088cc, #0077b3);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0077b3));
+            background-image: -webkit-linear-gradient(top, #0088cc, #0077b3);
+            background-image: -o-linear-gradient(top, #0088cc, #0077b3);
+            background-image: linear-gradient(to bottom, #0088cc, #0077b3);
+            background-repeat: repeat-x;
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0077b3', GradientType=0)
+        }
+
+        .tt-suggestion.tt-is-under-cursor a {
+            color: #fff;
+        }
+
+        .tt-suggestion p {
+            margin: 0;
+        }
+
+        span.isloading-wrapper {
+            text-align: center;
+            color: #000;
+            padding: 10px;
+            display: inline-block;
+        }
+
+        .isloading-wrapper i {
+            -webkit-animation: spin 4s linear infinite;
+            -moz-animation: spin 4s linear infinite;
+            animation: spin 4s linear infinite;
+        }
+
+        .isloading-overlay {
+            background-color: transparent !important
+        }
+
+        @-moz-keyframes spin {
+            100% {
+                -moz-transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes spin {
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        .table-sm-pd td {
+            padding: 3px !important;
+        }
+
+        .table-sm-pd table {
+            margin: 0;
+        }
+
+        #result-form td {
+
+        }
+
+        #result-form .input-group input {
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #result-form .input-group-addon {
+            float: none;
+            width: 100%;
+            display: inline-block;
+            margin: 0;
+            border: none;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+<div class="{% block container %}container{% endblock %}">
+    <nav class="navbar navbar-default">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/dashboard">Laboratory</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/dashboard">П/у</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/dashboard/directions">Направления</a></li>
+                <li><a href="/researches/control">Взятие материала</a></li>
+                <li><a href="/dashboard/receive">Прием материала</a></li>
+                <li><a href="/results/enter">Ввод результатов</a></li>
+            </ul>
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+</div>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/jquery.hotkeys.js"></script>
+<script src="/static/js/typeahead.js"></script>
+<script src="/static/js/bootstrap-select.js"></script>
+<script src="/static/js/bootbox.min.js"></script>
+<script src="/static/js/lang.ru.js"></script>
+<script src="/static/js/perfect-scrollbar.jquery.min.js"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
+<script src="/static/js/jquery.isloading.min.js"></script>
+<script src="/static/js/jquery.scrollTo.js"></script>
+<script>
+    String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
+        var s = this,
+                i = arguments.length;
+
+        while (i--) {
+            s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+        }
+        return s;
+    };
+    Array.prototype.reversedCopy = function () {
+        var arr = [];
+        for (var i = this.length; i--;) {
+            arr.push(this[i]);
+        }
+        ;
+        return arr;
+    };
+
+    $(document).ready(function () {
+        $('.select-b').selectpicker();
+    });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

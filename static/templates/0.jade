@@ -1,0 +1,19 @@
+h2 Исследование - #{title}
+form
+    input(type="hidden", value=res_id)
+    table.table.table-bordered.table-sm-pd
+        thead
+            th.col-md-3 Фракция
+            th Значение
+            th.col-md-3 Норма для пациента
+        each fraction in fractions
+            tr
+                td.col-md-6
+                    label= fraction.title
+                td.col-md-3
+                    .input-group
+                        input(type="text").form-control
+                        span.input-group-addon= fraction.unit
+                td.col-md-3!= getNorms(dir_data.client_sex, dir_data.client_vozrast, fraction.references, fraction.unit)
+div.col-md-9
+button.btn.btn-success.col-md-3 Сохранить

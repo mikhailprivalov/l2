@@ -1,0 +1,93 @@
+{% extends "dbase.html" %}
+{% block title %}Панель управления{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Профиль</h3>
+        </div>
+        <div class="panel-body">
+            ФИО: {{ request.user.doctorprofile }}<br/>
+            Логин: {{ request.user }}<br/><br/>
+            Группы:<br/>
+            {% for v in request.user.groups.all %}{{ v }}<br/>{% endfor %}<br/>
+            <a href="/logout">Выход</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-6 col-md-3 panel">
+            <a href="/dashboard/directions" id="create_user_btn" class="panel-body">
+                Направления<br/><br/>
+                <small>(Shift+n)</small>
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3 panel">
+            <a href="/researches/control" id="create_user_btn" class="panel-body">
+                Взятие материала<br/><br/>
+                <small>(Shift+g)</small>
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3 panel">
+            <a href="/dashboard/receive" id="create_user_btn" class="panel-body">
+                Прием материала<br/><br/>
+                <small>(Shift+r)</small>
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3 panel">
+            <a href="/results/enter" id="create_user_btn" class="panel-body">
+                Ввод результатов<br/><br/>
+                <small>(Shift+v)</small>
+            </a>
+        </div>
+    </div>
+    {% if user.is_superuser %}
+        <hr/>
+        <div class="row">
+            <div class="col-xs-6 col-md-3 panel">
+                <a href="/admin" id="create_user_btn" class="panel-body">
+                    Админ-панель<br/><br/>
+                    <small>(Alt+a)</small>
+                </a>
+            </div>
+            <div class="col-xs-6 col-md-3 panel">
+                <a href="/dashboard/create_user" id="create_user_btn" class="panel-body">
+                    Создать пользователя<br/>
+                    <small>(Alt+n)</small>
+                </a>
+            </div>
+            <div class="col-xs-6 col-md-3 panel">
+                <a href="/dashboard/create_podr" id="create_user_btn" class="panel-body">
+                    Добавить подразделение<br/>
+                    <small>(Alt+p)</small>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block scripts %}
+    <script>
+        $(document).on('keydown', null, 'shift+n', function () {
+            window.location.href = "/dashboard/directions";
+        });
+        $(document).on('keydown', null, 'shift+g', function () {
+            window.location.href = "/researches/control";
+        });
+        $(document).on('keydown', null, 'shift+r', function () {
+            window.location.href = "/dashboard/receive";
+        });
+        $(document).on('keydown', null, 'shift+v', function () {
+            window.location.href = "/results/enter";
+        });
+        {% if user.is_superuser %}
+            $(document).on('keydown', null, 'alt+n', function () {
+                window.location.href = "/dashboard/create_user";
+            });
+            $(document).on('keydown', null, 'alt+a', function () {
+                window.location.href = "/admin";
+            });
+            $(document).on('keydown', null, 'alt+p', function () {
+                window.location.href = "/dashboard/create_podr";
+            });
+        {% endif %}
+    </script>
+{% endblock %}

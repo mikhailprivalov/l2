@@ -1,0 +1,510 @@
+{% extends "dbase.html" %}
+{% block title %}Направления{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-6" id="div1">
+            <div>
+                <h5>Категория пациентов:</h5>
+
+                <div class="btn-group" data-toggle="buttons" style="margin-bottom: 20px">
+                    <label class="btn btn-default active">
+                        <input type="radio" name="type" id="option1" value="poli" autocomplete="off" checked>
+                        Поликлиника
+                    </label>
+                    <label class="btn btn-default">
+                        <input type="radio" name="type" id="option2" value="stat" autocomplete="off"> Стационар
+                    </label><!--
+                    <label class="btn btn-default">
+                        <input type="radio" name="type" id="option3" value="all" autocomplete="off"> Все категории
+                    </label>
+-->
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
+                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                       placeholder="Поиск пациента">
+          <span class="input-group-btn">
+                <button class="btn btn-default" onclick="search($('#search-field').val());" type="button">Поиск</button>
+          </span>
+            </div>
+            <span>Введите ФИО и дату рождения или номер карты, например: <br/>Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456</span>
+            <br/>
+            <br/>
+
+            <table class="table table-bordered table-condensed" style="width: 400px">
+                <tr>
+                    <td class="col-md-4">Тип:&nbsp;</td>
+                    <td id="card-type"></td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">Номер карты:&nbsp;</td>
+                    <td id="card-num"></td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">ФИО:&nbsp;</td>
+                    <td id="card-fio"></td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">Дата рождения:&nbsp;</td>
+                    <td id="card-bth" style="vertical-align: middle"></td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">Пол:&nbsp;</td>
+                    <td id="card-sx"></td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-md-6" id="div2">
+            <table class="table table-hover">
+                <tr>
+                    <th>№</th>
+                    <th>Дата назначения</th>
+                    <th>Лаборатория</th>
+                    <th>Вид анализа</th>
+                    <th>Управление</th>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>11.06.2015</td>
+                    <td>Иммунология</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>11.06.2015</td>
+                    <td>Иммунология</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>11.06.2015</td>
+                    <td>Иммунология</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>11.06.2015</td>
+                    <td>Иммунология</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>11.06.2015</td>
+                    <td>Иммунология</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6" id="div3">
+            <form onsubmit="return false;">
+                <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
+                        title='Выберите лабораторию...' disabled>
+                    {% for v in labs %}
+                        <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
+                </select>
+            </form>
+            <div id="table-researches"></div>
+        </div>
+        <div class="col-md-6" id="div4" style="margin-bottom: 20px">
+            <h4>Создание направления:</h4>
+
+            <div style="margin-bottom: 20px">
+                <div class="col-md-7" style="padding-left: 0">
+                    <input name="diagnos" id="diagnos-field" class="form-control" placeholder="Направительный диагноз"
+                           onkeyup="sync();" style="margin-bottom: 20px"/>
+                </div>
+                <div class="col-md-5" id="sources" style="text-align: center">
+                    <div class="btn-group" id="fin_poli" data-toggle="buttons" style="display: inline-block;">
+                        {% for v in fin_poli %}
+                            <label class="btn btn-default"><input type="radio" name="source" value="{{ v.pk }}"
+                                                                  autocomplete="off"> {{ v.tilie }}</label>
+                        {% endfor %}
+                    </div>
+                    <div class="btn-group" id="fin_stat" data-toggle="buttons" style="display: inline-block;">
+                        {% for v in fin_stat %}
+                            <label class="btn btn-default"><input type="radio" name="source" value="{{ v.pk }}"
+                                                                  autocomplete="off"> {{ v.tilie }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
+            <button class="btn btn-success ctrl" disabled onclick="save_direction();">Сохранить</button>
+            <button onclick="clear_direction();" class="btn btn-warning ctrl" disabled>Очистить</button>
+        </div>
+    </div>
+    <div class="modal fade" id="res-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Найдено несколько пациентов</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="results-data"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        var client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
+        var types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
+        var res = [];  // Кэш поиска
+        var active_lab = -1;
+        var labs = {
+        {% for v in labs %}{{ v.pk }} :
+        "{{ v.title }}",
+        {% endfor %}
+        }
+
+        var tmp_direction = {}
+        var res_stack = [];
+        var checked = new Array();
+        var dict = new Array();
+
+        $(document).ready(function () {
+            $("#fin_stat").hide();
+            $("#fin_poli input:first").parent('.btn').addClass('active');
+            $("#search-field").bind('keydown', 'return', function () {
+                search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
+            });
+            $("#select-lab").change(function () {
+                active_lab = $("#select-lab").val();
+                if (checked[active_lab] == undefined)
+                    checked[active_lab] = [];
+                load_researches();
+            });
+            $("body").on("change", "#table-researches .btn input", function () {
+                checked[active_lab] = [];
+                $.each($("input[name='sel']:checked"), function () {
+                    checked[active_lab].push($(this).val());
+                });
+                sync(true);
+            });
+            sync(true);
+        });
+        function sync(notfull) {
+            $("#table-researches-preview").html("");
+            $("#table-researches-preview").append(lang.table_researches_preview_header);
+            $("#div4 .ctrl").attr('disabled', 1);
+            $.each(checked, function (k, v) {
+                if (v == undefined || v.length == 0) return;
+                if (!$("#selected-" + k).length) {
+                    $("#table-researches-preview").append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='col-md-1'><button class='btn btn-warning' data-toggle=\"confirmation\" onclick='remove_researches({2});'>X</button></td></tr>".f(labs[k], k, k));
+                }
+                $("#selected-" + k).html("");
+
+                var keys = Object.keys(v);
+                var last = keys[keys.length - 1];
+                $.each(v, function (key, val) {
+                    $("#selected-" + k).append("<span onclick=\"rem(" + k + "," + key + ");\">" + dict[val] + "</span>");
+                    if (key != last)
+                        $("#selected-" + k).append(",&nbsp;");
+                });
+
+                $("#div4 .ctrl").removeAttr('disabled');
+            });
+            tmp_direction = {
+                client_id: client_id,
+                researches: checked,
+                diagnos: $("#diagnos-field").val().trim(),
+                fin_source: parseInt($('#sources .active-s .btn.active input[name=source]').val())
+            };
+            if (notfull == undefined)
+                load_researches();
+            console.log(JSON.stringify(tmp_direction.researches))
+        }
+        function rem(k, key) {
+            id = checked[k][key];
+            if ($("input[value='" + id + "']").length) {
+                $("input[value='" + id + "']").removeAttr("checked");
+                $("input[value='" + id + "']").change();
+            }
+            else {
+                if (checked[k].length == 1) delete checked[k];
+                else {
+                    checked[k].splice(checked[k].indexOf(checked[k][key]), 1);
+                }
+                sync();
+            }
+        }
+        function search(query) { // Функция поиска
+            type = $('input[name=type]:checked').val(); // Получение выбранного типа базы
+            $("#results-data").html(""); // Очищение результатов
+            $.ajax({ // AJAX запрос
+                url: "/clients/ajax/search?query=" + query + "&type=" + type // Установка адреса и параметров запроса
+            }).done(function (data) { // Выполняется по завершению запроса и получению ответа
+                res = data; // Запись результата в кэш
+                i = data.length; // Получение количества результатов
+
+                if (i > 1) // Если результатов больше, чем 1
+                {
+                    $.each(data, function (key, val) { // Перебор результатов
+                        $("#results-data").append("<a href='#' onclick='$(\"#res-modal\").modal(\"hide\");return show_res("
+                                + key + "," + val.pk + ");'>" + types[val.fields.type] + " | Карта №" + val.fields.num + " | "
+                                + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
+                                + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
+                    });
+                    $("#res-modal").modal(); // Открытие модального окна
+                }
+                else if (i == 1) { // Если результат 1
+                    show_card(data[0].fields, data[0].pk); // Вызов функции формирования карты пациента
+                }
+                else { // Если результатов нет
+                    $('#search-field').attr('data-content', lang.client_not_found); // Установка сообщения об ошибке
+                    $('#search-field').focus(); // Перевод фокуса ввода на поле поиска
+                    $('#search-field').popover('show'); // Показ сообщения об ошибке
+                    $("#search-field").parent().addClass("has-error"); // Подсвечивание поля поиска красным для сигнализации об ошибке
+                }
+                $("#diagnos-field").val("");
+            });
+        }
+        function clear() { // Функция очистки результатов
+            $('#search-field').attr('data-content', '');
+            $("#search-field").parent().removeClass("has-error");
+            $("#card-type").html("");
+            $("#card-num").html("");
+            $("#card-fio").html("");
+            $("#card-bth").html("");
+            $("#card-sx").html("");
+        }
+        function show_res(id, pk) { // Функция показа результата из списка нескольких
+            show_card(res[id].fields, pk); // Вызов функции формирования карты пациента
+            return false;
+        }
+        function show_card(fields, pk) { // Функция формирования карты пациента
+            clear(); // Вызов функции очистки
+            client_id = pk;
+            fio = fields.family + " " + fields.name + " " + fields.twoname; // Формирование ФИО
+            dbth = fields.birthday.split(" ")[0]; // Формирование даты рождения
+            sx = fields.sex;
+            type = fields.type;
+            num = fields.num;
+            // Установка полей таблицы карты пациента
+
+            $("#card-type").text(types[type]);
+            $("#card-num").text(num);
+            $("#card-fio").text(fio);
+            $("#card-bth").text(dbth);
+            $("#card-sx").text(sx);
+            $("#fin_poli input").parent('.btn').removeClass('active');
+            $("#fin_stat input").parent('.btn').removeClass('active');
+            if (type == "stat") {
+                $("#fin_poli").hide();
+                $("#fin_stat").show();
+                $("#fin_stat input:first").parent('.btn').addClass('active');
+
+                $("#fin_poli").removeClass("active-s");
+                $("#fin_stat").addClass("active-s");
+            }
+            else {
+                $("#fin_poli").show();
+                $("#fin_stat").hide();
+                $("#fin_poli input:first").parent('.btn').addClass('active');
+
+                $("#fin_poli").addClass("active-s");
+                $("#fin_stat").removeClass("active-s");
+            }
+            $("#select-lab").removeProp('disabled');
+            $("#select-lab").selectpicker('refresh');
+            tmp_direction = {
+                client_id: client_id,
+                researches: checked,
+                diagnos: $("#diagnos-field").val().trim(),
+                fin_source: parseInt($('#sources .active-s .btn.active input[name=source]').val())
+            };
+            clear_fast();
+        }
+        function load_researches() {
+            $("#table-researches").html("");
+            $("#table-researches").append(lang.table_researches_header);
+            $.ajax({ // AJAX запрос
+                url: "/researches/ajax/search?lab_id=" + active_lab,// Установка адреса и параметров запроса
+                dataType: 'json'
+            }).done(function (data) {
+                if (data.length == 0) {
+                    $("#table-researches").append(lang.table_researches_not_found);
+                    return;
+                }
+                $.each(data, function (k, v) {
+                    ind = false;
+                    for (var prop in checked[v.fields.id_lab_fk]) {
+                        if (checked[v.fields.id_lab_fk].hasOwnProperty(prop)) {
+                            if (checked[v.fields.id_lab_fk][prop] == v.pk) {
+                                ind = true;
+                            }
+                        }
+                    }
+                    if (!ind)
+                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    else
+                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    dict[v.pk] = v.fields.ref_title;
+                });
+            });
+
+        }
+        function remove_researches(index) {
+            bootbox.confirm(lang.table_researches_preview_realy_delete.f(labs[index]), function (result) {
+                if (!result) return;
+                delete checked[index];
+                sync();
+            });
+        }
+        function clear_fast() {
+            if (tmp_direction.researches == undefined || tmp_direction.researches.length == 0) {
+                return;
+            }
+            checked = [];
+            $("#diagnos-field").val("");
+            sync();
+        }
+        function clear_direction() {
+            if (tmp_direction.researches == undefined || tmp_direction.researches.length == 0) {
+                return;
+            }
+            bootbox.confirm(lang.clear_direction, function (result) {
+                if (!result) return;
+                checked = [];
+                sync();
+            });
+        }
+        /*
+         function perform_ref(vm, vf) {
+         r_m = "";
+         r_f = "";
+
+         $.each(vm, function (k1, v1) {
+         fr = format_ref(k1, v1);
+         r_m = "{0}{1}, ".f(r_m, fr);
+         });
+         $.each(vf, function (k1, v1) {
+         fr = format_ref(k1, v1);
+         r_f = "{0}{1}, ".f(r_f, fr);
+         });
+         if (r_m === r_f)
+         return "<td>{0}</td>".f(r_m.substring(0, r_m.length - 2));
+         return "<td>М: {0}<br/>Ж: {1}</td>".f(r_m.substring(0, r_m.length - 2), r_f.substring(0, r_f.length - 2));
+         }
+         function format_ref(k, v) {
+         key = "{0} : ".f(k);
+         if (k in ref_types) {
+         if (ref_types[k].show) key = "{0} : ".f(ref_types[k].s);
+         else key = "";
+         }
+         return key + "" + v;
+         }
+
+         function to(t) {
+         $(t).toggleClass("opened");
+         }
+
+         function replaceAll(find, replace, str) {
+         return str.replace(new RegExp(find, 'g'), replace);
+         }
+
+         function reverse(a) {
+         var temp = [];
+         var len = a.length;
+         for (var i = (len - 1); i !== 0; i--) {
+         temp.push(a[i]);
+         }
+         return result;
+         }
+         function declOfNum(number, titles) {
+         cases = [2, 0, 1, 1, 1, 2];
+         return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+         }*/
+        function save_direction() {
+            sync();
+            $.ajax({
+                type: "POST",
+                url: "/directions/ajax/save",
+                data: {dict: JSON.stringify(tmp_direction)}
+            }).done(function (data) {
+                console.log(JSON.stringify(data));
+                if (data[0].r && data[0].list_id) {
+                    window.open('/directions/pdf?napr_id=' + data[0].list_id, '_newtab');
+                    clear_fast();
+                }
+            });
+        }
+    </script>
+    <style>
+        .active {
+            background-color: #337ab7 !important;
+            color: #fff !important;
+        }
+
+        .tw {
+            border: #ddd 1px solid;
+            min-height: 300px;
+            background: #eee;
+        }
+
+        .div4 {
+            width: 50%;
+            height: 50%;
+            float: left;
+            display: inline-block;
+            padding: 5px;
+            overflow-y: auto;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        body, html {
+            height: 100%;
+        }
+
+        .hideble {
+            height: 32px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hideble table, .hideble-n table {
+            margin: 0;
+        }
+
+        .hideble.opened {
+            height: auto;
+        }
+
+        #table-researches .btn {
+            display: inline-block;
+            text-align: left;
+            overflow-wrap: normal;
+            white-space: normal;
+            vertical-align: top;
+            width: 25% !important;
+            float: left;
+            border-radius: 0;
+            border-collapse: collapse !important;
+        }
+
+        #table-researches-preview span {
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}

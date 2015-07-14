@@ -1,0 +1,201 @@
+{% extends "dbase.html" %}
+{% block title %}Прием материала{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <!--TODO: интерфейс-->
+    <div class="row">
+        <table class="table table-bordered">
+            <tr>
+                <td style="width: 320px"><h4>Лаборатория:&nbsp;&nbsp;</h4></td>
+                <td>
+                    <h4>{{ request.user.doctorprofile.podrazileniye.title }}</h4>
+                </td>
+                <td>
+                    <div style="text-align: right">
+                        <h4>Дата:
+                            <script>var today = new Date();
+                            document.write(getFormattedDate(today));</script>
+                        </h4>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 320px"><h4>Подразделение в лаборатории:&nbsp;&nbsp;</h4>
+                </td>
+                <td>
+                    <select class="selectpicker" data-width="100%" id="subgroup" onchange="load_tubes();">
+                        {% for v in groups %}
+                            <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="width: 320px"><h4>Отделение (от кого):&nbsp;&nbsp;</h4></td>
+                <td>
+                    <select class="selectpicker" data-width="100%" id="from" onchange="load_tubes();">
+                        {% for v in podrazdeleniya %}
+                            <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
+                </td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div id="scroll-tb" style="position: relative;">
+                <table class="table table-bordered table-responsive">
+                    <thead>
+                    <th style="width: 70px">№ п/п</th>
+                    <th style="width: 280px">Тип пробирки</th>
+                    <th style="width: 180px">№ пробирки</th>
+                    <th>Исследования</th>
+                    <th style="width: 180px">№ направления</th>
+                    <th style="width: 180px">Принято</th>
+                    <th style="width: 300px">Замечания</th>
+                    </thead>
+                    <tbody id="tubes"></tbody>
+                </table>
+                <div class="r">
+                    <button class='btn btn-success' style="width: 200px" onclick='save()'>Сохранить</button>
+                </div>
+            </div>
+            <br/>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+            load_tubes();
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
+        });
+
+        function load_tubes() {
+            $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
+                $("#tubes").html("");
+                $.each(data, function (k, v) {
+                    if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))
+                        $("#tubes").append("<tr><td class='c'>{0}</td><td style='background-color: {4}; color: #fff; text-shadow: 1px 1px 3px #000'>{1}</td><td class='c'>{2}</td><td>{3}</td><td class='c'>{5}</td><td class='c'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' /></label></td><td><div class='btn-group'><input id='notice_{2}' type='text' class='form-control'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
+                    else if (v.tube.notice == undefined || v.tube.notice == "")
+                        $("#tubes").append("<tr><td class='c'>{0}</td><td style='background-color: {4}; color: #fff; text-shadow: 1px 1px 3px #000'>{1}</td><td class='c'>{2}</td><td>{3}</td><td class='c'>{6}</td><td class='c'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                    else
+                        $("#tubes").append("<tr><td class='c'>{0}</td><td style='background-color: {4}; color: #fff; text-shadow: 1px 1px 3px #000'>{1}</td><td class='c'>{2}</td><td>{3}</td><td class='c'>{6}</td><td><label class='c'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                });
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+        }
+
+        function clear_field(id) {
+            $("#notice_" + id).val("");
+        }
+
+        function save() {
+            tubes = [];
+            $(".confirm").each(function (k, v) {
+                tubes.push({
+                    "id": $(v).val(),
+                    "notice": $("#notice_" + $(v).val()).val(),
+                    "status": $(v).prop("checked")
+                })
+            });
+            $.ajax({
+                url: "/dashboard/receive",
+                method: "POST",
+                data: {data: JSON.stringify(tubes)},
+                type: "json"
+            }).done(function (data) {
+                console.log(data);
+                load_tubes();
+            });
+        }
+
+        function resize() {
+            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 20);
+            $('#scroll-tb').perfectScrollbar();
+        }
+    </script>
+    <style>
+        .borderless td {
+            border: 0 !important;
+        }
+
+        .r {
+            text-align: right;
+        }
+
+        .c {
+            text-align: center;
+        }
+
+        #scroll-tb {
+            padding: 5px 15px 5px 5px;
+            border: 1px solid #ccc;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-fluid, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #tubes tr, #tubes td {
+            padding: 2px;
+            vertical-align: middle;
+        }
+
+        #tubes input[type=text] {
+            border: 0;
+            margin: 0;
+            width: 100%;
+            padding: 0 5px;
+        }
+
+        #tubes label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        #tubes label:hover {
+            background-color: #efefef;
+        }
+
+        #tubes .btn-group {
+            width: 100%;
+        }
+
+        .searchclear {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: .6;
+            color: #881c2f;
+        }
+
+        .searchclear:hover {
+            opacity: 1;
+        }
+
+    </style>
+{% endblock %}
