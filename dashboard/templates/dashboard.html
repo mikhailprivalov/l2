@@ -76,6 +76,23 @@
             </script>
         {% endif %}
     </div>
+    <div class="row" style="margin-top: 25px">
+        {% if request.user|has_group:"Оператор" %}
+            <div class="col-xs-6 col-md-3">
+                <a href="/construct/menu" id="create_user_btn" class="panel-body">
+                    Конструктор справочника<br/>
+                    <small>(Shift+c)</small>
+                </a>
+            </div>
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+c', function () {
+                        window.location.href = "/construct/menu";
+                    });
+                });
+            </script>
+        {% endif %}
+    </div>
     {% if user.is_superuser %}
         <hr/>
         <h4 style="text-align: center;">Администрирование</h4>
@@ -98,12 +115,6 @@
                     <small>(Alt+p)</small>
                 </a>
             </div>
-            <div class="col-xs-6 col-md-3">
-                <a href="/construct/directory" id="create_user_btn" class="panel-body">
-                    Конструктор справочника<br/>
-                    <small>(Alt+c)</small>
-                </a>
-            </div>
         </div>
     {% endif %}
 {% endblock %}
@@ -118,9 +129,6 @@
             });
             $(document).on('keydown', null, 'alt+p', function () {
                 window.location.href = "/dashboard/create_podr";
-            });
-            $(document).on('keydown', null, 'alt+c', function () {
-                window.location.href = "/dashboard/directory";
             });
         {% endif %}
     </script>

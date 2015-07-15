@@ -10,6 +10,7 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
     get_issledovaniya
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready
+from construct import urls
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -33,6 +34,7 @@ urlpatterns = [
                   url(r'^results/enter', enter),
                   url(r'^results/loadready', loadready),
                   url(r'^admin/', include(admin.site.urls)),
+                  url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',
                       {'next_page': '/'}),
               ] + staticfiles_urlpatterns()
