@@ -7,7 +7,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from directions.models import IstochnikiFinansirovaniya
 from researches.models import Tubes
 from django.views.decorators.cache import cache_page
-
+from laboratory.decorators import group_required
 
 # @cache_page(60 * 15)
 @login_required
@@ -16,6 +16,8 @@ def dashboard(request):  # Представление панели управл�
 
 
 # @cache_page(60 * 15)
+@login_required
+@group_required("Заборщик биоматериала")
 def researches_control(request):
     tubes = Tubes.objects.all()
     return render(request, 'dashboard/recive_material.html', {"tubes": tubes})
@@ -92,6 +94,8 @@ def create_pod(request):
 
 
 # @cache_page(60 * 15)
+@login_required
+@group_required("Лечащий врач")
 def directions(request):
     podr = Podrazdeleniya.objects.all()
 

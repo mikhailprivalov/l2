@@ -17,11 +17,14 @@ from researches.models import Researches
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from clients.models import Importedclients
 from django.views.decorators.cache import cache_page
+from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 
 w, h = A4
 
 
 @csrf_exempt
+@login_required
 def dir_save(request):
     """Сохранение направления"""
     res = {}  # Словарь с направлениями, сгруппированными по лабораториям
@@ -123,6 +126,7 @@ def dir_save(request):
 
 
 @cache_page(60 * 15)
+@login_required
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
@@ -297,6 +301,7 @@ def calculate_age(born):
         return today.year - born.year
 
 
+@login_required
 def get_one_dir(request):
     """Получение одного направления и исследований из него по пробиркам"""
     # import logging
@@ -359,6 +364,7 @@ def get_one_dir(request):
 
 
 @csrf_exempt
+@login_required
 def update_direction(request):
     """Функция обновления исследований в направлении"""
     from django.utils import timezone
@@ -380,6 +386,7 @@ def update_direction(request):
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
     import pytz
@@ -401,6 +408,7 @@ def load_history(request):
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def print_history(request):
     """Печать истории забора материала за день"""
     user = request.user.doctorprofile  # Профиль текущего пользователя
@@ -590,6 +598,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
     c.drawRightString(w - paddingx, 20, "Страница " + str(page) + " из " + str(pages))
 
 
+@login_required
 def get_issledovaniya(request):
     res = {"issledovaniya": []}
     if request.method == "GET":

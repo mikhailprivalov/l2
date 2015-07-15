@@ -2,12 +2,17 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import simplejson as json
 from directions.models import TubesRegistration, Issledovaniya
+from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 
 
+@login_required
+@group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     return render(request, 'dashboard/resultsenter.html')
 
 
+@login_required
 def loadready(request):
     result = {"tubes": [], "directions": []}
     tubes = TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False)

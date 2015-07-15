@@ -6,9 +6,12 @@ from users.models import DoctorProfile
 import simplejson as json
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-
+from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 
 @csrf_exempt
+@login_required
+@group_required("Получатель биоматериала")
 def receive(request):
     """Представление для приемщика материала в лаборатории"""
     from django.utils import timezone
@@ -33,6 +36,7 @@ def receive(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
+@login_required
 def tubes_get(request):
     result = []
     if request.method == "GET":

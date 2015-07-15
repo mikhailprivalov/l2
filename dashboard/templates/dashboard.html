@@ -1,7 +1,7 @@
 {% extends "dbase.html" %}
 {% block title %}Панель управления{% endblock %}
 
-{% block content %}
+{% block content %}{% load has_group %}
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Профиль</h3>
@@ -15,50 +15,93 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-xs-6 col-md-3 panel">
+        {% if request.user|has_group:"Лечащий врач" %}
+            <div class="col-xs-6 col-md-3">
             <a href="/dashboard/directions" id="create_user_btn" class="panel-body">
                 Направления<br/><br/>
                 <small>(Shift+n)</small>
             </a>
         </div>
-        <div class="col-xs-6 col-md-3 panel">
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+n', function () {
+                        window.location.href = "/dashboard/directions";
+                    });
+                });
+            </script>
+        {% endif %}
+        {% if request.user|has_group:"Заборщик биоматериала" %}
+            <div class="col-xs-6 col-md-3">
             <a href="/researches/control" id="create_user_btn" class="panel-body">
                 Взятие материала<br/><br/>
                 <small>(Shift+g)</small>
             </a>
         </div>
-        <div class="col-xs-6 col-md-3 panel">
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+g', function () {
+                        window.location.href = "/researches/control";
+                    });
+                });
+            </script>
+        {% endif %}
+        {% if request.user|has_group:"Получатель биоматериала" %}
+            <div class="col-xs-6 col-md-3">
             <a href="/dashboard/receive" id="create_user_btn" class="panel-body">
                 Прием материала<br/><br/>
                 <small>(Shift+r)</small>
             </a>
         </div>
-        <div class="col-xs-6 col-md-3 panel">
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+r', function () {
+                        window.location.href = "/dashboard/receive";
+                    });
+                });
+            </script>
+        {% endif %}
+        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
+            <div class="col-xs-6 col-md-3">
             <a href="/results/enter" id="create_user_btn" class="panel-body">
                 Ввод результатов<br/><br/>
                 <small>(Shift+v)</small>
             </a>
         </div>
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+v', function () {
+                        window.location.href = "/results/enter";
+                    });
+                });
+            </script>
+        {% endif %}
     </div>
     {% if user.is_superuser %}
         <hr/>
+        <h4 style="text-align: center;">Администрирование</h4>
         <div class="row">
-            <div class="col-xs-6 col-md-3 panel">
+            <div class="col-xs-6 col-md-3">
                 <a href="/admin" id="create_user_btn" class="panel-body">
                     Админ-панель<br/><br/>
                     <small>(Alt+a)</small>
                 </a>
             </div>
-            <div class="col-xs-6 col-md-3 panel">
+            <div class="col-xs-6 col-md-3">
                 <a href="/dashboard/create_user" id="create_user_btn" class="panel-body">
                     Создать пользователя<br/>
                     <small>(Alt+n)</small>
                 </a>
             </div>
-            <div class="col-xs-6 col-md-3 panel">
+            <div class="col-xs-6 col-md-3">
                 <a href="/dashboard/create_podr" id="create_user_btn" class="panel-body">
                     Добавить подразделение<br/>
                     <small>(Alt+p)</small>
+                </a>
+            </div>
+            <div class="col-xs-6 col-md-3">
+                <a href="/construct/directory" id="create_user_btn" class="panel-body">
+                    Конструктор справочника<br/>
+                    <small>(Alt+c)</small>
                 </a>
             </div>
         </div>
@@ -66,18 +109,6 @@
 {% endblock %}
 {% block scripts %}
     <script>
-        $(document).on('keydown', null, 'shift+n', function () {
-            window.location.href = "/dashboard/directions";
-        });
-        $(document).on('keydown', null, 'shift+g', function () {
-            window.location.href = "/researches/control";
-        });
-        $(document).on('keydown', null, 'shift+r', function () {
-            window.location.href = "/dashboard/receive";
-        });
-        $(document).on('keydown', null, 'shift+v', function () {
-            window.location.href = "/results/enter";
-        });
         {% if user.is_superuser %}
             $(document).on('keydown', null, 'alt+n', function () {
                 window.location.href = "/dashboard/create_user";
@@ -87,6 +118,9 @@
             });
             $(document).on('keydown', null, 'alt+p', function () {
                 window.location.href = "/dashboard/create_podr";
+            });
+            $(document).on('keydown', null, 'alt+c', function () {
+                window.location.href = "/dashboard/directory";
             });
         {% endif %}
     </script>

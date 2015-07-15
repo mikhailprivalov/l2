@@ -4,9 +4,10 @@ from researches.models import Researches, Subgroups, Podrazdeleniya
 from directions.models import Issledovaniya
 import simplejson as json
 from django.views.decorators.cache import cache_page
-
+from django.contrib.auth.decorators import login_required
 
 @cache_page(60 * 15)
+@login_required
 def ajax_search_res(request):
     """Получение исследований в лаборатории"""
     res = []
@@ -23,6 +24,7 @@ def ajax_search_res(request):
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def researches_get_one(request):
     res = {"res_id": "", "title": "", "fractions": []}
     if request.method == "GET":

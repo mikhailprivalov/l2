@@ -62,7 +62,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'laboratory.wsgi.application'
-
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
