@@ -3,4 +3,5 @@ from . import views
 
 urlpatterns = [
     url(r'^menu$', views.menu),
+    url(r'^researches$', views.researches),
 ]

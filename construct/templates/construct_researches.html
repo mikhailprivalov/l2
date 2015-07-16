@@ -1,0 +1,77 @@
+{% extends "dbase.html" %}
+{% block title %}Конструктор исследований{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <ol class="breadcrumb breadcrumb-arrow">
+        <li><a href="/dashboard/">Панель управления</a></li>
+        <li><a href="/construct/menu">Конструктор</a></li>
+        <li class="active"><span>Исследования</span></li>
+    </ol>
+    <div class="row" style="padding: 0;margin: 0">
+        <div class="col-md-3" id="researches-list">
+            <div class="row">
+                <div class="researches-list">
+                    <div class="btn-group">
+                        <div class="btn btn-default research-title col-md-9">Гематологический анализ</div>
+                        <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                    </div>
+                    <div class="btn-group">
+                        <div class="btn btn-default research-title col-md-9">Холестерин</div>
+                        <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div id="research-form"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <style>
+        #researches-list {
+            height: 100%;
+            background-color: #434A54;
+            padding-right: 28px;
+            padding-left: 28px;
+        }
+
+        #researches-list .row {
+            background-color: #656D78;
+            padding: 5px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        #researches-list .row .research-title {
+            cursor: default;
+        }
+
+        #researches-list .row .research-title:hover {
+            background: #fff;
+            color: #434a54;
+        }
+
+        .researches-list .btn-group {
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            resize();
+            clear_form();
+            $(window).resize(function () {
+                resize();
+            });
+        });
+        function resize() {
+            $('#researches-list').height($(window).height() - $('#researches-list').position().top - 20);
+            $('#researches-list').perfectScrollbar();
+        }
+        function clear_form() {
+            $("#research-form").html("<div class='well'>Ничего не выбрано</div>")
+        }
+    </script>
+{% endblock %}

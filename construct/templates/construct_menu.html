@@ -3,10 +3,27 @@
 
 {% block content %}
     <ol class="breadcrumb breadcrumb-arrow">
-        <li><a href="/dashboard/">Панель кправления</a></li>
-        <li><a href="/dashboard/menu">Конструктор</a></li>
+        <li><a href="/dashboard/">Панель управления</a></li>
+        <li><a href="/construct/menu">Конструктор</a></li>
         <li class="active"><span>Меню</span></li>
     </ol>
+    <div class="row">
+        <div class="col-xs-6 col-md-3">
+            <a href="/construct/researches" class="panel-body">
+                Добавление и редактирование анализов
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3">
+            <a href="/construct/directions_group" class="panel-body">
+                Группировка анализов по направлениям
+            </a>
+        </div>
+        <div class="col-xs-6 col-md-3">
+            <a href="/construct/weight_setup" class="panel-body">
+                Настройка поглащения<br/><br/>
+            </a>
+        </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <script>
