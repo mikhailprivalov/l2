@@ -8,16 +8,83 @@
         <li class="active"><span>Исследования</span></li>
     </ol>
     <div class="row" style="padding: 0;margin: 0">
+        <div class="col-md-3" style="padding: 5px">
+            <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
+                    title='Выберите лабораторию...'>
+                <option>Иммунологическое отделение</option>
+            </select>
+        </div>
+    </div>
+    <div class="row" style="padding: 0;margin: 0">
         <div class="col-md-3" id="researches-list">
-            <div class="row">
-                <div class="researches-list">
-                    <div class="btn-group">
-                        <div class="btn btn-default research-title col-md-9">Гематологический анализ</div>
-                        <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+            <div style="text-align: right; margin-right: 15px">
+                <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ</button>
+            </div>
+            <div id="researches-container">
+                <div class="row">
+                    <div class="bw">
+                        <div class="list-header">Анализы</div>
+                        <div class="researches-list">
+                            <div class="btn-group">
+                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                            </div>
+                            <div class="btn-group">
+                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                            </div>
+                            <div class="btn-group right">
+                                <button class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>
+                                    Добавть анализ к пробирке
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="btn-group">
-                        <div class="btn btn-default research-title col-md-9">Холестерин</div>
-                        <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                    <div class="bw">
+                        <div class="list-header">Пробирки</div>
+                        <div class="tubes-list">
+                            <div class="well tube" id="tube-1">
+                                <div>
+                                    <div class="sq">
+                                        <div class="color-sq" style="background-color: #8CC152">&nbsp;</div>
+                                    </div>
+                                    Зеленая пробирка
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="bw">
+                        <div class="list-header">Анализы</div>
+                        <div class="researches-list">
+                            <div class="btn-group">
+                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bw">
+                        <div class="list-header">Пробирки</div>
+                        <div class="tubes-list">
+                            <div class="well tube">
+                                <div>
+                                    <div class="sq" id="tube-3">
+                                        <div class="color-sq" style="background-color: #DA4453">&nbsp;</div>
+                                    </div>
+                                    Красная пробирка, 6 мл
+                                </div>
+                            </div>
+                            <div class="well tube" id="tube-2">
+                                <div>
+                                    <div class="sq">
+                                        <div class="color-sq" style="background-color: #434A54">&nbsp;</div>
+                                    </div>
+                                    Черная пробирка
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -29,22 +96,36 @@
 {% endblock %}
 {% block scripts %}
     <style>
+        .add {
+            font-size: 12px;
+            margin: 15px;
+            padding: 2px;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
         #researches-list {
-            height: 100%;
             background-color: #434A54;
-            padding-right: 28px;
-            padding-left: 28px;
+            padding-right: 0;
+            padding-left: 10px;
+            padding-bottom: 20px;
+        }
+
+        #researches-container {
+            height: 100%;
+            position: relative;
+            padding-right: 30px;
+            padding-left: 20px;
         }
 
         #researches-list .row {
-            background-color: #656D78;
-            padding: 5px;
-            margin-top: 5px;
-            margin-bottom: 5px;
+            background-color: #fff;
+            margin-bottom: 15px;
         }
 
         #researches-list .row .research-title {
             cursor: default;
+            text-align: left;
         }
 
         #researches-list .row .research-title:hover {
@@ -54,8 +135,105 @@
 
         .researches-list .btn-group {
             width: 100%;
-            margin-top: 5px;
-            margin-bottom: 5px;
+        }
+
+        .researches-list .btn-group .btn {
+            padding: 2px;
+            font-size: 10pt;
+            border-radius: 0;
+        }
+
+        .researches-list .btn-group:first-child .btn:first-child {
+            border-top-left-radius: 5px;
+        }
+
+        .researches-list .btn-group:first-child .btn:last-child {
+            border-top-right-radius: 5px;
+        }
+
+        .researches-list .btn-group:last-child .btn:first-child {
+            border-bottom-left-radius: 5px;
+        }
+
+        .researches-list .btn-group:last-child .btn:last-child {
+            border-bottom-right-radius: 5px;
+        }
+
+        .researches-list .btn-group .btn:hover {
+            background-color: #3BAFDA;
+        }
+
+        .list-header {
+            font-weight: 500;
+            font-size: 12pt;
+            margin: 3px;
+            margin-top: 0;
+            font-size: 16px;
+        }
+
+        .bw:first-child .list-header:first-child {
+            margin-top: 3px;
+        }
+
+        .sq {
+            padding: 3px;
+            display: inline-block;
+            background-color: #efefef;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .tube {
+            padding: 2px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+            font-size: 10pt;
+        }
+
+        .tube:hover {
+            background-color: #3BAFDA;
+            cursor: pointer;
+            color: #fff
+        }
+
+        .color-sq {
+            height: 12px;
+            width: 12px;
+        }
+
+        .bw {
+            background: #fff;
+            padding: 3px;
+            margin: 0;
+            padding-top: 0;
+        }
+
+        .right {
+            padding-right: 1px;
+            text-align: right;
+        }
+
+        #directory-select, .drophere {
+            width: 300px;
+            padding: 6px 2px;
+        }
+
+        .drophere {
+            border-width: 3px;
+            padding: 4px 2px;
+            border-style: dashed;
+            display: none;
+        }
+
+        .drophere.hover {
+            background-color: #aab2bd;
+            color: #fff
+        }
+
+        .ui-draggable-dragging {
+            opacity: .7;
         }
     </style>
     <script>
@@ -65,13 +243,61 @@
             $(window).resize(function () {
                 resize();
             });
+            $('.tubes-list .tube').draggable({
+                appendTo: "body",
+                helper: "clone",
+                start: function () {
+                    $("#directory-select").hide();
+                    $(".drophere").css({display: "inline-block"});
+                },
+                drag: function () {
+
+                },
+                stop: function () {
+                    $("#directory-select").css({display: "inline-block"});
+                    $(".drophere").hide();
+                }
+            });
+            loadform(0);
         });
+        var fractiontubes = [];
+        function loadform(id) {
+            fractiontubes = [];
+            $("#research-form").html("");
+            form = $("<form></form>").appendTo($("#research-form"));
+            $("<h4></h4>").text("Редактор анализа").appendTo($(form));
+
+            group = $("<div class=\"input-group\"></div>").appendTo($(form));
+            $('<span class="input-group-addon">Название</span>').appendTo($(group));
+            $("<input class='form-control' id='research_title' />").appendTo($(group));
+
+            $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
+            $("<p style='padding: 5px'></p>").appendTo($(form));
+            p = $("<p style='padding: 5px'></p>").appendTo($(form));
+            $(p).append("<span>Присвоить пробирку к анализу:&nbsp;&nbsp;</span>")
+            $("<button class='btn btn-default' id='directory-select'></button>").text("Выбрать из справочника").appendTo($(p));
+            $("<div class='btn btn-default drophere'></div>").text("Перетащите пробирку сюда").appendTo($(p));
+            $(".drophere").droppable({
+                accept: ".tube",
+                hoverClass: "hover",
+                drop: function (event, ui) {
+                    $(this).text("Перетащите пробирку сюда");
+                },
+                over: function (event, ui) {
+                    $(this).text("Отпустите пробирку здесь");
+                },
+                out: function (event, ui) {
+                    $(this).text("Перетащите пробирку сюда");
+                }
+            });
+        }
         function resize() {
-            $('#researches-list').height($(window).height() - $('#researches-list').position().top - 20);
-            $('#researches-list').perfectScrollbar();
+            $('#researches-container').height($(window).height() - $('#researches-container').position().top - 205);
+            $('#researches-container').perfectScrollbar();
         }
         function clear_form() {
             $("#research-form").html("<div class='well'>Ничего не выбрано</div>")
+            $(".active").removeClass("active");
         }
     </script>
 {% endblock %}
