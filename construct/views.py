@@ -15,3 +15,9 @@ def menu(request):
 def researches(request):
     lab_subgroups = Subgroups.objects.all()
     return render(request, 'construct_researches.html', {"lab_subgroups": lab_subgroups})
+
+
+@login_required
+@group_required("Оператор")
+def tubes(request):
+    return render(request, 'construct_tubes.html')
