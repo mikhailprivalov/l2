@@ -1,11 +1,11 @@
 {% extends "dbase.html" %}
-{% block title %}Конструктор исследований{% endblock %}
+{% block title %}Добавление и редактирование анализов{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <ol class="breadcrumb breadcrumb-arrow">
         <li><a href="/dashboard/">Панель управления</a></li>
         <li><a href="/construct/menu">Конструктор</a></li>
-        <li class="active"><span>Исследования</span></li>
+        <li class="active"><span>Добавление и редактирование анализов</span></li>
     </ol>
     <div class="row" style="padding: 0;margin: 0">
         <div class="col-md-3" style="padding: 5px">
@@ -21,8 +21,13 @@
     </div>
     <div class="row" style="padding: 0;margin: 0">
         <div class="col-md-3" id="researches-list">
-            <div style="text-align: right; margin-right: 15px">
-                <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ</button>
+            <div style="margin-left: 5px;height: 55px">
+                <div style="float: right;">
+                    <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ</button>
+                </div>
+                <div style="float: left;">
+                    <h4 style="color: #fff">Связи</h4>
+                </div>
             </div>
             <div id="researches-container">
                 <div class="row">
@@ -439,9 +444,9 @@
                 },
                 snap: ".tubeselect",
                 snapMode: "inner",
-                snapTolerance: 30,
+                snapTolerance: 200,
                 scroll: false,
-                cursorAt: {left: 10, top: 10}
+                //cursorAt: {left: 10, top: 10}
             });
             $('#tube_directory_Modal').on('show.bs.modal', function (e) {
                 $.ajax({url: "/directory/tubes/all", method: "GET"}).done(function (data) {

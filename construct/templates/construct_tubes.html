@@ -11,5 +11,16 @@
 {% endblock %}
 {% block scripts %}
     <script>
+        $(document).ready(function () {
+            loadtubes();
+        });
+        function loadtubes() {
+            $.ajax({url: "/directory/tubes/all"}).done(function (data) {
+                $("#tubes-list").html("");
+                $.each(data, function () {
+
+                });
+            });
+        }
     </script>
 {% endblock %}
