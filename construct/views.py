@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+from podrazdeleniya.models import Subgroups
 
 
 @login_required
@@ -12,4 +13,5 @@ def menu(request):
 @login_required
 @group_required("Оператор")
 def researches(request):
-    return render(request, 'construct_researches.html')
+    lab_subgroups = Subgroups.objects.all()
+    return render(request, 'construct_researches.html', {"lab_subgroups": lab_subgroups})

@@ -5,7 +5,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
 from dashboard.views import dashboard, create_user, create_pod, directions, researches_control
 from clients.views import ajax_search
-from researches.views import ajax_search_res, researches_get_one
+from researches.views import ajax_search_res, researches_get_one, get_all_tubes
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
     get_issledovaniya
 from receivematerial.views import receive, tubes_get
@@ -22,6 +22,7 @@ urlpatterns = [
                   url(r'^direction/researches/update$', update_direction),
                   url(r'^direction/researches/update/history$', load_history),
                   url(r'^direction/researches/update/history/print$', print_history),
+                  url(r'^directory/tubes/all$', get_all_tubes),
                   url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/control$', researches_control),
                   url(r'^researches/get/one', researches_get_one),

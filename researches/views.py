@@ -1,6 +1,6 @@
 from django.core import serializers
 from django.http import HttpResponse
-from researches.models import Researches, Subgroups, Podrazdeleniya
+from researches.models import Researches, Subgroups, Podrazdeleniya, Tubes
 from directions.models import Issledovaniya
 import simplejson as json
 from django.views.decorators.cache import cache_page
@@ -37,4 +37,13 @@ def researches_get_one(request):
             res["fractions"].append(
                 {"title": val, "unit": iss.ref_units[key], "references": {"m": iss.ref_m[key], "f": iss.ref_f[key]}})
 
+    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
+@login_required
+def get_all_tubes(request):
+    res = []
+    tubes = Tubes.objects.all()
+    for v in tubes:
+        res.append({"id": v.id, "title": v.title, "color": v.color})
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
