@@ -106,7 +106,9 @@
                     <h4 class="modal-title" id="tube_directory_Modal">Справочник пробирок</h4>
                 </div>
                 <div class="modal-body">
-                    <h5>Выберете пробирку из списка:</h5>
+                    <h5>Выберете пробирку из списка для привязки к анализу:</h5>
+
+                    <div id="modaltubes"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
@@ -443,7 +445,18 @@
             });
             $('#tube_directory_Modal').on('show.bs.modal', function (e) {
                 $.ajax({url: "/directory/tubes/all", method: "GET"}).done(function (data) {
-
+                    $("#modaltubes").html("");
+                    $.each(data, function (k, v) {
+                        tube = $("<div></div>").appendTo("#modaltubes");
+                        $(tube).addClass("well");
+                        $(tube).addClass("tube");
+                        sq = $("<div></div>").addClass("sq").appendTo($(tube));
+                        colorsq = $("<div></div>").appendTo($(sq));
+                        $(colorsq).html("&nbsp;");
+                        $(colorsq).css({"background-color": "#" + v.color});
+                        $(colorsq).addClass("color-sq");
+                        $(tube).append(v.title);
+                    });
                 });
             });
             loadform(0);
