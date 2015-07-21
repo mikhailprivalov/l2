@@ -84,3 +84,34 @@ def tubes_control(request):
         tube.title = title
         tube.save()
     return HttpResponse(json.dumps({}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def tubes_relation(request):
+    return_result = {}
+    if request.method == "PUT":
+        if hasattr(request, '_post'):
+            del request._post
+            del request._files
+
+        try:
+            request.method = "POST"
+            request._load_post_and_files()
+            request.method = "PUT"
+        except AttributeError:
+            request.META['REQUEST_METHOD'] = 'POST'
+            request._load_post_and_files()
+            request.META['REQUEST_METHOD'] = 'PUT'
+
+        request.PUT = request.POST
+
+        tube_id = request.PUT["id"]
+        tube = Tubes.objects.get(id=tube_id)
+        import random
+
+        return_result["id"] = random.randint(1, 10000)
+        return_result["title"] = tube.title
+        return_result["color"] = tube.color
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

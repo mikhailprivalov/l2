@@ -6,22 +6,26 @@
         <div class="panel-heading">
             <h3 class="panel-title">Профиль</h3>
         </div>
-        <div class="panel-body">
-            ФИО: {{ request.user.doctorprofile }}<br/>
-            Логин: {{ request.user }}<br/><br/>
-            Группы:<br/>
-            {% for v in request.user.groups.all %}{{ v }}<br/>{% endfor %}<br/>
-            <a href="/logout">Выход</a>
-        </div>
+        <ul class="list-group">
+            <li class="list-group-item">Логин: {{ request.user }}
+                <small><a href="/logout">Выход</a></small>
+            </li>
+            <li class="list-group-item">ФИО: {{ request.user.doctorprofile }}</li>
+            <li class="list-group-item">Группы: {% for v in request.user.groups.all %}
+                <span class="label label-default">{{ v }}</span>&nbsp;{% endfor %}</li>
+        </ul>
     </div>
-    <div class="row">
+    <hr/>
+    <h4 style="text-align: center;">Меню</h4>
+    <hr/>
+    <div class="row dash-buttons">
         {% if request.user|has_group:"Лечащий врач" %}
             <div class="col-xs-6 col-md-3">
-            <a href="/dashboard/directions" id="create_user_btn" class="panel-body">
-                Направления<br/><br/>
-                <small>(Shift+n)</small>
-            </a>
-        </div>
+                <a href="/dashboard/directions" id="create_user_btn" class="panel-body">
+                    Направления<br/><br/>
+                    <small class="badge badge-default">Shift+n</small>
+                </a>
+            </div>
             <script>
                 $(document).ready(function () {
                     $(document).on('keydown', null, 'shift+n', function () {
@@ -32,11 +36,11 @@
         {% endif %}
         {% if request.user|has_group:"Заборщик биоматериала" %}
             <div class="col-xs-6 col-md-3">
-            <a href="/researches/control" id="create_user_btn" class="panel-body">
-                Взятие материала<br/><br/>
-                <small>(Shift+g)</small>
-            </a>
-        </div>
+                <a href="/researches/control" id="create_user_btn" class="panel-body">
+                    Взятие материала<br/><br/>
+                    <small class="badge badge-default">Shift+g</small>
+                </a>
+            </div>
             <script>
                 $(document).ready(function () {
                     $(document).on('keydown', null, 'shift+g', function () {
@@ -47,11 +51,11 @@
         {% endif %}
         {% if request.user|has_group:"Получатель биоматериала" %}
             <div class="col-xs-6 col-md-3">
-            <a href="/dashboard/receive" id="create_user_btn" class="panel-body">
-                Прием материала<br/><br/>
-                <small>(Shift+r)</small>
-            </a>
-        </div>
+                <a href="/dashboard/receive" id="create_user_btn" class="panel-body">
+                    Прием материала<br/><br/>
+                    <small class="badge badge-default">Shift+r</small>
+                </a>
+            </div>
             <script>
                 $(document).ready(function () {
                     $(document).on('keydown', null, 'shift+r', function () {
@@ -62,11 +66,11 @@
         {% endif %}
         {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
             <div class="col-xs-6 col-md-3">
-            <a href="/results/enter" id="create_user_btn" class="panel-body">
-                Ввод результатов<br/><br/>
-                <small>(Shift+v)</small>
-            </a>
-        </div>
+                <a href="/results/enter" id="create_user_btn" class="panel-body">
+                    Ввод результатов<br/><br/>
+                    <small class="badge badge-default">Shift+v</small>
+                </a>
+            </div>
             <script>
                 $(document).ready(function () {
                     $(document).on('keydown', null, 'shift+v', function () {
@@ -76,12 +80,12 @@
             </script>
         {% endif %}
     </div>
-    <div class="row" style="margin-top: 25px">
+    <div class="row dash-buttons" style="margin-top: 25px">
         {% if request.user|has_group:"Оператор" %}
             <div class="col-xs-6 col-md-3">
                 <a href="/construct/menu" id="create_user_btn" class="panel-body">
                     Конструктор справочника<br/>
-                    <small>(Shift+c)</small>
+                    <small class="badge badge-default">Shift+c</small>
                 </a>
             </div>
             <script>
@@ -96,23 +100,24 @@
     {% if user.is_superuser %}
         <hr/>
         <h4 style="text-align: center;">Администрирование</h4>
-        <div class="row">
+        <hr/>
+        <div class="row dash-buttons">
             <div class="col-xs-6 col-md-3">
                 <a href="/admin" id="create_user_btn" class="panel-body">
                     Админ-панель<br/><br/>
-                    <small>(Alt+a)</small>
+                    <small class="badge badge-default">Alt+a</small>
                 </a>
             </div>
             <div class="col-xs-6 col-md-3">
                 <a href="/dashboard/create_user" id="create_user_btn" class="panel-body">
                     Создать пользователя<br/>
-                    <small>(Alt+n)</small>
+                    <small class="badge badge-default">Alt+n</small>
                 </a>
             </div>
             <div class="col-xs-6 col-md-3">
                 <a href="/dashboard/create_podr" id="create_user_btn" class="panel-body">
                     Добавить подразделение<br/>
-                    <small>(Alt+p)</small>
+                    <small class="badge badge-default">Alt+p</small>
                 </a>
             </div>
         </div>
@@ -132,4 +137,21 @@
             });
         {% endif %}
     </script>
+    <style>
+        .dash-buttons .panel-body {
+            background-color: #656D78;
+            border: 1px solid #656D78;
+            color: #F5F7FA
+        }
+
+        .dash-buttons .panel-body:hover {
+            background-color: #FC6E51;
+            border: 1px solid #FC6E51;
+            color: #fff
+        }
+
+        h4 {
+            margin: 5px;
+        }
+    </style>
 {% endblock %}
