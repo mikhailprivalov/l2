@@ -14,83 +14,84 @@
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
             </select>
-        </div>
-        <div class="col-md-9" style="padding: 5px; text-align: right">
 
-        </div>
-    </div>
-    <div class="row" style="padding: 0;margin: 0">
-        <div class="col-md-3" id="researches-list">
-            <div style="margin-left: 5px;height: 55px">
-                <div style="float: right;">
-                    <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ</button>
-                </div>
-                <div style="float: left;">
-                    <h4 style="color: #fff">Связи</h4>
-                </div>
-            </div>
-            <div id="researches-container">
-                <div class="row">
-                    <div class="bw">
-                        <div class="list-header">Анализы</div>
-                        <div class="researches-list">
-                            <div class="btn-group">
-                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
-                            </div>
-                            <div class="btn-group">
-                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
-                            </div>
-                            <div class="btn-group right">
-                                <button class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>
-                                    Добавть анализ к пробирке
-                                </button>
-                            </div>
-                        </div>
-
+            <div id="researches-list" style="margin-top: 10px">
+                <div style="margin-left: 5px;height: 55px">
+                    <div style="float: right;">
+                        <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ
+                        </button>
                     </div>
-                    <div class="bw">
-                        <div class="list-header">Пробирки</div>
-                        <div class="tubes-list">
-                            <div class="well tube tube-drag" id="tube-1">
-                                <div>
-                                    <div class="sq">
-                                        <div class="color-sq" style="background-color: #8CC152">&nbsp;</div>
+                    <div style="float: left;">
+                        <h4 style="color: #fff">Связи</h4>
+                    </div>
+                </div>
+                <div id="researches-container">
+                    <div class="row">
+                        <div class="bw">
+                            <div class="list-header">Анализы</div>
+                            <div class="researches-list">
+                                <div class="btn-group">
+                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
                                     </div>
-                                    Зеленая пробирка
+                                </div>
+                                <div class="btn-group">
+                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
+                                    </div>
+                                </div>
+                                <div class="btn-group right">
+                                    <button class="btn btn-default col-md-12 right"><i
+                                            class="glyphicon glyphicon-plus"></i>
+                                        Добавть анализ к пробирке
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="bw">
+                            <div class="list-header">Пробирки</div>
+                            <div class="tubes-list">
+                                <div class="well tube tube-drag" id="tube-1">
+                                    <div>
+                                        <div class="sq">
+                                            <div class="color-sq" style="background-color: #8CC152">&nbsp;</div>
+                                        </div>
+                                        Зеленая пробирка
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="bw">
-                        <div class="list-header">Анализы</div>
-                        <div class="researches-list">
-                            <div class="btn-group">
-                                <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bw">
-                        <div class="list-header">Пробирки</div>
-                        <div class="tubes-list">
-                            <div class="well tube" id="tube-3">
-                                <div>
-                                    <div class="sq">
-                                        <div class="color-sq" style="background-color: #DA4453">&nbsp;</div>
+                    <div class="row">
+                        <div class="bw">
+                            <div class="list-header">Анализы</div>
+                            <div class="researches-list">
+                                <div class="btn-group">
+                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
+                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
                                     </div>
-                                    Красная пробирка, 6 мл
                                 </div>
                             </div>
-                            <div class="well tube" id="tube-2">
-                                <div>
-                                    <div class="sq">
-                                        <div class="color-sq" style="background-color: #434A54">&nbsp;</div>
+                        </div>
+                        <div class="bw">
+                            <div class="list-header">Пробирки</div>
+                            <div class="tubes-list">
+                                <div class="well tube" id="tube-3">
+                                    <div>
+                                        <div class="sq">
+                                            <div class="color-sq" style="background-color: #DA4453">&nbsp;</div>
+                                        </div>
+                                        Красная пробирка, 6 мл
                                     </div>
-                                    Черная пробирка
+                                </div>
+                                <div class="well tube" id="tube-2">
+                                    <div>
+                                        <div class="sq">
+                                            <div class="color-sq" style="background-color: #434A54">&nbsp;</div>
+                                        </div>
+                                        Черная пробирка
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -469,17 +470,21 @@
             $("#research-form").html("");
             form = $("<form></form>").appendTo($("#research-form"));
             $("<h4></h4>").text("Редактор анализа").appendTo($(form));
-
-            cloumn1 = $("<div class='col-md-6'></div>").appendTo($(form));
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
-            $('<span class="input-group-addon">Название</span>').appendTo($(group));
+            row = $("<div class='row'></div>").appendTo($(form))
+            cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
+            group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
+            $('<span class="input-group-addon" style="min-width: 122px">Название</span>').appendTo($(group));
             $("<input class='form-control' id='research_title' />").appendTo($(group));
 
-            cloumn2 = $("<div class='col-md-6'></div>").appendTo($(form));
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn2));
+            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
             $('<span class="input-group-addon">Квота по ОМС</span>').appendTo($(group));
             $("<input class='form-control' id='quota' />").appendTo($(group));
-            $("<br/>").appendTo($(cloumn2));
+
+            cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
+            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
+            $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
+            $('<textarea class="form-control" id="pre" rows="3"></textarea>').appendTo($(group));
+
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
@@ -722,10 +727,10 @@
         }
         function resize(f) {
             if (!f) {
-                $('#researches-container').height($(window).height() - $('#researches-container').position().top - 205);
+                $('#researches-container').height($(window).height() - $('#researches-container').position().top - 155);
                 $('#researches-container').perfectScrollbar();
                 if ($('#tubes').length) {
-                    $('#tubes').height($(window).height() - $('#tubes').position().top - 255);
+                    $('#tubes').height($(window).height() - $('#tubes').position().top - 205);
                     $('#tubes').perfectScrollbar();
                 }
             }
