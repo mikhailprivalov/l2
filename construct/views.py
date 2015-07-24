@@ -21,3 +21,9 @@ def researches(request):
 @group_required("Оператор")
 def tubes(request):
     return render(request, 'construct_tubes.html')
+
+
+@login_required
+@group_required("Оператор")
+def directions_group(request):
+    return render(request, 'construct_directions_group.html')

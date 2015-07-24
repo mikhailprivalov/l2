@@ -9,7 +9,8 @@
     </ol>
     <div class="row" style="padding: 0;margin: 0">
         <div class="col-md-3" style="padding: 5px">
-            <select class="select-b" id="select-lab" data-live-search="true" data-width="100%">
+            <select class="select-b" id="select-lab" data-live-search="true" onchange="loadreslist();"
+                    data-width="100%">
                 {% for v in lab_subgroups %}
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
@@ -18,85 +19,15 @@
             <div id="researches-list" style="margin-top: 10px">
                 <div style="margin-left: 5px;height: 55px">
                     <div style="float: right;">
-                        <button class="btn btn-primary add"><i class="glyphicon glyphicon-plus"></i> Добавть анализ
+                        <button class="btn btn-primary add" onclick="loadform(-1, false);return false;"><i
+                                class="glyphicon glyphicon-plus"></i> Добавть анализ
                         </button>
                     </div>
                     <div style="float: left;">
                         <h4 style="color: #fff">Связи</h4>
                     </div>
                 </div>
-                <div id="researches-container">
-                    <div class="row">
-                        <div class="bw">
-                            <div class="list-header">Анализы</div>
-                            <div class="researches-list">
-                                <div class="btn-group">
-                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
-                                    </div>
-                                </div>
-                                <div class="btn-group">
-                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
-                                    </div>
-                                </div>
-                                <div class="btn-group right">
-                                    <button class="btn btn-default col-md-12 right"><i
-                                            class="glyphicon glyphicon-plus"></i>
-                                        Добавть анализ к пробирке
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="bw">
-                            <div class="list-header">Пробирки</div>
-                            <div class="tubes-list">
-                                <div class="well tube tube-drag" id="tube-1">
-                                    <div>
-                                        <div class="sq">
-                                            <div class="color-sq" style="background-color: #8CC152">&nbsp;</div>
-                                        </div>
-                                        Зеленая пробирка
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="bw">
-                            <div class="list-header">Анализы</div>
-                            <div class="researches-list">
-                                <div class="btn-group">
-                                    <div class="btn btn-default research-title col-md-9">Общий анализ крови</div>
-                                    <div class="btn btn-default col-md-3"><i class="glyphicon glyphicon-pencil"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bw">
-                            <div class="list-header">Пробирки</div>
-                            <div class="tubes-list">
-                                <div class="well tube" id="tube-3">
-                                    <div>
-                                        <div class="sq">
-                                            <div class="color-sq" style="background-color: #DA4453">&nbsp;</div>
-                                        </div>
-                                        Красная пробирка, 6 мл
-                                    </div>
-                                </div>
-                                <div class="well tube" id="tube-2">
-                                    <div>
-                                        <div class="sq">
-                                            <div class="color-sq" style="background-color: #434A54">&nbsp;</div>
-                                        </div>
-                                        Черная пробирка
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="researches-container"></div>
             </div>
         </div>
         <div class="col-md-9">
@@ -381,44 +312,35 @@
         .tubeselect .btn {
             min-width: 450px;
         }
+
+        .awesome.ok {
+            background-color: #434A54;
+            color: #fff
+        }
+
+        .amaran.awesome.ok .icon {
+            background-color: #8CC152;
+        }
+
+        .amaran.awesome.ok p.bold {
+            color: #8CC152;
+        }
     </style>
     <script src="/static/js/jquery.floatThead.min.js"></script>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
         $(document).ready(function () {
+            /*$("#select-lab").change(function () {
+             active_lab = $("#select-lab").val();
+             if (checked[active_lab] == undefined)
+             checked[active_lab] = [];
+             load_researches();
+             });*/
+            loadreslist();
             resize();
             clear_form();
             $(window).resize(function () {
                 resize();
-            });
-            $('.tubes-list .tube-drag').draggable({
-                appendTo: "body",
-                helper: function () {
-                    return $(this).clone().width($(this).width());
-                },
-                start: function (event, ui) {
-                    $("#directory-select").hide();
-                    $(".drophere").css({display: "inline-block"});
-                },
-                drag: function (event, ui) {
-                    var draggable = $(this).data("ui-draggable")
-                    $.each(draggable.snapElements, function (index, element) {
-                        if (element.snapping) {
-                            draggable._trigger("snapped", event, $.extend({}, ui, {
-                                snapElement: $(element.item)
-                            }));
-                        }
-                    });
-                },
-                stop: function () {
-                    $("#directory-select").css({display: "inline-block"});
-                    $(".drophere").hide();
-                },
-                snap: ".tubeselect",
-                snapMode: "inner",
-                snapTolerance: 200,
-                scroll: false,
-                //cursorAt: {left: 10, top: 10}
             });
             $('#tube_directory_Modal').on('show.bs.modal', function (e) {
                 $.ajax({url: "/directory/tubes/all", method: "GET"}).done(function (data) {
@@ -461,11 +383,14 @@
                     });
                 });
             });
-            loadform(0);
-
+            //loadform(-1);
         });
-        var fractiontubes = {};
-        function loadform(id) {
+        var fractiontubes = {}, resid = -1;
+        function edit_research(id) {
+            loadform(id);
+        }
+        function loadform(id, tube) {
+            resid = id;
             fractiontubes = {};
             $("#research-form").html("");
             form = $("<form></form>").appendTo($("#research-form"));
@@ -478,18 +403,18 @@
 
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
             $('<span class="input-group-addon">Квота по ОМС</span>').appendTo($(group));
-            $("<input class='form-control' id='quota' />").appendTo($(group));
+            $("<input class='form-control' value='-1' id='quota' />").appendTo($(group));
 
             cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
             $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
-            $('<textarea class="form-control" id="pre" rows="3"></textarea>').appendTo($(group));
-
+            $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
+            $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
-            $(form).append('<span style="float: right"><a href="#" onclick="showref(); return false;" id="refhidden">Развернуть референсы</a>' +
-                    '<a href="#" onclick="hideref(); return false;" id="refshowed">Свернуть референсы</a></span>');
+            $(form).append('<span style="float: right"><div onclick="save();" class="btn btn-default">Сохранить</div></span>');
+
             div2 = $("<div id='select-div'></div>");
             $(form).append(div2);
             $(div2).append("<span>Присвоить пробирку к анализу:&nbsp;&nbsp;</span>");
@@ -499,35 +424,7 @@
             $(".drophere").droppable({
                 accept: ".tube",
                 hoverClass: "hover",
-                drop: function (event, ui) {
-                    $(this).text("Перетащите пробирку сюда");
-                    id = $(ui.draggable).attr("id");
-                    //console.log(id)
-                    ok = true;
-                    $.each(fractiontubes, function (k, v) {
-                        if (!$(".tubes-list #" + v.sel).parent().is($(ui.draggable).parent())) ok = false;
-                    });
-
-                    if (fractiontubes[id] == undefined && ok) {
-                        fractiontubes[id] = {
-                            sel: id,
-                            color: rgb2hex($(".tubes-list #" + id + " .color-sq").css("background-color")),
-                            title: $(".tubes-list #" + id + " div").text().replace(new RegExp('\r?\n', 'g'), "").trim(),
-                            fractions: [
-                                {
-                                    title: "",
-                                    units: "",
-                                    ref_m: {"": ""},
-                                    ref_f: {"": ""}
-                                }
-                            ]
-                        };
-                        //console.log(fractiontubes);
-                        showtubes();
-                        $("#tubes").scrollTo($("#tubes #{0}".f(id)));
-                    }
-                    $("#select-div").hide();
-                },
+                drop: droptube,
                 over: function (event, ui) {
                     $(this).text("Отпустите пробирку здесь");
                 },
@@ -538,10 +435,60 @@
             showtubes();
             hideref();
             resize();
+
+            if (resid > -1) {
+                $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
+                    $("#research_title").val(data.title);
+                    $("#quota").val(data.quota);
+                    $("#preparation").val(data.preparation);
+                    fractiontubes = data.fractiontubes;
+                    showtubes();
+                });
+            }
         }
         function selectfromdirectory() {
             $('#tube_directory_Modal').modal('show');
         }
+
+        function droptube(event, ui) {
+            $(this).text("Перетащите пробирку сюда");
+            id = $(ui.draggable).attr("id");
+            //console.log(id)
+            ok = true;
+            $.each(fractiontubes, function (k, v) {
+                if (!$(".tubes-list #" + v.sel).parent().is($(ui.draggable).parent())) ok = false;
+            });
+            if (!ok) return;
+            //addtube(id, rgb2hex($(".tubes-list #" + id + " .color-sq").css("background-color")), $(".tubes-list #" + id + " div").text().replace(new RegExp('\r?\n', 'g'), "").trim());
+            addtube_obj(".tubes-list #" + id);
+        }
+
+        function addtube_obj(selector) {
+            addtube($(selector).attr("id"), rgb2hex($(selector + " .color-sq").css("background-color")), $(selector + " div").text().replace(new RegExp('\r?\n', 'g'), "").trim());
+
+        }
+
+        function addtube(id, color, title) {
+            if (fractiontubes[id] == undefined) {
+                fractiontubes[id] = {
+                    sel: id,
+                    color: color,
+                    title: title,
+                    fractions: [
+                        {
+                            title: "",
+                            units: "",
+                            ref_m: {"": ""},
+                            ref_f: {"": ""}
+                        }
+                    ]
+                };
+                showtubes();
+                $("#tubes").scrollTo($("#tubes #{0}".f(id)));
+                $("#select-div").hide();
+            }
+        }
+
         var refshow = false;
         function showtubes(auto) {
             s = "#tubes";
@@ -637,12 +584,13 @@
                     $(".tube-drag").draggable("enable");
             }
             resize(true);
-            if (!auto) {
+            //if (!auto) {
                 $("#refhidden").show();
                 $("#refshowed").hide();
+            $(".ref input, .ref button").attr("disabled", "disabled");
                 if (refshow) showref();
                 else hideref(true);
-            }
+            //}
         }
         function showref() {
             $(".hide-ref").removeClass("hide-ref");
@@ -681,13 +629,24 @@
             return false;
         }
         function removefraction(tube, fraction) {
+            syncFractions();
             fractiontubes[tube].fractions.splice(fraction, 1);
+            if (fractiontubes[tube].fractions.length == 0)
+                fractiontubes[tube].fractions = [
+                    {
+                        title: "",
+                        units: "",
+                        ref_m: {"": ""},
+                        ref_f: {"": ""}
+                    }
+                ];
             showtubes(true);
             $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
         }
         var scrollto = "";
         function addfraction(tube) {
+
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
             syncFractions();
             fractiontubes[tube].fractions.push({title: "", units: "", ref_m: {"": ""}, ref_f: {"": ""}});
@@ -724,6 +683,7 @@
                     fractiontubes[k].fractions[key].ref_m[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
                 });
             });
+            console.log(fractiontubes);
         }
         function resize(f) {
             if (!f) {
@@ -758,5 +718,134 @@
 
             return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
         }
+        function loadreslist() {
+            $.ajax({
+                url: "/directory/researches",
+                method: "GET",
+                data: {lab_group: $("#select-lab option:selected").val()}
+            }).done(function (data) {
+                clear_form();
+                $("#researches-container").html("");
+                console.log(data);
+                data.researches.sort(SortByTubes);
+                $.each(data.researches, function (k, v) {
+                    row = $("<div class='row'></div>");
+                    researches = $("<div class='bw'></div>").appendTo(row);
+                    $(researches).append('<div class="list-header">Анализы</div>');
+                    researches_list = $('<div class="researches-list"></div>').appendTo(researches);
+
+                    tubes = $("<div class='bw'></div>").appendTo(row);
+                    $(tubes).append('<div class="list-header">Пробирки</div>');
+                    tubes_list = $('<div class="tubes-list"></div>').appendTo(tubes);
+                    $(row).appendTo("#researches-container");
+                    var g;
+                    if (v.tubes_c > 1) {
+                        $.each(v.tubes, function (key, val) {
+                            obj = $('<div class="well tube" id="tube-{0}"></div>'.f(val.id)).appendTo(tubes_list);
+                            obj = $('<div></div>').appendTo(obj);
+                            g = $('<div class="sq"></div>').appendTo(obj);
+                            $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: val.color});
+                            $(obj).append(val.title);
+                        });
+                    }
+                    else if (v.tubes_c == 1) {
+                        $(row).addClass("one-tube");
+
+                        if (!$(".one-tube #tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id)).length) {
+                            $(row).addClass("has-tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id));
+                            obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
+                            obj = $('<div></div>').appendTo(obj);
+                            g = $('<div class="sq"></div>').appendTo(obj);
+                            $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: v.tubes[Object.keys(v.tubes)[0]].color});
+                            $(obj).append(v.tubes[Object.keys(v.tubes)[0]].title);
+                        }
+                        else {
+                            $(row).remove();
+                        }
+                        researches_list = $('.has-tube-{0} .researches-list'.f(v.tubes[Object.keys(v.tubes)[0]].id));
+
+                    }
+                    else {
+                        $(tubes_list).append('<div class="well">Пробирки не приязаны</div>');
+                    }
+                    g = $('<div class="btn-group"></div>').appendTo(researches_list);
+                    $(g).append('<div class="btn btn-default research-title col-md-9">{0}</div>'.f(v.title));
+                    $(g).append('<div class="btn btn-default col-md-3" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
+                });
+                $.each($(".one-tube"), function (k, v) {
+                    $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
+                });
+
+                $('.tubes-list .tube-drag').draggable({
+                    appendTo: "body",
+                    helper: function () {
+                        return $(this).clone().width($(this).width());
+                    },
+                    start: function (event, ui) {
+                        $("#directory-select").hide();
+                        $(".drophere").css({display: "inline-block"});
+                    },
+                    drag: function (event, ui) {
+                        var draggable = $(this).data("ui-draggable")
+                        $.each(draggable.snapElements, function (index, element) {
+                            if (element.snapping) {
+                                draggable._trigger("snapped", event, $.extend({}, ui, {
+                                    snapElement: $(element.item)
+                                }));
+                            }
+                        });
+                    },
+                    stop: function () {
+                        $("#directory-select").css({display: "inline-block"});
+                        $(".drophere").hide();
+                    },
+                    snap: ".tubeselect",
+                    snapMode: "inner",
+                    snapTolerance: 100,
+                    scroll: false,
+                });
+            });
+        }
+
+        function save() {
+            syncFractions();
+            research = {
+                id: resid,
+                lab_group: $("#select-lab option:selected").val(),
+                title: $("#research_title").val(),
+                quota_oms: parseInt($("#quota").val()),
+                preparation: $("#preparation").val(),
+                fraction: fractiontubes
+            }
+            $.ajax({
+                url: "/directory/researches",
+                method: "POST",
+                data: {research: JSON.stringify(research)}
+            }).done(function (data) {
+                if (data.ok) {
+                    resid = data.id;
+                    loadreslist();
+                    clear_form();
+
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Анализ сохранен',
+                            message: data.title,
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 10000
+                    });
+                }
+            });
+        }
+        function SortByTubes(a, b) {
+            var aName = a.tubes_c;
+            var bName = b.tubes_c;
+            return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+        }
+
     </script>
 {% endblock %}

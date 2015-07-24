@@ -11,6 +11,8 @@
           type='text/css'>
     <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
+    <link href="/static/css/amaran.min.css" rel="stylesheet">
+    <link href="/static/css/animate.min.css" rel="stylesheet">
 
     <script src="/static/js/jquery.min.js"></script>
     <script>
@@ -282,6 +284,21 @@
             border: 1px solid #434A54;
         }
 
+        .btn-blue2-nb {
+            background-color: #AAB2BD;
+            border: 1px solid #AAB2BD;
+            color: #fff;
+            font-size: 12px;
+            padding: 2px;
+            height: 23px;
+            min-width: 28px;
+        }
+
+        .btn-blue2-nb:hover, .btn-blue-nb:active {
+            background-color: #3BAFDA !important;
+            border: 1px solid #3BAFDA !important;
+        }
+
         .tube .label {
             float: right;
         }
@@ -387,6 +404,7 @@
 <script src="/static/bootflat/js/jquery.fs.selecter.min.js"></script>
 <script src="/static/bootflat/js/jquery.fs.stepper.min.js"></script>
 <script src="/static/bootflat/js/icheck.min.js"></script>
+<script src="/static/js/jquery.amaran.min.js"></script>
 <script>
     String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
         var s = this,

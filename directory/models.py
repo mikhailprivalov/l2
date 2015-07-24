@@ -13,11 +13,11 @@ class ReleationsFT(models.Model):
 
 
 class Researches(models.Model):
-    direction = models.ForeignKey(DirectionsGroup)
-    title = models.CharField(max_length=255)
-    subgroup = models.ForeignKey(Subgroups)
-    quota_oms = models.IntegerField()
-    preparation = models.CharField(max_length=2047)
+    direction = models.ForeignKey(DirectionsGroup, null=True, blank=True)
+    title = models.CharField(max_length=255, default="")
+    subgroup = models.ForeignKey(Subgroups, related_name="subgroup")
+    quota_oms = models.IntegerField(default=-1)
+    preparation = models.CharField(max_length=2047, default="")
 
 
 class Fractions(models.Model):
@@ -27,5 +27,5 @@ class Fractions(models.Model):
     ref_m = JSONField()
     ref_f = JSONField()
     relation = models.ForeignKey(ReleationsFT)
-    uet_doc = models.FloatField()
-    uet_lab = models.FloatField()
+    uet_doc = models.FloatField(default=0)
+    uet_lab = models.FloatField(default=0)

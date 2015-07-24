@@ -11,6 +11,7 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready
 from construct import urls
+from directory.views import directory_researches, directory_research
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -25,6 +26,8 @@ urlpatterns = [
                   url(r'^directory/tubes/all$', get_all_tubes),
                   url(r'^directory/tubes$', tubes_control),
                   url(r'^directory/tubes/relation$', tubes_relation),
+                  url(r'^directory/research$', directory_research),
+                  url(r'^directory/researches$', directory_researches),
                   url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/control$', researches_control),
                   url(r'^researches/get/one', researches_get_one),

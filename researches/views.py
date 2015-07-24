@@ -108,9 +108,11 @@ def tubes_relation(request):
 
         tube_id = request.PUT["id"]
         tube = Tubes.objects.get(id=tube_id)
-        import random
+        from directory.models import ReleationsFT
 
-        return_result["id"] = random.randint(1, 10000)
+        relation = ReleationsFT(tube=tube)
+        relation.save()
+        return_result["id"] = relation.pk
         return_result["title"] = tube.title
         return_result["color"] = tube.color
 

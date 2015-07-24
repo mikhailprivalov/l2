@@ -27,7 +27,8 @@ INSTALLED_APPS = (
     'researches',
     'directions',
     'receivematerial',
-    'construct'
+    'construct',
+    'directory'
 )
 
 LOGIN_REDIRECT_URL = '/'
