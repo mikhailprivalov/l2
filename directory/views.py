@@ -9,6 +9,7 @@ import simplejson as json
 @csrf_exempt
 @login_required
 def directory_researches(request):
+    """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
     return_result = {}
     if request.method == "POST":
         research = json.loads(request.POST["research"])
@@ -57,6 +58,7 @@ def directory_researches(request):
 @csrf_exempt
 @login_required
 def directory_research(request):
+    """GET: получение исследования и фракций"""
     return_result = {}
     if request.method == "GET":
         id = int(request.GET["id"])
@@ -89,6 +91,7 @@ def directory_research(request):
 @csrf_exempt
 @login_required
 def directory_researches_group(request):
+    """GET: получение списка исследований для группы. POST: добавление новой или выбор существующей группы и привязка исследований к ней"""
     return_result = {}
     if request.method == "GET":
         return_result = {"researches": []}
@@ -133,6 +136,7 @@ def directory_researches_group(request):
 @csrf_exempt
 @login_required
 def directory_get_directions(request):
+    """GET: получение списка групп (по направлениям)"""
     return_result = {}
     if request.method == "GET":
         return_result = {"directions": {}}
