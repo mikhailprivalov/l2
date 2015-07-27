@@ -4,15 +4,17 @@
 {% block content %}
     <div class="container">
         {% if error %}
-            <div class="alert alert-danger" role="alert">Неверный логин или пароль</div>
+            <div class="alert alert-danger alert-dismissable" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                Неверный логин или пароль
+            </div>
         {% endif %}
-        <form class="form-signin" action='/' method='POST'>
+
+        <form class="well form-signin" action='/' method='POST'>
             {% csrf_token %}
-            <h2 class="form-signin-heading">Форма авторизации</h2>
-            <label for="inputEmail" class="sr-only">Логин</label>
+            <h3 class="form-signin-heading">Форма авторизации</h3>
             <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
                    value="{{ username }}" required autofocus>
-            <label for="inputPassword" class="sr-only">Пароль</label>
             <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
                    required>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>
@@ -26,11 +28,13 @@
         }
 
         .form-signin {
-            max-width: 330px;
-            padding: 15px;
+            max-width: 450px;
             margin: 0 auto;
         }
 
+        .form-signin-heading {
+            margin-top: 0;
+        }
         .form-signin .form-signin-heading,
         .form-signin .checkbox {
             margin-bottom: 10px;
@@ -48,7 +52,9 @@
             box-sizing: border-box;
             padding: 10px;
             font-size: 16px;
+            border-radius: 5px 5px 0 0;
         }
+
 
         .form-signin .form-control:focus {
             z-index: 2;
@@ -62,8 +68,7 @@
 
         .form-signin input[type="password"] {
             margin-bottom: 10px;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
+            border-radius: 0 0 5px 5px;
         }
     </style>
 {% endblock %}

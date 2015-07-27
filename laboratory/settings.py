@@ -73,7 +73,7 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lis',
+        'NAME': 'lis2',  # TODO: lis
         'USER': 'postgres',
         'PASSWORD': '123456',
         # 'HOST': '192.168.122.45',
@@ -86,11 +86,12 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': '127.0.0.1:11212',  # TODO: 11211
+        'KEY_PREFIX': 'list_test'
     },
     'debug-panel': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/debug-panel-cache',
+        'LOCATION': '/var/tmp/debug-panel-cache-2',
         'TIMEOUT': 300,
         'OPTIONS': {
             'MAX_ENTRIES': 200
@@ -124,7 +125,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
-STATIC_ROOT = '/webapps/lis/static/'
+# STATIC_ROOT = '/webapps/lis/static/'
+STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
+
 '''
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
@@ -153,6 +156,8 @@ LOGGING = {
         },
     },
 }
+
+CACHALOT_ENABLED = True
 
 DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.versions.VersionsPanel',
