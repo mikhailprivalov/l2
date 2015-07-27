@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from directory.models import Researches, Subgroups, ReleationsFT, Fractions
+from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
 
 
@@ -83,4 +83,65 @@ def directory_research(request):
         color: color,
         title: title,
         '''
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_group(request):
+    return_result = {}
+    if request.method == "GET":
+        return_result = {"researches": []}
+        subgroup_id = request.GET["lab_group"]
+        gid = int(request.GET["gid"])
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+
+        for research in researches:
+            resdict = {"pk": research.pk, "title": research.title}
+            if gid < 0:
+                if not research.direction:
+                    return_result["researches"].append(resdict)
+            else:
+                if research.direction and research.direction.pk == gid:
+                    return_result["researches"].append(resdict)
+
+    elif request.method == "POST":
+        gid = int(request.POST["group"])
+        if gid < 0:
+            direction = DirectionsGroup()
+            direction.save()
+        else:
+            direction = DirectionsGroup.objects.get(pk=gid)
+        tmp_researches = Researches.objects.filter(direction=direction)
+        for v in tmp_researches:
+            v.direction = None
+            v.save()
+
+        researches = json.loads(request.POST["researches"])
+        for k in researches.keys():
+            if researches[k]:
+                if k == "" or not k.isdigit() or not Researches.objects.filter(pk=k).exists(): continue
+                research = Researches.objects.get(pk=k)
+                research.direction = direction
+                research.save()
+
+        return_result["gid"] = direction.pk
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_get_directions(request):
+    return_result = {}
+    if request.method == "GET":
+        return_result = {"directions": {}}
+        subgroup_id = request.GET["lab_group"]
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        for research in researches:
+            if not research.direction: continue
+            if research.direction.pk not in return_result["directions"].keys():
+                return_result["directions"][research.direction.pk] = []
+            return_result["directions"][research.direction.pk].append(research.title)
+
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

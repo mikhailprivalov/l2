@@ -26,4 +26,5 @@ def tubes(request):
 @login_required
 @group_required("Оператор")
 def directions_group(request):
-    return render(request, 'construct_directions_group.html')
+    lab_subgroups = Subgroups.objects.all()
+    return render(request, 'construct_directions_group.html', {"lab_subgroups": lab_subgroups})

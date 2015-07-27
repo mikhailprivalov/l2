@@ -330,12 +330,6 @@
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
         $(document).ready(function () {
-            /*$("#select-lab").change(function () {
-             active_lab = $("#select-lab").val();
-             if (checked[active_lab] == undefined)
-             checked[active_lab] = [];
-             load_researches();
-             });*/
             loadreslist();
             resize();
             clear_form();
@@ -386,9 +380,18 @@
             //loadform(-1);
         });
         var fractiontubes = {}, resid = -1;
+        /**
+         * Редактирование исследования
+         * @param id - идентификатор исследования
+         */
         function edit_research(id) {
             loadform(id);
         }
+        /**
+         * Загрузка формы редактирования или создания исследования
+         * @param id - идентификатор исследоавания (при -1 загрузка пустой формы для создания нового исследования)
+         * @param tube - идентификатор пробирки для быстрой привязки при создании нового исследования
+         */
         function loadform(id, tube) {
             resid = id;
             fractiontubes = {};
@@ -446,10 +449,12 @@
                 });
             }
         }
+        /** Открытие окна выбора пробирки из справочника */
         function selectfromdirectory() {
             $('#tube_directory_Modal').modal('show');
         }
 
+        /** Событие перетаскивания пробирки */
         function droptube(event, ui) {
             $(this).text("Перетащите пробирку сюда");
             id = $(ui.draggable).attr("id");
@@ -463,11 +468,21 @@
             addtube_obj(".tubes-list #" + id);
         }
 
+        /**
+         * Добавление пробирки
+         * @param selector - идентификатор пробирки
+         */
         function addtube_obj(selector) {
             addtube($(selector).attr("id"), rgb2hex($(selector + " .color-sq").css("background-color")), $(selector + " div").text().replace(new RegExp('\r?\n', 'g'), "").trim());
 
         }
 
+        /**
+         * Добавление пробирки
+         * @param id - идентификатор
+         * @param color - цвет
+         * @param title - название
+         */
         function addtube(id, color, title) {
             if (fractiontubes[id] == undefined) {
                 fractiontubes[id] = {
@@ -490,6 +505,11 @@
         }
 
         var refshow = false;
+
+        /**
+         * Генерация списка пробирок, фракций для исследования
+         * @param auto - bool, автоматический вызов функции?
+         */
         function showtubes(auto) {
             s = "#tubes";
             $(s).html("");
@@ -592,6 +612,8 @@
                 else hideref(true);
             //}
         }
+
+        /** Показать скрытые референсы */
         function showref() {
             $(".hide-ref").removeClass("hide-ref");
             $("#refhidden").hide();
@@ -600,10 +622,16 @@
             $(".ref input, .ref button").removeAttr("disabled");
             resize();
         }
+        /** TODO: доделать функцию */
         function showreferenses(tube, fraction) {
             $("[k='{0}'][key='{1}']".f(tube, fraction)).toggleClass("showref");
             return false;
         }
+
+        /**
+         * Скрыть референсы
+         * @param noclick - true, если это не по нажатию на кнопку
+         */
         function hideref(noclick) {
             $(".tablefractions").addClass("hide-ref");
             $("#refhidden").show();
@@ -614,6 +642,12 @@
             if (!noclick)
                 $('#tubes').scrollTop(0);
         }
+        /**
+         * Добавление референса
+         * @param tube - пробирка
+         * @param fraction - фракция
+         * @returns {boolean}
+         */
         function addref(tube, fraction) {
             syncFractions();
             fractiontubes[tube].fractions[fraction].ref_m[""] = "";
@@ -622,12 +656,25 @@
             //$('#tubes').scrollTo($("[k='{0}'][key='{1}']".f(tube, fraction)), 0, {offset: 30, margin: true});
             return false;
         }
+
+        /**
+         * Удаление пробирки
+         * @param tube - идентификатор пробирки
+         * @returns {boolean}
+         */
         function removetube(tube) {
             $("#tubes #group-{0}".f(tube)).remove();
             syncFractions();
             showtubes(true);
             return false;
         }
+
+        /**
+         * Удаление фракции
+         * @param tube - идентификатор пробирки
+         * @param fraction - идентификатор фракции
+         * @returns {boolean}
+         */
         function removefraction(tube, fraction) {
             syncFractions();
             fractiontubes[tube].fractions.splice(fraction, 1);
@@ -645,6 +692,11 @@
             return false;
         }
         var scrollto = "";
+        /**
+         * Добавление фракции к пробирке
+         * @param tube - идентификатор пробирки
+         * @returns {boolean}
+         */
         function addfraction(tube) {
 
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
@@ -654,6 +706,8 @@
             // $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
         }
+
+        /** Синхронизация буфера фракций с GUI */
         function syncFractions() {
             fractiontubes = {};
             $(".fraction-tr").each(function (i) {
@@ -685,6 +739,11 @@
             });
             console.log(fractiontubes);
         }
+
+        /**
+         * Растягивание блоков по высоте окна, активация плавающих заголовков таблиц и добавление скроллбара
+         * @param f - при true только активация плавающих заголовков таблиц
+         */
         function resize(f) {
             if (!f) {
                 $('#researches-container').height($(window).height() - $('#researches-container').position().top - 155);
@@ -703,11 +762,19 @@
                 }
             });
         }
+        /** Очистка формы */
         function clear_form() {
             $("#research-form").html("<div class='well'>Ничего не выбрано</div>")
             $(".tube.active").removeClass("active");
             $("#refshowed, #refhidden").hide();
         }
+
+        /**
+         * Из RGB в HEX
+         * rgb(255,255,255) -> #ffffff
+         * @param rgb
+         * @returns {*}
+         */
         function rgb2hex(rgb) {
             if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
 
@@ -718,6 +785,8 @@
 
             return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
         }
+
+        /** Загрузка списка исследований */
         function loadreslist() {
             $.ajax({
                 url: "/directory/researches",
@@ -807,6 +876,7 @@
             });
         }
 
+        /** Сохранение исследования */
         function save() {
             syncFractions();
             research = {
@@ -841,6 +911,14 @@
                 }
             });
         }
+
+        /**
+         * Сортировка по количеству пробирок
+         * @param a
+         * @param b
+         * @returns {number}
+         * @constructor
+         */
         function SortByTubes(a, b) {
             var aName = a.tubes_c;
             var bName = b.tubes_c;
