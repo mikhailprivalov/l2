@@ -47,15 +47,15 @@ def tubes_get(request):
             tubes = TubesRegistration.objects.exclude(time_get__lt=datetime.now().date()).filter(doc_get=doc)
             for tube in tubes:
                 if tube.doc_get is None: continue
-                issledovaniya = Issledovaniya.objects.filter(tube=tube)
+                issledovaniya = Issledovaniya.objects.filter(tubes__id=tube.id)
                 issledovaniya_tmp = []
                 for iss in issledovaniya:
-                    if iss.issledovaniye.subgroup_lab == subgroup_lab:
-                        issledovaniya_tmp.append(iss.issledovaniye.ref_title)
+                    if iss.research.subgroup == subgroup_lab:
+                        issledovaniya_tmp.append(iss.research.title)
                 if len(issledovaniya_tmp) > 0 and not tube.rstatus() and tube.notice == "":
                     result.append({"researches": ', '.join(issledovaniya_tmp),
                                    "direction": tube.issledovaniya_set.first().napravleniye.pk,
-                                   "tube": {"type": tube.type.title, "id": tube.getbc(), "status": tube.rstatus(),
-                                            "color": tube.type.color, "notice": tube.notice}})
+                                   "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),
+                                            "color": tube.type.tube.color, "notice": tube.notice}})
 
     return HttpResponse(json.dumps(result), content_type="application/json")

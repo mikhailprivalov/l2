@@ -12,7 +12,7 @@ from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
-    directory_get_directions
+    directory_get_directions, directory_researches_list
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -31,6 +31,7 @@ urlpatterns = [
                   url(r'^directory/researches$', directory_researches),
                   url(r'^directory/researches/group$', directory_researches_group),
                   url(r'^directory/researches/directions$', directory_get_directions),
+                  url(r'^directory/researches/list$', directory_researches_list),
                   url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/control$', researches_control),
                   url(r'^researches/get/one', researches_get_one),

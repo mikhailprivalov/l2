@@ -3,12 +3,12 @@ from clients.models import Importedclients
 from users.models import DoctorProfile
 from jsonfield import JSONField
 from researches.models import Researches, Tubes
-
+import directory.models as directory
 
 class TubesRegistration(models.Model):
     # Таблица с пробирками для исследований
     id = models.AutoField(primary_key=True)
-    type = models.ForeignKey(Tubes)  # Тип пробирки
+    type = models.ForeignKey(directory.ReleationsFT)  # Тип пробирки
     time_get = models.DateTimeField(null=True, blank=True)  # Время взятия материала
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
                                 related_name='docget')  # Кто взял материал
@@ -49,6 +49,6 @@ class Napravleniya(models.Model):
 class Issledovaniya(models.Model):
     # Направления на исследования
     napravleniye = models.ForeignKey(Napravleniya)  # Направление
-    issledovaniye = models.ForeignKey(Researches)  # Вид исследования из справочника
-    tube = models.ForeignKey(TubesRegistration, null=True, blank=True)  # Пробирка
+    research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
     resultat = JSONField()  # Результат исследования в JSON
+    tubes = models.ManyToManyField(TubesRegistration)

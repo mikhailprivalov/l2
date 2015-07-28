@@ -6,7 +6,7 @@ import simplejson as json
 from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-
+import directory.models as directory
 
 @cache_page(60 * 15)
 @login_required
@@ -31,15 +31,16 @@ def researches_get_one(request):
     res = {"res_id": "", "title": "", "fractions": []}
     if request.method == "GET":
         id = request.GET["id"]
-        iss = Issledovaniya.objects.get(pk=id).issledovaniye
-        fractions = iss.ref_fractions
+        research = Issledovaniya.objects.get(pk=id).research
+        fractions = directory.Fractions.objects.filter(research=research)
         res["res_id"] = id
-        res["title"] = iss.ref_title
-        for key, val in enumerate(fractions):
+        res["title"] = research.title
+        for val in fractions:
             res["fractions"].append(
-                {"title": val, "unit": iss.ref_units[key], "references": {"m": iss.ref_m[key], "f": iss.ref_f[key]}})
+                {"title": val.title, "pk": val.pk, "unit": val.units,
+                 "references": {"m": json.loads(val.ref_m), "f": json.loads(val.ref_f)}})
 
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return HttpResponse(json.dumps(res))  # Создание JSON
 
 
 @login_required

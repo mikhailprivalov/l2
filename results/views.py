@@ -17,9 +17,10 @@ def loadready(request):
     result = {"tubes": [], "directions": []}
     tubes = TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False)
     for tube in tubes:
-        if tube.issledovaniya_set.first().issledovaniye.subgroup_lab.podrazdeleniye != request.user.doctorprofile.podrazileniye:
+        if Issledovaniya.objects.filter(
+                tubes__id=tube.id).first().research.subgroup.podrazdeleniye != request.user.doctorprofile.podrazileniye:
             continue
-        iss_set = tube.issledovaniya_set.all()  # .filter(issledovaniye__hide=0)
+        iss_set = Issledovaniya.objects.filter(tubes__id=tube.id).all()  # .filter(issledovaniye__hide=0)
         if len(iss_set) == 0: continue
         complete = False
         for issledovaniye in iss_set:

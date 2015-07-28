@@ -20,6 +20,8 @@ from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 
+import directory.models as directory
+
 w, h = A4
 
 
@@ -62,24 +64,16 @@ def dir_save(request):
 
             finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
             result["mda"] += json.dumps(res)
-            for key in res:
-                append_list = []
-                for v in res[key]:
-                    research = Researches.objects.get(id_research=v, hide=0)
-                    if research.auto_add != 0:
-                        hidden_researches = Researches.objects.filter(auto_add=research.auto_add, hide=1)
-                        for val in hidden_researches:
-                            append_list.append(str(val.pk))
-                if len(append_list) > 0:
-                    res[key].extend(append_list)
-            result["mda"] += json.dumps(res)
 
             for key in res:  # перебор лабораторий
                 for v in res[key]:  # перебор выбраных исследований в лаборатории
-                    research = Researches.objects.get(id_research=v)  # получение объекта исследования по id
-                    dir_group = research.group  # получение группы исследования
+                    research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
+
+                    dir_group = -1
+                    if research.direction:
+                        dir_group = research.direction.pk  # получение группы исследования
                     # Если группа == 0, исследование не группируется с другими в одно направление
-                    if research.group and research.group != 0 and dir_group not in directionsForResearches.keys():
+                    if dir_group >= 0 and dir_group not in directionsForResearches.keys():
                         # Если исследование может группироваться и направление для группы не создано
 
                         # Создание направления для группы
@@ -96,8 +90,8 @@ def dir_save(request):
 
                         result["mda"] += str(dir_group)  # Отладка
                         result["list_id"].append(
-                            directionsForResearches[research.group].pk)  # Добавление ID в список созданых направлений
-                    if not research.group or research.group == 0:  # если исследование не должно группироваться
+                            directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                    if dir_group < 0:  # если исследование не должно группироваться
                         dir_group = "id" + str(
                             research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
@@ -114,10 +108,10 @@ def dir_save(request):
                         directionsForResearches[dir_group].save()  # Сохранение направления
                         result["list_id"].append(
                             directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        result["mda"] += str(research.group)  # Добавление в отладочный вывод
+                        result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
                     issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
                                                   # Установка направления для группы этого исследования
-                                                  issledovaniye=research)  # Создание направления на исследование
+                                                  research=research)  # Создание направления на исследование
                     issledovaniye.save()  # Сохранение направления на исследование
 
             result["r"] = True  # Флаг успешной вставки в True
@@ -231,10 +225,10 @@ def printDirection(c, n, dir):
     else:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
 
-    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir, issledovaniye__hide=0)
+    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
-                 "Лаборатория: " + issledovaniya[0].issledovaniye.subgroup_lab.podrazdeleniye.title)
+                 "Лаборатория: " + issledovaniya[0].research.subgroup.podrazdeleniye.title)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 134) + (h / 2) * yn, "Наименования исследований: ")
     c.setStrokeColorRGB(0, 0, 0)
@@ -254,7 +248,7 @@ def printDirection(c, n, dir):
         pg = p.page(pg_num)
         tmp = []
         for obj in pg.object_list:
-            tmp.append(Paragraph('<font face="OpenSans" size="8">' + obj.issledovaniye.ref_title + "</font>",
+            tmp.append(Paragraph('<font face="OpenSans" size="8">' + obj.research.title + "</font>",
                                  styleSheet["BodyText"]))
         if len(pg.object_list) < 2:
             tmp.append(Paragraph('<font face="OpenSans" size="8"></font>', styleSheet["BodyText"]))
@@ -312,49 +306,45 @@ def get_one_dir(request):
         id = int(request.GET['id'])  # Получение идентификатора направления
         if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
             tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
-            tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by(
-                '-issledovaniye__tube_weight')  # Выборка исследований по направлению
+            tmp = Issledovaniya.objects.filter(napravleniye=tmp2)
+            '''.order_by(
+                '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
             response["direction"] = {"pk": tmp2.pk,
                                      "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                      "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
-                                     "lab": tmp[0].issledovaniye.getlab()}  # Формирование вывода
+                                     "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
             response["tubes"] = {}
+            tubes_buffer = {}
+            for v in tmp:
+                for val in directory.Fractions.objects.filter(research=v.research):
+                    if val.id not in tubes_buffer.keys():
+                        if not v.tubes.filter(type=val.relation).exists():
+                            ntube = TubesRegistration(type=val.relation)
+                            ntube.save()
+                            v.tubes.add(ntube)
+                        else:
+                            ntube = v.tubes.get(type=val.relation)
+                        tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
+                    tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
+            for key in tubes_buffer.keys():
+                tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
 
-            for v in tmp:  # Перебор исследований
-                tube = v.tube  # Получение пробирки
-                if not tube:  # Если пробирка не существует в базе
-                    weight = -1
-                    for tb_v in tmp:  # Перебор существующих пробирок у исследований в направлении
-                        if (
-                                tb_v.tube and tb_v.issledovaniye.tubegroup == v.issledovaniye.tubegroup and tb_v.issledovaniye.tubegroup > 0) or (
-                                    v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight_group == v.issledovaniye.tube_weight_group and v.issledovaniye.tube_weight < tb_v.issledovaniye.tube_weight):
-                            tube = tb_v.tube
-                        if tb_v.issledovaniye.tube_weight_group == v.issledovaniye.tube_weight_group and tb_v.issledovaniye.tube_weight and v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight > v.issledovaniye.tube_weight and v.issledovaniye.tubegroup > 0 and not tube:
-                            tube = TubesRegistration(type=tb_v.issledovaniye.tubetype)
-                            tube.save()
-                            tb_v.tube = tube
-                            tb_v.save()
-                            # logger.info('Save1')
-                    if not tube:  # Если пробирка не была найдена
-                        tube = TubesRegistration(type=v.issledovaniye.tubetype)  # Создание новой пробирки
-                        tube.save()
-                        # logger.info('Save2')
-
-                    v.tube = tube  # Привязка пробирки
-                    v.save()
+            for key in tubes_buffer.keys():  # Перебор исследований
+                v = tubes_buffer[key]
+                tube = TubesRegistration.objects.get(id=v["pk"])
 
                 barcode = ""
                 if tube.barcode:  # Проверка штрих кода пробирки
                     barcode = tube.barcode
                 if tube.id not in response["tubes"].keys():  # Если пробирки нет в словаре
-                    response["tubes"][tube.id] = {"researches": [], "status": True, "color": tube.type.color,
-                                                  "title": tube.type.title, "id": tube.id,
+                    response["tubes"][tube.id] = {"researches": v["researches"], "status": True,
+                                                  "color": tube.type.tube.color,
+                                                  "title": tube.type.tube.title, "id": tube.id,
                                                   "barcode": barcode}  # Добавление пробирки в словарь
                 s = False  # Статус взятия материала для исследований
                 if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
                     s = True  # Установка статуса для вывода в интерфейс
                 response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
-                response["tubes"][tube.id]["researches"].append(v.issledovaniye.ref_title)
 
             response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
                                   "sx": tmp2.client.sex, "bth": str(
@@ -397,11 +387,11 @@ def load_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Формирование временной зоны
 
     for v in tubes:  # Перебор пробирки
-        iss = Issledovaniya.objects.filter(tube=v)  # Выборка исследований по пробирке
+        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Выборка исследований по пробирке
         iss_list = []
         for val in iss:  # Перебор выбранных исследований
-            iss_list.append(val.issledovaniye.ref_title)  # Добавление в список исследований по пробирке
-        res["rows"].append({"type": v.type.title, "researches": ', '.join(str(x) for x in iss_list),
+            iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
+        res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
                             "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"),
                             "dir_id": iss[0].napravleniye.pk, "tube_id": v.id})  # Добавление пробирки с исследованиями
         # в вывод
@@ -606,9 +596,8 @@ def get_issledovaniya(request):
         napr = None
         id = request.GET["id"]
         if request.GET["type"] == "0":
-            tube = TubesRegistration.objects.get(pk=id)
-            iss = tube.issledovaniya_set.all()
-            ishide = True
+            iss = Issledovaniya.objects.filter(tubes__id=id).all()
+            '''ishide = False
             for iss_check in iss:
                 if iss_check.issledovaniye.hide == 0:
                     ishide = False
@@ -617,20 +606,25 @@ def get_issledovaniya(request):
                 iss = Issledovaniya.objects.filter(tube=tube)
                 napr = iss.first().napravleniye
                 iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
-            else:
-                napr = iss.first().napravleniye
+            else:'''
+            napr = iss.first().napravleniye
         else:
             napr = Napravleniya.objects.get(pk=id)
-            iss = napr.issledovaniya_set.all()
+            iss = Issledovaniya.objects.filter(napravleniye__pk=id).all()
         for issledovaniye in iss:
-            if issledovaniye.issledovaniye.hide == 0:
-                tubes = [issledovaniye.tube.id, ]
-                for iss_hidden in iss.filter(issledovaniye__hide=1,
+            if True:  # issledovaniye.research.hide == 0:
+                tubes_list = issledovaniye.tubes.all()
+                tubes = []
+                titles = []
+                for tube_o in tubes_list:
+                    tubes.append(tube_o.pk)
+                    titles.append(tube_o.type.tube.title)
+                '''for iss_hidden in iss.filter(issledovaniye__hide=1,
                                              issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
-                    tubes.append(iss_hidden.tube.pk)
-                res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.issledovaniye.ref_title,
+                    tubes.append(iss_hidden.tube.pk)'''
+                res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                              "tube": {"pk": ', '.join(str(v) for v in tubes),
-                                                      "title": issledovaniye.tube.type.title}})
+                                                      "title": ', '.join(titles)}})
         res["napr_pk"] = napr.pk
         res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
         res["client_sex"] = napr.client.sex

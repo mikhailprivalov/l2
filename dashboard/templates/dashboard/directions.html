@@ -336,7 +336,7 @@
             $("#table-researches").html("");
             $("#table-researches").append(lang.table_researches_header);
             $.ajax({ // AJAX запрос
-                url: "/researches/ajax/search?lab_id=" + active_lab,// Установка адреса и параметров запроса
+                url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
                 if (data.length == 0) {
@@ -449,7 +449,7 @@
     </script>
     <style>
         .active {
-            background-color: #337ab7 !important;
+            background-color: #656D78 !important;
             color: #fff !important;
         }
 

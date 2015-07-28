@@ -186,12 +186,14 @@
                 template = data;
                 $.ajax({
                     url: "/researches/get/one",
-                    type: "json",
+                    type: "text",
                     method: "GET",
                     data: {id: id}
                 }).done(function (data2) {
                     $("#form-scroll").isLoading("hide");
                     $("#issledovaniya .active").removeClass("active");
+                    data2 = JSON.parse(data2);
+                    console.log(data2);
                     data2["sex"] = dir_data.client_sex;
                     data2["age"] = dir_data.client_vozrast;
                     $("#result-form").html(jade.compile(template)(data2));
@@ -240,6 +242,16 @@
             $('#dirs-list').perfectScrollbar();
             $('#form-scroll').perfectScrollbar();
         }
+        function save() {
+            $(this).disabled = true;
+            var result = {issledovaniye: -1, fractions: {}}
+            result.issledovaniye = $("#issledovaniye_id").val();
+            $.each($(".result-enter"), function (k, v) {
+                result.fractions[$(v).data("pk")] = $(v).val();
+            });
+            $(this).disabled = false;
+            console.log(result);
+        }
 
 
     </script>
@@ -249,17 +261,17 @@
         }
 
         .active {
-            background-color: #337ab7 !important;
+            background-color: #656D78 !important;
             color: #fff !important;
         }
 
         li.active {
-            background-color: #9EC4E4 !important;
+            background-color: #CCD1D9 !important;
             color: #000 !important;
         }
 
         .select-dir.active td, .select-tube.active td {
-            background-color: #337ab7 !important;
+            background-color: #656D78 !important;
             color: #fff !important;
         }
 
@@ -316,7 +328,7 @@
         }
 
         #issledovaniya li:hover {
-            background-color: #eee;
+            background-color: #E6E9ED;
         }
 
         #issledovaniya li:hover small {
@@ -330,6 +342,10 @@
         */
         #dir_info td {
             padding: 5px;
+        }
+
+        .center {
+            text-align: center;
         }
     </style>
 {% endblock %}

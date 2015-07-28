@@ -48,17 +48,19 @@
             </tr>
         </table>
         <div>
-            <h4>Исследования в направлении:</h4>
+
+            <div style="margin-bottom: 25px;margin-top: -5px">
+                <div class="btn btn-success col-md-2" tabindex="10" id="success-b"
+                     style="display: none;float: right;margin-right: 15px;" onclick="save_research();">Сохранить
+                </div>
+                <h4>Исследования в направлении:</h4>
+            </div>
+
 
             <div id="scroll-res" style="position: relative;padding-right: 15px">
                 <table class="table table-bordered" id="researches-tb"></table>
                 <span id="itogo" style="float: right"></span>
 
-                <div style="text-align: right">
-                    <div class="btn btn-success col-md-2" tabindex="10" id="success-b"
-                         style="display: none;float: right" onclick="save_research();">Сохранить
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -171,7 +173,7 @@
                             $("#doc-otd").html(data.direction.doc.otd);
                             $("#lab").html(data.direction.lab);
                             $(".last").removeClass("last");
-                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-2'>Тип пробирки</th><th class='col-md-3'>Номер пробирки</th><th style='width: 32px'><i class='glyphicon glyphicon-ok'></i></th></tr>");
+                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 32px'><i class='glyphicon glyphicon-ok'></i></th></tr>");
                             n = 0;
                             fn = 0;
                             complete = true;
@@ -191,7 +193,8 @@
                                     probirki[v.title] = 1
                                 else
                                     probirki[v.title]++;
-                                $("#researches-tb").append("<tr><td>{0}</td><td style='background-color: {1}; color: #fff; text-shadow: 1px 1px 2px #000'>{2}</td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                                // $("#researches-tb").append("<tr><td>{0}</td><td style='background-color: {1}; color: #F2F2F2; text-shadow: 1px 1px 4px black'>{2}</td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                             });
 
                             tmpstr = "";
@@ -207,7 +210,7 @@
                                 }
                                 all_cnt += v;
                             });
-                            $("#researches-tb").append("<tr><td style='text-align:right;' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
+                            $("#researches-tb").append("<tr><td style='text-align:right;font-size:10pt' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
 
                             if (complete) {
                                 com = true;
@@ -234,6 +237,7 @@
         }
 
         function save_research() {
+            $(".btn#success-b").attr("disabled", "true");
             if (com) return;
             data = {
                 dir_id: dnum,

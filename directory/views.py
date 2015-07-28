@@ -57,6 +57,20 @@ def directory_researches(request):
 
 @csrf_exempt
 @login_required
+def directory_researches_list(request):
+    """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
+    return_result = []
+    if request.method == "GET":
+        lab_id = request.GET["lab_id"]
+        researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id)
+        for research in researches:
+            return_result.append({"pk": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}})
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
 def directory_research(request):
     """GET: получение исследования и фракций"""
     return_result = {}
