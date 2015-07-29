@@ -317,7 +317,7 @@ def get_one_dir(request):
             tubes_buffer = {}
             for v in tmp:
                 for val in directory.Fractions.objects.filter(research=v.research):
-                    if val.id not in tubes_buffer.keys():
+                    if val.relation.pk not in tubes_buffer.keys():
                         if not v.tubes.filter(type=val.relation).exists():
                             ntube = TubesRegistration(type=val.relation)
                             ntube.save()
@@ -365,12 +365,13 @@ def update_direction(request):
 
         for k, v in statuses["statuses"].items():  # Перебор ключей и значений
             val = TubesRegistration.objects.get(id=k)  # Выборка пробирки по ключу
-            if v:  # Если статус выполнения забора установлен в True
+            if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
                 val.doc_get = request.user.doctorprofile  # Привязка профиля к пробирке
                 val.time_get = timezone.now()  # Установка времени
                 val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
-            val.save()  # Сохранение пробирки
-            res["o"].append(val.id)
+                val.save()  # Сохранение пробирки
+                res["o"].append(val.id)
+            res["dn"] = Issledovaniya.objects.get(tubes__id=k).napravleniye.pk
         res["r"] = True
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
@@ -439,19 +440,19 @@ def print_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
-        iss = Issledovaniya.objects.filter(tube=v)  # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + iss[
-            0].issledovaniye.getlab()  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + str(iss[
+                                                                        0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
-            iss_list.append(val.issledovaniye.s_title())
+            iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
             labs[k] = []
         for value in iss_list:  # Перебор списка исследований
             labs[k].append(
-                {"type": v.type.title, "researches": value,
+                {"type": v.type.tube.title, "researches": value,
                  "client-type": iss[0].napravleniye.client.type,
-                 "lab_title": iss[0].issledovaniye.getlab(),
+                 "lab_title": iss[0].research.subgroup.title,
                  "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
                  "podr": iss[0].napravleniye.doc.podrazileniye.title,
                  "reciver": None,
@@ -542,7 +543,7 @@ def print_history(request):
                               (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])),
                               0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.05), int(tw * 0.25), int(tw * 0.10), int(tw * 0.35), int(tw * 0.25)],
+            t = Table(data, colWidths=[int(tw * 0.05), int(tw * 0.27), int(tw * 0.10), int(tw * 0.35), int(tw * 0.23)],
                       style=style)
 
             t.canv = c

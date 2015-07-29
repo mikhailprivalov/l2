@@ -29,3 +29,4 @@ class Fractions(models.Model):
     relation = models.ForeignKey(ReleationsFT)
     uet_doc = models.FloatField(default=0)
     uet_lab = models.FloatField(default=0)
+    max_iterations = models.IntegerField(default=1)

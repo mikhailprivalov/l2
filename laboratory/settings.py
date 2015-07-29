@@ -86,8 +86,8 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11212',  # TODO: 11211
-        'KEY_PREFIX': 'list_test'
+        'LOCATION': '127.0.0.1:11211',  # TODO: 11211
+        'KEY_PREFIX': 'lis_test'
     },
     'debug-panel': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
@@ -157,7 +157,6 @@ LOGGING = {
     },
 }
 
-CACHALOT_ENABLED = True
 
 DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.versions.VersionsPanel',

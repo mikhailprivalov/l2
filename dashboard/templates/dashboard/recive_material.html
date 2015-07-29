@@ -186,7 +186,7 @@
                                     d = "disabled"
                                 }
                                 else {
-                                    c = "";
+                                    c = d = "";
                                     complete = false;
                                 }
                                 if (!probirki[v.title])
@@ -255,7 +255,7 @@
                 method: "POST"
             }).done(function (d) {
                 if (d.r) {
-                    update_history(dnum);
+                    update_history(d.o, d.dn);
 
                 }
             });
@@ -270,16 +270,17 @@
             $("#doc-fio").html("");
             $("#doc-otd").html("");
             $("#lab").html("");
-            $("#researches-tb").html("<tr><td>Материал по направлению {0} занесен в базу</td></tr>".f(num));
+            if (num)
+                $("#researches-tb").html("<tr><td>Материал по направлению {0} занесен в базу</td></tr>".f(num));
             $(".btn#success-b").attr("disabled", "true");
-            $(".last").removeClass("last");
-            $("#story-" + num + " td").addClass("last");
+            /*$(".last").removeClass("last");
+             $("#story-" + num + " td").addClass("last");*/
             //$("#story-"+num+" td").effect( "highlight", {color:"#D4E6C2"}, 20000 );
             input_buffer_scan = "";
             $("#search-field").val("");
             $("#search-field").focus();
         }
-        function update_history(clearn) {
+        function update_history(clearn, dn) {
             $.ajax({
                 url: "/direction/researches/update/history",
                 type: "json",
@@ -310,14 +311,18 @@
                             tmpstr = key + " " + value + " шт, " + tmpstr
                         }
                     });
-                    $("#history-tb").prepend("<tr id='story-{1}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
+                    $("#history-tb").prepend("<tr id='story-{3}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
                 });
                 $("#history-tb").prepend("<tr><th>Время забора</th><th>Направление</th><th>Исследования</th><th>Номер пробирки</th><th>Тип пробирки</th></tr>");
 
                 resize();
-                if (clearn) {
-                    clear(clearn);
-                }
+                if (!clearn || !dn) return;
+                clear(dn);
+                $(".last").removeClass("last");
+                $.each(clearn, function (k, v) {
+                    $("#story-" + v + " td").addClass("last");
+                    console.log(v);
+                });
             });
         }
         function resize() {

@@ -50,5 +50,12 @@ class Issledovaniya(models.Model):
     # Направления на исследования
     napravleniye = models.ForeignKey(Napravleniya)  # Направление
     research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
-    resultat = JSONField()  # Результат исследования в JSON
+    # resultat = JSONField()  # Результат исследования в JSON
     tubes = models.ManyToManyField(TubesRegistration)
+
+
+class Result(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya)
+    fraction = models.ForeignKey(directory.Fractions)
+    value = models.CharField(max_length=255, null=True, blank=True)
+    iteration = models.IntegerField(default=1, null=True)

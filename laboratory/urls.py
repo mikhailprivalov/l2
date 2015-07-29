@@ -9,7 +9,7 @@ from researches.views import ajax_search_res, researches_get_one, get_all_tubes,
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
     get_issledovaniya
 from receivematerial.views import receive, tubes_get
-from results.views import enter, loadready
+from results.views import enter, loadready, results_save, result_get
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list
@@ -42,7 +42,9 @@ urlpatterns = [
                   url(r'^dashboard/receive', receive),
                   url(r'^tubes/get', tubes_get),
                   url(r'^results/enter', enter),
+                  url(r'^results/save', results_save),
                   url(r'^results/loadready', loadready),
+                  url(r'^results/get', result_get),
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',

@@ -198,9 +198,6 @@
                     data2["age"] = dir_data.client_vozrast;
                     $("#result-form").html(jade.compile(template)(data2));
                     $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
-                    $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
-
-                    });
                 });
             });
 
@@ -252,12 +249,8 @@
             $.each($(".result-enter"), function (k, v) {
                 result.fractions[$(v).data("pk")] = $(v).val();
             });
-            result.fractions = JSON.stringify(result.fractions);
             $(this).disabled = false;
             console.log(result);
-            $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
-                console.log(data);
-            });
         }
 
 
