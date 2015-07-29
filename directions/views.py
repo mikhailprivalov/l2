@@ -317,14 +317,19 @@ def get_one_dir(request):
             tubes_buffer = {}
             for v in tmp:
                 for val in directory.Fractions.objects.filter(research=v.research):
+
                     if val.relation.pk not in tubes_buffer.keys():
                         if not v.tubes.filter(type=val.relation).exists():
                             ntube = TubesRegistration(type=val.relation)
                             ntube.save()
-                            v.tubes.add(ntube)
                         else:
                             ntube = v.tubes.get(type=val.relation)
+                        v.tubes.add(ntube)
                         tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
+                    else:
+                        ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
+                        v.tubes.add(ntube)
+
                     tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
             for key in tubes_buffer.keys():
                 tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
@@ -371,7 +376,7 @@ def update_direction(request):
                 val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
                 val.save()  # Сохранение пробирки
                 res["o"].append(val.id)
-            res["dn"] = Issledovaniya.objects.get(tubes__id=k).napravleniye.pk
+            res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

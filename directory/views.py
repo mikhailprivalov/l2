@@ -28,14 +28,29 @@ def directory_researches(request):
                 research["quota_oms"] = -1
             research_obj.quota_oms = research["quota_oms"]
             research_obj.save()
-            Fractions.objects.filter(research=research_obj).delete()
+            # Fractions.objects.filter(research=research_obj).delete()
+            fractions_pk = []
             for key in research["fraction"].keys():
                 tube_relation = ReleationsFT.objects.get(pk=key.split("-")[1])
                 for fraction in research["fraction"][key]["fractions"]:
-                    fraction_obj = Fractions(title=fraction["title"], research=research_obj, units=fraction["units"],
-                                             relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
-                                             ref_f=json.dumps(fraction["ref_f"]))
+                    if fraction["pk"] == -1:
+                        fraction_obj = Fractions(title=fraction["title"], research=research_obj,
+                                                 units=fraction["units"],
+                                                 relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
+                                                 ref_f=json.dumps(fraction["ref_f"]))
+                    else:
+                        fraction_obj = Fractions.objects.get(pk=fraction["pk"])
+                        fraction_obj.title = fraction["title"]
+                        fraction_obj.research = research_obj
+                        fraction_obj.units = fraction["units"]
+                        fraction_obj.ref_m = fraction["ref_m"]
+                        fraction_obj.ref_f = fraction["ref_f"]
+                        fractions_pk.append(fraction["pk"])
                     fraction_obj.save()
+            fractions = Fractions.objects.filter(research=research_obj)
+            for fraction in fractions:
+                if fraction.pk not in fractions_pk:
+                    fraction.delete()
             return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title}
     elif request.method == "GET":
         return_result = {"researches": []}
@@ -89,10 +104,15 @@ def directory_research(request):
                                                                                        "title": fraction.relation.tube.title,
                                                                                        "sel": "tube-" + str(
                                                                                            fraction.relation.pk)}
-
+            ref_m = fraction.ref_m
+            ref_f = fraction.ref_f
+            if isinstance(ref_m, str):
+                ref_m = json.loads(ref_m)
+            if isinstance(ref_f, str):
+                ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
-                {"title": fraction.title, "units": fraction.units, "ref_m": json.loads(fraction.ref_m),
-                 "ref_f": json.loads(fraction.ref_f)});
+                {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
+                 "ref_f": ref_f, "pk": fraction.pk});
 
         '''
         sel: id,

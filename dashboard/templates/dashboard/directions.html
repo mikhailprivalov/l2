@@ -24,34 +24,32 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                       placeholder="Поиск пациента">
+                       placeholder="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456">
           <span class="input-group-btn">
-                <button class="btn btn-default" onclick="search($('#search-field').val());" type="button">Поиск</button>
+                <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск</button>
           </span>
             </div>
-            <span>Введите ФИО и дату рождения или номер карты, например: <br/>Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456</span>
-            <br/>
             <br/>
 
-            <table class="table table-bordered table-condensed" style="width: 400px">
+            <table class="table table-bordered table-condensed" style="width: 100%">
                 <tr>
-                    <td class="col-md-4">Тип:&nbsp;</td>
+                    <td style="width: 135px">Тип:&nbsp;</td>
                     <td id="card-type"></td>
                 </tr>
                 <tr>
-                    <td class="col-md-4">Номер карты:&nbsp;</td>
+                    <td style="width: 135px">Номер карты:&nbsp;</td>
                     <td id="card-num"></td>
                 </tr>
                 <tr>
-                    <td class="col-md-4">ФИО:&nbsp;</td>
+                    <td style="width: 135px">ФИО:&nbsp;</td>
                     <td id="card-fio"></td>
                 </tr>
                 <tr>
-                    <td class="col-md-4">Дата рождения:&nbsp;</td>
+                    <td style="width: 135px">Дата рождения:&nbsp;</td>
                     <td id="card-bth" style="vertical-align: middle"></td>
                 </tr>
                 <tr>
-                    <td class="col-md-4">Пол:&nbsp;</td>
+                    <td style="width: 135px">Пол:&nbsp;</td>
                     <td id="card-sx"></td>
                 </tr>
             </table>
@@ -139,8 +137,14 @@
                 </div>
             </div>
             <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
-            <button class="btn btn-success ctrl" disabled onclick="save_direction();">Сохранить</button>
-            <button onclick="clear_direction();" class="btn btn-warning ctrl" disabled>Очистить</button>
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-primary-nb ctrl" disabled onclick="save_direction();">Сохранить</button>
+                </div>
+                <div class="col-md-3">
+                    <button onclick="clear_direction();" class="btn btn-blue-nb ctrl" disabled>Очистить</button>
+                </div>
+            </div>
         </div>
     </div>
     <div class="modal fade" id="res-modal">
@@ -221,11 +225,15 @@
 
                 $("#div4 .ctrl").removeAttr('disabled');
             });
+            if ($('#sources .active-s .btn.active input[name=source]').length)
+                fs = parseInt($('#sources .active-s .btn.active input[name=source]').val());
+            else
+                fs = -1
             tmp_direction = {
                 client_id: client_id,
                 researches: checked,
                 diagnos: $("#diagnos-field").val().trim(),
-                fin_source: parseInt($('#sources .active-s .btn.active input[name=source]').val())
+                fin_source: fs
             };
             if (notfull == undefined)
                 load_researches();
@@ -247,7 +255,15 @@
         }
         function search(query) { // Функция поиска
             type = $('input[name=type]:checked').val(); // Получение выбранного типа базы
+            query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
+            $("#sources .active").removeClass("active");
+            try {
+                $('#search-field').tooltipster('destroy');
+            }
+            catch (e) {
+
+            }
             $.ajax({ // AJAX запрос
                 url: "/clients/ajax/search?query=" + query + "&type=" + type // Установка адреса и параметров запроса
             }).done(function (data) { // Выполняется по завершению запроса и получению ответа
@@ -267,11 +283,19 @@
                 else if (i == 1) { // Если результат 1
                     show_card(data[0].fields, data[0].pk); // Вызов функции формирования карты пациента
                 }
-                else { // Если результатов нет
-                    $('#search-field').attr('data-content', lang.client_not_found); // Установка сообщения об ошибке
+                else {
+                    clear();
+                    // Если результатов нет
+                    //$('#search-field').attr('data-content', lang.client_not_found); // Установка сообщения об ошибке
                     $('#search-field').focus(); // Перевод фокуса ввода на поле поиска
-                    $('#search-field').popover('show'); // Показ сообщения об ошибке
+                    //$('#search-field').popover('show'); // Показ сообщения об ошибке
                     $("#search-field").parent().addClass("has-error"); // Подсвечивание поля поиска красным для сигнализации об ошибке
+                    $('#search-field').tooltipster({
+                        content: lang.client_not_found,
+                        //position: "bottom",
+                        theme: "tooltipster-shadow"
+                    });
+                    $('#search-field').tooltipster('show');
                 }
                 $("#diagnos-field").val("");
             });
@@ -309,7 +333,7 @@
             if (type == "stat") {
                 $("#fin_poli").hide();
                 $("#fin_stat").show();
-                $("#fin_stat input:first").parent('.btn').addClass('active');
+                //$("#fin_stat input:first").parent('.btn').addClass('active');
 
                 $("#fin_poli").removeClass("active-s");
                 $("#fin_stat").addClass("active-s");
@@ -317,7 +341,7 @@
             else {
                 $("#fin_poli").show();
                 $("#fin_stat").hide();
-                $("#fin_poli input:first").parent('.btn').addClass('active');
+                //$("#fin_poli input:first").parent('.btn').addClass('active');
 
                 $("#fin_poli").addClass("active-s");
                 $("#fin_stat").removeClass("active-s");
@@ -433,7 +457,22 @@
          return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
          }*/
         function save_direction() {
+            try {
+                $('#sources').tooltipster('destroy');
+            }
+            catch (e) {
+
+            }
             sync();
+            if (tmp_direction.fin_source === -1) {
+                $('#sources').tooltipster({
+                    content: "Выберите один из вариантов",
+                    theme: "tooltipster-shadow"
+                });
+                $('#sources').tooltipster('show');
+                return;
+            }
+            $("#div4 .ctrl").attr('disabled', 1);
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
@@ -441,8 +480,9 @@
             }).done(function (data) {
                 console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
-                    window.open('/directions/pdf?napr_id=' + data[0].list_id, '_newtab');
+                    window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
                     clear_fast();
+                    $("#sources .active").removeClass("active");
                 }
             });
         }
@@ -505,6 +545,10 @@
 
         #table-researches-preview span {
             cursor: pointer;
+        }
+
+        .has-error {
+            border-color: #E9573F;
         }
     </style>
 {% endblock %}

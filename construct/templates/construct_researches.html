@@ -536,7 +536,10 @@
                 fractions += "</thead><tbody>";
                 first = true;
                 $.each(v.fractions, function (key, value) {
-                    fractions += "<tr k='{0}' key='{1}' sel='{2}' class='fraction-tr'>".f(k, key, v.sel);
+                    pk = -1;
+                    if (value.pk)
+                        pk = value.pk;
+                    fractions += "<tr k='{0}' key='{1}' sel='{2}' pk='{3}' class='fraction-tr'>".f(k, key, v.sel, pk);
                     if (first) {
                         fractions += "<td class='col-md-2'><div><!--<br/><br/>--><div class='input-group'><div class='input-group-btn'><button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
                                     // "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
@@ -724,6 +727,7 @@
                 }
                 if (fractiontubes[k].fractions[key] === undefined) {
                     fractiontubes[k].fractions[key] = {
+                        pk: parseInt($(this).attr("pk")),
                         title: $(".fractiontitle", $(this)).val(),
                         units: $(".refunits", $(this)).val(),
                         ref_m: {},

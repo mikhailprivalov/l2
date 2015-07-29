@@ -13,6 +13,8 @@
     <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
     <link href="/static/css/amaran.min.css" rel="stylesheet">
     <link href="/static/css/animate.min.css" rel="stylesheet">
+    <link href="/static/css/tooltipster.css" rel="stylesheet">
+    <link href="/static/css/themes/tooltipster-shadow.css" rel="stylesheet">
 
     <script src="/static/js/jquery.min.js"></script>
     <script>
@@ -262,26 +264,26 @@
             width: 12px;
         }
 
-        .btn-primary-nb {
-            width: 100%;
-            background-color: #AAB2BD;
-            color: #F5F7FA;
-            border: 1px solid #AAB2BD;
+        .btn-primary-nb, .btn-primary-nb:focus, .btn-primary-nb:active {
+            width: 100% !important;
+            background-color: #AAB2BD !important;
+            color: #F5F7FA !important;
+            border: 1px solid #AAB2BD !important;
         }
 
-        .btn-primary-nb:hover, .btn-primary-nb:active {
-            background-color: #8CC152;
-            border: 1px solid #8CC152;
+        .btn-primary-nb:hover {
+            background-color: #8CC152 !important;
+            border: 1px solid #8CC152 !important;
         }
 
-        .btn-blue-nb {
-            background-color: #AAB2BD;
-            border: 1px solid #AAB2BD;
+        .btn-blue-nb, .btn-blue-nb:active, .btn-blue-nb:focus {
+            background-color: #AAB2BD !important;
+            border: 1px solid #AAB2BD !important;
         }
 
-        .btn-blue-nb:hover, .btn-blue-nb:active {
-            background-color: #434A54;
-            border: 1px solid #434A54;
+        .btn-blue-nb:hover {
+            background-color: #434A54 !important;
+            border: 1px solid #434A54 !important;
         }
 
         .btn-blue2-nb {
@@ -405,6 +407,7 @@
 <script src="/static/bootflat/js/jquery.fs.stepper.min.js"></script>
 <script src="/static/bootflat/js/icheck.min.js"></script>
 <script src="/static/js/jquery.amaran.min.js"></script>
+<script src="/static/js/jquery.tooltipster.min.js"></script>
 <script>
     String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
         var s = this,
