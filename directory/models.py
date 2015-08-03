@@ -18,6 +18,8 @@ class Researches(models.Model):
     subgroup = models.ForeignKey(Subgroups, related_name="subgroup")
     quota_oms = models.IntegerField(default=-1)
     preparation = models.CharField(max_length=2047, default="")
+    edit_mode = models.IntegerField(
+        default=0)  # 0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить
 
 
 class Fractions(models.Model):

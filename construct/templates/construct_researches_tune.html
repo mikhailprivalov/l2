@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Настройка параметров анализов{% endblock %}
+{% block content %}
+    <form class="form form-inline">
+        <p>
+            Название анализа: <span id="research_title"></span><br/>
+            Исполнители:<br/>
+            <label><input type="radio" name="edit_mode" value="0" onchange="update_mode();"/> Лаборант</label><br/>
+            <label><input type="radio" name="edit_mode" value="1" onchange="update_mode();"/> Врач</label><br/>
+            <label><input type="radio" name="edit_mode" value="2" onchange="update_mode();"/> Лаборант+Врач</label>
+        </p>
+
+        <p>
+        <h5>Настройка УЕТов</h5>
+        <table class="table table-bordered table-responsive">
+            <thead>
+            <tr>
+                <th>Фракция</th>
+                <th class="col-md-2">Повторения</th>
+                <th class="col-md-2">УЕТ лаборант</th>
+                <th class="col-md-2">УЕТ врач</th>
+            </tr>
+            </thead>
+            <tbody id="uets"></tbody>
+        </table>
+        </p>
+    </form>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/js/bootstrap-editable.min.js"></script>
+    <style></style>
+    <script>
+        var pk = {{ pk }};
+        $(document).ready(function () {
+            $("head").append("<link rel='stylesheet' type='text/css' href='/static/css/bootstrap-editable.css' />");
+            $.ajax({url: "/construct/researches/get_details", method: "GET", data: {pk: pk}}).done(function (data) {
+                $("#research_title").html(data.title);
+                $("[type='radio'][value='" + data.edit_mode + "']").attr('checked', 'checked');
+                $.fn.editable.defaults.send = "always";
+                $.each(data.uets, function (k, v) {
+                    $("#uets").append("<tr class='uet-tr' pk='" + v.pk + "'><td>" + v.title + "</td><td class=\"col-md-2\"><a href='#' data-type='text' data-name='max-iterations' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите максимальное количество повторений для фракции " + v.title + "' data-value='" + v.iterations + "'></a></td><td class=\"col-md-2\"><a href='#' data-type='text' data-name='lab-uet' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите УЕТ для фракции " + v.title + " для лаборанта' data-value='" + v.lab + "'></a></td><td class=\"col-md-2\"><a href='#' data-name='doc-uet' data-type='text' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите УЕТ для фракции " + v.title + " для врача' data-value='" + v.doc + "'></a></td></tr>");
+                });
+                $('tr a').editable();
+            });
+        });
+
+        function update_mode() {
+            if ($("[type='radio']:checked").val() == 0) {
+
+            } else {
+
+            }
+            $.ajax({
+                url: "/directory/researches/update_mode",
+                method: "POST",
+                data: {pk: pk, value: $("[type='radio']:checked").val()}
+            });
+        }
+
+    </script>
+{% endblock %}

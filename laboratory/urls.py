@@ -7,12 +7,14 @@ from dashboard.views import dashboard, create_user, create_pod, directions, rese
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
-    get_issledovaniya
+    get_issledovaniya, get_client_directions
 from receivematerial.views import receive, tubes_get
-from results.views import enter, loadready, results_save, result_get
+from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
+    result_filter
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
-    directory_get_directions, directory_researches_list
+    directory_get_directions, directory_researches_list, directory_researches_update_uet, \
+    directory_researches_update_mode
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -21,6 +23,7 @@ urlpatterns = [
                   url(r'^directions/pdf$', gen_pdf_dir),
                   url(r'^directions/get/one$', get_one_dir),
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
+                  url(r'^directions/list/client$', get_client_directions),
                   url(r'^direction/researches/update$', update_direction),
                   url(r'^direction/researches/update/history$', load_history),
                   url(r'^direction/researches/update/history/print$', print_history),
@@ -32,6 +35,8 @@ urlpatterns = [
                   url(r'^directory/researches/group$', directory_researches_group),
                   url(r'^directory/researches/directions$', directory_get_directions),
                   url(r'^directory/researches/list$', directory_researches_list),
+                  url(r'^directory/researches/update_uet$', directory_researches_update_uet),
+                  url(r'^directory/researches/update_mode$', directory_researches_update_mode),
                   url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/control$', researches_control),
                   url(r'^researches/get/one', researches_get_one),
@@ -45,6 +50,10 @@ urlpatterns = [
                   url(r'^results/save', results_save),
                   url(r'^results/loadready', loadready),
                   url(r'^results/get', result_get),
+                  url(r'^results/conformation$', result_conformation),
+                  url(r'^results/confirm$', result_confirm),
+                  url(r'^results/pdf', result_print),
+                  url(r'^results/filter$', result_filter),
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',

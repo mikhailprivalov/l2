@@ -96,6 +96,21 @@
                 });
             </script>
         {% endif %}
+        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
+            <div class="col-xs-6 col-md-3">
+                <a href="/results/conformation" id="create_user_btn" class="panel-body">
+                    Подтверждение и печать результатов<br/>
+                    <small class="badge badge-default">Shift+d</small>
+                </a>
+            </div>
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, 'shift+d', function () {
+                        window.location.href = "/results/conformation";
+                    });
+                });
+            </script>
+        {% endif %}
     </div>
     {% if user.is_superuser %}
         <hr/>

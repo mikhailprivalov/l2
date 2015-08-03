@@ -103,6 +103,7 @@
                     "status": $(v).prop("checked")
                 })
             });
+            if (tubes.length <= 0) return;
             $.ajax({
                 url: "/dashboard/receive",
                 method: "POST",
@@ -111,6 +112,17 @@
             }).done(function (data) {
                 console.log(data);
                 load_tubes();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Пробирки приняты',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
             });
         }
 

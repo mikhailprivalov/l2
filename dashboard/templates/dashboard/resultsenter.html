@@ -13,11 +13,11 @@
 
         <div class="btn-group" data-toggle="buttons" style="display: inline-block; margin-bottom: 10px">
             <label class="btn btn-default active">
-                <input type="radio" name="type" id="option1" value="tubes" autocomplete="off" checked>
+                <input type="radio" name="type" id="option1" value="0" autocomplete="off" checked>
                 Номер пробирки
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="type" id="option2" value="dirs" autocomplete="off">
+                <input type="radio" name="type" id="option2" value="1" autocomplete="off">
                 Номер направления
             </label>
         </div>
@@ -25,28 +25,29 @@
 
         <div id="lists">
             <div class="col-md-6" id="tubes-list">
-                <table class="table table-bordered">
+                <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
                         <th colspan="2" style="text-align: center">Пробирки</th>
                     </tr>
                     <tr>
                         <th style="width: 80%">№</th>
-                        <th>Статус</th>
+                        <!--<th>Статус</th>-->
                     </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
             <div class="col-md-6" id="dirs-list">
-                <table class="table table-bordered">
+                <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
                         <th colspan="2" style="text-align: center">Направления</th>
                     </tr>
+
                     <tr>
                         <th style="width: 80%">№</th>
-                        <th>Статус</th>
+                        <!--<th>Статус</th>-->
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -55,6 +56,9 @@
         </div>
     </div>
     <div class="col-md-3">
+        <button onclick="print_results();" id="result-print" disabled style="margin-bottom: 10px"
+                class="btn btn-primary-nb">Печать результатов
+        </button>
         <table class="table table-bordered" id="dir_info">
             <tr>
                 <td style="width: 150px">№ Направления</td>
@@ -97,6 +101,7 @@
     <script>
         var type = 0;
         $(document).ready(function () {
+            $("#result-print").attr("disabled", 1);
             load_tubes_and_dirs();
             resize();
             $(window).resize(function () {
@@ -128,10 +133,21 @@
         });
 
         function load_d_fast() {
+            type = $('label.btn.active input').val();
             load_data($('#search-field').val(), type);
         }
+
+        function reload_fast() {
+            if (loaded_research < 0) return;
+
+            load_data(dir_data.napr_pk, type, loaded_research);
+            //load_form(loaded_research);
+        }
         var dir_data = {};
-        function load_data(id, type) {
+        var statuses = {"n": "Н", "s": "О", "c": "П"};
+        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден"};
+        function load_data(id, type, select_el) {
+            $("#result-print").attr("disabled", 1);
             $("#issledovaniya").isLoading({
                 text: "Загрузка списка исследований",
                 position: "inside",
@@ -144,6 +160,23 @@
                 method: "GET",
                 data: {id: id, type: type}
             }).done(function (data) {
+                if (!data.ok) {
+                    $("#search-field").parent().addClass("has-error");
+                    $('#search-field').tooltipster({
+                        content: "Не найдено",
+                        //position: "bottom",
+                        theme: "tooltipster-shadow"
+                    });
+                    $('#search-field').tooltipster('show');
+                    return;
+                }
+                $(".has-error").removeClass("has-error");
+                try {
+                    $('#search-field').tooltipster('destroy');
+                }
+                catch (e) {
+
+                }
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
                 $(".select-dir.active, .select-tube.active").removeClass("active");
@@ -155,8 +188,13 @@
                 $("#client_vozrast").html(data.client_vozrast);
                 $("#client_cardnum").html(data.client_cardnum);
                 $("#client_sex").html(data.client_sex);
+                var status = "n";
                 $.each(data.issledovaniya, function (k, v) {
-                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk));
+                    if (v.saved && !v.confirmed) status = "s";
+                    else if (v.saved && v.confirmed) status = "c";
+                    else status = "n";
+
+                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'><div title='{5}' class='status status-{3}'>{4}</div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status]));
                     if (type == 0) {
                         tubessplit = v.tube.pk.split(', ');
                         $.each(tubessplit, function (k, v) {
@@ -172,10 +210,17 @@
                     $("[direction='{0}']".f(data.napr_pk)).addClass("active");
                     $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150);
                 }
+                if (!select_el)
                 $("#issledovaniya li").first().click();
+                else
+                    $("#issledovaniya li[num='{0}']".f(select_el)).click();
+                $('#issledovaniya-scroll').scrollTop(0);
+                if (data.all_confirmed) {
+                    $("#result-print").removeAttr("disabled");
+                }
             });
         }
-
+        var loaded_research = -1;
         function load_form(id) {
             $("#result-form").isLoading({
                 text: "Загрузка исследования",
@@ -199,8 +244,25 @@
                     $("#result-form").html(jade.compile(template)(data2));
                     $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
-
+                        $.each(data.results, function (k, v) {
+                            $("[data-pk='" + k + "']").val(v);
+                        });
                     });
+                    resize();
+                    loaded_research = id;
+                    if (data2.confirmed) {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#save-btn").attr("disabled", 1);
+                    }
+                    else if (data2.saved) {
+                        $("#confirm-btn").removeAttr("disabled");
+                        $("#save-btn").removeAttr("disabled");
+                    }
+                    else {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#save-btn").removeAttr("disabled");
+                    }
+                    $('#result-jade-form').scrollTop(0);
                 });
             });
 
@@ -209,7 +271,7 @@
         function fast_search(num) {
             $("#search-field").val(num);
         }
-        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><td><i class="%class% glyphicon glyphicon-refresh"></i></td></tr>';
+        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><!--<td><i class="%class% glyphicon glyphicon-refresh"></i></td>--></tr>';
         function load_tubes_and_dirs() {
             $("#tubes-list tbody").isLoading({
                 text: "Загрузка пробирок",
@@ -227,10 +289,10 @@
                 $("#tubes-list tbody").html("");
                 $("#dirs-list tbody").html("");
                 $.each(data.tubes, function (k, v) {
-                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'>{0}</td><td><i class='glyphicon glyphicon-asterisk'></i></td></tr>".f(v.id, v.direction))
+                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'>{0}</td><!--<td><i class='glyphicon glyphicon-asterisk'></i></td>--></tr>".f(v.id, v.direction))
                 });
                 $.each(data.directions, function (k, v) {
-                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td>{0}</td><td><i class='glyphicon glyphicon-asterisk'></i></td></tr>".f(v.id))
+                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td>{0}</td><!--<td><i class='glyphicon glyphicon-asterisk'></i></td>--></tr>".f(v.id))
                 });
                 resize();
             });
@@ -239,11 +301,12 @@
             $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 80);
             $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 80);
             $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 80);
-            $('#form-scroll').height($(window).height() - $('#form-scroll').position().top - 10);
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
-            $('#form-scroll').perfectScrollbar();
+            if (!$('#result-jade-form').length) return;
+            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 120);
+            $('#result-jade-form').perfectScrollbar();
         }
         function save() {
             $(this).disabled = true;
@@ -257,28 +320,96 @@
             console.log(result);
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
                 console.log(data);
+                reload_fast();
+
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Результат сохранен',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
             });
+        }
+
+        function confirm() {
+            $.ajax({
+                "url": "/results/confirm",
+                method: "POST",
+                data: {pk: $("#issledovaniye_id").val()}
+            }).done(function () {
+                reload_fast();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Исследование подтверждено',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+        var list_reload = false;
+        function print_results() {
+            data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
+            window.open('/results/pdf' + data, '_blank');
+            // list_reload = true;
+            $('[direction="' + dir_data.napr_pk + '"]').remove();
         }
 
 
     </script>
     <style>
+        .status {
+            float: right;
+            display: inline-block;
+            vertical-align: middle;
+            margin-top: 9px;
+            margin-right: 9px;
+            font-weight: 600;
+            font-size: 12pt;
+        }
+
+        .status-n {
+            color: #CF3A24
+        }
+
+        .status-s {
+            color: #4B77BE
+        }
+
+        .status-c {
+            color: #049372
+        }
+
+        .awesome.ok {
+            background-color: #434A54;
+            color: #fff
+        }
         #dirs-list tbody, #tubes-list tbody {
             min-height: 100px;
         }
 
         .active {
-            background-color: #656D78 !important;
+            background-color: #6C7A89 !important;
             color: #fff !important;
         }
 
         li.active {
-            background-color: #CCD1D9 !important;
+            background-color: #fff !important;
             color: #000 !important;
+            outline: 2px solid #6C7A89
         }
 
         .select-dir.active td, .select-tube.active td {
-            background-color: #656D78 !important;
+            background-color: #6C7A89 !important;
             color: #fff !important;
         }
 
@@ -300,13 +431,13 @@
             padding: 0;
         }
 
-        #tubes-list, #dirs-list, #issledovaniya-scroll, #form-scroll {
+        #tubes-list, #dirs-list, #issledovaniya-scroll, #result-jade-form {
             position: relative;
             overflow-y: auto;
             overflow-x: hidden;
         }
 
-        #issledovaniya-scroll {
+        #issledovaniya-scroll, #result-jade-form {
             padding-right: 15px;
         }
 
@@ -320,7 +451,7 @@
             padding: 5px;
             cursor: pointer;
             margin: 3px;
-            background-color: #F2F2F2;
+            background-color: #ECF0F1;
         }
 
         /*

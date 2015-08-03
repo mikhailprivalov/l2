@@ -174,7 +174,7 @@
                             $("#doc-otd").html(data.direction.doc.otd);
                             $("#lab").html(data.direction.lab);
                             $(".last").removeClass("last");
-                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 32px'><i class='glyphicon glyphicon-ok'></i></th></tr>");
+                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 60px'>Взято</th></tr>");
                             n = 0;
                             fn = 0;
                             complete = true;
@@ -194,7 +194,7 @@
                                     probirki[v.title] = 1
                                 else
                                     probirki[v.title]++;
-                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                                 // $("#researches-tb").append("<tr><td>{0}</td><td style='background-color: {1}; color: #F2F2F2; text-shadow: 1px 1px 4px black'>{2}</td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                             });
 
@@ -370,11 +370,28 @@
         }
 
         td label {
-            display: block;
+            width: 100%;
+            height: 100%;
+            margin: 0;
             cursor: pointer;
-            height: 30px;
+            vertical-align: middle;
+            display: inline-block;
+
         }
 
+        td label input {
+            vertical-align: middle;
+            margin-top: 15px;
+        }
+
+        td label:hover {
+            background-color: #efefef;
+        }
+
+        .c {
+            text-align: center;
+            padding: 0 !important;
+        }
         .last {
             background-color: #D4E6C2;
         }

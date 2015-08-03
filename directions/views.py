@@ -208,8 +208,8 @@ def printDirection(c, n, dir):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn,
                  "ФИО: " + dir.client.family + " " + dir.client.name + " " + dir.client.twoname)
 
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "Возраст: " + str(
-        calculate_age(datetime.strptime(dir.client.birthday.split(" ")[0], "%d.%m.%Y").date())) + " лет")
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
+                      "Возраст: " + dir.client.age_s())
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "Номер карты: " + str(dir.client.num))
 
@@ -596,47 +596,106 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
 
 @login_required
 def get_issledovaniya(request):
-    res = {"issledovaniya": []}
+    res = {"issledovaniya": [], "ok": False}
     if request.method == "GET":
         iss = []
         napr = None
         id = request.GET["id"]
-        if request.GET["type"] == "0":
-            iss = Issledovaniya.objects.filter(tubes__id=id).all()
-            '''ishide = False
-            for iss_check in iss:
-                if iss_check.issledovaniye.hide == 0:
-                    ishide = False
+        res["all_confirmed"] = True
+        if id.isnumeric():
+            if request.GET["type"] == "0":
+                tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
+                if tube.doc_recive:
+                    iss = Issledovaniya.objects.filter(tubes__id=id).all()
+                    '''ishide = False
+                    for iss_check in iss:
+                        if iss_check.issledovaniye.hide == 0:
+                            ishide = False
 
-            if ishide:
-                iss = Issledovaniya.objects.filter(tube=tube)
-                napr = iss.first().napravleniye
-                iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
-            else:'''
-            napr = iss.first().napravleniye
-        else:
-            napr = Napravleniya.objects.get(pk=id)
-            iss = Issledovaniya.objects.filter(napravleniye__pk=id).all()
-        for issledovaniye in iss:
-            if True:  # issledovaniye.research.hide == 0:
-                tubes_list = issledovaniye.tubes.all()
-                tubes = []
-                titles = []
-                for tube_o in tubes_list:
-                    tubes.append(tube_o.pk)
-                    titles.append(tube_o.type.tube.title)
-                '''for iss_hidden in iss.filter(issledovaniye__hide=1,
-                                             issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
-                    tubes.append(iss_hidden.tube.pk)'''
-                res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
-                                             "tube": {"pk": ', '.join(str(v) for v in tubes),
-                                                      "title": ', '.join(titles)}})
-        res["napr_pk"] = napr.pk
-        res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
-        res["client_sex"] = napr.client.sex
-        res["client_cardnum"] = napr.client.num
-        res["client_vozrast"] = str(
-            calculate_age(datetime.strptime(napr.client.birthday.split(" ")[0], "%d.%m.%Y").date())) + " лет"
-        res["directioner"] = napr.doc.fio
+                    if ishide:
+                        iss = Issledovaniya.objects.filter(tube=tube)
+                        napr = iss.first().napravleniye
+                        iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
+                    else:'''
+                    napr = iss.first().napravleniye
+            elif request.GET["type"] == "2":
+                try:
+                    napr = Napravleniya.objects.get(pk=id)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation").all()
+                except Napravleniya.DoesNotExist:
+                    napr = None
+                    iss = []
+            else:
+                try:
+                    napr = Napravleniya.objects.get(pk=id, is_printed=False)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation").all()
+                except Napravleniya.DoesNotExist:
+                    napr = None
+                    iss = []
+            if len(iss) > 0:
+                for issledovaniye in iss:
+                    if True:  # issledovaniye.research.hide == 0:
 
+                        tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
+                        tubes = []
+                        titles = []
+                        for tube_o in tubes_list:
+                            tubes.append(tube_o.pk)
+                            titles.append(tube_o.type.tube.title)
+                        '''for iss_hidden in iss.filter(issledovaniye__hide=1,
+                                                     issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
+                            tubes.append(iss_hidden.tube.pk)'''
+                        saved = True
+                        confirmed = True
+                        if not issledovaniye.doc_save:
+                            saved = False
+                        if not issledovaniye.doc_confirmation:
+                            confirmed = False
+                            res["all_confirmed"] = False
+                        res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                     "saved": saved, "confirmed": confirmed,
+                                                     "tube": {"pk": ', '.join(str(v) for v in tubes),
+                                                              "title": ', '.join(titles)}})
+            if napr:
+                res["napr_pk"] = napr.pk
+                res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
+                res["client_sex"] = napr.client.sex
+                res["client_cardnum"] = napr.client.num
+                res["client_vozrast"] = napr.client.age_s()
+                res["directioner"] = napr.doc.fio
+                res["ok"] = True
+
+    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
+@login_required
+def get_client_directions(request):
+    res = {"directions": [], "ok": False}
+    if request.method == "GET":
+        pk = int(request.GET["pk"])
+        napr_list = Napravleniya.objects.filter(client__pk=pk, doc=request.user.doctorprofile)
+
+        for napr in napr_list:
+            status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
+
+            iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+            for v in iss_list:
+                iss_status = 2
+                if not v.doc_confirmation and not v.doc_save:
+                    iss_status = 1
+                    if v.tubes.count() == 0:
+                        iss_status = 0
+                    for t in v.tubes.all():
+                        if not t.time_recive:
+                            iss_status = 0
+                elif v.doc_confirmation:
+                    iss_status = 2
+                status = min(iss_status, status)
+
+            res["directions"].append(
+                {"pk": napr.pk, "status": status, "researches": ', '.join(v.research.title for v in iss_list),
+                 "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT))})
+        res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

@@ -53,6 +53,21 @@
             </div>
         </div>
     </div>
+    <div class="modal" id="tune-modal" tabindex="-1" role="dialog" aria-labelledby="tune-modal-title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="tune-modal-title">Настройка анализа</h4>
+                </div>
+                <div class="modal-body" style="min-height: 450px"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <style>
@@ -200,8 +215,12 @@
         }
 
         .right {
-            padding-right: 1px;
+            padding-right: 3px !important;
             text-align: right;
+        }
+
+        .right .btn {
+            margin-right: 10px !important;
         }
 
         #directory-select, .drophere {
@@ -326,7 +345,6 @@
             color: #8CC152;
         }
     </style>
-    <script src="/static/js/jquery.floatThead.min.js"></script>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
         $(document).ready(function () {
@@ -395,6 +413,7 @@
         function loadform(id, tube) {
             resid = id;
             fractiontubes = {};
+            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
             $("#research-form").html("");
             form = $("<form></form>").appendTo($("#research-form"));
             $("<h4></h4>").text("Редактор анализа").appendTo($(form));
@@ -412,6 +431,7 @@
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
             $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
             $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
+            $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Настройка дополнительных параметров</a></span>');
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
@@ -438,13 +458,14 @@
             showtubes();
             hideref();
             resize();
-
+            $("#tunebtn").attr("disabled", 1);
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
                     $("#research_title").val(data.title);
                     $("#quota").val(data.quota);
                     $("#preparation").val(data.preparation);
                     fractiontubes = data.fractiontubes;
+                    $("#tunebtn").removeAttr("disabled");
                     showtubes();
                 });
             }
@@ -713,6 +734,7 @@
         /** Синхронизация буфера фракций с GUI */
         function syncFractions() {
             fractiontubes = {};
+            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
             $(".fraction-tr").each(function (i) {
                 k = $(this).attr("k");
                 key = $(this).attr("key");
@@ -734,6 +756,7 @@
                         ref_f: {}
                     };
                 }
+
                 $("[type='f']", $(this)).each(function (index) {
                     fractiontubes[k].fractions[key].ref_f[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
                 });
@@ -842,8 +865,9 @@
                         $(tubes_list).append('<div class="well">Пробирки не приязаны</div>');
                     }
                     g = $('<div class="btn-group"></div>').appendTo(researches_list);
-                    $(g).append('<div class="btn btn-default research-title col-md-9">{0}</div>'.f(v.title));
-                    $(g).append('<div class="btn btn-default col-md-3" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
+                    $(g).append('<div class="btn btn-default research-title col-md-10">{0}</div>'.f(v.title));
+                    $(g).append('<div class="btn btn-default col-md-1" onclick="tune_research({0});"><i class="glyphicon glyphicon-cog"></i></div>'.f(v.pk));
+                    $(g).append('<div class="btn btn-default col-md-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
                 });
                 $.each($(".one-tube"), function (k, v) {
                     $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
@@ -927,6 +951,12 @@
             var aName = a.tubes_c;
             var bName = b.tubes_c;
             return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+        }
+
+        function tune_research(id) {
+            $('#tune-modal').modal('show');
+            $("#tune-modal .modal-body").html('<iframe width="100%" height="100%" style="height: 100%; width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
+            console.log("ID: {0}".f(id));
         }
 
     </script>

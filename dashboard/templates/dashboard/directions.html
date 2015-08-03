@@ -3,7 +3,7 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="row">
-        <div class="col-md-6" id="div1">
+        <div class="col-md-6" id="div1" style="height: 420px">
             <div>
                 <h5>Категория пациентов:</h5>
 
@@ -54,7 +54,7 @@
                 </tr>
             </table>
         </div>
-        <div class="col-md-6" id="div2">
+        <div class="col-md-6" id="div2" style="height: 420px">
             <table class="table table-hover">
                 <tr>
                     <th>№</th>
@@ -114,7 +114,7 @@
             <div id="table-researches"></div>
         </div>
         <div class="col-md-6" id="div4" style="margin-bottom: 20px">
-            <h4>Создание направления:</h4>
+            <h4 style="margin-top: 0">Создание направления:</h4>
 
             <div style="margin-bottom: 20px">
                 <div class="col-md-7" style="padding-left: 0">
@@ -185,8 +185,8 @@
 
         $(document).ready(function () {
             $("#fin_stat").hide();
-            $("#fin_poli input:first").parent('.btn').addClass('active');
-            $("#search-field").bind('keydown', 'return', function () {
+            //$("#fin_poli input:first").parent('.btn').addClass('active');
+            $("#search-field").bind('keyup', 'return', function () {
                 search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
             });
             $("#select-lab").change(function () {
@@ -239,6 +239,12 @@
                 load_researches();
             console.log(JSON.stringify(tmp_direction.researches))
         }
+        function load_client_dirs(id) {
+            console.log(id);
+            $.ajax({url: "/directions/list/client", data: {pk: id}}).done(function (data) {
+                console.log(data);
+            });
+        }
         function rem(k, key) {
             id = checked[k][key];
             if ($("input[value='" + id + "']").length) {
@@ -282,6 +288,7 @@
                 }
                 else if (i == 1) { // Если результат 1
                     show_card(data[0].fields, data[0].pk); // Вызов функции формирования карты пациента
+
                 }
                 else {
                     clear();
@@ -314,6 +321,7 @@
             return false;
         }
         function show_card(fields, pk) { // Функция формирования карты пациента
+            load_client_dirs(pk);
             clear(); // Вызов функции очистки
             client_id = pk;
             fio = fields.family + " " + fields.name + " " + fields.twoname; // Формирование ФИО

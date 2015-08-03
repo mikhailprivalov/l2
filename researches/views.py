@@ -28,17 +28,28 @@ def ajax_search_res(request):
 
 @login_required
 def researches_get_one(request):
-    res = {"res_id": "", "title": "", "fractions": []}
+    res = {"res_id": "", "title": "", "fractions": [], "confirmed": True, "saved": True}
     if request.method == "GET":
         id = request.GET["id"]
-        research = Issledovaniya.objects.get(pk=id).research
+        iss = Issledovaniya.objects.get(pk=id)
+        research = iss.research
         fractions = directory.Fractions.objects.filter(research=research)
         res["res_id"] = id
         res["title"] = research.title
+        if not iss.doc_save:
+            res["saved"] = False
+        if not iss.doc_confirmation:
+            res["confirmed"] = False
         for val in fractions:
+            ref_m = val.ref_m
+            ref_f = val.ref_f
+            if isinstance(ref_m, str):
+                ref_m = json.loads(ref_m)
+            if isinstance(ref_f, str):
+                ref_f = json.loads(ref_f)
             res["fractions"].append(
                 {"title": val.title, "pk": val.pk, "unit": val.units,
-                 "references": {"m": json.loads(val.ref_m), "f": json.loads(val.ref_f)}})
+                 "references": {"m": ref_m, "f": ref_f}})
 
     return HttpResponse(json.dumps(res))  # Создание JSON
 

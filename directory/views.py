@@ -84,6 +84,43 @@ def directory_researches_list(request):
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
 
+
+@csrf_exempt
+@login_required
+def directory_researches_update_uet(request):
+    """POST: обновление УЕТов"""
+    return_result = {"ok": False}
+    if request.method == "POST":
+        name = request.POST["name"]
+        pk = request.POST["pk"]
+        value = request.POST["value"]
+        if value != "":
+            fraction = Fractions.objects.get(pk=pk)
+            if name == "lab-uet":
+                fraction.uet_lab = value
+            else:
+                fraction.uet_doc = value
+            fraction.save()
+            return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_update_mode(request):
+    """POST: обновление режима для лаборанта"""
+    return_result = {"ok": False}
+    if request.method == "POST":
+        pk = request.POST["pk"]
+        value = request.POST["value"]
+        if value != "":
+            research = Researches.objects.get(pk=pk)
+            research.edit_mode = value
+            research.save()
+            return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
 @csrf_exempt
 @login_required
 def directory_research(request):
@@ -95,7 +132,10 @@ def directory_research(request):
         return_result["title"] = research.title
         return_result["quota"] = research.quota_oms
         return_result["preparation"] = research.preparation
+        return_result["edit_mode"] = research.edit_mode
         return_result["fractiontubes"] = {}
+        return_result["uet_doc"] = {}
+        return_result["uet_lab"] = {}
         fractions = Fractions.objects.filter(research=research)
         for fraction in fractions:
             if "tube-" + str(fraction.relation.pk) not in return_result["fractiontubes"].keys():
@@ -104,6 +144,8 @@ def directory_research(request):
                                                                                        "title": fraction.relation.tube.title,
                                                                                        "sel": "tube-" + str(
                                                                                            fraction.relation.pk)}
+            return_result["uet_doc"][fraction.pk] = fraction.uet_doc
+            return_result["uet_lab"][fraction.pk] = fraction.uet_lab
             ref_m = fraction.ref_m
             ref_f = fraction.ref_f
             if isinstance(ref_m, str):
@@ -182,4 +224,22 @@ def directory_get_directions(request):
                 return_result["directions"][research.direction.pk] = []
             return_result["directions"][research.direction.pk].append(research.title)
 
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def researches_get_details(request):
+    """GET: получение детальной информации из анализа"""
+    return_result = {}
+    if request.method == "GET":
+        pk = request.GET["pk"]
+        research_obj = Researches.objects.get(pk=pk)
+        return_result["title"] = research_obj.title
+        return_result["edit_mode"] = research_obj.edit_mode
+        return_result["uets"] = []
+        fractions = Fractions.objects.filter(research=research_obj)
+        for fraction in fractions:
+            return_result["uets"].append(
+                {"pk": fraction.pk, "title": fraction.title, "lab": fraction.uet_lab, "doc": fraction.uet_doc})
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

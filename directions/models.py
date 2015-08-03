@@ -44,6 +44,10 @@ class Napravleniya(models.Model):
     client = models.ForeignKey(Importedclients, db_index=True)  # Пациент
     doc = models.ForeignKey(DoctorProfile, db_index=True)  # Лечащий врач
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True)  # Источник финансирования
+    is_printed = models.BooleanField(default=False, blank=True)
+    time_print = models.DateTimeField(default=None, blank=True, null=True)
+    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print")
+
 
 
 class Issledovaniya(models.Model):
@@ -52,6 +56,10 @@ class Issledovaniya(models.Model):
     research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
     # resultat = JSONField()  # Результат исследования в JSON
     tubes = models.ManyToManyField(TubesRegistration)
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save")
+    time_save = models.DateTimeField(null=True, blank=True)
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation")
+    time_confirmation = models.DateTimeField(null=True, blank=True)
 
 
 class Result(models.Model):

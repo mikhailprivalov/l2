@@ -296,6 +296,16 @@
             min-width: 28px;
         }
 
+        .btn-blue2-nb[disabled], .btn-blue2-nb.disabled {
+            background-color: #AAB2BD;
+            border: 1px solid #AAB2BD;
+            color: #ddd;
+            font-size: 12px;
+            padding: 2px;
+            height: 23px;
+            min-width: 28px;
+        }
+
         .btn-blue2-nb:hover, .btn-blue-nb:active {
             background-color: #3BAFDA !important;
             border: 1px solid #3BAFDA !important;
@@ -356,6 +366,22 @@
         .ps-scrollbar-y-rail {
           opacity: 0.6;
         }*/
+
+        .amaran.awesome.ok .icon {
+            background-color: #8CC152;
+        }
+
+        .amaran.awesome.ok p.bold {
+            color: #8CC152;
+        }
+
+        .amaran.awesome.no .icon {
+            background-color: #E9573F;
+        }
+
+        .amaran.awesome.no p.bold {
+            color: #E9573F;
+        }
     </style>
 </head>
 <body>{% load has_group %}
@@ -387,6 +413,7 @@
                 {% endif %}
                 {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
                     <li><a href="/results/enter">Ввод результатов</a></li>
+                    <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -408,6 +435,7 @@
 <script src="/static/bootflat/js/icheck.min.js"></script>
 <script src="/static/js/jquery.amaran.min.js"></script>
 <script src="/static/js/jquery.tooltipster.min.js"></script>
+<script src="/static/js/jquery.floatThead.min.js"></script>
 <script>
     String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
         var s = this,

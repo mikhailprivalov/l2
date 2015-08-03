@@ -13,3 +13,5 @@ pytz
 pymongo
 gunicorn
 python3-memcached
+pymorphy2[fast]
+pymorphy2-dicts-ru

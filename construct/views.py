@@ -19,6 +19,13 @@ def researches(request):
 
 @login_required
 @group_required("Оператор")
+def researches_tune(request):
+    pk = request.GET["pk"]
+    return render(request, 'construct_researches_tune.html', {"pk": pk})
+
+
+@login_required
+@group_required("Оператор")
 def tubes(request):
     return render(request, 'construct_tubes.html')
 
