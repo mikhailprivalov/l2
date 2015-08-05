@@ -19,7 +19,7 @@ from clients.models import Importedclients
 from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
-
+import slog.models as slog
 import directory.models as directory
 
 w, h = A4
@@ -134,6 +134,9 @@ def dir_save(request):
 
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+                slog.Log(key=json.dumps(result["list_id"]), user=request.user.doctorprofile, type=21,
+                         body=request.POST['dict']).save()
+
             else:
                 result["r"] = False
                 result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
@@ -397,6 +400,7 @@ def update_direction(request):
                 val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
                 val.save()  # Сохранение пробирки
                 res["o"].append(val.id)
+                slog.Log(key=str(val.pk), type=9, body="", user=request.user.doctorprofile).save()
             res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
@@ -584,6 +588,7 @@ def print_history(request):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    slog.Log(key="", type=10, body="", user=request.user.doctorprofile).save()
     return response
 
 

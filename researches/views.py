@@ -7,6 +7,7 @@ from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
+import slog.models as slog
 
 @cache_page(60 * 15)
 @login_required
@@ -28,6 +29,7 @@ def ajax_search_res(request):
 
 @login_required
 def researches_get_one(request):
+    """Получение исследования (название, фракции, параметры)"""
     res = {"res_id": "", "title": "", "fractions": [], "confirmed": True, "saved": True}
     if request.method == "GET":
         id = request.GET["id"]
@@ -56,6 +58,7 @@ def researches_get_one(request):
 
 @login_required
 def get_all_tubes(request):
+    """Получение списка пробирок"""
     res = []
     tubes = Tubes.objects.all().order_by('title')
     for v in tubes:
@@ -66,6 +69,7 @@ def get_all_tubes(request):
 @csrf_exempt
 @login_required
 def tubes_control(request):
+
     if request.method == "PUT":
         if hasattr(request, '_post'):
             del request._post
@@ -81,12 +85,12 @@ def tubes_control(request):
             request.META['REQUEST_METHOD'] = 'PUT'
 
         request.PUT = request.POST
-
         title = request.PUT["title"]
         color = "#" + request.PUT["color"]
         new_tube = Tubes(title=title, color=color)
         new_tube.save()
-
+        slog.Log(key=str(new_tube.pk), user=request.user.doctorprofile, type=1,
+                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
     if request.method == "POST":
         id = int(request.POST["id"])
         title = request.POST["title"]
@@ -95,6 +99,8 @@ def tubes_control(request):
         tube.color = color
         tube.title = title
         tube.save()
+        slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
+                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
     return HttpResponse(json.dumps({}), content_type="application/json")  # Создание JSON
 
 
@@ -127,5 +133,6 @@ def tubes_relation(request):
         return_result["id"] = relation.pk
         return_result["title"] = tube.title
         return_result["color"] = tube.color
-
+        slog.Log(key=str(relation.pk), user=request.user.doctorprofile, type=20,
+                 body=json.dumps({"data": {"id": tube_id}})).save()
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

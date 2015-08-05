@@ -8,6 +8,8 @@ from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+import slog.models as slog
+
 
 @csrf_exempt
 @login_required
@@ -25,13 +27,17 @@ def receive(request):
         tubes = json.loads(request.POST["data"])
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
-
+            message = ""
             if tube_get["status"]:
                 tube.doc_recive = request.user.doctorprofile
                 tube.time_recive = timezone.now()
+                type = 11
             else:
                 tube.notice = tube_get["notice"]
+                type = 12
             tube.save()
+            slog.Log(key=str(tube_get["id"]), user=request.user.doctorprofile, type=type,
+                     body=json.dumps({"status": tube_get["status"], "notice": tube_get["notice"]})).save()
         result = {"r": True}
         return HttpResponse(json.dumps(result), content_type="application/json")
 

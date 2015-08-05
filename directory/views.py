@@ -5,6 +5,8 @@ from django.http import HttpResponse
 from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
 import directions.models as directions
+import slog.models as slog
+
 
 @csrf_exempt
 @login_required
@@ -21,6 +23,7 @@ def directory_researches(request):
                 research_obj = Researches(subgroup=Subgroups.objects.get(pk=research["lab_group"]))
             else:
                 research_obj = Researches.objects.get(pk=int(research["id"]))
+
             research_obj.title = research["title"]
             if not research["preparation"]:
                 research["preparation"] = "Не требуется"
@@ -29,6 +32,11 @@ def directory_researches(request):
                 research["quota_oms"] = -1
             research_obj.quota_oms = research["quota_oms"]
             research_obj.save()
+            type = 4
+            if research["id"] == -1:
+                type = 3
+            slog.Log(key=str(research_obj.pk), type=type, body="{'data': " + request.POST["research"] + "}",
+                     user=request.user.doctorprofile).save()
             # Fractions.objects.filter(research=research_obj).delete()
             fractions_pk = []
             return_result["F"] = []
@@ -138,6 +146,8 @@ def directory_toggle_hide_research(request):
     research = Researches.objects.get(pk=int(pk))
     research.hide = not research.hide
     research.save()
+    slog.Log(key=request.REQUEST["pk"], type=19, body=json.dumps({"hide": research.hide}),
+             user=request.user.doctorprofile).save()
     return HttpResponse(json.dumps({"status_hide": research.hide}), content_type="application/json")  # Создание JSON
 
 
@@ -221,8 +231,12 @@ def directory_researches_group(request):
         if gid < 0:
             direction = DirectionsGroup()
             direction.save()
+            type = 5
         else:
             direction = DirectionsGroup.objects.get(pk=gid)
+            type = 6
+        slog.Log(key=direction.pk, type=type, body="{'data': " + request.POST["researches"] + "}",
+                 user=request.user.doctorprofile).save()
         tmp_researches = Researches.objects.filter(direction=direction)
         for v in tmp_researches:
             v.direction = None

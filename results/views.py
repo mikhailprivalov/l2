@@ -10,6 +10,7 @@ import users.models as users
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 from django.utils import dateformat
+import slog.models as slog
 
 @login_required
 @group_required("Врач-лаборант", "Лаборант")
@@ -76,6 +77,9 @@ def results_save(request):
 
         issledovaniye.time_save = datetime.now()
         issledovaniye.save()
+
+        slog.Log(key=request.POST["issledovaniye"], type=13, body=request.POST["fractions"],
+                 user=request.user.doctorprofile).save()
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -91,6 +95,8 @@ def result_confirm(request):
 
             issledovaniye.time_confirmation = datetime.now()
             issledovaniye.save()
+            slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
+
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -241,6 +247,7 @@ def result_print(request):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    slog.Log(key=request.GET["pk"], type=15, body="", user=request.user.doctorprofile).save()
 
     return response
 

@@ -28,7 +28,7 @@ INSTALLED_APPS = (
     'directions',
     'receivematerial',
     'construct',
-    'syslogs',
+    'slog',
     'directory'
 )
 

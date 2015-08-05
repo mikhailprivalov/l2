@@ -8,6 +8,9 @@ from directions.models import IstochnikiFinansirovaniya
 from researches.models import Tubes
 from django.views.decorators.cache import cache_page
 from laboratory.decorators import group_required
+import slog.models as slog
+import simplejson as json
+
 
 # @cache_page(60 * 15)
 @login_required
@@ -52,6 +55,8 @@ def create_user(request):  # Страница создания пользова�
                 profile.podrazileniye = podr.get(pk=podrpost)  # Привязка подразделения
                 profile.save()  # Сохранение профиля
                 registered = True
+                slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps(
+                    {"username": username, "password": password, "podr": podrpost, "fio": fio})).save()
             else:
                 return render(request, 'dashboard/create_user.html',
                               {'error': True, 'mess': 'Пользователь с таким именем пользователя уже существует',
@@ -83,6 +88,8 @@ def create_pod(request):
                 pd.save()  # Сохранение подразделения
                 p = True
                 e = False
+                slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17,
+                         body=json.dumps({"title": title})).save()
             else:
                 mess = "Такое подразделение уже есть"
         else:
