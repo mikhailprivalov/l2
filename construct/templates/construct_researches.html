@@ -436,7 +436,7 @@
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
-            $(form).append('<span style="float: right"><div onclick="save();" class="btn btn-default">Сохранить</div></span>');
+            $(form).append('<span style="float: right"><div onclick="save();" class="btn btn-default save-btn">Сохранить</div></span>');
 
             div2 = $("<div id='select-div'></div>");
             $(form).append(div2);
@@ -467,6 +467,11 @@
                     fractiontubes = data.fractiontubes;
                     $("#tunebtn").removeAttr("disabled");
                     showtubes();
+                    if (data.readonly === true) {
+                        $("#research-form input, #research-form textarea").prop("readonly", true);
+                        $("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
+                        $(".drophere").remove();
+                    }
                 });
             }
         }
@@ -826,6 +831,7 @@
                 data.researches.sort(SortByTubes);
                 $.each(data.researches, function (k, v) {
                     row = $("<div class='row'></div>");
+                    if (v.readonly) $(row).addClass("readonly");
                     researches = $("<div class='bw'></div>").appendTo(row);
                     $(researches).append('<div class="list-header">Анализы</div>');
                     researches_list = $('<div class="researches-list"></div>').appendTo(researches);
@@ -865,11 +871,18 @@
                         $(tubes_list).append('<div class="well">Пробирки не приязаны</div>');
                     }
                     g = $('<div class="btn-group"></div>').appendTo(researches_list);
-                    $(g).append('<div class="btn btn-default research-title col-md-10">{0}</div>'.f(v.title));
+                    add_txt = "";
+                    if (v.readonly) add_txt = "readonly ";
+                    add_txt += "<span class='hidden-d' id='hd-{0}'>скрыт</span>".f(v.pk);
+                    $(g).append('<div class="btn btn-default research-title col-md-9"><span style="float: right; color: #757575;font-size: 8pt">{1}</span>{0}</div>'.f(v.title, add_txt));
+                    //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
+                    $(g).append('<div class="btn btn-default col-md-1" onclick="toggle_hide({0});" title="Скрыть/показать">Скр.</div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="tune_research({0});"><i class="glyphicon glyphicon-cog"></i></div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
+                    if (!v.hide) $(".hidden-d", g).hide();
                 });
-                $.each($(".one-tube"), function (k, v) {
+                $(".readonly .tube-drag").removeClass("tube-drag");
+                $.each($(".one-tube:not(.readonly)"), function (k, v) {
                     $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
                 });
 
@@ -903,7 +916,19 @@
                 });
             });
         }
-
+        function toggle_hide(pk) {
+            $.ajax({url: "/directory/researches/hide/toggle", data: {pk: pk}}).done(function (data) {
+                if (data.status_hide)
+                    $("#hd-" + pk).show();
+                else
+                    $("#hd-" + pk).hide();
+            });
+        }
+        function copy(pk) {
+            $.ajax({url: "/directory/researches/copy", data: {pk: pk}}).done(function (data) {
+                loadform(data.pk);
+            });
+        }
         /** Сохранение исследования */
         function save() {
             syncFractions();

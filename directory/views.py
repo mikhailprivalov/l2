@@ -4,22 +4,23 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
-
+import directions.models as directions
 
 @csrf_exempt
 @login_required
 def directory_researches(request):
     """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
-    return_result = {}
+    return_result = {"tubes_r": []}
     if request.method == "POST":
         research = json.loads(request.POST["research"])
-        if not research["title"] or not research["id"]:
-            return_result = {"ok": False}
+        if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
+                research__pk=int(research["id"])).exists():
+            return_result = {"ok": False, "tubes_r": []}
         else:
             if research["id"] == -1:
                 research_obj = Researches(subgroup=Subgroups.objects.get(pk=research["lab_group"]))
             else:
-                research_obj = Researches.objects.get(pk=research["id"])
+                research_obj = Researches.objects.get(pk=int(research["id"]))
             research_obj.title = research["title"]
             if not research["preparation"]:
                 research["preparation"] = "Не требуется"
@@ -30,14 +31,17 @@ def directory_researches(request):
             research_obj.save()
             # Fractions.objects.filter(research=research_obj).delete()
             fractions_pk = []
+            return_result["F"] = []
             for key in research["fraction"].keys():
-                tube_relation = ReleationsFT.objects.get(pk=key.split("-")[1])
+                tube_relation = ReleationsFT.objects.get(pk=int(key.split("-")[1]))
                 for fraction in research["fraction"][key]["fractions"]:
-                    if fraction["pk"] == -1:
+                    if int(fraction["pk"]) < 0:
                         fraction_obj = Fractions(title=fraction["title"], research=research_obj,
                                                  units=fraction["units"],
                                                  relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
                                                  ref_f=json.dumps(fraction["ref_f"]))
+                        fraction_obj.save()
+                        return_result["F"].append((tube_relation.pk, fraction_obj.pk, key, int(key.split("-")[1])))
                     else:
                         fraction_obj = Fractions.objects.get(pk=fraction["pk"])
                         fraction_obj.title = fraction["title"]
@@ -45,19 +49,24 @@ def directory_researches(request):
                         fraction_obj.units = fraction["units"]
                         fraction_obj.ref_m = fraction["ref_m"]
                         fraction_obj.ref_f = fraction["ref_f"]
+                        # fraction_obj
                         fractions_pk.append(fraction["pk"])
-                    fraction_obj.save()
-            fractions = Fractions.objects.filter(research=research_obj)
+                        fraction_obj.save()
+            '''fractions = Fractions.objects.filter(research=research_obj)
             for fraction in fractions:
                 if fraction.pk not in fractions_pk:
-                    fraction.delete()
-            return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title}
+                    fraction.delete()'''
+            return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title,
+                             "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
     elif request.method == "GET":
         return_result = {"researches": []}
         subgroup_id = request.GET["lab_group"]
         researches = Researches.objects.filter(subgroup__pk=subgroup_id)
         for research in researches:
-            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0}
+            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False,
+                       "hide": research.hide}
+            if directions.Issledovaniya.objects.filter(research=research).exists():
+                resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research)
             for fraction in fractions:
                 if fraction.relation.pk not in resdict["tubes"].keys():
@@ -77,7 +86,7 @@ def directory_researches_list(request):
     return_result = []
     if request.method == "GET":
         lab_id = request.GET["lab_id"]
-        researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id)
+        researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
         for research in researches:
             return_result.append({"pk": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}})
 
@@ -123,6 +132,27 @@ def directory_researches_update_mode(request):
 
 @csrf_exempt
 @login_required
+def directory_toggle_hide_research(request):
+    result = {}
+    pk = request.REQUEST["pk"]
+    research = Researches.objects.get(pk=int(pk))
+    research.hide = not research.hide
+    research.save()
+    return HttpResponse(json.dumps({"status_hide": research.hide}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_copy_research(request):
+    pk = request.REQUEST["pk"]
+    research = Researches.objects.get(pk=int(pk))
+    research.pk = None
+    research.save()
+    return HttpResponse(json.dumps({"pk": research.pk}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
 def directory_research(request):
     """GET: получение исследования и фракций"""
     return_result = {}
@@ -133,6 +163,8 @@ def directory_research(request):
         return_result["quota"] = research.quota_oms
         return_result["preparation"] = research.preparation
         return_result["edit_mode"] = research.edit_mode
+        return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
+        return_result["hide"] = research.hide
         return_result["fractiontubes"] = {}
         return_result["uet_doc"] = {}
         return_result["uet_lab"] = {}

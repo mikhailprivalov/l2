@@ -45,77 +45,98 @@ def dir_save(request):
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0  # Идентификатор направления
         if client_id and researches:  # если client_id получен и исследования получены
+            no_attach = False
+            conflict_list = []
+            conflict_keys = []
             for v in researches:  # нормализация исследований
                 if v:
                     researches_grouped_by_lab.append(
                         {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
                     # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
+
+                    for vv in v:
+                        if not vv or not vv.isnumeric():
+                            continue
+                        research_tmp = directory.Researches.objects.get(pk=int(vv))
+                        if research_tmp.no_attach and research_tmp.no_attach > 0:
+                            if research_tmp.no_attach not in conflict_keys:
+                                conflict_keys.append(research_tmp.no_attach)
+                                if not no_attach:
+                                    conflict_list = [research_tmp.title]
+                            else:
+                                no_attach = True
+                                conflict_list.append(research_tmp.title)
                 i += 1
+
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res[key] = v[key]
-            # {5:[0,2,5,7],6:[8]}
+                    # {5:[0,2,5,7],6:[8]}
 
-            # TODO: Обратить внимание!
-            # TODO: Нарисовать отдельную блок-схему
+            if not no_attach:
+                # TODO: Обратить внимание!
+                # TODO: Нарисовать отдельную блок-схему
 
-            directionsForResearches = {}  # Словарь для временной записи направлений.
-            # Исследование привязываются к направлению по группе
+                directionsForResearches = {}  # Словарь для временной записи направлений.
+                # Исследование привязываются к направлению по группе
 
-            finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
-            result["mda"] += json.dumps(res)
+                finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
+                result["mda"] += json.dumps(res)
 
-            for key in res:  # перебор лабораторий
-                for v in res[key]:  # перебор выбраных исследований в лаборатории
-                    research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
+                for key in res:  # перебор лабораторий
+                    for v in res[key]:  # перебор выбраных исследований в лаборатории
+                        research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
 
-                    dir_group = -1
-                    if research.direction:
-                        dir_group = research.direction.pk  # получение группы исследования
-                    # Если группа == 0, исследование не группируется с другими в одно направление
-                    if dir_group >= 0 and dir_group not in directionsForResearches.keys():
-                        # Если исследование может группироваться и направление для группы не создано
+                        dir_group = -1
+                        if research.direction:
+                            dir_group = research.direction.pk  # получение группы исследования
+                        # Если группа == 0, исследование не группируется с другими в одно направление
+                        if dir_group >= 0 and dir_group not in directionsForResearches.keys():
+                            # Если исследование может группироваться и направление для группы не создано
 
-                        # Создание направления для группы
-                        directionsForResearches[dir_group] = Napravleniya(
-                            client=Importedclients.objects.get(pk=client_id),
-                            # Привязка пациента к направлению
-                            doc=request.user.doctorprofile,
-                            # Привязка врача к направлению
-                            istochnik_f=finsource,
-                            # Установка источника финансирования
-                            diagnos=diagnos)  # Установка диагноза
+                            # Создание направления для группы
+                            directionsForResearches[dir_group] = Napravleniya(
+                                client=Importedclients.objects.get(pk=client_id),
+                                # Привязка пациента к направлению
+                                doc=request.user.doctorprofile,
+                                # Привязка врача к направлению
+                                istochnik_f=finsource,
+                                # Установка источника финансирования
+                                diagnos=diagnos)  # Установка диагноза
 
-                        directionsForResearches[dir_group].save()  # Сохранение направления
+                            directionsForResearches[dir_group].save()  # Сохранение направления
 
-                        result["mda"] += str(dir_group)  # Отладка
-                        result["list_id"].append(
-                            directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                    if dir_group < 0:  # если исследование не должно группироваться
-                        dir_group = "id" + str(
-                            research.pk)  # формирование ключа (группы) для негруппируемого исследования
+                            result["mda"] += str(dir_group)  # Отладка
+                            result["list_id"].append(
+                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                        if dir_group < 0:  # если исследование не должно группироваться
+                            dir_group = "id" + str(
+                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
-                        # Создание направления для исследования
-                        directionsForResearches[dir_group] = Napravleniya(
-                            client=Importedclients.objects.get(pk=client_id),
-                            # Привязка пациента к направлению
-                            doc=request.user.doctorprofile,
-                            # Привязка врача к направлению
-                            istochnik_f=finsource,
-                            # Установка источника финансирования
-                            diagnos=diagnos)  # Установка диагноза
+                            # Создание направления для исследования
+                            directionsForResearches[dir_group] = Napravleniya(
+                                client=Importedclients.objects.get(pk=client_id),
+                                # Привязка пациента к направлению
+                                doc=request.user.doctorprofile,
+                                # Привязка врача к направлению
+                                istochnik_f=finsource,
+                                # Установка источника финансирования
+                                diagnos=diagnos)  # Установка диагноза
 
-                        directionsForResearches[dir_group].save()  # Сохранение направления
-                        result["list_id"].append(
-                            directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
-                    issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
-                                                  # Установка направления для группы этого исследования
-                                                  research=research)  # Создание направления на исследование
-                    issledovaniye.save()  # Сохранение направления на исследование
+                            directionsForResearches[dir_group].save()  # Сохранение направления
+                            result["list_id"].append(
+                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                            result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
+                        issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
+                                                      # Установка направления для группы этого исследования
+                                                      research=research)  # Создание направления на исследование
+                        issledovaniye.save()  # Сохранение направления на исследование
 
-            result["r"] = True  # Флаг успешной вставки в True
-            result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+                result["r"] = True  # Флаг успешной вставки в True
+                result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+            else:
+                result["r"] = False
+                result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
 
@@ -225,7 +246,7 @@ def printDirection(c, n, dir):
     else:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
 
-    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
+    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__title")
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
                  "Лаборатория: " + issledovaniya[0].research.subgroup.podrazdeleniye.title)
@@ -306,7 +327,7 @@ def get_one_dir(request):
         id = int(request.GET['id'])  # Получение идентификатора направления
         if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
             tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
-            tmp = Issledovaniya.objects.filter(napravleniye=tmp2)
+            tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
             '''.order_by(
                 '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
             response["direction"] = {"pk": tmp2.pk,
@@ -672,10 +693,21 @@ def get_issledovaniya(request):
 
 @login_required
 def get_client_directions(request):
+    import datetime
     res = {"directions": [], "ok": False}
     if request.method == "GET":
         pk = int(request.GET["pk"])
-        napr_list = Napravleniya.objects.filter(client__pk=pk, doc=request.user.doctorprofile)
+        req_status = int(request.GET["status"])
+        date_start = request.GET["date[start]"]
+        date_end = request.GET["date[end]"]
+
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+
+        napr_list = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk,
+                                                doc=request.user.doctorprofile).order_by("-data_sozdaniya")
 
         for napr in napr_list:
             status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
@@ -694,8 +726,10 @@ def get_client_directions(request):
                     iss_status = 2
                 status = min(iss_status, status)
 
-            res["directions"].append(
-                {"pk": napr.pk, "status": status, "researches": ', '.join(v.research.title for v in iss_list),
-                 "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT))})
+            if req_status == 3 or req_status == status:
+                res["directions"].append(
+                    {"pk": napr.pk, "status": status, "researches": ', '.join(v.research.title for v in iss_list),
+                     "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                     "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
         res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

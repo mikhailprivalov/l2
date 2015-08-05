@@ -10,11 +10,11 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
     get_issledovaniya, get_client_directions
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter
+    result_filter, get_full_result, get_odf_result
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
-    directory_researches_update_mode
+    directory_researches_update_mode, directory_toggle_hide_research, directory_copy_research
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -32,6 +32,8 @@ urlpatterns = [
                   url(r'^directory/tubes/relation$', tubes_relation),
                   url(r'^directory/research$', directory_research),
                   url(r'^directory/researches$', directory_researches),
+                  url(r'^directory/researches/hide/toggle$', directory_toggle_hide_research),
+                  url(r'^directory/researches/copy$', directory_copy_research),
                   url(r'^directory/researches/group$', directory_researches_group),
                   url(r'^directory/researches/directions$', directory_get_directions),
                   url(r'^directory/researches/list$', directory_researches_list),
@@ -49,7 +51,9 @@ urlpatterns = [
                   url(r'^results/enter', enter),
                   url(r'^results/save', results_save),
                   url(r'^results/loadready', loadready),
-                  url(r'^results/get', result_get),
+                  url(r'^results/get$', result_get),
+                  url(r'^results/get/full$', get_full_result),
+                  url(r'^results/get/odf$', get_odf_result),
                   url(r'^results/conformation$', result_conformation),
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/pdf', result_print),

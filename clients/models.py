@@ -19,7 +19,7 @@ class Importedclients(models.Model):
         managed = False
         db_table = 'ImportedClients'
 
-    def fio(self):
+    def fio(self) -> str:
         return self.family + " " + self.name + " " + self.twoname
 
     def bd(self):
@@ -38,11 +38,10 @@ class Importedclients(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self):
+    def age_s(self) -> str:
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
-
         age = self.age()
         if age < 5:
             _let = morph.parse("год")[0]

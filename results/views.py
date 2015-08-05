@@ -94,6 +94,110 @@ def result_confirm(request):
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
+@login_required
+def get_full_result(request):
+    result = {"ok": False}
+    if request.method == "GET":
+        pk = int(request.GET["pk"])
+        napr = Napravleniya.objects.get(pk=pk)
+        iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+        if not iss_list.filter(doc_confirmation__isnull=True).exists():
+
+            result["direction"] = {}
+            result["direction"]["pk"] = napr.pk
+            result["direction"]["doc"] = iss_list[0].doc_confirmation.get_fio()
+            result["direction"]["date"] = str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT))
+
+            result["client"] = {}
+            result["client"]["sex"] = napr.client.sex
+            result["client"]["fio"] = napr.client.fio()
+            result["client"]["age"] = napr.client.age_s()
+            result["client"]["cardnum"] = napr.client.num
+            result["client"]["dr"] = str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT))
+
+            result["results"] = {}
+            for issledovaniye in iss_list:
+                result["results"][issledovaniye.pk] = {"title": issledovaniye.research.title, "fractions": {}}
+                results = Result.objects.filter(issledovaniye=issledovaniye)
+                for res in results:
+                    if res.fraction.pk not in result["results"][issledovaniye.pk]["fractions"].keys():
+                        result["results"][issledovaniye.pk]["fractions"][res.fraction.pk] = {}
+
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["result"] = res.value
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["title"] = res.fraction.title
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["units"] = res.fraction.units
+                    ref_m = res.fraction.ref_m
+                    ref_f = res.fraction.ref_f
+                    if not isinstance(ref_m, str):
+                        ref_m = json.dumps(ref_m)
+                    if not isinstance(ref_f, str):
+                        ref_f = json.dumps(ref_f)
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_m"] = ref_m
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_f"] = ref_f
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@login_required
+def get_odf_result(request):
+    pass
+    '''
+    from django.shortcuts import redirect
+    import os.path
+    from relatorio.templates.opendocument import Template
+    import hashlib
+    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+    result = {}
+
+    pk = int(request.REQUEST["pk"])
+    napr = Napravleniya.objects.get(pk=pk)
+    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+    class ResultD(dict):
+        pass
+
+    if not iss_list.filter(doc_confirmation__isnull=True).exists():
+
+        result["direction"] = {}
+        result["direction"]["pk"] = napr.pk
+        result["direction"]["doc"] = iss_list[0].doc_confirmation.get_fio()
+        result["direction"]["date"] = str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT))
+
+        result["cl"] = {}
+        result["cl"]["sex"] = napr.client.sex
+        result["cl"]["fio"] = napr.client.fio()
+        result["cl"]["ag"] = napr.client.age_s()
+        result["cl"]["cn"] = napr.client.num
+        result["cl"]["d"] = str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT))
+
+        result["results"] = {}
+        for issledovaniye in iss_list:
+            result["results"][issledovaniye.pk] = {"title": issledovaniye.research.title, "fractions": {}}
+            results = Result.objects.filter(issledovaniye=issledovaniye)
+            for res in results:
+                if res.fraction.pk not in result["results"][issledovaniye.pk]["fractions"].keys():
+                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk] = {}
+
+                result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["result"] = res.value
+                result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["title"] = res.fraction.title
+                result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["units"] = res.fraction.units
+                ref_m = res.fraction.ref_m
+                ref_f = res.fraction.ref_f
+                if not isinstance(ref_m, str):
+                    ref_m = json.dumps(ref_m)
+                if not isinstance(ref_f, str):
+                    ref_f = json.dumps(ref_f)
+                result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_m"] = ref_m
+                result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_f"] = ref_f
+
+    basic = Template(source=None, filepath=PROJECT_ROOT+'/../static/tpl1.odt')
+    basic_generated = basic.generate(o=ResultD(r=result)).render()
+    fn = hashlib.sha256((str(pk)+"_direction").encode('utf-8')).hexdigest()
+
+    file = open(PROJECT_ROOT + r'/../static/tmp/result-'+fn+'.odt', 'wb')
+    file.write(basic_generated.getvalue())
+    return redirect('/../static/tmp/result-'+fn+'.odt')'''
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
 

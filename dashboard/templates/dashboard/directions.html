@@ -3,7 +3,7 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="row">
-        <div class="col-md-6" id="div1" style="height: 420px">
+        <div class="col-md-6" id="div1" style="height: 440px">
             <div>
                 <h5>Категория пациентов:</h5>
 
@@ -54,51 +54,46 @@
                 </tr>
             </table>
         </div>
-        <div class="col-md-6" id="div2" style="height: 420px">
-            <table class="table table-hover">
-                <tr>
-                    <th>№</th>
-                    <th>Дата назначения</th>
-                    <th>Лаборатория</th>
-                    <th>Вид анализа</th>
-                    <th>Управление</th>
-                </tr>
-                <tr>
-                    <td>5</td>
-                    <td>11.06.2015</td>
-                    <td>Иммунология</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>4</td>
-                    <td>11.06.2015</td>
-                    <td>Иммунология</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>11.06.2015</td>
-                    <td>Иммунология</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>11.06.2015</td>
-                    <td>Иммунология</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>1</td>
-                    <td>11.06.2015</td>
-                    <td>Иммунология</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </table>
+        <div class="col-md-6" id="div2" style="height: 440px">
+            <div class="row">
+                <div class="col-md-3">
+                    <h6>Дата назначения:</h6>
+
+                    <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                        <input type="text" class="input-sm form-control" name="date-start"/>
+                        <span class="input-group-addon"
+                              style="background-color: #fff;color: #000">&mdash;</span>
+                        <input type="text" class="input-sm form-control" name="date-end"/>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <h6>Статус:</h6>
+                    <select class="select-b" data-live-search="false" data-width="175px" id="status">
+                        <option value="3">Любой</option>
+                        <option value="0">Выписаные</option>
+                        <option value="1">Материал доставлен в лабораторию</option>
+                        <option value="2">Подтвержденные</option>
+                    </select>
+                </div>
+                <div class="col-md-3"></div>
+                <div class="col-md-3"><h6><br/></h6>
+                    <button onclick="fast_ld_dirs();return false;" class="btn btn-primary-nb">Обновить список</button>
+                </div>
+            </div>
+            <div style="padding-top: 10px" id="story-list">
+                <table class="table table-hover table-bordered">
+                    <thead>
+                    <tr>
+                        <th style="width: 105px">Дата назначения</th>
+                        <th>Лаборатория</th>
+                        <th>Анализы</th>
+                        <th style="width: 45px">Статус</th>
+                        <th style="width: 240px"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="story-table"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -119,7 +114,7 @@
             <div style="margin-bottom: 20px">
                 <div class="col-md-7" style="padding-left: 0">
                     <input name="diagnos" id="diagnos-field" class="form-control" placeholder="Направительный диагноз"
-                           onkeyup="sync();" style="margin-bottom: 20px"/>
+                           onkeyup="sync(true);" style="margin-bottom: 20px"/>
                 </div>
                 <div class="col-md-5" id="sources" style="text-align: center">
                     <div class="btn-group" id="fin_poli" data-toggle="buttons" style="display: inline-block;">
@@ -139,7 +134,9 @@
             <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
             <div class="row">
                 <div class="col-md-3">
-                    <button class="btn btn-primary-nb ctrl" disabled onclick="save_direction();">Сохранить</button>
+                    <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();">
+                        Сохранить
+                    </button>
                 </div>
                 <div class="col-md-3">
                     <button onclick="clear_direction();" class="btn btn-blue-nb ctrl" disabled>Очистить</button>
@@ -164,10 +161,80 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="results-modal">
+        <div class="modal-dialog" style="min-width: 50%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Результаты анализов</h4>
+                </div>
+                <div class="modal-body" id="results-body">
+                    <table style="width: 100%">
+                        <tr>
+                            <td style="text-align: left" id="res-dir-num">№ <span></span></td>
+                            <td style="text-align: center"></td>
+                            <td style="text-align: right">Дата: <span id="res-date"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left" colspan="2">ФИО: <span id="res-fio"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left">Номер карты: <span id="res-cardnum"></span></td>
+                            <td style="text-align: center">Пол: <span id="res-sex"></span></td>
+                            <td style="text-align: right">Дата рождения: <span id="res-dr"></span> (<span
+                                    id="res-age"></span>)
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table ct" id="results-tb" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th style="padding: 2px">Исследование</th>
+                            <th style="padding: 2px;width: 190px">Значение</th>
+                            <th style="padding: 2px;width: 110px">Еденицы измерения</th>
+                            <th style="padding: 2px;width: 35%">Референсы</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <div>Врач (лаборант): <span id="res-doc"></span></div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" onclick="selectText('results-body');return false;" class="print-btn btn btn-blue-nb">Выделить
+                        результаты</a>
+                    <a href="/results/pdf?pk=[614]" target="_blank" class="print-btn btn btn-blue-nb">Печать
+                        результатов</a>
+                    <button type="button" class="btn btn-blue-nb" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/js/jquery.tablesorter.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
+        function selectText(element) {
+            var doc = document;
+            var text = doc.getElementById(element);
+
+            if (doc.body.createTextRange) { // ms
+                var range = doc.body.createTextRange();
+                range.moveToElementText(text);
+                range.select();
+            } else if (window.getSelection) { // moz, opera, webkit
+                var selection = window.getSelection();
+                var range = doc.createRange();
+                range.selectNodeContents(text);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+
         var client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
         var types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
         var res = [];  // Кэш поиска
@@ -184,6 +251,8 @@
         var dict = new Array();
 
         $(document).ready(function () {
+            $("#div2 input, #div2 button").prop("disabled", true);
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             $("#fin_stat").hide();
             //$("#fin_poli input:first").parent('.btn').addClass('active');
             $("#search-field").bind('keyup', 'return', function () {
@@ -203,7 +272,92 @@
                 sync(true);
             });
             sync(true);
+
+            var today = new Date();
+
+            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
+            $('#datepicker').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
         });
+
+        function show_results(pk) {
+            $("#results-modal #res-dir-num span").text("");
+            $("#results-modal #res-date").text("");
+            $("#results-modal #res-fio").text("");
+            $("#results-modal #res-cardnum").text("");
+            $("#results-modal #res-sex").text("");
+            $("#results-modal #res-dr").text("");
+            $("#results-modal #res-age").text("");
+            $("#results-modal #res-doc").text("");
+            $("#results-modal .ct tbody").html("");
+            $.ajax({url: "/results/get/full", method: "GET", data: {pk: pk}}).done(function (data) {
+                $("#results-modal #res-dir-num span").text(data.direction.pk);
+                $("#results-modal #res-date").text(data.direction.date);
+                $("#results-modal #res-doc").text(data.direction.doc);
+
+                $("#results-modal #res-dr").text(data.client.dr);
+                $("#results-modal #res-fio").text(data.client.fio);
+                $("#results-modal #res-sex").text(data.client.sex);
+                $("#results-modal #res-age").text(data.client.age);
+                $("#results-modal #res-age").text(data.client.age);
+                $("#results-modal #res-cardnum").text(data.client.cardnum);
+
+                $.each(data.results, function (k, v) {
+                    if (Object.keys(v.fractions).length == 1) {
+                        key_v = Object.keys(v.fractions)[0];
+                        ref = JSON.parse(v.fractions[key_v].ref_f);
+                        if (data.client.sex.toLowerCase().trim() == "м")
+                            ref = JSON.parse(v.fractions[key_v].ref_m);
+                        ref_array = []
+                        $.each(ref, function (key, value) {
+                            ref_array.push("{0} : {1}".f(key, value));
+                        });
+                        ref_str = ref_array.join(", ");
+                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v.title, v.fractions[key_v].result, v.fractions[key_v].units, ref_str));
+                    }
+                    else if (Object.keys(v.fractions).length > 1) {
+                        td_str = "";
+                        td2_str = "";
+                        td3_str = "";
+                        td4_str = "";
+                        $.each(v.fractions, function (kk, vv) {
+                            ref = JSON.parse(vv.ref_f);
+                            if (data.client.sex.toLowerCase().trim() == "м")
+                                ref = JSON.parse(vv.ref_m);
+                            ref_array = []
+                            $.each(ref, function (key, value) {
+                                ref_array.push("{0} : {1}".f(key, value));
+                            });
+                            ref_str = ref_array.join(", ");
+                            td_str += "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title + "<br/>";
+                            td2_str += vv.result + "<br/>";
+                            td3_str += vv.units + "<br/>";
+                            td4_str += ref_str + "<br/>";
+                        });
+                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b><br/>{1}</td><td><br/>{2}</td><td><br/>{3}</td><td><br/>{4}</td></tr>".f(v.title, td_str, td2_str, td3_str, td4_str));
+
+                    }
+                });
+                $("#results-modal .ct td, #results-modal .ct th").css({
+                    border: "1px solid #000",
+                    padding: 2,
+                    fontSize: 14
+                });
+                $("#results-modal .print-btn").attr("href", "/results/pdf?pk=[" + pk + "]");
+                $("#results-modal").modal();
+            });
+        }
+
         function sync(notfull) {
             $("#table-researches-preview").html("");
             $("#table-researches-preview").append(lang.table_researches_preview_header);
@@ -239,11 +393,36 @@
                 load_researches();
             console.log(JSON.stringify(tmp_direction.researches))
         }
+        function fast_ld_dirs() {
+            load_client_dirs(client_id);
+        }
+        var statuses = {0: "0", 1: "1", 2: "2"}
+        var statuses_titles = {
+            0: "Направление выписано",
+            1: "Материал получен лабораторией",
+            2: "Результат подтвержден"
+        }
         function load_client_dirs(id) {
-            console.log(id);
-            $.ajax({url: "/directions/list/client", data: {pk: id}}).done(function (data) {
-                console.log(data);
+            var data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
+            data.status = $("#status").val();
+            $.ajax({url: "/directions/list/client", data: data}).done(function (data) {
+                $("#story-table").html("");
+                if (data.ok) {
+                    $.each(data.directions, function (k, v) {
+                        $("#story-table").append("<tr>" +
+                                "<td>{0}</td>".f(v.date) +
+                                "<td>{0}</td>".f(v.lab) +
+                                "<td>{0}</td>".f(v.researches) +
+                                "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
+                                "<td>" +
+                                (v.status == 2 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
+                                "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-blue-nb'>Направление</a>".f(v.pk) +
+                                "</td>" +
+                                "</tr>");
+                    });
+                }
             });
+            $('#story-list').scrollTop(0);
         }
         function rem(k, key) {
             id = checked[k][key];
@@ -260,6 +439,7 @@
             }
         }
         function search(query) { // Функция поиска
+            $("#div2 input, #div2 button").prop("disabled", true);
             type = $('input[name=type]:checked').val(); // Получение выбранного типа базы
             query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
@@ -321,6 +501,7 @@
             return false;
         }
         function show_card(fields, pk) { // Функция формирования карты пациента
+            $("#div2 input, #div2 button").prop("disabled", false);
             load_client_dirs(pk);
             clear(); // Вызов функции очистки
             client_id = pk;
@@ -418,55 +599,15 @@
                 sync();
             });
         }
-        /*
-         function perform_ref(vm, vf) {
-         r_m = "";
-         r_f = "";
-
-         $.each(vm, function (k1, v1) {
-         fr = format_ref(k1, v1);
-         r_m = "{0}{1}, ".f(r_m, fr);
-         });
-         $.each(vf, function (k1, v1) {
-         fr = format_ref(k1, v1);
-         r_f = "{0}{1}, ".f(r_f, fr);
-         });
-         if (r_m === r_f)
-         return "<td>{0}</td>".f(r_m.substring(0, r_m.length - 2));
-         return "<td>М: {0}<br/>Ж: {1}</td>".f(r_m.substring(0, r_m.length - 2), r_f.substring(0, r_f.length - 2));
-         }
-         function format_ref(k, v) {
-         key = "{0} : ".f(k);
-         if (k in ref_types) {
-         if (ref_types[k].show) key = "{0} : ".f(ref_types[k].s);
-         else key = "";
-         }
-         return key + "" + v;
-         }
-
-         function to(t) {
-         $(t).toggleClass("opened");
-         }
-
-         function replaceAll(find, replace, str) {
-         return str.replace(new RegExp(find, 'g'), replace);
-         }
-
-         function reverse(a) {
-         var temp = [];
-         var len = a.length;
-         for (var i = (len - 1); i !== 0; i--) {
-         temp.push(a[i]);
-         }
-         return result;
-         }
-         function declOfNum(number, titles) {
-         cases = [2, 0, 1, 1, 1, 2];
-         return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
-         }*/
         function save_direction() {
             try {
                 $('#sources').tooltipster('destroy');
+            }
+            catch (e) {
+
+            }
+            try {
+                $('#save-btn').tooltipster('destroy');
             }
             catch (e) {
 
@@ -492,10 +633,73 @@
                     clear_fast();
                     $("#sources .active").removeClass("active");
                 }
+                else if (data[0].message) {
+                    $('#save-btn').tooltipster({
+                        content: data[0].message,
+                        theme: "tooltipster-shadow"
+                    });
+                    $('#save-btn').tooltipster('show');
+                }
             });
+        }
+
+        function resize() {
+            $('#story-list').height(370);
+            $('#story-list').perfectScrollbar();
         }
     </script>
     <style>
+        #results-modal .modal-body {
+            color: #000
+        }
+
+        table.ct {
+            border-collapse: collapse;
+            margin-top: 5px
+        }
+
+        table.ct td {
+            border-collapse: collapse;
+            margin-top: 5px;
+
+            padding: 2px !important;
+        }
+
+        table.ct, .ct th, .ct td, .ct tr, .ct tbody, .ct thead {
+            border: 1px solid black !important;
+            font-weight: normal;
+            background-color: #fff;
+        }
+
+        .btn-sm.btn-blue-nb {
+            margin: 2px;
+            width: 105px;
+            display: inline-block;
+        }
+
+        .status {
+            vertical-align: middle;
+            font-weight: 600;
+            font-size: 12pt;
+            width: 100%;
+            text-align: center;
+        }
+
+        .status-0 {
+            color: #CF3A24
+        }
+
+        .status-1 {
+            color: #4B77BE
+        }
+
+        .status-2 {
+            color: #049372
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
         .active {
             background-color: #656D78 !important;
             color: #fff !important;
@@ -557,6 +761,23 @@
 
         .has-error {
             border-color: #E9573F;
+        }
+
+        h6 {
+            margin: 3px;
+        }
+
+        #results-modal .ct tbody td {
+            white-space: nowrap;
+            word-wrap: normal;
+        }
+
+        #story-list {
+            position: relative;
+        }
+
+        #story-table td {
+            padding: 2px;
         }
     </style>
 {% endblock %}
