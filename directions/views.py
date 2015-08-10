@@ -630,20 +630,32 @@ def get_issledovaniya(request):
         res["all_confirmed"] = True
         if id.isnumeric():
             if request.GET["type"] == "0":
-                tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
-                if tube.doc_recive:
-                    iss = Issledovaniya.objects.filter(tubes__id=id).all()
-                    '''ishide = False
-                    for iss_check in iss:
-                        if iss_check.issledovaniye.hide == 0:
-                            ishide = False
+                if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() <= 1:
+                    tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
+                    if tube.doc_recive:
+                        iss = Issledovaniya.objects.filter(tubes__id=id).all()
+                        '''ishide = False
+                        for iss_check in iss:
+                            if iss_check.issledovaniye.hide == 0:
+                                ishide = False
 
-                    if ishide:
-                        iss = Issledovaniya.objects.filter(tube=tube)
+                        if ishide:
+                            iss = Issledovaniya.objects.filter(tube=tube)
+                            napr = iss.first().napravleniye
+                            iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
+                        else:'''
                         napr = iss.first().napravleniye
-                        iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
-                    else:'''
-                    napr = iss.first().napravleniye
+                else:
+                    tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
+                    for tube in tubes:
+                        if tube.doc_recive:
+                            lit = Issledovaniya.objects.filter(tubes__id=id).all()
+                            if lit.count() != 0:
+                                iss = []
+                            for i in lit:
+                                iss.append(i)
+                    if len(iss) > 0:
+                        napr = iss[0].napravleniye
             elif request.GET["type"] == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)

@@ -3,24 +3,24 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <!--TODO: интерфейс-->
-    <div class="row">
+    <div class="row" style="margin: 0">
         <table class="table table-bordered">
             <tr>
-                <td style="width: 320px"><h4>Лаборатория:&nbsp;&nbsp;</h4></td>
+                <td style="width: 320px"><h6>Лаборатория:&nbsp;&nbsp;</h6></td>
                 <td>
-                    <h4>{{ request.user.doctorprofile.podrazileniye.title }}</h4>
+                    <h6>{{ request.user.doctorprofile.podrazileniye.title }}</h6>
                 </td>
                 <td>
                     <div style="text-align: right">
-                        <h4>Дата:
+                        <h6>Дата:
                             <script>var today = new Date();
                             document.write(getFormattedDate(today));</script>
-                        </h4>
+                        </h6>
                     </div>
                 </td>
             </tr>
             <tr>
-                <td style="width: 320px"><h4>Подразделение в лаборатории:&nbsp;&nbsp;</h4>
+                <td style="width: 320px"><h6>Подразделение в лаборатории:&nbsp;&nbsp;</h6>
                 </td>
                 <td>
                     <select class="selectpicker" data-width="100%" id="subgroup" onchange="load_tubes();">
@@ -30,7 +30,7 @@
                 <td></td>
             </tr>
             <tr>
-                <td style="width: 320px"><h4>Отделение (от кого):&nbsp;&nbsp;</h4></td>
+                <td style="width: 320px"><h6>Отделение (от кого):&nbsp;&nbsp;</h6></td>
                 <td>
                     <select class="selectpicker" data-width="100%" id="from" onchange="load_tubes();">
                         {% for v in podrazdeleniya %}
@@ -46,20 +46,22 @@
                 <table class="table table-bordered table-responsive">
                     <thead>
                     <th style="width: 70px">№ п/п</th>
-                    <th style="width: 280px">Тип пробирки</th>
-                    <th style="width: 180px">№ пробирки</th>
                     <th>Исследования</th>
                     <th style="width: 180px">№ направления</th>
+                    <th style="width: 280px">Тип пробирки</th>
+                    <th style="width: 180px">№ пробирки</th>
                     <th style="width: 180px">Принято</th>
                     <th style="width: 300px">Замечания</th>
                     </thead>
                     <tbody id="tubes"></tbody>
                 </table>
-                <div class="r">
-                    <button class='btn btn-success' style="width: 200px" onclick='save()'>Сохранить</button>
-                </div>
             </div>
-            <br/>
+
+            <div class="r">
+                <button class='btn btn-primary-nb' style="margin-top: 5px;width: auto!important;" onclick='save()'>
+                    Сохранить
+                </button>
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -78,13 +80,13 @@
             $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
                 $("#tubes").html("");
                 $.each(data, function (k, v) {
-                    tube = "<td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></div></td>".format(v.tube.color, v.tube.type);
+                    tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
                     if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))
-                        $("#tubes").append(("<tr><td class='c'>{0}</td>" + tube + "<td class='c'>{2}</td><td>{3}</td><td class='c'>{5}</td><td class='c'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' /></label></td><td><div class='btn-group'><input id='notice_{2}' type='text' class='form-control'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
+                        $("#tubes").append(("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'>{5}</td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' /></label></td><td><div class='btn-group'><input id='notice_{2}' type='text' class='form-control'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
                     else if (v.tube.notice == undefined || v.tube.notice == "")
-                        $("#tubes").append("<tr><td class='c'>{0}</td><td style='background-color: {4}; color: #fff; text-shadow: 1px 1px 3px #000'>{1}</td><td class='c'>{2}</td><td>{3}</td><td class='c'>{6}</td><td class='c'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                        $("#tubes").append("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'>{6}</td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                     else
-                        $("#tubes").append("<tr><td class='c'>{0}</td><td style='background-color: {4}; color: #fff; text-shadow: 1px 1px 3px #000'>{1}</td><td class='c'>{2}</td><td>{3}</td><td class='c'>{6}</td><td><label class='c'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                        $("#tubes").append("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'>{6}</td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                 });
                 $('[data-toggle="tooltip"]').tooltip();
             });
@@ -127,7 +129,7 @@
         }
 
         function resize() {
-            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 20);
+            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 80);
             $('#scroll-tb').perfectScrollbar();
         }
     </script>
@@ -142,6 +144,10 @@
 
         .c {
             text-align: center;
+        }
+
+        td {
+            padding: 2px !important;
         }
 
         #scroll-tb {
@@ -210,5 +216,21 @@
             opacity: 1;
         }
 
+        td h6 {
+            margin: 4px !important;
+        }
+
+        td.tube {
+            padding: 2px !important;
+        }
+
+        td .form-control, .in, .in label {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        td .form-control {
+            height: 20px;
+        }
     </style>
 {% endblock %}
