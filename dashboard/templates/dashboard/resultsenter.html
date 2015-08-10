@@ -131,16 +131,16 @@
                 load_d_fast();
             });
         });
-
+        request = "";
         function load_d_fast() {
             type = $('label.btn.active input').val();
             load_data($('#search-field').val(), type);
         }
 
         function reload_fast() {
-            if (loaded_research < 0) return;
+            if (loaded_research < 0 && request != "") return;
 
-            load_data(dir_data.napr_pk, type, loaded_research);
+            load_data(request, type, loaded_research);
             //load_form(loaded_research);
         }
         var dir_data = {};
@@ -178,6 +178,7 @@
                 catch (e) {
 
                 }
+                request = id;
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
                 $(".select-dir.active, .select-tube.active").removeClass("active");

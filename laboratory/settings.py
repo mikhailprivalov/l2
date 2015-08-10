@@ -7,7 +7,7 @@ SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.105']
+ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2']
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -173,3 +173,12 @@ DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.logging.LoggingPanel',
     'cachalot.panels.CachalotPanel',
 )
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 1
+X_FRAME_OPTIONS = 'DENY'
+DEBUG = False
