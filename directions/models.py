@@ -3,12 +3,12 @@ from clients.models import Importedclients
 from users.models import DoctorProfile
 from jsonfield import JSONField
 from researches.models import Researches, Tubes
-
+import directory.models as directory
 
 class TubesRegistration(models.Model):
     # Таблица с пробирками для исследований
     id = models.AutoField(primary_key=True)
-    type = models.ForeignKey(Tubes)  # Тип пробирки
+    type = models.ForeignKey(directory.ReleationsFT)  # Тип пробирки
     time_get = models.DateTimeField(null=True, blank=True)  # Время взятия материала
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
                                 related_name='docget')  # Кто взял материал
@@ -44,11 +44,26 @@ class Napravleniya(models.Model):
     client = models.ForeignKey(Importedclients, db_index=True)  # Пациент
     doc = models.ForeignKey(DoctorProfile, db_index=True)  # Лечащий врач
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True)  # Источник финансирования
+    is_printed = models.BooleanField(default=False, blank=True)
+    time_print = models.DateTimeField(default=None, blank=True, null=True)
+    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print")
+
 
 
 class Issledovaniya(models.Model):
     # Направления на исследования
     napravleniye = models.ForeignKey(Napravleniya)  # Направление
-    issledovaniye = models.ForeignKey(Researches)  # Вид исследования из справочника
-    tube = models.ForeignKey(TubesRegistration, null=True, blank=True)  # Пробирка
-    resultat = JSONField()  # Результат исследования в JSON
+    research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
+    # resultat = JSONField()  # Результат исследования в JSON
+    tubes = models.ManyToManyField(TubesRegistration)
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save")
+    time_save = models.DateTimeField(null=True, blank=True)
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation")
+    time_confirmation = models.DateTimeField(null=True, blank=True)
+
+
+class Result(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya)
+    fraction = models.ForeignKey(directory.Fractions)
+    value = models.CharField(max_length=255, null=True, blank=True)
+    iteration = models.IntegerField(default=1, null=True)

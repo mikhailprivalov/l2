@@ -17,11 +17,16 @@ from researches.models import Researches
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from clients.models import Importedclients
 from django.views.decorators.cache import cache_page
+from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
+import slog.models as slog
+import directory.models as directory
 
 w, h = A4
 
 
 @csrf_exempt
+@login_required
 def dir_save(request):
     """Сохранение направления"""
     res = {}  # Словарь с направлениями, сгруппированными по лабораториям
@@ -40,89 +45,106 @@ def dir_save(request):
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0  # Идентификатор направления
         if client_id and researches:  # если client_id получен и исследования получены
+            no_attach = False
+            conflict_list = []
+            conflict_keys = []
             for v in researches:  # нормализация исследований
                 if v:
                     researches_grouped_by_lab.append(
                         {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
                     # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
+
+                    for vv in v:
+                        if not vv or not vv.isnumeric():
+                            continue
+                        research_tmp = directory.Researches.objects.get(pk=int(vv))
+                        if research_tmp.no_attach and research_tmp.no_attach > 0:
+                            if research_tmp.no_attach not in conflict_keys:
+                                conflict_keys.append(research_tmp.no_attach)
+                                if not no_attach:
+                                    conflict_list = [research_tmp.title]
+                            else:
+                                no_attach = True
+                                conflict_list.append(research_tmp.title)
                 i += 1
+
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res[key] = v[key]
-            # {5:[0,2,5,7],6:[8]}
+                    # {5:[0,2,5,7],6:[8]}
 
-            # TODO: Обратить внимание!
-            # TODO: Нарисовать отдельную блок-схему
+            if not no_attach:
+                # TODO: Обратить внимание!
+                # TODO: Нарисовать отдельную блок-схему
 
-            directionsForResearches = {}  # Словарь для временной записи направлений.
-            # Исследование привязываются к направлению по группе
+                directionsForResearches = {}  # Словарь для временной записи направлений.
+                # Исследование привязываются к направлению по группе
 
-            finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
-            result["mda"] += json.dumps(res)
-            for key in res:
-                append_list = []
-                for v in res[key]:
-                    research = Researches.objects.get(id_research=v, hide=0)
-                    if research.auto_add != 0:
-                        hidden_researches = Researches.objects.filter(auto_add=research.auto_add, hide=1)
-                        for val in hidden_researches:
-                            append_list.append(str(val.pk))
-                if len(append_list) > 0:
-                    res[key].extend(append_list)
-            result["mda"] += json.dumps(res)
+                finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
+                result["mda"] += json.dumps(res)
 
-            for key in res:  # перебор лабораторий
-                for v in res[key]:  # перебор выбраных исследований в лаборатории
-                    research = Researches.objects.get(id_research=v)  # получение объекта исследования по id
-                    dir_group = research.group  # получение группы исследования
-                    # Если группа == 0, исследование не группируется с другими в одно направление
-                    if research.group and research.group != 0 and dir_group not in directionsForResearches.keys():
-                        # Если исследование может группироваться и направление для группы не создано
+                for key in res:  # перебор лабораторий
+                    for v in res[key]:  # перебор выбраных исследований в лаборатории
+                        research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
 
-                        # Создание направления для группы
-                        directionsForResearches[dir_group] = Napravleniya(
-                            client=Importedclients.objects.get(pk=client_id),
-                            # Привязка пациента к направлению
-                            doc=request.user.doctorprofile,
-                            # Привязка врача к направлению
-                            istochnik_f=finsource,
-                            # Установка источника финансирования
-                            diagnos=diagnos)  # Установка диагноза
+                        dir_group = -1
+                        if research.direction:
+                            dir_group = research.direction.pk  # получение группы исследования
+                        # Если группа == 0, исследование не группируется с другими в одно направление
+                        if dir_group >= 0 and dir_group not in directionsForResearches.keys():
+                            # Если исследование может группироваться и направление для группы не создано
 
-                        directionsForResearches[dir_group].save()  # Сохранение направления
+                            # Создание направления для группы
+                            directionsForResearches[dir_group] = Napravleniya(
+                                client=Importedclients.objects.get(pk=client_id),
+                                # Привязка пациента к направлению
+                                doc=request.user.doctorprofile,
+                                # Привязка врача к направлению
+                                istochnik_f=finsource,
+                                # Установка источника финансирования
+                                diagnos=diagnos)  # Установка диагноза
 
-                        result["mda"] += str(dir_group)  # Отладка
-                        result["list_id"].append(
-                            directionsForResearches[research.group].pk)  # Добавление ID в список созданых направлений
-                    if not research.group or research.group == 0:  # если исследование не должно группироваться
-                        dir_group = "id" + str(
-                            research.pk)  # формирование ключа (группы) для негруппируемого исследования
+                            directionsForResearches[dir_group].save()  # Сохранение направления
 
-                        # Создание направления для исследования
-                        directionsForResearches[dir_group] = Napravleniya(
-                            client=Importedclients.objects.get(pk=client_id),
-                            # Привязка пациента к направлению
-                            doc=request.user.doctorprofile,
-                            # Привязка врача к направлению
-                            istochnik_f=finsource,
-                            # Установка источника финансирования
-                            diagnos=diagnos)  # Установка диагноза
+                            result["mda"] += str(dir_group)  # Отладка
+                            result["list_id"].append(
+                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                        if dir_group < 0:  # если исследование не должно группироваться
+                            dir_group = "id" + str(
+                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
-                        directionsForResearches[dir_group].save()  # Сохранение направления
-                        result["list_id"].append(
-                            directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        result["mda"] += str(research.group)  # Добавление в отладочный вывод
-                    issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
-                                                  # Установка направления для группы этого исследования
-                                                  issledovaniye=research)  # Создание направления на исследование
-                    issledovaniye.save()  # Сохранение направления на исследование
+                            # Создание направления для исследования
+                            directionsForResearches[dir_group] = Napravleniya(
+                                client=Importedclients.objects.get(pk=client_id),
+                                # Привязка пациента к направлению
+                                doc=request.user.doctorprofile,
+                                # Привязка врача к направлению
+                                istochnik_f=finsource,
+                                # Установка источника финансирования
+                                diagnos=diagnos)  # Установка диагноза
 
-            result["r"] = True  # Флаг успешной вставки в True
-            result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+                            directionsForResearches[dir_group].save()  # Сохранение направления
+                            result["list_id"].append(
+                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                            result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
+                        issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
+                                                      # Установка направления для группы этого исследования
+                                                      research=research)  # Создание направления на исследование
+                        issledovaniye.save()  # Сохранение направления на исследование
+
+                result["r"] = True  # Флаг успешной вставки в True
+                result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+                slog.Log(key=json.dumps(result["list_id"]), user=request.user.doctorprofile, type=21,
+                         body=request.POST['dict']).save()
+
+            else:
+                result["r"] = False
+                result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
 
 @cache_page(60 * 15)
+@login_required
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
@@ -210,8 +232,8 @@ def printDirection(c, n, dir):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn,
                  "ФИО: " + dir.client.family + " " + dir.client.name + " " + dir.client.twoname)
 
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "Возраст: " + str(
-        calculate_age(datetime.strptime(dir.client.birthday.split(" ")[0], "%d.%m.%Y").date())) + " лет")
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
+                      "Возраст: " + dir.client.age_s())
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "Номер карты: " + str(dir.client.num))
 
@@ -227,10 +249,10 @@ def printDirection(c, n, dir):
     else:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
 
-    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir, issledovaniye__hide=0)
+    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__title")
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
-                 "Лаборатория: " + issledovaniya[0].issledovaniye.subgroup_lab.podrazdeleniye.title)
+                 "Лаборатория: " + issledovaniya[0].research.subgroup.podrazdeleniye.title)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 134) + (h / 2) * yn, "Наименования исследований: ")
     c.setStrokeColorRGB(0, 0, 0)
@@ -250,7 +272,7 @@ def printDirection(c, n, dir):
         pg = p.page(pg_num)
         tmp = []
         for obj in pg.object_list:
-            tmp.append(Paragraph('<font face="OpenSans" size="8">' + obj.issledovaniye.ref_title + "</font>",
+            tmp.append(Paragraph('<font face="OpenSans" size="8">' + obj.research.title + "</font>",
                                  styleSheet["BodyText"]))
         if len(pg.object_list) < 2:
             tmp.append(Paragraph('<font face="OpenSans" size="8"></font>', styleSheet["BodyText"]))
@@ -297,6 +319,7 @@ def calculate_age(born):
         return today.year - born.year
 
 
+@login_required
 def get_one_dir(request):
     """Получение одного направления и исследований из него по пробиркам"""
     # import logging
@@ -307,49 +330,50 @@ def get_one_dir(request):
         id = int(request.GET['id'])  # Получение идентификатора направления
         if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
             tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
-            tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by(
-                '-issledovaniye__tube_weight')  # Выборка исследований по направлению
+            tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
+            '''.order_by(
+                '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
             response["direction"] = {"pk": tmp2.pk,
                                      "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                      "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
-                                     "lab": tmp[0].issledovaniye.getlab()}  # Формирование вывода
+                                     "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
             response["tubes"] = {}
+            tubes_buffer = {}
+            for v in tmp:
+                for val in directory.Fractions.objects.filter(research=v.research):
 
-            for v in tmp:  # Перебор исследований
-                tube = v.tube  # Получение пробирки
-                if not tube:  # Если пробирка не существует в базе
-                    weight = -1
-                    for tb_v in tmp:  # Перебор существующих пробирок у исследований в направлении
-                        if (
-                                tb_v.tube and tb_v.issledovaniye.tubegroup == v.issledovaniye.tubegroup and tb_v.issledovaniye.tubegroup > 0) or (
-                                    v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight_group == v.issledovaniye.tube_weight_group and v.issledovaniye.tube_weight < tb_v.issledovaniye.tube_weight):
-                            tube = tb_v.tube
-                        if tb_v.issledovaniye.tube_weight_group == v.issledovaniye.tube_weight_group and tb_v.issledovaniye.tube_weight and v.issledovaniye.tube_weight and tb_v.issledovaniye.tube_weight > v.issledovaniye.tube_weight and v.issledovaniye.tubegroup > 0 and not tube:
-                            tube = TubesRegistration(type=tb_v.issledovaniye.tubetype)
-                            tube.save()
-                            tb_v.tube = tube
-                            tb_v.save()
-                            # logger.info('Save1')
-                    if not tube:  # Если пробирка не была найдена
-                        tube = TubesRegistration(type=v.issledovaniye.tubetype)  # Создание новой пробирки
-                        tube.save()
-                        # logger.info('Save2')
+                    if val.relation.pk not in tubes_buffer.keys():
+                        if not v.tubes.filter(type=val.relation).exists():
+                            ntube = TubesRegistration(type=val.relation)
+                            ntube.save()
+                        else:
+                            ntube = v.tubes.get(type=val.relation)
+                        v.tubes.add(ntube)
+                        tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
+                    else:
+                        ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
+                        v.tubes.add(ntube)
 
-                    v.tube = tube  # Привязка пробирки
-                    v.save()
+                    tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
+            for key in tubes_buffer.keys():
+                tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
+
+            for key in tubes_buffer.keys():  # Перебор исследований
+                v = tubes_buffer[key]
+                tube = TubesRegistration.objects.get(id=v["pk"])
 
                 barcode = ""
                 if tube.barcode:  # Проверка штрих кода пробирки
                     barcode = tube.barcode
                 if tube.id not in response["tubes"].keys():  # Если пробирки нет в словаре
-                    response["tubes"][tube.id] = {"researches": [], "status": True, "color": tube.type.color,
-                                                  "title": tube.type.title, "id": tube.id,
+                    response["tubes"][tube.id] = {"researches": v["researches"], "status": True,
+                                                  "color": tube.type.tube.color,
+                                                  "title": tube.type.tube.title, "id": tube.id,
                                                   "barcode": barcode}  # Добавление пробирки в словарь
                 s = False  # Статус взятия материала для исследований
                 if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
                     s = True  # Установка статуса для вывода в интерфейс
                 response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
-                response["tubes"][tube.id]["researches"].append(v.issledovaniye.ref_title)
 
             response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
                                   "sx": tmp2.client.sex, "bth": str(
@@ -359,6 +383,7 @@ def get_one_dir(request):
 
 
 @csrf_exempt
+@login_required
 def update_direction(request):
     """Функция обновления исследований в направлении"""
     from django.utils import timezone
@@ -369,17 +394,20 @@ def update_direction(request):
 
         for k, v in statuses["statuses"].items():  # Перебор ключей и значений
             val = TubesRegistration.objects.get(id=k)  # Выборка пробирки по ключу
-            if v:  # Если статус выполнения забора установлен в True
+            if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
                 val.doc_get = request.user.doctorprofile  # Привязка профиля к пробирке
                 val.time_get = timezone.now()  # Установка времени
                 val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
-            val.save()  # Сохранение пробирки
-            res["o"].append(val.id)
+                val.save()  # Сохранение пробирки
+                res["o"].append(val.id)
+                slog.Log(key=str(val.pk), type=9, body="", user=request.user.doctorprofile).save()
+            res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
     import pytz
@@ -390,17 +418,18 @@ def load_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Формирование временной зоны
 
     for v in tubes:  # Перебор пробирки
-        iss = Issledovaniya.objects.filter(tube=v)  # Выборка исследований по пробирке
+        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Выборка исследований по пробирке
         iss_list = []
         for val in iss:  # Перебор выбранных исследований
-            iss_list.append(val.issledovaniye.ref_title)  # Добавление в список исследований по пробирке
-        res["rows"].append({"type": v.type.title, "researches": ', '.join(str(x) for x in iss_list),
+            iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
+        res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
                             "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"),
                             "dir_id": iss[0].napravleniye.pk, "tube_id": v.id})  # Добавление пробирки с исследованиями
         # в вывод
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def print_history(request):
     """Печать истории забора материала за день"""
     user = request.user.doctorprofile  # Профиль текущего пользователя
@@ -441,19 +470,19 @@ def print_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
-        iss = Issledovaniya.objects.filter(tube=v)  # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + iss[
-            0].issledovaniye.getlab()  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + str(iss[
+                                                                        0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
-            iss_list.append(val.issledovaniye.s_title())
+            iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
             labs[k] = []
         for value in iss_list:  # Перебор списка исследований
             labs[k].append(
-                {"type": v.type.title, "researches": value,
+                {"type": v.type.tube.title, "researches": value,
                  "client-type": iss[0].napravleniye.client.type,
-                 "lab_title": iss[0].issledovaniye.getlab(),
+                 "lab_title": iss[0].research.subgroup.title,
                  "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
                  "podr": iss[0].napravleniye.doc.podrazileniye.title,
                  "reciver": None,
@@ -544,7 +573,7 @@ def print_history(request):
                               (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])),
                               0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.05), int(tw * 0.25), int(tw * 0.10), int(tw * 0.35), int(tw * 0.25)],
+            t = Table(data, colWidths=[int(tw * 0.05), int(tw * 0.27), int(tw * 0.10), int(tw * 0.35), int(tw * 0.23)],
                       style=style)
 
             t.canv = c
@@ -559,6 +588,7 @@ def print_history(request):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    slog.Log(key="", type=10, body="", user=request.user.doctorprofile).save()
     return response
 
 
@@ -590,44 +620,133 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
     c.drawRightString(w - paddingx, 20, "Страница " + str(page) + " из " + str(pages))
 
 
+@login_required
 def get_issledovaniya(request):
-    res = {"issledovaniya": []}
+    res = {"issledovaniya": [], "ok": False}
     if request.method == "GET":
         iss = []
         napr = None
         id = request.GET["id"]
-        if request.GET["type"] == "0":
-            tube = TubesRegistration.objects.get(pk=id)
-            iss = tube.issledovaniya_set.all()
-            ishide = True
-            for iss_check in iss:
-                if iss_check.issledovaniye.hide == 0:
-                    ishide = False
+        res["all_confirmed"] = True
+        if id.isnumeric():
+            if request.GET["type"] == "0":
+                if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() <= 1:
+                    tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
+                    if tube.doc_recive:
+                        iss = Issledovaniya.objects.filter(tubes__id=id).all()
+                        '''ishide = False
+                        for iss_check in iss:
+                            if iss_check.issledovaniye.hide == 0:
+                                ishide = False
 
-            if ishide:
-                iss = Issledovaniya.objects.filter(tube=tube)
-                napr = iss.first().napravleniye
-                iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
+                        if ishide:
+                            iss = Issledovaniya.objects.filter(tube=tube)
+                            napr = iss.first().napravleniye
+                            iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
+                        else:'''
+                        napr = iss.first().napravleniye
+                else:
+                    tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
+                    for tube in tubes:
+                        if tube.doc_recive:
+                            lit = Issledovaniya.objects.filter(tubes__id=id).all()
+                            if lit.count() != 0:
+                                iss = []
+                            for i in lit:
+                                iss.append(i)
+                    if len(iss) > 0:
+                        napr = iss[0].napravleniye
+            elif request.GET["type"] == "2":
+                try:
+                    napr = Napravleniya.objects.get(pk=id)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation").all()
+                except Napravleniya.DoesNotExist:
+                    napr = None
+                    iss = []
             else:
-                napr = iss.first().napravleniye
-        else:
-            napr = Napravleniya.objects.get(pk=id)
-            iss = napr.issledovaniya_set.all()
-        for issledovaniye in iss:
-            if issledovaniye.issledovaniye.hide == 0:
-                tubes = [issledovaniye.tube.id, ]
-                for iss_hidden in iss.filter(issledovaniye__hide=1,
-                                             issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
-                    tubes.append(iss_hidden.tube.pk)
-                res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.issledovaniye.ref_title,
-                                             "tube": {"pk": ', '.join(str(v) for v in tubes),
-                                                      "title": issledovaniye.tube.type.title}})
-        res["napr_pk"] = napr.pk
-        res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
-        res["client_sex"] = napr.client.sex
-        res["client_cardnum"] = napr.client.num
-        res["client_vozrast"] = str(
-            calculate_age(datetime.strptime(napr.client.birthday.split(" ")[0], "%d.%m.%Y").date())) + " лет"
-        res["directioner"] = napr.doc.fio
+                try:
+                    napr = Napravleniya.objects.get(pk=id, is_printed=False)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation").all()
+                except Napravleniya.DoesNotExist:
+                    napr = None
+                    iss = []
+            if len(iss) > 0:
+                for issledovaniye in iss:
+                    if True:  # issledovaniye.research.hide == 0:
 
+                        tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
+                        tubes = []
+                        titles = []
+                        for tube_o in tubes_list:
+                            tubes.append(tube_o.pk)
+                            titles.append(tube_o.type.tube.title)
+                        '''for iss_hidden in iss.filter(issledovaniye__hide=1,
+                                                     issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
+                            tubes.append(iss_hidden.tube.pk)'''
+                        saved = True
+                        confirmed = True
+                        if not issledovaniye.doc_save:
+                            saved = False
+                        if not issledovaniye.doc_confirmation:
+                            confirmed = False
+                            res["all_confirmed"] = False
+                        res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                     "saved": saved, "confirmed": confirmed,
+                                                     "tube": {"pk": ', '.join(str(v) for v in tubes),
+                                                              "title": ', '.join(titles)}})
+            if napr:
+                res["napr_pk"] = napr.pk
+                res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
+                res["client_sex"] = napr.client.sex
+                res["client_cardnum"] = napr.client.num
+                res["client_vozrast"] = napr.client.age_s()
+                res["directioner"] = napr.doc.fio
+                res["ok"] = True
+
+    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
+@login_required
+def get_client_directions(request):
+    import datetime
+    res = {"directions": [], "ok": False}
+    if request.method == "GET":
+        pk = int(request.GET["pk"])
+        req_status = int(request.GET["status"])
+        date_start = request.GET["date[start]"]
+        date_end = request.GET["date[end]"]
+
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+
+        napr_list = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk,
+                                                doc=request.user.doctorprofile).order_by("-data_sozdaniya")
+
+        for napr in napr_list:
+            status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
+
+            iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+            for v in iss_list:
+                iss_status = 2
+                if not v.doc_confirmation and not v.doc_save:
+                    iss_status = 1
+                    if v.tubes.count() == 0:
+                        iss_status = 0
+                    for t in v.tubes.all():
+                        if not t.time_recive:
+                            iss_status = 0
+                elif v.doc_confirmation:
+                    iss_status = 2
+                status = min(iss_status, status)
+
+            if req_status == 3 or req_status == status:
+                res["directions"].append(
+                    {"pk": napr.pk, "status": status, "researches": ', '.join(v.research.title for v in iss_list),
+                     "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                     "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+        res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

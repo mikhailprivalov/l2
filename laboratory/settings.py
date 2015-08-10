@@ -7,7 +7,7 @@ SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.105']
+ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2']
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -26,7 +26,10 @@ INSTALLED_APPS = (
     'results',
     'researches',
     'directions',
-    'receivematerial'
+    'receivematerial',
+    'construct',
+    'slog',
+    'directory'
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -62,7 +65,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'laboratory.wsgi.application'
-
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
@@ -70,7 +74,7 @@ WSGI_APPLICATION = 'laboratory.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lis',
+        'NAME': 'lis2',  # TODO: lis
         'USER': 'postgres',
         'PASSWORD': '123456',
         # 'HOST': '192.168.122.45',
@@ -83,11 +87,12 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': '127.0.0.1:11211',  # TODO: 11211
+        'KEY_PREFIX': 'lis_test'
     },
     'debug-panel': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/debug-panel-cache',
+        'LOCATION': '/var/tmp/debug-panel-cache-2',
         'TIMEOUT': 300,
         'OPTIONS': {
             'MAX_ENTRIES': 200
@@ -121,7 +126,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
-STATIC_ROOT = '/webapps/lis/static/'
+# STATIC_ROOT = '/webapps/lis/static/'
+STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
+
 '''
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
@@ -151,6 +158,7 @@ LOGGING = {
     },
 }
 
+
 DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.versions.VersionsPanel',
     'debug_toolbar.panels.timer.TimerPanel',
@@ -165,3 +173,12 @@ DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.logging.LoggingPanel',
     'cachalot.panels.CachalotPanel',
 )
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 1
+X_FRAME_OPTIONS = 'DENY'
+DEBUG = False

@@ -1,19 +1,35 @@
-h2 Исследование - #{title}
+div.col-md-8
+div.col-md-2
+    button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
+div.col-md-2
+    .row
+        button(onclick="confirm();")#confirm-btn.btn.btn-primary-nb Подтвердить
+h4(style="margin-top: 0") Исследование - #{title}
 form
-    input(type="hidden", value=res_id)
-    table.table.table-bordered.table-sm-pd
-        thead
-            th.col-md-3 Фракция
-            th Значение
-            th.col-md-3 Норма для пациента
-        each fraction in fractions
-            tr
-                td.col-md-6
-                    label= fraction.title
-                td.col-md-3
-                    .input-group
-                        input(type="text").form-control
-                        span.input-group-addon= fraction.unit
-                td.col-md-3!= getNorms(dir_data.client_sex, dir_data.client_vozrast, fraction.references, fraction.unit)
-div.col-md-9
-button.btn.btn-success.col-md-3 Сохранить
+    input(type="hidden", value=res_id)#issledovaniye_id
+    #result-jade-form
+        table.table.table-bordered.table-sm-pd
+            thead
+                th.col-md-4 Фракция
+                th Значение
+                th.col-md-2 Нормы М
+                th.col-md-2 Нормы Ж
+            each fraction in fractions
+                tr
+                    td.col-md-4
+                        label= fraction.title
+                    td
+                        input(type="text", data-pk=fraction.pk).form-control.result-enter
+                        .center= fraction.unit
+                    td.col-md-2
+                        table.table.table-bordered.table-responsive
+                            each norm, index in fraction.references.m
+                                tr
+                                    td= index
+                                    td.col-md-5= norm
+                    td.col-md-2
+                        table.table.table-bordered.table-responsive
+                            each norm, index in fraction.references.f
+                                tr
+                                    td= index
+                                    td.col-md-5= norm

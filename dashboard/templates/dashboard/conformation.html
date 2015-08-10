@@ -1,0 +1,567 @@
+{% extends "dbase.html" %}
+{% block title %}Подтверждение и печать{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="row" style="padding-top: 5px;padding-bottom: 5px">
+                <div class="col-md-3" style="padding-left: 24px;margin-top: 5px"><h6>Лаборатория:</h6></div>
+                <div class="col-md-9">
+                    <select class="select-b" data-live-search="true" data-width="100%" id="select-lab"
+                            onchange="load_researches();">
+                        {% for v in labs %}
+                            <option {% if v.title == request.user.doctorprofile.podrazileniye.title %}selected{% endif %}
+                                    value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <table class="table" id="tb-nb">
+                <tr>
+                    <td style="width: 180px"><h6>Виды анализов:&nbsp;&nbsp;</h6>
+
+                        <select class="select-b" data-live-search="true" data-width="175px" id="sel-researches">
+                            <option value="-1">Все анализы</option>
+                            {% for v in researches %}
+                                <option value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
+                    </td>
+                    <td style="width: 180px">
+                        <h6>Статус:</h6>
+                        <select class="select-b" data-live-search="false" data-width="175px" id="status">
+                            <option value="0">Не обработаные</option>
+                            <option value="1">Не подтвержденные</option>
+                            <option value="2">Распечатаные</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6><br/></h6>
+
+                                <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                                    <input type="text" class="input-sm form-control" name="date-start"/>
+                                    <span class="input-group-addon"
+                                          style="background-color: #fff;color: #000">&mdash;</span>
+                                    <input type="text" class="input-sm form-control" name="date-end"/>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width: 180px">
+                        <h6>Номер направления:</h6>
+                        <input type="text" onkeyup="freeze();" class="form-control" id="dir-id"/>
+                    </td>
+                    <td style="width: 180px">
+                    </td>
+                    <td style="text-align: center">
+                        <div onclick="load_data();" class="btn btn-blue-nb" style="margin-top: 18px;width: 100%">Поиск
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div class="container-fluid">
+                <div class="row">
+                    <div id="scroll-tb" style="position: relative;">
+                        <table class="table table-bordered table-responsive tablesorter">
+                            <thead>
+                            <tr>
+                                <th style="width: 150px">Название</th>
+                                <th style="width: 100px">Напр.</th>
+                                <th>Пробирки</th>
+                                <th style="width: 115px">Статус</th>
+                                <th style="width: 100px">Дата посл. действия.</th>
+                            </tr>
+                            </thead>
+                            <tbody id="researches-list"></tbody>
+                        </table>
+                    </div>
+                    <br/>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <table class="table table-bordered" id="dir_info">
+                <tr>
+                    <td style="width: 150px">№ Направления</td>
+                    <td id="dir_num"></td>
+                </tr>
+                <tr>
+                    <td style="width: 150px">Пол</td>
+                    <td id="client_sex"></td>
+                </tr>
+                <tr>
+                    <td style="width: 150px">Номер карты</td>
+                    <td id="client_cardnum"></td>
+                </tr>
+                <tr>
+                    <td style="width: 150px">Возраст</td>
+                    <td id="client_vozrast"></td>
+                </tr>
+                <tr>
+                    <td style="width: 150px">Лечащий врач</td>
+                    <td id="directioner"></td>
+                </tr>
+            </table>
+            <h5 id="research-title"><br/></h5>
+
+            <div id="fractions-list">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <td>Исследование</td>
+                        <td>Значение</td>
+                        <td>Е/и</td>
+                    </tr>
+                    </thead>
+                    <tbody id="fractions">
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6"><input type="hidden" id="issledovaniye_id" value="-1"/></div>
+                <div class="col-md-3">
+                    <button disabled id="print-btn" class="btn btn-primary-nb" style="display: none;"
+                            onclick="print_loaded();return false">Печать
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button disabled id="confirm-btn" class="btn btn-primary-nb"
+                            onclick="confirm_loaded();return false">Подтвердить
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div id="no-printed">
+                <div style="margin-right: 10px">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Не распечатаные</h5>
+                        </div>
+                        <div class="col-md-1" style="padding: 0 2px">
+                            <button class="btn btn-small btn-primary-nb" title="Выбрать все"
+                                    onclick="$('#no-printed input').prop('checked', !$('#no-printed input').prop('checked'));sync_checked();return false;">
+                                <i
+                                        class="glyphicon glyphicon-check"></i>
+                            </button>
+                        </div>
+                        <div class="col-md-5" style="padding: 0 2px; padding-right: 15px">
+                            <button class="btn btn-small btn-primary-nb" onclick="print_selected();return false;"><i
+                                    class="glyphicon glyphicon-print"></i> Печать выбранных
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="no-printed-list"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/js/jquery.tablesorter.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script>
+
+        var checked_list = [];
+        var s_d = {0: "Не обработан", 1: "Не подтвержден", 2: "Распечатан", 3: "Не распечатан"}
+        var active_lab = -1;
+        $(document).ready(function () {
+            load_no_printed();
+            setInterval(load_no_printed, 5000);
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
+            $("#dir-id").bind('keydown', 'return', function () {
+                load_data();
+            });
+            var today = new Date();
+
+            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
+            $('#datepicker').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
+        });
+
+
+        function sync_checked() {
+
+            checked_list = [];
+            $.each($("input:checked"), function () {
+                if (!$(this).attr("pk")) return;
+                checked_list.push(parseInt($(this).attr("pk")));
+            });
+        }
+
+        function resize() {
+            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 80);
+            $('#scroll-tb').perfectScrollbar();
+            $('#no-printed-list').height($(window).height() - $('#no-printed-list').position().top - 70);
+            $('#no-printed-list').perfectScrollbar();
+            $('#fractions-list').height($(window).height() - $('#fractions-list').position().top - 100);
+            $('#fractions-list').perfectScrollbar();
+        }
+
+        function load_researches() {
+
+            $("#sel-researches").html("");
+            active_lab = $("#select-lab").val();
+            $.ajax({ // AJAX запрос
+                url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
+                dataType: 'json'
+            }).done(function (data) {
+                $("#sel-researches").append('<option value="-1">Все анализы</option>');
+                $.each(data, function (k, v) {
+                    $("#sel-researches").append("<option value='{0}'>{1}</option>".f(v.pk, v.fields.ref_title));
+                });
+                $('#sel-researches').selectpicker('refresh').selectpicker('render');
+            });
+        }
+
+        function freeze() {
+            $("#dir-id").val($("#dir-id").val().trim());
+            val = $("#dir-id").val();
+            if (val == "") {
+                $.each($("#sel-researches, #select-lab, #status, #date-start, #date-end, .input-daterange input"), function (k, v) {
+                    $(v).removeAttr("disabled");
+                });
+            }
+            else {
+                $.each($("#sel-researches, #select-lab, #status, #date-start, #date-end, .input-daterange input"), function (k, v) {
+                    $(v).attr("disabled", 1);
+                });
+            }
+            $('#sel-researches, #select-lab, #status').selectpicker('refresh');
+        }
+        var ts = false;
+        function load_data() {
+            $("#researches-list").html("");
+            var req_data = {};
+            req_data.research = $("#sel-researches").val();
+            req_data.status = $("#status").val();
+            req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+            req_data.dir_id = $("#dir-id").val();
+            $.ajax({url: "/results/filter", method: "POST", data: req_data}).done(function (data) {
+                if (data.ok && Object.keys(data.list).length > 0) {
+                    $.each(data.list, function (k, v) {
+                        $("#researches-list").append("<tr class='clickable' pk='{5}' dir='{1}' onclick='load_research({5},{1});'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.title, v.direction, v.tubes, s_d[v.status], v.date, v.pk));
+                    });
+                    /* if(!ts) {
+                     $(".tablesorter").tablesorter({ widthFixed: true});
+                     ts = true;
+                     }
+                     else
+                     $(".tablesorter").tablesorter("update");*/
+                    resize();
+                }
+                else {
+                    $("#researches-list").append("<tr><td class='well' colspan='5'>Не найдено</td></tr>");
+                }
+                $("#dir-id").val("");
+                freeze();
+            });
+            console.log(req_data);
+        }
+        function load_research(id, dir) {
+            $.ajax({
+                url: "/directions/get/issledovaniya",
+                type: "json",
+                method: "GET", data: {id: dir, type: 2}
+            }).done(function (data) {
+                if (!data.ok)return;
+                $("#fractions").html("");
+                $("#dir_num").html(data.napr_pk);
+                $("#dir_client_fio").html(data.client_fio);
+                $("#directioner").html(data.directioner);
+                $("#client_vozrast").html(data.client_vozrast);
+                $("#client_cardnum").html(data.client_cardnum);
+                $("#client_sex").html(data.client_sex);
+                $.ajax({
+                    url: "/researches/get/one",
+                    type: "text",
+                    method: "GET",
+                    data: {id: id}
+                }).done(function (data2) {
+                    data2 = JSON.parse(data2);
+                    $.each(data2.fractions, function (k, v) {
+                        $("#fractions").append("<tr><td>{0}</td><td data-pk='{3}'>{1}</td><td>{2}</td></tr>".f(v.title, "", v.unit, v.pk));
+                    });
+                    $("#research-title").html(data2.title);
+                    $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data3) {
+                        $.each(data3.results, function (k, v) {
+                            $("[data-pk='" + k + "']").text(v);
+                        });
+                    });
+                    $("#issledovaniye_id").val(id);
+                    if (data2.confirmed) {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#print-btn").removeAttr("disabled");
+                    }
+                    else if (data2.saved) {
+                        $("#print-btn").attr("disabled", 1);
+                        $("#confirm-btn").removeAttr("disabled");
+                    }
+                    else {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#print-btn").attr("disabled", 1);
+                    }
+                });
+            });
+        }
+        function load_no_printed() {
+
+            $("#no-printed h5").isLoading({
+                text: "Не распечатаные",
+                position: "inside",
+                'tpl': loading_tpl,
+            });
+
+            var req_data = {status: 3};
+
+            req_data.research = $("#sel-researches").val();
+            req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+            req_data.dir_id = "";
+
+            $.ajax({url: "/results/filter", data: req_data, method: "POST"}).done(function (data) {
+                $("#no-printed-list").html("");
+                if (data.ok && Object.keys(data.list).length > 0) {
+                    // console.log(data);
+                    $.each(data.list, function (k, v) {
+                        if (!$("#no-printed-list #dir" + v.direction).length)
+                            $("#no-printed-list").append("<div class='well dir' id='dir{1}'><div class='dir-ch'><input type='checkbox' pk='{1}' /></div>Направление: {1}<br/><div class='researches'>{0}</div></div>".f(v.title, v.direction));
+                        else
+                            $("#no-printed-list #dir" + v.direction + " .researches").append("<br/>{0}".f(v.title));
+                        //    console.log(jQuery.inArray(v.direction, checked_list));
+                        if (jQuery.inArray(parseInt(v.direction), checked_list) != -1) {
+                            $("input[pk='{0}']".f(v.direction)).prop("checked", true);
+                            //  console.log(v.direction);
+                            //  console.log(checked_list);
+                        }
+                    });
+                    /* if(!ts) {
+                     $(".tablesorter").tablesorter({ widthFixed: true});
+                     ts = true;
+                     }
+                     else
+                     $(".tablesorter").tablesorter("update");*/
+                    resize();
+
+                }
+                else {
+                    $("#no-printed-list").append("<div class='well'>Не найдено</div>");
+                }
+
+                $("#no-printed h5").isLoading("hide");
+                $("#no-printed h5").html("Не распечатаные");
+
+            });
+        }
+
+        function print_selected() {
+            sync_checked();
+            data = "?pk=" + JSON.stringify(checked_list);
+            window.open('/results/pdf' + data, '_blank');
+        }
+
+        function print_loaded() {
+            data = "?pk=" + JSON.stringify([parseInt($("#dir_num").text()),]);
+            window.open('/results/pdf' + data, '_blank');
+        }
+
+        function confirm_loaded() {
+            $.ajax({
+                "url": "/results/confirm",
+                method: "POST",
+                data: {pk: $("#issledovaniye_id").val()}
+            }).done(function () {
+                load_research($("#issledovaniye_id").val(), parseInt($("#dir_num").text()));
+                sync_checked();
+                load_data();
+                load_no_printed();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Исследование подтверждено',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+    </script>
+    <style>
+        .btn-small {
+            padding: 1px;
+            display: inline-block;
+            width: 50%;
+        }
+
+        .well.dir {
+            margin: 2px;
+        }
+
+        .dir-ch {
+            float: right;
+        }
+
+        #no-printed {
+            background-color: #434A54;
+            padding: 5px;
+        }
+
+        #no-printed h5 {
+            color: #fff;
+            margin: 2px;
+            margin-bottom: 15px;
+        }
+
+        #no-printed .isloading-wrapper {
+            color: #fff;
+            margin: 0;
+            font-size: 18px;
+            padding: 0;
+        }
+
+        #no-printed i {
+            font-size: 16px;
+        }
+
+        #fractions-list#no-printed-list {
+            position: relative;
+            padding-right: 15px;
+        }
+
+        #no-printed-list {
+            position: relative;
+            padding-right: 10px;
+        }
+
+        .tablesorter th, .clickable {
+            cursor: pointer;
+        }
+
+        .clickable:hover {
+            background-color: #F2F2F2;
+        }
+
+        #tb-nb tr, #tb-nb td {
+            border: 0 !important;
+        }
+
+        h6 {
+            padding-top: 3px;
+            padding-bottom: 3px;
+            margin: 0;
+        }
+
+        .borderless td {
+            border: 0 !important;
+        }
+
+        .r {
+            text-align: right;
+        }
+
+        .c {
+            text-align: center;
+        }
+
+        #scroll-tb {
+            padding: 5px 15px 5px 5px;
+            border: 1px solid #ccc;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-fluid, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #tubes tr, #tubes td {
+            padding: 2px;
+            vertical-align: middle;
+        }
+
+        #tubes input[type=text] {
+            border: 0;
+            margin: 0;
+            width: 100%;
+            padding: 0 5px;
+        }
+
+        #tubes label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        #tubes label:hover {
+            background-color: #efefef;
+        }
+
+        #tubes .btn-group {
+            width: 100%;
+        }
+
+        .searchclear {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: .6;
+            color: #881c2f;
+        }
+
+        .searchclear:hover {
+            opacity: 1;
+        }
+
+        #researches {
+
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
+
+        #dir_info td {
+            padding: 5px;
+        }
+    </style>
+{% endblock %}

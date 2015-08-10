@@ -6,10 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %}</title>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/bootflat/css/bootflat.min.css" rel="stylesheet">
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300&subset=cyrillic,latin' rel='stylesheet'
           type='text/css'>
     <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
+    <link href="/static/css/amaran.min.css" rel="stylesheet">
+    <link href="/static/css/animate.min.css" rel="stylesheet">
+    <link href="/static/css/tooltipster.css" rel="stylesheet">
+    <link href="/static/css/themes/tooltipster-shadow.css" rel="stylesheet">
+
+    <script src="/static/js/jquery.min.js"></script>
     <script>
 
         function getFormattedDate(date) {
@@ -167,11 +174,219 @@
             border: none;
             background: transparent;
         }
+
+        .open .dropdown-toggle.btn-default {
+            background-color: #434a54;
+        }
+
+        .dropdown-toggle.btn-default:hover, .dropdown-toggle.btn-default:focus, .dropdown-toggle.btn-default:active {
+            background-color: #656D78;
+        }
+
+        .dropdown-toggle.btn-default:focus, .dropdown-toggle.btn-default:active {
+            background-color: #fff;
+            color: #434a54;
+        }
+
+        .hex-color-picker-wrapper .color-block {
+            display: inline-block;
+        }
+
+        .hex-color-picker-wrapper .picker-row {
+            text-align: center;
+            width: 100%;
+        }
+
+        .hex-color-picker-wrapper .picker-sidebar {
+            float: right;
+            font-size: 0;
+        }
+
+        .hex-color-picker-wrapper .color-picker-container {
+            float: left;
+            font-size: 0;
+        }
+
+        .hex-color-picker-wrapper .picker-form {
+            width: 100%;
+            position: relative;
+        }
+
+        .hex-color-picker-wrapper .picker-form-wrapper {
+            clear: both;
+        }
+
+        .hex-color-picker-wrapper .picker-form .selected-color {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .hex-color-picker-wrapper .picker-form .submit {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        .hex-color-picker-wrapper .picker-form input {
+            border: medium;
+            border-radius: 0;
+            font-size: 12px;
+            height: 30px;
+            margin: 0;
+            padding: 3px 5px;
+        }
+
+        .sq {
+            padding: 3px;
+            display: inline-block;
+            background-color: #efefef;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .tube {
+            padding: 2px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+            font-size: 10pt;
+        }
+
+        .tube:hover {
+            background-color: #3BAFDA;
+            cursor: pointer;
+            color: #fff
+        }
+
+        .color-sq {
+            height: 12px;
+            width: 12px;
+        }
+
+        .btn-primary-nb, .btn-primary-nb:focus, .btn-primary-nb:active {
+            width: 100% !important;
+            background-color: #AAB2BD !important;
+            color: #F5F7FA !important;
+            border: 1px solid #AAB2BD !important;
+        }
+
+        .btn-primary-nb:hover {
+            background-color: #8CC152 !important;
+            border: 1px solid #8CC152 !important;
+        }
+
+        .btn-blue-nb, .btn-blue-nb:active, .btn-blue-nb:focus {
+            background-color: #AAB2BD !important;
+            border: 1px solid #AAB2BD !important;
+        }
+
+        .btn-blue-nb:hover {
+            background-color: #434A54 !important;
+            border: 1px solid #434A54 !important;
+        }
+
+        .btn-blue2-nb {
+            background-color: #AAB2BD;
+            border: 1px solid #AAB2BD;
+            color: #fff;
+            font-size: 12px;
+            padding: 2px;
+            height: 23px;
+            min-width: 28px;
+        }
+
+        .btn-blue2-nb[disabled], .btn-blue2-nb.disabled {
+            background-color: #AAB2BD;
+            border: 1px solid #AAB2BD;
+            color: #ddd;
+            font-size: 12px;
+            padding: 2px;
+            height: 23px;
+            min-width: 28px;
+        }
+
+        .btn-blue2-nb:hover, .btn-blue-nb:active {
+            background-color: #3BAFDA !important;
+            border: 1px solid #3BAFDA !important;
+        }
+
+        .tube .label {
+            float: right;
+        }
+
+        .last-tube, .edit-tube {
+            color: #ffffff !important;
+            background-color: #37BC9B !important;
+        }
+
+        .breadcrumb-arrow li a {
+            position: relative;
+            color: #fff;
+            text-decoration: none;
+            background-color: #656D78;
+            border: 1px solid #656D78;
+        }
+
+        .breadcrumb-arrow li a:after {
+            right: -11px;
+            z-index: 2;
+            border-left: 11px solid #656D78;
+        }
+
+        .breadcrumb-arrow li a:before {
+            right: -10px;
+            z-index: 3;
+            border-left-color: #656D78;
+            border-left-style: solid;
+            border-left-width: 11px;
+        }
+
+        .breadcrumb-arrow li a:hover {
+            background-color: #3BAFDA;
+            border: 1px solid #3BAFDA;
+        }
+
+        .breadcrumb-arrow li a:focus:before, .breadcrumb-arrow li a:hover:before {
+            border-left-color: #3BAFDA;
+        }
+
+        .dash-buttons .panel-body {
+            background-color: #656D78;
+            border: 1px solid #656D78;
+            color: #F5F7FA
+        }
+
+        .dash-buttons .panel-body:hover {
+            background-color: #FC6E51;
+            border: 1px solid #FC6E51;
+            color: #fff
+        }
+        /*.ps-scrollbar-x-rail,
+        .ps-scrollbar-y-rail {
+          opacity: 0.6;
+        }*/
+
+        .amaran.awesome.ok .icon {
+            background-color: #8CC152;
+        }
+
+        .amaran.awesome.ok p.bold {
+            color: #8CC152;
+        }
+
+        .amaran.awesome.no .icon {
+            background-color: #E9573F;
+        }
+
+        .amaran.awesome.no p.bold {
+            color: #E9573F;
+        }
     </style>
 </head>
-<body>
+<body>{% load has_group %}
 <div class="{% block container %}container{% endblock %}">
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-inverse">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                     aria-expanded="false" aria-controls="navbar">
@@ -180,23 +395,31 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/dashboard">Laboratory</a>
+            <a class="navbar-brand" href="/dashboard"><i class="glyphicon glyphicon-leaf"></i> FC ISMU LIS</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="/dashboard">П/у</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="/dashboard/directions">Направления</a></li>
-                <li><a href="/researches/control">Взятие материала</a></li>
-                <li><a href="/dashboard/receive">Прием материала</a></li>
-                <li><a href="/results/enter">Ввод результатов</a></li>
+                {% if request.user|has_group:"Лечащий врач" %}
+                    <li><a href="/dashboard/directions">Направления</a></li>
+                {% endif %}
+                {% if request.user|has_group:"Заборщик биоматериала" %}
+                    <li><a href="/researches/control">Взятие материала</a></li>
+                {% endif %}
+                {% if request.user|has_group:"Получатель биоматериала" %}
+                    <li><a href="/dashboard/receive">Прием материала</a></li>
+                {% endif %}
+                {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
+                    <li><a href="/results/enter">Ввод результатов</a></li>
+                    <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
     {% block content %}{% endblock %}
 </div>
-<script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
 <script src="/static/js/typeahead.js"></script>
@@ -207,6 +430,12 @@
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jquery.isloading.min.js"></script>
 <script src="/static/js/jquery.scrollTo.js"></script>
+<script src="/static/bootflat/js/jquery.fs.selecter.min.js"></script>
+<script src="/static/bootflat/js/jquery.fs.stepper.min.js"></script>
+<script src="/static/bootflat/js/icheck.min.js"></script>
+<script src="/static/js/jquery.amaran.min.js"></script>
+<script src="/static/js/jquery.tooltipster.min.js"></script>
+<script src="/static/js/jquery.floatThead.min.js"></script>
 <script>
     String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
         var s = this,

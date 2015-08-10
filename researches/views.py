@@ -1,12 +1,16 @@
 from django.core import serializers
 from django.http import HttpResponse
-from researches.models import Researches, Subgroups, Podrazdeleniya
+from researches.models import Researches, Subgroups, Podrazdeleniya, Tubes
 from directions.models import Issledovaniya
 import simplejson as json
 from django.views.decorators.cache import cache_page
-
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+import directory.models as directory
+import slog.models as slog
 
 @cache_page(60 * 15)
+@login_required
 def ajax_search_res(request):
     """Получение исследований в лаборатории"""
     res = []
@@ -23,16 +27,112 @@ def ajax_search_res(request):
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@login_required
 def researches_get_one(request):
-    res = {"res_id": "", "title": "", "fractions": []}
+    """Получение исследования (название, фракции, параметры)"""
+    res = {"res_id": "", "title": "", "fractions": [], "confirmed": True, "saved": True}
     if request.method == "GET":
         id = request.GET["id"]
-        iss = Issledovaniya.objects.get(pk=id).issledovaniye
-        fractions = iss.ref_fractions
+        iss = Issledovaniya.objects.get(pk=id)
+        research = iss.research
+        fractions = directory.Fractions.objects.filter(research=research)
         res["res_id"] = id
-        res["title"] = iss.ref_title
-        for key, val in enumerate(fractions):
+        res["title"] = research.title
+        if not iss.doc_save:
+            res["saved"] = False
+        if not iss.doc_confirmation:
+            res["confirmed"] = False
+        for val in fractions:
+            ref_m = val.ref_m
+            ref_f = val.ref_f
+            if isinstance(ref_m, str):
+                ref_m = json.loads(ref_m)
+            if isinstance(ref_f, str):
+                ref_f = json.loads(ref_f)
             res["fractions"].append(
-                {"title": val, "unit": iss.ref_units[key], "references": {"m": iss.ref_m[key], "f": iss.ref_f[key]}})
+                {"title": val.title, "pk": val.pk, "unit": val.units,
+                 "references": {"m": ref_m, "f": ref_f}})
 
+    return HttpResponse(json.dumps(res))  # Создание JSON
+
+
+@login_required
+def get_all_tubes(request):
+    """Получение списка пробирок"""
+    res = []
+    tubes = Tubes.objects.all().order_by('title')
+    for v in tubes:
+        res.append({"id": v.id, "title": v.title, "color": v.color})
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def tubes_control(request):
+
+    if request.method == "PUT":
+        if hasattr(request, '_post'):
+            del request._post
+            del request._files
+
+        try:
+            request.method = "POST"
+            request._load_post_and_files()
+            request.method = "PUT"
+        except AttributeError:
+            request.META['REQUEST_METHOD'] = 'POST'
+            request._load_post_and_files()
+            request.META['REQUEST_METHOD'] = 'PUT'
+
+        request.PUT = request.POST
+        title = request.PUT["title"]
+        color = "#" + request.PUT["color"]
+        new_tube = Tubes(title=title, color=color)
+        new_tube.save()
+        slog.Log(key=str(new_tube.pk), user=request.user.doctorprofile, type=1,
+                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
+    if request.method == "POST":
+        id = int(request.POST["id"])
+        title = request.POST["title"]
+        color = "#" + request.POST["color"]
+        tube = Tubes.objects.get(id=id)
+        tube.color = color
+        tube.title = title
+        tube.save()
+        slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
+                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
+    return HttpResponse(json.dumps({}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def tubes_relation(request):
+    return_result = {}
+    if request.method == "PUT":
+        if hasattr(request, '_post'):
+            del request._post
+            del request._files
+
+        try:
+            request.method = "POST"
+            request._load_post_and_files()
+            request.method = "PUT"
+        except AttributeError:
+            request.META['REQUEST_METHOD'] = 'POST'
+            request._load_post_and_files()
+            request.META['REQUEST_METHOD'] = 'PUT'
+
+        request.PUT = request.POST
+
+        tube_id = request.PUT["id"]
+        tube = Tubes.objects.get(id=tube_id)
+        from directory.models import ReleationsFT
+
+        relation = ReleationsFT(tube=tube)
+        relation.save()
+        return_result["id"] = relation.pk
+        return_result["title"] = tube.title
+        return_result["color"] = tube.color
+        slog.Log(key=str(relation.pk), user=request.user.doctorprofile, type=20,
+                 body=json.dumps({"data": {"id": tube_id}})).save()
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

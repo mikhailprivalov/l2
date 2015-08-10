@@ -1,0 +1,134 @@
+{% extends "dbase.html" %}
+{% block title %}Добавление и редактирование пробирок{% endblock %}
+
+{% block content %}
+    <ol class="breadcrumb breadcrumb-arrow">
+        <li><a href="/dashboard/">Панель управления</a></li>
+        <li><a href="/construct/menu">Конструктор</a></li>
+        <li class="active"><span>Добавление и редактирование пробирок</span></li>
+    </ol>
+    <h4>Пробирки</h4>
+    <div id="tubes-list"></div><br/><br/>
+    <h5>Добавить новую пробирку</h5>
+    <div class="row">
+        <div class="col-md-7">
+            <div class="input-group">
+                <span class="input-group-addon">Название</span>
+                <input class='form-control' required id='tubetitle'/>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="input-group" style="box-shadow: 0 0 5px #000;border-radius:5px ">
+                <span class="input-group-addon">Цвет #</span>
+                <input class='form-control' required value="000000" id='tubecolor'/>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary-nb" onclick="addnewtube(); return false;">Добавить</button>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <style>
+        #tubecolor, .tubecolor {
+            border-right: 34px solid black;
+            border-color: black;
+        }
+
+        .tube:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+    </style>
+    <script src="/static/js/colpick.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('head').append($('<link rel="stylesheet" type="text/css" />').attr('href', '/static/css/colpick.css'));
+            loadtubes();
+        });
+        function loadtubes() {
+            $.ajax({url: "/directory/tubes/all"}).done(function (data) {
+                $("#tubes-list").html("");
+                $.each(data, function (k, v) {
+                    $("#tubes-list").append("<div id='tube-{2}' class='well tube'><div onclick='edittube(this);'><span class=\"label label-default\">{3}</span><div class='sq'><div class='color-sq' style='background-color: {1}'>&nbsp;</div></div><span class='tube-title'>{0}</span></div></div>".f(v.title, v.color, v.id, v.color.replace("#", "")))
+                });
+                if (lasttube != "")
+                    $("#tube-{0}".f(lasttube)).addClass("last-tube");
+                lasttube = ""
+            });
+            $("#tubetitle").val("");
+            $("#tubecolor").val("");
+            $('#tubecolor').colpick({
+                layout: 'hex',
+                submit: 0,
+                onChange: function (hsb, hex, rgb, el, bySetColor) {
+                    $(el).css('border-color', '#' + hex);
+                    if (!bySetColor) $(el).val(hex);
+                    if (!bySetColor) $(el).val(hex);
+                },
+            }).keyup(function () {
+                $(this).colpickSetColor(this.value);
+            });
+        }
+        var lasttube = ""
+        function edittube(tubediv) {
+            $(".edit-tube").removeClass("edit-tube");
+            $(".last-tube").removeClass("last-tube");
+            if (!$(tubediv).parent(".tube").has(".edit-tool-window").length) {
+                $(tubediv).parent(".tube").addClass("edit-tube");
+                $(".edit-tool-window").remove();
+                //language=HTML
+                ht = "<div class=\"row edit-tool-window\" style=\"padding: 5px\">\n    <div class=\"col-md-5\">\n        <div class=\"input-group\">\n            <span class=\"input-group-addon\">Название</span>\n            <input class=\'form-control tubetitle\' value=\"{1}\" required />\n        </div>\n    </div>\n    <div class=\"col-md-3\">\n        <div class=\"input-group\" style=\"box-shadow: 0 0 5px #000;border-radius:5px \">\n            <span class=\"input-group-addon\">Цвет #</span>\n            <input class=\'form-control tubecolor\' required value=\"{0}\"/>\n        </div>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"$(\'.edit-tool-window\').remove();$(\'.last-tube\').removeClass(\'last-tube\');$(\'.edit-tube\').removeClass(\'edit-tube\');return false;\" class=\"btn btn-primary-nb btn-blue-nb\">Отмена</button>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"save_tube(\'{2}\')\" class=\"btn btn-primary-nb\">Сохранить</button>\n    </div>\n</div>"
+                        .f($('.label', $(tubediv).parent(".tube")).text(), $('.tube-title', $(tubediv).parent(".tube")).text(), $(tubediv).parent(".tube").attr("id").split("-")[1]);
+                $(tubediv).parent(".tube").append(ht);
+                $('.tubecolor', $(tubediv).parent(".tube")).css('border-color', '#' + $('.label', $(tubediv).parent(".tube")).text());
+                /*  $('.tubecolor', $(tubediv).parent(".tube")).keyup(function(){
+                 $(this).css('border-color','#'+$(this).val());
+                 });*/
+                $('.tubecolor', $(tubediv).parent(".tube")).colpick({
+                    layout: 'hex',
+                    submit: 0,
+                    onChange: function (hsb, hex, rgb, el, bySetColor) {
+                        $(el).css('border-color', '#' + hex);
+                        if (!bySetColor) $(el).val(hex);
+                        if (!bySetColor) $(el).val(hex);
+                    }
+                }).colpickSetColor($('.label', $(tubediv).parent(".tube")).text()).keyup(function () {
+                    $(this).colpickSetColor(this.value);
+                });
+            }
+            else {
+                $(".edit-tool-window").remove();
+            }
+        }
+        function addnewtube() {
+            title = $("#tubetitle").val();
+            color = $("#tubecolor").val();
+
+            if (title == undefined || color == undefined || title == "" || color == "") {
+                loadtubes();
+                return false;
+            }
+            $.ajax({url: "/directory/tubes", method: "PUT", data: {title: title, color: color}}).done(function (data) {
+                loadtubes();
+            });
+        }
+        function save_tube(id) {
+            title = $("#tube-{0} .tubetitle".f(id)).val();
+            color = $("#tube-{0} .tubecolor".f(id)).val();
+            if (title == undefined || color == undefined || title == "" || color == "") {
+                loadtubes();
+                return false;
+            }
+            $.ajax({
+                url: "/directory/tubes",
+                method: "POST",
+                data: {id: id, title: title, color: color}
+            }).done(function (data) {
+                lasttube = id;
+                loadtubes();
+            });
+
+        }
+    </script>
+{% endblock %}

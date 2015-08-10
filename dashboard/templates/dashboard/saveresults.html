@@ -1,0 +1,351 @@
+{% extends "dbase.html" %}
+{% block title %}Ввод результатов{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <div class="col-md-4">
+        <div class="input-group" style="margin-bottom: 5px">
+            <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus>
+            <span class="input-group-btn">
+                <button class="btn btn-primary-nb" onclick="load_d_fast();" type="button">Поиск</button>
+            </span>
+        </div>
+        <span>Область поиска:&nbsp;</span>
+
+        <div class="btn-group" data-toggle="buttons" style="display: inline-block; margin-bottom: 10px">
+            <label class="btn btn-default active">
+                <input type="radio" name="type" id="option1" value="tubes" autocomplete="off" checked>
+                Номер пробирки
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="type" id="option2" value="dirs" autocomplete="off">
+                Номер направления
+            </label>
+        </div>
+        <br/>
+
+        <div id="lists">
+            <div class="col-md-6" id="tubes-list">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th colspan="2" style="text-align: center">Пробирки</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 80%">№</th>
+                        <th>Статус</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="col-md-6" id="dirs-list">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th colspan="2" style="text-align: center">Направления</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 80%">№</th>
+                        <th>Статус</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <table class="table table-bordered" id="dir_info">
+            <tr>
+                <td style="width: 150px">№ Направления</td>
+                <td id="dir_num"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">ФИО Пациента</td>
+                <td id="dir_client_fio"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">Пол</td>
+                <td id="client_sex"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">Номер карты</td>
+                <td id="client_cardnum"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">Возраст</td>
+                <td id="client_vozrast"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">Лечащий врач</td>
+                <td id="directioner"></td>
+            </tr>
+        </table>
+        <div id="issledovaniya-scroll">
+            <ul id="issledovaniya"></ul>
+        </div>
+    </div>
+    <div class="col-md-5" id="form-scroll">
+        <div id="result-form">
+
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/js/runtime.js"></script>
+    <script src="/static/js/jade.min.js"></script>
+    <script>
+        var type = 0;
+        $(document).ready(function () {
+            load_tubes_and_dirs();
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
+            $(document).on("click", ".select-tube", function (e) {
+                fast_search($(this, ".num").text());
+                $("#option1").attr("checked", "checked");
+                $("#option2").removeAttr("checked");
+                $("#option1").parent(".btn").addClass('active');
+                $("#option2").parent(".btn").removeClass('active');
+                type = 0;
+                load_d_fast();
+            });
+
+            $(document).on("click", ".select-dir", function (e) {
+                fast_search($(this).attr("direction"));
+                $("#option1").removeAttr("checked");
+                $("#option2").attr("checked", "checked");
+                $("#option1").parent(".btn").removeClass('active');
+                $("#option2").parent(".btn").addClass('active');
+                type = 1;
+                load_d_fast();
+            });
+
+            $("#search-field").bind('keydown', 'return', function () {
+                load_d_fast();
+            });
+        });
+
+        function load_d_fast() {
+            load_data($('#search-field').val(), type);
+        }
+        var dir_data = {};
+        function load_data(id, type) {
+            $("#issledovaniya").isLoading({
+                text: "Загрузка списка исследований",
+                position: "inside",
+                'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
+            });
+
+            $.ajax({
+                url: "/directions/get/issledovaniya",
+                type: "json",
+                method: "GET",
+                data: {id: id, type: type}
+            }).done(function (data) {
+                dir_data = data;
+                $("#issledovaniya").isLoading("hide");
+                $(".select-dir.active, .select-tube.active").removeClass("active");
+                $("#result-form").empty();
+                $("#issledovaniya").empty();
+                $("#dir_num").html(data.napr_pk);
+                $("#dir_client_fio").html(data.client_fio);
+                $("#directioner").html(data.directioner);
+                $("#client_vozrast").html(data.client_vozrast);
+                $("#client_cardnum").html(data.client_cardnum);
+                $("#client_sex").html(data.client_sex);
+                $.each(data.issledovaniya, function (k, v) {
+                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk));
+                    if (type == 0) {
+                        tubessplit = v.tube.pk.split(', ');
+                        $.each(tubessplit, function (k, v) {
+                            $(".select-tube[tube='{0}']".f(v)).addClass("active");
+                        });
+                    }
+                });
+                if (type == 0) {
+                    $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
+                    $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150);
+                }
+                if (type == 1) {
+                    $("[direction='{0}']".f(data.napr_pk)).addClass("active");
+                    $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150);
+                }
+                $("#issledovaniya li").first().click();
+            });
+        }
+
+        function load_form(id) {
+            $("#result-form").isLoading({
+                text: "Загрузка исследования",
+                position: "inside",
+                'tpl': loading_tpl,
+            });
+            $.ajax({url: "/static/templates/0.jade", type: "text", method: "GET", cache: false}).done(function (data) {
+                template = data;
+                $.ajax({
+                    url: "/researches/get/one",
+                    type: "text",
+                    method: "GET",
+                    data: {id: id}
+                }).done(function (data2) {
+                    $("#form-scroll").isLoading("hide");
+                    $("#issledovaniya .active").removeClass("active");
+                    data2 = JSON.parse(data2);
+                    console.log(data2);
+                    data2["sex"] = dir_data.client_sex;
+                    data2["age"] = dir_data.client_vozrast;
+                    $("#result-form").html(jade.compile(template)(data2));
+                    $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
+                });
+            });
+
+        }
+
+        function fast_search(num) {
+            $("#search-field").val(num);
+        }
+        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><td><i class="%class% glyphicon glyphicon-refresh"></i></td></tr>';
+        function load_tubes_and_dirs() {
+            $("#tubes-list tbody").isLoading({
+                text: "Загрузка пробирок",
+                position: "inside",
+                'tpl': loadingtable,
+            });
+            $("#dirs-list tbody").isLoading({
+                text: "Загрузка направлений",
+                position: "inside",
+                'tpl': loadingtable,
+            });
+            $.ajax({url: "/results/loadready", type: "json", method: "GET"}).done(function (data) {
+                $("#tubes-list tbody").isLoading("hide");
+                $("#dirs-list tbody").isLoading("hide");
+                $("#tubes-list tbody").html("");
+                $("#dirs-list tbody").html("");
+                $.each(data.tubes, function (k, v) {
+                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'>{0}</td><td><i class='glyphicon glyphicon-asterisk'></i></td></tr>".f(v.id, v.direction))
+                });
+                $.each(data.directions, function (k, v) {
+                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td>{0}</td><td><i class='glyphicon glyphicon-asterisk'></i></td></tr>".f(v.id))
+                });
+                resize();
+            });
+        }
+        function resize() {
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 80);
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 80);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 80);
+            $('#form-scroll').height($(window).height() - $('#form-scroll').position().top - 10);
+            $('#tubes-list').perfectScrollbar();
+            $('#issledovaniya-scroll').perfectScrollbar();
+            $('#dirs-list').perfectScrollbar();
+            $('#form-scroll').perfectScrollbar();
+        }
+        function save() {
+            $(this).disabled = true;
+            var result = {issledovaniye: -1, fractions: {}}
+            result.issledovaniye = $("#issledovaniye_id").val();
+            $.each($(".result-enter"), function (k, v) {
+                result.fractions[$(v).data("pk")] = $(v).val();
+            });
+            $(this).disabled = false;
+            console.log(result);
+        }
+
+
+    </script>
+    <style>
+        #dirs-list tbody, #tubes-list tbody {
+            min-height: 100px;
+        }
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        li.active {
+            background-color: #CCD1D9 !important;
+            color: #000 !important;
+        }
+
+        .select-dir.active td, .select-tube.active td {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        .select-tube, .select-dir {
+            cursor: pointer;
+        }
+
+        .highlight, .select-tube:hover, .select-dir:hover {
+            background-color: #F0F0F0;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #tubes-list, #dirs-list, #issledovaniya-scroll, #form-scroll {
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #issledovaniya-scroll {
+            padding-right: 15px;
+        }
+
+        #issledovaniya {
+            margin: 0;
+            padding: 0;
+        }
+
+        #issledovaniya li {
+            list-style: none;
+            padding: 5px;
+            cursor: pointer;
+            margin: 3px;
+            background-color: #F2F2F2;
+        }
+
+        /*
+                #issledovaniya li.active small{
+                    color: rgba(255,255,255,.55);
+                    font-size: 8pt;
+                }
+        */
+        #issledovaniya li small {
+            color: rgba(0, 0, 0, .4);
+            font-size: 8pt;
+        }
+
+        #issledovaniya li:hover {
+            background-color: #E6E9ED;
+        }
+
+        #issledovaniya li:hover small {
+            color: #000
+        }
+
+        /*
+                #issledovaniya li.active:hover small{
+                    color: #fff
+                }
+        */
+        #dir_info td {
+            padding: 5px;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+{% endblock %}
