@@ -51,7 +51,7 @@
         <div>
 
             <div style="margin-bottom: 25px;margin-top: -5px">
-                <div class="btn btn-blue-nb2 mw col-md-2" tabindex="10" id="success-b"
+                <div class="btn btn-primary-nb mw col-md-2" tabindex="10" id="success-b"
                      style="display: none;float: right;margin-right: 15px;" onclick="save_research();">Сохранить
                 </div>
                 <h4>Исследования в направлении:</h4>
@@ -68,17 +68,17 @@
     <div class="col-md-6">
         <div>
             <div class="btn-group" style="margin-bottom: 10px">
-                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-blue-nb">Печать</a>
+                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary-nb mw">Печать</a>
 
-                <div class="btn btn-blue-nb" onclick="update_history();">Обновить</div>
+                <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
             <div id="scroll-tb" style="position: relative;padding-right: 15px ; ">
                 <table class="table table-bordered" id="history-tb"></table>
             </div>
             <div class="btn-group" style="margin-top: 10px">
-                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-blue-nb">Печать</a>
+                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary-nb mw">Печать</a>
 
-                <div class="btn btn-blue-nb" onclick="update_history();">Обновить</div>
+                <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
         </div>
     </div>
@@ -334,11 +334,7 @@
         }
     </script>
     <style>
-        .mw {
-            width: 150px !important;
-        }
-
-        .mw:active {
+        .mw, .mw:active, .mw:focus {
             width: 150px !important;
         }
         #searchclear {

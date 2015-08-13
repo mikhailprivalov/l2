@@ -630,7 +630,7 @@ def get_issledovaniya(request):
         res["all_confirmed"] = True
         if id.isnumeric():
             if request.GET["type"] == "0":
-                if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() <= 1:
+                if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() == 1:
                     tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
                     if tube.doc_recive:
                         iss = Issledovaniya.objects.filter(tubes__id=id).all()
@@ -645,7 +645,7 @@ def get_issledovaniya(request):
                             iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
                         else:'''
                         napr = iss.first().napravleniye
-                else:
+                elif TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
                     for tube in tubes:
                         if tube.doc_recive:

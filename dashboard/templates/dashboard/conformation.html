@@ -63,14 +63,14 @@
             <div class="container-fluid">
                 <div class="row">
                     <div id="scroll-tb" style="position: relative;">
-                        <table class="table table-bordered table-responsive tablesorter">
+                        <table class="table table-bordered table-responsive tablesorter floatThead">
                             <thead>
                             <tr>
                                 <th style="width: 150px">Название</th>
-                                <th style="width: 100px">Напр.</th>
+                                <th style="width: 80px">Напр.</th>
                                 <th>Пробирки</th>
-                                <th style="width: 115px">Статус</th>
-                                <th style="width: 100px">Дата посл. действия.</th>
+                                <th style="width: 125px">Статус</th>
+                                <th style="width: 96px">Дата посл. действия.</th>
                             </tr>
                             </thead>
                             <tbody id="researches-list"></tbody>
@@ -81,7 +81,7 @@
             </div>
         </div>
         <div class="col-md-5">
-            <table class="table table-bordered" id="dir_info">
+            <table class="table table-bordered " id="dir_info">
                 <tr>
                     <td style="width: 150px">№ Направления</td>
                     <td id="dir_num"></td>
@@ -106,7 +106,7 @@
             <h5 id="research-title"><br/></h5>
 
             <div id="fractions-list">
-                <table class="table table-bordered">
+                <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
                         <td>Исследование</td>
@@ -217,6 +217,14 @@
             $('#no-printed-list').perfectScrollbar();
             $('#fractions-list').height($(window).height() - $('#fractions-list').position().top - 100);
             $('#fractions-list').perfectScrollbar();
+
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
         }
 
         function load_researches() {
@@ -299,6 +307,7 @@
                     method: "GET",
                     data: {id: id}
                 }).done(function (data2) {
+                    $(".active").removeClass("active");
                     data2 = JSON.parse(data2);
                     $.each(data2.fractions, function (k, v) {
                         $("#fractions").append("<tr><td>{0}</td><td data-pk='{3}'>{1}</td><td>{2}</td></tr>".f(v.title, "", v.unit, v.pk));
@@ -309,6 +318,7 @@
                             $("[data-pk='" + k + "']").text(v);
                         });
                     });
+                    $("[pk='{0}']".f(id)).addClass("active");
                     $("#issledovaniye_id").val(id);
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
@@ -410,6 +420,18 @@
         }
     </script>
     <style>
+        tr.active td {
+            background-color: #6C7A89 !important;
+            color: #fff !important;
+        }
+
+        td, th {
+            padding: 2px !important;
+        }
+
+        .floatThead th {
+            background-color: #fff;
+        }
         .btn-small {
             padding: 1px;
             display: inline-block;

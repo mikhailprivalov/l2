@@ -5,17 +5,44 @@ from django.contrib.auth.models import User, Group
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya
 from directions.models import IstochnikiFinansirovaniya
+from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
 from django.views.decorators.cache import cache_page
 from laboratory.decorators import group_required
 import slog.models as slog
+import simplejson as json
+from django.http import HttpResponse
 import simplejson as json
 
 
 # @cache_page(60 * 15)
 @login_required
 def dashboard(request):  # Представление панели управления
-    return render(request, 'dashboard.html')
+    from laboratory import settings
+
+    menu = []
+    groups = [str(x) for x in request.user.groups.all()]
+
+    if "Лечащий врач" in groups:
+        menu.append({"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n"})
+    if "Заборщик биоматериала" in groups:
+        menu.append({"url": "/researches/control", "title": "Взятие материала", "keys": "Shift+g"})
+    if "Получатель биоматериала" in groups:
+        menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r"})
+    if "Врач-лаборант" in groups or "Лаборант" in groups:
+        menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v"})
+        menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d"})
+    if "Оператор" in groups:
+        menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c"})
+
+    if request.user.is_superuser:
+        menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a"})
+        menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n"})
+        menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p"})
+        if settings.LDAP and settings.LDAP["enable"]:
+            menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s"})
+    menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
+    return render(request, 'dashboard.html', {"menu": menu_st})
 
 
 # @cache_page(60 * 15)
@@ -53,6 +80,7 @@ def create_user(request):  # Страница создания пользова�
                 profile.user = user  # Привязка профиля к пользователю
                 profile.fio = fio  # ФИО
                 profile.podrazileniye = podr.get(pk=podrpost)  # Привязка подразделения
+                profile.isLDAP_user = False
                 profile.save()  # Сохранение профиля
                 registered = True
                 slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps(
@@ -100,6 +128,12 @@ def create_pod(request):
                   {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr})
 
 
+@login_required
+@staff_member_required
+def ldap_sync(request):
+    return render(request, 'dashboard/ldap_sync.html')
+
+
 # @cache_page(60 * 15)
 @login_required
 @group_required("Лечащий врач")
@@ -111,3 +145,74 @@ def directions(request):
                                                              IstochnikiFinansirovaniya.objects.filter(istype="poli"),
                                                          'fin_stat':
                                                              IstochnikiFinansirovaniya.objects.filter(istype="stat")})
+
+
+@login_required
+@staff_member_required
+def users_count(request):
+    result = {"all": 0, "ldap": 0}
+    result["all"] = User.objects.all().count()
+    result["ldap"] = DoctorProfile.objects.filter(isLDAP_user=True).count()
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
+@staff_member_required
+def users_dosync(request):
+    from ldap3 import Server, Connection, SIMPLE, SYNC, ALL_ATTRIBUTES, SUBTREE, ALL
+    from laboratory import settings
+
+    result = {}
+
+    s = Server(settings.LDAP["server"]["host"], port=settings.LDAP["server"]["port"], get_info=ALL)
+    c = Connection(s, auto_bind=True, user=settings.LDAP["server"]["user"],
+                   password=settings.LDAP["server"]["password"], client_strategy=SYNC, authentication=SIMPLE,
+                   check_names=True)
+
+    result_t = ""
+
+    c.search(search_base=settings.LDAP["base"],
+             search_filter='(&(objectClass=person))',
+             search_scope=SUBTREE,
+             attributes=ALL_ATTRIBUTES,
+             get_operational_attributes=True)
+    resp = json.loads(c.response_to_json())
+    i = 0
+    for ldap_user in resp["entries"]:
+        if "uidNumber" not in ldap_user["attributes"].keys() or "uid" not in ldap_user[
+            "attributes"].keys() or "userPassword" not in ldap_user["attributes"].keys() or "displayName" not in \
+                ldap_user["attributes"].keys():
+            continue
+        i += 1
+        active = False
+        if ldap_user["attributes"]["accountStatus"] == "active":
+            active = True
+        dn = ldap_user["attributes"]["displayName"]
+
+        username = ldap_user["attributes"]["uid"][0]
+        password = ldap_user["attributes"]["userPassword"][0]
+
+        if not User.objects.filter(username=username).exists():  # Проверка существования пользователя
+            user = User.objects.create_user(username)  # Создание пользователя
+            user.set_password(password)  # Установка пароля
+            user.is_active = active
+            user.save()  # Сохранение пользователя
+
+            profile = DoctorProfile.objects.create()  # Создание профиля
+            profile.user = user  # Привязка профиля к пользователю
+            profile.isLDAP_user = True
+            profile.fio = dn  # ФИО
+            profile.save()  # Сохранение профиля
+        else:
+            user = User.objects.get(username=username)
+            user.set_password(password)
+            user.is_active = active
+            user.save()
+            profile = DoctorProfile.objects.get(user=user)
+            profile.isLDAP_user = True
+            profile.fio = dn
+            profile.save()
+    c.unbind()
+    return HttpResponse(json.dumps(result), content_type="application/json")

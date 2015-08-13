@@ -63,23 +63,25 @@ def results_save(request):
     if request.method == "POST":
         fractions = json.loads(request.POST["fractions"])
         issledovaniye = Issledovaniya.objects.get(pk=int(request.POST["issledovaniye"]))
-        for key in fractions.keys():
-            fraction_result = None
-            if Result.objects.filter(issledovaniye=issledovaniye, fraction__pk=key).exists():
-                fraction_result = Result.objects.get(issledovaniye=issledovaniye, fraction__pk=key)
-            else:
-                fraction_result = Result(issledovaniye=issledovaniye, fraction=directory.Fractions.objects.get(pk=key))
-            fraction_result.value = fractions[key]
-            fraction_result.iteration = 1
-            fraction_result.save()
-        issledovaniye.doc_save = request.user.doctorprofile
-        from datetime import datetime
+        if issledovaniye:
+            for key in fractions.keys():
+                fraction_result = None
+                if Result.objects.filter(issledovaniye=issledovaniye, fraction__pk=key).exists():
+                    fraction_result = Result.objects.get(issledovaniye=issledovaniye, fraction__pk=key)
+                else:
+                    fraction_result = Result(issledovaniye=issledovaniye,
+                                             fraction=directory.Fractions.objects.get(pk=key))
+                fraction_result.value = fractions[key]
+                fraction_result.iteration = 1
+                fraction_result.save()
+            issledovaniye.doc_save = request.user.doctorprofile
+            from datetime import datetime
 
-        issledovaniye.time_save = datetime.now()
-        issledovaniye.save()
+            issledovaniye.time_save = datetime.now()
+            issledovaniye.save()
 
-        slog.Log(key=request.POST["issledovaniye"], type=13, body=request.POST["fractions"],
-                 user=request.user.doctorprofile).save()
+            slog.Log(key=request.POST["issledovaniye"], type=13, body=request.POST["fractions"],
+                     user=request.user.doctorprofile).save()
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -465,12 +467,12 @@ def result_filter(request):
                 if status == 0:
                     iss_list = iss_list.filter(tubes__time_recive__range=(date_start, date_end))
                 elif status == 1:
-                    iss_list = iss_list.filter(time_save__range=(date_start, date_end))
+                    iss_list = iss_list.filter(time_save__range=(date_start, date_end), time_save__isnull=False)
                 elif status == 2:
                     iss_list = iss_list.filter(napravleniye__time_print__range=(date_start, date_end))
                 if int(research_pk) >= 0:
                     iss_list = iss_list.filter(research__pk=int(research_pk))
-            elif status == 3:
+            elif dir_pk == "" and status == 3:
                 iss_list = iss_list.filter(napravleniye__doc_print__isnull=True, doc_confirmation__isnull=False)
                 is_tmp = iss_list
                 for v in is_tmp:
@@ -479,6 +481,7 @@ def result_filter(request):
                         iss_list = iss_list.exclude(napravleniye=v.napravleniye)
             elif dir_pk.isnumeric():
                 iss_list = iss_list.filter(napravleniye__pk=int(dir_pk))
+
             result["list"] = {}
             for v in iss_list:
                 status_v = 0
@@ -490,7 +493,8 @@ def result_filter(request):
                     status_v = 3
                 if v.pk in result["list"].keys() or (status != status_v and not dir_pk.isnumeric()):
                     continue
-
+                if dir_pk.isnumeric():
+                    status = status_v
                 res = {"status": status_v, "pk": v.pk, "title": v.research.title, "date": "",
                        "direction": v.napravleniye.pk,
                        "tubes": ", ".join(map(str, v.tubes.values_list('pk', flat=True)))}

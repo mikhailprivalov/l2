@@ -6,7 +6,7 @@
         <div class="input-group" style="margin-bottom: 5px">
             <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus>
             <span class="input-group-btn">
-                <button class="btn btn-primary-nb" onclick="load_d_fast();" type="button">Поиск</button>
+                <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
             </span>
         </div>
         <span>Область поиска:&nbsp;</span>
@@ -28,11 +28,7 @@
                 <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
-                        <th colspan="2" style="text-align: center">Пробирки</th>
-                    </tr>
-                    <tr>
-                        <th style="width: 80%">№</th>
-                        <!--<th>Статус</th>-->
+                        <th style="text-align: center">Пробирки</th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -42,12 +38,7 @@
                 <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
-                        <th colspan="2" style="text-align: center">Направления</th>
-                    </tr>
-
-                    <tr>
-                        <th style="width: 80%">№</th>
-                        <!--<th>Статус</th>-->
+                        <th style="text-align: center">Направления</th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -130,6 +121,15 @@
             $("#search-field").bind('keydown', 'return', function () {
                 load_d_fast();
             });
+            $("body").on('keyup', '.result-enter', function (e) {
+                if (e.which === 13) {
+                    var index = $('.result-enter').index(this) + 1;
+                    if ($('.result-enter').eq(index).length)
+                        $('.result-enter').eq(index).focus();
+                    else
+                        save();
+                }
+            });
         });
         request = "";
         function load_d_fast() {
@@ -140,7 +140,8 @@
         function reload_fast() {
             if (loaded_research < 0 && request != "") return;
 
-            load_data(request, type, loaded_research);
+            load_data(request, type);
+
             //load_form(loaded_research);
         }
         var dir_data = {};
@@ -148,11 +149,6 @@
         var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден"};
         function load_data(id, type, select_el) {
             $("#result-print").attr("disabled", 1);
-            $("#issledovaniya").isLoading({
-                text: "Загрузка списка исследований",
-                position: "inside",
-                'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
-            });
 
             $.ajax({
                 url: "/directions/get/issledovaniya",
@@ -171,6 +167,13 @@
                     load_tubes_and_dirs();
                     return;
                 }
+
+                $("#issledovaniya").isLoading({
+                    text: "Загрузка списка исследований",
+                    position: "inside",
+                    'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
+                });
+
                 $(".has-error").removeClass("has-error");
                 try {
                     $('#search-field').tooltipster('destroy');
@@ -223,6 +226,7 @@
             });
         }
         var loaded_research = -1;
+        var datatype = -1;
         function load_form(id) {
             $("#result-form").isLoading({
                 text: "Загрузка исследования",
@@ -250,15 +254,19 @@
                             $("[data-pk='" + k + "']").val(v);
                         });
                     });
+                    $('.result-enter').eq(0).focus();
                     resize();
                     loaded_research = id;
+                    datatype = -1;
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").attr("disabled", 1);
+                        datatype = 2;
                     }
                     else if (data2.saved) {
                         $("#confirm-btn").removeAttr("disabled");
                         $("#save-btn").removeAttr("disabled");
+                        datatype = 1;
                     }
                     else {
                         $("#confirm-btn").attr("disabled", 1);
@@ -306,11 +314,21 @@
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
+
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
+
             if (!$('#result-jade-form').length) return;
             $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 120);
             $('#result-jade-form').perfectScrollbar();
         }
         function save() {
+            if (datatype == 2) return;
             $(this).disabled = true;
             var result = {issledovaniye: -1, fractions: {}}
             result.issledovaniye = $("#issledovaniye_id").val();
@@ -323,7 +341,6 @@
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
                 console.log(data);
                 reload_fast();
-
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
@@ -369,6 +386,9 @@
 
     </script>
     <style>
+        .floatThead th {
+            background-color: #fff;
+        }
         .status {
             float: right;
             display: inline-block;

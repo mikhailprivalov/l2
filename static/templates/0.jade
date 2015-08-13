@@ -5,7 +5,7 @@ div.col-md-2
     .row
         button(onclick="confirm();")#confirm-btn.btn.btn-primary-nb Подтвердить
 h4(style="margin-top: 0") Исследование - #{title}
-form
+form(onsubmit="return false;")
     input(type="hidden", value=res_id)#issledovaniye_id
     #result-jade-form
         table.table.table-bordered.table-sm-pd

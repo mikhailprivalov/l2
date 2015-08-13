@@ -7,7 +7,13 @@ SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2']
+ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis']
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_HSTS_SECONDS = 1
+X_FRAME_OPTIONS = 'DENY'
+DEBUG = False
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -74,15 +80,28 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lis2',  # TODO: lis
+        'NAME': 'lis2',
         'USER': 'postgres',
         'PASSWORD': '123456',
         # 'HOST': '192.168.122.45',
-        'HOST': '192.168.0.105',
+        'HOST': '192.168.0.252',
         # 'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'lis2',  # TODO: lis
+            'USER': 'postgres',
+            'PASSWORD': '123456',
+            # 'HOST': '192.168.122.45',
+            'HOST': '192.168.0.105',
+            # 'HOST': '127.0.0.1',
+            'PORT': '5432',
+        }
+    }
 
 CACHES = {
     'default': {
@@ -124,11 +143,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 
+
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
-STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
-
+STATIC_ROOT = '/home/lisuser/lis/static/'
+if DEBUG:
+    STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
 '''
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
@@ -174,11 +195,17 @@ DEBUG_TOOLBAR_PANELS = (
     'cachalot.panels.CachalotPanel',
 )
 
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 1
-X_FRAME_OPTIONS = 'DENY'
-DEBUG = False
+LDAP = {
+    "enable": True,
+    "server": {
+        "host": "192.169.10.11",
+        "port": 389,
+        "user": "cn=Manager,dc=fc-ismu,dc=local",
+        "password": "123456"
+    },
+    "user_object": "(objectClass=*)",
+    "base": "dc=fc-ismu,dc=local"
+
+}
+
+DEBUG = True

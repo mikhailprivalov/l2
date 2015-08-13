@@ -1,0 +1,54 @@
+{% extends "dbase.html" %}
+{% block title %}Синхронизация с LDAP{% endblock %}
+
+{% block content %}
+    <div id="cont" style="min-height: 300px">
+        Всего пользователей: <span id="users_count">-</span><br/>
+        Импортировано из LDAP: <span id="ldap_users_count">-</span><br/><br/>
+        <a href="#" onclick="ldap_sync();return false;">Синхронизировать с LDAP</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+            update_users_count();
+        });
+
+        function update_users_count() {
+            $.ajax({"url": "/users/count", method: "GET"}).done(function (data) {
+                $("#users_count").text(data.all);
+                $("#ldap_users_count").text(data.ldap);
+            });
+        }
+        var insync = false;
+        function ldap_sync() {
+            if (insync) return;
+
+            $("#cont a").isLoading({text: "Синхронизация...", position: "inside"});
+
+            insync = true;
+            $.ajax({url: "/users/ldap/dosync", method: "POST"}).done(function (data) {
+                update_users_count();
+                insync = false;
+                $("#cont a").isLoading("hide");
+                $("#cont a").text("Синхронизировать с LDAP")
+            });
+        }
+    </script>
+    <style>
+        .isloading-overlay {
+            background: rgba(0, 0, 0, 0.5) !important;
+            color: #fff !important;
+        }
+
+        .isloading-wrapper {
+            background-color: transparent !important;
+        }
+
+        #cont a {
+            display: block;
+            height: 40px;
+        }
+    </style>
+{% endblock %}
