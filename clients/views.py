@@ -23,6 +23,7 @@ def ignore_exception(IgnoreException=Exception, DefaultVal=None):
 
 
 def ajax_search(request):
+    """ Поиск пациентов """
     objects = []
     if request.method == "GET" and request.GET['query'] and request.GET[
         'type']:  # Проверка типа запроса и наличия полей

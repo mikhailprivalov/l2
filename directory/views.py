@@ -197,7 +197,6 @@ def directory_research(request):
             return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
                  "ref_f": ref_f, "pk": fraction.pk});
-
         '''
         sel: id,
         color: color,

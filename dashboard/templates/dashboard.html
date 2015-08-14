@@ -20,7 +20,7 @@
         <div class="row dash-buttons">
             {% for item in line %}
             <div class="col-xs-6 col-md-3">
-                <a href="{{ item.url }}" class="panel-body">
+                <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
                     {{ item.title }}
                     <small class="badge badge-default">{{ item.keys }}</small>
                 </a>

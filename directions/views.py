@@ -622,6 +622,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
 
 @login_required
 def get_issledovaniya(request):
+    """ Получение списка исследований и направления для ввода результатов"""
     res = {"issledovaniya": [], "ok": False}
     if request.method == "GET":
         iss = []
@@ -634,16 +635,6 @@ def get_issledovaniya(request):
                     tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
                     if tube.doc_recive:
                         iss = Issledovaniya.objects.filter(tubes__id=id).all()
-                        '''ishide = False
-                        for iss_check in iss:
-                            if iss_check.issledovaniye.hide == 0:
-                                ishide = False
-
-                        if ishide:
-                            iss = Issledovaniya.objects.filter(tube=tube)
-                            napr = iss.first().napravleniye
-                            iss = napr.issledovaniya_set.filter(issledovaniye__auto_add=iss.first().issledovaniye.hide)
-                        else:'''
                         napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
@@ -682,9 +673,6 @@ def get_issledovaniya(request):
                         for tube_o in tubes_list:
                             tubes.append(tube_o.pk)
                             titles.append(tube_o.type.tube.title)
-                        '''for iss_hidden in iss.filter(issledovaniye__hide=1,
-                                                     issledovaniye__auto_add=issledovaniye.issledovaniye.auto_add):
-                            tubes.append(iss_hidden.tube.pk)'''
                         saved = True
                         confirmed = True
                         if not issledovaniye.doc_save:
@@ -710,13 +698,14 @@ def get_issledovaniya(request):
 
 @login_required
 def get_client_directions(request):
+    """ Получение направлений для пациента """
     import datetime
     res = {"directions": [], "ok": False}
     if request.method == "GET":
         pk = int(request.GET["pk"])
         req_status = int(request.GET["status"])
-        date_start = request.GET["date[start]"]
-        date_end = request.GET["date[end]"]
+        date_start = request.GET["date[start]"]  # начальная дата назначения
+        date_end = request.GET["date[end]"]  # конечная дата назначения
 
         date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                    int(date_start.split(".")[0]))
@@ -731,7 +720,7 @@ def get_client_directions(request):
 
             iss_list = Issledovaniya.objects.filter(napravleniye=napr)
             for v in iss_list:
-                iss_status = 2
+                iss_status = 1
                 if not v.doc_confirmation and not v.doc_save:
                     iss_status = 1
                     if v.tubes.count() == 0:
