@@ -3,7 +3,8 @@ from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
-from dashboard.views import dashboard, create_user, create_pod, directions, researches_control
+from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
+    users_dosync
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
@@ -45,6 +46,7 @@ urlpatterns = [
                   url(r'^dashboard/$', dashboard),
                   url(r'^dashboard/create_user$', create_user),
                   url(r'^dashboard/create_podr$', create_pod),
+                  url(r'^dashboard/ldap_sync$', ldap_sync),
                   url(r'^dashboard/directions$', directions),
                   url(r'^dashboard/receive', receive),
                   url(r'^tubes/get', tubes_get),
@@ -58,6 +60,10 @@ urlpatterns = [
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/pdf', result_print),
                   url(r'^results/filter$', result_filter),
+
+                  url(r'^users/count$', users_count),
+                  url(r'^users/ldap/dosync$', users_dosync),
+
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',

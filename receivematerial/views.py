@@ -21,7 +21,8 @@ def receive(request):
     if request.method == "GET":
         groups = Subgroups.objects.filter(
             podrazdeleniye=request.user.doctorprofile.podrazileniye)  # Список доступных групп для текущего пользователя
-        podrazdeleniya = Podrazdeleniya.objects.all()  # Список всех подразделений
+        podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by(
+            "title")  # Список всех подразделений
         return render(request, 'dashboard/receive.html', {"groups": groups, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])
@@ -44,6 +45,7 @@ def receive(request):
 
 @login_required
 def tubes_get(request):
+    """ Получение списка не принятых пробирок """
     result = []
     if request.method == "GET":
         subgroup_lab = Subgroups.objects.get(pk=request.GET["subgroup"])

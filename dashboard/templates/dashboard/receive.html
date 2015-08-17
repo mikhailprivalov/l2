@@ -79,6 +79,11 @@
         function load_tubes() {
             $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
                 $("#tubes").html("");
+                data = data.sort(function (a, b) {
+                    var x = a.tube.id,
+                            y = b.tube.id;
+                    return x < y ? -1 : x > y ? 1 : 0;
+                });
                 $.each(data, function (k, v) {
                     tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
                     if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))

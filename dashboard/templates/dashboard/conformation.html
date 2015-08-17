@@ -63,14 +63,14 @@
             <div class="container-fluid">
                 <div class="row">
                     <div id="scroll-tb" style="position: relative;">
-                        <table class="table table-bordered table-responsive tablesorter">
+                        <table class="table table-bordered table-responsive tablesorter floatThead">
                             <thead>
                             <tr>
                                 <th style="width: 150px">Название</th>
-                                <th style="width: 100px">Напр.</th>
+                                <th style="width: 80px">Напр.</th>
                                 <th>Пробирки</th>
-                                <th style="width: 115px">Статус</th>
-                                <th style="width: 100px">Дата посл. действия.</th>
+                                <th style="width: 125px">Статус</th>
+                                <th style="width: 96px">Дата посл. действия.</th>
                             </tr>
                             </thead>
                             <tbody id="researches-list"></tbody>
@@ -81,7 +81,7 @@
             </div>
         </div>
         <div class="col-md-5">
-            <table class="table table-bordered" id="dir_info">
+            <table class="table table-bordered " id="dir_info">
                 <tr>
                     <td style="width: 150px">№ Направления</td>
                     <td id="dir_num"></td>
@@ -103,10 +103,19 @@
                     <td id="directioner"></td>
                 </tr>
             </table>
-            <h5 id="research-title"><br/></h5>
+            <div class="row">
+                <div class="col-md-9">
+                    <h5 id="research-title"></h5>
+                </div>
+                <div style="text-align: right; margin-bottom: 10px" class="col-md-3">
+                    <button disabled class="btn btn-primary-nb confirm-btn"
+                            onclick="confirm_loaded();return false">Подтвердить
+                    </button>
+                </div>
+            </div>
 
             <div id="fractions-list">
-                <table class="table table-bordered">
+                <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
                         <td>Исследование</td>
@@ -132,7 +141,7 @@
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button disabled id="confirm-btn" class="btn btn-primary-nb"
+                    <button disabled class="btn btn-primary-nb confirm-btn"
                             onclick="confirm_loaded();return false">Подтвердить
                     </button>
                 </div>
@@ -217,6 +226,14 @@
             $('#no-printed-list').perfectScrollbar();
             $('#fractions-list').height($(window).height() - $('#fractions-list').position().top - 100);
             $('#fractions-list').perfectScrollbar();
+
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
         }
 
         function load_researches() {
@@ -251,13 +268,15 @@
             $('#sel-researches, #select-lab, #status').selectpicker('refresh');
         }
         var ts = false;
+        var last_dir = "";
         function load_data() {
+            $(".confirm-btn").attr("disabled", 1);
             $("#researches-list").html("");
             var req_data = {};
             req_data.research = $("#sel-researches").val();
             req_data.status = $("#status").val();
             req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
-            req_data.dir_id = $("#dir-id").val();
+            last_dir = req_data.dir_id = $("#dir-id").val();
             $.ajax({url: "/results/filter", method: "POST", data: req_data}).done(function (data) {
                 if (data.ok && Object.keys(data.list).length > 0) {
                     $.each(data.list, function (k, v) {
@@ -269,7 +288,8 @@
                      }
                      else
                      $(".tablesorter").tablesorter("update");*/
-                    resize();
+
+                    $("#researches-list td").eq(0).click();
                 }
                 else {
                     $("#researches-list").append("<tr><td class='well' colspan='5'>Не найдено</td></tr>");
@@ -299,6 +319,7 @@
                     method: "GET",
                     data: {id: id}
                 }).done(function (data2) {
+                    $(".active").removeClass("active");
                     data2 = JSON.parse(data2);
                     $.each(data2.fractions, function (k, v) {
                         $("#fractions").append("<tr><td>{0}</td><td data-pk='{3}'>{1}</td><td>{2}</td></tr>".f(v.title, "", v.unit, v.pk));
@@ -309,19 +330,21 @@
                             $("[data-pk='" + k + "']").text(v);
                         });
                     });
+                    $("[pk='{0}']".f(id)).addClass("active");
                     $("#issledovaniye_id").val(id);
                     if (data2.confirmed) {
-                        $("#confirm-btn").attr("disabled", 1);
+                        $(".confirm-btn").attr("disabled", 1);
                         $("#print-btn").removeAttr("disabled");
                     }
                     else if (data2.saved) {
                         $("#print-btn").attr("disabled", 1);
-                        $("#confirm-btn").removeAttr("disabled");
+                        $(".confirm-btn").removeAttr("disabled");
                     }
                     else {
-                        $("#confirm-btn").attr("disabled", 1);
+                        $(".confirm-btn").attr("disabled", 1);
                         $("#print-btn").attr("disabled", 1);
                     }
+                    resize();
                 });
             });
         }
@@ -391,7 +414,9 @@
                 method: "POST",
                 data: {pk: $("#issledovaniye_id").val()}
             }).done(function () {
-                load_research($("#issledovaniye_id").val(), parseInt($("#dir_num").text()));
+                if (last_dir != "") {
+                    $("#dir-id").val(last_dir);
+                }
                 sync_checked();
                 load_data();
                 load_no_printed();
@@ -410,6 +435,18 @@
         }
     </script>
     <style>
+        tr.active td {
+            background-color: #6C7A89 !important;
+            color: #fff !important;
+        }
+
+        td, th {
+            padding: 2px !important;
+        }
+
+        .floatThead th {
+            background-color: #fff;
+        }
         .btn-small {
             padding: 1px;
             display: inline-block;

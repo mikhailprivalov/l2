@@ -7,8 +7,7 @@
     <title>{% block title %}{% endblock %}</title>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/bootflat/css/bootflat.min.css" rel="stylesheet">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,300&subset=cyrillic,latin' rel='stylesheet'
-          type='text/css'>
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
     <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
     <link href="/static/css/amaran.min.css" rel="stylesheet">
@@ -29,6 +28,27 @@
         }
     </script>
     <style>
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 300;
+            src: local('Open Sans Light'), local('OpenSans-Light'), url(/static/fonts/OpenSans/OpenSans-Light.ttf);
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Open Sans'), local('OpenSans'), url(/static/fonts/OpenSans/OpenSans-Regular.ttf)
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 700;
+            src: local('Open Sans Bold'), local('OpenSans-Bold'), url(/static/fonts/OpenSans/OpenSans-Bold.ttf)
+        }
+
         * {
             font-family: 'Open Sans', sans-serif;
         }
@@ -272,8 +292,8 @@
         }
 
         .btn-primary-nb:hover {
-            background-color: #8CC152 !important;
-            border: 1px solid #8CC152 !important;
+            background-color: #049372 !important;
+            border: 1px solid #049372 !important;
         }
 
         .btn-blue-nb, .btn-blue-nb:active, .btn-blue-nb:focus {
@@ -359,7 +379,9 @@
 
         .dash-buttons .panel-body:hover {
             background-color: #FC6E51;
+            background-color: #049372;
             border: 1px solid #FC6E51;
+            border: 1px solid #049372;
             color: #fff
         }
         /*.ps-scrollbar-x-rail,
@@ -367,20 +389,85 @@
           opacity: 0.6;
         }*/
 
-        .amaran.awesome.ok .icon {
-            background-color: #8CC152;
+        .amaran {
+            background-color: #434A54 !important;
+            color: #fff
         }
 
-        .amaran.awesome.ok p.bold {
-            color: #8CC152;
+        .awesome .icon {
+            color: #434A54
         }
 
-        .amaran.awesome.no .icon {
-            background-color: #E9573F;
+        .awesome p.bold, .awesome p span {
+            color: #fff;
         }
 
-        .amaran.awesome.no p.bold {
-            color: #E9573F;
+        .awesome.ok .icon {
+            background-color: #049372;
+        }
+
+        .awesome.ok p.bold {
+            color: #fff !important;
+        }
+
+        .awesome.no .icon {
+            background-color: #CF3A24;
+        }
+
+        .awesome.no p.bold {
+            color: #fff !important;
+        }
+
+        .awesome.wrn .icon {
+            background-color: #F5AB35;
+        }
+
+        .navbar-inverse {
+            border-radius: 0 0 5px 5px;
+            background-color: #656D78;
+            border: 1px solid #656D78;
+            border-top: 0;
+            border: 0;
+            overflow: hidden;
+        }
+
+        .navbar-inverse .navbar-brand {
+            color: #fff !important;
+        }
+
+        .navbar-inverse a {
+            color: #ECF0F1 !important;
+        }
+
+        .navbar-inverse a:hover {
+            /*color: #6C7A89!important;*/
+            background-color: #FC6E51 !important;
+            background-color: #049372 !important;
+        }
+
+        .panel-flt .panel-heading {
+            background-color: #95A5A6;
+            color: #fff
+        }
+
+        .panel-flt .panel-title {
+            color: #fff !important;
+        }
+
+        .panel-flt .panel-body, .panel-flt .list-group-item {
+            background-color: #ECF0F1;
+        }
+
+        .f-h {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-top: 3px solid #F2F1EF;
+            border-bottom: 3px solid #F2F1EF;
+            padding: 5px;
+        }
+
+        .b-flt, .b-flt td {
+            background-color: #ECF0F1;
         }
     </style>
 </head>

@@ -3,28 +3,80 @@
 
 {% block content %}
     <div class="container">
+        <div style="text-align: center">
+            <h1 style="font-weight: 300;margin-bottom: 20px;font-size: 26pt">Лабораторная информационная система</h1>
+        </div>
         {% if error %}
             <div class="alert alert-danger alert-dismissable" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                 Неверный логин или пароль
             </div>
         {% endif %}
-
-        <form class="well form-signin" action='/' method='POST'>
+        <form class="form-signin" action='/' method='POST'>
             {% csrf_token %}
-            <h3 class="form-signin-heading">Форма авторизации</h3>
-            <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
-                   value="{{ username }}" required autofocus>
-            <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
-                   required>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>
+            <div class="panel panel-flt">
+                <div class="panel-heading">Форма авторизации</div>
+                <div class="panel-body">
+                    <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
+                           value="{{ username }}" required autofocus>
+                    <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
+                           required>
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>
+                </div>
+            </div>
         </form>
     </div>
     <style>
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 300;
+            src: local('Open Sans Light'), local('OpenSans-Light'), url(/static/fonts/OpenSans/OpenSans-Light.ttf);
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Open Sans'), local('OpenSans'), url(/static/fonts/OpenSans/OpenSans-Regular.ttf)
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 700;
+            src: local('Open Sans Bold'), local('OpenSans-Bold'), url(/static/fonts/OpenSans/OpenSans-Bold.ttf)
+        }
+
+        input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+        }
+
+        .panel-flt .panel-heading {
+            background-color: #95A5A6;
+            color: #fff
+        }
+
+        .panel-flt .panel-title {
+            color: #fff !important;
+        }
+
+        .panel-flt .panel-body, .panel-flt .list-group-item {
+            background-color: #ECF0F1;
+        }
+
+        .btn-primary {
+            background: #6C7A89;
+            border: 0
+        }
+
+        .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+            background: #049372;
+            border: 0
+        }
         body {
-            padding-top: 40px;
-            padding-bottom: 40px;
-            background-color: #eee;
+            background: #f0f0f0;
         }
 
         .form-signin {

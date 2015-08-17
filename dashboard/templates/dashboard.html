@@ -2,7 +2,7 @@
 {% block title %}Панель управления{% endblock %}
 
 {% block content %}{% load has_group %}
-    <div class="panel panel-default">
+    <div class="panel panel-default panel-flt">
         <div class="panel-heading">
             <h3 class="panel-title">Профиль</h3>
         </div>
@@ -15,145 +15,43 @@
                 <span class="label label-default">{{ v }}</span>&nbsp;{% endfor %}</li>
         </ul>
     </div>
-    <hr/>
-    <h4 style="text-align: center;">Меню</h4>
-    <hr/>
-    <div class="row dash-buttons">
-        {% if request.user|has_group:"Лечащий врач" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/dashboard/directions" id="create_user_btn" class="panel-body">
-                    Направления<br/><br/>
-                    <small class="badge badge-default">Shift+n</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+n', function () {
-                        window.location.href = "/dashboard/directions";
-                    });
-                });
-            </script>
-        {% endif %}
-        {% if request.user|has_group:"Заборщик биоматериала" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/researches/control" id="create_user_btn" class="panel-body">
-                    Взятие материала<br/><br/>
-                    <small class="badge badge-default">Shift+g</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+g', function () {
-                        window.location.href = "/researches/control";
-                    });
-                });
-            </script>
-        {% endif %}
-        {% if request.user|has_group:"Получатель биоматериала" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/dashboard/receive" id="create_user_btn" class="panel-body">
-                    Прием материала<br/><br/>
-                    <small class="badge badge-default">Shift+r</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+r', function () {
-                        window.location.href = "/dashboard/receive";
-                    });
-                });
-            </script>
-        {% endif %}
-        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/results/enter" id="create_user_btn" class="panel-body">
-                    Ввод результатов<br/><br/>
-                    <small class="badge badge-default">Shift+v</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+v', function () {
-                        window.location.href = "/results/enter";
-                    });
-                });
-            </script>
-        {% endif %}
-    </div>
-    <div class="row dash-buttons" style="margin-top: 25px">
-        {% if request.user|has_group:"Оператор" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/construct/menu" id="create_user_btn" class="panel-body">
-                    Конструктор справочника<br/>
-                    <small class="badge badge-default">Shift+c</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+c', function () {
-                        window.location.href = "/construct/menu";
-                    });
-                });
-            </script>
-        {% endif %}
-        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
-            <div class="col-xs-6 col-md-3">
-                <a href="/results/conformation" id="create_user_btn" class="panel-body">
-                    Подтверждение и печать результатов<br/>
-                    <small class="badge badge-default">Shift+d</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, 'shift+d', function () {
-                        window.location.href = "/results/conformation";
-                    });
-                });
-            </script>
-        {% endif %}
-    </div>
-    {% if user.is_superuser %}
-        <hr/>
-        <h4 style="text-align: center;">Администрирование</h4>
-        <hr/>
+    <h4 class='f-h' style="text-align: center;">Меню</h4>
+    {% for line in menu %}
         <div class="row dash-buttons">
+            {% for item in line %}
             <div class="col-xs-6 col-md-3">
-                <a href="/admin" id="create_user_btn" class="panel-body">
-                    Админ-панель<br/><br/>
-                    <small class="badge badge-default">Alt+a</small>
+                <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
+                    {{ item.title }}
+                    <small class="badge badge-default">{{ item.keys }}</small>
                 </a>
             </div>
-            <div class="col-xs-6 col-md-3">
-                <a href="/dashboard/create_user" id="create_user_btn" class="panel-body">
-                    Создать пользователя<br/>
-                    <small class="badge badge-default">Alt+n</small>
-                </a>
-            </div>
-            <div class="col-xs-6 col-md-3">
-                <a href="/dashboard/create_podr" id="create_user_btn" class="panel-body">
-                    Добавить подразделение<br/>
-                    <small class="badge badge-default">Alt+p</small>
-                </a>
-            </div>
-        </div>
-    {% endif %}
+            <script>
+                $(document).ready(function () {
+                    $(document).on('keydown', null, '{{ item.keys|lower }}', function () {
+                        window.location.href = "{{ item.url }}";
+                    });
+                });
+            </script>
+            {% endfor %}
+        </div>{% endfor %}
 {% endblock %}
 {% block scripts %}
-    <script>
-        {% if user.is_superuser %}
-            $(document).on('keydown', null, 'alt+n', function () {
-                window.location.href = "/dashboard/create_user";
-            });
-            $(document).on('keydown', null, 'alt+a', function () {
-                window.location.href = "/admin";
-            });
-            $(document).on('keydown', null, 'alt+p', function () {
-                window.location.href = "/dashboard/create_podr";
-            });
-        {% endif %}
-    </script>
     <style>
+        .dash-buttons {
+            margin-top: 20px;
+        }
 
+        .dash-buttons .col-md-3 a {
+            height: 122px;
+            position: relative;
+        }
+
+        .dash-buttons a .badge {
+            position: absolute;
+            bottom: 10px;
+            right: 100px;
+            left: 100px;
+        }
         h4 {
             margin: 5px;
         }
