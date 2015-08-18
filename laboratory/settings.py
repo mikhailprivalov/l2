@@ -89,6 +89,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
 if DEBUG:
     DATABASES = {
         'default': {
@@ -211,4 +212,4 @@ LDAP = {
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60
 
-DEBUG = True
+DEBUG = False

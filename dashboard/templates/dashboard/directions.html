@@ -211,7 +211,7 @@
                         <div class="col-md-3"><a href="#" onclick="selectText('results-body');return false;"
                                                  class="btn btn-primary-nb btn-blue-nb">Выделить результаты</a></div>
                         <div class="col-md-3"><a href="/results/pdf?pk=[614]" target="_blank"
-                                                 class="btn btn-primary-nb">Печать результатов</a></div>
+                                                 class="btn btn-primary-nb print-b">Печать результатов</a></div>
                         <div class="col-md-3">
                             <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть
                             </button>
@@ -300,7 +300,7 @@
             });
         });
 
-        function show_results(pk) {
+        function show_results(rpk) {
             $("#results-modal #res-dir-num span").text("");
             $("#results-modal #res-date").text("");
             $("#results-modal #res-fio").text("");
@@ -310,7 +310,7 @@
             $("#results-modal #res-age").text("");
             $("#results-modal #res-doc").text("");
             $("#results-modal .ct tbody").html("");
-            $.ajax({url: "/results/get/full", method: "GET", data: {pk: pk}}).done(function (data) {
+            $.ajax({url: "/results/get/full", method: "GET", data: {pk: rpk}}).done(function (data) {
                 $("#results-modal #res-dir-num span").text(data.direction.pk);
                 $("#results-modal #res-date").text(data.direction.date);
                 $("#results-modal #res-doc").text(data.direction.doc);
@@ -363,7 +363,7 @@
                     padding: 2,
                     fontSize: 14
                 });
-                $("#results-modal .print-btn").attr("href", "/results/pdf?pk=[" + pk + "]");
+                $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
                 $("#results-modal").modal();
             });
         }
