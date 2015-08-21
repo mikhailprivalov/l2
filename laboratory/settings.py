@@ -35,7 +35,8 @@ INSTALLED_APPS = (
     'receivematerial',
     'construct',
     'slog',
-    'directory'
+    'directory',
+    'statistic',
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -213,3 +214,4 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
 DEBUG = False
+DEBUG = True

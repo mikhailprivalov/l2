@@ -17,3 +17,4 @@ pymorphy2[fast]
 pymorphy2-dicts-ru
 relatorio
 ldap3
+xlwt
