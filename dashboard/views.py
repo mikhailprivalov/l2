@@ -35,6 +35,8 @@ def dashboard(request):  # Представление панели управл�
                      "nt": False})
     if "Оператор" in groups:
         menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
+    if "Просмотр статистики" in groups:
+        menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
 
     if request.user.is_superuser:
         menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
