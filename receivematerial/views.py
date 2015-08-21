@@ -61,7 +61,7 @@ def tubes_get(request):
                     if iss.research.subgroup == subgroup_lab:
                         issledovaniya_tmp.append(iss.research.title)
                 if len(issledovaniya_tmp) > 0 and not tube.rstatus() and tube.notice == "":
-                    result.append({"researches": ', '.join(issledovaniya_tmp),
+                    result.append({"researches": ' | '.join(issledovaniya_tmp),
                                    "direction": tube.issledovaniya_set.first().napravleniye.pk,
                                    "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),
                                             "color": tube.type.tube.color, "notice": tube.notice}})

@@ -518,7 +518,7 @@ def result_filter(request):
                     status = status_v
                 res = {"status": status_v, "pk": v.pk, "title": v.research.title, "date": "",
                        "direction": v.napravleniye.pk,
-                       "tubes": ", ".join(map(str, v.tubes.values_list('pk', flat=True)))}
+                       "tubes": " | ".join(map(str, v.tubes.values_list('pk', flat=True)))}
                 if status == 0 and v.tubes.filter(time_recive__isnull=False).exists():  # Не обработаные
                     res["date"] = str(dateformat.format(
                         v.tubes.filter(time_recive__isnull=False).order_by("-time_recive").first().time_recive.date(),

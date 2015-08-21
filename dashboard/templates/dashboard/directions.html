@@ -332,7 +332,7 @@
                         $.each(ref, function (key, value) {
                             ref_array.push("{0} : {1}".f(key, value));
                         });
-                        ref_str = ref_array.join(", ");
+                        ref_str = ref_array.join(" | ");
                         $("#results-modal .ct tbody").append("<tr><td><b>{0}</b></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v.title, v.fractions[key_v].result, v.fractions[key_v].units, ref_str));
                     }
                     else if (Object.keys(v.fractions).length > 1) {
@@ -348,7 +348,7 @@
                             $.each(ref, function (key, value) {
                                 ref_array.push("{0} : {1}".f(key, value));
                             });
-                            ref_str = ref_array.join(", ");
+                            ref_str = ref_array.join(" | ");
                             td_str += "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title + "<br/>";
                             td2_str += vv.result + "<br/>";
                             td3_str += vv.units + "<br/>";
@@ -382,9 +382,9 @@
                 var keys = Object.keys(v);
                 var last = keys[keys.length - 1];
                 $.each(v, function (key, val) {
-                    $("#selected-" + k).append("<span onclick=\"rem(" + k + "," + key + ");\">" + dict[val] + "</span>");
+                    $("#selected-" + k).append("<span class='h-d' onclick=\"rem(" + k + "," + key + ");\">" + dict[val] + "</span>");
                     if (key != last)
-                        $("#selected-" + k).append(",&nbsp;");
+                        $("#selected-" + k).append("&nbsp;|&nbsp;");
                 });
 
                 $("#div4 .ctrl").removeAttr('disabled');
@@ -578,9 +578,9 @@
                         }
                     }
                     if (!ind)
-                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                        $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
                     else
-                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
                     dict[v.pk] = v.fields.ref_title;
                 });
             });
@@ -909,5 +909,8 @@
             display: inline-block;
             text-align: center;
         }
+    .h-d:hover{
+        background-color: #eee;
+    }
     </style>
 {% endblock %}

@@ -860,9 +860,9 @@
                     }
                     g = $('<div class="btn-group"></div>').appendTo(researches_list);
                     add_txt = "";
-                    if (v.readonly) add_txt = "readonly ";
+                    if (v.readonly) add_txt = "rdly ";
                     add_txt += "<span class='hidden-d' id='hd-{0}'>скрыт</span>".f(v.pk);
-                    $(g).append('<div class="btn btn-default research-title col-md-9"><span style="float: right; color: #757575;font-size: 8pt">{1}</span>{0}</div>'.f(v.title, add_txt));
+                    $(g).append('<div class="btn btn-default research-title col-md-9" style="z-index:0;"><div class="row" style="z-index:0;margin-bottom:0;margin-left:0"><div class="col-md-9" style="white-space: nowrap;overflow: hidden"><span>{0}</span></div><div class="col-md-3"><span style="color: #757575;font-size: 8pt">{1}</span></div></div>'.f(v.title, add_txt));
                     //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="toggle_hide({0});" title="Скрыть/показать">Скр.</div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="tune_research({0});"><i class="glyphicon glyphicon-cog"></i></div>'.f(v.pk));

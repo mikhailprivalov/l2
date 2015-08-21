@@ -264,6 +264,17 @@ def printDirection(c, n, dir):
     from reportlab.lib.styles import getSampleStyleSheet
 
     styleSheet = getSampleStyleSheet()
+
+    all_iss = issledovaniya.count()
+    max_f = 9
+    min_f = 6
+    max_res = 34
+
+    max_off = max_f - min_f
+    font_size = max_f - (max_off * (all_iss/max_res))
+
+
+    styleSheet["BodyText"].leading = font_size+0.5
     data = []
 
     p = Paginator(issledovaniya, 2)
@@ -272,10 +283,10 @@ def printDirection(c, n, dir):
         pg = p.page(pg_num)
         tmp = []
         for obj in pg.object_list:
-            tmp.append(Paragraph('<font face="OpenSans" size="8">' + obj.research.title + "</font>",
+            tmp.append(Paragraph('<font face="OpenSans" size="'+str(font_size)+'">' + obj.research.title + "</font>",
                                  styleSheet["BodyText"]))
         if len(pg.object_list) < 2:
-            tmp.append(Paragraph('<font face="OpenSans" size="8"></font>', styleSheet["BodyText"]))
+            tmp.append(Paragraph('<font face="OpenSans" size="'+str(font_size)+'"></font>', styleSheet["BodyText"]))
         data.append(tmp)
 
     tw = w / 2 - paddingx * 2
@@ -286,9 +297,9 @@ def printDirection(c, n, dir):
                            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                            ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                           ('TOPPADDING', (0, 0), (-1, -1), -0.5),
+                           ('TOPPADDING', (0, 0), (-1, -1), 0.5),
                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                           ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
+                           ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
                            ]))
     t.canv = c
     wt, ht = t.wrap(0, 0)
@@ -298,7 +309,7 @@ def printDirection(c, n, dir):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138) + (h / 2) * yn - ht - 10,
                  "Всего назначено: " + str(len(issledovaniya)))
 
-    c.drawString(paddingx + (w / 2 * xn), 30 + (h / 2) * yn, "Отделение: " + dir.doc.podrazileniye.title)
+    c.drawString(paddingx + (w / 2 * xn), 27 + (h / 2) * yn, "Отделение: " + dir.doc.podrazileniye.title)
     c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn, "Врач: " + dir.doc.get_fio())
     c.setFont('OpenSans', 7)
     c.setLineWidth(0.25)
@@ -470,6 +481,7 @@ def print_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
+        idv = v.id
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
         k = iss[0].napravleniye.doc.podrazileniye.title + "@" + str(iss[
@@ -549,8 +561,8 @@ def print_history(request):
                     tmp.append("")
                 research_tmp = obj["researches"]
                 # tubes_cache[obj["tube_id"]]["researches"].append(research_tmp)
-                if len(research_tmp) > 40:
-                    research_tmp = research_tmp[0:-(len(research_tmp) - 40)] + "..."
+                if len(research_tmp) > 38:
+                    research_tmp = research_tmp[0:-(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 tmp.append(Paragraph("", styleSheet["BodyText"]))
 
@@ -683,7 +695,7 @@ def get_issledovaniya(request):
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                                      "saved": saved, "confirmed": confirmed,
                                                      "tube": {"pk": ', '.join(str(v) for v in tubes),
-                                                              "title": ', '.join(titles)}})
+                                                              "title": ' | '.join(titles)}})
             if napr:
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
@@ -734,7 +746,7 @@ def get_client_directions(request):
 
             if req_status == 3 or req_status == status:
                 res["directions"].append(
-                    {"pk": napr.pk, "status": status, "researches": ', '.join(v.research.title for v in iss_list),
+                    {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
                      "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
                      "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
         res["ok"] = True
