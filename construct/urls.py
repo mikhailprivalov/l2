@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^researches/get_details$', d_views.researches_get_details),
     url(r'^tubes', views.tubes),
     url(r'^directions_group', views.directions_group),
+    url(r'^uets$', views.uets),
 ]

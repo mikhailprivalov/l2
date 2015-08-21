@@ -6,6 +6,7 @@ from users.models import Podrazdeleniya
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, Tubes
 import directory.models as directory
 from django.http import HttpResponse
+from users.models import DoctorProfile
 
 
 @csrf_exempt
@@ -306,7 +307,77 @@ def statistic_xls(request):
         font_style.alignment.horz = 3
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
+    elif tp == "uets":
+        usrs = DoctorProfile.objects.filter(podrazileniye__isLab=True).order_by("podrazileniye__title")
+        response['Content-Disposition'] = str.translate("attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start, date_end), tr)
 
+
+        ws = wb.add_sheet("УЕТы")
+        row_num = 0
+
+        font_style = xlwt.XFStyle()
+        row_num = 0
+        row = [
+            "За период: ",
+            "{0} - {1}".format(date_start, date_end)
+        ]
+
+        import datetime
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num], font_style)
+
+        font_style = xlwt.XFStyle()
+        font_style.font.bold = True
+        row_num += 1
+        row = [
+            (u"Лаборатория", 8000),
+            (u"ФИО", 8000),
+            (u"УЕТы", 2500),
+        ]
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style)
+            ws.col(col_num).width = row[col_num][1]
+
+        font_style = xlwt.XFStyle()
+        for usr in usrs:
+            if usr.labtype == 0: continue
+            researches_uets = {}
+            iss = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False, time_save__range=(date_start, date_end))
+            for issledovaniye in iss:
+                uet_tmp = 0
+                if usr.labtype == 1:
+                    uet_tmp = sum([v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                else:
+                    uet_tmp = sum([v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
+            iss = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
+            for issledovaniye in iss:
+                uet_tmp = 0
+                if usr.labtype == 1:
+                    uet_tmp = sum([v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                else:
+                    uet_tmp = sum([v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
+                researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
+            uets = sum([researches_uets[v]["uet"] for v in researches_uets.keys()])
+            row_num += 1
+            row = [
+                usr.podrazileniye.title,
+                usr.fio,
+                uets,
+            ]
+            for col_num in range(len(row)):
+                font_style.alignment.wrap = 1
+                font_style.alignment.horz = 1
+                if col_num > 2:
+                    font_style.alignment.wrap = 3
+                    font_style.alignment.horz = 3
+                ws.write(row_num, col_num, row[col_num], font_style)
     wb.save(response)
     return response
 

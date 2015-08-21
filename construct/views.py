@@ -38,5 +38,13 @@ def tubes(request):
 @group_required("Оператор")
 def directions_group(request):
     """ Группировка по направлениям """
-    lab_subgroups = Subgroups.objects.all()
+    lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
     return render(request, 'construct_directions_group.html', {"lab_subgroups": lab_subgroups})
+
+
+@login_required
+@group_required("Оператор")
+def uets(request):
+    """ Настройка УЕТов """
+    lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
+    return render(request, 'uets.html', {"lab_subgroups": lab_subgroups})

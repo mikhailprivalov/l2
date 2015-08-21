@@ -224,19 +224,22 @@ def users_dosync(request):
 
             profile = DoctorProfile.objects.create()  # Создание профиля
             profile.user = user  # Привязка профиля к пользователю
-            profile.isLDAP_user = True
-            profile.fio = dn  # ФИО
-            profile.podrazileniye = pod
-            profile.save()  # Сохранение профиля
         else:
             user = User.objects.get(username=username)
             user.set_password(password)
             user.is_active = active
             user.save()
             profile = DoctorProfile.objects.get(user=user)
-            profile.isLDAP_user = True
-            profile.fio = dn
-            profile.podrazileniye = pod
-            profile.save()
+        emp = ldap_user["attributes"]["employeeType"][0].lower()
+
+        profile.labtype = 0
+        if "врач" in emp or "зав" in emp:
+            profile.labtype = 1
+        if "лаб" in emp or "лаборант" in emp:
+            profile.labtype = 2
+        profile.isLDAP_user = True
+        profile.fio = dn
+        profile.podrazileniye = pod
+        profile.save()
     c.unbind()
     return HttpResponse(json.dumps(groups), content_type="application/json")

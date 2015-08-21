@@ -54,6 +54,17 @@
                         <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
                     {% endfor %} {% endcomment %}
                 </ul>
+            </div><br/>
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по пользователям</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('uets', 0)">Подсчет УЕТов</li>
+                   {% comment %} {% for tube in tubes %}
+                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
+                    {% endfor %} {% endcomment %}
+                </ul>
             </div>
         </div>
     </div>
