@@ -1,0 +1,104 @@
+{% extends "dbase.html" %}
+{% block title %}Статистика{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <h6>Период:</h6>
+            <div class="input-daterange input-group" id="datepicker">
+                <input type="text" class="input-sm form-control" name="date-start"/>
+                <span class="input-group-addon"
+                      style="background-color: #fff;color: #000; vertical-align: middle">&mdash;</span>
+                <input type="text" class="input-sm form-control" name="date-end"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h6></h6>
+        </div>
+        <div class="col-md-4">
+            <h6></h6>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col-md-6">
+             <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по лабораториям</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
+                    {% for lab in labs %}
+                        <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
+                    {% endfor %}
+                </ul>
+            </div><br/>
+             <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по отделениям</h3>
+                </div>
+                <ul class="list-group">
+                    {% for pod in podrs %}
+                        <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по емкостям</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('tubes-using', 0)">Использование пробирок</li>
+                   {% comment %} {% for tube in tubes %}
+                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
+                    {% endfor %} {% endcomment %}
+                </ul>
+            </div><br/>
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по пользователям</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('uets', 0)">Подсчет УЕТов</li>
+                   {% comment %} {% for tube in tubes %}
+                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
+                    {% endfor %} {% endcomment %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
+            var today = new Date();
+
+            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
+            $('#datepicker').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
+        });
+        function gen_stat(stype, pk){
+            window.open('/statistic/xls?type=' + stype + "&pk="+pk+"&date-start="+$("[name='date-start']").val()+"&date-end="+$("[name='date-end']").val(), '_blank');
+        }
+    </script>
+    <style>
+    .panel-flt .list-group-item{
+        padding: 4px;
+    }
+    .panel-flt .list-group-item:hover{
+        background-color: #fff;
+        cursor: pointer;
+    }
+    </style>
+{% endblock %}

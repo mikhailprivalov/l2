@@ -16,7 +16,7 @@ from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
     directory_researches_update_mode, directory_toggle_hide_research, directory_copy_research
-
+from statistic.views import statistic_page, statistic_xls
 urlpatterns = [
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
@@ -60,6 +60,8 @@ urlpatterns = [
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/pdf', result_print),
                   url(r'^results/filter$', result_filter),
+                  url(r'^statistic$', statistic_page),
+                  url(r'^statistic/xls$', statistic_xls),
 
                   url(r'^users/count$', users_count),
                   url(r'^users/ldap/dosync$', users_dosync),

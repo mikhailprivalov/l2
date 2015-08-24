@@ -24,7 +24,7 @@ def home(request):
             else:
                 return HttpResponse("Ваш аккаунт отключен")  # Сообщение об ошибке
         else:
-            if settings.LDAP and settings.LDAP["enable"]:  # Проверка на наличие и активность настройки LDAP
+            if settings.LDAP and settings.LDAP["enable"] and False:  # Проверка на наличие и активность настройки LDAP
                 s = Server(settings.LDAP["server"]["host"], port=settings.LDAP["server"]["port"],
                            get_info=ALL)  # Создание объекта сервера
                 c = Connection(s, auto_bind=True, user=settings.LDAP["server"]["user"],
