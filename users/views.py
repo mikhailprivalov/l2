@@ -12,8 +12,8 @@ import simplejson as json
 def home(request):
     """Страница автоизации"""
     if request.method == 'POST':  # Проверка типа запроса
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST['username']  # Имя пользователя
+        password = request.POST['password']  # Пароль
         user = authenticate(username=username, password=password)  # Аутинтификация
         if user:  # Проверка на правильность введенных данных
             if user.is_active:  # Проверка активности профиля

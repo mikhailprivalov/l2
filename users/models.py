@@ -14,7 +14,7 @@ class DoctorProfile(models.Model):  # Профили врачей
     podrazileniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True)  # Подразделение
     isLDAP_user = models.BooleanField(default=False,
                                       blank=True)  # Флаг, показывающий, что это импортированый из LDAP пользователь
-    labtype = models.IntegerField(choices=labtypes, default=0, blank=True)
+    labtype = models.IntegerField(choices=labtypes, default=0, blank=True)  # Категория профиля для лаборатории
 
     def get_fio(self):  # Функция формирования фамилии и инициалов (Иванов И.И.)
         return self.fio.split(" ")[0] + " " + self.fio.split(" ")[1][0] + "." + self.fio.split(" ")[2][0] + "."

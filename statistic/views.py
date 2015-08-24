@@ -13,9 +13,10 @@ from users.models import DoctorProfile
 @login_required
 @group_required("Просмотр статистики")
 def statistic_page(request):
-    labs = Podrazdeleniya.objects.filter(isLab=True)
-    tubes = directory.Tubes.objects.all()
-    podrs = Podrazdeleniya.objects.filter(isLab=False,hide=False)
+    """ Страница статистики """
+    labs = Podrazdeleniya.objects.filter(isLab=True)  # Лаборатории
+    tubes = directory.Tubes.objects.all()  # Пробирки
+    podrs = Podrazdeleniya.objects.filter(isLab=False, hide=False)  # Подлазделения
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs})
 
 
@@ -23,18 +24,20 @@ def statistic_page(request):
 @login_required
 @group_required("Просмотр статистики")
 def statistic_xls(request):
+    """ Генерация XLS """
     from directions.models import Issledovaniya
     import xlwt
+
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
-    pk = request.REQUEST["pk"]
-    tp = request.REQUEST["type"]
-    date_start = request.REQUEST["date-start"]
-    date_end = request.REQUEST["date-end"]
+    pk = request.REQUEST["pk"]  # Первичный ключ
+    tp = request.REQUEST["type"]  # Тип статистики
+    date_start = request.REQUEST["date-start"]  # Начало периода
+    date_end = request.REQUEST["date-end"]  # Конец периода
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
-           u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
-    tr = {ord(a):ord(b) for a, b in zip(*symbols)}
+           u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
+    tr = {ord(a):ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
 
     if tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
@@ -224,13 +227,15 @@ def statistic_xls(request):
             ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "tubes-using":
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Использование_Емкостей_{0}-{1}.xls'".format(date_start, date_end), tr)
-        ws = wb.add_sheet("Использование емкостей")
 
+        per = "{0} - {1}".format(date_start, date_end)
+
+        ws = wb.add_sheet("Общее использование емкостей")
         font_style = xlwt.XFStyle()
         row_num = 0
         row = [
             "За период: ",
-            "{0} - {1}".format(date_start, date_end)
+            per
         ]
 
         import datetime
@@ -294,19 +299,73 @@ def statistic_xls(request):
                     font_style.alignment.wrap = 3
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
-        row_num += 1
-        row = [
-            "",
-            "Всего: "+str(all_get),
-            "Всего: "+str(all_rec),
-            "Всего: "+str(all_nrec),
-            "Всего: "+str(all_lost),
-        ]
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 3
-        font_style.alignment.horz = 3
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style)
+
+        labs = Podrazdeleniya.objects.filter(isLab=True)
+        for lab in labs:
+            ws = wb.add_sheet(lab.title)
+            font_style = xlwt.XFStyle()
+            row_num = 0
+            row = [
+                "За период: ",
+                per
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+            row_num += 1
+
+            font_style = xlwt.XFStyle()
+            font_style.font.bold = True
+            columns = [
+                (u"Тип емкости", 9000),
+                (u"Материал взят в процедурном каб", 9000),
+                (u"Принято лабораторией", 8000),
+                (u"Не принято лабораторией", 8000),
+                (u"Потеряны", 4000),
+            ]
+
+
+            for col_num in range(len(columns)):
+                ws.write(row_num, col_num, columns[col_num][0], font_style)
+                ws.col(col_num).width = columns[col_num][1]
+
+            font_style = xlwt.XFStyle()
+            font_style.alignment.wrap = 1
+            all_get = 0
+            all_rec = 0
+            all_nrec = 0
+            all_lost = 0
+            for tube in Tubes.objects.all():
+
+                row_num += 1
+                c_get = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False, time_get__range=(date_start, date_end)).count()
+                c_rec = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab, type__tube=tube, time_recive__isnull=False, notice="", time_get__range=(date_start, date_end)).count()
+                c_nrec = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab, type__tube=tube, time_get__isnull=False, time_get__range=(date_start, date_end)).exclude(notice="").count()
+                str1 = ""
+                str2 = ""
+                if c_nrec > 0:
+                    str1 = str(c_nrec)
+                if c_get-c_rec-all_nrec > 0:
+                    str2 = str(c_get-c_rec-all_nrec)
+                    all_lost += c_get-c_rec-all_nrec
+
+                row = [
+                    tube.title,
+                    c_get,
+                    c_rec,
+                    str1,
+                    str2
+                ]
+                all_get += c_get
+                all_rec += c_rec
+                all_nrec += c_nrec
+                for col_num in range(len(row)):
+                    font_style.alignment.wrap = 1
+                    font_style.alignment.horz = 1
+                    if col_num > 0:
+                        font_style.alignment.wrap = 3
+                        font_style.alignment.horz = 3
+                    ws.write(row_num, col_num, row[col_num], font_style)
+
     elif tp == "uets":
         usrs = DoctorProfile.objects.filter(podrazileniye__isLab=True).order_by("podrazileniye__title")
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start, date_end), tr)
