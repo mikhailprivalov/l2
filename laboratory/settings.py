@@ -200,7 +200,7 @@ DEBUG_TOOLBAR_PANELS = (
 LDAP = {
     "enable": True,
     "server": {
-        "host": "192.168.0.249",
+        "host": "192.168.0.254",
         "port": 389,
         "user": "cn=Admin,dc=fc-ismu,dc=local",
         "password": "cnfkbybd"
