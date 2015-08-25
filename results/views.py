@@ -400,8 +400,8 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + f.title + "</font>",
                                      styleSheet["BodyText"]))
                 result = ""
-                if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
-                    result = Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value
+                if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+                    result = Result.objects.get(issledovaniye=iss, fraction=f).value
 
                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + result + "</font>", styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.units + "</font>", styleSheet["BodyText"]))
