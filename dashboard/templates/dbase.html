@@ -469,6 +469,16 @@
         .b-flt, .b-flt td {
             background-color: #ECF0F1;
         }
+        .footer-float{
+            position: absolute;
+            bottom: 0;
+            text-align: center;
+            font-size: 10pt;
+            left: 100px;
+            right: 100px;
+            z-index: 0;
+            overflow: visible;
+        }
     </style>
 </head>
 <body>{% load has_group %}
@@ -482,13 +492,11 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/dashboard"><i class="glyphicon glyphicon-leaf"></i> FC ISMU LIS</a>
+            <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="/dashboard">П/у</a></li>
-            </ul>
             <ul class="nav navbar-nav navbar-right">
+                <li><a href="/dashboard">П/у</a></li>
                 {% if request.user|has_group:"Лечащий врач" %}
                     <li><a href="/dashboard/directions">Направления</a></li>
                 {% endif %}
@@ -506,6 +514,7 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
+    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС</div>
 </div>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
