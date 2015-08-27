@@ -235,7 +235,7 @@ def users_dosync(request):
         profile.labtype = 0
         if "врач" in emp or "зав" in emp:
             profile.labtype = 1
-        if "лаб" in emp or "лаборант" in emp:
+        elif "лаб" in emp or "лаборант" in emp:
             profile.labtype = 2
         profile.isLDAP_user = True
         profile.fio = dn
