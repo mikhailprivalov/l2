@@ -516,7 +516,7 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
-    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС</div>
+    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС | <span id="clock"></span></div>
 </div>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
@@ -553,8 +553,25 @@
         return arr;
     };
 
+    function startTime() {
+        var today=new Date();
+        var h=today.getHours();
+        var m=today.getMinutes();
+        var s=today.getSeconds();
+        m = checkTime(m);
+        s = checkTime(s);
+        document.getElementById('clock').innerHTML = h+":"+m+":"+s;
+        var t = setTimeout(function(){startTime()},500);
+    }
+
+    function checkTime(i) {
+        if (i<10) {i = "0" + i}
+        return i;
+    }
+
     $(document).ready(function () {
         $('.select-b').selectpicker();
+        startTime();
     });
 </script>
 {% block scripts %}{% endblock %}
