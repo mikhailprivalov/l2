@@ -516,7 +516,7 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
-    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС | <span id="clock">00:00:00</span></div>
+    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span></div>
 </div>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
@@ -558,6 +558,7 @@
         var h=today.getHours();
         var m=today.getMinutes();
         var s=today.getSeconds();
+        if(h < 10) h = " " + h;
         m = checkTime(m);
         s = checkTime(s);
         document.getElementById('clock').innerHTML = h+":"+m+":"+s;
