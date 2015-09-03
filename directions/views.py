@@ -724,8 +724,7 @@ def get_client_directions(request):
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
 
-        napr_list = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk,
-                                                doc=request.user.doctorprofile).order_by("-data_sozdaniya")
+        napr_list = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya")
 
         for napr in napr_list:
             status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
