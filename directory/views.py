@@ -35,8 +35,8 @@ def directory_researches(request):
             type = 4
             if research["id"] == -1:
                 type = 3
-            slog.Log(key=str(research_obj.pk), type=type, body="{'data': " + request.POST["research"] + "}",
-                     user=request.user.doctorprofile).save()
+            # slog.Log(key=str(research_obj.pk), type=type, body="{'data': " + request.POST["research"] + "}",
+            #          user=request.user.doctorprofile).save()
             # Fractions.objects.filter(research=research_obj).delete()
             fractions_pk = []
             return_result["F"] = []

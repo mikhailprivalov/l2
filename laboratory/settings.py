@@ -108,7 +108,7 @@ if DEBUG:
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',  # TODO: 11211
+        'LOCATION': 'lis:11211',  # TODO: 11211
         'KEY_PREFIX': 'lis_test'
     },
     'debug-panel': {
@@ -213,4 +213,4 @@ LDAP = {
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
-DEBUG = False
+DEBUG = True

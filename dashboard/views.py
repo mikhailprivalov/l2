@@ -23,7 +23,7 @@ def dashboard(request):  # Представление панели управл�
     menu = []
     groups = [str(x) for x in request.user.groups.all()]
 
-    if "Лечащий врач" in groups:
+    if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
         menu.append({"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append({"url": "/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
@@ -144,16 +144,21 @@ def ldap_sync(request):
 
 # @cache_page(60 * 15)
 @login_required
-@group_required("Лечащий врач")
+@group_required("Лечащий врач", "Оператор лечащего врача")
 def directions(request):
     """ Страница создания направлений """
     podr = Podrazdeleniya.objects.filter(isLab=True)
-
+    oper = "Оператор лечащего врача" in request.user.groups.values_list('name', flat=True)
+    docs = list()
+    if oper:
+        docs = DoctorProfile.objects.filter(podrazileniye=request.user.doctorprofile.podrazileniye,
+                                            user__groups__name="Лечащий врач")
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin_poli':
                                                              IstochnikiFinansirovaniya.objects.filter(istype="poli"),
                                                          'fin_stat':
-                                                             IstochnikiFinansirovaniya.objects.filter(istype="stat")})
+                                                             IstochnikiFinansirovaniya.objects.filter(istype="stat"),
+                                                         "operator": oper, "docs": docs})
 
 
 @login_required

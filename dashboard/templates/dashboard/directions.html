@@ -53,6 +53,14 @@
                     <td id="card-sx"></td>
                 </tr>
             </table>
+            <br/>
+            {% if operator %}
+                <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
+                    {% for v in docs %}
+                    <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                    {% endfor %}
+                </select></label>
+            {% endif %}
         </div>
         <div class="col-md-6" id="div2" style="height: 380px">
             <div class="row">
@@ -665,10 +673,14 @@
             }
             sync();
             $("#div4 .ctrl").attr('disabled', 1);
+            ofname = -1;
+            {% if operator %}
+                ofname = $("#select-doc").val();
+            {% endif %}
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
-                data: {dict: JSON.stringify(tmp_direction)}
+                data: {dict: JSON.stringify(tmp_direction), ofname: ofname}
             }).done(function (data) {
                 console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {

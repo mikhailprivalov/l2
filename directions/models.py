@@ -47,7 +47,7 @@ class Napravleniya(models.Model):
     is_printed = models.BooleanField(default=False, blank=True)
     time_print = models.DateTimeField(default=None, blank=True, null=True)
     doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print")
-
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create")  # Создатель направления
 
 
 class Issledovaniya(models.Model):

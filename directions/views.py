@@ -21,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 import slog.models as slog
 import directory.models as directory
+import users.models as umodels
 
 w, h = A4
 
@@ -43,8 +44,13 @@ def dir_save(request):
         finsource = dict["fin_source"]  # источник финансирования
         researches = dict["researches"]  # исследования
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        ofname_id = int(request.POST['ofname'])
         i = 0  # Идентификатор направления
         if client_id and researches:  # если client_id получен и исследования получены
+            ofname = None
+            if ofname_id > -1:
+                ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
+
             no_attach = False
             conflict_list = []
             conflict_keys = []
@@ -103,6 +109,9 @@ def dir_save(request):
                                 istochnik_f=finsource,
                                 # Установка источника финансирования
                                 diagnos=diagnos)  # Установка диагноза
+                            if ofname_id > -1 and ofname:
+                                directionsForResearches[dir_group].doc = ofname
+                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
 
                             directionsForResearches[dir_group].save()  # Сохранение направления
 
@@ -122,7 +131,9 @@ def dir_save(request):
                                 istochnik_f=finsource,
                                 # Установка источника финансирования
                                 diagnos=diagnos)  # Установка диагноза
-
+                            if ofname_id > -1 and ofname:
+                                directionsForResearches[dir_group].doc = ofname
+                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
                             directionsForResearches[dir_group].save()  # Сохранение направления
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
