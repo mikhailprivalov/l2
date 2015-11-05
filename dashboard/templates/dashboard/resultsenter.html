@@ -47,9 +47,18 @@
         </div>
     </div>
     <div class="col-md-3">
-        <button onclick="print_results();" id="result-print" disabled style="margin-bottom: 10px"
-                class="btn btn-primary-nb">Печать результатов
-        </button>
+        <div class="row" style="margin-bottom: 10px">
+            <div class="col-md-6">
+                <button onclick="print_results();" id="result-print" disabled
+                        class="btn btn-primary-nb">Печать результатов
+                </button>
+            </div>
+            <div class="col-md-6">
+                <button onclick="confirm_results();" id="result-confirm" disabled
+                        class="btn btn-primary-nb">Подтвердить результаты
+                </button>
+            </div>
+        </div>
         <table class="table table-bordered" id="dir_info">
             <tr>
                 <td style="width: 150px">№ Направления</td>
@@ -147,9 +156,11 @@
         var dir_data = {};
         var statuses = {"n": "Н", "s": "О", "c": "П"};
         var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден"};
+        var iss_pks = [];
         function load_data(id, type, select_el) {
-            $("#result-print").attr("disabled", 1);
-
+            $("#result-print").prop("disabled", true);
+            $("#result-confirm").prop("disabled", true);
+            iss_pks = [];
             $.ajax({
                 url: "/directions/get/issledovaniya",
                 type: "json",
@@ -193,11 +204,23 @@
                 $("#client_vozrast").html(data.client_vozrast);
                 $("#client_cardnum").html(data.client_cardnum);
                 $("#client_sex").html(data.client_sex);
-                var status = "n";
+                var status = "n", all_saved = false, firstch = true, has_n = false;
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
                     else if (v.saved && v.confirmed) status = "c";
                     else status = "n";
+
+
+                    if(status == "s"){
+                        iss_pks.push(v.pk);
+                        if(firstch && !all_saved && !has_n){
+                            all_saved = firstch = true;
+                        }
+                    }
+                    else if(status == "n"){
+                        all_saved = false;
+                        has_n = true;
+                    }
 
                     $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'><div title='{5}' class='status status-{3}'>{4}</div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status]));
                     if (type == 0) {
@@ -220,8 +243,11 @@
                 else
                     $("#issledovaniya li[num='{0}']".f(select_el)).click();
                 $('#issledovaniya-scroll').scrollTop(0);
+                if(all_saved){
+                    $("#result-confirm").prop("disabled", false);
+                }
                 if (data.all_confirmed) {
-                    $("#result-print").removeAttr("disabled");
+                    $("#result-print").prop("disabled", false);
                 }
             });
         }
@@ -388,6 +414,32 @@
                     'position': 'bottom right',
                     delay: 6000
                 });
+            });
+        }
+
+        function confirm_results(){
+            $(this).prop("disabled", true);
+            $.ajax({
+                "url": "/results/confirm/list",
+                method: "POST",
+                type: "json",
+                data: {list: JSON.stringify(iss_pks)}
+            }).done(function (data) {
+                reload_fast();
+                if(data.ok) {
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Исследования подтверждены',
+                            message: "",
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
+                $(this).prop("disabled", false);
             });
         }
 

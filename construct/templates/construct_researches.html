@@ -215,8 +215,12 @@
         }
 
         .right {
-            padding-right: 3px !important;
+            padding-right: 1px !important;
             text-align: right;
+        }
+        .left {
+            padding-right: 1px !important;
+            text-align: left;
         }
 
         .right .btn {
@@ -332,10 +336,13 @@
             min-width: 450px;
         }
 
-        .fraction-type{
+        .fraction-type {
             width: 100%;
         }
 
+        .col-nopd {
+            padding: 0;
+        }
     </style>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
@@ -544,7 +551,7 @@
                 if (refshow)
                     fractions = "<table class='table table-bordered tablefractions table-condensed table-striped table-responsive'><thead>";
                 else
-                fractions = "<table class='table table-bordered tablefractions table-condensed table-striped table-responsive hide-ref'><thead>";
+                    fractions = "<table class='table table-bordered tablefractions table-condensed table-striped table-responsive hide-ref'><thead>";
 
                 fractions += "<tr>";
 
@@ -587,8 +594,8 @@
                     }
 
                     fractions += "<td class='col-md-2'><div><select onchange='syncFractions();' class='fraction-type'>";
-                    $.each(fraction_types, function(fk, fv){
-                        if(value.type == fk)
+                    $.each(fraction_types, function (fk, fv) {
+                        if (value.type == fk)
                             fractions += "<option value='{0}' selected>{1}</option>".f(fk, fv.join("/"));
                         else
                             fractions += "<option value='{0}'>{1}</option>".f(fk, fv.join("/"));
@@ -636,7 +643,7 @@
                     $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>')
                     $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>')
                 }
-                else{
+                else {
                     $("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
                     $("#research-form .remove, #select-div, #research-form .add-fr").remove();
                 }
@@ -649,11 +656,11 @@
             }
             resize(true);
             //if (!auto) {
-                $("#refhidden").show();
-                $("#refshowed").hide();
+            $("#refhidden").show();
+            $("#refshowed").hide();
             $(".ref input, .ref button").attr("disabled", "disabled");
-                if (refshow) showref();
-                else hideref(true);
+            if (refshow) showref();
+            else hideref(true);
             //}
         }
 
@@ -847,7 +854,7 @@
                 console.log(data);
                 data.researches.sort(SortByTubes);
                 $.each(data.researches, function (k, v) {
-                    row = $("<div class='row'></div>");
+                    row = $("<div class='row res-row'></div>");
                     if (v.readonly) $(row).addClass("readonly");
                     researches = $("<div class='bw'></div>").appendTo(row);
                     $(researches).append('<div class="list-header">Анализы</div>');
@@ -887,18 +894,26 @@
                     else {
                         $(tubes_list).append('<div class="well">Пробирки не приязаны</div>');
                     }
-                    g = $('<div class="btn-group"></div>').appendTo(researches_list);
+                    g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
+                    $(g).attr("pk", v.pk);
                     add_txt = "";
                     if (v.readonly) add_txt = "rdly ";
                     add_txt += "<span class='hidden-d' id='hd-{0}'>скрыт</span>".f(v.pk);
-                    $(g).append('<div class="btn btn-default research-title col-md-9" style="z-index:0;"><div class="row" style="z-index:0;margin-bottom:0;margin-left:0"><div class="col-md-9" style="white-space: nowrap;overflow: hidden"><span>{0}</span></div><div class="col-md-3"><span style="color: #757575;font-size: 8pt">{1}</span></div></div>'.f(v.title, add_txt));
+                    $(g).append('<div class="btn btn-default col-md-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk));
+                    $(g).append('<div class="btn btn-default col-md-05 down" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></div>'.f(v.pk));
+                    $(g).append('<div class="btn btn-default research-title col-md-9" style="z-index:0;"><div class="row" style="z-index:0;margin-bottom:0;margin-left:0"><div class="col-md-9 col-nopd" style="white-space: nowrap;overflow: hidden"><span>{0}</span></div><div class="col-md-3"><span style="color: #757575;font-size: 8pt">{1}</span></div></div>'.f(v.title, add_txt));
                     //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="toggle_hide({0});" title="Скрыть/показать">Скр.</div>'.f(v.pk));
-                    $(g).append('<div class="btn btn-default col-md-1" onclick="tune_research({0});"><i class="glyphicon glyphicon-cog"></i></div>'.f(v.pk));
                     $(g).append('<div class="btn btn-default col-md-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
                     if (!v.hide) $(".hidden-d", g).hide();
+
                 });
+                syncUpDown();
+                $(".up", $(g)).addClass("disabled");
                 //$(".readonly .tube-drag").removeClass("tube-drag");
+                $.each($(".one-tube"), function (k, v) {
+                    $(".researches-list", v).append('<div class="btn-group right"><button onclick="save_sort(this);" class="btn btn-default col-md-12 left"><i class="glyphicon glyphicon-floppy-disk"></i> Сохранить порядок</button></div>'.f($('.tube', v).attr('id')));
+                });
                 $.each($(".one-tube"), function (k, v) {
                     $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
                 });
@@ -990,8 +1005,8 @@
          * @constructor
          */
         function SortByTubes(a, b) {
-            var aName = a.tubes_c;
-            var bName = b.tubes_c;
+            var aName = a.sort_weight;
+            var bName = b.sort_weight;
             return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
         }
 
@@ -999,6 +1014,70 @@
             $('#tune-modal').modal('show');
             $("#tune-modal .modal-body").html('<iframe width="100%" height="100%" style="height: 100%; width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
             console.log("ID: {0}".f(id));
+        }
+
+        function syncUpDown() {
+            $(".up, .down").removeClass("disabled");
+
+            $.each($(".researches-list"), function (kk, vv) {
+                var i = 0;
+                $.each($(".up", $(vv)), function (k, v) {
+                    i++;
+                    $(".btn-group[pk='{0}']".f($(v).attr("pk"))).attr("pos", i);
+                    $(v).attr("onclick", "swap(this, 'up');");
+                });
+                $.each($(".down", $(vv)), function (k, v) {
+                    $(v).attr("onclick", "swap(this, 'down');");
+                });
+            });
+            $.each($(".researches-list"), function (k, v) {
+                $(".up", $(v)).eq(0).addClass("disabled").removeAttr("onclick");
+                $(".down", $(v)).last().addClass("disabled").removeAttr("onclick");
+            });
+        }
+        function swap(element, direction) {
+            var selector = $(".btn-group[pk='{0}']".f($(element).attr("pk")));
+            var n = $(selector).attr("pos");
+            switch (direction) {
+                case "up":
+                    n--;
+                    jswap($(selector), $(selector).parent().children("[pos={0}]".f(n)));
+                    break;
+                case "down":
+                    n++;
+                    jswap($(selector).parent().children("[pos={0}]".f(n)), $(selector));
+                    break;
+            }
+            syncUpDown();
+        }
+        function jswap(f, t) {
+            $(f).after($(t));
+        }
+
+        function save_sort(btn){
+            $(btn).prop("disabled", true);
+            var tmp = {};
+            $.each($(btn).parent().parent(".researches-list").children(".research-obj"), function(k, v){
+                tmp[$(v).attr("pk")] = parseInt($(v).attr("pos"));
+            });
+            $.ajax({
+                url: "/directory/researches/sort",
+                method: "POST",
+                data: {sort: JSON.stringify(tmp)}
+            }).done(function(data){
+                 $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Порядок сохранен',
+                            message: "",
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 10000
+                    });
+                $(btn).prop("disabled", false);
+            });
         }
 
     </script>

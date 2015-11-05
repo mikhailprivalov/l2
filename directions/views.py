@@ -684,13 +684,17 @@ def get_issledovaniya(request):
                 if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() == 1:
                     tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
                     if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id).all()
+                        iss = Issledovaniya.objects.filter(tubes__id=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation",
+                                                                                  "research__sort_weight").all()
                         napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
                     for tube in tubes:
                         if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id).all()
+                            lit = Issledovaniya.objects.filter(tubes__id=id).order_by("-doc_save",
+                                                                                     "-doc_confirmation",
+                                                                                      "research__sort_weight").all()
                             if lit.count() != 0:
                                 iss = []
                             for i in lit:
@@ -701,7 +705,8 @@ def get_issledovaniya(request):
                 try:
                     napr = Napravleniya.objects.get(pk=id)
                     iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
-                                                                                     "-doc_confirmation").all()
+                                                                                     "-doc_confirmation",
+                                                                                     "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
@@ -709,7 +714,8 @@ def get_issledovaniya(request):
                 try:
                     napr = Napravleniya.objects.get(pk=id, is_printed=False)
                     iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
-                                                                                     "-doc_confirmation").all()
+                                                                                     "-doc_confirmation",
+                                                                                     "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
@@ -731,6 +737,7 @@ def get_issledovaniya(request):
                             confirmed = False
                             res["all_confirmed"] = False
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                     "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved, "confirmed": confirmed,
                                                      "tube": {"pk": ', '.join(str(v) for v in tubes),
                                                               "title": ' | '.join(titles)}})

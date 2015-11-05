@@ -22,6 +22,7 @@ class Researches(models.Model):
         default=0)  # 0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить
     hide = models.BooleanField(default=False, blank=True)
     no_attach = models.IntegerField(default=0, null=True, blank=True)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True)
 
 class Fractions(models.Model):
     title = models.CharField(max_length=255)

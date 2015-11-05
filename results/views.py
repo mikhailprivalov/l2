@@ -112,6 +112,24 @@ def result_confirm(request):
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
+@csrf_exempt
+@login_required
+def result_confirm_list(request):
+    """ Пакетное подтверждение результатов """
+    result = {"ok": False}
+    if request.method == "POST":
+        iss_pks = json.loads(request.POST["list"])
+        for pk in iss_pks:
+            issledovaniye = Issledovaniya.objects.get(pk=int(pk))
+            if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
+                issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
+                from datetime import datetime
+
+                issledovaniye.time_confirmation = datetime.now()  # Время подтверждения
+                issledovaniye.save()
+        result["ok"] = True
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
 
 @login_required
 def get_full_result(request):
@@ -308,7 +326,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                      0] + ".   ____________________   (подпись)")
     c.setFont('OpenSans', 8)
 
-    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+    iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__pk", "research__sort_weight")
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
     from reportlab.platypus import Paragraph
@@ -428,11 +446,12 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, paddingx + s, pos - ht)
         pos = pos - ht
-    napr.is_printed = True
-    from datetime import datetime
+    if not napr.is_printed:
+        napr.is_printed = True
+        from datetime import datetime
 
-    napr.time_print = datetime.now()
-    napr.doc_print = doctorprofile
+        napr.time_print = datetime.now()
+        napr.doc_print = doctorprofile
     napr.save()
 
 

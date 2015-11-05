@@ -16,7 +16,7 @@ def directory_researches(request):
     if request.method == "POST":
         research = json.loads(request.POST["research"])
         #if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
-        #        research__pk=int(research["id"])).exists():
+   #        research__pk=int(research["id"])).exists():
         if not research["title"] or not research["id"]:
             return_result = {"ok": False, "tubes_r": []}
         else:
@@ -41,8 +41,11 @@ def directory_researches(request):
             # Fractions.objects.filter(research=research_obj).delete()
             fractions_pk = []
             return_result["F"] = []
+            sort_list = []
             for key in research["fraction"].keys():
                 tube_relation = ReleationsFT.objects.get(pk=int(key.split("-")[1]))
+                for fr in Fractions.objects.filter(relation=tube_relation):
+                    sort_list.append(fr.research.sort_weight)
                 for fraction in research["fraction"][key]["fractions"]:
                     if int(fraction["pk"]) < 0:
                         fraction_obj = Fractions(title=fraction["title"], research=research_obj,
@@ -59,9 +62,11 @@ def directory_researches(request):
                         fraction_obj.ref_m = fraction["ref_m"]
                         fraction_obj.ref_f = fraction["ref_f"]
                         fraction_obj.type = fraction["type"]
-                        # fraction_obj
                         fractions_pk.append(fraction["pk"])
                         fraction_obj.save()
+            research_obj.sort_weight = max(sort_list) + 1
+            research_obj.save()
+            fL = Fractions.objects.filter()
             '''fractions = Fractions.objects.filter(research=research_obj)
             for fraction in fractions:
                 if fraction.pk not in fractions_pk:
@@ -71,10 +76,12 @@ def directory_researches(request):
     elif request.method == "GET":
         return_result = {"researches": []}
         subgroup_id = request.GET["lab_group"]
-        researches = Researches.objects.filter(subgroup__pk=subgroup_id).order_by("pk")
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id).order_by("sort_weight")
+        i = 0
         for research in researches:
+            i += 1
             resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False,
-                       "hide": research.hide}
+                       "hide": research.hide, "sort_weight": research.sort_weight}
             if directions.Issledovaniya.objects.filter(research=research).exists():
                 resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research)
@@ -84,6 +91,7 @@ def directory_researches(request):
                     resdict["tubes"][fraction.relation.pk] = {"id": fraction.relation.pk,
                                                               "color": fraction.relation.tube.color,
                                                               "title": fraction.relation.tube.title}
+            #return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
@@ -137,6 +145,21 @@ def directory_researches_update_mode(request):
             research.edit_mode = value
             research.save()
             return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_update_sort(request):
+    """POST: обновление сортировки """
+    return_result = {"ok": False}
+    if request.method == "POST":
+        sort = json.loads(request.POST["sort"])
+        for k in sort.keys():
+            res = Researches.objects.get(pk=int(k))
+            res.sort_weight = sort[k]
+            res.save()
+        return_result["ok"] = True
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
 
