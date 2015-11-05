@@ -52,7 +52,7 @@ def tubes_get(request):
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
         docs = DoctorProfile.objects.filter(podrazileniye=podrazledeniye)
         for doc in docs:
-            tubes = TubesRegistration.objects.exclude(time_get__lt=datetime.now().date()).filter(doc_get=doc)
+            tubes = TubesRegistration.objects.filter(doc_get=doc)
             for tube in tubes:
                 if tube.doc_get is None: continue
                 issledovaniya = Issledovaniya.objects.filter(tubes__id=tube.id)

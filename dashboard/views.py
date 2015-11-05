@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User, Group
 from users.models import DoctorProfile
-from podrazdeleniya.models import Podrazdeleniya
-from directions.models import IstochnikiFinansirovaniya
+from podrazdeleniya.models import Podrazdeleniya, Subgroups
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
 from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
 from django.views.decorators.cache import cache_page
@@ -168,6 +168,24 @@ def users_count(request):
     result = {"all": 0, "ldap": 0}
     result["all"] = User.objects.all().count()
     result["ldap"] = DoctorProfile.objects.filter(isLDAP_user=True).count()
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@login_required
+def dashboard_from(request):
+    """ Получение отделений и кол-ва пробирок """
+    result = {}
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    i = 0
+    for podr in podrazdeleniya:
+        i += 1
+        #tubes = TubesRegistration.objects.filter(doc_get__isnull=False, doc_get__podrazileniye=podr)
+        result[i] = {"tubes": 0, "title": podr.title, "pk": podr.pk}
+
+        #for t in tubes:
+        #   if not t.doc_get is None and not t.rstatus() and t.notice == "":
+        #        result[podr.pk]["tubes"] += 1
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 

@@ -69,7 +69,7 @@
 {% block scripts %}
     <script>
         $(document).ready(function () {
-            load_tubes();
+            loadfrom();
             resize();
             $(window).resize(function () {
                 resize();
@@ -136,6 +136,23 @@
         function resize() {
             $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 80);
             $('#scroll-tb').perfectScrollbar();
+        }
+
+        function loadfrom(){
+            var from = $("#from");
+            $(from).html("");
+             $.ajax({
+                url: "/dashboard/from",
+                method: "GET",
+                type: "json"
+            }).done(function (data) {
+                 $.each(data, function(k, v){
+                     console.log(v.pk, v.title, v.tubes);
+                     $(from).append("<option num='{0}'>{1}</option>".f(v.pk, v.title));
+                 });
+                 $(from).selectpicker("refresh");
+                 load_tubes();
+             });
         }
     </script>
     <style>
