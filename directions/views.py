@@ -44,7 +44,9 @@ def dir_save(request):
         finsource = dict["fin_source"]  # источник финансирования
         researches = dict["researches"]  # исследования
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
-        ofname_id = int(request.POST['ofname'])
+        ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
+        history_num = request.POST['history_num']  # Номер истории болезни
+        ptype = request.POST['type']
         i = 0  # Идентификатор направления
         if client_id and researches:  # если client_id получен и исследования получены
             ofname = None
@@ -112,6 +114,8 @@ def dir_save(request):
                             if ofname_id > -1 and ofname:
                                 directionsForResearches[dir_group].doc = ofname
                                 directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
+                            if ptype == "stat":
+                                directionsForResearches[dir_group].history_num = history_num
 
                             directionsForResearches[dir_group].save()  # Сохранение направления
 
@@ -134,6 +138,8 @@ def dir_save(request):
                             if ofname_id > -1 and ofname:
                                 directionsForResearches[dir_group].doc = ofname
                                 directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
+                            if ptype == "stat":
+                                directionsForResearches[dir_group].history_num = history_num
                             directionsForResearches[dir_group].save()  # Сохранение направления
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
@@ -239,6 +245,8 @@ def printDirection(c, n, dir):
     c.setFont('OpenSans', 9)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn,
                  "Дата: " + str(dateformat.format(dir.data_sozdaniya.date(), settings.DATE_FORMAT)))
+    if dir.history_num and len(dir.history_num) > 0:
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn,
                  "ФИО: " + dir.client.family + " " + dir.client.name + " " + dir.client.twoname)
@@ -347,60 +355,62 @@ def get_one_dir(request):
     # import logging
     # logger = logging.getLogger(__name__)
 
-    response = {}
+    response = {"ok": False}
     if request.method == 'GET':  # Проверка типа запроса
         id = int(request.GET['id'])  # Получение идентификатора направления
         if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
-            tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
-            tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
-            '''.order_by(
-                '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
-            response["direction"] = {"pk": tmp2.pk,
-                                     "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                                     "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
-                                     "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
-            response["tubes"] = {}
-            tubes_buffer = {}
-            for v in tmp:
-                for val in directory.Fractions.objects.filter(research=v.research):
+            if "check" not in request.GET.keys():
+                tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
+                tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
+                '''.order_by(
+                    '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
+                response["direction"] = {"pk": tmp2.pk,
+                                         "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                                         "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
+                                         "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
+                response["tubes"] = {}
+                tubes_buffer = {}
+                for v in tmp:
+                    for val in directory.Fractions.objects.filter(research=v.research):
 
-                    if val.relation.pk not in tubes_buffer.keys():
-                        if not v.tubes.filter(type=val.relation).exists():
-                            ntube = TubesRegistration(type=val.relation)
-                            ntube.save()
+                        if val.relation.pk not in tubes_buffer.keys():
+                            if not v.tubes.filter(type=val.relation).exists():
+                                ntube = TubesRegistration(type=val.relation)
+                                ntube.save()
+                            else:
+                                ntube = v.tubes.get(type=val.relation)
+                            v.tubes.add(ntube)
+                            tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
                         else:
-                            ntube = v.tubes.get(type=val.relation)
-                        v.tubes.add(ntube)
-                        tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
-                    else:
-                        ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
-                        v.tubes.add(ntube)
+                            ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
+                            v.tubes.add(ntube)
 
-                    tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
-            for key in tubes_buffer.keys():
-                tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
+                        tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
+                for key in tubes_buffer.keys():
+                    tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
 
-            for key in tubes_buffer.keys():  # Перебор исследований
-                v = tubes_buffer[key]
-                tube = TubesRegistration.objects.get(id=v["pk"])
+                for key in tubes_buffer.keys():  # Перебор исследований
+                    v = tubes_buffer[key]
+                    tube = TubesRegistration.objects.get(id=v["pk"])
 
-                barcode = ""
-                if tube.barcode:  # Проверка штрих кода пробирки
-                    barcode = tube.barcode
-                if tube.id not in response["tubes"].keys():  # Если пробирки нет в словаре
-                    response["tubes"][tube.id] = {"researches": v["researches"], "status": True,
-                                                  "color": tube.type.tube.color,
-                                                  "title": tube.type.tube.title, "id": tube.id,
-                                                  "barcode": barcode}  # Добавление пробирки в словарь
-                s = False  # Статус взятия материала для исследований
-                if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
-                    s = True  # Установка статуса для вывода в интерфейс
-                response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
+                    barcode = ""
+                    if tube.barcode:  # Проверка штрих кода пробирки
+                        barcode = tube.barcode
+                    if tube.id not in response["tubes"].keys():  # Если пробирки нет в словаре
+                        response["tubes"][tube.id] = {"researches": v["researches"], "status": True,
+                                                      "color": tube.type.tube.color,
+                                                      "title": tube.type.tube.title, "id": tube.id,
+                                                      "barcode": barcode}  # Добавление пробирки в словарь
+                    s = False  # Статус взятия материала для исследований
+                    if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
+                        s = True  # Установка статуса для вывода в интерфейс
+                    response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
 
-            response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
-                                  "sx": tmp2.client.sex, "bth": str(
-                dateformat.format(datetime.strptime(tmp2.client.birthday.split(" ")[0], "%d.%m.%Y").date(),
-                                  settings.DATE_FORMAT))}  # Добавление информации о пациенте в вывод
+                response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
+                                      "sx": tmp2.client.sex, "bth": str(
+                    dateformat.format(datetime.strptime(tmp2.client.birthday.split(" ")[0], "%d.%m.%Y").date(),
+                                      settings.DATE_FORMAT))}  # Добавление информации о пациенте в вывод
+            response["ok"] = True
     return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
 
 
@@ -467,6 +477,12 @@ def print_history(request):
     import collections
     import pytz
 
+    filter = False
+    filterArray = []
+    if "filter" in request.GET.keys():
+        filter = True
+        filterArray = json.loads(request.GET["filter"])
+
     # from pymongo import MongoClient
     '''client = MongoClient('mongodb://localhost:27017/')
     db = client['reports-db']
@@ -486,9 +502,13 @@ def print_history(request):
         'Content-Disposition'] = 'inline; filename="napr.pdf"'  # Content-Disposition inline для показа PDF в браузере
     buffer = BytesIO()  # Буфер
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-
-    tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
-        time_get__lt=datetime.now().date())  # Получение пробирок с материалом, взятым текущим пользователем
+    tubes = []
+    if not filter:
+        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
+            time_get__lt=datetime.now().date())  # Получение пробирок с материалом, взятым текущим пользователем
+    else:
+        for v in filterArray:
+            tubes.append(TubesRegistration.objects.get(pk=v))
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
@@ -509,18 +529,20 @@ def print_history(request):
                  "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
                  "podr": iss[0].napravleniye.doc.podrazileniye.title,
                  "reciver": None,
-                 "tube_id": str(v.id)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                 "tube_id": str(v.id),
+                 "history_num": iss[0].napravleniye.history_num,
+                    "fio": iss[0].napravleniye.client.family + " " + iss[0].napravleniye.client.name[0] + "." + iss[0].napravleniye.client.twoname[0] + "."})  # Добавление в список исследований и пробирок по ключу k в словарь labs
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)
 
     paddingx = 17
-    data_header = ["№ п/п", "Тип емкости", "№ емкости", "Наименования исследований", "Емкость не принята (замечания)"]
-    tw = w - paddingx * 4
+    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Емкость не принята (замечания)"]
+    tw = w - paddingx * 4.5
     tx = paddingx * 3
     ty = 90
     c.setFont('OpenSans', 9)
     styleSheet["BodyText"].fontName = "OpenSans"
-    styleSheet["BodyText"].fontSize = 8
+    styleSheet["BodyText"].fontSize = 7
     doc_num = 0
 
     # mongo_cache = {"date": str(dateformat.format(date.today(), settings.DATE_FORMAT)), "user": request.user.id, "docs": {}}
@@ -564,9 +586,14 @@ def print_history(request):
 
                 if shownum:
                     tmp.append(Paragraph(str(i), styleSheet["BodyText"]))
-                    tmp.append(Paragraph(obj["type"], styleSheet["BodyText"]))
+                    fio = obj["fio"]
+                    if obj["history_num"] and len(obj["history_num"]) > 0:
+                        fio += ", " + obj["history_num"]
+                    tmp.append(Paragraph(fio, styleSheet["BodyText"]))
                     tmp.append(Paragraph(obj["tube_id"], styleSheet["BodyText"]))
+                    tmp.append(Paragraph(obj["type"], styleSheet["BodyText"]))
                 else:
+                    tmp.append("")
                     tmp.append("")
                     tmp.append("")
                     tmp.append("")
@@ -591,12 +618,12 @@ def print_history(request):
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 1)
             ])
             for span in merge_list:  # Цикл объединения ячеек
-                for pos in range(0, 5):
+                for pos in range(0, 6):
                     style.add('INNERGRID', (pos, merge_list[span][0]),
                               (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])),
                               0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.05), int(tw * 0.27), int(tw * 0.10), int(tw * 0.35), int(tw * 0.23)],
+            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.23), int(tw * 0.08), int(tw * 0.23), int(tw * 0.31), int(tw * 0.14)],
                       style=style)
 
             t.canv = c
@@ -761,3 +788,5 @@ def get_client_directions(request):
                      "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
         res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+

@@ -248,3 +248,10 @@ def users_dosync(request):
         profile.save()
     c.unbind()
     return HttpResponse(json.dumps(groups), content_type="application/json")
+
+
+@login_required
+def dir_multiprint(request):
+    """ Страница пакетной печати направлений """
+
+    return render(request, 'dashboard/dir_multiprint.html')

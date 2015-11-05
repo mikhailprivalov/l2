@@ -1,0 +1,205 @@
+{% extends "dbase.html" %}
+{% block title %}Печать направлений{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <span id="performing">Проверка направления <span id="performing_num">0</span></span>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text" class="form-control" id="dir-field" name="dir-field" data-container="body"
+                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                       placeholder="Введите номер направления">
+                  <span class="input-group-btn">
+                        <button class="btn btn-blue-nb" onclick="add_direction();" type="button">Добавить</button>
+                  </span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            Направлений выбрано: <span id="selected">0</span>
+        </div>
+    </div>
+    <div class="dir-cont"></div>
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4" id="print_container">
+            <button class="btn btn-primary-nb mw" onclick="window.open('/directions/pdf?napr_id=' + JSON.stringify(directions), '_blank'); return false;" type="button">Печать выбранных</button><br/>
+            <button class="btn btn-primary-nb btn-primary-rm mw" onclick="directions = []; sync(); return false;" style="margin-top: 15px" type="button">Очистить</button>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        var directions = [];
+        var dir_queue = [];
+        var errors_dirs = [];
+        var maxPerOne = 16, maxAll = 16;
+        function add_direction() {
+            var pattern = /\d+\-\d+/;
+            var pk = $("#dir-field").val();
+            if (pk.match(pattern)) {
+                var splitA = pk.split("-");
+                var from = parseInt(splitA[0]), to = parseInt(splitA[1]);
+                if (to < from)
+                    to = [from, from = to][0];
+                if (to - from + 1 > maxPerOne) {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Невозможно добавить более чем {0} направлений одновременно'.f(maxPerOne),
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                    return false;
+                }
+                if (to - from + 1 + directions.length > maxAll) {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Невозможно добавить более {0} направлений'.f(maxAll),
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                    return false;
+                }
+                for (var i = from; i <= to; i++) {
+                    dir_queue.push(i);
+                }
+                put_direction();
+            }
+            else if (pk.match(/\d+/)) {
+                if (directions.length + 1 > maxAll) {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Невозможно добавить более {0} направлений'.f(maxAll),
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                    return false;
+                }
+                dir_queue.push(parseInt(pk));
+                put_direction();
+            }
+            $("#dir-field").focus();
+        }
+        function put_direction(pk) {
+            var f = false;
+            if (pk) {
+                pk = parseInt(pk);
+                f = true;
+            }
+            else if (dir_queue.length > 0)
+                pk = dir_queue[0];
+            else return;
+            $("#performing").show();
+            $("#performing_num").text(pk);
+            $.ajax({
+                url: "/directions/get/one",
+                method: "GET",
+                dataType: 'json',
+                data: {id: pk, check: true}
+            }).done(function (data) {
+                if (data.ok) {
+                    directions.push(pk);
+                }
+                else {
+                    errors_dirs.push(pk);
+                }
+                sync();
+                if (!f) {
+                    dir_queue.splice(0, 1);
+                    if (dir_queue.length > 0)
+                        put_direction();
+                    else {
+                        ckerr();
+                        $("#performing").hide();
+                    }
+                }
+                else {
+                    ckerr();
+                    $("#performing").hide();
+                }
+            });
+        }
+        $(document).ready(function () {
+            $("#performing, #print_container").hide();
+            sync();
+            $("#dir-field").bind('keyup', 'return', function () {
+                add_direction();
+            });
+        });
+        function sync() {
+            $("#selected").text(directions.length);
+            if (directions.length == 0) {
+                $(".dir-cont").html("Ничего не выбрано");
+                $("#print_container").hide();
+            } else {
+                $(".dir-cont").html("");
+                $.each(directions, function (k, v) {
+                    $(".dir-cont").append('<span class="badge badge-default" onclick="remove({1});">{0}</span>&nbsp;&nbsp;'.f(v, k));
+                });
+                $("#print_container").show();
+            }
+        }
+        function remove(k) {
+            directions.splice(k, 1);
+            if (window.getSelection) {
+                if (window.getSelection().empty) {
+                    window.getSelection().empty();
+                } else if (window.getSelection().removeAllRanges) {
+                    window.getSelection().removeAllRanges();
+                }
+            } else if (document.selection) {
+                document.selection.empty();
+            }
+            sync();
+
+            return false;
+        }
+        function ckerr() {
+            if (errors_dirs.length == 0) return;
+            $.amaran({
+                'theme': 'awesome no',
+                'content': {
+                    title: 'Следующие направления не существуют',
+                    message: errors_dirs.join(", "),
+                    info: '',
+                    icon: 'fa fa-exclamation'
+                },
+                'position': 'top right',
+                delay: 6000
+            });
+            errors_dirs = [];
+        }
+    </script>
+    <style>
+        .dir-cont {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .badge {
+            cursor: pointer;
+        }
+
+        #print_container {
+            margin-top: 15px;
+        }
+    </style>
+{% endblock %}

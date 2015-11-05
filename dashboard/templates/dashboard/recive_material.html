@@ -67,8 +67,9 @@
     </div>
     <div class="col-md-6">
         <div>
+            <!--<div style="float: right;margin-top: 3px"><label>Печатать все <input type="radio" name="print_type" checked value="all"/></label>&nbsp;&nbsp;&nbsp;<label>Печатать выбранные <input type="radio" name="print_type" value="selected"/> </label></div>-->
             <div class="btn-group" style="margin-bottom: 10px">
-                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary-nb mw">Печать</a>
+                <a href="/direction/researches/update/history/print" onclick="print_history();return false;" target="_blank" class="btn btn-primary-nb mw">Печать</a>
 
                 <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
@@ -76,7 +77,7 @@
                 <table class="table table-bordered" id="history-tb"></table>
             </div>
             <div class="btn-group" style="margin-top: 10px">
-                <a href="/direction/researches/update/history/print" target="_blank" class="btn btn-primary-nb mw">Печать</a>
+                <a href="/direction/researches/update/history/print" onclick="print_history();return false;" target="_blank" class="btn btn-primary-nb mw">Печать</a>
 
                 <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
@@ -99,6 +100,7 @@
         ;
         var clear_timer_start = false, input_buffer_scan = "";
         var SFinFocus = false;
+        var checkboxed = [];
         $(document).ready(function () {
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
@@ -312,11 +314,12 @@
                             tmpstr = key + " " + value + " шт, " + tmpstr
                         }
                     });
-                    $("#history-tb").prepend("<tr id='story-{3}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
+                    $("#history-tb").prepend("<tr id='story-{3}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class='label-c'><label><input type='checkbox' name='custom_print' value='{3}' onchange='checkboxes_to_array();' /></label></td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
                 });
-                $("#history-tb").prepend("<tr><th>Время забора</th><th>Направление</th><th>Исследования</th><th>Номер пробирки</th><th>Тип пробирки</th></tr>");
+                $("#history-tb").prepend("<tr><th>Время забора</th><th>Направление</th><th>Исследования</th><th>Номер пробирки</th><th>Тип пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' onchange='sync_checkboxes();' name='allprint' checked /></label></th></tr>");
 
                 resize();
+                sync_checkboxes();
                 if (!clearn || !dn) return;
                 clear(dn);
                 $(".last").removeClass("last");
@@ -331,6 +334,32 @@
             $('#scroll-tb').perfectScrollbar();
             $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 80);
             $('#scroll-res').perfectScrollbar();
+        }
+        function sync_checkboxes(){
+            $("input[name='custom_print']").prop("checked", $("input[name='allprint']").is(':checked'));
+            checkboxes_to_array();
+        }
+        var nochecked = false;
+        function checkboxes_to_array(){
+            checkboxed = [];
+            nochecked = false;
+            $.each($("input[name='custom_print']"), function(k, v){
+                if($(v).is(":checked")) {
+                    checkboxed.push(parseInt($(v).val()));
+                }
+                else{
+                    nochecked = true;
+                }
+            });
+        }
+        function print_history(){
+            checkboxes_to_array();
+            if(!nochecked){
+                window.open('/direction/researches/update/history/print', '_blank');
+            }
+            else{
+                window.open('/direction/researches/update/history/print?filter=' + JSON.stringify(checkboxed), '_blank');
+            }
         }
     </script>
     <style>
@@ -403,5 +432,16 @@
         .last {
             background-color: #D4E6C2;
         }
+    th label, td label{
+        margin: 0;
+    }
+    .label-c{
+        text-align: right;
+        vertical-align: top;
+    }
+    .label-c input{
+        margin: 0;
+        margin-right: 5px;
+    }
     </style>
 {% endblock %}

@@ -15,8 +15,9 @@ def directory_researches(request):
     return_result = {"tubes_r": []}
     if request.method == "POST":
         research = json.loads(request.POST["research"])
-        if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
-                research__pk=int(research["id"])).exists():
+        #if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
+        #        research__pk=int(research["id"])).exists():
+        if not research["title"] or not research["id"]:
             return_result = {"ok": False, "tubes_r": []}
         else:
             if research["id"] == -1:
@@ -57,6 +58,7 @@ def directory_researches(request):
                         fraction_obj.units = fraction["units"]
                         fraction_obj.ref_m = fraction["ref_m"]
                         fraction_obj.ref_f = fraction["ref_f"]
+                        fraction_obj.type = fraction["type"]
                         # fraction_obj
                         fractions_pk.append(fraction["pk"])
                         fraction_obj.save()
@@ -69,7 +71,7 @@ def directory_researches(request):
     elif request.method == "GET":
         return_result = {"researches": []}
         subgroup_id = request.GET["lab_group"]
-        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id).order_by("pk")
         for research in researches:
             resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False,
                        "hide": research.hide}
@@ -196,7 +198,7 @@ def directory_research(request):
                 ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk});
+                 "ref_f": ref_f, "pk": fraction.pk, "type": fraction.type});
         '''
         sel: id,
         color: color,

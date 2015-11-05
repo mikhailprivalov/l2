@@ -332,6 +332,10 @@
             min-width: 450px;
         }
 
+        .fraction-type{
+            width: 100%;
+        }
+
     </style>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
@@ -370,6 +374,7 @@
                                         {
                                             title: "",
                                             units: "",
+                                            type: -1,
                                             ref_m: {"": ""},
                                             ref_f: {"": ""}
                                         }
@@ -393,6 +398,7 @@
         function edit_research(id) {
             loadform(id);
         }
+        var rdl = false;
         /**
          * Загрузка формы редактирования или создания исследования
          * @param id - идентификатор исследоавания (при -1 загрузка пустой формы для создания нового исследования)
@@ -447,6 +453,7 @@
             hideref();
             resize();
             $("#tunebtn").attr("disabled", 1);
+            rdl = false;
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
                     $("#research_title").val(data.title);
@@ -456,8 +463,10 @@
                     $("#tunebtn").removeAttr("disabled");
                     showtubes();
                     if (data.readonly === true) {
-                        $("#research-form input, #research-form textarea").prop("readonly", true);
-                        $("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
+                        rdl = true;
+                        $("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
+                        //$("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
+                        $("#research-form .remove, #select-div, #research-form .add-fr").remove();
                         $(".drophere").remove();
                     }
                 });
@@ -507,6 +516,7 @@
                         {
                             title: "",
                             units: "",
+                            type: -1,
                             ref_m: {"": ""},
                             ref_f: {"": ""}
                         }
@@ -542,6 +552,8 @@
 
                 fractions += "<th>Еденицы измерения</th>";
 
+                fractions += "<th>Варианты</th>";
+
                 fractions += "<th class='ref'>Референсы М</th>";
 
                 fractions += "<th class='ref'>Референсы Ж</th>";
@@ -555,10 +567,10 @@
                         pk = value.pk;
                     fractions += "<tr k='{0}' key='{1}' sel='{2}' pk='{3}' class='fraction-tr'>".f(k, key, v.sel, pk);
                     if (first) {
-                        fractions += "<td class='col-md-2'><div><!--<br/><br/>--><div class='input-group'><div class='input-group-btn'><button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
+                        fractions += "<td class='col-md-2'><div><div class='input-group'><div class='input-group-btn'><button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
                                     // "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
                                 "</div><input class='form-control fractiontitle' value='" + value.title + "' /></div></div></td>";
-                        fractions += "<td><div><!--<br/><br/>--><input class='form-control refunits' value='" + value.units + "' /></div></td>";
+                        fractions += "<td><div><input class='form-control refunits' value='" + value.units + "' /></div></td>";
                     }
                     else {
                         fractions += "<td class='col-md-2'>" +
@@ -573,6 +585,15 @@
                                 "</div></td>";
                         fractions += "<td><div><input class='form-control refunits' value='" + value.units + "' /></div></td>";
                     }
+
+                    fractions += "<td class='col-md-2'><div><select onchange='syncFractions();' class='fraction-type'>";
+                    $.each(fraction_types, function(fk, fv){
+                        if(value.type == fk)
+                            fractions += "<option value='{0}' selected>{1}</option>".f(fk, fv.join("/"));
+                        else
+                            fractions += "<option value='{0}'>{1}</option>".f(fk, fv.join("/"));
+                    });
+                    fractions += "</select></div></td>";
 
                     if (first)
                         ref_m = fullrefhead;
@@ -611,8 +632,14 @@
                 }
                 $(tube).addClass("active");
                 $(s).append($("<div class='well wellfractions' id=\"group-" + v.sel + "\"></div>").append($(tube).clone()).append(fractions));
-                $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>')
-                $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>')
+                if (!rdl || resid < 1) {
+                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>')
+                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>')
+                }
+                else{
+                    $("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
+                    $("#research-form .remove, #select-div, #research-form .add-fr").remove();
+                }
             });
             if (Object.keys(fractiontubes).length == 0) {
                 $(s).append("<div class='well'>Пробирки не привязаны</div>");
@@ -700,6 +727,7 @@
                     {
                         title: "",
                         units: "",
+                        type: -1,
                         ref_m: {"": ""},
                         ref_f: {"": ""}
                     }
@@ -718,7 +746,7 @@
 
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
             syncFractions();
-            fractiontubes[tube].fractions.push({title: "", units: "", ref_m: {"": ""}, ref_f: {"": ""}});
+            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, ref_m: {"": ""}, ref_f: {"": ""}});
             showtubes(true);
             // $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
@@ -745,6 +773,7 @@
                         pk: parseInt($(this).attr("pk")),
                         title: $(".fractiontitle", $(this)).val(),
                         units: $(".refunits", $(this)).val(),
+                        type: parseInt($(".fraction-type", $(this)).val()),
                         ref_m: {},
                         ref_f: {}
                     };
@@ -869,8 +898,8 @@
                     $(g).append('<div class="btn btn-default col-md-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
                     if (!v.hide) $(".hidden-d", g).hide();
                 });
-                $(".readonly .tube-drag").removeClass("tube-drag");
-                $.each($(".one-tube:not(.readonly)"), function (k, v) {
+                //$(".readonly .tube-drag").removeClass("tube-drag");
+                $.each($(".one-tube"), function (k, v) {
                     $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
                 });
 

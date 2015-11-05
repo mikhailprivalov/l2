@@ -8,12 +8,12 @@
                 <h5>Категория пациентов:</h5>
 
                 <div class="btn-group" data-toggle="buttons" style="margin-bottom: 20px">
-                    <label class="btn btn-blue-nb active">
-                        <input type="radio" name="type" id="option1" value="poli" autocomplete="off" checked>
+                    <label class="btn btn-blue-nb">
+                        <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)" autocomplete="off">
                         Поликлиника
                     </label>
                     <label class="btn btn-blue-nb">
-                        <input type="radio" name="type" id="option2" value="stat" autocomplete="off"> Стационар
+                        <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)" autocomplete="off"> Стационар
                     </label><!--
                     <label class="btn btn-default">
                         <input type="radio" name="type" id="option3" value="all" autocomplete="off"> Все категории
@@ -31,7 +31,7 @@
             </div>
             <br/>
 
-            <table class="table table-bordered table-condensed" style="width: 100%">
+            <table class="table table-bordered table-condensed" style="width: 100%; margin-bottom: 10px">
                 <tr>
                     <td style="width: 135px">Тип:&nbsp;</td>
                     <td id="card-type"></td>
@@ -52,8 +52,15 @@
                     <td style="width: 135px">Пол:&nbsp;</td>
                     <td id="card-sx"></td>
                 </tr>
+                <tr id="history-num-tr">
+                    <td style="width: 135px">Номер истории:&nbsp;</td>
+                    <td><input  type="text" class="form-control" maxlength="11" /></td>
+                </tr>
+                <tr id="ballast">
+                    <td style="width: 135px">&nbsp;</td>
+                    <td><div style="height: 34px">&nbsp;</div></td>
+                </tr>
             </table>
-            <br/>
             {% if operator %}
                 <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
                     {% for v in docs %}
@@ -306,7 +313,29 @@
             $(window).resize(function () {
                 resize();
             });
+            checkType();
         });
+
+        function checkType(tr){
+            if(tr)
+            {
+                tmp = $('input[name=type]:checked').val();
+                if(type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                    search($('#search-field').val());
+                }
+            }
+            type = $('input[name=type]:checked').val();
+            $("#history-num-tr").hide();
+            $("#ballast").hide();
+            if(type == "stat")
+            {
+                $("#history-num-tr").show();
+            }
+            else
+            {
+                $("#ballast").show();
+            }
+        }
 
         function show_results(rpk) {
             $("#results-modal #res-dir-num span").text("");
@@ -460,7 +489,22 @@
         }
         function search(query) { // Функция поиска
             $("#div2 input, #div2 button").prop("disabled", true);
-            type = $('input[name=type]:checked').val(); // Получение выбранного типа базы
+            checkType(); // Получение выбранного типа базы
+            if(!type)
+            {
+                $.amaran({
+                'theme': 'awesome no',
+                'content': {
+                    title: 'Не выбрана категория пациента',
+                    message: "",
+                    info: '',
+                    icon: 'fa fa-exclamation'
+                },
+                    'position': 'top left',
+                    delay: 6000
+                });
+                return;
+            }
             query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
             $("#sources .active").removeClass("active");
@@ -503,6 +547,10 @@
                         theme: "tooltipster-shadow"
                     });
                     $('#search-field').tooltipster('show');
+                    $("#table-researches input").prop("checked", false);
+                    clear_fast();
+                    clear_direction();
+
                 }
                 $("#diagnos-field").val("");
             });
@@ -564,6 +612,9 @@
                 fin_source: parseInt($('#sources .active-s .btn.active input[name=source]').val())
             };
             clear_fast();
+            $("#history-num-tr input").val("");
+            if(type == "stat")
+                $("#history-num-tr input[type=text]").focus();
         }
         function load_researches() {
             $("#table-researches").html("");
@@ -680,14 +731,14 @@
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
-                data: {dict: JSON.stringify(tmp_direction), ofname: ofname}
+                data: {dict: JSON.stringify(tmp_direction), ofname: ofname, history_num: $("#history-num-tr input").val(), type: type}
             }).done(function (data) {
                 console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
                     window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
-                    clear_fast();
                     $("#sources .active").removeClass("active");
                     load_client_dirs(client_id);
+                    setTimeout(clear_fast, 200);
                 }
                 else if (data[0].message) {
 

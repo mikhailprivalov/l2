@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
 from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
-    users_dosync
+    users_dosync, dir_multiprint
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
@@ -24,6 +24,7 @@ urlpatterns = [
                   url(r'^directions/pdf$', gen_pdf_dir),
                   url(r'^directions/get/one$', get_one_dir),
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
+                  url(r'^directions/multiprint', dir_multiprint),
                   url(r'^directions/list/client$', get_client_directions),
                   url(r'^direction/researches/update$', update_direction),
                   url(r'^direction/researches/update/history$', load_history),

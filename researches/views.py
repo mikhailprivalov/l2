@@ -30,12 +30,14 @@ def ajax_search_res(request):
 @login_required
 def researches_get_one(request):
     """Получение исследования (название, фракции, параметры)"""
-    res = {"res_id": "", "title": "", "fractions": [], "confirmed": True, "saved": True}
+    import collections
+    from operator import itemgetter
+    res = {"res_id": "", "title": "", "fractions": {}, "confirmed": True, "saved": True}
     if request.method == "GET":
         id = request.GET["id"]
         iss = Issledovaniya.objects.get(pk=id)
         research = iss.research
-        fractions = directory.Fractions.objects.filter(research=research)
+        fractions = directory.Fractions.objects.filter(research=research).order_by("pk")
         res["res_id"] = id
         res["title"] = research.title
         if not iss.doc_save:
@@ -49,10 +51,13 @@ def researches_get_one(request):
                 ref_m = json.loads(ref_m)
             if isinstance(ref_f, str):
                 ref_f = json.loads(ref_f)
-            res["fractions"].append(
-                {"title": val.title, "pk": val.pk, "unit": val.units,
-                 "references": {"m": ref_m, "f": ref_f}})
+            #res["fractions"].append(
+            #   {"title": val.title, "pk": val.pk, "unit": val.units,
+            #     "references": {"m": ref_m, "f": ref_f}})
 
+            res["fractions"][val.pk] = {"title": val.title, "pk": val.pk, "unit": val.units, "type": val.type,"references": {"m": ref_m, "f": ref_f}}
+        #res["fractions"] = sorted(res["fractions"], key=itemgetter("pk"))
+        res["fractions"] = collections.OrderedDict(sorted(res["fractions"].items()))
     return HttpResponse(json.dumps(res))  # Создание JSON
 
 

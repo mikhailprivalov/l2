@@ -33,3 +33,4 @@ class Fractions(models.Model):
     uet_doc = models.FloatField(default=0)
     uet_lab = models.FloatField(default=0)
     max_iterations = models.IntegerField(default=1)
+    type = models.IntegerField(default=-1, blank=True, null=True)

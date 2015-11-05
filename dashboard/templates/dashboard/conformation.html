@@ -104,8 +104,13 @@
                 </tr>
             </table>
             <div class="row">
-                <div class="col-md-9">
+                <div class="col-md-6">
                     <h5 id="research-title"></h5>
+                </div>
+                <div class="col-md-3">
+                    <button disabled id="print-btn" class="btn btn-primary-nb"
+                            onclick="print_loaded();return false">Печать
+                    </button>
                 </div>
                 <div style="text-align: right; margin-bottom: 10px" class="col-md-3">
                     <button disabled class="btn btn-primary-nb confirm-btn"
@@ -134,12 +139,7 @@
             </div>
 
             <div class="row">
-                <div class="col-md-6"><input type="hidden" id="issledovaniye_id" value="-1"/></div>
-                <div class="col-md-3">
-                    <button disabled id="print-btn" class="btn btn-primary-nb" style="display: none;"
-                            onclick="print_loaded();return false">Печать
-                    </button>
-                </div>
+                <div class="col-md-9"><input type="hidden" id="issledovaniye_id" value="-1"/></div>
                 <div class="col-md-3">
                     <button disabled class="btn btn-primary-nb confirm-btn"
                             onclick="confirm_loaded();return false">Подтвердить
@@ -307,7 +307,7 @@
             }).done(function (data) {
                 if (!data.ok)return;
                 $("#fractions").html("");
-                $("#dir_num").html(data.napr_pk);
+                $("#dir_num").html("<a href='/directions/pdf?napr_id=[{0}]' target='_blank'>{0}</a>".f(data.napr_pk));
                 $("#dir_client_fio").html(data.client_fio);
                 $("#directioner").html(data.directioner);
                 $("#client_vozrast").html(data.client_vozrast);
@@ -333,16 +333,16 @@
                     $("[pk='{0}']".f(id)).addClass("active");
                     $("#issledovaniye_id").val(id);
                     if (data2.confirmed) {
-                        $(".confirm-btn").attr("disabled", 1);
-                        $("#print-btn").removeAttr("disabled");
+                        $(".confirm-btn").prop("disabled", false);
+                        $("#print-btn").prop("disabled", false);
                     }
                     else if (data2.saved) {
-                        $("#print-btn").attr("disabled", 1);
-                        $(".confirm-btn").removeAttr("disabled");
+                        $("#print-btn").prop("disabled", true);
+                        $(".confirm-btn").prop("disabled", false);
                     }
                     else {
-                        $(".confirm-btn").attr("disabled", 1);
-                        $("#print-btn").attr("disabled", 1);
+                        $(".confirm-btn").prop("disabled", true);
+                        $("#print-btn").prop("disabled", true);
                     }
                     resize();
                 });

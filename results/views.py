@@ -289,8 +289,10 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     c.drawCentredString(w / 4 + s, h - 50, "Результаты анализов")
 
     c.setFont('OpenSans', 20)
-    c.drawString(paddingx + s, h - 70, "№ " + str(obj))
+    c.drawString(paddingx + s, h - 55, "№ " + str(obj))
+
     c.setFont('OpenSans', 10)
+    c.drawString(paddingx + s, h - 70, "Лечащий врач: " + napr.doc.get_fio())
     c.drawRightString(s + w / 2 - paddingx, h - 70,
                       "Дата: " + str(dateformat.format(last_iss.time_confirmation.date(), settings.DATE_FORMAT)))
 
@@ -321,21 +323,21 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     tmp = []
     tmp.append(Paragraph('<font face="OpenSans" size="8">Исследование</font>', styleSheet["BodyText"]))
     tmp.append(Paragraph('<font face="OpenSans" size="8">Значение</font>', styleSheet["BodyText"]))
-    tmp.append(Paragraph('<font face="OpenSans" size="8">Еденицы измерения</font>', styleSheet["BodyText"]))
+    tmp.append(Paragraph('<font face="OpenSans" size="8">Ед. изм.</font>', styleSheet["BodyText"]))
     if napr.client.sex.lower() == "м":
         tmp.append(
-            Paragraph('<font face="OpenSans" size="8">Референсы М<br/>Условие:значение</font>', styleSheet["BodyText"]))
+            Paragraph('<font face="OpenSans" size="8">Референсы (М)<br/>Условие:значение</font>', styleSheet["BodyText"]))
     else:
         tmp.append(
-            Paragraph('<font face="OpenSans" size="8">Референсы Ж<br/>Условие:значение</font>', styleSheet["BodyText"]))
+            Paragraph('<font face="OpenSans" size="8">Референсы (Ж)<br/>Условие:значение</font>', styleSheet["BodyText"]))
     data.append(tmp)
-    cw = [int(tw * 0.35), int(tw * 0.12), int(tw * 0.130), int(tw * 0.4)]
+    cw = [int(tw * 0.485), int(tw * 0.164), int(tw * 0.12), int(tw * 0.232)]
     t = Table(data, colWidths=cw)
     t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                           ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                           ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                           ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                           ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                           ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                           ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
                            ('TOPPADDING', (0, 0), (-1, -1), 0),
                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
@@ -348,7 +350,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
     for iss in iss_list:
         data = []
-        fractions = directory.Fractions.objects.filter(research=iss.research)
+        fractions = directory.Fractions.objects.filter(research=iss.research).order_by("pk")
         if fractions.count() == 1:
             tmp = []
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + "</font>",
@@ -368,10 +370,10 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             data.append(tmp)
             t = Table(data, colWidths=cw)
             t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                   ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                    ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                   ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                                   ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                                   ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                   ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
                                    ('TOPPADDING', (0, 0), (-1, -1), 0),
                                    ('RIGHTPADDING', (0, 0), (-1, -1), 2),
@@ -383,10 +385,10 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             data.append(tmp)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 # ('SPAN',(0,0),(-1,0)),
-                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                 ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
-                                ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+                                ('INNERGRID', (0, 0), (-1, -1), 0.2, colors.black),
+                                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                                 ('LEFTPADDING', (0, 0), (-1, -1), 4),
                                 ('TOPPADDING', (0, 0), (-1, -1), 0),
                                 ('RIGHTPADDING', (0, 0), (-1, -1), 2),
@@ -416,9 +418,9 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
             for k in range(0, 4):
                 style.add('INNERGRID', (k, 0),
-                          (k, j), 0.28, colors.white)
+                          (k, j), 0.01, colors.black)
                 style.add('BOX', (k, 0), (k, j),
-                          0.2, colors.black)
+                          0.8, colors.black)
 
             t = Table(data, colWidths=cw)
             t.setStyle(style)
@@ -442,8 +444,13 @@ def get_r(ref) -> str:
     tmp = []
     s = ""
     for k in r.keys():
-        tmp.append(k + " : " + r[k])
-    s = ", ".join(tmp)
+        if len(r[k]) > 0:
+            if k == "Все" and len(r) == 1:
+                tmp.append(r[k])
+            else:
+                tmp.append(k + " : " + r[k])
+    tmp.sort()
+    s = "<br/>".join(tmp)
     if s == " : ":
         s = ""
     return s

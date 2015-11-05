@@ -76,3 +76,6 @@ var getNorms = function (sex, age, ref, units) {
     html_ret += "</table>";
     return html_ret;
 }
+
+
+var fraction_types = {"-1": ["Без вариантов"], "0": ["Да", "Нет"], "1": ["Отрицательный", "Положительный", "Сомнительный"]};

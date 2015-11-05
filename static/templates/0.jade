@@ -12,14 +12,17 @@ form(onsubmit="return false;")
             thead
                 th.col-md-4 Фракция
                 th Значение
-                th.col-md-2 Нормы М
-                th.col-md-2 Нормы Ж
+                th.col-md-3 Нормы М
+                th.col-md-3 Нормы Ж
             each fraction in fractions
                 tr
                     td.col-md-4
                         label= fraction.title
                     td
-                        input(type="text", data-pk=fraction.pk).form-control.result-enter
+                        if fraction.type == -1
+                            input(type="text", data-pk=fraction.pk).form-control.result-enter
+                        else
+                            input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
                         .center= fraction.unit
                     td.col-md-2
                         table.table.table-bordered.table-responsive

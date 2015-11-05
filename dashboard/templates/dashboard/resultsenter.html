@@ -2,7 +2,7 @@
 {% block title %}Ввод результатов{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="input-group" style="margin-bottom: 5px">
             <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus>
             <span class="input-group-btn">
@@ -80,7 +80,7 @@
             <ul id="issledovaniya"></ul>
         </div>
     </div>
-    <div class="col-md-5" id="form-scroll">
+    <div class="col-md-6" id="form-scroll">
         <div id="result-form">
 
         </div>
@@ -187,7 +187,7 @@
                 $(".select-dir.active, .select-tube.active").removeClass("active");
                 $("#result-form").empty();
                 $("#issledovaniya").empty();
-                $("#dir_num").html(data.napr_pk);
+                $("#dir_num").html("<a href='/directions/pdf?napr_id=[{0}]' target='_blank'>{0}</a>".f(data.napr_pk));
                 $("#dir_client_fio").html(data.client_fio);
                 $("#directioner").html(data.directioner);
                 $("#client_vozrast").html(data.client_vozrast);
@@ -254,7 +254,43 @@
                             $("[data-pk='" + k + "']").val(v);
                         });
                     });
-                    $('.result-enter').eq(0).focus();
+                    var autoIsF = false;
+                    var num = 0;
+                    $.each(data2.fractions, function(fk, fv){
+                        num++;
+                        if(fv.type != -1){
+                            if(num == 1) autoIsF = true;
+                            var ft = $.map(fraction_types[fv.type+""], function(item){
+                                return {value: item};
+                            });
+                            var typeVals = new Bloodhound({
+                                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+                                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                identify: function(obj) { return obj.value; },
+                                local: ft
+                            });
+                            function typeValsDefaults(q, sync) {
+                                if (q === '') {
+                                    sync(typeVals.get(fraction_types[fv.type+""]));
+                                }
+
+                                else {
+                                    typeVals.search(q, sync);
+                                }
+                            }
+                            $("[data-pk='" + fv.pk + "']").typeahead({
+                                minLength: 0,
+                                highlight: true,
+                                //local: fraction_types[fv.type+""]
+                            }, {
+                                name: 'typeval',
+                                display: 'value',
+                                source: typeValsDefaults,
+                            });
+                        }
+                    });
+                    $('.result-enter:not(.tt-hint)').eq(0).focus();
+
                     resize();
                     loaded_research = id;
                     datatype = -1;
@@ -382,7 +418,27 @@
             // list_reload = true;
             $('[direction="' + dir_data.napr_pk + '"]').remove();
         }
+        var substringMatcher = function(strs) {
+          return function findMatches(q, cb) {
+            var matches, substringRegex;
 
+            // an array that will be populated with substring matches
+            matches = [];
+
+            // regex used to determine if a string contains the substring `q`
+            substrRegex = new RegExp(q, 'i');
+
+            // iterate through the pool of strings and for any string that
+            // contains the substring `q`, add it to the `matches` array
+            $.each(strs, function(i, str) {
+              if (substrRegex.test(str)) {
+                matches.push(str);
+              }
+            });
+
+            cb(matches);
+          };
+        };
 
     </script>
     <style>
@@ -507,5 +563,23 @@
         .center {
             text-align: center;
         }
+    .tt-hint{
+        display: none;
+    }
+    span.twitter-typeahead {
+      width: 100%;
+    }
+    .input-group span.twitter-typeahead {
+      display: block !important;
+    }
+    .input-group span.twitter-typeahead .tt-dropdown-menu {
+      top: 32px !important;
+    }
+    .input-group.input-group-lg span.twitter-typeahead .tt-dropdown-menu {
+      top: 44px !important;
+    }
+    .input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {
+      top: 28px !important;
+    }
     </style>
 {% endblock %}

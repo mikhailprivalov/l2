@@ -296,6 +296,11 @@
             border: 1px solid #049372 !important;
         }
 
+        .btn-primary-rm:hover {
+            background-color: #FC6E51 !important;
+            border: 1px solid #FC6E51 !important;
+        }
+
         .btn-blue-nb, .btn-blue-nb:active, .btn-blue-nb:focus {
             background-color: #AAB2BD !important;
             border: 1px solid #AAB2BD !important;
@@ -384,6 +389,7 @@
             border: 1px solid #049372;
             color: #fff
         }
+
         /*.ps-scrollbar-x-rail,
         .ps-scrollbar-y-rail {
           opacity: 0.6;
@@ -428,7 +434,7 @@
             border: 1px solid #656D78;
             border-top: 0;
             border: 0;
-            overflow: hidden;
+            /*overflow: hidden;*/
         }
 
         .navbar-inverse .navbar-brand {
@@ -469,13 +475,14 @@
         .b-flt, .b-flt td {
             background-color: #ECF0F1;
         }
-        .footer-float{
+
+        .footer-float {
             position: fixed;
             bottom: 0;
             text-align: center;
             font-size: 10pt;
-            left: 180px;
-            right: 180px;
+            left: 20%;
+            right: 20%;
             z-index: 0;
             overflow: visible;
             word-break: keep-all;
@@ -484,8 +491,239 @@
             background: #fff;
 
         }
-        .footer-float:hover{
+
+        .footer-float:hover {
             opacity: .3;
+        }
+
+        .navbar-inverse .navbar-nav > .open > a {
+            background: #049372 !important;
+        }
+
+        #right-navbar li:last-child a:hover {
+            border-bottom-right-radius: 5px;
+        }
+
+        .has-warning .twitter-typeahead .tt-input,
+        .has-warning .twitter-typeahead .tt-hint {
+            border-color: #8a6d3b;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        }
+
+        .has-warning .twitter-typeahead .tt-input:focus,
+        .has-warning .twitter-typeahead .tt-hint:focus {
+            border-color: #66512c;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #c0a16b;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #c0a16b;
+        }
+
+        .has-error .twitter-typeahead .tt-input,
+        .has-error .twitter-typeahead .tt-hint {
+            border-color: #a94442;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        }
+
+        .has-error .twitter-typeahead .tt-input:focus,
+        .has-error .twitter-typeahead .tt-hint:focus {
+            border-color: #843534;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #ce8483;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #ce8483;
+        }
+
+        .has-success .twitter-typeahead .tt-input,
+        .has-success .twitter-typeahead .tt-hint {
+            border-color: #3c763d;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+        }
+
+        .has-success .twitter-typeahead .tt-input:focus,
+        .has-success .twitter-typeahead .tt-hint:focus {
+            border-color: #2b542c;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #67b168;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #67b168;
+        }
+
+        .input-group .twitter-typeahead:first-child .tt-input,
+        .input-group .twitter-typeahead:first-child .tt-hint {
+            border-bottom-left-radius: 4px;
+            border-top-left-radius: 4px;
+            width: 100%;
+        }
+
+        .input-group .twitter-typeahead:last-child .tt-input,
+        .input-group .twitter-typeahead:last-child .tt-hint {
+            border-bottom-right-radius: 4px;
+            border-top-right-radius: 4px;
+            width: 100%;
+        }
+
+        .input-group.input-group-sm .twitter-typeahead .tt-input,
+        .input-group.input-group-sm .twitter-typeahead .tt-hint {
+            height: 30px;
+            padding: 5px 10px;
+            font-size: 12px;
+            line-height: 1.5;
+            border-radius: 3px;
+        }
+
+        select.input-group.input-group-sm .twitter-typeahead .tt-input,
+        select.input-group.input-group-sm .twitter-typeahead .tt-hint {
+            height: 30px;
+            line-height: 30px;
+        }
+
+        textarea.input-group.input-group-sm .twitter-typeahead .tt-input,
+        textarea.input-group.input-group-sm .twitter-typeahead .tt-hint,
+        select[multiple].input-group.input-group-sm .twitter-typeahead .tt-input,
+        select[multiple].input-group.input-group-sm .twitter-typeahead .tt-hint {
+            height: auto;
+        }
+
+        .input-group.input-group-sm .twitter-typeahead:not(:first-child):not(:last-child) .tt-input,
+        .input-group.input-group-sm .twitter-typeahead:not(:first-child):not(:last-child) .tt-hint {
+            border-radius: 0;
+        }
+
+        .input-group.input-group-sm .twitter-typeahead:first-child .tt-input,
+        .input-group.input-group-sm .twitter-typeahead:first-child .tt-hint {
+            border-bottom-left-radius: 3px;
+            border-top-left-radius: 3px;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+        .input-group.input-group-sm .twitter-typeahead:last-child .tt-input,
+        .input-group.input-group-sm .twitter-typeahead:last-child .tt-hint {
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            border-bottom-right-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+
+        .input-group.input-group-lg .twitter-typeahead .tt-input,
+        .input-group.input-group-lg .twitter-typeahead .tt-hint {
+            height: 46px;
+            padding: 10px 16px;
+            font-size: 18px;
+            line-height: 1.33;
+            border-radius: 6px;
+        }
+
+        select.input-group.input-group-lg .twitter-typeahead .tt-input,
+        select.input-group.input-group-lg .twitter-typeahead .tt-hint {
+            height: 46px;
+            line-height: 46px;
+        }
+
+        textarea.input-group.input-group-lg .twitter-typeahead .tt-input,
+        textarea.input-group.input-group-lg .twitter-typeahead .tt-hint,
+        select[multiple].input-group.input-group-lg .twitter-typeahead .tt-input,
+        select[multiple].input-group.input-group-lg .twitter-typeahead .tt-hint {
+            height: auto;
+        }
+
+        .input-group.input-group-lg .twitter-typeahead:not(:first-child):not(:last-child) .tt-input,
+        .input-group.input-group-lg .twitter-typeahead:not(:first-child):not(:last-child) .tt-hint {
+            border-radius: 0;
+        }
+
+        .input-group.input-group-lg .twitter-typeahead:first-child .tt-input,
+        .input-group.input-group-lg .twitter-typeahead:first-child .tt-hint {
+            border-bottom-left-radius: 6px;
+            border-top-left-radius: 6px;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+        .input-group.input-group-lg .twitter-typeahead:last-child .tt-input,
+        .input-group.input-group-lg .twitter-typeahead:last-child .tt-hint {
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            border-bottom-right-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+
+        .twitter-typeahead {
+            width: 100%;
+            float: left;
+        }
+
+        .input-group .twitter-typeahead {
+            display: table-cell !important;
+        }
+
+        .twitter-typeahead .tt-hint {
+            color: #999999;
+        }
+
+        .twitter-typeahead .tt-input {
+            z-index: 2;
+        }
+
+        .twitter-typeahead .tt-input[disabled],
+        .twitter-typeahead .tt-input[readonly],
+        fieldset[disabled] .twitter-typeahead .tt-input {
+            cursor: not-allowed;
+            background-color: #eeeeee !important;
+        }
+
+        .tt-dropdown-menu,
+        .tt-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            min-width: 160px;
+            width: 100%;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            list-style: none;
+            font-size: 14px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+            background-clip: padding-box;
+            *border-right-width: 2px;
+            *border-bottom-width: 2px;
+        }
+
+        .tt-dropdown-menu .tt-suggestion,
+        .tt-menu .tt-suggestion {
+            display: block;
+            padding: 3px 20px;
+            clear: both;
+            font-weight: normal;
+            line-height: 1.42857143;
+            color: #333333;
+        }
+
+        .tt-dropdown-menu .tt-suggestion.tt-cursor,
+        .tt-menu .tt-suggestion.tt-cursor,
+        .tt-dropdown-menu .tt-suggestion:hover,
+        .tt-menu .tt-suggestion:hover {
+            cursor: pointer;
+            text-decoration: none;
+            outline: 0;
+            background-color: #37BC9B;
+            color: #fff;
+        }
+
+        .tt-dropdown-menu .tt-suggestion.tt-cursor a,
+        .tt-menu .tt-suggestion.tt-cursor a,
+        .tt-dropdown-menu .tt-suggestion:hover a,
+        .tt-menu .tt-suggestion:hover a {
+            color: #262626;
+        }
+
+        .tt-dropdown-menu .tt-suggestion p,
+        .tt-menu .tt-suggestion p {
+            margin: 0;
         }
     </style>
 </head>
@@ -500,12 +738,22 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
+            <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="/dashboard">П/у</a></li>
-                {% if request.user|has_group:"Лечащий врач" %}
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+                        <li><a href="/dashboard">Главная</a></li>
+                        <li><a href="/logout">Выход из профиля</a></li>
+                        <li class="divider"></li>
+                        <li><a href="/directions/multiprint" target="_blank">Печать направлений</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right" id="right-navbar">
+                {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
                     <li><a href="/dashboard/directions">Направления</a></li>
                 {% endif %}
                 {% if request.user|has_group:"Заборщик биоматериала" %}
@@ -522,11 +770,12 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
-    <div class="footer-float">ФК ИГМУ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span></div>
+    <div class="footer-float">Клиники ГБОУ ВПО ИГМУ Минздрава РФ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span>
+    </div>
 </div>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
-<script src="/static/js/typeahead.js"></script>
+<script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/bootstrap-select.js"></script>
 <script src="/static/js/bootbox.min.js"></script>
 <script src="/static/js/lang.ru.js"></script>
@@ -560,19 +809,23 @@
     };
 
     function startTime() {
-        var today=new Date();
-        var h=today.getHours();
-        var m=today.getMinutes();
-        var s=today.getSeconds();
-        if(h < 10) h = " " + h;
+        var today = new Date();
+        var h = today.getHours();
+        var m = today.getMinutes();
+        var s = today.getSeconds();
+        if (h < 10) h = " " + h;
         m = checkTime(m);
         s = checkTime(s);
-        document.getElementById('clock').innerHTML = h+":"+m+":"+s;
-        var t = setTimeout(function(){startTime()},500);
+        document.getElementById('clock').innerHTML = h + ":" + m + ":" + s;
+        var t = setTimeout(function () {
+            startTime()
+        }, 500);
     }
 
     function checkTime(i) {
-        if (i<10) {i = "0" + i}
+        if (i < 10) {
+            i = "0" + i
+        }
         return i;
     }
 
