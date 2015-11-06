@@ -471,7 +471,7 @@
                     showtubes();
                     if (data.readonly === true) {
                         rdl = true;
-                        $("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
+                        //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
                         //$("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
                         $("#research-form .remove, #select-div, #research-form .add-fr").remove();
                         $(".drophere").remove();
@@ -644,9 +644,9 @@
                     $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>')
                 }
                 else {
-                    $("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
                     $("#research-form .remove, #select-div, #research-form .add-fr").remove();
                 }
+                //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", false);
             });
             if (Object.keys(fractiontubes).length == 0) {
                 $(s).append("<div class='well'>Пробирки не привязаны</div>");

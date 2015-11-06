@@ -50,17 +50,12 @@ def tubes_get(request):
     if request.method == "GET":
         subgroup_lab = Subgroups.objects.get(pk=request.GET["subgroup"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
-        docs = DoctorProfile.objects.filter(podrazileniye=podrazledeniye)
-        for doc in docs:
-            tubes = TubesRegistration.objects.filter(doc_get=doc)
-            for tube in tubes:
-                if tube.doc_get is None: continue
-                issledovaniya = Issledovaniya.objects.filter(tubes__id=tube.id)
+        for doc in DoctorProfile.objects.filter(podrazileniye=podrazledeniye):
+            for tube in TubesRegistration.objects.filter(doc_get=doc, notice="", doc_recive__isnull=True):
                 issledovaniya_tmp = []
-                for iss in issledovaniya:
-                    if iss.research.subgroup == subgroup_lab:
-                        issledovaniya_tmp.append(iss.research.title)
-                if len(issledovaniya_tmp) > 0 and not tube.rstatus() and tube.notice == "":
+                for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__subgroup=subgroup_lab):
+                    issledovaniya_tmp.append(iss.research.title)
+                if len(issledovaniya_tmp) > 0 and not tube.rstatus():
                     result.append({"researches": ' | '.join(issledovaniya_tmp),
                                    "direction": tube.issledovaniya_set.first().napravleniye.pk,
                                    "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),

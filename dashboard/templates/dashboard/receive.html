@@ -77,14 +77,15 @@
         });
 
         function load_tubes() {
+            $("#tubes").html("");
             $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
-                $("#tubes").html("");
                 data = data.sort(function (a, b) {
                     var x = a.tube.id,
                             y = b.tube.id;
                     return x < y ? -1 : x > y ? 1 : 0;
-                });
+                });var i = 0;
                 $.each(data, function (k, v) {
+                    i++;
                     tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
                     if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))
                         $("#tubes").append(("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{5}]' target='_blank'>{5}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' /></label></td><td><div class='btn-group'><input id='notice_{2}' type='text' class='form-control'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
@@ -93,6 +94,9 @@
                     else
                         $("#tubes").append("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                 });
+                if(i == 0){
+                    $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
+                }
                 $('[data-toggle="tooltip"]').tooltip();
             });
         }

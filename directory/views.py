@@ -64,9 +64,10 @@ def directory_researches(request):
                         fraction_obj.type = fraction["type"]
                         fractions_pk.append(fraction["pk"])
                         fraction_obj.save()
-            research_obj.sort_weight = max(sort_list) + 1
-            research_obj.save()
-            fL = Fractions.objects.filter()
+            if research["id"] == -1:
+                research_obj.sort_weight = max(sort_list) + 1
+                research_obj.save()
+            #fL = Fractions.objects.filter()
             '''fractions = Fractions.objects.filter(research=research_obj)
             for fraction in fractions:
                 if fraction.pk not in fractions_pk:
