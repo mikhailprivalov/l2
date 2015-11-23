@@ -18,6 +18,7 @@ from directory.views import directory_researches, directory_research, directory_
     directory_researches_update_mode, directory_toggle_hide_research, directory_copy_research, \
     directory_researches_update_sort
 from statistic.views import statistic_page, statistic_xls
+import api.urls as api_urls
 urlpatterns = [
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
@@ -73,6 +74,7 @@ urlpatterns = [
 
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
+                  url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',
                       {'next_page': '/'}),
               ] + staticfiles_urlpatterns()

@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
+    'api',
 )
 
 LOGIN_REDIRECT_URL = '/'
