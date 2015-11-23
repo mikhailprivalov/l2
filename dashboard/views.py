@@ -65,7 +65,7 @@ def create_user(request):  # Страница создания пользова�
     registered = False
     podr = Podrazdeleniya.objects.all()  # Получение всех подразделений
     podrpost = 0
-    groups = Group.objects.all();  # Получение всех групп
+    groups = Group.objects.all()  # Получение всех групп
     if request.method == 'POST':
         username = request.POST['username']  # Имя пользователя
         password = request.POST['password']  # Пароль
@@ -271,5 +271,4 @@ def users_dosync(request):
 @login_required
 def dir_multiprint(request):
     """ Страница пакетной печати направлений """
-
     return render(request, 'dashboard/dir_multiprint.html')

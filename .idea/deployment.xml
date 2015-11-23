@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="k105-2">
+  <component name="PublishConfigData" autoUpload="Always" serverName="k105">
     <serverData>
-      <paths name="f">
+      <paths name="k105">
         <serverdata>
           <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="k105-2">
+      <paths name="lis">
         <serverdata>
           <mappings>
             <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/../../../webapps/" local="$USER_HOME$/PycharmProjects/kpatients" web="/" />
           </mappings>
         </serverdata>
       </paths>

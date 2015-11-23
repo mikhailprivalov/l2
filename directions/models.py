@@ -39,7 +39,7 @@ class IstochnikiFinansirovaniya(models.Model):
 
 class Napravleniya(models.Model):
     # Таблица направлений
-    data_sozdaniya = models.DateTimeField(auto_now=True)  # Дата создания направления
+    data_sozdaniya = models.DateTimeField(auto_now_add=True)  # Дата создания направления
     diagnos = models.CharField(max_length=511)  # Время взятия материала
     client = models.ForeignKey(Importedclients, db_index=True)  # Пациент
     doc = models.ForeignKey(DoctorProfile, db_index=True)  # Лечащий врач

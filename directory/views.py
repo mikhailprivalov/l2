@@ -63,7 +63,8 @@ def directory_researches(request):
                         fraction_obj.ref_f = fraction["ref_f"]
                         fraction_obj.type = fraction["type"]
                         fractions_pk.append(fraction["pk"])
-                        fraction_obj.save()
+                    fraction_obj.sort_weight = fraction["num"]
+                    fraction_obj.save()
             if research["id"] == -1:
                 research_obj.sort_weight = max(sort_list) + 1
                 research_obj.save()
@@ -85,13 +86,13 @@ def directory_researches(request):
                        "hide": research.hide, "sort_weight": research.sort_weight}
             if directions.Issledovaniya.objects.filter(research=research).exists():
                 resdict["readonly"] = True
-            fractions = Fractions.objects.filter(research=research)
+            fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
             for fraction in fractions:
                 if fraction.relation.pk not in resdict["tubes"].keys():
                     resdict["tubes_c"] += 1
                     resdict["tubes"][fraction.relation.pk] = {"id": fraction.relation.pk,
                                                               "color": fraction.relation.tube.color,
-                                                              "title": fraction.relation.tube.title}
+                                                              "title": fraction.relation.tube.title, "num": fraction.sort_weight}
             #return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
 
@@ -204,7 +205,7 @@ def directory_research(request):
         return_result["fractiontubes"] = {}
         return_result["uet_doc"] = {}
         return_result["uet_lab"] = {}
-        fractions = Fractions.objects.filter(research=research)
+        fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
         for fraction in fractions:
             if "tube-" + str(fraction.relation.pk) not in return_result["fractiontubes"].keys():
                 return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)] = {"fractions": [],
@@ -222,7 +223,9 @@ def directory_research(request):
                 ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk, "type": fraction.type});
+                 "ref_f": ref_f, "pk": fraction.pk, "type": fraction.type, "num": fraction.sort_weight})
+        for key in return_result["fractiontubes"].keys():
+            return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"], key=lambda k: k['num'])
         '''
         sel: id,
         color: color,

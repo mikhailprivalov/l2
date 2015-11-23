@@ -38,16 +38,16 @@ def result_conformation(request):
 def loadready(request):
     """ Представление, возвращающее JSON со списками пробирок и направлений, принятых в лабораторию """
     result = {"tubes": [], "directions": []}
-    tubes = TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False,
-                                             issledovaniya__napravleniye__is_printed=False,
-                                             issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)  # Загрузка пробирок,
+    #tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
-    for tube in tubes:  # перебор результатов выборки
-        iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
-        if len(iss_set) == 0: continue  # пропуск пробирки, если исследований нет
+    for tube in TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False,
+                                             issledovaniya__napravleniye__is_printed=False,
+                                             issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye):  # перебор результатов выборки
+        #iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
+        if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
         complete = False  # Завершен ли анализ
-        direction = iss_set.first().napravleniye  # Выборка направления для пробирки
+        direction = tube.issledovaniya_set.first().napravleniye  # Выборка направления для пробирки
         dicttube = {"id": tube.pk, "direction": direction.pk}  # Временный словарь с информацией о пробирке
         if not complete and dicttube not in result[
             "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
@@ -138,7 +138,8 @@ def get_full_result(request):
     if request.method == "GET":
         pk = int(request.GET["pk"])  # ID направления
         napr = Napravleniya.objects.get(pk=pk)  # Выборка направления из базы
-        iss_list = Issledovaniya.objects.filter(napravleniye=napr)  # Выборка списка исследований из базы по направлению
+        iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__direction__pk", "research__sort_weight")  # Выборка списка исследований из базы по направлению
+        kint = 0
         if not iss_list.filter(
                 doc_confirmation__isnull=True).exists():  # Если для направления все исследования подтверждены
 
@@ -157,17 +158,21 @@ def get_full_result(request):
 
             result["results"] = {}  # Результаты
             for issledovaniye in iss_list:  # Перебор списка исследований
-                result["results"][issledovaniye.pk] = {"title": issledovaniye.research.title,
-                                                       "fractions": {}}  # Словарь результата
-                results = Result.objects.filter(issledovaniye=issledovaniye)  # Выборка результатов из базы
+                kint += 1
+                result["results"][kint] = {"title": issledovaniye.research.title,
+                                                       "fractions": {}, "sort": issledovaniye.research.sort_weight}  # Словарь результата
+                results = Result.objects.filter(issledovaniye=issledovaniye).order_by("fraction__sort_weight")  # Выборка результатов из базы
                 for res in results:  # Перебор результатов
-                    if res.fraction.pk not in result["results"][issledovaniye.pk]["fractions"].keys():
-                        result["results"][issledovaniye.pk]["fractions"][res.fraction.pk] = {}
+                    pk = res.fraction.sort_weight
+                    if not pk or pk <= 0:
+                        pk = res.fraction.pk
+                    if pk not in result["results"][kint]["fractions"].keys():
+                        result["results"][kint]["fractions"][pk] = {}
 
-                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["result"] = res.value  # Значение
-                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk][
+                    result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
+                    result["results"][kint]["fractions"][pk][
                         "title"] = res.fraction.title  # Название фракции
-                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk][
+                    result["results"][kint]["fractions"][pk][
                         "units"] = res.fraction.units  # Еденицы измерения
                     ref_m = res.fraction.ref_m
                     ref_f = res.fraction.ref_f
@@ -175,8 +180,8 @@ def get_full_result(request):
                         ref_m = json.dumps(ref_m)
                     if not isinstance(ref_f, str):
                         ref_f = json.dumps(ref_f)
-                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_m"] = ref_m  # Референсы М
-                    result["results"][issledovaniye.pk]["fractions"][res.fraction.pk]["ref_f"] = ref_f  # Референсы Ж
+                    result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                    result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -300,28 +305,28 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     last_iss = napr.issledovaniya_set.filter(time_confirmation__isnull=False).order_by("-time_confirmation").first()
 
     c.setFont('OpenSans', 10)
-    c.drawCentredString(w / 4 + s, h - 20, "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+    c.drawCentredString(w / 4 + s, h - 18, "Клиники ГБОУ ВПО ИГМУ Минздрава России")
     c.setFont('OpenSans', 8)
-    c.drawCentredString(w / 4 + s, h - 30, "(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
-    c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 4 + s, h - 50, "Результаты анализов")
+    c.drawCentredString(w / 4 + s, h - 28, "(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
+    c.setFont('OpenSans', 10)
+    c.drawString(paddingx + s, h - 42, "Результаты анализов")
 
     c.setFont('OpenSans', 20)
-    c.drawString(paddingx + s, h - 55, "№ " + str(obj))
+    c.drawString(paddingx + s, h - 28, "№ " + str(obj))
 
     c.setFont('OpenSans', 10)
-    c.drawString(paddingx + s, h - 70, "Лечащий врач: " + napr.doc.get_fio())
-    c.drawRightString(s + w / 2 - paddingx, h - 70,
+    c.drawRightString(s + w / 2 - paddingx, h - 42, "Лечащий врач: " + napr.doc.get_fio())
+    c.drawRightString(s + w / 2 - paddingx, h - 54,
                       "Дата: " + str(dateformat.format(last_iss.time_confirmation.date(), settings.DATE_FORMAT)))
 
-    c.drawString(s + paddingx, h - 84, "ФИО пациента: " + napr.client.fio())
-    c.drawString(s + paddingx, h - 97, "Номер карты: " + str(napr.client.num))
-    c.drawCentredString(w / 4 + s, h - 97, "Пол: " + napr.client.sex)
+    c.drawString(s + paddingx, h - 54, "ФИО пациента: " + napr.client.fio())
+    c.drawString(s + paddingx, h - 64, "Номер карты: " + str(napr.client.num))
+    c.drawCentredString(w / 4 + s, h - 64, "Пол: " + napr.client.sex)
     # c.drawRightString(s + w/2 - paddingx, h-97, "Дата рождения: " + str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + " (" + str(napr.client.age()) + " лет)")
 
-    c.drawRightString(s + w / 2 - paddingx, h - 97, napr.client.age_s() + " " + "(д.р. " + str(
+    c.drawRightString(s + w / 2 - paddingx, h - 64, napr.client.age_s() + " " + "(д.р. " + str(
         dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + ")")
-    c.drawString(s + paddingx, 20, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
+    c.drawString(s + paddingx, 18, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
                  last_iss.doc_confirmation.fio.split(" ")[1][0] + "." + last_iss.doc_confirmation.fio.split(" ")[2][
                      0] + ".   ____________________   (подпись)")
     c.setFont('OpenSans', 8)
@@ -335,19 +340,19 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     styleSheet = getSampleStyleSheet()
 
     tw = w / 2 - paddingx * 2
-    pos = h - 95 - paddingx / 2
+    pos = h - 64 - paddingx / 2
 
     data = []
     tmp = []
-    tmp.append(Paragraph('<font face="OpenSans" size="8">Исследование</font>', styleSheet["BodyText"]))
-    tmp.append(Paragraph('<font face="OpenSans" size="8">Значение</font>', styleSheet["BodyText"]))
-    tmp.append(Paragraph('<font face="OpenSans" size="8">Ед. изм.</font>', styleSheet["BodyText"]))
+    tmp.append(Paragraph('<font face="OpenSans" size="7">Исследование</font>', styleSheet["BodyText"]))
+    tmp.append(Paragraph('<font face="OpenSans" size="7">Значение</font>', styleSheet["BodyText"]))
+    tmp.append(Paragraph('<font face="OpenSans" size="7">Ед. изм.</font>', styleSheet["BodyText"]))
     if napr.client.sex.lower() == "м":
         tmp.append(
-            Paragraph('<font face="OpenSans" size="8">Референсы (М)<br/>Условие:значение</font>', styleSheet["BodyText"]))
+            Paragraph('<font face="OpenSans" size="7">Референсы (М)</font>', styleSheet["BodyText"]))
     else:
         tmp.append(
-            Paragraph('<font face="OpenSans" size="8">Референсы (Ж)<br/>Условие:значение</font>', styleSheet["BodyText"]))
+            Paragraph('<font face="OpenSans" size="7">Референсы (Ж)</font>', styleSheet["BodyText"]))
     data.append(tmp)
     cw = [int(tw * 0.485), int(tw * 0.164), int(tw * 0.12), int(tw * 0.232)]
     t = Table(data, colWidths=cw)
@@ -368,22 +373,22 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
     for iss in iss_list:
         data = []
-        fractions = directory.Fractions.objects.filter(research=iss.research).order_by("pk")
+        fractions = directory.Fractions.objects.filter(research=iss.research).order_by("pk").order_by("sort_weight")
         if fractions.count() == 1:
             tmp = []
-            tmp.append(Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + "</font>",
+            tmp.append(Paragraph('<font face="OpenSansBold" size="7">' + iss.research.title + "</font>",
                                  styleSheet["BodyText"]))
             result = ""
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 result = Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value
-            tmp.append(Paragraph('<font face="OpenSans" size="8">' + result + "</font>", styleSheet["BodyText"]))
+            tmp.append(Paragraph('<font face="OpenSans" size="7">' + result + "</font>", styleSheet["BodyText"]))
             tmp.append(
-                Paragraph('<font face="OpenSans" size="8">' + fractions[0].units + "</font>", styleSheet["BodyText"]))
+                Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", styleSheet["BodyText"]))
             if napr.client.sex.lower() == "м":
-                tmp.append(Paragraph('<font face="OpenSans" size="8">' + get_r(fractions[0].ref_m) + "</font>",
+                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_m) + "</font>",
                                      styleSheet["BodyText"]))
             else:
-                tmp.append(Paragraph('<font face="OpenSans" size="8">' + get_r(fractions[0].ref_f) + "</font>",
+                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_f) + "</font>",
                                      styleSheet["BodyText"]))
             data.append(tmp)
             t = Table(data, colWidths=cw)
@@ -398,7 +403,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
                                    ]))
         else:
-            tmp = [Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + "</font>",
+            tmp = [Paragraph('<font face="OpenSansBold" size="7">' + iss.research.title + "</font>",
                              styleSheet["BodyText"]), '', '', '']
             data.append(tmp)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -417,19 +422,19 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             for f in fractions:
                 j += 1
                 tmp = []
-                tmp.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + f.title + "</font>",
+                tmp.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="7">' + f.title + "</font>",
                                      styleSheet["BodyText"]))
                 result = ""
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     result = Result.objects.get(issledovaniye=iss, fraction=f).value
 
-                tmp.append(Paragraph('<font face="OpenSans" size="8">' + result + "</font>", styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.units + "</font>", styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSans" size="7">' + result + "</font>", styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", styleSheet["BodyText"]))
                 if napr.client.sex.lower() == "м":
-                    tmp.append(Paragraph('<font face="OpenSans" size="8">' + get_r(f.ref_m) + "</font>",
+                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_m) + "</font>",
                                          styleSheet["BodyText"]))
                 else:
-                    tmp.append(Paragraph('<font face="OpenSans" size="8">' + get_r(f.ref_f) + "</font>",
+                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_f) + "</font>",
                                          styleSheet["BodyText"]))
 
                 data.append(tmp)

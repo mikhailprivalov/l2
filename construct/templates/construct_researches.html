@@ -343,6 +343,11 @@
         .col-nopd {
             padding: 0;
         }
+    .fup, .fdown{
+        font-size: 8pt;
+        padding: 6px;
+        padding-bottom: 5px;
+    }
     </style>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
@@ -473,7 +478,7 @@
                         rdl = true;
                         //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
                         //$("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
-                        $("#research-form .remove, #select-div, #research-form .add-fr").remove();
+                        $("#research-form .remove, #select-div").remove();
                         $(".drophere").remove();
                     }
                 });
@@ -572,18 +577,22 @@
                     pk = -1;
                     if (value.pk)
                         pk = value.pk;
-                    fractions += "<tr k='{0}' key='{1}' sel='{2}' pk='{3}' class='fraction-tr'>".f(k, key, v.sel, pk);
+                    fractions += "<tr k='{0}' key='{1}' sel='{2}' pk='{3}' num='{4}' class='fraction-tr'>".f(k, key, v.sel, pk, key+1);
+
+                    fractions += "<td class='col-md-2'>" +
+                                "<div>" +
+                                "<div class='input-group'>" +
+                                "<div class='input-group-btn'>"+
+                                    '<button class="btn btn-default fup" onclick="fswap(this, \'up\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></button>'.f(pk)+
+                                    '<button class="btn btn-default fdown" onclick="fswap(this, \'down\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></button>'.f(pk);
                     if (first) {
-                        fractions += "<td class='col-md-2'><div><div class='input-group'><div class='input-group-btn'><button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
+                        fractions += "<button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
                                     // "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
                                 "</div><input class='form-control fractiontitle' value='" + value.title + "' /></div></div></td>";
                         fractions += "<td><div><input class='form-control refunits' value='" + value.units + "' /></div></td>";
                     }
                     else {
-                        fractions += "<td class='col-md-2'>" +
-                                "<div>" +
-                                "<div class='input-group'>" +
-                                "<div class='input-group-btn'>" +
+                        fractions +=
                                 "<button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
                                     //  "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
                                 "</div>" +
@@ -639,12 +648,13 @@
                 }
                 $(tube).addClass("active");
                 $(s).append($("<div class='well wellfractions' id=\"group-" + v.sel + "\"></div>").append($(tube).clone()).append(fractions));
+
+                $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>');
                 if (!rdl || resid < 1) {
-                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>')
-                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>')
+                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>');
                 }
                 else {
-                    $("#research-form .remove, #select-div, #research-form .add-fr").remove();
+                    $("#research-form .remove, #select-div").remove();
                 }
                 //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", false);
             });
@@ -655,6 +665,7 @@
                     $(".tube-drag").draggable("enable");
             }
             resize(true);
+            syncUpDownFractions();
             //if (!auto) {
             $("#refhidden").show();
             $("#refshowed").hide();
@@ -781,6 +792,7 @@
                         title: $(".fractiontitle", $(this)).val(),
                         units: $(".refunits", $(this)).val(),
                         type: parseInt($(".fraction-type", $(this)).val()),
+                        num: parseInt($(this).attr("num")),
                         ref_m: {},
                         ref_f: {}
                     };
@@ -1035,6 +1047,22 @@
                 $(".down", $(v)).last().addClass("disabled").removeAttr("onclick");
             });
         }
+        function syncUpDownFractions(){
+            $(".fup, .fdown").prop("disabled", false);
+            var i = 0;
+            $.each($(".wellfractions"), function(kk, vv){
+                $.each($(".fup", $(vv)), function (k, v) {
+                    i++;
+                    $(".fraction-tr[pk='{0}']".f($(v).attr("pk"))).attr("num", i);
+                    $(v).attr("onclick", "fswap(this, 'up');return false;");
+                });
+                $.each($(".fdown", $(vv)), function (k, v) {
+                    $(v).attr("onclick", "fswap(this, 'down');return false;");
+                });
+                $(".fup", $(vv)).eq(0).prop("disabled", true).removeAttr("onclick");
+                $(".fdown", $(vv)).last().prop("disabled", true).removeAttr("onclick");
+            });
+        }
         function swap(element, direction) {
             var selector = $(".btn-group[pk='{0}']".f($(element).attr("pk")));
             var n = $(selector).attr("pos");
@@ -1049,6 +1077,21 @@
                     break;
             }
             syncUpDown();
+        }
+        function fswap(element, direction) {
+            var selector = $(".fraction-tr[pk='{0}']".f($(element).attr("pk")));
+            var n = $(selector).attr("num");
+            switch (direction) {
+                case "up":
+                    n--;
+                    jswap($(selector), $(selector).parent().children("[num={0}]".f(n)));
+                    break;
+                case "down":
+                    n++;
+                    jswap($(selector).parent().children("[num={0}]".f(n)), $(selector));
+                    break;
+            }
+            syncUpDownFractions();
         }
         function jswap(f, t) {
             $(f).after($(t));

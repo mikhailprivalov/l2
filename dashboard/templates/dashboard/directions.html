@@ -100,7 +100,8 @@
                 <table class="table table-hover table-bordered floatThead">
                     <thead>
                     <tr>
-                        <th style="width: 105px">Дата назначения</th>
+                        <th style="width: 46px">Дата</th>
+                        <th style="width: 80px">№<br/>напр-ия</th>
                         <th style="width: 120px">Лаборатория</th>
                         <th>Анализы</th>
                         <th style="width: 45px">Статус</th>
@@ -120,13 +121,29 @@
 
     <div class="row">
         <div class="col-md-6" id="div3">
-            <form onsubmit="return false;">
-                <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
-                        title='Выберите лабораторию...' disabled>
-                    {% for v in labs %}
-                        <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
-                </select>
-            </form>
+            <div class="row">
+                <div class="col-md-4">
+                    <form onsubmit="return false;">
+                        <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
+                                title='Выберите лабораторию...' disabled>
+                            {% for v in labs %}
+                                <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
+                        </select>
+                    </form>
+                </div>
+                <div class="col-md-3">
+                    </div>
+                <div class="col-md-3">
+                    <select class="select-b" id="select-template" data-width="100%"
+                                title='Шаблоны' disabled>
+                        <option value="1" selected>Липидограмма</option>
+                        <option value="2" selected>Коагулограмма</option>
+                        </select>
+                </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-blue-nb" disabled style="width: 100%" id="select-template-btn">Загрузить</button>
+                    </div>
+            </div>
             <div id="table-researches"></div>
         </div>
         <div class="col-md-6" id="div4" style="margin-bottom: 20px">
@@ -274,7 +291,14 @@
         var res_stack = [];
         var checked = new Array();
         var dict = new Array();
-
+        var callback;
+        function sync_checks(){
+                checked[active_lab] = [];
+                $.each($("input[name='sel']:checked"), function () {
+                    checked[active_lab].push($(this).val());
+                });
+                sync(true);
+        }
         $(document).ready(function () {
             $("#div2 input, #div2 button").prop("disabled", true);
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
@@ -289,13 +313,21 @@
                     checked[active_lab] = [];
                 load_researches();
             });
-            $("body").on("change", "#table-researches .btn input", function () {
-                checked[active_lab] = [];
-                $.each($("input[name='sel']:checked"), function () {
-                    checked[active_lab].push($(this).val());
-                });
-                sync(true);
+            var templates = {1: {lab: 34, iss: [77,78,79,80,81,161]},
+                2: {lab: 34, iss: [156,157,158,159]}
+            };
+
+            $("#select-template-btn").click(function () {
+                active_template = $("#select-template").val();
+                callback = function(){
+                    $.each(templates[active_template].iss, function(k,v){
+                        $("[value={0}]".f(v)).prop("checked", true);
+                    });
+                    sync_checks();
+                };
+                $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
             });
+            $("body").on("change", "#table-researches .btn input", sync_checks);
             sync(true);
 
             var today = new Date();
@@ -458,6 +490,7 @@
                     $.each(data.directions, function (k, v) {
                         $("#story-table").append("<tr>" +
                                 "<td>{0}</td>".f(v.date) +
+                                "<td style='text-align: center'>{0}</td>".f(v.pk) +
                                 "<td>{0}</td>".f(v.lab) +
                                 "<td>{0}</td>".f(v.researches) +
                                 "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
@@ -489,6 +522,7 @@
         }
         function search(query) { // Функция поиска
             $("#div2 input, #div2 button").prop("disabled", true);
+
             checkType(); // Получение выбранного типа базы
             if(!type)
             {
@@ -535,6 +569,8 @@
 
                 }
                 else {
+
+                    client_id = -1;
                     clear();
                     // Если результатов нет
                     //$('#search-field').attr('data-content', lang.client_not_found); // Установка сообщения об ошибке
@@ -550,7 +586,7 @@
                     $("#table-researches input").prop("checked", false);
                     clear_fast();
                     clear_direction();
-
+                    $("#story-table").html("");
                 }
                 $("#diagnos-field").val("");
             });
@@ -563,6 +599,9 @@
             $("#card-fio").html("");
             $("#card-bth").html("");
             $("#card-sx").html("");
+            $("#table-researches").html("");
+            $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
+
         }
         function show_res(id, pk) { // Функция показа результата из списка нескольких
             show_card(res[id].fields, pk); // Вызов функции формирования карты пациента
@@ -603,8 +642,8 @@
                 $("#fin_poli").addClass("active-s");
                 $("#fin_stat").removeClass("active-s");
             }
-            $("#select-lab").removeProp('disabled');
-            $("#select-lab").selectpicker('refresh');
+            $("#select-lab, #select-template, #select-template-btn").removeProp('disabled');
+            $("#select-lab, #select-template").selectpicker('refresh');
             tmp_direction = {
                 client_id: client_id,
                 researches: checked,
@@ -615,8 +654,10 @@
             $("#history-num-tr input").val("");
             if(type == "stat")
                 $("#history-num-tr input[type=text]").focus();
+            load_researches();
         }
         function load_researches() {
+            if(client_id == -1 || active_lab == -1) return;
             $("#table-researches").html("");
             $("#table-researches").append(lang.table_researches_header);
             $.ajax({ // AJAX запрос
@@ -627,6 +668,8 @@
                     $("#table-researches").append(lang.table_researches_not_found);
                     return;
                 }
+                $("#table-researches").html("");
+                $("#table-researches").append(lang.table_researches_header);
                 $.each(data, function (k, v) {
                     ind = false;
                     for (var prop in checked[v.fields.id_lab_fk]) {
@@ -642,6 +685,10 @@
                         $("#table-researches").append("<label class=\"btn btn-default col-md-3\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
                     dict[v.pk] = v.fields.ref_title;
                 });
+                if(typeof callback == typeof load_researches) {
+                    callback();
+                    callback = null;
+                }
             });
 
         }

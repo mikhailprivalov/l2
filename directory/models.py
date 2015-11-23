@@ -35,3 +35,4 @@ class Fractions(models.Model):
     uet_lab = models.FloatField(default=0)
     max_iterations = models.IntegerField(default=1)
     type = models.IntegerField(default=-1, blank=True, null=True)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True)

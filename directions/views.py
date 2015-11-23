@@ -1,3 +1,4 @@
+# coding=utf-8
 from io import BytesIO
 from datetime import date, datetime
 
@@ -48,6 +49,7 @@ def dir_save(request):
         history_num = request.POST['history_num']  # Номер истории болезни
         ptype = request.POST['type']
         i = 0  # Идентификатор направления
+        checklist = []
         if client_id and researches:  # если client_id получен и исследования получены
             ofname = None
             if ofname_id > -1:
@@ -57,7 +59,8 @@ def dir_save(request):
             conflict_list = []
             conflict_keys = []
             for v in researches:  # нормализация исследований
-                if v:
+                if v and v not in checklist:
+                    # checklist.append(v)
                     researches_grouped_by_lab.append(
                         {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
                     # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
@@ -189,7 +192,7 @@ def gen_pdf_dir(request):
         i = 4  # Номер позиции направления на странице (4..1)
         for obj in pg.object_list:  # Перебор номеров направлений на странице
             printDirection(c, i,
-                           Napravleniya.objects.get(pk=obj))  # Вызов функции печати направления на указанную позицию
+                           Napravleniya.objects.get(pk=int(obj)))  # Вызов функции печати направления на указанную позицию
             i -= 1
         if pg.has_next():  # Если есть следующая страница
             c.showPage()  # Создание новой страницы
@@ -268,7 +271,8 @@ def printDirection(c, n, dir):
     else:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
 
-    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__title")
+    issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
+
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
                  "Лаборатория: " + issledovaniya[0].research.subgroup.podrazdeleniye.title)
@@ -286,8 +290,8 @@ def printDirection(c, n, dir):
 
     all_iss = issledovaniya.count()
     max_f = 9
-    min_f = 6
-    max_res = 34
+    min_f = 7
+    max_res = 36
 
     max_off = max_f - min_f
     font_size = max_f - (max_off * (all_iss/max_res))
@@ -296,13 +300,33 @@ def printDirection(c, n, dir):
     styleSheet["BodyText"].leading = font_size+0.5
     data = []
 
-    p = Paginator(issledovaniya, 2)
+    values = []
+
+    for v in issledovaniya:
+        values.append({"title": v.research.title, "sw": v.research.sort_weight, "g": v.research.fractions_set.first().relation.pk})
+
+    values.sort(key=lambda l: (l["g"], l["sw"]))
+
+    n_rows = int(len(values)/2)
+
+    normvars = []
+    c_cnt = nc_cnt = 0
+    for i in range(0, len(values)):
+        if (i+1) % 2 == 0:
+            normvars.append(values[nc_cnt+n_rows])
+            nc_cnt += 1
+        else:
+            normvars.append(values[c_cnt])
+            c_cnt += 1
+
+
+    p = Paginator(normvars, 2)
 
     for pg_num in p.page_range:
         pg = p.page(pg_num)
         tmp = []
         for obj in pg.object_list:
-            tmp.append(Paragraph('<font face="OpenSans" size="'+str(font_size)+'">' + obj.research.title + "</font>",
+            tmp.append(Paragraph('<font face="OpenSans" size="'+str(font_size)+'">' + obj["title"] + "</font>",
                                  styleSheet["BodyText"]))
         if len(pg.object_list) < 2:
             tmp.append(Paragraph('<font face="OpenSans" size="'+str(font_size)+'"></font>', styleSheet["BodyText"]))
@@ -370,22 +394,51 @@ def get_one_dir(request):
                                          "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
                 response["tubes"] = {}
                 tubes_buffer = {}
+                nn = 0
+                # **************************
+                # TODO: убрать костыль
+                # **************************
+                v52 = None
+                for v in tmp:
+                    if v.research.pk == 53:
+                        nn += 1
+                    if v.research.pk == 52:
+                        nn += 1
+                        v52 = v
                 for v in tmp:
                     for val in directory.Fractions.objects.filter(research=v.research):
-
-                        if val.relation.pk not in tubes_buffer.keys():
-                            if not v.tubes.filter(type=val.relation).exists():
-                                ntube = TubesRegistration(type=val.relation)
-                                ntube.save()
+                        vrpk = val.relation.pk
+                        if nn < 2 or v.research.pk != 53:
+                            if val.relation.pk not in tubes_buffer.keys():
+                                if not v.tubes.filter(type=val.relation).exists():
+                                    ntube = TubesRegistration(type=val.relation)
+                                    ntube.save()
+                                else:
+                                    ntube = v.tubes.get(type=val.relation)
+                                v.tubes.add(ntube)
+                                tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
                             else:
-                                ntube = v.tubes.get(type=val.relation)
-                            v.tubes.add(ntube)
-                            tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
+                                ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
+                                v.tubes.add(ntube)
                         else:
-                            ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
-                            v.tubes.add(ntube)
 
-                        tubes_buffer[val.relation.pk]["researches"].add(v.research.title)
+                            # **************************
+                            # TODO: убрать костыль
+                            # **************************
+                            vval = directory.Fractions.objects.filter(research=v52.research).first()
+                            vrpk = vval.relation.pk
+                            if vval.relation.pk not in tubes_buffer.keys():
+                                if not v.tubes.filter(type=vval.relation).exists():
+                                    ntube = TubesRegistration(type=vval.relation)
+                                    ntube.save()
+                                else:
+                                    ntube = v52.tubes.get(type=vval.relation)
+                                v.tubes.add(ntube)
+                                tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set()}
+                            else:
+                                ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
+                                v.tubes.add(ntube)
+                        tubes_buffer[vrpk]["researches"].add(v.research.title)
                 for key in tubes_buffer.keys():
                     tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
 
@@ -769,11 +822,8 @@ def get_client_directions(request):
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
 
-        napr_list = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya")
-
-        for napr in napr_list:
+        for napr in Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya"):
             status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
-
             iss_list = Issledovaniya.objects.filter(napravleniye=napr)
             for v in iss_list:
                 iss_status = 1
@@ -787,6 +837,7 @@ def get_client_directions(request):
                 elif v.doc_confirmation:
                     iss_status = 2
                 status = min(iss_status, status)
+                tmpiss = v
 
             if req_status == 3 or req_status == status:
                 res["directions"].append(

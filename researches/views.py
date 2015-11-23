@@ -37,7 +37,7 @@ def researches_get_one(request):
         id = request.GET["id"]
         iss = Issledovaniya.objects.get(pk=id)
         research = iss.research
-        fractions = directory.Fractions.objects.filter(research=research).order_by("pk")
+        fractions = directory.Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
         res["res_id"] = id
         res["title"] = research.title
         if not iss.doc_save:
@@ -54,10 +54,14 @@ def researches_get_one(request):
             #res["fractions"].append(
             #   {"title": val.title, "pk": val.pk, "unit": val.units,
             #     "references": {"m": ref_m, "f": ref_f}})
+            tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "type": val.type,"references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight}
+            if val.sort_weight and val.sort_weight > 0:
+                res["fractions"][val.sort_weight] = tmp
+            else:
+                res["fractions"][val.pk] = tmp
 
-            res["fractions"][val.pk] = {"title": val.title, "pk": val.pk, "unit": val.units, "type": val.type,"references": {"m": ref_m, "f": ref_f}}
-        #res["fractions"] = sorted(res["fractions"], key=itemgetter("pk"))
-        res["fractions"] = collections.OrderedDict(sorted(res["fractions"].items()))
+        #res["fractions"] = sorted(res["fractions"], key=itemgetter("num"))
+        #res["fractions"] = collections.OrderedDict(sorted(res["fractions"]))
     return HttpResponse(json.dumps(res))  # Создание JSON
 
 
