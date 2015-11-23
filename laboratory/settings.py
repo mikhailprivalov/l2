@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
+    'ajax_select'
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -151,6 +152,7 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = '/home/lisuser/lis/static/'
+DEBUG = False
 if DEBUG:
     STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
 '''
@@ -214,4 +216,4 @@ LDAP = {
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
-DEBUG = False
+#DEBUG = True

@@ -19,6 +19,8 @@ from directory.views import directory_researches, directory_research, directory_
     directory_researches_update_sort
 from statistic.views import statistic_page, statistic_xls
 import api.urls as api_urls
+from ajax_select import urls as ajax_select_urls
+
 urlpatterns = [
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
@@ -71,7 +73,7 @@ urlpatterns = [
 
                   url(r'^users/count$', users_count),
                   url(r'^users/ldap/dosync$', users_dosync),
-
+                  url(r'^ajax_select/', include(ajax_select_urls)),
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^api/', include(api_urls.urlpatterns)),

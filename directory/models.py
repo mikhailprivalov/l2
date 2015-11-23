@@ -36,3 +36,6 @@ class Fractions(models.Model):
     max_iterations = models.IntegerField(default=1)
     type = models.IntegerField(default=-1, blank=True, null=True)
     sort_weight = models.IntegerField(default=0, null=True, blank=True)
+
+    def __str__(self):
+        return self.research.title + " | " + self.title

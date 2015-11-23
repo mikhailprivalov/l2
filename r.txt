@@ -18,3 +18,4 @@ pymorphy2-dicts-ru
 relatorio
 ldap3
 xlwt
+django-ajax-selects
