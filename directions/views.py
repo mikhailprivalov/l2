@@ -311,10 +311,11 @@ def printDirection(c, n, dir):
 
     normvars = []
     c_cnt = nc_cnt = 0
-    for i in range(0, len(values)):
+    for i in range(0, len(values)+1):
         if (i+1) % 2 == 0:
-            normvars.append(values[nc_cnt+n_rows])
             nc_cnt += 1
+            if nc_cnt+n_rows < len(values):
+                normvars.append(values[nc_cnt+n_rows])
         else:
             normvars.append(values[c_cnt])
             c_cnt += 1
