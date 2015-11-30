@@ -162,6 +162,99 @@ def dir_save(request):
                 result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
+@login_required
+def get_xls_dir(request):
+    import xlwt
+    response = HttpResponse(content_type='application/ms-excel')
+    direction_id = json.loads(request.GET["napr_id"])
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+           u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
+    tr = {ord(a):ord(b) for a, b in zip(*symbols)}
+    response['Content-Disposition'] = str.translate("attachment; filename='Направления_сводная_таблица_{0}.xls'".format(request.user.doctorprofile.get_fio()), tr)
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet("Направления")
+    first_color = "light_yellow"
+    second_color = "light_green"
+    head_color = "ice_blue"
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    pattern = xlwt.Pattern()
+    pattern.pattern = xlwt.Pattern.SOLID_PATTERN
+    pattern.pattern_fore_colour = xlwt.Style.colour_map[head_color]
+    font_style.pattern = pattern
+    columns = [
+        (u"ФИО", 10000),
+        (u"Лаборатория", 8000),
+        (u"№ напр.", 2500),
+        (u"Пробирка", 8000),
+        (u"Исследования", 65535),
+    ]
+    for col_num in range(len(columns)):
+        ws.write(0, col_num, columns[col_num][0], font_style)
+        ws.col(col_num).width = columns[col_num][1]
+    font_style = xlwt.XFStyle()
+    i = 1
+    lastfio = ""
+    nn = 0
+    import  directory.models as dirmodels
+
+
+    for dir in Napravleniya.objects.filter(pk__in=direction_id).order_by("client__family"):
+        fresearches = set()
+        fuppers = set()
+        flowers = set()
+        for iss in Issledovaniya.objects.filter(napravleniye=dir):
+            for fr in iss.research.fractions_set.all():
+                absor = dirmodels.Absorption.objects.filter(fupper=fr)
+                if absor.exists():
+                    fuppers.add(fr.pk)
+                    fresearches.add(fr.research.pk)
+                    for absor_obj in absor:
+                        flowers.add(absor_obj.flower.pk)
+                        fresearches.add(absor_obj.flower.research.pk)
+        iss = Issledovaniya.objects.filter(napravleniye=dir)
+        if lastfio != dir.client.fio():
+            nn += 1
+            ncolor = first_color
+            if nn % 2 == 0:
+                ncolor = second_color
+            pattern = xlwt.Pattern()
+            pattern.pattern = xlwt.Pattern.SOLID_PATTERN
+            pattern.pattern_fore_colour = xlwt.Style.colour_map[ncolor]
+            font_style.pattern = pattern
+            lastfio = dir.client.fio()
+            ws.write(i, 0, lastfio, font_style)
+        else:
+            ws.write(i, 0, "", font_style)
+        ws.write(i, 1, iss.first().research.subgroup.podrazdeleniye.title, font_style)
+        ws.write(i, 2, dir.pk, font_style)
+        fractiontubes = {}
+        hasoak = False
+        relpk = -1
+        for isobj in iss:
+            for fraction in dirmodels.Fractions.objects.filter(research=isobj.research).order_by("sort_weight"):
+                rpk = fraction.relation.pk
+                if fraction.research.pk in fresearches and fraction.pk in flowers:
+                    absor = dirmodels.Absorption.objects.filter(flower__pk=fraction.pk).first()
+                    if absor.fupper.pk in fuppers:
+                        rpk = absor.fupper.relation.pk
+                        if rpk not in fractiontubes.keys():
+                            fractiontubes[rpk] = {"tt": absor.fupper.relation.tube.title, "researches": set()}
+                elif rpk not in fractiontubes.keys():
+                    fractiontubes[rpk] = {"tt": fraction.relation.tube.title, "researches": set()}
+                fractiontubes[rpk]["researches"].add(isobj.research.title)
+        prei = i
+        for key in fractiontubes.keys():
+            if i - prei > 0:
+                ws.write(i, 0, "", font_style)
+            if i - prei > 0:
+                ws.write(i, 1, "", font_style)
+                ws.write(i, 2, "", font_style)
+            ws.write(i, 3, fractiontubes[key]["tt"], font_style)
+            ws.write(i, 4, ", ".join(fractiontubes[key]["researches"]), font_style)
+            i += 1
+    wb.save(response)
+    return response
 
 @cache_page(60 * 15)
 @login_required
@@ -395,51 +488,44 @@ def get_one_dir(request):
                                          "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
                 response["tubes"] = {}
                 tubes_buffer = {}
-                nn = 0
-                # **************************
-                # TODO: убрать костыль
-                # **************************
-                v52 = None
-                for v in tmp:
-                    if v.research.pk == 53:
-                        nn += 1
-                    if v.research.pk == 52:
-                        nn += 1
-                        v52 = v
+
+                fresearches = set()
+                fuppers = set()
+                flowers = set()
+                for iss in Issledovaniya.objects.filter(napravleniye=tmp2):
+                    for fr in iss.research.fractions_set.all():
+                        absor = directory.Absorption.objects.filter(fupper=fr)
+                        if absor.exists():
+                            fuppers.add(fr.pk)
+                            fresearches.add(fr.research.pk)
+                            for absor_obj in absor:
+                                flowers.add(absor_obj.flower.pk)
+                                fresearches.add(absor_obj.flower.research.pk)
+
                 for v in tmp:
                     for val in directory.Fractions.objects.filter(research=v.research):
                         vrpk = val.relation.pk
-                        if nn < 2 or v.research.pk != 53:
-                            if val.relation.pk not in tubes_buffer.keys():
-                                if not v.tubes.filter(type=val.relation).exists():
-                                    ntube = TubesRegistration(type=val.relation)
-                                    ntube.save()
-                                else:
-                                    ntube = v.tubes.get(type=val.relation)
-                                v.tubes.add(ntube)
-                                tubes_buffer[val.relation.pk] = {"pk": ntube.pk, "researches": set()}
-                            else:
-                                ntube = TubesRegistration.objects.get(pk=tubes_buffer[val.relation.pk]["pk"])
-                                v.tubes.add(ntube)
-                        else:
+                        rel = val.relation
+                        if val.research.pk in fresearches and val.pk in flowers:
+                            absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
+                            if absor.fupper.pk in fuppers:
+                                vrpk = absor.fupper.relation.pk
+                                rel = absor.fupper.relation
 
-                            # **************************
-                            # TODO: убрать костыль
-                            # **************************
-                            vval = directory.Fractions.objects.filter(research=v52.research).first()
-                            vrpk = vval.relation.pk
-                            if vval.relation.pk not in tubes_buffer.keys():
-                                if not v.tubes.filter(type=vval.relation).exists():
-                                    ntube = TubesRegistration(type=vval.relation)
-                                    ntube.save()
-                                else:
-                                    ntube = v52.tubes.get(type=vval.relation)
-                                v.tubes.add(ntube)
-                                tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set()}
+                        if vrpk not in tubes_buffer.keys():
+                            if not v.tubes.filter(type=rel).exists():
+                                ntube = TubesRegistration(type=rel)
+                                ntube.save()
                             else:
-                                ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
-                                v.tubes.add(ntube)
+                                ntube = v.tubes.get(type=rel)
+                            v.tubes.add(ntube)
+                            tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set()}
+                        else:
+                            ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
+                            v.tubes.add(ntube)
+
                         tubes_buffer[vrpk]["researches"].add(v.research.title)
+
                 for key in tubes_buffer.keys():
                     tubes_buffer[key]["researches"] = list(tubes_buffer[key]["researches"])
 
@@ -822,30 +908,41 @@ def get_client_directions(request):
                                    int(date_start.split(".")[0]))
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
+        if pk >= 0 or req_status == 4:
+            if req_status == 4:
+                from django.db.models import Q
+                for napr in Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile)
+                                                                | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile)).order_by("-data_sozdaniya"):
+                    status = 0
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+                    res["directions"].append(
+                        {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
+                         "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                         "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+            else:
+                for napr in Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya"):
+                    status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+                    for v in iss_list:
+                        iss_status = 1
+                        if not v.doc_confirmation and not v.doc_save:
+                            iss_status = 1
+                            if v.tubes.count() == 0:
+                                iss_status = 0
+                            for t in v.tubes.all():
+                                if not t.time_recive:
+                                    iss_status = 0
+                        elif v.doc_confirmation:
+                            iss_status = 2
+                        status = min(iss_status, status)
+                        tmpiss = v
 
-        for napr in Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya"):
-            status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
-            iss_list = Issledovaniya.objects.filter(napravleniye=napr)
-            for v in iss_list:
-                iss_status = 1
-                if not v.doc_confirmation and not v.doc_save:
-                    iss_status = 1
-                    if v.tubes.count() == 0:
-                        iss_status = 0
-                    for t in v.tubes.all():
-                        if not t.time_recive:
-                            iss_status = 0
-                elif v.doc_confirmation:
-                    iss_status = 2
-                status = min(iss_status, status)
-                tmpiss = v
-
-            if req_status == 3 or req_status == status:
-                res["directions"].append(
-                    {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
-                     "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                     "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
-        res["ok"] = True
+                    if req_status == 3 or req_status == status:
+                        res["directions"].append(
+                            {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
+                             "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+            res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 

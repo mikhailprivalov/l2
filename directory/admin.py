@@ -1,3 +1,4 @@
 from django.contrib import admin
+import directory.models as models
 
-# Register your models here.
+admin.site.register(models.Absorption)

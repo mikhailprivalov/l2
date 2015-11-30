@@ -39,3 +39,10 @@ class Fractions(models.Model):
 
     def __str__(self):
         return self.research.title + " | " + self.title
+
+class Absorption(models.Model):
+    fupper = models.ForeignKey(Fractions, related_name="fupper")
+    flower = models.ForeignKey(Fractions, related_name="flower")
+
+    def __str__(self):
+        return  self.flower.__str__() + " -> " + self.fupper.__str__()

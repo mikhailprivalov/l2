@@ -8,7 +8,7 @@ from dashboard.views import dashboard, create_user, create_pod, directions, rese
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
-    get_issledovaniya, get_client_directions
+    get_issledovaniya, get_client_directions, get_xls_dir
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
     result_filter, get_full_result, get_odf_result, result_confirm_list
@@ -26,6 +26,7 @@ urlpatterns = [
                   url(r'^clients/ajax/search$', ajax_search),
                   url(r'^directions/ajax/save$', dir_save),
                   url(r'^directions/pdf$', gen_pdf_dir),
+                  url(r'^directions/xls$', get_xls_dir),
                   url(r'^directions/get/one$', get_one_dir),
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
                   url(r'^directions/multiprint', dir_multiprint),
