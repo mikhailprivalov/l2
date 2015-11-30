@@ -19,7 +19,7 @@
     {% for line in menu %}
         <div class="row dash-buttons">
             {% for item in line %}
-            <div class="col-xs-6 col-md-3">
+            <div class="col-md-3">
                 <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
                     {{ item.title }}
                     <small class="badge badge-default">{{ item.keys }}</small>
@@ -37,10 +37,6 @@
 {% endblock %}
 {% block scripts %}
     <style>
-        .dash-buttons {
-            margin-top: 20px;
-        }
-
         .dash-buttons .col-md-3 a {
             height: 122px;
             position: relative;
