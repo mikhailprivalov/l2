@@ -222,7 +222,7 @@
                         has_n = true;
                     }
 
-                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'><div title='{5}' class='status status-{3}'>{4}</div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status]));
+                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1}, {6})'><div title='{5}' class='status status-{3}'>{4}</div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status], v.template));
                     if (type == 0) {
                         tubessplit = v.tube.pk.split(', ');
                         $.each(tubessplit, function (k, v) {
@@ -253,13 +253,16 @@
         }
         var loaded_research = -1;
         var datatype = -1;
-        function load_form(id) {
+        function load_form(id, templateid) {
+            if(typeof templateid == "undefined"){
+                templateid = 0;
+            }
             $("#result-form").isLoading({
                 text: "Загрузка исследования",
                 position: "inside",
-                'tpl': loading_tpl,
+                'tpl': loading_tpl
             });
-            $.ajax({url: "/static/templates/0.jade", type: "text", method: "GET", cache: false}).done(function (data) {
+            $.ajax({url: "/static/templates/{0}.jade".f(templateid), type: "text", method: "GET", cache: false}).done(function (data) {
                 template = data;
                 $.ajax({
                     url: "/researches/get/one",
@@ -494,6 +497,9 @@
 
     </script>
     <style>
+    label{
+        cursor: pointer!important;
+    }
         .floatThead th {
             background-color: #fff;
         }

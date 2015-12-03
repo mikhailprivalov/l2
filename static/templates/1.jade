@@ -1,0 +1,70 @@
+div.col-md-8
+div.col-md-2
+    button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
+div.col-md-2
+    .row
+        button(onclick="confirm();")#confirm-btn.btn.btn-primary-nb Подтвердить
+h4(style="margin-top: 0") Исследование шаблон 3 #{title}
+form(onsubmit="return false;")
+    input(type="hidden", value=res_id)#issledovaniye_id
+    #result-jade-form
+        table.table.table-bordered.table-sm-pd
+            thead
+                th(style="width: 16%") Фракция
+                th(style="width: 40%") Значение
+                th.col-md-3 Нормы М
+                th.col-md-3 Нормы Ж
+            each fraction in fractions
+                tr
+                    td.col-md-3
+                        label= fraction.title
+                    td
+                        .input-group
+                            input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                            span.input-group-btn
+                                button(title="Генерация результата", onclick="genresult(this);", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
+                                    i.fa.fa-circle
+                    td.col-md-1
+                        table.table.table-bordered.table-responsive
+                            each norm, index in fraction.references.m
+                                tr
+                                    td= index
+                                    td.col-md-5= norm
+                    td.col-md-1
+                        table.table.table-bordered.table-responsive
+                            each norm, index in fraction.references.f
+                                tr
+                                    td= index
+                                    td.col-md-5= norm
+script(src="/static/templates/1.js")
+.modal.fade#res-modal
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button(type="button", data-dismiss="modal", aria-label="Close").close
+                    span(aria-hidden="true") &times;
+                h4.modal-title
+                .modal-body
+                    span Направление:
+                        span#res-modal-dir
+                    hr
+                    label
+                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="0")
+                        | Отрицательный&nbsp;&nbsp;
+                    label
+                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="1")
+                        | Положительный&nbsp;&nbsp;
+                    label
+                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="2")
+                        | Сомнительный&nbsp;&nbsp;
+                    #hiddenresmodal
+                        label
+                            | Кпол
+                            input(type="text", name="kpol").form-control
+                        br
+                        label
+                            | Ккор
+                            input(type="text", name="kkor").form-control
+                .modal-footer
+                    button(type="button", data-dismiss="modal").btn.btn-default Отмена
+                    button(type="button", onclick="saveresmodal();", data-dismiss="modal").btn.btn-default Сохранить

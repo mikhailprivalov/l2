@@ -23,6 +23,7 @@ class Researches(models.Model):
     hide = models.BooleanField(default=False, blank=True)
     no_attach = models.IntegerField(default=0, null=True, blank=True)
     sort_weight = models.IntegerField(default=0, null=True, blank=True)
+    template = models.IntegerField(default=0, blank=True)
 
 class Fractions(models.Model):
     title = models.CharField(max_length=255)

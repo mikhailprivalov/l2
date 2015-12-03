@@ -880,7 +880,8 @@ def get_issledovaniya(request):
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved, "confirmed": confirmed,
                                                      "tube": {"pk": ', '.join(str(v) for v in tubes),
-                                                              "title": ' | '.join(titles)}})
+                                                              "title": ' | '.join(titles)},
+                                                     "template": str(issledovaniye.research.template)})
             if napr:
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
