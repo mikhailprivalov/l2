@@ -95,17 +95,21 @@
                 <div class="col-md-1">
 
                 </div>
-                <div class="col-md-3"><h6><br/></h6>
+                <div class="col-md-3" style="width: 20%;padding-right: 5px"><h6><br/></h6>
                     <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb">Обновить список</button>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" style="width: 21.66666667%;padding-left: 0">
                     <h6><br/></h6>
                     <div class="row">
-                        <div class="col-xs-6"><button class="btn btn-primary btn-primary-nb fa fa-print"
+                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-print"
                             style="" title="Печать выбраных направлений"
                             onclick="batch_print();return false;"></button>
                         </div>
-                        <div class="col-xs-6"><button class="btn btn-primary btn-primary-nb fa fa-table"
+                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-barcode"
+                            style="" title="Печать штрих-кодов"
+                            onclick="batch_print_bc();return false;"></button>
+                        </div>
+                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-table"
                             style="" title="Экспорт сводной таблицы по выбранным направлениям"
                             onclick="batch_table_print();return false;"></button>
                         </div>
@@ -188,8 +192,12 @@
                     <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
                     <div class="row">
                         <div class="col-md-4">
-                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();">
-                                Сохранить и распечатать
+                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();" style="margin-bottom: 5px">
+                                Сохранить и распечатать направления
+                            </button>
+                            <br/>
+                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction(true, true);">
+                                Сохранить и распечатать штрих-коды
                             </button>
                         </div>
                         <div class="col-md-2">
@@ -789,7 +797,7 @@
             });
             // });
         }
-        function save_direction(tr) {
+        function save_direction(tr ,bc) {
             try {
                 $('#sources').tooltipster('destroy');
             }
@@ -844,6 +852,9 @@
                                 'position': 'bottom right',
                                 delay: 10000
                             });
+                        if(bc){
+                            window.open('/barcodes/tubes?napr_id=' + data[0].list_id, '_blank');
+                        }
                     }
                     $("#sources .active").removeClass("active");
                     load_client_dirs(client_id);
@@ -900,6 +911,27 @@
                 print_array.push(parseInt($(v).attr("pk")));
             });
             window.open('/directions/pdf?napr_id=' + JSON.stringify(print_array), '_blank');
+        }
+        function batch_print_bc() {
+            if ($(".batch-print:checked").length < 1) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Печать не возможна",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            var print_array = [];
+            $.each($(".batch-print:checked"), function (k, v) {
+                print_array.push(parseInt($(v).attr("pk")));
+            });
+            window.open('/barcodes/tubes?napr_id=' + JSON.stringify(print_array), '_blank');
         }
         function batch_table_print() {
             if ($(".batch-print:checked").length < 1) {

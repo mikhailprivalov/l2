@@ -19,6 +19,7 @@ from directory.views import directory_researches, directory_research, directory_
     directory_researches_update_sort
 from statistic.views import statistic_page, statistic_xls
 import api.urls as api_urls
+import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 
 urlpatterns = [
@@ -80,6 +81,7 @@ urlpatterns = [
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^api/', include(api_urls.urlpatterns)),
+                  url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',
                       {'next_page': '/'}),
               ] + staticfiles_urlpatterns()

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import simplejson as json
 from reportlab.pdfgen import canvas
 from django.core.paginator import Paginator
-from reportlab.graphics.barcode import eanbc
+from reportlab.graphics.barcode import eanbc, code39
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
 from reportlab.lib.pagesizes import A4
@@ -623,10 +623,8 @@ def get_one_dir(request):
         id = int(request.GET['id'])  # Получение идентификатора направления
         if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
             if "check" not in request.GET.keys():
-                tmp2 = Napravleniya.objects.get(pk=id)  # Выборка направления
+                tmp2 = Napravleniya.objects.get(pk=id)
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
-                '''.order_by(
-                    '-issledovaniye__tube_weight')  # Выборка исследований по направлению'''
                 response["direction"] = {"pk": tmp2.pk,
                                          "date": str(dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                          "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
