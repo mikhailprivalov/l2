@@ -61,6 +61,7 @@ class Issledovaniya(models.Model):
     time_save = models.DateTimeField(null=True, blank=True)
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation")
     time_confirmation = models.DateTimeField(null=True, blank=True)
+    deferred = models.BooleanField(default=False, blank=True)
 
 
 class Result(models.Model):

@@ -149,7 +149,7 @@ def dir_save(request):
                             result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
                         issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
                                                       # Установка направления для группы этого исследования
-                                                      research=research)  # Создание направления на исследование
+                                                      research=research, deferred=False)  # Создание направления на исследование
                         issledovaniye.save()  # Сохранение направления на исследование
 
                 result["r"] = True  # Флаг успешной вставки в True
@@ -255,6 +255,151 @@ def get_xls_dir(request):
             i += 1
     wb.save(response)
     return response
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import inch, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
+
+import random
+@login_required
+def gen_pdf_execlist(request):
+    type = int(request.GET["type"])
+    date_start = request.GET["datestart"]
+    date_end = request.GET["dateend"]
+    if type != 2:
+        import datetime
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
+
+    researches = json.loads(request.GET["researches"])
+    xsize = 8
+    ysize = 8
+    from reportlab.lib.pagesizes import landscape
+    fam = ["Касъяненко", "Привалов", "Михайлов", "Селиверстов", "Красильников", "Овчинников"]
+    initials = ["С.Н.", "М.С.", "И.И.", "С.А.", "А.С."]
+    lw, lh = landscape(A4)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="execlist.pdf"'
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=10, leftMargin=80, topMargin=10, bottomMargin=0)
+    doc.pagesize = landscape(A4)
+
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    import numpy as np
+    import os.path
+    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+    pdfmetrics.registerFont(
+        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+
+    elements = []
+    hb = False
+    for res in directory.Researches.objects.filter(pk__in=researches):
+        if type != 2:
+            iss_list = Issledovaniya.objects.filter(napravleniye__is_printed=False, tubes__doc_recive_id__isnull=False, napravleniye__data_sozdaniya__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False)
+        else:
+            iss_list = Issledovaniya.objects.filter(napravleniye__is_printed=False, research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False)
+
+        if iss_list.count() == 0:
+            # if not hb:
+            #    elements.append(PageBreak())
+            hb = True
+            continue
+        hb = False
+        pn = 0
+        tubes = []
+        for iss in iss_list:
+            for tube in iss.tubes.all():
+                #if not tube.doc_recive:
+                #    pass
+                #else:
+                tubes.append(tube)
+        if len(tubes) == 0:
+            continue
+        data = []
+        pn += 1
+        p = Paginator(tubes, xsize*(ysize-1))
+
+        for pg_num in p.page_range:
+            pg = p.page(pg_num)
+            data = [[]]
+            for j in range(0, xsize):
+                data[-1].append("<br/><br/><br/><br/><br/>")
+            inpg = Paginator(pg.object_list, xsize)
+            for inpg_num in inpg.page_range:
+                inpg_o = inpg.page(inpg_num)
+                data.append([])
+                for inobj in inpg_o.object_list:
+                    data[-1].append(inobj.issledovaniya_set.first().napravleniye.client.family + " " + inobj.issledovaniya_set.first().napravleniye.client.name[0] + "." + inobj.issledovaniya_set.first().napravleniye.client.twoname[0] + "., " + str(inobj.issledovaniya_set.first().napravleniye.client.age()) + "<br/>№ напр.: " + str(inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ пробирки.: " + str(inobj.pk) + "<br/><br/><br/>")
+            if len(data) < ysize:
+                for i in range(len(data), ysize):
+                    data.append([])
+            for y in range(0, ysize):
+                if len(data[y]) < xsize:
+                    for i in range(len(data[y]), xsize):
+                        data[y].append("<br/><br/><br/><br/><br/>")
+            style = TableStyle([('ALIGN',(0,0),(-1,-1),'LEFT'),
+                                   ('INNERGRID', (0,0), (-1,-1), 0.3, colors.black),
+                                   ('BOX', (0,0), (-1,-1), 0.3, colors.black),
+                                   ])
+
+            s = getSampleStyleSheet()
+            s = s["BodyText"]
+            s.wordWrap = 'LTR'
+            data = np.array(data).T
+            data2 = [[Paragraph('<font face="OpenSans" size="7">' + cell + "</font>", s) for cell in row] for row in data]
+            tw = lw - 90
+            t=Table(data2, colWidths=[int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8), int(tw / 8)])
+            t.setStyle(style)
+            st = ""
+            if type == 2:
+                st = ", отложенные"
+            elements.append(Paragraph('<font face="OpenSans" size="10">' + res.title + st + ", " +  str(pg_num) + " стр<br/><br/></font>", s))
+            elements.append(t)
+            elements.append(PageBreak())
+
+    doc.build(elements)
+
+    """
+     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        if pk >= 0 or req_status == 4:
+            if req_status == 4:
+                from django.db.models import Q
+                for napr in Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end)
+    """
+    pdf = buffer.getvalue()  # Получение данных из буфера
+    buffer.close()  # Закрытие буфера
+    response.write(pdf)  # Запись PDF в ответ
+    return response
+
+
+def frameOctahedralPage(canvas, lw, lh, xsize, ysize, padding, lpadding):
+    n = 0
+    fam = ["Касъяненко", "Привалов", "Михайлов", "Селиверстов", "Красильников", "Овчинников"]
+    initials = ["С.Н.", "М.С.", "И.И.", "С.А.", "А.С."]
+    canvas.setFont('OpenSans', 7)
+    for y in reversed(range(1,ysize+1)):
+        canvas.line(lpadding + padding, (lh - padding)/ysize*y, lw - padding, (lh - padding)/ysize*y)
+        for x in range(1, xsize+1):
+            n += 1
+            canvas.line((lw-padding-lpadding)/xsize*x + lpadding, padding, (lw-padding-lpadding)/xsize*x + lpadding, lh - padding)
+            tx = (lw-padding-lpadding)/xsize*x + lpadding + 2 - (lw-padding-lpadding)/xsize
+            ty = (lh - padding)/ysize*y
+            if x == 1:
+                tx += 16
+            canvas.setFont('OpenSans', 7)
+            canvas.drawString(tx, ty - 11, random.choice(fam) + " " + random.choice(initials) + ", " + str(random.randrange(10,99)) + " л")
+            canvas.drawString(tx, ty - 22, "№ напр.: " + str(random.randrange(6600, 150000)))
+            canvas.drawString(tx, ty - 33, "№ пробирки.: " + str(random.randrange(10000, 400000)))
+            #canvas.circle(tx + (lw - padding)/xsize - 23, ty - 12, 9, fill=0)
+            #canvas.drawCentredString(tx + (lw - padding)/xsize - 23, ty - 16, str(n))
+
+    canvas.line(lpadding + padding, padding, lw - padding, padding)
+    canvas.line(lpadding + padding, padding, lpadding + padding, lh - padding)
 
 @cache_page(60 * 15)
 @login_required
@@ -556,6 +701,23 @@ def get_one_dir(request):
 
 @csrf_exempt
 @login_required
+def setdef(request):
+    response = {"ok": False}
+    if "pk" in request.REQUEST.keys():
+        status = False
+        if "status" in request.REQUEST.keys():
+            status = request.REQUEST["status"]
+            if isinstance(status, str):
+                status = status == "true"
+        response["s"] = status
+        pk = request.REQUEST["pk"]
+        iss = Issledovaniya.objects.get(pk=int(pk))
+        iss.deferred = status
+        iss.save()
+    return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
+
+@csrf_exempt
+@login_required
 def update_direction(request):
     """Функция обновления исследований в направлении"""
     from django.utils import timezone
@@ -824,7 +986,7 @@ def get_issledovaniya(request):
                 if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() == 1:
                     tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
                     if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id).order_by("-doc_save",
+                        iss = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
                                                                                      "-doc_confirmation",
                                                                                   "research__sort_weight").all()
                         napr = iss.first().napravleniye
@@ -832,7 +994,7 @@ def get_issledovaniya(request):
                     tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
                     for tube in tubes:
                         if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id).order_by("-doc_save",
+                            lit = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
                                                                                      "-doc_confirmation",
                                                                                       "research__sort_weight").all()
                             if lit.count() != 0:
@@ -844,7 +1006,7 @@ def get_issledovaniya(request):
             elif request.GET["type"] == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
                                                                                      "-doc_confirmation",
                                                                                      "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
@@ -853,7 +1015,7 @@ def get_issledovaniya(request):
             else:
                 try:
                     napr = Napravleniya.objects.get(pk=id, is_printed=False)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id).order_by("-doc_save",
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
                                                                                      "-doc_confirmation",
                                                                                      "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
@@ -881,7 +1043,8 @@ def get_issledovaniya(request):
                                                      "saved": saved, "confirmed": confirmed,
                                                      "tube": {"pk": ', '.join(str(v) for v in tubes),
                                                               "title": ' | '.join(titles)},
-                                                     "template": str(issledovaniye.research.template)})
+                                                     "template": str(issledovaniye.research.template),
+                                                     "deff": issledovaniye.deferred})
             if napr:
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
@@ -893,6 +1056,8 @@ def get_issledovaniya(request):
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
+
+from django.db.models import Q
 
 @login_required
 def get_client_directions(request):
@@ -911,19 +1076,21 @@ def get_client_directions(request):
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
         if pk >= 0 or req_status == 4:
             if req_status == 4:
-                from django.db.models import Q
                 for napr in Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile)
                                                                 | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile)).order_by("-data_sozdaniya"):
                     status = 0
                     iss_list = Issledovaniya.objects.filter(napravleniye=napr)
-                    res["directions"].append(
-                        {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
-                         "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                         "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+                    if iss_list.exists():
+                        res["directions"].append(
+                            {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
+                             "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
             else:
                 for napr in Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya"):
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
                     iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+                    if not iss_list.exists():
+                        continue
                     for v in iss_list:
                         iss_status = 1
                         if not v.doc_confirmation and not v.doc_save:

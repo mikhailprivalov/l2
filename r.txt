@@ -19,3 +19,4 @@ relatorio
 ldap3
 xlwt
 django-ajax-selects
+numpy

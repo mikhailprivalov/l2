@@ -22,7 +22,7 @@ form(onsubmit="return false;")
                         .input-group
                             input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
                             span.input-group-btn
-                                button(title="Генерация результата", onclick="genresult(this);", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
+                                a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
                                     i.fa.fa-circle
                     td.col-md-1
                         table.table.table-bordered.table-responsive

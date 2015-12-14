@@ -3,6 +3,7 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="col-md-3">
+        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a></div>
         <div class="input-group" style="margin-bottom: 5px">
             <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus>
             <span class="input-group-btn">
@@ -94,13 +95,52 @@
 
         </div>
     </div>
+<div class="modal fade" id="list-modal">
+<div class="modal-dialog" style="width: 64%;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Создание листа исполения</h4>
+        </div>
+        <div class="modal-body">
+            Дата назначения:
+            <br/>
+            <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                <input type="text" class="input-sm form-control" name="date-start"/>
+                <span class="input-group-addon"
+                      style="background-color: #fff;color: #000">&mdash;</span>
+                <input type="text" class="input-sm form-control" name="date-end"/>
+            </div>
+            <div style="height: 400px">
+                <div id="table-researches"></div>
+            </div>
+            <hr/>
+            <div class="row" style="text-align: center;width: 100%">
+                <div class="col-md-3"></div>
+                <div class="col-md-6" style="margin: 0 auto">
+                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createlist(1);return false;">Создать лист по выбранному периоду</button>
+                    <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">Создать лист по отложенным</button>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+        </div>
+    </div>
+</div>
+</div>
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/runtime.js"></script>
     <script src="/static/js/jade.min.js"></script>
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         var type = 0;
         $(document).ready(function () {
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             $("#result-print").attr("disabled", 1);
             load_tubes_and_dirs();
             resize();
@@ -128,6 +168,7 @@
             });
 
             $("#search-field").bind('keydown', 'return', function () {
+
                 load_d_fast();
             });
             $("body").on('keyup', '.result-enter', function (e) {
@@ -138,6 +179,16 @@
                     else
                         save();
                 }
+            });
+            var today = new Date();
+
+            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
+            $('#datepicker').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
             });
         });
         request = "";
@@ -154,8 +205,8 @@
             //load_form(loaded_research);
         }
         var dir_data = {};
-        var statuses = {"n": "Н", "s": "О", "c": "П"};
-        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден"};
+        var statuses = {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
+        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден", "o": "Отложен"};
         var iss_pks = [];
         function load_data(id, type, select_el) {
             $("#result-print").prop("disabled", true);
@@ -221,8 +272,16 @@
                         all_saved = false;
                         has_n = true;
                     }
-
-                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1}, {6})'><div title='{5}' class='status status-{3}'>{4}</div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status], v.template));
+                    deffc = "";
+                    if(status != "c"){
+                        if(v.deff === false)
+                            deffc = "<br/><div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
+                        else {
+                            deffc = "<br/><div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
+                            status = "o";
+                        }
+                    }
+                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1}, {6})'><div title='{5}' class='status status-{3}'>{4}{7}</div></div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status], v.template,deffc));
                     if (type == 0) {
                         tubessplit = v.tube.pk.split(', ');
                         $.each(tubessplit, function (k, v) {
@@ -373,9 +432,9 @@
             });
         }
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 80);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 85);
             $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 80);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 80);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 85);
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
@@ -494,7 +553,69 @@
             cb(matches);
           };
         };
-
+    function openexeclist(){
+        load_researches();
+        $("#list-modal").modal();
+    }
+    var lockdeff = false;
+    function deff(status, pk){
+        if(lockdeff) return;
+        lockdeff = true;
+        $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function(data){
+            lockdeff = false;
+            reload_fast();
+        });
+    }
+    function createlist(type){
+        datestart = dateend = "";
+        researches = [];
+        $.each($(".research-sel:checked"), function(k,v){
+            researches.push(parseInt($(v).val()));
+        });
+        if(researches.length == 0){
+            $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Создание невозможно",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            return;
+        }
+        switch(type){
+            case 2:
+                    console.log("2");
+                break;
+            default:
+                    datestart = $("[name=date-start]").val();
+                    dateend = $("[name=date-end]").val();
+                    console.log(datestart, dateend);
+                break;
+        }
+        window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
+    }
+    function load_researches() {
+            $("#table-researches").html("");
+            $("#table-researches").append(lang.table_researches_header);
+            $.ajax({ // AJAX запрос
+                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+                dataType: 'json'
+            }).done(function (data) {
+                if (data.length == 0) {
+                    $("#table-researches").append(lang.table_researches_not_found);
+                    return;
+                }
+                $("#table-researches").html("");
+                $("#table-researches").append(lang.table_researches_header);
+                $.each(data, function (k, v) {
+                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                });
+            });
+        }
     </script>
     <style>
     label{
@@ -506,11 +627,11 @@
         .status {
             float: right;
             display: inline-block;
-            vertical-align: middle;
-            margin-top: 9px;
-            margin-right: 9px;
+            vertical-align: top;
             font-weight: 600;
             font-size: 12pt;
+            text-align: right;
+            padding-bottom: 3px;
         }
 
         .status-n {
@@ -523,6 +644,10 @@
 
         .status-c {
             color: #049372
+        }
+
+        .status-o {
+            color: #F7CA18
         }
 
         .awesome.ok {
@@ -584,7 +709,7 @@
 
         #issledovaniya li {
             list-style: none;
-            padding: 5px;
+            padding: 6px;
             cursor: pointer;
             margin: 3px;
             background-color: #ECF0F1;
@@ -603,6 +728,14 @@
 
         #issledovaniya li:hover {
             background-color: #E6E9ED;
+        }
+
+        #issledovaniya li .hiddenlinks {
+            opacity: 0;
+            transition: .1s linear;
+        }
+        #issledovaniya li:hover .hiddenlinks {
+            opacity: 1;
         }
 
         #issledovaniya li:hover small {
@@ -638,6 +771,27 @@
     }
     .input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {
       top: 28px !important;
+    }
+    .fastlinks a{
+        cursor: pointer;
+    }
+    .fastlinks{
+        margin-top: -13px;
+        margin-bottom: 5px;
+    }
+    #issledovaniya .fastlinks{
+        margin: 0;
+    }
+    .hiddenlinks{
+        font-weight: 400;
+        margin-top: 3px;
+        margin-bottom: 2px;
+        padding-bottom: 3px;
+    }
+    .hiddenlinks a{
+        font-size: 9pt;
+        margin-right: -5px;
+        padding: 2px!important;
     }
     </style>
 {% endblock %}
