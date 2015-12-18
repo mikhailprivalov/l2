@@ -11,6 +11,9 @@ from django.views.decorators.cache import cache_page
 from django.conf import settings
 from django.utils import dateformat
 import slog.models as slog
+from reportlab.pdfbase import pdfdoc
+
+pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
 
 @login_required
@@ -38,21 +41,24 @@ def result_conformation(request):
 def loadready(request):
     """ Представление, возвращающее JSON со списками пробирок и направлений, принятых в лабораторию """
     result = {"tubes": [], "directions": []}
-    #tubes =   # Загрузка пробирок,
+    # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
     for tube in TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False,
-                                             issledovaniya__napravleniye__is_printed=False,
-                                             issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye):  # перебор результатов выборки
-        #iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
+                                                 # issledovaniya__napravleniye__is_printed=False,
+                                                 issledovaniya__doc_confirmation__isnull=True,
+                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye):  # перебор результатов выборки
+        # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
         if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
         complete = False  # Завершен ли анализ
         direction = tube.issledovaniya_set.first().napravleniye  # Выборка направления для пробирки
-        dicttube = {"id": tube.pk, "direction": direction.pk}  # Временный словарь с информацией о пробирке
+        dicttube = {"id": tube.pk, "direction": direction.pk, "date": (dateformat.format(direction.data_sozdaniya,
+                                                                                         settings.DATE_FORMAT))}  # Временный словарь с информацией о пробирке
         if not complete and dicttube not in result[
             "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
-        dictdir = {"id": direction.pk}  # Временный словарь с информацией о направлении
+        dictdir = {"id": direction.pk, "date": (dateformat.format(direction.data_sozdaniya,
+                                                                  settings.DATE_FORMAT))}  # Временный словарь с информацией о направлении
         if dictdir not in result["directions"]:  # Если информация о направлении не присутствует в ответе
             result["directions"].append(dictdir)  # Добавление временного словаря к ответу
     result["tubes"] = sorted(result["tubes"], key=lambda k: k['id'])  # Сортировка списка пробирок
@@ -112,6 +118,7 @@ def result_confirm(request):
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
+
 @csrf_exempt
 @login_required
 def result_confirm_list(request):
@@ -134,20 +141,32 @@ def result_confirm_list(request):
 @login_required
 def get_full_result(request):
     """ Получение результатов для направления """
+    from django.db.models import Q
     result = {"ok": False}
     if request.method == "GET":
         pk = int(request.GET["pk"])  # ID направления
         napr = Napravleniya.objects.get(pk=pk)  # Выборка направления из базы
-        iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__direction__pk", "research__sort_weight")  # Выборка списка исследований из базы по направлению
+        dates = {}
+        for iss in Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
+            if iss.time_save:
+                dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                if dt not in dates.keys():
+                    dates[dt] = 0
+                dates[dt] += 1
+
+        import operator
+        maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+
+        iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__direction__pk",
+                                                                            "research__sort_weight")  # Выборка списка исследований из базы по направлению
         kint = 0
-        if not iss_list.filter(
-                doc_confirmation__isnull=True).exists():  # Если для направления все исследования подтверждены
+        if not iss_list.filter(doc_confirmation__isnull=True).exists() or iss_list.filter(
+                deferred=False).exists():  # Если для направления все исследования подтверждены
 
             result["direction"] = {}  # Направление
             result["direction"]["pk"] = napr.pk  # ID
             result["direction"]["doc"] = iss_list[0].doc_confirmation.get_fio()  # ФИО подтвердившего
-            result["direction"]["date"] = str(
-                dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT))  # Дата подтверждения
+            result["direction"]["date"] = maxdate  # Дата подтверждения
 
             result["client"] = {}  # Пациент
             result["client"]["sex"] = napr.client.sex  # Пол
@@ -160,28 +179,56 @@ def get_full_result(request):
             for issledovaniye in iss_list:  # Перебор списка исследований
                 kint += 1
                 result["results"][kint] = {"title": issledovaniye.research.title,
-                                                       "fractions": {}, "sort": issledovaniye.research.sort_weight}  # Словарь результата
-                results = Result.objects.filter(issledovaniye=issledovaniye).order_by("fraction__sort_weight")  # Выборка результатов из базы
-                for res in results:  # Перебор результатов
-                    pk = res.fraction.sort_weight
-                    if not pk or pk <= 0:
-                        pk = res.fraction.pk
-                    if pk not in result["results"][kint]["fractions"].keys():
-                        result["results"][kint]["fractions"][pk] = {}
+                                           "fractions": {},
+                                           "sort": issledovaniye.research.sort_weight}  # Словарь результата
+                if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                    results = Result.objects.filter(issledovaniye=issledovaniye).order_by(
+                        "fraction__sort_weight")  # Выборка результатов из базы
+                    for res in results:  # Перебор результатов
+                        pk = res.fraction.sort_weight
+                        if not pk or pk <= 0:
+                            pk = res.fraction.pk
+                        if pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][pk] = {}
 
-                    result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
-                    result["results"][kint]["fractions"][pk][
-                        "title"] = res.fraction.title  # Название фракции
-                    result["results"][kint]["fractions"][pk][
-                        "units"] = res.fraction.units  # Еденицы измерения
-                    ref_m = res.fraction.ref_m
-                    ref_f = res.fraction.ref_f
-                    if not isinstance(ref_m, str):
-                        ref_m = json.dumps(ref_m)
-                    if not isinstance(ref_f, str):
-                        ref_f = json.dumps(ref_f)
-                    result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
-                    result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+                        result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
+                        if maxdate != str(dateformat.format(issledovaniye.time_save, settings.DATE_FORMAT)):
+                            result["results"][kint]["fractions"][pk]["result"] += "<br/>" + str(
+                                dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                        result["results"][kint]["fractions"][pk][
+                            "title"] = res.fraction.title  # Название фракции
+                        result["results"][kint]["fractions"][pk][
+                            "units"] = res.fraction.units  # Еденицы измерения
+                        ref_m = res.fraction.ref_m
+                        ref_f = res.fraction.ref_f
+                        if not isinstance(ref_m, str):
+                            ref_m = json.dumps(ref_m)
+                        if not isinstance(ref_f, str):
+                            ref_f = json.dumps(ref_f)
+                        result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                        result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+                else:
+                    fr_list = directory.Fractions.objects.filter(research=issledovaniye.research)
+                    for fr in fr_list:
+                        pk = fr.sort_weight
+                        if not pk or pk <= 0:
+                            pk = fr.pk
+                        if pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][pk] = {}
+
+                        result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
+                        result["results"][kint]["fractions"][pk][
+                            "title"] = fr.title  # Название фракции
+                        result["results"][kint]["fractions"][pk][
+                            "units"] = fr.units  # Еденицы измерения
+                        ref_m = fr.ref_m
+                        ref_f = fr.ref_f
+                        if not isinstance(ref_m, str):
+                            ref_m = json.dumps(ref_m)
+                        if not isinstance(ref_f, str):
+                            ref_f = json.dumps(ref_f)
+                        result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                        result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -251,7 +298,11 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
 
 w, h = landscape(A4)
+
+
 # @cache_page(60 * 30)
+
+
 @login_required
 def result_print(request):
     """ Печать результатов """
@@ -269,6 +320,10 @@ def result_print(request):
 
     pdfmetrics.registerFont(
         TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('Champ', PROJECT_ROOT + '/../static/fonts/Champ.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/ChampB.ttf'))
     pdfmetrics.registerFont(
         TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
 
@@ -302,6 +357,17 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     if i % 2 == 0:
         s = w / 2
     paddingx = 15
+    dates = {}
+    for iss in Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
+        if iss.time_save:
+            dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+            if dt not in dates.keys():
+                dates[dt] = 0
+            dates[dt] += 1
+
+    import operator
+    maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+
     last_iss = napr.issledovaniya_set.filter(time_confirmation__isnull=False).order_by("-time_confirmation").first()
 
     c.setFont('OpenSans', 10)
@@ -317,7 +383,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     c.setFont('OpenSans', 10)
     c.drawRightString(s + w / 2 - paddingx, h - 42, "Лечащий врач: " + napr.doc.get_fio())
     c.drawRightString(s + w / 2 - paddingx, h - 54,
-                      "Дата: " + str(dateformat.format(last_iss.time_confirmation.date(), settings.DATE_FORMAT)))
+                      "Дата: " + maxdate)
 
     c.drawString(s + paddingx, h - 54, "ФИО пациента: " + napr.client.fio())
     c.drawString(s + paddingx, h - 64, "Номер карты: " + str(napr.client.num))
@@ -331,7 +397,8 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                      0] + ".   ____________________   (подпись)")
     c.setFont('OpenSans', 8)
 
-    iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__pk", "research__sort_weight")
+    iss_list = Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False).order_by("research__pk",
+                                                                                                 "research__sort_weight")
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
     from reportlab.platypus import Paragraph
@@ -381,7 +448,12 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             result = ""
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 result = Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value
-            tmp.append(Paragraph('<font face="OpenSans" size="7">' + result + "</font>", styleSheet["BodyText"]))
+
+            if not iss.doc_confirmation and iss.deferred:
+                result = "отложен"
+            elif maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
+                result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+            tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
             tmp.append(
                 Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", styleSheet["BodyText"]))
             if napr.client.sex.lower() == "м":
@@ -427,8 +499,11 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 result = ""
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     result = Result.objects.get(issledovaniye=iss, fraction=f).value
-
-                tmp.append(Paragraph('<font face="OpenSans" size="7">' + result + "</font>", styleSheet["BodyText"]))
+                if not iss.doc_confirmation and iss.deferred:
+                    result = "отложен"
+                elif maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
+                    result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", styleSheet["BodyText"]))
                 if napr.client.sex.lower() == "м":
                     tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_m) + "</font>",
@@ -458,6 +533,148 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
         napr.time_print = datetime.now()
         napr.doc_print = doctorprofile
     napr.save()
+
+
+@login_required
+def result_journal_print(request):
+    """ Печать журнала подтверждений """
+    pw, ph = A4
+    paddingx = 30
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="results.pdf"'
+    import datetime
+    dateo = request.GET["date"]
+    date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    end_date = date + datetime.timedelta(days=1)
+    iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
+                                            research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
+
+    from io import BytesIO
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    import os.path
+    from reportlab.platypus import Paragraph
+    from reportlab.lib.styles import getSampleStyleSheet
+    styleSheet = getSampleStyleSheet()
+    styles = getSampleStyleSheet()
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, Spacer
+    from reportlab.lib.units import mm
+    import collections
+    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
+
+    pdfmetrics.registerFont(
+        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('Champ', PROJECT_ROOT + '/../static/fonts/Champ.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/ChampB.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
+
+    buffer = BytesIO()
+    elements = []
+    doc = SimpleDocTemplate(buffer, rightMargin=5 * mm, leftMargin=20 * mm, topMargin=15 * mm, bottomMargin=17 * mm,
+                            pagesize=A4)
+    class FooterCanvas(canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            canvas.Canvas.__init__(self, *args, **kwargs)
+            self.pages = []
+
+        def showPage(self):
+            self.pages.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            page_count = len(self.pages)
+            for page in self.pages:
+                self.__dict__.update(page)
+                self.draw_canvas(page_count)
+                canvas.Canvas.showPage(self)
+            canvas.Canvas.save(self)
+
+        def draw_canvas(self, page_count):
+            self.setFont('OpenSans', 12)
+            self.drawCentredString((A4[0]-25*mm)/2 + 20*mm, ph - 12*mm, request.user.doctorprofile.podrazileniye.title + ", " + dateo)
+            page = "Страница %s из %s" % (self._pageNumber, page_count)
+            self.saveState()
+            self.setStrokeColorRGB(0, 0, 0)
+            self.setLineWidth(0.5)
+            self.line(20*mm, 24, A4[0] - 5*mm, 24)
+            self.setFont('OpenSans', 8)
+            self.drawRightString(A4[0]-8*mm, 17, page)
+            self.drawString(23*mm, 17, dateo)
+            self.restoreState()
+
+    styles["Normal"].fontName = "OpenSans"
+    styles["Normal"].fontSize = 12
+
+
+    data = []
+    data_header = ["№", "ФИО, номер карты", "Направление: Результаты"]
+    tmp = []
+    for v in data_header:
+        tmp.append(Paragraph(str(v), styles["Normal"]))
+    data.append(tmp)
+    clientresults = {}
+    for iss in iss_list.order_by("napravleniye__client__family"):
+        key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
+        if key not in clientresults.keys():
+            clientresults[key] = {"directions": {},
+                                  "fio": iss.napravleniye.client.shortfio() + ", " + str(iss.napravleniye.client.num)}
+        if iss.napravleniye.pk not in clientresults[key]["directions"]:
+            clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
+        # results = Result.objects.filter(issledovaniye=iss)
+        if iss.research.pk not in clientresults[key]["directions"][iss.napravleniye.pk]["researches"]:
+            clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk] = {
+                "title": iss.research.title, "res": []}
+        # for result in results:
+        #    pass
+        for fr in iss.research.fractions_set.all():
+            fres = Result.objects.filter(issledovaniye=iss, fraction=fr)
+            if fres.exists():
+                clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(
+                    fr.title + ": " + fres.first().value)
+    i = 0
+    clientresults = collections.OrderedDict(sorted(clientresults.items()))
+    for cleint_pk in clientresults.keys():
+        client = clientresults[cleint_pk]
+        data_tmp = ""
+        for dir_pk in client["directions"].keys():
+            i += 1
+            dir = client["directions"][dir_pk]
+            data_tmp += "Направление: " + str(dir_pk) + " | "
+            for research_pk in dir["researches"].keys():
+                research_obj = dir["researches"][research_pk]
+                if len(research_obj["res"]) == 1:
+                    data_tmp += research_obj["res"][0]
+                else:
+                    data_tmp += research_obj["title"] + ":" + "; ".join(research_obj["res"])
+                # data_tmp += ". "
+                data_tmp += "<br/>"
+        data.append([Paragraph('<font face="OpenSans" size="8">' + str(i) + "</font>", styles["Normal"]),
+                     Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
+                     Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
+    st = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                     ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                     ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                     ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                     ('TOPPADDING', (0, 1), (-1, -1), 0),
+                     ('TOPPADDING', (0, 0), (-1, 0), 2),
+                     ('BOTTOMPADDING', (0, 0), (-1, 0), 3),
+                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                     ('BOTTOMPADDING', (0, 1), (-1, -1), 0), ])
+    tw = pw - 25 * mm
+    t = Table(data, colWidths=[tw * 0.12, tw * 0.28, tw * 0.6])
+    t.setStyle(st)
+    elements.append(t)
+    doc.multiBuild(elements, canvasmaker=FooterCanvas)
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+
+    return response
 
 
 def get_r(ref) -> str:

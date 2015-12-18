@@ -36,7 +36,7 @@ form(onsubmit="return false;")
                                 tr
                                     td= index
                                     td.col-md-5= norm
-script(src="/static/templates/1.js")
+script(src="/static/templates/2.js")
 .modal.fade#res-modal
     .modal-dialog
         .modal-content
@@ -48,23 +48,33 @@ script(src="/static/templates/1.js")
                     span Направление:
                         span#res-modal-dir
                     hr
-                    label
-                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="0")
-                        | Отрицательный&nbsp;&nbsp;
-                    label
-                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="1")
-                        | Положительный&nbsp;&nbsp;
-                    label
-                        input(type="radio", name="result-v", onclick="updateresmodal(this);", value="2")
-                        | Сомнительный&nbsp;&nbsp;
-                    #hiddenresmodal
+                    div(style="text-align: center")
                         label
-                            | Кпол
-                            input(type="text", name="kpol").form-control
-                        br
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="0")
+                            | O<sub>&alpha;&beta;</sub> (I)&nbsp;&nbsp;&nbsp;&nbsp;
                         label
-                            | Ккор
-                            input(type="text", name="kkor").form-control
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-2")
+                            | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="3")
+                            | B<sub>&alpha;</sub> (III)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-3")
+                            | AB<sub>0</sub> (IV)
+                        #hiddenresmodal-1
+                            label
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="1")
+                                | A<sub>1</sub>&nbsp;&nbsp;&nbsp;&nbsp;
+                            label
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="2")
+                                | A<sub>2</sub>
+                        #hiddenresmodal-2
+                            label
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="4")
+                                | AB&nbsp;&nbsp;&nbsp;&nbsp;
+                            label
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="5")
+                                | A<sub>2</sub>B
                 .modal-footer
                     button(type="button", data-dismiss="modal").btn.btn-default Отмена
                     button(type="button", onclick="saveresmodal();", data-dismiss="modal").btn.btn-default Сохранить

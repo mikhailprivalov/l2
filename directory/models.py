@@ -27,7 +27,7 @@ class Researches(models.Model):
 
 class Fractions(models.Model):
     title = models.CharField(max_length=255)
-    research = models.ForeignKey(Researches)
+    research = models.ForeignKey(Researches, db_index=True)
     units = models.CharField(max_length=255)
     ref_m = JSONField()
     ref_f = JSONField()

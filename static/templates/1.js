@@ -17,7 +17,7 @@ function updateresmodal(th){
         $("#hiddenresmodal").show();
     }
 }
-var types_directory = {"0": "Отрицательный", "1": "Положительный", "2": "Сомнительный"};
+var types_directory = {"0": "Отриц.", "1": "Пол.", "2": "Сомнит."};
 function saveresmodal(){
     checked = $("[name='result-v']:checked");
     result = types_directory[checked.val()];

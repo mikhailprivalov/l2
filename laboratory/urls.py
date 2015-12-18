@@ -7,11 +7,11 @@ from dashboard.views import dashboard, create_user, create_pod, directions, rese
     users_dosync, dir_multiprint, dashboard_from
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
-from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, load_history, print_history, \
-    get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist
+from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, print_history, \
+    get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter, get_full_result, get_odf_result, result_confirm_list
+    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -34,7 +34,10 @@ urlpatterns = [
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
                   url(r'^directions/multiprint', dir_multiprint),
                   url(r'^directions/list/client$', get_client_directions),
+                  url(r'^directions/worklist$', get_worklist),
+                  url(r'^directions/group_confirm_get$', group_confirm_get),
                   url(r'^direction/researches/update$', update_direction),
+                  url(r'^direction/researches/cancel$', cancel_direction),
                   url(r'^direction/researches/update/history$', load_history),
                   url(r'^direction/researches/update/history/print$', print_history),
                   url(r'^directory/tubes/all$', get_all_tubes),
@@ -71,6 +74,7 @@ urlpatterns = [
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/confirm/list$', result_confirm_list),
                   url(r'^results/pdf', result_print),
+                  url(r'^results/journal$', result_journal_print),
                   url(r'^results/filter$', result_filter),
                   url(r'^statistic$', statistic_page),
                   url(r'^statistic/xls$', statistic_xls),

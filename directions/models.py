@@ -49,6 +49,7 @@ class Napravleniya(models.Model):
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True)
     doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print")
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create")  # Создатель направления
+    cancel = models.BooleanField(default=False, blank=True)
 
 
 class Issledovaniya(models.Model):
@@ -57,15 +58,16 @@ class Issledovaniya(models.Model):
     research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
     # resultat = JSONField()  # Результат исследования в JSON
     tubes = models.ManyToManyField(TubesRegistration)
-    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save")
-    time_save = models.DateTimeField(null=True, blank=True)
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation")
-    time_confirmation = models.DateTimeField(null=True, blank=True)
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True)
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True)
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True)
     deferred = models.BooleanField(default=False, blank=True)
 
 
+
 class Result(models.Model):
-    issledovaniye = models.ForeignKey(Issledovaniya)
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True)
     fraction = models.ForeignKey(directory.Fractions)
     value = models.CharField(max_length=255, null=True, blank=True)
     iteration = models.IntegerField(default=1, null=True)

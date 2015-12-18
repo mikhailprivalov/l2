@@ -191,7 +191,7 @@
                     </div>
                     <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();" style="margin-bottom: 5px">
                                 Сохранить и распечатать направления
                             </button>
@@ -523,11 +523,12 @@
         function fast_ld_dirs() {
             load_client_dirs(client_id);
         }
-        var statuses = {0: "0", 1: "1", 2: "2"};
+        var statuses = {0: "0", 1: "1", 2: "2", "-1": "-1"};
         var statuses_titles = {
             0: "Направление выписано",
             1: "Материал получен лабораторией",
-            2: "Результаты подтверждены"
+            2: "Результаты подтверждены",
+            "-1": "Направление отменено"
         };
         function load_client_dirs(id) {
             var data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
@@ -541,7 +542,7 @@
                         if (sliced.length < v.researches.length) {
                             sliced += '...';
                         }
-                        $("#story-table").append("<tr>" +
+                        $("#story-table").append("<tr pk='{0}'>".f(v.pk) +
                                 "<td>{0}</td>".f(v.date) +
                                 "<td style='text-align: center'>{0}</td>".f(v.pk) +
                                 "<td>{0}</td>".f(v.lab) +
@@ -549,16 +550,43 @@
                                 "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
                                 "<td style='text-align: right;'>" +
                                 (v.status == 2 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
+                                (v.status == 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
                                 "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
                                 "</td>" +
                                 "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
                                 "</tr>");
+                        if(v.cancel === true) {
+                            $("#story-table tr[pk={0}]".f(v.pk)).addClass("tr-cancel");
+                            $("#story-table tr[pk={0}] .status".f(v.pk)).attr("rstatus", $("#story-table tr[pk={0}] .status".f(v.pk)).text());
+                            $("#story-table tr[pk={0}] .status".f(v.pk)).attr("title", statuses_titles["-1"]);
+                            $("#story-table tr[pk={0}] .status".f(v.pk)).text(statuses["-1"]);
+                        }
                     });
                 }
                 resize();
                 $('#story-list').scrollTop(0);
             });
         }
+
+        function toggle_cancel(pk){
+            tr = $("#story-table tr[pk={0}]".f(pk));
+            val = !tr.hasClass("tr-cancel");
+
+            $.ajax({url: "/direction/researches/cancel", method: "POST", data: {status: val, pk: pk}}).done(function (data) {
+                if(tr.hasClass("tr-cancel")){
+                    tr.removeClass("tr-cancel");
+                    $(".status", tr).text($(".status", tr).attr("rstatus"));
+                    $(".status", tr).attr("title", statuses_titles[$(".status", tr).text()]);
+                }
+                else{
+                    tr.addClass("tr-cancel");
+                    $(".status", tr).attr("rstatus", $(".status", tr).text());
+                    $(".status", tr).attr("title", statuses_titles["-1"]);
+                    $(".status", tr).text(statuses["-1"]);
+                }
+            });
+        }
+
         function rem(k, key) {
             id = checked[k][key];
             if ($("input[value='" + id + "']").length) {
@@ -834,7 +862,22 @@
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
-                data: {dict: JSON.stringify(tmp_direction), ofname: ofname, history_num: $("#history-num-tr input").val(), type: type}
+                data: {dict: JSON.stringify(tmp_direction), ofname: ofname, history_num: $("#history-num-tr input").val(), type: type},
+                statusCode: {
+                    500: function() {
+                          $.amaran({
+                            'theme': 'awesome no',
+                            'content': {
+                                title: 'Серверная ошибка',
+                                message: "Error 500",
+                                info: '',
+                                icon: 'fa fa-exclamation'
+                            },
+                            'position': 'bottom right',
+                            delay: 6000
+                        });
+                    }
+                  }
             }).done(function (data) {
                 console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
@@ -1129,6 +1172,9 @@
         word-break: break-all;
         line-break: auto!important;
         hyphens: manual!important;
+    }
+    .tr-cancel .status{
+        color: #F4D03F
     }
     </style>
 {% endblock %}

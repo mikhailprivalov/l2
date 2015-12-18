@@ -24,7 +24,8 @@
     <div class="row">
         <div class="col-md-4"></div>
         <div class="col-md-4" id="print_container">
-            <button class="btn btn-primary-nb mw" onclick="window.open('/directions/pdf?napr_id=' + JSON.stringify(directions), '_blank'); return false;" type="button">Печать выбранных</button><br/>
+            <button class="btn btn-primary-nb mw" onclick="window.open('/directions/pdf?napr_id=' + JSON.stringify(directions), '_blank'); return false;" type="button">Печать выбранных</button><br/><br/>
+            <button class="btn btn-primary-nb mw" onclick="window.open('/barcodes/tubes?napr_id=' + JSON.stringify(directions), '_blank'); return false;" type="button">Печать штрих-кодов</button><br/>
             <button class="btn btn-primary-nb btn-primary-rm mw" onclick="directions = []; sync(); return false;" style="margin-top: 15px" type="button">Очистить</button>
         </div>
         <div class="col-md-4"></div>

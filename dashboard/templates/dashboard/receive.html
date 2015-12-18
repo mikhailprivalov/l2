@@ -36,7 +36,7 @@
                         {% for v in podrazdeleniya %}
                             <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
                 </td>
-                <td></td>
+                <td style="width: 350px">Состояние сканера:<br/><span id="barcode">----</span></td>
             </tr>
         </table>
     </div>
@@ -75,10 +75,20 @@
                 resize();
             });
         });
-
+        function highlight(th){
+            $tr = $("tr[pk={0}]".f($(th).val()));
+            if($(th).prop("checked"))
+            {
+                $tr.addClass("highlight");
+            }
+            else{
+                $tr.removeClass("highlight");
+            }
+        }
         function load_tubes() {
             $("#tubes").html("");
             $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
+                $('button').blur();
                 data = data.sort(function (a, b) {
                     var x = a.tube.id,
                             y = b.tube.id;
@@ -88,11 +98,11 @@
                     i++;
                     tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
                     if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))
-                        $("#tubes").append(("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{5}]' target='_blank'>{5}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' /></label></td><td><div class='btn-group'><input id='notice_{2}' type='text' class='form-control'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
+                        $("#tubes").append(("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{5}]' target='_blank'>{5}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><div class='btn-group fh'><input id='notice_{2}' type='text' class='form-control fh'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
                     else if (v.tube.notice == undefined || v.tube.notice == "")
-                        $("#tubes").append("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                        $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                     else
-                        $("#tubes").append("<tr><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                        $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input onchange='highlight(this);' id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                 });
                 if(i == 0){
                     $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
@@ -158,6 +168,46 @@
                  load_tubes();
              });
         }
+
+        var timeoutID = -2;
+        $(document).ready(function() {
+            var pressed = false;
+            var chars = [];
+            $(window).keypress(function(e) {
+                if (e.which >= 48 && e.which <= 57) {
+                    chars.push(String.fromCharCode(e.which));
+                }
+                if (pressed == false) {
+                        clearTimeout(timeoutID);
+                        ttimeoutID = setTimeout(function () {
+                            var barcode = chars.join("");
+                            chars = [];
+                            pressed = false;
+                            $ch = $("[value={0}]".f(barcode));
+                            if ($ch.length) {
+                                if(!$ch.prop("checked"))
+                                    $ch.click();
+                                $("#barcode").text("Последнее просканированное: " + barcode);
+                            }
+                            else {
+                                $("#barcode").text('Пробирка {0} в списке не найдена'.f(barcode));
+                                $.amaran({
+                                    'theme': 'awesome no',
+                                    'content': {
+                                        title: 'Пробирка {0} в списке не найдена'.f(barcode),
+                                        message: "",
+                                        info: '',
+                                        icon: 'fa fa-exclamation'
+                                    },
+                                    'position': 'top right',
+                                    delay: 6000
+                                });
+                            }
+                        }, 350);
+                    }
+                    pressed = true;
+            });
+        });
     </script>
     <style>
         .borderless td {
@@ -254,9 +304,12 @@
             padding: 0 !important;
             margin: 0 !important;
         }
-
-        td .form-control {
-            height: 20px;
-        }
+    tr.highlight, tr.highlight .tube, tr.highlight input{
+        background-color: #e4f6d2;
+    }
+    .fh {
+        display: block;
+        height: 100%;
+    }
     </style>
 {% endblock %}

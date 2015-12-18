@@ -3,7 +3,7 @@ from io import BytesIO
 from django.http import HttpResponse
 import simplejson as json
 from reportlab.pdfgen import canvas
-from reportlab.graphics.barcode import  code128
+from reportlab.graphics.barcode import code39, code128
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from django.contrib.auth.decorators import login_required
 import directory.models as directory
@@ -12,19 +12,25 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import inch, mm
 import os.path
 import re
+from reportlab.pdfbase import pdfdoc
+pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 pdfmetrics.registerFont(
         TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+pdfmetrics.registerFont(
+        TTFont('clacon', PROJECT_ROOT + '/../static/fonts/clacon.ttf'))
 
 @login_required
 def tubes(request):
     pw, ph = 43, 25
     direction_id = json.loads(request.GET["napr_id"])
     response = HttpResponse(content_type='application/pdf')
+    response['Content-Type'] = 'application/pdf'
     response['Content-Disposition'] = 'inline; filename="barcodes.pdf"'
 
     buffer = BytesIO()
+    pdfdoc.PDFInfo.title = 'Barcodes'
     c = canvas.Canvas(buffer, pagesize=(pw*mm, ph*mm))
     dt = {"poli": "Поликлиника", "stat": "Стационар"}
     for d in direction_id:
@@ -70,22 +76,33 @@ def tubes(request):
                 tubes_buffer[vrpk]["researches"].add(v.research.title)
         for tube_k in tubes_buffer.keys():
             tube = tubes_buffer[tube_k]["pk"]
-            c.setFont('OpenSans', 8)
+            #c.setFont('OpenSans', 8)
+            c.setFont('clacon', 12)
             c.drawString(2*mm, ph*mm - 3*mm, "№ " + str(d))
             c.drawRightString(pw*mm - 2*mm, ph*mm - 3*mm, dt[tmp2.istochnik_f.istype])
             otd = tmp2.doc.podrazileniye.title.split(" ")
+            st = ""
             if len(otd) > 1:
-                c.drawRightString(pw*mm - 2*mm, ph*mm - 6*mm, otd[0][:9] + ". " + otd[1][:3] + ".")
+                st = otd[0][:3] + "/" + otd[1][:1]
             elif len(otd) == 1:
-                c.drawRightString(pw*mm - 2*mm, ph*mm - 6*mm, otd[0][:9])
+                st = otd[0][:3]
+            st += u" => " + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[:4] + ". лаб."
+            c.drawRightString(pw*mm - 2*mm, ph*mm - 6*mm, st.lower())
 
             c.drawRightString(pw*mm - 2*mm, ph*mm - 9*mm, "л/в: " + tmp2.doc.get_fio())
 
-            c.setFont('OpenSans', 11)
-            c.drawRightString(pw*mm - 2*mm, ph*mm - 13*mm, tmp2.client.family + " " + tmp2.client.name[0] + " " + tmp2.client.twoname[0])
+            #c.setFont('OpenSans', 11)
 
-            c.setFont('OpenSans', 10)
-            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая"]
+            c.setFont('clacon', 18)
+            fam = tmp2.client.family
+            if len(fam) > 12:
+                c.setFont('clacon', 18 - len(fam) * 0.7 + 12 * 0.7)
+
+            c.drawRightString(pw*mm - 2*mm, ph*mm - 13*mm, fam + " " + tmp2.client.name[0] + tmp2.client.twoname[0])
+
+            #c.setFont('OpenSans', 10)
+            c.setFont('clacon', 12)
+            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая", "зелёная"]
             tb_t = tubes_buffer[tube_k]["title"].lower()
             pr = ""
             for s in types:
@@ -98,9 +115,16 @@ def tubes(request):
 
             c.drawString(2*mm, mm, pr)
             c.drawRightString(pw*mm - 2*mm, mm, str(tube))
-
-            barcode = code128.Code128(str(tube), barHeight=5*mm, barWidth=inch * 0.026, stop=1, checksum=0)
-            barcode.drawOn(c, -4*mm, barcode.barHeight - 0.3*mm)
+            m = 0.027
+            if tube >= 10000:
+                m = 0.02
+            if tube >= 100000:
+                m = 0.02
+            if tube >= 1000000:
+                m = 0.017
+            m *= 0.7
+            barcode = code39.Standard39(str(tube), barHeight=5*mm, barWidth=inch * m, checksum=0)
+            barcode.drawOn(c, -5*mm, barcode.barHeight - 0.3*mm)
             c.showPage()
     c.save()
     pdf = buffer.getvalue()

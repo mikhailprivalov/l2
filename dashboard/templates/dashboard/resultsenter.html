@@ -3,9 +3,9 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="col-md-3">
-        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a></div>
+        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a href="#" onclick="openjournal();return false">Журнал</a></div>
         <div class="input-group" style="margin-bottom: 5px">
-            <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus>
+            <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus/>
             <span class="input-group-btn">
                 <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
             </span>
@@ -14,32 +14,32 @@
 
         <div class="btn-group" data-toggle="buttons" style="display: inline-block; margin-bottom: 10px">
             <label class="btn btn-default active">
-                <input type="radio" name="type" id="option1" value="0" autocomplete="off" checked>
-                Номер пробирки
+                <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
+                Номер направления
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="type" id="option2" value="1" autocomplete="off">
-                Номер направления
+                <input type="radio" name="type" id="option1" value="0" autocomplete="off">
+                Номер пробирки
             </label>
         </div>
         <br/>
 
         <div id="lists">
-            <div class="col-md-6" id="tubes-list">
-                <table class="table table-bordered floatThead">
-                    <thead>
-                    <tr>
-                        <th style="text-align: center">Пробирки</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
             <div class="col-md-6" id="dirs-list">
                 <table class="table table-bordered floatThead">
                     <thead>
                     <tr>
                         <th style="text-align: center">Направления</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="col-md-6" id="tubes-list">
+                <table class="table table-bordered floatThead">
+                    <thead>
+                    <tr>
+                        <th style="text-align: center">Пробирки</th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -96,40 +96,64 @@
         </div>
     </div>
 <div class="modal fade" id="list-modal">
-<div class="modal-dialog" style="width: 64%;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                    aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Создание листа исполения</h4>
-        </div>
-        <div class="modal-body">
-            Дата назначения:
-            <br/>
-            <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                <input type="text" class="input-sm form-control" name="date-start"/>
-                <span class="input-group-addon"
-                      style="background-color: #fff;color: #000">&mdash;</span>
-                <input type="text" class="input-sm form-control" name="date-end"/>
+    <div class="modal-dialog" style="width: 64%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Создание листа исполения</h4>
             </div>
-            <div style="height: 400px">
-                <div id="table-researches"></div>
-            </div>
-            <hr/>
-            <div class="row" style="text-align: center;width: 100%">
-                <div class="col-md-3"></div>
-                <div class="col-md-6" style="margin: 0 auto">
-                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createlist(1);return false;">Создать лист по выбранному периоду</button>
-                    <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">Создать лист по отложенным</button>
+            <div class="modal-body">
+                Дата назначения:
+                <br/>
+                <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                    <input type="text" class="input-sm form-control" name="date-start"/>
+                    <span class="input-group-addon"
+                          style="background-color: #fff;color: #000">&mdash;</span>
+                    <input type="text" class="input-sm form-control" name="date-end"/>
                 </div>
-                <div class="col-md-3"></div>
+                <div style="height: 400px">
+                    <div id="table-researches"></div>
+                </div>
+                <hr/>
+                <div class="row" style="text-align: center;width: 100%">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6" style="margin: 0 auto">
+                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createlist(1);return false;">Создать лист по выбранному периоду</button>
+                        <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">Создать лист по отложенным</button>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
         </div>
     </div>
-</div>
+</div><div class="modal fade" id="journal-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Журнал</h4>
+            </div>
+            <div class="modal-body">
+                <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span style="display: inline-block;"><input type="text" class="form-control" style="display: inline-block" name="date-confirm"/></span></label>
+                <hr/>
+                <div class="row" style="text-align: center;width: 100%">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8" style="margin: 0 auto">
+                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createjournal();return false;">Создать журнал по выбранной дате</button>
+                    </div>
+                    <div class="col-md-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -148,7 +172,7 @@
                 resize();
             });
             $(document).on("click", ".select-tube", function (e) {
-                fast_search($(this, ".num").text());
+                fast_search($(this, ".num").attr("tube"));
                 $("#option1").attr("checked", "checked");
                 $("#option2").removeAttr("checked");
                 $("#option1").parent(".btn").addClass('active');
@@ -182,8 +206,8 @@
             });
             var today = new Date();
 
-            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
-            $('#datepicker').datepicker({
+            $("[name='date-start'],[name='date-end'],[name=date-confirm]").val(getFormattedDate(today));
+            $('#datepicker,[name=date-confirm]').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
                 language: "ru",
@@ -259,7 +283,8 @@
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
                     else if (v.saved && v.confirmed) status = "c";
-                    else status = "n";
+                    else if(!v.deff) status = "n";
+                    else status = "o";
 
 
                     if(status == "s"){
@@ -291,11 +316,11 @@
                 });
                 if (type == 0) {
                     $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
-                    $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150);
+                    $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
                 }
                 if (type == 1) {
                     $("[direction='{0}']".f(data.napr_pk)).addClass("active");
-                    $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150);
+                    $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
                 }
                 if (!select_el)
                 $("#issledovaniya li").first().click();
@@ -423,10 +448,10 @@
                 $("#tubes-list tbody").html("");
                 $("#dirs-list tbody").html("");
                 $.each(data.tubes, function (k, v) {
-                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'>{0}</td><!--<td><i class='glyphicon glyphicon-asterisk'></i></td>--></tr>".f(v.id, v.direction))
+                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date))
                 });
                 $.each(data.directions, function (k, v) {
-                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td>{0}</td><!--<td><i class='glyphicon glyphicon-asterisk'></i></td>--></tr>".f(v.id))
+                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date))
                 });
                 resize();
             });
@@ -530,24 +555,21 @@
             data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
             window.open('/results/pdf' + data, '_blank');
             // list_reload = true;
-            $('[direction="' + dir_data.napr_pk + '"]').remove();
+            //$('[direction="' + dir_data.napr_pk + '"]').remove();
+        }
+        function createjournal(){
+            date = $("[name=date-confirm]").val()
+            window.open('/results/journal?date=' + date, '_blank');
         }
         var substringMatcher = function(strs) {
-          return function findMatches(q, cb) {
+            return function findMatches(q, cb) {
             var matches, substringRegex;
-
-            // an array that will be populated with substring matches
             matches = [];
-
-            // regex used to determine if a string contains the substring `q`
             substrRegex = new RegExp(q, 'i');
-
-            // iterate through the pool of strings and for any string that
-            // contains the substring `q`, add it to the `matches` array
             $.each(strs, function(i, str) {
-              if (substrRegex.test(str)) {
-                matches.push(str);
-              }
+                if (substrRegex.test(str)) {
+                    matches.push(str);
+                }
             });
 
             cb(matches);
@@ -556,6 +578,9 @@
     function openexeclist(){
         load_researches();
         $("#list-modal").modal();
+    }
+    function openjournal(){
+        $("#journal-modal").modal();
     }
     var lockdeff = false;
     function deff(status, pk){

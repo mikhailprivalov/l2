@@ -24,6 +24,9 @@ import slog.models as slog
 import directory.models as directory
 import users.models as umodels
 
+from reportlab.pdfbase import pdfdoc
+pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
+
 w, h = A4
 
 
@@ -113,7 +116,7 @@ def dir_save(request):
                                 # Привязка врача к направлению
                                 istochnik_f=finsource,
                                 # Установка источника финансирования
-                                diagnos=diagnos)  # Установка диагноза
+                                diagnos=diagnos, cancel=False)  # Установка диагноза
                             if ofname_id > -1 and ofname:
                                 directionsForResearches[dir_group].doc = ofname
                                 directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
@@ -716,6 +719,26 @@ def setdef(request):
 
 @csrf_exempt
 @login_required
+def cancel_direction(request):
+    """Функция отмены направления"""
+
+    response = {"ok": False}
+    if "pk" in request.REQUEST.keys():
+        cancel = False
+        if "status" in request.REQUEST.keys():
+            cancel = request.REQUEST["status"]
+            if isinstance(cancel, str):
+                cancel = cancel == "true"
+        response["s"] = cancel
+        pk = request.REQUEST["pk"]
+        nap = Napravleniya.objects.get(pk=int(pk))
+        nap.cancel = cancel
+        nap.save()
+    return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
 def update_direction(request):
     """Функция обновления исследований в направлении"""
     from django.utils import timezone
@@ -739,6 +762,23 @@ def update_direction(request):
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
+@csrf_exempt
+@login_required
+def group_confirm_get(request):
+    """Функция группового подтвержения взятия материала"""
+    from django.utils import timezone
+    res = {"r": False}
+    if request.method == 'POST':  # Проверка типа запроса
+        checked = json.loads(request.POST["checked"])
+
+        for t in TubesRegistration.objects.filter(pk__in=checked, doc_get__isnull=True):
+            t.doc_get = request.user.doctorprofile
+            t.time_get = timezone.now()
+            t.save()
+
+    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
 @login_required
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
@@ -758,6 +798,27 @@ def load_history(request):
                             "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"),
                             "dir_id": iss[0].napravleniye.pk, "tube_id": v.id})  # Добавление пробирки с исследованиями
         # в вывод
+    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+
+
+@login_required
+def get_worklist(request):
+    """Получение необходимых пробирок для взятия"""
+    tmprows = {}
+    res = {"rows": []}
+    from datetime import timedelta
+    date_start = datetime.now() - timedelta(days=1)
+    date_end = datetime.now()
+    naps = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
+                                                                | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False))
+    for n in naps:
+        for i in Issledovaniya.objects.filter(napravleniye=n):
+            for t in i.tubes.filter(doc_get__isnull=True):
+                tmprows[t.pk] = {"direction": n.pk, "patient": n.client.shortfio(), "title": t.type.tube.title, "pk": t.pk, "color": t.type.tube.color}
+    for pk in tmprows.keys():
+        res["rows"].append(tmprows[pk])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
+
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
@@ -981,18 +1042,18 @@ def get_issledovaniya(request):
         res["all_confirmed"] = True
         if id.isnumeric():
             if request.GET["type"] == "0":
-                if TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() == 1:
-                    tube = TubesRegistration.objects.get(pk=id, issledovaniya__napravleniye__is_printed=False)
+                if TubesRegistration.objects.filter(pk=id).count() == 1:
+                    tube = TubesRegistration.objects.get(pk=id)
                     if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
+                        iss = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("deferred", "-doc_save",
                                                                                      "-doc_confirmation",
                                                                                   "research__sort_weight").all()
                         napr = iss.first().napravleniye
-                elif TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False).count() > 1:
-                    tubes = TubesRegistration.objects.filter(pk=id, issledovaniya__napravleniye__is_printed=False)
+                elif TubesRegistration.objects.filter(pk=id).count() > 1:
+                    tubes = TubesRegistration.objects.filter(pk=id)
                     for tube in tubes:
                         if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
+                            lit = Issledovaniya.objects.filter(tubes__id=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("deferred", "-doc_save",
                                                                                      "-doc_confirmation",
                                                                                       "research__sort_weight").all()
                             if lit.count() != 0:
@@ -1004,7 +1065,7 @@ def get_issledovaniya(request):
             elif request.GET["type"] == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("deferred", "-doc_save",
                                                                                      "-doc_confirmation",
                                                                                      "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
@@ -1012,8 +1073,8 @@ def get_issledovaniya(request):
                     iss = []
             else:
                 try:
-                    napr = Napravleniya.objects.get(pk=id, is_printed=False)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("-doc_save",
+                    napr = Napravleniya.objects.get(pk=id)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk).order_by("deferred", "-doc_save",
                                                                                      "-doc_confirmation",
                                                                                      "research__sort_weight").all()
                 except Napravleniya.DoesNotExist:
@@ -1035,7 +1096,8 @@ def get_issledovaniya(request):
                             saved = False
                         if not issledovaniye.doc_confirmation:
                             confirmed = False
-                            res["all_confirmed"] = False
+                            if not issledovaniye.deferred:
+                                res["all_confirmed"] = False
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved, "confirmed": confirmed,
@@ -1082,7 +1144,7 @@ def get_client_directions(request):
                         res["directions"].append(
                             {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
                              "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title, "cancel": napr.cancel})
             else:
                 for napr in Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end), client__pk=pk).order_by("-data_sozdaniya"):
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден
@@ -1091,14 +1153,14 @@ def get_client_directions(request):
                         continue
                     for v in iss_list:
                         iss_status = 1
-                        if not v.doc_confirmation and not v.doc_save:
+                        if not v.doc_confirmation and not v.doc_save and not v.deferred:
                             iss_status = 1
                             if v.tubes.count() == 0:
                                 iss_status = 0
                             for t in v.tubes.all():
                                 if not t.time_recive:
                                     iss_status = 0
-                        elif v.doc_confirmation:
+                        elif v.doc_confirmation or v.deferred:
                             iss_status = 2
                         status = min(iss_status, status)
                         tmpiss = v
@@ -1107,7 +1169,7 @@ def get_client_directions(request):
                         res["directions"].append(
                             {"pk": napr.pk, "status": status, "researches": ' | '.join(v.research.title for v in iss_list),
                              "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title})
+                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title, "cancel": napr.cancel})
             res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 

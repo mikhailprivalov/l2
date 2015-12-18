@@ -22,6 +22,9 @@ class Importedclients(models.Model):
     def fio(self) -> str:
         return self.family + " " + self.name + " " + self.twoname
 
+    def shortfio(self) -> str:
+        return self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
+
     def bd(self):
         return datetime.strptime(self.birthday.split(" ")[0], "%d.%m.%Y").date()
 
