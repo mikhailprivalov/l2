@@ -25,7 +25,7 @@ class TubesRegistration(models.Model):
         return False
 
     def getbc(self):
-        if self.barcode.isnumeric():
+        if self.barcode and self.barcode.isnumeric():
             return self.barcode
         return self.id
 

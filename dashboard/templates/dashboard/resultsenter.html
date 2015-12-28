@@ -3,50 +3,68 @@
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="col-md-3">
-        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a href="#" onclick="openjournal();return false">Журнал</a></div>
-        <div class="input-group" style="margin-bottom: 5px">
-            <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus/>
-            <span class="input-group-btn">
-                <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
-            </span>
-        </div>
-        <span>Область поиска:&nbsp;</span>
-
-        <div class="btn-group" data-toggle="buttons" style="display: inline-block; margin-bottom: 10px">
-            <label class="btn btn-default active">
-                <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
-                Номер направления
-            </label>
-            <label class="btn btn-default">
-                <input type="radio" name="type" id="option1" value="0" autocomplete="off">
-                Номер пробирки
-            </label>
-        </div>
-        <br/>
-
-        <div id="lists">
-            <div class="col-md-6" id="dirs-list">
-                <table class="table table-bordered floatThead">
-                    <thead>
-                    <tr>
-                        <th style="text-align: center">Направления</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="col-md-6" id="tubes-list">
-                <table class="table table-bordered floatThead">
-                    <thead>
-                    <tr>
-                        <th style="text-align: center">Пробирки</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a href="#" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;<a href="#" onclick="dayprint();return false">Печать результатов за день</a></div>
+        <div class="panel panel-flt m5">
+            <div class="panel-body">
+                <div class="input-group" style="margin-bottom: 5px">
+                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus/>
+                    <span class="input-group-btn">
+                        <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
+                    </span>
+                </div>
+                <div class="btn-group" data-toggle="buttons" style="display: inline-block; width: 100%">
+                    <label class="btn btn-default active" style="width: 50%">
+                        <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
+                        Номер направления
+                    </label>
+                    <label class="btn btn-default" style="width: 50%">
+                        <input type="radio" name="type" id="option1" value="0" autocomplete="off">
+                        Номер пробирки
+                    </label>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="panel panel-flt m2">
+            <div class="panel-body">
+                <label style="float: right;">отложенные <input type="checkbox" name="def" onchange="tgfreeze(this);"/></label>Дата забора биоматериала:
+                <div class="row" style="margin-bottom: 5px">
+                    <div class="col-md-9" style="padding-right: 0;">
+                        <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
+                            <input type="text" class="input-sm form-control" name="datemain-start"/>
+                            <span class="input-group-addon"
+                                  style="background-color: #fff;color: #000">&mdash;</span>
+                            <input type="text" class="input-sm form-control" name="datemain-end"/>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary-nb" onclick="load_tubes_and_dirs();return false;"><i class="fa fa-refresh"></i></button>
+                    </div>
+                </div>
+                <div id="lists">
+                    <div class="col-md-6" id="dirs-list">
+                        <table class="table table-bordered floatThead">
+                            <thead>
+                            <tr>
+                                <th style="text-align: center">Направления <small class="badge">0</small></th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6" id="tubes-list">
+                        <table class="table table-bordered floatThead">
+                            <thead>
+                            <tr>
+                                <th style="text-align: center">Пробирки <small class="badge">0</small></th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
     <div class="col-md-3">
         <div class="row" style="margin-bottom: 10px">
             <div class="col-md-6">
@@ -119,6 +137,14 @@
                 <div class="row" style="text-align: center;width: 100%">
                     <div class="col-md-3"></div>
                     <div class="col-md-6" style="margin: 0 auto">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="$('#table-researches input[type=checkbox]').prop('checked', true);return false;">Выбрать всe</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="$('#table-researches input[type=checkbox]').prop('checked', false);return false;">Снять всe</button>
+                            </div>
+                        </div>
                         <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createlist(1);return false;">Создать лист по выбранному периоду</button>
                         <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">Создать лист по отложенным</button>
                     </div>
@@ -155,6 +181,31 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="results-day-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Печать результатов за день</h4>
+            </div>
+            <div class="modal-body">
+                <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span style="display: inline-block;"><input type="text" class="form-control" style="display: inline-block" name="dateday-confirm"/></span></label>
+                <hr/>
+                <div class="row" style="text-align: center;width: 100%">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8" style="margin: 0 auto">
+                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="dayprint_do();return false;">Печать результатов за выбранную дату</button>
+                    </div>
+                    <div class="col-md-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/runtime.js"></script>
@@ -166,8 +217,6 @@
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             $("#result-print").attr("disabled", 1);
-            load_tubes_and_dirs();
-            resize();
             $(window).resize(function () {
                 resize();
             });
@@ -206,15 +255,21 @@
             });
             var today = new Date();
 
-            $("[name='date-start'],[name='date-end'],[name=date-confirm]").val(getFormattedDate(today));
-            $('#datepicker,[name=date-confirm]').datepicker({
+            $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
+            $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
                 language: "ru",
                 autoclose: true,
                 todayHighlight: true
             });
+
+            load_tubes_and_dirs();
+            resize();
         });
+        function tgfreeze(th){
+            $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
+        }
         request = "";
         function load_d_fast() {
             type = $('label.btn.active input').val();
@@ -442,24 +497,38 @@
                 position: "inside",
                 'tpl': loadingtable,
             });
-            $.ajax({url: "/results/loadready", type: "json", method: "GET"}).done(function (data) {
+            $.ajax({url: "/results/loadready", data: {datestart: $("[name=datemain-start]").val(), dateend: $("[name=datemain-end]").val(), def: $("[name=def]").prop("checked")? 1 : 0}, type: "json", method: "GET"}).done(function (data) {
                 $("#tubes-list tbody").isLoading("hide");
                 $("#dirs-list tbody").isLoading("hide");
+
                 $("#tubes-list tbody").html("");
                 $("#dirs-list tbody").html("");
+
+                if(data.tubes.length == 0)
+                    $("#tubes-list tbody").append("<tr><td>Не найдено</td></tr>");
+                if(data.directions.length == 0)
+                    $("#dirs-list tbody").append("<tr><td>Не найдено</td></tr>");
+                tubesn = 0;
+                dirsn = 0;
                 $.each(data.tubes, function (k, v) {
                     $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date))
+                    tubesn++;
                 });
                 $.each(data.directions, function (k, v) {
                     $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date))
+                    dirsn++;
                 });
+                $("#tubes-list th small").text(tubesn);
+                $("#dirs-list th small").text(dirsn);
+                $('#dirs-list').scrollTop(0);
+                $('#tubes-list').scrollTop(0);
                 resize();
             });
         }
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 85);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 110);
             $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 80);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 85);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 110);
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
@@ -582,6 +651,9 @@
     function openjournal(){
         $("#journal-modal").modal();
     }
+    function dayprint(){
+        $("#results-day-modal").modal();
+    }
     var lockdeff = false;
     function deff(status, pk){
         if(lockdeff) return;
@@ -589,6 +661,31 @@
         $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function(data){
             lockdeff = false;
             reload_fast();
+        });
+    }
+    function dayprint_do(){
+        if(lockdeff) return;
+        lockdeff = true;
+        $.ajax({url: "/results/day", data: {date: $("[name=dateday-confirm]").val()}}).done(function(data){
+            lockdeff = false;
+            if(data.directions.length > 0) {
+                st = "?pk=" + JSON.stringify(data.directions);
+                window.open('/results/pdf' + st, '_blank');
+                $("#results-day-modal").modal('close');
+            }
+            else{
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Печать невозможна",
+                        message: "Ничего не найдено",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            }
         });
     }
     function createlist(type){
@@ -643,6 +740,9 @@
         }
     </script>
     <style>
+    th small{
+
+    }
     label{
         cursor: pointer!important;
     }
@@ -679,6 +779,12 @@
             background-color: #434A54;
             color: #fff
         }
+        #dirs-list{
+            padding-left: 0;
+        }
+        #tubes-list{
+            padding-left: 10px;
+        }
         #dirs-list tbody, #tubes-list tbody {
             min-height: 100px;
         }
@@ -698,6 +804,9 @@
             background-color: #6C7A89 !important;
             color: #fff !important;
         }
+        .select-dir td, .select-tube td {
+            background-color: #fff;
+        }
 
         .select-tube, .select-dir {
             cursor: pointer;
@@ -715,6 +824,9 @@
         body {
             margin: 0;
             padding: 0;
+        }
+        #lists{
+                margin-right: -10px;
         }
 
         #tubes-list, #dirs-list, #issledovaniya-scroll, #result-jade-form {
@@ -817,6 +929,12 @@
         font-size: 9pt;
         margin-right: -5px;
         padding: 2px!important;
+    }
+    .m2{
+
+    }
+    .datepicker{
+        z-index: 10005!important;
     }
     </style>
 {% endblock %}

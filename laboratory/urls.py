@@ -11,7 +11,7 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
     get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print
+    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -76,6 +76,7 @@ urlpatterns = [
                   url(r'^results/pdf', result_print),
                   url(r'^results/journal$', result_journal_print),
                   url(r'^results/filter$', result_filter),
+                  url(r'^results/day', get_day_results),
                   url(r'^statistic$', statistic_page),
                   url(r'^statistic/xls$', statistic_xls),
 

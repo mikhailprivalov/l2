@@ -59,20 +59,26 @@
         <div>
 
             <div style="margin-bottom: 25px;margin-top: -5px">
-                <div class="btn btn-primary-nb mw col-md-2" tabindex="10" id="success-b"
-                     style="display: none;float: right;margin-right: 15px;" onclick="save_research();">Сохранить
+                <div class="row">
+                    <div class="col-md-3">
+
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary btn-primary-nb"onclick="barcodes_print();return false;" id="print-bc">Печать штрих-кодов</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary-nb" tabindex="9" id="success-b" style="margin-bottom: 5px" onclick="save_research();return false;">Сохранить</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary-nb" tabindex="9" onclick="barcodes_print();save_research();return false;" id="print-bc-save">Печать ш/к и сохранить</button>
+                    </div>
                 </div>
-                <div class="btn btn-primary-nb col-md-4" tabindex="9" id="print-bc"
-                     style="width: 250px !important;display: none;float: right;margin-right: 15px;" onclick="barcodes_print();">Печать штрих-кодов пробирок
-                </div>
-                <h4>Исследования в направлении:</h4>
             </div>
 
 
             <div id="scroll-res" style="position: relative;padding-right: 15px">
                 <table class="table table-bordered" id="researches-tb"></table>
                 <span id="itogo" style="float: right"></span>
-
             </div>
         </div>
     </div>
@@ -141,6 +147,7 @@
         var SFinFocus = false;
         var checkboxed = [];
         $(document).ready(function () {
+            $("#print-bc-save, #print-bc, #success-b").prop("disabled", true);
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
             });
@@ -233,13 +240,13 @@
             }
         }
         var com = false;
-        function search(q) {
+        function search(q, reload) {
             com = true;
             input_buffer_scan = "";
             if (!q || q == "") return;
             $("#search-field").val("");
             $(".has-error").removeClass("has-error");
-            $("#print-bc").hide();
+            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", true);
             $.ajax(
                     {
                         url: "/directions/get/one?id=" + q,
@@ -259,8 +266,9 @@
                             $("#doc-fio").html(data.direction.doc.fio);
                             $("#doc-otd").html(data.direction.doc.otd);
                             $("#lab").html(data.direction.lab);
-                            $(".last").removeClass("last");
-                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 60px'>Взято</th></tr>");
+                            if(!reload)
+                                $(".last").removeClass("last");
+                            $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint3'  checked /></label></th></tr>");
                             n = 0;
                             fn = 0;
                             complete = true;
@@ -268,20 +276,19 @@
                             c = "";
                             d = "";
                             $.each(data.tubes, function (k, v) {
+                                c = "checked";
                                 if (v.status === true) {
-                                    c = "checked";
                                     d = "disabled"
                                 }
                                 else {
-                                    c = d = "";
+                                    d = "";
                                     complete = false;
                                 }
                                 if (!probirki[v.title])
                                     probirki[v.title] = 1
                                 else
                                     probirki[v.title]++;
-                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
-                                // $("#researches-tb").append("<tr><td>{0}</td><td style='background-color: {1}; color: #F2F2F2; text-shadow: 1px 1px 4px black'>{2}</td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                             });
 
                             tmpstr = "";
@@ -299,12 +306,12 @@
                             });
                             $("#researches-tb").append("<tr><td style='text-align:right;font-size:10pt' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
 
+                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", false);
                             if (complete) {
                                 com = true;
-                                $(".btn#success-b").attr("disabled", "true");
+                                $("#researches-tb .allprint, #print-bc-save, #success-b").prop("disabled", true);
                             }
                             $("input[name=complete-res]").first().focus();
-                            $("#print-bc").show();
                         }
                         else {
                             $("#dir-num").html("Не найдено");
@@ -319,7 +326,7 @@
                             $(".btn#success-b").attr("disabled", "true");
                             $("#search-field").focus();
                             $("#search-field").parent().addClass("has-error");
-                            $("#print-bc").hide();
+                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", true);
                         }
 
                     });
@@ -328,7 +335,7 @@
             window.open('/barcodes/tubes?napr_id=' + JSON.stringify([dnum]), '_blank');
         }
         function save_research() {
-            $(".btn#success-b").attr("disabled", "true");
+            //$(".btn#success-b").attr("disabled", "true");
             if (com) return;
             data = {
                 dir_id: dnum,
@@ -361,6 +368,7 @@
             $("#doc-fio").html("");
             $("#doc-otd").html("");
             $("#lab").html("");
+
             if (num)
                 $("#researches-tb").html("<tr><td>Материал по направлению {0} занесен в базу</td></tr>".f(num));
             $(".btn#success-b").attr("disabled", "true");
@@ -370,6 +378,7 @@
             input_buffer_scan = "";
             $("#search-field").val("");
             $("#search-field").focus();
+            $("#print-bc").hide();
         }
         function update_history(clearn, dn) {
             $.ajax({
@@ -409,7 +418,8 @@
                 resize();
                 sync_checkboxes("[name=allprint]");
                 if (!clearn || !dn) return;
-                clear(dn);
+                search(dnum, true);
+                //clear(dn);
                 $(".last").removeClass("last");
                 $.each(clearn, function (k, v) {
                     $("#story-" + v + " td").addClass("last");
@@ -425,7 +435,6 @@
         }
         function sync_checkboxes(th){
             $table = $(th).parents(".table").first();
-            console.log($table);
             $(".custom_print", $table).prop("checked", $(".allprint", $table).is(':checked'));
             checkboxes_to_array();
         }

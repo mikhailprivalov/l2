@@ -37,17 +37,32 @@ def result_conformation(request):
     return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
 
 
+@csrf_exempt
 @login_required
 def loadready(request):
     """ Представление, возвращающее JSON со списками пробирок и направлений, принятых в лабораторию """
     result = {"tubes": [], "directions": []}
+    date_start = request.REQUEST["datestart"]
+    date_end = request.REQUEST["dateend"]
+    deff = int(request.REQUEST["def"])
+    import datetime
+    date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),int(date_start.split(".")[0]))
+    date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
+    tlist = []
+    if deff == 0:
+        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__range=(date_start,date_end),
+                                                 # issledovaniya__napravleniye__is_printed=False,
+                                                 issledovaniya__doc_confirmation__isnull=True,
+                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
+    else:
+        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__isnull=False,
+                                                 # issledovaniya__napravleniye__is_printed=False,
+                                                 issledovaniya__doc_confirmation__isnull=True,
+                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye, issledovaniya__deferred=True)
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
-    for tube in TubesRegistration.objects.filter(doc_recive__isnull=False, doc_get__isnull=False,
-                                                 # issledovaniya__napravleniye__is_printed=False,
-                                                 issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye):  # перебор результатов выборки
+    for tube in tlist:  # перебор результатов выборки
         # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
         if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
         complete = False  # Завершен ли анализ
@@ -165,7 +180,9 @@ def get_full_result(request):
 
             result["direction"] = {}  # Направление
             result["direction"]["pk"] = napr.pk  # ID
-            result["direction"]["doc"] = iss_list[0].doc_confirmation.get_fio()  # ФИО подтвердившего
+            result["direction"]["doc"] = ""
+            if iss_list.filter(doc_confirmation__isnull=False).exists():
+                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[0].doc_confirmation.get_fio()  # ФИО подтвердившего
             result["direction"]["date"] = maxdate  # Дата подтверждения
 
             result["client"] = {}  # Пациент
@@ -323,7 +340,7 @@ def result_print(request):
     pdfmetrics.registerFont(
         TTFont('Champ', PROJECT_ROOT + '/../static/fonts/Champ.ttf'))
     pdfmetrics.registerFont(
-        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/ChampB.ttf'))
+        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/Calibri.ttf'))
     pdfmetrics.registerFont(
         TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
 
@@ -397,7 +414,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                      0] + ".   ____________________   (подпись)")
     c.setFont('OpenSans', 8)
 
-    iss_list = Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False).order_by("research__pk",
+    iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__pk",
                                                                                                  "research__sort_weight")
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
@@ -451,7 +468,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
             if not iss.doc_confirmation and iss.deferred:
                 result = "отложен"
-            elif maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
+            elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                 result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
             tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
             tmp.append(
@@ -501,7 +518,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                     result = Result.objects.get(issledovaniye=iss, fraction=f).value
                 if not iss.doc_confirmation and iss.deferred:
                     result = "отложен"
-                elif maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
+                elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                     result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                 tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", styleSheet["BodyText"]))
@@ -708,6 +725,20 @@ def result_get(request):
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
     return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
+def get_day_results(request):
+    import datetime
+    from datetime import timedelta
+    day = request.REQUEST["date"]
+    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]),int(day.split(".")[0]))
+    day2 = day1 + timedelta(days=1)
+    directions = set()
+    for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2), issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye):
+        directions.add(dir.pk)
+    return HttpResponse(json.dumps({"directions": list(directions)}), content_type="application/json")
 
 
 @csrf_exempt
