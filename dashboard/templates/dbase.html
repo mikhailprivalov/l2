@@ -880,7 +880,12 @@
     }
     $.fn.uHash = function()
     {
-      return document.URL.substr(document.URL.indexOf('#')+1);
+        return document.URL.substr(document.URL.indexOf('#')+1);
+    };
+
+    $.fn.setUHash = function(hash)
+    {
+        window.location.hash = "#" + hash;
     };
 
     $(document).ready(function () {
