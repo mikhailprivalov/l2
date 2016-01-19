@@ -354,6 +354,8 @@
                     checked[active_lab] = [];
                 load_researches();
             });
+
+            // TODO: DYNAMIC IT
             var templates = {1: {lab: 34, iss: [77,78,79,80,81,161]},
                 2: {lab: 34, iss: [156,157,158,159]}
             };
@@ -394,6 +396,8 @@
                 resize();
             });
             checkType();
+
+            console.log(uHash());
         });
 
         function checkType(tr){
