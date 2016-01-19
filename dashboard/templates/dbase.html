@@ -885,11 +885,21 @@
 
     $.fn.setUHash = function(hash)
     {
-        if(hash == ""){
+        if(hash === "" || hash === {} || hash == null){
             history.pushState("", document.title, window.location.pathname + window.location.search);
             return;
         }
+        if(typeof hash === 'object')
+        {
+            hash = JSON.stringify(hash);
+        }
+
         history.pushState("", document.title, window.location.pathname + window.location.search + "#" + hash);
+    };
+
+    $.fn.sTitle = function(title)
+    {
+        document.title = title;
     };
 
     $(document).ready(function () {
