@@ -50,7 +50,7 @@ def loadready(request):
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
     tlist = []
     if deff == 0:
-        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__range=(date_start,date_end),
+        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start,date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
                                                  issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
@@ -67,7 +67,7 @@ def loadready(request):
         if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
         complete = False  # Завершен ли анализ
         direction = tube.issledovaniya_set.first().napravleniye  # Выборка направления для пробирки
-        dicttube = {"id": tube.pk, "direction": direction.pk, "date": (dateformat.format(direction.data_sozdaniya,
+        dicttube = {"id": tube.pk, "direction": direction.pk, "date": (dateformat.format(tube.time_recive,
                                                                                          settings.DATE_FORMAT))}  # Временный словарь с информацией о пробирке
         if not complete and dicttube not in result[
             "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
@@ -628,7 +628,7 @@ def result_journal_print(request):
 
 
     data = []
-    data_header = ["№", "ФИО, номер карты", "Направление: Результаты"]
+    data_header = ["№", "ФИО", "Направление: Результаты"]
     tmp = []
     for v in data_header:
         tmp.append(Paragraph(str(v), styles["Normal"]))
@@ -638,7 +638,8 @@ def result_journal_print(request):
         key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
-                                  "fio": iss.napravleniye.client.shortfio() + ", " + str(iss.napravleniye.client.num)}
+                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + str(iss.napravleniye.client.num) +
+                                         (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
@@ -683,7 +684,7 @@ def result_journal_print(request):
                      ('RIGHTPADDING', (0, 0), (-1, -1), 1),
                      ('BOTTOMPADDING', (0, 1), (-1, -1), 0), ])
     tw = pw - 25 * mm
-    t = Table(data, colWidths=[tw * 0.12, tw * 0.28, tw * 0.6])
+    t = Table(data, colWidths=[tw * 0.05, tw * 0.15, tw * 0.8])
     t.setStyle(st)
     elements.append(t)
     doc.multiBuild(elements, canvasmaker=FooterCanvas)

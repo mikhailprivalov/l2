@@ -279,8 +279,6 @@ def gen_pdf_execlist(request):
     xsize = 8
     ysize = 8
     from reportlab.lib.pagesizes import landscape
-    fam = ["Касъяненко", "Привалов", "Михайлов", "Селиверстов", "Красильников", "Овчинников"]
-    initials = ["С.Н.", "М.С.", "И.И.", "С.А.", "А.С."]
     lw, lh = landscape(A4)
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="execlist.pdf"'
@@ -295,14 +293,13 @@ def gen_pdf_execlist(request):
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
     pdfmetrics.registerFont(
         TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
-
     elements = []
     hb = False
     for res in directory.Researches.objects.filter(pk__in=researches):
         if type != 2:
-            iss_list = Issledovaniya.objects.filter(napravleniye__is_printed=False, tubes__doc_recive_id__isnull=False, napravleniye__data_sozdaniya__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False)
+            iss_list = Issledovaniya.objects.filter(tubes__doc_recive_id__isnull=False, tubes__time_recive__range=(date_start, date_end), doc_confirmation_id__isnull=True, research__pk=res.pk, deferred=False)
         else:
-            iss_list = Issledovaniya.objects.filter(napravleniye__is_printed=False, research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False)
+            iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True, tubes__doc_recive__isnull=False)
 
         if iss_list.count() == 0:
             # if not hb:
@@ -363,17 +360,6 @@ def gen_pdf_execlist(request):
             elements.append(PageBreak())
 
     doc.build(elements)
-
-    """
-     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
-        if pk >= 0 or req_status == 4:
-            if req_status == 4:
-                from django.db.models import Q
-                for napr in Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end)
-    """
     pdf = buffer.getvalue()  # Получение данных из буфера
     buffer.close()  # Закрытие буфера
     response.write(pdf)  # Запись PDF в ответ
@@ -809,6 +795,8 @@ def get_worklist(request):
     from datetime import timedelta
     date_start = datetime.now() - timedelta(days=1)
     date_end = datetime.now()
+    if date_start.weekday() == 6: date_start -= timedelta(days=2)
+    if date_start.weekday() == 5: date_start -= timedelta(days=1)
     naps = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
                                                                 | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False))
     for n in naps:
@@ -1110,8 +1098,10 @@ def get_issledovaniya(request):
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
                 res["client_sex"] = napr.client.sex
                 res["client_cardnum"] = napr.client.num
+                res["client_hisnum"] = napr.history_num
                 res["client_vozrast"] = napr.client.age_s()
                 res["directioner"] = napr.doc.fio
+                res["fin_source"] = napr.istochnik_f.tilie
                 res["ok"] = True
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

@@ -39,6 +39,7 @@
         var errors_dirs = [];
         var maxPerOne = 16, maxAll = 16;
         function add_direction() {
+            sync();
             var pattern = /\d+\-\d+/;
             var pk = $("#dir-field").val();
             if (pk.match(pattern)) {
@@ -78,6 +79,7 @@
                     dir_queue.push(i);
                 }
                 put_direction();
+                $("#dir-field").val("");
             }
             else if (pk.match(/\d+/)) {
                 if (directions.length + 1 > maxAll) {
@@ -97,7 +99,7 @@
                 dir_queue.push(parseInt(pk));
                 put_direction();
             }
-            $("#dir-field").focus();
+            $("#dir-field").val("");
         }
         function put_direction(pk) {
             var f = false;
@@ -153,13 +155,15 @@
             } else {
                 $(".dir-cont").html("");
                 $.each(directions, function (k, v) {
-                    $(".dir-cont").append('<span class="badge badge-default" onclick="remove({1});">{0}</span>&nbsp;&nbsp;'.f(v, k));
+                    $(".dir-cont").append('<span class="badge badge-default" onclick="removee({1});">{0}</span>&nbsp;&nbsp;'.f(v, k));
                 });
                 $("#print_container").show();
             }
+            console.log(directions);
         }
-        function remove(k) {
+        function removee(k) {
             directions.splice(k, 1);
+            sync();
             if (window.getSelection) {
                 if (window.getSelection().empty) {
                     window.getSelection().empty();
@@ -169,8 +173,6 @@
             } else if (document.selection) {
                 document.selection.empty();
             }
-            sync();
-
             return false;
         }
         function ckerr() {

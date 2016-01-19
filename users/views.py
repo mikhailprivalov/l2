@@ -14,6 +14,9 @@ def home(request):
     if request.method == 'POST':  # Проверка типа запроса
         username = request.POST['username']  # Имя пользователя
         password = request.POST['password']  # Пароль
+        next = '/dashboard/'
+        if 'next' in request.POST.keys():
+            next = request.POST['next']
         user = authenticate(username=username, password=password)  # Аутинтификация
         if user:  # Проверка на правильность введенных данных
             if user.is_active:  # Проверка активности профиля
@@ -59,5 +62,5 @@ def home(request):
                 c.unbind()  # Отключение от сервера
             return render(request, 'auth.html', {'error': True, 'username': username})  # Сообщение об ошибке
     if request.user.is_authenticated():  # Проверка статуса автоизации
-        return HttpResponseRedirect('/dashboard')  # Редирект в п/у
+        return HttpResponseRedirect(next)  # Редирект в п/у
     return render(request, 'auth.html', {'error': False, 'username': ''})  # Вывод формы авторизации

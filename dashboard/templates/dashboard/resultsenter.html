@@ -26,7 +26,7 @@
         </div>
         <div class="panel panel-flt m2">
             <div class="panel-body">
-                <label style="float: right;">отложенные <input type="checkbox" name="def" onchange="tgfreeze(this);"/></label>Дата забора биоматериала:
+                <label style="float: right;">отложенные <input type="checkbox" name="def" onchange="tgfreeze(this);"/></label>Дата приема материала:
                 <div class="row" style="margin-bottom: 5px">
                     <div class="col-md-9" style="padding-right: 0;">
                         <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
@@ -62,6 +62,14 @@
                         </table>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6" style="text-align: right">
+                        <small >дата создания направления</small>
+                    </div>
+                    <div class="col-md-6" style="text-align: right">
+                        <small>дата приема материала</small>
+                    </div>
+                </div>
             </div>
             </div>
         </div>
@@ -84,6 +92,10 @@
                 <td id="dir_num"></td>
             </tr>
             <tr>
+                <td style="width: 150px">Ист. фин.</td>
+                <td id="fin_source"></td>
+            </tr>
+            <tr>
                 <td style="width: 150px">ФИО Пациента</td>
                 <td id="dir_client_fio"></td>
             </tr>
@@ -94,6 +106,10 @@
             <tr>
                 <td style="width: 150px">Номер карты</td>
                 <td id="client_cardnum"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px">Номер истории</td>
+                <td id="client_hisnum"></td>
             </tr>
             <tr>
                 <td style="width: 150px">Возраст</td>
@@ -122,7 +138,7 @@
                 <h4 class="modal-title">Создание листа исполения</h4>
             </div>
             <div class="modal-body">
-                Дата назначения:
+                Дата приема материала:
                 <br/>
                 <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
                     <input type="text" class="input-sm form-control" name="date-start"/>
@@ -334,6 +350,8 @@
                 $("#client_vozrast").html(data.client_vozrast);
                 $("#client_cardnum").html(data.client_cardnum);
                 $("#client_sex").html(data.client_sex);
+                $("#client_hisnum").html(data.client_hisnum);
+                $("#fin_source").html(data.fin_source);
                 var status = "n", all_saved = false, firstch = true, has_n = false;
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
