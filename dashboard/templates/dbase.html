@@ -885,7 +885,11 @@
 
     $.fn.setUHash = function(hash)
     {
-        window.location.hash = "#" + hash;
+        if(hash == ""){
+            history.pushState("", document.title, window.location.pathname + window.location.search);
+            return;
+        }
+        history.pushState("", document.title, window.location.pathname + window.location.search + "#" + hash);
     };
 
     $(document).ready(function () {
