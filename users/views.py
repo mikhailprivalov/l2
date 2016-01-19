@@ -11,10 +11,10 @@ import simplejson as json
 
 def home(request):
     """Страница автоизации"""
+    next = '/dashboard/'
     if request.method == 'POST':  # Проверка типа запроса
         username = request.POST['username']  # Имя пользователя
         password = request.POST['password']  # Пароль
-        next = '/dashboard/'
         if 'next' in request.POST.keys():
             next = request.POST['next']
         user = authenticate(username=username, password=password)  # Аутинтификация
