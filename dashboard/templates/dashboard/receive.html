@@ -86,6 +86,7 @@
             }
         }
         function load_tubes() {
+            sl();
             $("#tubes").html("");
             $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
                 $('button').blur();
@@ -109,6 +110,7 @@
                 }
                 $('[data-toggle="tooltip"]').tooltip();
                 $('#scroll-tb').scrollTop(0);
+                hl();
             });
         }
 

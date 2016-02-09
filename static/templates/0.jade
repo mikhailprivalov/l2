@@ -10,29 +10,29 @@ form(onsubmit="return false;")
     #result-jade-form
         table.table.table-bordered.table-sm-pd
             thead
-                th.col-md-4 Фракция
-                th Значение
+                th.col-md-3 Фракция
+                th.col-md-3 Значение
                 th.col-md-3 Нормы М
                 th.col-md-3 Нормы Ж
             each fraction in fractions
                 tr
-                    td.col-md-4
+                    td.col-md-3
                         label= fraction.title
-                    td
+                    td.col-md-3
                         if fraction.type == -1
                             input(type="text", data-pk=fraction.pk).form-control.result-enter
                         else
                             input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
                         .center= fraction.unit
-                    td.col-md-2
+                    td.col-md-3
                         table.table.table-bordered.table-responsive
                             each norm, index in fraction.references.m
                                 tr
                                     td= index
-                                    td.col-md-5= norm
-                    td.col-md-2
+                                    td.col-md-6= norm
+                    td.col-md-3
                         table.table.table-bordered.table-responsive
                             each norm, index in fraction.references.f
                                 tr
                                     td= index
-                                    td.col-md-5= norm
+                                    td.col-md-6= norm

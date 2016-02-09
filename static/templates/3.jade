@@ -19,9 +19,8 @@ form(onsubmit="return false;")
                     td.col-md-3
                         label= fraction.title
                     td
-                        input(data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;", type='hidden').result-enter
                         .input-group
-                            div(data-div-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;text-align:center").form-control
+                            input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
                             span.input-group-btn
                                 a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
                                     i.fa.fa-circle
@@ -37,7 +36,7 @@ form(onsubmit="return false;")
                                 tr
                                     td= index
                                     td.col-md-5= norm
-script(src="/static/templates/2.js")
+script(src="/static/templates/3.js")
 .modal.fade#res-modal
     .modal-dialog
         .modal-content
@@ -64,18 +63,18 @@ script(src="/static/templates/2.js")
                             | AB<sub>0</sub> (IV)
                         #hiddenresmodal-1
                             label
-                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="1", checked)
-                                | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="1")
+                                | A<sub>1</sub>&nbsp;&nbsp;&nbsp;&nbsp;
                             label
                                 input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="2")
-                                | A<sub>2&beta;</sub> (II)
+                                | A<sub>2&beta;</sub>
                         #hiddenresmodal-2
                             label
-                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="4", checked)
-                                | AB<sub>0</sub> (IV)&nbsp;&nbsp;&nbsp;&nbsp;
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="4")
+                                | AB&nbsp;&nbsp;&nbsp;&nbsp;
                             label
                                 input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="5")
-                                | A<sub>2</sub>B<sub>0</sub> (IV)
+                                | A<sub>2</sub>B<sub>0</sub>
                 .modal-footer
                     button(type="button", data-dismiss="modal").btn.btn-default Отмена
                     button(type="button", onclick="saveresmodal();", data-dismiss="modal").btn.btn-default Сохранить

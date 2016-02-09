@@ -435,11 +435,6 @@
                     data2["age"] = dir_data.client_vozrast;
                     $("#result-form").html(jade.compile(template)(data2));
                     $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
-                    $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
-                        $.each(data.results, function (k, v) {
-                            $("[data-pk='" + k + "']").val(v);
-                        });
-                    });
                     var autoIsF = false;
                     var num = 0;
                     $.each(data2.fractions, function(fk, fv){
@@ -464,18 +459,33 @@
                                     typeVals.search(q, sync);
                                 }
                             }
-                            $("[data-pk='" + fv.pk + "']").typeahead({
+                            $d = $("[data-pk='{0}']".f(fv.pk));
+                            $val =  $d.val();
+                            $d.typeahead({
                                 minLength: 0,
                                 highlight: true,
-                                //local: fraction_types[fv.type+""]
+                                hint: $val == ""
                             }, {
                                 name: 'typeval',
                                 display: 'value',
-                                source: typeValsDefaults,
+                                source: typeValsDefaults
                             });
+                            $d.typeahead('val', $val);
+                            $("[data-pk='{0}']".f(fv.pk)).val($val);
                         }
                     });
-                    $('.result-enter:not(.tt-hint)').eq(0).focus();
+                    f = $('.result-enter:not(.tt-hint)').eq(0);
+                    $(f).focus();
+
+
+                    $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
+                        $.each(data.results, function (k, v) {
+                            if(v != "")
+                                $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
+                            $("[data-pk='" + k + "']").val(v);
+                            $("[data-div-pk='{0}']".f(k)).html(v);
+                        });
+                    });
 
                     resize();
                     loaded_research = id;
@@ -505,6 +515,7 @@
         }
         var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><!--<td><i class="%class% glyphicon glyphicon-refresh"></i></td>--></tr>';
         function load_tubes_and_dirs() {
+            sl();
             $("#tubes-list tbody").isLoading({
                 text: "Загрузка пробирок",
                 position: "inside",
@@ -541,6 +552,7 @@
                 $('#dirs-list').scrollTop(0);
                 $('#tubes-list').scrollTop(0);
                 resize();
+                hl();
             });
         }
         function resize() {
@@ -910,7 +922,7 @@
             text-align: center;
         }
     .tt-hint{
-        display: none;
+        display: none!important;
     }
     span.twitter-typeahead {
       width: 100%;

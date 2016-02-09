@@ -157,7 +157,9 @@
                     <select class="select-b" id="select-template" data-width="100%"
                                 title='Шаблоны' disabled>
                         <option value="1" selected>Липидограмма</option>
-                        <option value="2" selected>Коагулограмма</option>
+                        <option value="2">Коагулограмма</option>
+                        <option value="3">Индекс атерогенности</option>
+                        <option value="4">Группа крови</option>
                         </select>
                 </div>
                     <div class="col-md-2">
@@ -357,7 +359,9 @@
 
             // TODO: DYNAMIC IT
             var templates = {1: {lab: 34, iss: [77,78,79,80,81,161]},
-                2: {lab: 34, iss: [156,157,158,159]}
+                2: {lab: 34, iss: [156,157,158,159]},
+                3: {lab: 34, iss: [78,81,80,77]},
+                4: {lab: 33, iss: [110,111]}
             };
 
             $("#select-template-btn").click(function () {

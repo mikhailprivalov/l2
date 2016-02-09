@@ -327,7 +327,7 @@
                     $("#research-title").html(data2.title);
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data3) {
                         $.each(data3.results, function (k, v) {
-                            $("[data-pk='" + k + "']").text(v);
+                            $("[data-pk='" + k + "']").html(v);
                         });
                     });
                     $("[pk='{0}']".f(id)).addClass("active");

@@ -409,9 +409,12 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
     c.drawRightString(s + w / 2 - paddingx, h - 64, napr.client.age_s() + " " + "(д.р. " + str(
         dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + ")")
-    c.drawString(s + paddingx, 18, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
+    if last_iss and last_iss.doc_confirmation:
+        c.drawString(s + paddingx, 18, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
                  last_iss.doc_confirmation.fio.split(" ")[1][0] + "." + last_iss.doc_confirmation.fio.split(" ")[2][
                      0] + ".   ____________________   (подпись)")
+    else:
+         c.drawString(s + paddingx, 18, "Результат не подтвержден")
     c.setFont('OpenSans', 8)
 
     iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__pk",
@@ -564,7 +567,8 @@ def result_journal_print(request):
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
     end_date = date + datetime.timedelta(days=1)
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
-                                            research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
+                                            research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                            napravleniye__cancel=False)
 
     from io import BytesIO
     from reportlab.pdfbase import pdfmetrics
@@ -639,7 +643,7 @@ def result_journal_print(request):
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
                                   "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + str(iss.napravleniye.client.num) +
-                                         (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num != "" else "")}
+                                         (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)

@@ -1,3 +1,4 @@
+from astm.tests.test_server import null_dispatcher
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -19,6 +20,9 @@ import simplejson as json
 @login_required
 def dashboard(request):  # Представление панели управления
     from laboratory import settings
+
+
+    dt = ""
 
     menu = []
     groups = [str(x) for x in request.user.groups.all()]
