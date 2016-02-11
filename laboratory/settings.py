@@ -25,10 +25,10 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'debug_panel',
     'cachalot',
+    'clients',
     'users',
     'dashboard',
     'podrazdeleniya',
-    'clients',
     'results',
     'researches',
     'directions',
@@ -215,6 +215,27 @@ LDAP = {
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
+
+import sys, logging
+class DisableMigrations(object):
+
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return "notmigrations"
+
+
+TESTS_IN_PROGRESS = False
+if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
+    logging.disable(logging.CRITICAL)
+    PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    )
+    DEBUG = False
+    TEMPLATE_DEBUG = False
+    TESTS_IN_PROGRESS = True
+    MIGRATION_MODULES = DisableMigrations()
 
 
 #DEBUG = True
