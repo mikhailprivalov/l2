@@ -52,13 +52,15 @@ class Napravleniya(models.Model):
     cancel = models.BooleanField(default=False, blank=True)
 
     @staticmethod
-    def genNapravlenye(client_id, doc, istochnik_f, diagnos, issledovaniya=[]):
+    def genNapravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
         """
         Генерация направления
         :param client_id: id пациента
         :param doc: л/врач
         :param istochnik_f: источник финансирования
         :param diagnos: диагноз
+        :param patient_type: тип пациента (напр; поликлиника/стационар)
+        :param historynum: номер истории в стационаре
         :param issledovaniya: исследования (reserved)
         :return: созданое направление
         """
@@ -67,6 +69,9 @@ class Napravleniya(models.Model):
                             istochnik_f=istochnik_f,
                             diagnos=diagnos, cancel=False)
 
+        if patient_type == "stat":
+            dir.history_num = historynum
+        dir.save()
         return dir
     @staticmethod
     def setOfName(dir, doc_current, ofname_id, ofname):
