@@ -348,30 +348,6 @@ def gen_pdf_execlist(request):
     return response
 
 
-def frameOctahedralPage(canvas, lw, lh, xsize, ysize, padding, lpadding):
-    n = 0
-    fam = ["Касъяненко", "Привалов", "Михайлов", "Селиверстов", "Красильников", "Овчинников"]
-    initials = ["С.Н.", "М.С.", "И.И.", "С.А.", "А.С."]
-    canvas.setFont('OpenSans', 7)
-    for y in reversed(range(1,ysize+1)):
-        canvas.line(lpadding + padding, (lh - padding)/ysize*y, lw - padding, (lh - padding)/ysize*y)
-        for x in range(1, xsize+1):
-            n += 1
-            canvas.line((lw-padding-lpadding)/xsize*x + lpadding, padding, (lw-padding-lpadding)/xsize*x + lpadding, lh - padding)
-            tx = (lw-padding-lpadding)/xsize*x + lpadding + 2 - (lw-padding-lpadding)/xsize
-            ty = (lh - padding)/ysize*y
-            if x == 1:
-                tx += 16
-            canvas.setFont('OpenSans', 7)
-            canvas.drawString(tx, ty - 11, random.choice(fam) + " " + random.choice(initials) + ", " + str(random.randrange(10,99)) + " л")
-            canvas.drawString(tx, ty - 22, "№ напр.: " + str(random.randrange(6600, 150000)))
-            canvas.drawString(tx, ty - 33, "№ пробирки.: " + str(random.randrange(10000, 400000)))
-            #canvas.circle(tx + (lw - padding)/xsize - 23, ty - 12, 9, fill=0)
-            #canvas.drawCentredString(tx + (lw - padding)/xsize - 23, ty - 16, str(n))
-
-    canvas.line(lpadding + padding, padding, lw - padding, padding)
-    canvas.line(lpadding + padding, padding, lpadding + padding, lh - padding)
-
 @cache_page(60 * 15)
 @login_required
 def gen_pdf_dir(request):
