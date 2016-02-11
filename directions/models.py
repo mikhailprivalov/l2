@@ -86,6 +86,7 @@ class Napravleniya(models.Model):
         if ofname_id > -1 and ofname:
             dir.doc = ofname
             dir.doc_who_create = doc_current
+            dir.save()
 
 
 class Issledovaniya(models.Model):

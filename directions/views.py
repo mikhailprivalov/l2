@@ -117,8 +117,6 @@ def dir_save(request):
                                                                                               history_num)
                             Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
 
-                            directionsForResearches[dir_group].save()  # Сохранение направления
-
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
                         if dir_group < 0:  # если исследование не должно группироваться
@@ -134,7 +132,6 @@ def dir_save(request):
                                                                                               history_num)
                             Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
 
-                            directionsForResearches[dir_group].save()  # Сохранение направления
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
                         issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
