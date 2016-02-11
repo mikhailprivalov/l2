@@ -113,9 +113,8 @@ def dir_save(request):
                                                                                              request.user.doctorprofile,
                                                                                              finsource,
                                                                                              diagnos)
-                            if ofname_id > -1 and ofname:
-                                directionsForResearches[dir_group].doc = ofname
-                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
+                            Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
+
                             if ptype == "stat":
                                 directionsForResearches[dir_group].history_num = history_num
 
@@ -133,9 +132,8 @@ def dir_save(request):
                                                                                              request.user.doctorprofile,
                                                                                              finsource,
                                                                                              diagnos)
-                            if ofname_id > -1 and ofname:
-                                directionsForResearches[dir_group].doc = ofname
-                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
+                            Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
+
                             if ptype == "stat":
                                 directionsForResearches[dir_group].history_num = history_num
                             directionsForResearches[dir_group].save()  # Сохранение направления
