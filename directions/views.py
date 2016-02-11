@@ -35,7 +35,7 @@ w, h = A4
 def dir_save(request):
     """Сохранение направления"""
     res = {}  # Словарь с направлениями, сгруппированными по лабораториям
-    result = {"r": False, "list_id": [], "mda": ""}
+    result = {"r": False, "list_id": []}
     """
         r - флаг успешной вставки направлений
         list_id - список сохраненных направлений
@@ -120,7 +120,6 @@ def dir_save(request):
 
                             directionsForResearches[dir_group].save()  # Сохранение направления
 
-                            result["mda"] += str(dir_group)  # Отладка
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
                         if dir_group < 0:  # если исследование не должно группироваться
@@ -139,7 +138,6 @@ def dir_save(request):
                             directionsForResearches[dir_group].save()  # Сохранение направления
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                            result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
                         issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
                                                       # Установка направления для группы этого исследования
                                                       research=research, deferred=False)  # Создание направления на исследование
