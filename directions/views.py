@@ -39,7 +39,6 @@ def dir_save(request):
     """
         r - флаг успешной вставки направлений
         list_id - список сохраненных направлений
-        mda - отладка
     """
     if request.method == 'POST':
         dict = json.loads(request.POST['dict'])  # json парсинг принятых данных
@@ -95,7 +94,6 @@ def dir_save(request):
                 # Исследование привязываются к направлению по группе
 
                 finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
-                result["mda"] += json.dumps(res)
 
                 for key in res:  # перебор лабораторий
                     for v in res[key]:  # перебор выбраных исследований в лаборатории
