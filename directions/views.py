@@ -109,14 +109,13 @@ def dir_save(request):
                             # Если исследование может группироваться и направление для группы не создано
 
                             # Создание направления для группы
-                            directionsForResearches[dir_group] = Napravleniya.genNapravlenye(client_id,
-                                                                                             request.user.doctorprofile,
-                                                                                             finsource,
-                                                                                             diagnos)
+                            directionsForResearches[dir_group] = Napravleniya.genNapravleniye(client_id,
+                                                                                              request.user.doctorprofile,
+                                                                                              finsource,
+                                                                                              diagnos,
+                                                                                              ptype,
+                                                                                              history_num)
                             Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
-
-                            if ptype == "stat":
-                                directionsForResearches[dir_group].history_num = history_num
 
                             directionsForResearches[dir_group].save()  # Сохранение направления
 
@@ -127,14 +126,14 @@ def dir_save(request):
                                 research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
                             # Создание направления для исследования
-                            directionsForResearches[dir_group] = Napravleniya.genNapravlenye(client_id,
-                                                                                             request.user.doctorprofile,
-                                                                                             finsource,
-                                                                                             diagnos)
+                            directionsForResearches[dir_group] = Napravleniya.genNapravleniye(client_id,
+                                                                                              request.user.doctorprofile,
+                                                                                              finsource,
+                                                                                              diagnos,
+                                                                                              ptype,
+                                                                                              history_num)
                             Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
 
-                            if ptype == "stat":
-                                directionsForResearches[dir_group].history_num = history_num
                             directionsForResearches[dir_group].save()  # Сохранение направления
                             result["list_id"].append(
                                 directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
