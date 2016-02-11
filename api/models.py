@@ -14,7 +14,7 @@ class Application(models.Model):
 
 class RelationFractionASTM(models.Model):
     MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000),)
-    astm_field = models.CharField(max_length=127, unique=True)
+    astm_field = models.CharField(max_length=127)
     fraction = models.ForeignKey(directory_models.Fractions)
     multiplier = models.IntegerField(choices=MULTIPLIERS, default=0)
 

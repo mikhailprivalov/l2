@@ -3,6 +3,10 @@ from __future__ import unicode_literals
 from django.db import models
 from datetime import date, datetime
 
+import sys
+
+TESTING = sys.argv[1:2] == ['test']
+
 class Importedclients(models.Model):
     """Пациенты из DBF"""
     num = models.IntegerField(unique=True, primary_key=False, blank=True, null=True)  # Номер карты
@@ -15,8 +19,9 @@ class Importedclients(models.Model):
     sex = models.CharField(max_length=16, blank=True, null=True)  # Пол
     initials = models.CharField(max_length=16, blank=True, null=True)  # Инициалы
 
+
     class Meta:
-        managed = False
+        managed = TESTING
         db_table = 'ImportedClients'
 
     def fio(self) -> str:
