@@ -109,14 +109,10 @@ def dir_save(request):
                             # Если исследование может группироваться и направление для группы не создано
 
                             # Создание направления для группы
-                            directionsForResearches[dir_group] = Napravleniya(
-                                client=Importedclients.objects.get(pk=client_id),
-                                # Привязка пациента к направлению
-                                doc=request.user.doctorprofile,
-                                # Привязка врача к направлению
-                                istochnik_f=finsource,
-                                # Установка источника финансирования
-                                diagnos=diagnos, cancel=False)  # Установка диагноза
+                            directionsForResearches[dir_group] = Napravleniya.genNapravlenye(client_id,
+                                                                                             request.user.doctorprofile,
+                                                                                             finsource,
+                                                                                             diagnos)
                             if ofname_id > -1 and ofname:
                                 directionsForResearches[dir_group].doc = ofname
                                 directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
@@ -133,14 +129,10 @@ def dir_save(request):
                                 research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
                             # Создание направления для исследования
-                            directionsForResearches[dir_group] = Napravleniya(
-                                client=Importedclients.objects.get(pk=client_id),
-                                # Привязка пациента к направлению
-                                doc=request.user.doctorprofile,
-                                # Привязка врача к направлению
-                                istochnik_f=finsource,
-                                # Установка источника финансирования
-                                diagnos=diagnos)  # Установка диагноза
+                            directionsForResearches[dir_group] = Napravleniya.genNapravlenye(client_id,
+                                                                                             request.user.doctorprofile,
+                                                                                             finsource,
+                                                                                             diagnos)
                             if ofname_id > -1 and ofname:
                                 directionsForResearches[dir_group].doc = ofname
                                 directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile

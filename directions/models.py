@@ -51,6 +51,15 @@ class Napravleniya(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create")  # Создатель направления
     cancel = models.BooleanField(default=False, blank=True)
 
+    @staticmethod
+    def genNapravlenye(client_id, doc, istochnik_f, diagnos, issledovaniya=[]):
+        dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
+                            doc=doc,
+                            istochnik_f=istochnik_f,
+                            diagnos=diagnos, cancel=False)
+
+        return dir
+
 
 class Issledovaniya(models.Model):
     # Направления на исследования
