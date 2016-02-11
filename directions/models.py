@@ -53,12 +53,34 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def genNapravlenye(client_id, doc, istochnik_f, diagnos, issledovaniya=[]):
+        """
+        Генерация направления
+        :param client_id: id пациента
+        :param doc: л/врач
+        :param istochnik_f: источник финансирования
+        :param diagnos: диагноз
+        :param issledovaniya: исследования (reserved)
+        :return: созданое направление
+        """
         dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
                             doc=doc,
                             istochnik_f=istochnik_f,
                             diagnos=diagnos, cancel=False)
 
         return dir
+    @staticmethod
+    def setOfName(dir, doc_current, ofname_id, ofname):
+        """
+        Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
+        :param dir: направление
+        :param doc_current: текущий врач, выписавший направление
+        :param ofname_id: id врача, от которого выписывается направление
+        :param ofname: объект с профилем врача, от которого выписывается направление
+        :return: Null
+        """
+        if ofname_id > -1 and ofname:
+            dir.doc = ofname
+            dir.doc_who_create = doc_current
 
 
 class Issledovaniya(models.Model):
