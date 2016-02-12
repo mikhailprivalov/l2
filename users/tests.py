@@ -4,7 +4,7 @@ from podrazdeleniya.models import Podrazdeleniya as podr
 from django.contrib.auth.models import Group
 
 class UsersTests(TestCase):
-    fixtures = ['groups.json']
+    fixtures = ['dbBase.json']
 
     def setUp(self):
         p = podr(title="TEST PODR")
