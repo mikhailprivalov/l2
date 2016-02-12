@@ -52,7 +52,7 @@ class Napravleniya(models.Model):
     cancel = models.BooleanField(default=False, blank=True)
 
     @staticmethod
-    def genNapravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
         """
         Генерация направления
         :param client_id: id пациента
@@ -73,10 +73,12 @@ class Napravleniya(models.Model):
             dir.history_num = historynum
         dir.save()
         return dir
+
     @staticmethod
-    def setOfName(dir, doc_current, ofname_id, ofname):
+    def set_of_name(dir, doc_current, ofname_id, ofname):
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
+        :rtype: Napravleniya
         :param dir: направление
         :param doc_current: текущий врач, выписавший направление
         :param ofname_id: id врача, от которого выписывается направление

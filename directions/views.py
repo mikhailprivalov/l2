@@ -1,30 +1,27 @@
 # coding=utf-8
-from io import BytesIO
 from datetime import date, datetime
+from io import BytesIO
 
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 import simplejson as json
-from reportlab.pdfgen import canvas
-from django.core.paginator import Paginator
-from reportlab.graphics.barcode import eanbc, code39
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics import renderPDF
-from reportlab.lib.pagesizes import A4
 from django.conf import settings
-from django.utils import dateformat
-
-from researches.models import Researches
-from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
-from clients.models import Importedclients
-from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
-from laboratory.decorators import group_required
-import slog.models as slog
-import directory.models as directory
-import users.models as umodels
-
+from django.core.paginator import Paginator
+from django.http import HttpResponse
+from django.utils import dateformat
+from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.graphics import renderPDF
+from reportlab.graphics.barcode import eanbc
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfdoc
+from reportlab.pdfgen import canvas
+
+import directory.models as directory
+import slog.models as slog
+import users.models as umodels
+from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
+
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
 w, h = A4
@@ -33,7 +30,9 @@ w, h = A4
 @csrf_exempt
 @login_required
 def dir_save(request):
-    """Сохранение направления"""
+    """Сохранение направления
+    :param request: запрос
+    """
     res = {}  # Словарь с направлениями, сгруппированными по лабораториям
     result = {"r": False, "list_id": []}
     """
@@ -41,11 +40,11 @@ def dir_save(request):
         list_id - список сохраненных направлений
     """
     if request.method == 'POST':
-        dict = json.loads(request.POST['dict'])  # json парсинг принятых данных
-        client_id = dict["client_id"]  # установка принятого идентификатора пациента
-        diagnos = dict["diagnos"]  # диагноз
-        finsource = dict["fin_source"]  # источник финансирования
-        researches = dict["researches"]  # исследования
+        dict_post = json.loads(request.POST['dict'])  # json парсинг принятых данных
+        client_id = dict_post["client_id"]  # установка принятого идентификатора пациента
+        diagnos = dict_post["diagnos"]  # диагноз
+        finsource = dict_post["fin_source"]  # источник финансирования
+        researches = dict_post["researches"]  # исследования
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
         history_num = request.POST['history_num']  # Номер истории болезни
@@ -87,11 +86,8 @@ def dir_save(request):
                     # {5:[0,2,5,7],6:[8]}
 
             if not no_attach:
-                # TODO: Обратить внимание!
-                # TODO: Нарисовать отдельную блок-схему
-
-                directionsForResearches = {}  # Словарь для временной записи направлений.
-                # Исследование привязываются к направлению по группе
+                directions_for_researches = {}  # Словарь для временной записи направлений.
+                # Исследования привязываются к направлению по группе
 
                 finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
 
@@ -103,36 +99,36 @@ def dir_save(request):
                         if research.direction:
                             dir_group = research.direction.pk  # получение группы исследования
                         # Если группа == 0, исследование не группируется с другими в одно направление
-                        if dir_group >= 0 and dir_group not in directionsForResearches.keys():
+                        if dir_group >= 0 and dir_group not in directions_for_researches.keys():
                             # Если исследование может группироваться и направление для группы не создано
 
                             # Создание направления для группы
-                            directionsForResearches[dir_group] = Napravleniya.genNapravleniye(client_id,
-                                                                                              request.user.doctorprofile,
-                                                                                              finsource,
-                                                                                              diagnos,
-                                                                                              ptype,
-                                                                                              history_num)
-                            Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
+                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
+                                                                                                 request.user.doctorprofile,
+                                                                                                 finsource,
+                                                                                                 diagnos,
+                                                                                                 ptype,
+                                                                                                 history_num)
+                            Napravleniya.set_of_name(directions_for_researches[dir_group], request.user.doctorprofile, ofname_id, ofname)
 
                             result["list_id"].append(
-                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
+                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
                         if dir_group < 0:  # если исследование не должно группироваться
                             dir_group = "id" + str(
                                 research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
                             # Создание направления для исследования
-                            directionsForResearches[dir_group] = Napravleniya.genNapravleniye(client_id,
-                                                                                              request.user.doctorprofile,
-                                                                                              finsource,
-                                                                                              diagnos,
-                                                                                              ptype,
-                                                                                              history_num)
-                            Napravleniya.setOfName(directionsForResearches[dir_group], request.user.doctorprofile, ofname_id, ofname)
+                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
+                                                                                                 request.user.doctorprofile,
+                                                                                                 finsource,
+                                                                                                 diagnos,
+                                                                                                 ptype,
+                                                                                                 history_num)
+                            Napravleniya.set_of_name(directions_for_researches[dir_group], request.user.doctorprofile, ofname_id, ofname)
 
                             result["list_id"].append(
-                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
+                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
+                        issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                       # Установка направления для группы этого исследования
                                                       research=research, deferred=False)  # Создание направления на исследование
                         issledovaniye.save()  # Сохранение направления на исследование
@@ -242,11 +238,10 @@ def get_xls_dir(request):
     return response
 
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 
-import random
+
 @login_required
 def gen_pdf_execlist(request):
     type = int(request.GET["type"])
