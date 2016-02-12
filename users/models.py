@@ -19,6 +19,14 @@ class DoctorProfile(models.Model):  # Профили врачей
     def get_fio(self):  # Функция формирования фамилии и инициалов (Иванов И.И.)
         return self.fio.split(" ")[0] + " " + self.fio.split(" ")[1][0] + "." + self.fio.split(" ")[2][0] + "."
 
+    def is_member(self, groups: list) -> bool:
+        """
+        Проверка вхождения пользователя в группу
+        :param group: название группы
+        :return: bool, входит ли в указаную группу
+        """
+        return self.user.groups.filter(name__in=groups).exists()
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazileniye:
             return self.fio + ', ' + self.podrazileniye.title

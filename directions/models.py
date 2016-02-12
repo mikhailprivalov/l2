@@ -81,7 +81,7 @@ class Napravleniya(models.Model):
     def set_of_name(dir, doc_current, ofname_id, ofname):
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
-        :rtype: Napravleniya
+        :rtype: Null
         :param dir: направление
         :param doc_current: текущий врач, выписавший направление
         :param ofname_id: id врача, от которого выписывается направление
@@ -98,6 +98,9 @@ class Napravleniya(models.Model):
                                       researches, researches_grouped_by_lab):
         result = {"r": False, "list_id": []}
         checklist = []
+        if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
+            result["message"] = "Недостаточно прав для создания направлений"
+            return result
         if client_id and researches:  # если client_id получен и исследования получены
             ofname = None
             if ofname_id > -1:
