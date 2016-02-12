@@ -19,7 +19,6 @@ from reportlab.pdfgen import canvas
 
 import directory.models as directory
 import slog.models as slog
-import users.models as umodels
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
@@ -50,98 +49,11 @@ def dir_save(request):
         history_num = request.POST['history_num']  # Номер истории болезни
         ptype = request.POST['type']
         i = 0  # Идентификатор направления
-        checklist = []
-        if client_id and researches:  # если client_id получен и исследования получены
-            ofname = None
-            if ofname_id > -1:
-                ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
-
-            no_attach = False
-            conflict_list = []
-            conflict_keys = []
-            for v in researches:  # нормализация исследований
-                if v and v not in checklist:
-                    # checklist.append(v)
-                    researches_grouped_by_lab.append(
-                        {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
-                    # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
-
-                    for vv in v:
-                        if not vv or not vv.isnumeric():
-                            continue
-                        research_tmp = directory.Researches.objects.get(pk=int(vv))
-                        if research_tmp.no_attach and research_tmp.no_attach > 0:
-                            if research_tmp.no_attach not in conflict_keys:
-                                conflict_keys.append(research_tmp.no_attach)
-                                if not no_attach:
-                                    conflict_list = [research_tmp.title]
-                            else:
-                                no_attach = True
-                                conflict_list.append(research_tmp.title)
-                i += 1
-
-            for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
-                for key in v.keys():
-                    res[key] = v[key]
-                    # {5:[0,2,5,7],6:[8]}
-
-            if not no_attach:
-                directions_for_researches = {}  # Словарь для временной записи направлений.
-                # Исследования привязываются к направлению по группе
-
-                finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
-
-                for key in res:  # перебор лабораторий
-                    for v in res[key]:  # перебор выбраных исследований в лаборатории
-                        research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
-
-                        dir_group = -1
-                        if research.direction:
-                            dir_group = research.direction.pk  # получение группы исследования
-                        # Если группа == 0, исследование не группируется с другими в одно направление
-                        if dir_group >= 0 and dir_group not in directions_for_researches.keys():
-                            # Если исследование может группироваться и направление для группы не создано
-
-                            # Создание направления для группы
-                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                                 request.user.doctorprofile,
-                                                                                                 finsource,
-                                                                                                 diagnos,
-                                                                                                 ptype,
-                                                                                                 history_num)
-                            Napravleniya.set_of_name(directions_for_researches[dir_group], request.user.doctorprofile, ofname_id, ofname)
-
-                            result["list_id"].append(
-                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        if dir_group < 0:  # если исследование не должно группироваться
-                            dir_group = "id" + str(
-                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
-
-                            # Создание направления для исследования
-                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                                 request.user.doctorprofile,
-                                                                                                 finsource,
-                                                                                                 diagnos,
-                                                                                                 ptype,
-                                                                                                 history_num)
-                            Napravleniya.set_of_name(directions_for_researches[dir_group], request.user.doctorprofile, ofname_id, ofname)
-
-                            result["list_id"].append(
-                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                      # Установка направления для группы этого исследования
-                                                      research=research, deferred=False)  # Создание направления на исследование
-                        issledovaniye.save()  # Сохранение направления на исследование
-
-                result["r"] = True  # Флаг успешной вставки в True
-                result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
-                slog.Log(key=json.dumps(result["list_id"]), user=request.user.doctorprofile, type=21,
-                         body=request.POST['dict']).save()
-
-            else:
-                result["r"] = False
-                result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, i, ofname_id, ptype, request.user.doctorprofile, res,
+                                          researches, researches_grouped_by_lab)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
+
+
 
 @login_required
 def get_xls_dir(request):
