@@ -53,8 +53,6 @@ def dir_save(request):
                                           researches, researches_grouped_by_lab)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
-
-
 @login_required
 def get_xls_dir(request):
     import xlwt
