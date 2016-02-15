@@ -88,35 +88,7 @@ def send(request):
         result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON
 
-'''
-{"PATIENTS":
-     [{"BIRTHDAY": "",
-       "NAME": {"FIRST_NAME": "", "FAMILY": ""},
-       "SEQUENCE_NO": "1",
-       "ID": "",
-       "DOCTOR": "",
-       "ORDERS": [{"ACTION": "",
-                   "PRIORITY": "R",
-                   "TESTS": {"1": {
-                       "RATE": "0", "ITEM_NO": "22", "NAME": "", "ITEM_NAME": "HDL", "TYPE": "", "ID": ""
-                   }
-                   },
-                   "SYSTEM_ID": {"POSITION": "1", "ROUND_NO": "1", "TAG": ""},
-                   "SAMPLE_ID": "", "SEQUENCE_NO": "1", "SAMPLE_TYPE": "Serum",
-                   "REPORT_FORM": "F",
-                   "RESULTS": [{
-                       "REFERENCE": " 1.0300 TO  3.0000",
-                       "VALUE": " 1.6536",
-                       "UNIT": " mmol/l",
-                       "DATETIME": "20160118112124",
-                       "TEST": {"RATE": "0", "ITEM_NO": "22", "NAME": "", "ITEM_NAME": "HDL", "TYPE": "", "ID": ""},
-                       "SEQUENCE_NO": "1", "ABNORMAL": "N", "CONDITION": "P"
-                   }]
-                   }],
-       "SEX": ""}],
- "HEADER": {"RECEIVER": {"ID": "P_1", "NAME": "HOST"}, "SENDER": {"ID": "SYSTEM1", "NAME": "BiOLiS NEO"},
-            "VERSION": "1", "PROCESS": "P", "DATETIME": "20160118155226"}
- }'''
+
 @csrf_exempt
 def get_order(request):
     import astm
