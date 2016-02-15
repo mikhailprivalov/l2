@@ -24,6 +24,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'debug_toolbar',
     'debug_panel',
+    'django_jenkins',
     'cachalot',
     'clients',
     'users',
@@ -236,6 +237,12 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     TEMPLATE_DEBUG = False
     TESTS_IN_PROGRESS = True
     MIGRATION_MODULES = DisableMigrations()
+
+
+JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
+                 'django_jenkins.tasks.run_pep8',
+                 'django_jenkins.tasks.run_pyflakes'
+                 )
 
 
 #DEBUG = True

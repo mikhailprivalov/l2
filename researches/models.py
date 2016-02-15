@@ -1,7 +1,9 @@
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from django.db import models
 import jsonfield
+import sys
 
+TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 class Tubes(models.Model):
     """Таблица типов пробирок"""
@@ -32,13 +34,13 @@ class Researches(models.Model):
     short_title = models.CharField(max_length=255, blank=True, null=True)
 
     tube_weight_group = models.IntegerField(default=0, db_column='tube_weight_group')
-    tube_weight = models.IntegerField(default=0, db_column='tube_weight')
+    tube_weight = models.IntegerField(default=0, null=True, db_column='tube_weight')
 
     hide = models.IntegerField(default=0, db_column="hide")
     auto_add = models.IntegerField(default=0, db_column="auto_add")
 
     class Meta:
-        managed = False
+        managed = TESTING
         db_table = 'researches'  # Название таблицы
 
     def __str__(self):

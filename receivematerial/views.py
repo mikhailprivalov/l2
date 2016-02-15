@@ -28,17 +28,11 @@ def receive(request):
         tubes = json.loads(request.POST["data"])
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
-            message = ""
             if tube_get["status"]:
-                tube.doc_recive = request.user.doctorprofile
-                tube.time_recive = timezone.now()
-                type = 11
-            else:
-                tube.notice = tube_get["notice"]
-                type = 12
-            tube.save()
-            slog.Log(key=str(tube_get["id"]), user=request.user.doctorprofile, type=type,
-                     body=json.dumps({"status": tube_get["status"], "notice": tube_get["notice"]})).save()
+                tube.set_r(request.user.doctorprofile)
+            elif tube_get["notice"] != "":
+                tube.set_notice(tube_get["notice"])
+
         result = {"r": True}
         return HttpResponse(json.dumps(result), content_type="application/json")
 

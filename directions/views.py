@@ -1,30 +1,26 @@
 # coding=utf-8
-from io import BytesIO
 from datetime import date, datetime
+from io import BytesIO
 
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 import simplejson as json
-from reportlab.pdfgen import canvas
-from django.core.paginator import Paginator
-from reportlab.graphics.barcode import eanbc, code39
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics import renderPDF
-from reportlab.lib.pagesizes import A4
 from django.conf import settings
-from django.utils import dateformat
-
-from researches.models import Researches
-from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
-from clients.models import Importedclients
-from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
-from laboratory.decorators import group_required
-import slog.models as slog
-import directory.models as directory
-import users.models as umodels
-
+from django.core.paginator import Paginator
+from django.http import HttpResponse
+from django.utils import dateformat
+from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.graphics import renderPDF
+from reportlab.graphics.barcode import eanbc
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfdoc
+from reportlab.pdfgen import canvas
+
+import directory.models as directory
+import slog.models as slog
+from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
+
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
 w, h = A4
@@ -33,136 +29,25 @@ w, h = A4
 @csrf_exempt
 @login_required
 def dir_save(request):
-    """Сохранение направления"""
-    res = {}  # Словарь с направлениями, сгруппированными по лабораториям
-    result = {"r": False, "list_id": [], "mda": ""}
+    """Сохранение направления
+    :param request: запрос
+    """
+    result = {"r": False, "list_id": []}
     """
         r - флаг успешной вставки направлений
         list_id - список сохраненных направлений
-        mda - отладка
     """
     if request.method == 'POST':
-        dict = json.loads(request.POST['dict'])  # json парсинг принятых данных
-        client_id = dict["client_id"]  # установка принятого идентификатора пациента
-        diagnos = dict["diagnos"]  # диагноз
-        finsource = dict["fin_source"]  # источник финансирования
-        researches = dict["researches"]  # исследования
-        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        dict_post = json.loads(request.POST['dict'])  # json парсинг принятых данных
+        client_id = dict_post["client_id"]  # установка принятого идентификатора пациента
+        diagnos = dict_post["diagnos"]  # диагноз
+        finsource = dict_post["fin_source"]  # источник финансирования
+        researches = dict_post["researches"]  # исследования
         ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
         history_num = request.POST['history_num']  # Номер истории болезни
         ptype = request.POST['type']
-        i = 0  # Идентификатор направления
-        checklist = []
-        if client_id and researches:  # если client_id получен и исследования получены
-            ofname = None
-            if ofname_id > -1:
-                ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
-
-            no_attach = False
-            conflict_list = []
-            conflict_keys = []
-            for v in researches:  # нормализация исследований
-                if v and v not in checklist:
-                    # checklist.append(v)
-                    researches_grouped_by_lab.append(
-                        {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
-                    # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
-
-                    for vv in v:
-                        if not vv or not vv.isnumeric():
-                            continue
-                        research_tmp = directory.Researches.objects.get(pk=int(vv))
-                        if research_tmp.no_attach and research_tmp.no_attach > 0:
-                            if research_tmp.no_attach not in conflict_keys:
-                                conflict_keys.append(research_tmp.no_attach)
-                                if not no_attach:
-                                    conflict_list = [research_tmp.title]
-                            else:
-                                no_attach = True
-                                conflict_list.append(research_tmp.title)
-                i += 1
-
-            for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
-                for key in v.keys():
-                    res[key] = v[key]
-                    # {5:[0,2,5,7],6:[8]}
-
-            if not no_attach:
-                # TODO: Обратить внимание!
-                # TODO: Нарисовать отдельную блок-схему
-
-                directionsForResearches = {}  # Словарь для временной записи направлений.
-                # Исследование привязываются к направлению по группе
-
-                finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
-                result["mda"] += json.dumps(res)
-
-                for key in res:  # перебор лабораторий
-                    for v in res[key]:  # перебор выбраных исследований в лаборатории
-                        research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
-
-                        dir_group = -1
-                        if research.direction:
-                            dir_group = research.direction.pk  # получение группы исследования
-                        # Если группа == 0, исследование не группируется с другими в одно направление
-                        if dir_group >= 0 and dir_group not in directionsForResearches.keys():
-                            # Если исследование может группироваться и направление для группы не создано
-
-                            # Создание направления для группы
-                            directionsForResearches[dir_group] = Napravleniya(
-                                client=Importedclients.objects.get(pk=client_id),
-                                # Привязка пациента к направлению
-                                doc=request.user.doctorprofile,
-                                # Привязка врача к направлению
-                                istochnik_f=finsource,
-                                # Установка источника финансирования
-                                diagnos=diagnos, cancel=False)  # Установка диагноза
-                            if ofname_id > -1 and ofname:
-                                directionsForResearches[dir_group].doc = ofname
-                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
-                            if ptype == "stat":
-                                directionsForResearches[dir_group].history_num = history_num
-
-                            directionsForResearches[dir_group].save()  # Сохранение направления
-
-                            result["mda"] += str(dir_group)  # Отладка
-                            result["list_id"].append(
-                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        if dir_group < 0:  # если исследование не должно группироваться
-                            dir_group = "id" + str(
-                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
-
-                            # Создание направления для исследования
-                            directionsForResearches[dir_group] = Napravleniya(
-                                client=Importedclients.objects.get(pk=client_id),
-                                # Привязка пациента к направлению
-                                doc=request.user.doctorprofile,
-                                # Привязка врача к направлению
-                                istochnik_f=finsource,
-                                # Установка источника финансирования
-                                diagnos=diagnos)  # Установка диагноза
-                            if ofname_id > -1 and ofname:
-                                directionsForResearches[dir_group].doc = ofname
-                                directionsForResearches[dir_group].doc_who_create = request.user.doctorprofile
-                            if ptype == "stat":
-                                directionsForResearches[dir_group].history_num = history_num
-                            directionsForResearches[dir_group].save()  # Сохранение направления
-                            result["list_id"].append(
-                                directionsForResearches[dir_group].pk)  # Добавление ID в список созданых направлений
-                            result["mda"] += str(dir_group) + " | "  # Добавление в отладочный вывод
-                        issledovaniye = Issledovaniya(napravleniye=directionsForResearches[dir_group],
-                                                      # Установка направления для группы этого исследования
-                                                      research=research, deferred=False)  # Создание направления на исследование
-                        issledovaniye.save()  # Сохранение направления на исследование
-
-                result["r"] = True  # Флаг успешной вставки в True
-                result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
-                slog.Log(key=json.dumps(result["list_id"]), user=request.user.doctorprofile, type=21,
-                         body=request.POST['dict']).save()
-
-            else:
-                result["r"] = False
-                result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, request.user.doctorprofile,
+                                          researches)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
 @login_required
@@ -260,11 +145,10 @@ def get_xls_dir(request):
     return response
 
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 
-import random
+
 @login_required
 def gen_pdf_execlist(request):
     type = int(request.GET["type"])
@@ -365,30 +249,6 @@ def gen_pdf_execlist(request):
     response.write(pdf)  # Запись PDF в ответ
     return response
 
-
-def frameOctahedralPage(canvas, lw, lh, xsize, ysize, padding, lpadding):
-    n = 0
-    fam = ["Касъяненко", "Привалов", "Михайлов", "Селиверстов", "Красильников", "Овчинников"]
-    initials = ["С.Н.", "М.С.", "И.И.", "С.А.", "А.С."]
-    canvas.setFont('OpenSans', 7)
-    for y in reversed(range(1,ysize+1)):
-        canvas.line(lpadding + padding, (lh - padding)/ysize*y, lw - padding, (lh - padding)/ysize*y)
-        for x in range(1, xsize+1):
-            n += 1
-            canvas.line((lw-padding-lpadding)/xsize*x + lpadding, padding, (lw-padding-lpadding)/xsize*x + lpadding, lh - padding)
-            tx = (lw-padding-lpadding)/xsize*x + lpadding + 2 - (lw-padding-lpadding)/xsize
-            ty = (lh - padding)/ysize*y
-            if x == 1:
-                tx += 16
-            canvas.setFont('OpenSans', 7)
-            canvas.drawString(tx, ty - 11, random.choice(fam) + " " + random.choice(initials) + ", " + str(random.randrange(10,99)) + " л")
-            canvas.drawString(tx, ty - 22, "№ напр.: " + str(random.randrange(6600, 150000)))
-            canvas.drawString(tx, ty - 33, "№ пробирки.: " + str(random.randrange(10000, 400000)))
-            #canvas.circle(tx + (lw - padding)/xsize - 23, ty - 12, 9, fill=0)
-            #canvas.drawCentredString(tx + (lw - padding)/xsize - 23, ty - 16, str(n))
-
-    canvas.line(lpadding + padding, padding, lw - padding, padding)
-    canvas.line(lpadding + padding, padding, lpadding + padding, lh - padding)
 
 @cache_page(60 * 15)
 @login_required
@@ -673,9 +533,7 @@ def get_one_dir(request):
                                                       "color": tube.type.tube.color,
                                                       "title": tube.type.tube.title, "id": tube.id,
                                                       "barcode": barcode}  # Добавление пробирки в словарь
-                    s = False  # Статус взятия материала для исследований
-                    if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
-                        s = True  # Установка статуса для вывода в интерфейс
+                    s = tube.getstatus()  # Статус взятия материала для исследований
                     response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
 
                 response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
@@ -736,12 +594,8 @@ def update_direction(request):
         for k, v in statuses["statuses"].items():  # Перебор ключей и значений
             val = TubesRegistration.objects.get(id=k)  # Выборка пробирки по ключу
             if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
-                val.doc_get = request.user.doctorprofile  # Привязка профиля к пробирке
-                val.time_get = timezone.now()  # Установка времени
-                val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
-                val.save()  # Сохранение пробирки
+                val.set_get(request.user.doctorprofile)
                 res["o"].append(val.id)
-                slog.Log(key=str(val.pk), type=9, body="", user=request.user.doctorprofile).save()
             res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
@@ -758,9 +612,7 @@ def group_confirm_get(request):
         checked = json.loads(request.POST["checked"])
 
         for t in TubesRegistration.objects.filter(pk__in=checked, doc_get__isnull=True):
-            t.doc_get = request.user.doctorprofile
-            t.time_get = timezone.now()
-            t.save()
+            t.set_get(request.user.doctorprofile)
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
