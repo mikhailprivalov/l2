@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 import sys
 
-TESTING = sys.argv[1:2] == ['test']
+TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 class Importedclients(models.Model):
     """Пациенты из DBF"""

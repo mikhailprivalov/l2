@@ -3,7 +3,7 @@ from django.db import models
 import jsonfield
 import sys
 
-TESTING = sys.argv[1:2] == ['test']
+TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 class Tubes(models.Model):
     """Таблица типов пробирок"""
