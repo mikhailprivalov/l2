@@ -22,6 +22,33 @@ class TubesRegistration(models.Model):
 
     notice = models.CharField(max_length=512, default="")  # Замечания
 
+    def set_get(self, doc_get):
+        from django.utils import timezone
+        self.time_get = timezone.now()
+        self.doc_get = doc_get
+        self.barcode = self.pk
+        self.save()
+        slog.Log(key=str(self.pk), type=9, body="", user=doc_get).save()
+
+    def getstatus(self):
+        if self.time_get and self.doc_get:
+            return True
+        return False
+
+    def set_r(self, doc_r):
+        from django.utils import timezone
+        self.time_recive = timezone.now()
+        self.doc_recive = doc_r
+        self.save()
+        slog.Log(key=str(self.pk), user=doc_r, type=11,
+                     body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
+
+    def set_notice(self, doc_r, notice):
+        self.notice = notice
+        self.save()
+        slog.Log(key=str(self.pk), user=doc_r, type=12,
+                     body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
+
     def rstatus(self):
         if self.doc_recive:
             return True
@@ -94,8 +121,11 @@ class Napravleniya(models.Model):
             dir.save()
 
     @staticmethod
-    def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, i, ofname_id, ptype, doc_current, res,
-                                      researches, researches_grouped_by_lab):
+    def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, doc_current,
+                                      researches):
+        res = {}  # Словарь с направлениями, сгруппированными по лабораториям
+        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
+        i = 0
         result = {"r": False, "list_id": []}
         checklist = []
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):

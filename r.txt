@@ -20,3 +20,8 @@ ldap3
 xlwt
 django-ajax-selects
 numpy
+django-jenkins
+coverage
+pep8
+pyflakes
+pylint

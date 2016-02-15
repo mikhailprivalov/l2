@@ -32,7 +32,6 @@ def dir_save(request):
     """Сохранение направления
     :param request: запрос
     """
-    res = {}  # Словарь с направлениями, сгруппированными по лабораториям
     result = {"r": False, "list_id": []}
     """
         r - флаг успешной вставки направлений
@@ -44,13 +43,11 @@ def dir_save(request):
         diagnos = dict_post["diagnos"]  # диагноз
         finsource = dict_post["fin_source"]  # источник финансирования
         researches = dict_post["researches"]  # исследования
-        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
         history_num = request.POST['history_num']  # Номер истории болезни
         ptype = request.POST['type']
-        i = 0  # Идентификатор направления
-        result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, i, ofname_id, ptype, request.user.doctorprofile, res,
-                                          researches, researches_grouped_by_lab)
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, request.user.doctorprofile,
+                                          researches)
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
 @login_required
@@ -536,9 +533,7 @@ def get_one_dir(request):
                                                       "color": tube.type.tube.color,
                                                       "title": tube.type.tube.title, "id": tube.id,
                                                       "barcode": barcode}  # Добавление пробирки в словарь
-                    s = False  # Статус взятия материала для исследований
-                    if tube.time_get and tube.doc_get:  # Проверка статуса пробирки
-                        s = True  # Установка статуса для вывода в интерфейс
+                    s = tube.getstatus()  # Статус взятия материала для исследований
                     response["tubes"][tube.id]["status"] = s  # Установка статуса в объект пробирки
 
                 response["client"] = {"fio": tmp2.client.family + " " + tmp2.client.name + " " + tmp2.client.twoname,
@@ -599,12 +594,8 @@ def update_direction(request):
         for k, v in statuses["statuses"].items():  # Перебор ключей и значений
             val = TubesRegistration.objects.get(id=k)  # Выборка пробирки по ключу
             if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
-                val.doc_get = request.user.doctorprofile  # Привязка профиля к пробирке
-                val.time_get = timezone.now()  # Установка времени
-                val.barcode = statuses["statuses"][k]  # Установка штрих-кода или номера пробирки
-                val.save()  # Сохранение пробирки
+                val.set_get(request.user.doctorprofile)
                 res["o"].append(val.id)
-                slog.Log(key=str(val.pk), type=9, body="", user=request.user.doctorprofile).save()
             res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
@@ -621,9 +612,7 @@ def group_confirm_get(request):
         checked = json.loads(request.POST["checked"])
 
         for t in TubesRegistration.objects.filter(pk__in=checked, doc_get__isnull=True):
-            t.doc_get = request.user.doctorprofile
-            t.time_get = timezone.now()
-            t.save()
+            t.set_get(request.user.doctorprofile)
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 

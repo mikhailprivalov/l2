@@ -85,7 +85,7 @@ def loadready(request):
 @login_required
 def results_save(request):
     """ Сохранение результатов """
-    result = {}
+    result = {"ok": False}
     if request.method == "POST":
         fractions = json.loads(request.POST["fractions"])  # Загрузка фракций из запроса
         issledovaniye = Issledovaniya.objects.get(
@@ -109,6 +109,7 @@ def results_save(request):
 
             issledovaniye.time_save = datetime.now()  # Время сохранения
             issledovaniye.save()
+            result = {"ok": True}
 
             slog.Log(key=request.POST["issledovaniye"], type=13, body=request.POST["fractions"],
                      user=request.user.doctorprofile).save()
