@@ -31,7 +31,7 @@ def receive(request):
             if tube_get["status"]:
                 tube.set_r(request.user.doctorprofile)
             elif tube_get["notice"] != "":
-                tube.set_notice(tube_get["notice"])
+                tube.set_notice(request.user.doctorprofile, tube_get["notice"])
 
         result = {"r": True}
         return HttpResponse(json.dumps(result), content_type="application/json")
