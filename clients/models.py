@@ -25,12 +25,21 @@ class Importedclients(models.Model):
         db_table = 'ImportedClients'
 
     def fio(self) -> str:
+        """
+        :return: Полное ФИО
+        """
         return self.family + " " + self.name + " " + self.twoname
 
     def shortfio(self) -> str:
+        """
+        :return: Короткое ФИО
+        """
         return self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
 
     def bd(self):
+        """
+        :return: Дата рождения
+        """
         return datetime.strptime(self.birthday.split(" ")[0], "%d.%m.%Y").date()
 
     def age(self):
@@ -47,6 +56,10 @@ class Importedclients(models.Model):
             return today.year - born.year
 
     def age_s(self) -> str:
+        """
+        Формирование строки возраста: 10 лет, 101 год
+        :return:
+        """
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
