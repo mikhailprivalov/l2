@@ -23,6 +23,11 @@ class TubesRegistration(models.Model):
     notice = models.CharField(max_length=512, default="")  # Замечания
 
     def set_get(self, doc_get):
+        """
+        Установка статуса взятия
+        :param doc_get: врач/мед сестра, взявшая материал
+        :return: None
+        """
         from django.utils import timezone
         self.time_get = timezone.now()
         self.doc_get = doc_get
@@ -31,11 +36,20 @@ class TubesRegistration(models.Model):
         slog.Log(key=str(self.pk), type=9, body="", user=doc_get).save()
 
     def getstatus(self):
+        """
+        Получение статуса взятия
+        :return:
+        """
         if self.time_get and self.doc_get:
             return True
         return False
 
     def set_r(self, doc_r):
+        """
+        Установка статуса принятия материала лабораторией
+        :param doc_r: врач/лаборант, принявший материал
+        :return:
+        """
         from django.utils import timezone
         self.time_recive = timezone.now()
         self.doc_recive = doc_r
@@ -44,17 +58,31 @@ class TubesRegistration(models.Model):
                      body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
     def set_notice(self, doc_r, notice):
+        """
+        Установка замечания для пробирки
+        :param doc_r: врач/лаборант, указавший замечание
+        :param notice: текст замечания
+        :return:
+        """
         self.notice = notice
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=12,
                      body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
     def rstatus(self):
+        """
+        Получение статуса принятия материала лабораторией
+        :return: статус принятия
+        """
         if self.doc_recive:
             return True
         return False
 
     def getbc(self):
+        """
+        Получение номера штрих-кода
+        :return: штрих-код
+        """
         if self.barcode and self.barcode.isnumeric():
             return self.barcode
         return self.id

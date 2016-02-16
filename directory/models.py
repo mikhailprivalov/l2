@@ -5,14 +5,23 @@ from researches.models import Tubes
 
 
 class DirectionsGroup(models.Model):
+    """
+    Группы направлений
+    """
     pass
 
 
 class ReleationsFT(models.Model):
+    """
+    (многие-ко-многим) фракции к пробиркам
+    """
     tube = models.ForeignKey(Tubes)
 
 
 class Researches(models.Model):
+    """
+    Вид исследования
+    """
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True)
     title = models.CharField(max_length=255, default="")
     subgroup = models.ForeignKey(Subgroups, related_name="subgroup")
@@ -26,6 +35,9 @@ class Researches(models.Model):
     template = models.IntegerField(default=0, blank=True)
 
 class Fractions(models.Model):
+    """
+    Фракции для исследований
+    """
     title = models.CharField(max_length=255)
     research = models.ForeignKey(Researches, db_index=True)
     units = models.CharField(max_length=255)
@@ -42,6 +54,9 @@ class Fractions(models.Model):
         return self.research.title + " | " + self.title
 
 class Absorption(models.Model):
+    """
+    Поглощение
+    """
     fupper = models.ForeignKey(Fractions, related_name="fupper")
     flower = models.ForeignKey(Fractions, related_name="flower")
 

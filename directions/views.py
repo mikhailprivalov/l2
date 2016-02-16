@@ -52,6 +52,11 @@ def dir_save(request):
 
 @login_required
 def get_xls_dir(request):
+    """
+    Сводная таблица направлений
+    :param request:
+    :return:
+    """
     import xlwt
     response = HttpResponse(content_type='application/ms-excel')
     direction_id = json.loads(request.GET["napr_id"])
@@ -151,6 +156,11 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 @login_required
 def gen_pdf_execlist(request):
+    """
+    Лист исполнения
+    :param request:
+    :return:
+    """
     type = int(request.GET["type"])
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
@@ -547,6 +557,11 @@ def get_one_dir(request):
 @csrf_exempt
 @login_required
 def setdef(request):
+    """
+    Установка/снятия статуса 'отложен' для исследования
+    :param request:
+    :return:
+    """
     response = {"ok": False}
     if "pk" in request.REQUEST.keys():
         status = False
