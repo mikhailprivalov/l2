@@ -94,7 +94,7 @@ class DirectionsTests(TestCase):
                 i += 1
                 tube_obj = dm.TubesRegistration.objects.get(pk=tube_row["tube"]["id"])
                 if i % 2 == 0:
-                    response2 = self.client.post("/dashboard/receive", {"data": json.dumps([{"id": tube_obj.pk, "status": True, "notice": ""}])})
+                    response2 = self.client.post("/dashboard/receive", {"data": json.dumps([{"id": tube_obj.pk, "status": True, "notice": "" if i % 6 != 0 else str(uuid.uuid4())}])})
                     self.assertContains(response2, "true")
                     self.assertTrue(dm.TubesRegistration.objects.get(pk=tube_obj.pk).rstatus())
                 else:
