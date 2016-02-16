@@ -26,7 +26,12 @@ pdfmetrics.registerFont(
 
 @login_required
 def tubes(request):
-    pw, ph = 43, 25
+    """
+    Barcodes view
+    :param request:
+    :return:
+    """
+    pw, ph = 43, 25  # длина, ширина листа
     direction_id = json.loads(request.GET["napr_id"])
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'
