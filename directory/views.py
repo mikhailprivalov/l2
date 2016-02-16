@@ -168,6 +168,11 @@ def directory_researches_update_sort(request):
 @csrf_exempt
 @login_required
 def directory_toggle_hide_research(request):
+    """
+    Переключение скрытия исследования для выписки
+    :param request:
+    :return:
+    """
     result = {}
     pk = request.REQUEST["pk"]
     research = Researches.objects.get(pk=int(pk))
@@ -181,6 +186,11 @@ def directory_toggle_hide_research(request):
 @csrf_exempt
 @login_required
 def directory_copy_research(request):
+    """
+    Копирование исследования
+    :param request:
+    :return:
+    """
     pk = request.REQUEST["pk"]
     research = Researches.objects.get(pk=int(pk))
     research.pk = None
