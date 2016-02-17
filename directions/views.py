@@ -889,7 +889,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
 @login_required
 def get_issledovaniya(request):
     """ Получение списка исследований и направления для ввода результатов"""
-    res = {"issledovaniya": [], "ok": False}
+    res = {"issledovaniya": {}, "ok": False}
     if request.method == "GET":
         iss = []
         napr = None
@@ -953,13 +953,13 @@ def get_issledovaniya(request):
                             confirmed = False
                             if not issledovaniye.deferred:
                                 res["all_confirmed"] = False
-                        res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                        res["issledovaniya"][issledovaniye.research.sort_weight] = {"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved, "confirmed": confirmed,
                                                      "tube": {"pk": ', '.join(str(v) for v in tubes),
                                                               "title": ' | '.join(titles)},
                                                      "template": str(issledovaniye.research.template),
-                                                     "deff": issledovaniye.deferred})
+                                                     "deff": issledovaniye.deferred}
             if napr:
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
