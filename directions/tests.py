@@ -116,7 +116,6 @@ class DirectionsTests(TestCase):
             for tube_row in ready["tubes"]:
                 response2 = self.client.get("/directions/get/issledovaniya", data={"id": tube_row["id"], "type": 0})
                 self.assertEqual(response2.status_code, 200)
-
                 dird = json.loads(response2.content)
                 for iss_t in dird["issledovaniya"]:
                     response3 = self.client.get("/researches/get/one", data={"id": int(iss_t["pk"])})
@@ -133,6 +132,8 @@ class DirectionsTests(TestCase):
                     response5 = self.client.post("/results/confirm/list", {"list": json.dumps([iss_t["pk"]])})
                     self.assertContains(response5, "true")
 
+        response6 = self.client.get("/results/pdf", data={"pk": json.dumps(self.naprs)})
+        self.assertEqual(response6.status_code, 200)
         self.assertTrue(self.client.login(username='kamshekinaea', password='123456'))
         for pk in self.naprs:
             response = self.client.get("/results/get/full", data={"pk": pk})
