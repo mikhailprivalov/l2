@@ -34,9 +34,9 @@ class Log(models.Model):
 
         (18, 'Пользователи: вход пользователя'),  #
     )
-    key = models.CharField(max_length=255)
+    key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
-    body = models.CharField(max_length=1023)
+    body = models.CharField(max_length=2047)
     user = models.ForeignKey(DoctorProfile)
     time = models.DateTimeField(auto_now=True)
 
