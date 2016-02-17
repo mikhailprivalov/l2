@@ -132,7 +132,9 @@ class DirectionsTests(TestCase):
 
                     response5 = self.client.post("/results/confirm/list", {"list": json.dumps([iss_t["pk"]])})
                     self.assertContains(response5, "true")
-
+                    # http://lis/results/pdf?pk=[3203,1155,3206,3207,3208,3210,3212,3215,3216,3217,3218,3221,3222,3223,3224,3228,3229,3230,3233,1188,3111,2997,3007,3138,3012,3141,3142,3146,3151,3152,3155,3160,3161,3162,3036,3164,3166,3039,3168,3167,3171,3044,3172,3175,3176,3177,3178,3052,3181,3182,3183,3057,3189,3190,3063,3191,3194,3195,3196,3198,3071]
+        response6 = self.client.get("/results/pdf", data={"pk": json.dumps(self.naprs)})
+        self.assertEqual(response6.status_code, 200)
         self.assertTrue(self.client.login(username='kamshekinaea', password='123456'))
         for pk in self.naprs:
             response = self.client.get("/results/get/full", data={"pk": pk})
