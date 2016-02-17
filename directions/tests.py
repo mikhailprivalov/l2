@@ -117,7 +117,7 @@ class DirectionsTests(TestCase):
                 response2 = self.client.get("/directions/get/issledovaniya", data={"id": tube_row["id"], "type": 0})
                 self.assertEqual(response2.status_code, 200)
                 dird = json.loads(response2.content)
-                for iss_t in dird["issledovaniya"].values():
+                for iss_t in dird["issledovaniya"]:
                     response3 = self.client.get("/researches/get/one", data={"id": int(iss_t["pk"])})
                     self.assertEqual(response3.status_code, 200)
 
