@@ -48,6 +48,7 @@ def dashboard(request):  # Представление панели управл�
         menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
         if settings.LDAP and settings.LDAP["enable"]:
             menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
+        menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
 
     menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
 
