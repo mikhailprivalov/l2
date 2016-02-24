@@ -660,10 +660,10 @@ def get_worklist(request):
     tmprows = {}
     res = {"rows": []}
     from datetime import timedelta
-    date_start = datetime.now() - timedelta(days=1)
+    date_start = datetime.now() - timedelta(days=6)
     date_end = datetime.now()
-    if date_start.weekday() == 6: date_start -= timedelta(days=2)
-    if date_start.weekday() == 5: date_start -= timedelta(days=1)
+    # if date_start.weekday() == 6: date_start -= timedelta(days=2)
+    # if date_start.weekday() == 5: date_start -= timedelta(days=1)
     naps = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end), doc_who_create=request.user.doctorprofile, cancel=False)
                                                                 | Q(data_sozdaniya__range=(date_start, date_end), doc=request.user.doctorprofile, cancel=False))
     for n in naps:
