@@ -20,7 +20,9 @@ pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent
 @group_required("Лечащий врач", "Зав. отделением")
 def results_search(request):
     """ Представление для поиска результатов исследований у пациента """
-    return render(request, 'dashboard/results_search.html')
+    from podrazdeleniya.models import Podrazdeleniya
+    labs = Podrazdeleniya.objects.filter(isLab=True)
+    return render(request, 'dashboard/results_search.html', {"labs": labs})
 
 
 @login_required

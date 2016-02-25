@@ -32,6 +32,14 @@
 {% block scripts %}
     <script>
         var type = "poli", num = -1;
+
+        var active_lab = -1;
+        var labs = {
+        {% for v in labs %}{{ v.pk }} :
+        "{{ v.title }}",
+        {% endfor %}
+        }
+
         $(document).ready(function () {
 
         });
