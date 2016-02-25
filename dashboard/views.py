@@ -20,10 +20,7 @@ import simplejson as json
 @login_required
 def dashboard(request):  # Представление панели управления
     from laboratory import settings
-
-
     dt = ""
-
     menu = []
     groups = [str(x) for x in request.user.groups.all()]
 

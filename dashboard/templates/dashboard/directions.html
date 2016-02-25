@@ -29,7 +29,7 @@
             </div>
             <br/>
 
-            <table class="table table-bordered table-condensed" style="width: auto">
+            <table class="table table-bordered table-condensed" style="width: auto;table-layout:fixed;">
                 <tr>
                     <td class="table-header-row">Тип:&nbsp;</td>
                     <td id="card-type" class="table-content-row"></td>
@@ -252,16 +252,27 @@
         </div>
     </div>
     <div class="modal fade" id="results-search-modal">
-        <div class="modal-dialog">
-            <div class="modal-content">
+        <div class="modal-dialog" style="min-width: 50%;    width: auto; max-width: 85%">
+            <div class="modal-content" style="width: auto">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title">Поиск результатов</h4>
                 </div>
                 <div class="modal-body">
-                    <div id="tree-modal">
-                        <ul></ul>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div id="tree-cont">
+                                <div id="tree-modal">
+                                    <ul></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="results_container">
+
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1048,20 +1059,39 @@
             window.open('/directions/xls?napr_id=' + JSON.stringify(ex_array), '_blank');
         }
     function open_search_results(){
+        $("#results_container").html("<b>Ничего не выбрано</b>");
         $("#tree-modal ul").html("");
         $.each(labs, function(k,v){
-            $("#tree-modal ul").append("<li data-pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
+            $("#tree-modal ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
         });
         function openLazyNode(event, nodes, node, hasChildren) {
             if (hasChildren) {
                 return false;
             }
-            node.lazyUrl = '/directory/researches/list';
-            node.lazyUrlJson = JSON.stringify({ lab_id: $("#" + node.id).attr("data-pk") });
+            node.lazyUrl = '/directory/researches/list?tree=1&lab_id='+parseInt(node.id.split("-")[2]);
+        }
+        function Toggling(e, nodes, node){
+            if(node.isFolder || !node.isActive) return;
+            $("#results_container").html("<h5>Поиск результатов для исследования {0}</h5><br/>Пациент: {1}<br/><br/>".f(node.text, $("#card-fio").text()));
+            $("#results_container").append("<div id='results_m_list'><div style='text-align: center'>загрузка...</div></div>");
+            $.ajax({url: "/results/search", method: "POST", data: {client_id: client_id, research_id: parseInt(node.pk)}, type: "json"}).done(function(d){
+                if(d.directions.length == 0) {
+                    $("#results_m_list").html("Ничего не найдено");
+                }else{
+                    $("#results_m_list").html("Результаты найдены в следующих направлениях:<br/>");
+                    d.directions.reverse();
+                    $.each(d.directions, function(k, v){
+                        $("#results_m_list").append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
+                    });
+                }
+                console.log(d);
+            });
+            console.log(node.pk, node.text);
         }
         $("#results-search-modal").modal();
          easyTree = $('#tree-modal').easytree({
-                openLazyNode: openLazyNode
+                openLazyNode: openLazyNode,
+                toggling: Toggling
             });
     }
     </script>
@@ -1249,12 +1279,20 @@
             color: #F4D03F
         }
     .table-header-row{
-        width: 20%;
+        width: 150px!important;
         font-weight: bolder;
+        overflow: hidden;
+        white-space: nowrap;
     }
      .table-content-row{
-         width: 3%;
-        min-width: 200px;
+        min-width: 250px;
      }
+    #tree-cont{
+        height: 700px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: block;
+        position: relative;
+    }
     </style>
 {% endblock %}

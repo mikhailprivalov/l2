@@ -15,11 +15,20 @@ from reportlab.pdfbase import pdfdoc
 
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
-
 @login_required
 @group_required("Лечащий врач", "Зав. отделением")
+@csrf_exempt
 def results_search(request):
     """ Представление для поиска результатов исследований у пациента """
+    if request.method == "POST":
+        dirs = set()
+        result = {"directions": [], "client_id": int(request.POST["client_id"]), "research_id": int(request.POST["research_id"])}
+        for r in Result.objects.filter(fraction__research_id=result["research_id"], issledovaniye__napravleniye__client_id=result["client_id"], issledovaniye__doc_confirmation__isnull=False):
+            dirs.add(r.issledovaniye.napravleniye.pk)
+        for d in dirs:
+            result["directions"].append({"pk": d, "date": Issledovaniya.objects.filter(napravleniye_id=d).first().time_confirmation.strftime('%d.%m.%Y')})
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
     from podrazdeleniya.models import Podrazdeleniya
     labs = Podrazdeleniya.objects.filter(isLab=True)
     return render(request, 'dashboard/results_search.html', {"labs": labs})
