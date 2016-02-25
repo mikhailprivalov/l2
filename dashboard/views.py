@@ -20,10 +20,7 @@ import simplejson as json
 @login_required
 def dashboard(request):  # Представление панели управления
     from laboratory import settings
-
-
     dt = ""
-
     menu = []
     groups = [str(x) for x in request.user.groups.all()]
 
@@ -41,6 +38,8 @@ def dashboard(request):  # Представление панели управл�
         menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
     if "Просмотр статистики" in groups:
         menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
+    #if "Лечащий врач" in groups or "Зав. отделением" in groups:
+    #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
 
     if request.user.is_superuser:
         menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
