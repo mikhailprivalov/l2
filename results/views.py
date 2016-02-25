@@ -17,6 +17,13 @@ pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent
 
 
 @login_required
+@group_required("Лечащий врач", "Зав. отделением")
+def results_search(request):
+    """ Представление для поиска результатов исследований у пациента """
+    return render(request, 'dashboard/results_search.html')
+
+
+@login_required
 @group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     """ Представление для страницы ввода результатов """
