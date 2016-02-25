@@ -9,11 +9,13 @@
 
                 <div class="btn-group" data-toggle="buttons" style="margin-bottom: 20px">
                     <label class="btn btn-blue-nb">
-                        <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)" autocomplete="off">
+                        <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"
+                               autocomplete="off">
                         Поликлиника
                     </label>
                     <label class="btn btn-blue-nb">
-                        <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)" autocomplete="off"> Стационар
+                        <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"
+                               autocomplete="off"> Стационар
                     </label><!--
                     <label class="btn btn-default">
                         <input type="radio" name="type" id="option3" value="all" autocomplete="off"> Все категории
@@ -54,17 +56,19 @@
                 </tr>
                 <tr id="history-num-tr">
                     <td style="width: 135px">Номер истории:&nbsp;</td>
-                    <td><input type="text" class="form-control" maxlength="11" /></td>
+                    <td><input type="text" class="form-control" maxlength="11"/></td>
                 </tr>
                 <tr id="ballast">
                     <td style="width: 135px">&nbsp;</td>
-                    <td><div style="height: 34px">&nbsp;</div></td>
+                    <td>
+                        <div style="height: 34px">&nbsp;</div>
+                    </td>
                 </tr>
             </table>
             {% if operator %}
                 <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
                     {% for v in docs %}
-                    <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                        <option value="{{ v.pk }}">{{ v.get_fio }}</option>
                     {% endfor %}
                 </select></label>
             {% endif %}
@@ -101,17 +105,20 @@
                 <div class="col-md-2" style="width: 21.66666667%;padding-left: 0">
                     <h6><br/></h6>
                     <div class="row">
-                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-print"
-                            style="" title="Печать выбраных направлений"
-                            onclick="batch_print();return false;"></button>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-primary-nb fa fa-print"
+                                    style="" title="Печать выбраных направлений"
+                                    onclick="batch_print();return false;"></button>
                         </div>
-                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-barcode"
-                            style="" title="Печать штрих-кодов"
-                            onclick="batch_print_bc();return false;"></button>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-primary-nb fa fa-barcode"
+                                    style="" title="Печать штрих-кодов"
+                                    onclick="batch_print_bc();return false;"></button>
                         </div>
-                        <div class="col-md-4"><button class="btn btn-primary btn-primary-nb fa fa-table"
-                            style="" title="Экспорт сводной таблицы по выбранным направлениям"
-                            onclick="batch_table_print();return false;"></button>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary btn-primary-nb fa fa-table"
+                                    style="" title="Экспорт сводной таблицы по выбранным направлениям"
+                                    onclick="batch_table_print();return false;"></button>
                         </div>
                     </div>
                 </div>
@@ -128,7 +135,7 @@
                         <th style="width: 240px"></th>
                         <th style="width: 30px">
                             <label>
-                                <input type="checkbox" name="selectAlldirs" id="selectAllDirs" />
+                                <input type="checkbox" name="selectAlldirs" id="selectAllDirs"/>
                             </label>
                         </th>
                     </tr>
@@ -152,19 +159,20 @@
                     </form>
                 </div>
                 <div class="col-md-3">
-                    </div>
+                </div>
                 <div class="col-md-3">
                     <select class="select-b" id="select-template" data-width="100%"
-                                title='Шаблоны' disabled>
+                            title='Шаблоны' disabled>
                         <option value="1" selected>Липидограмма</option>
                         <option value="2">Коагулограмма</option>
                         <option value="3">Индекс атерогенности</option>
                         <option value="4">Группа крови</option>
-                        </select>
+                    </select>
                 </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-blue-nb" disabled style="width: 100%" id="select-template-btn">Загрузить</button>
-                    </div>
+                <div class="col-md-2">
+                    <button class="btn btn-blue-nb" disabled style="width: 100%" id="select-template-btn">Загрузить
+                    </button>
+                </div>
             </div>
             <div id="table-researches"></div>
         </div>
@@ -173,7 +181,8 @@
                 <div class="col-md-12">
                     <div style="margin-bottom: 20px">
                         <div class="col-md-7" style="padding-left: 0">
-                            <input name="diagnos" id="diagnos-field" class="form-control" placeholder="Направительный диагноз"
+                            <input name="diagnos" id="diagnos-field" class="form-control"
+                                   placeholder="Направительный диагноз"
                                    onkeyup="sync(true);" style="margin-bottom: 20px"/>
                         </div>
                         <div class="col-md-5" id="sources" style="text-align: center">
@@ -191,19 +200,23 @@
                             </div>
                         </div>
                     </div>
-                    <table class="table table-hover table-bordered table-condensed" id="table-researches-preview"></table>
+                    <table class="table table-hover table-bordered table-condensed"
+                           id="table-researches-preview"></table>
                     <div class="row">
                         <div class="col-md-5">
-                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();" style="margin-bottom: 5px">
+                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();"
+                                    style="margin-bottom: 5px">
                                 Сохранить и распечатать направления
                             </button>
                             <br/>
-                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction(true, true);">
+                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled
+                                    onclick="save_direction(true, true);">
                                 Сохранить и распечатать штрих-коды
                             </button>
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-primary-nb ctrl" id="save-just-btn" disabled onclick="save_direction(true);">
+                            <button class="btn btn-primary-nb ctrl" id="save-just-btn" disabled
+                                    onclick="save_direction(true);">
                                 Сохранить
                             </button>
                         </div>
@@ -215,8 +228,15 @@
                 </div>
                 <div class="col-md-2 dir-queue" style="display: none">
                     <div class="row" style="margin-top: 10px">
-                        <div class="col-md-6"><button class="btn btn-primary-nb ctrl" id="queue-clear-btn" disabled onclick="save_direction(true);">X</button></div>
-                        <div class="col-md-6"><button class="btn btn-primary-nb ctrl" id="queue-print-btn" disabled onclick="save_direction();"><i class="fa fa-print"></i></button></div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary-nb ctrl" id="queue-clear-btn" disabled
+                                    onclick="save_direction(true);">X
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary-nb ctrl" id="queue-print-btn" disabled
+                                    onclick="save_direction();"><i class="fa fa-print"></i></button>
+                        </div>
                     </div>
                     <div class="list"></div>
                 </div>
@@ -335,12 +355,12 @@
         var checked = [];
         var dict = [];
         var callback;
-        function sync_checks(){
-                checked[active_lab] = [];
-                $.each($("input[name='sel']:checked"), function () {
-                    checked[active_lab].push($(this).val());
-                });
-                sync(true);
+        function sync_checks() {
+            checked[active_lab] = [];
+            $.each($("input[name='sel']:checked"), function () {
+                checked[active_lab].push($(this).val());
+            });
+            sync(true);
         }
         $(document).ready(function () {
             //$("#div2 input, #div2 button").prop("disabled", true);
@@ -358,16 +378,17 @@
             });
 
             // TODO: DYNAMIC IT
-            var templates = {1: {lab: 34, iss: [77,78,79,80,81,161]},
-                2: {lab: 34, iss: [156,157,158,159]},
-                3: {lab: 34, iss: [78,81,80,77]},
-                4: {lab: 33, iss: [110,111]}
+            var templates = {
+                1: {lab: 34, iss: [77, 78, 79, 80, 81, 161]},
+                2: {lab: 34, iss: [156, 157, 158, 159]},
+                3: {lab: 34, iss: [78, 81, 80, 77]},
+                4: {lab: 33, iss: [110, 111]}
             };
 
             $("#select-template-btn").click(function () {
                 active_template = $("#select-template").val();
-                callback = function(){
-                    $.each(templates[active_template].iss, function(k,v){
+                callback = function () {
+                    $.each(templates[active_template].iss, function (k, v) {
                         $("[value={0}]".f(v)).prop("checked", true);
                     });
                     sync_checks();
@@ -388,11 +409,11 @@
                 todayHighlight: true
             });
 
-            $("#selectAllDirs").click (function () {
-                 var checkedStatus = this.checked;
+            $("#selectAllDirs").click(function () {
+                var checkedStatus = this.checked;
                 $('.batch-print').each(function () {
                     $(this).prop('checked', checkedStatus);
-                 });
+                });
             });
 
             resize();
@@ -404,23 +425,20 @@
             console.log(uHash());
         });
 
-        function checkType(tr){
-            if(tr)
-            {
+        function checkType(tr) {
+            if (tr) {
                 tmp = $('input[name=type]:checked').val();
-                if(type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
                     search($('#search-field').val());
                 }
             }
             type = $('input[name=type]:checked').val();
             $("#history-num-tr").hide();
             $("#ballast").hide();
-            if(type == "stat")
-            {
+            if (type == "stat") {
                 $("#history-num-tr").show();
             }
-            else
-            {
+            else {
                 $("#ballast").show();
             }
         }
@@ -546,7 +564,7 @@
                 $("#story-table").html("");
                 if (data.ok) {
                     $.each(data.directions, function (k, v) {
-                        var sliced = v.researches.slice(0,55);
+                        var sliced = v.researches.slice(0, 55);
                         if (sliced.length < v.researches.length) {
                             sliced += '...';
                         }
@@ -563,7 +581,7 @@
                                 "</td>" +
                                 "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
                                 "</tr>");
-                        if(v.cancel === true) {
+                        if (v.cancel === true) {
                             $("#story-table tr[pk={0}]".f(v.pk)).addClass("tr-cancel");
                             $("#story-table tr[pk={0}] .status".f(v.pk)).attr("rstatus", $("#story-table tr[pk={0}] .status".f(v.pk)).text());
                             $("#story-table tr[pk={0}] .status".f(v.pk)).attr("title", statuses_titles["-1"]);
@@ -576,17 +594,21 @@
             });
         }
 
-        function toggle_cancel(pk){
+        function toggle_cancel(pk) {
             tr = $("#story-table tr[pk={0}]".f(pk));
             val = !tr.hasClass("tr-cancel");
 
-            $.ajax({url: "/direction/researches/cancel", method: "POST", data: {status: val, pk: pk}}).done(function (data) {
-                if(tr.hasClass("tr-cancel")){
+            $.ajax({
+                url: "/direction/researches/cancel",
+                method: "POST",
+                data: {status: val, pk: pk}
+            }).done(function (data) {
+                if (tr.hasClass("tr-cancel")) {
                     tr.removeClass("tr-cancel");
                     $(".status", tr).text($(".status", tr).attr("rstatus"));
                     $(".status", tr).attr("title", statuses_titles[$(".status", tr).text()]);
                 }
-                else{
+                else {
                     tr.addClass("tr-cancel");
                     $(".status", tr).attr("rstatus", $(".status", tr).text());
                     $(".status", tr).attr("title", statuses_titles["-1"]);
@@ -613,16 +635,15 @@
             //$("#div2 input, #div2 button").prop("disabled", true);
 
             checkType(); // Получение выбранного типа базы
-            if(!type)
-            {
+            if (!type) {
                 $.amaran({
-                'theme': 'awesome no',
-                'content': {
-                    title: 'Не выбрана категория пациента',
-                    message: "",
-                    info: '',
-                    icon: 'fa fa-exclamation'
-                },
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбрана категория пациента',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
                     'position': 'top left',
                     delay: 6000
                 });
@@ -696,7 +717,7 @@
             show_card(res[id].fields, pk); // Вызов функции формирования карты пациента
             return false;
         }
-        function getqueue(){
+        function getqueue() {
             $(".dir-queue .list").html("");
         }
         function show_card(fields, pk) { // Функция формирования карты пациента
@@ -744,12 +765,12 @@
             };
             clear_fast();
             $("#history-num-tr input").val("");
-            if(type == "stat")
+            if (type == "stat")
                 $("#history-num-tr input[type=text]").focus();
             load_researches();
         }
         function load_researches() {
-            if(client_id == -1 || active_lab == -1) return;
+            if (client_id == -1 || active_lab == -1) return;
             $("#table-researches").html("");
             $("#table-researches").append(lang.table_researches_header);
             $.ajax({ // AJAX запрос
@@ -777,7 +798,7 @@
                         $("#table-researches").append("<label class=\"btn btn-default col-md-3\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
                     dict[v.pk] = v.fields.ref_title;
                 });
-                if(typeof callback == typeof load_researches) {
+                if (typeof callback == typeof load_researches) {
                     callback();
                     callback = null;
                 }
@@ -787,8 +808,8 @@
         function remove_researches(index) {
             //bootbox.confirm(lang.table_researches_preview_realy_delete.f(labs[index]), function (result) {
             //if (!result) return;
-                delete checked[index];
-                sync();
+            delete checked[index];
+            sync();
 
             $.amaran({
                 'theme': 'awesome wrn',
@@ -817,8 +838,8 @@
             }
             // bootbox.confirm(lang.clear_direction, function (result) {
             //     if (!result) return;
-                checked = [];
-                sync();
+            checked = [];
+            sync();
 
             $.amaran({
                 'theme': 'awesome wrn',
@@ -833,7 +854,7 @@
             });
             // });
         }
-        function save_direction(tr ,bc) {
+        function save_direction(tr, bc) {
             try {
                 $('#sources').tooltipster('destroy');
             }
@@ -870,10 +891,15 @@
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
-                data: {dict: JSON.stringify(tmp_direction), ofname: ofname, history_num: $("#history-num-tr input").val(), type: type},
+                data: {
+                    dict: JSON.stringify(tmp_direction),
+                    ofname: ofname,
+                    history_num: $("#history-num-tr input").val(),
+                    type: type
+                },
                 statusCode: {
-                    500: function() {
-                          $.amaran({
+                    500: function () {
+                        $.amaran({
                             'theme': 'awesome no',
                             'content': {
                                 title: 'Серверная ошибка',
@@ -885,25 +911,25 @@
                             delay: 6000
                         });
                     }
-                  }
+                }
             }).done(function (data) {
                 console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
-                    if(!tr) {
+                    if (!tr) {
                         window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
-                    }else{
-                            $.amaran({
-                                'theme': 'awesome ok',
-                                'content': {
-                                    title: 'Направления созданы',
-                                    message: "Номера: " + JSON.parse(data[0].list_id).join(", "),
-                                    info: '',
-                                    icon: 'fa fa-exclamation'
-                                },
-                                'position': 'bottom right',
-                                delay: 10000
-                            });
-                        if(bc){
+                    } else {
+                        $.amaran({
+                            'theme': 'awesome ok',
+                            'content': {
+                                title: 'Направления созданы',
+                                message: "Номера: " + JSON.parse(data[0].list_id).join(", "),
+                                info: '',
+                                icon: 'fa fa-exclamation'
+                            },
+                            'position': 'bottom right',
+                            delay: 10000
+                        });
+                        if (bc) {
                             window.open('/barcodes/tubes?napr_id=' + data[0].list_id, '_blank');
                         }
                     }
@@ -1058,6 +1084,7 @@
         .navbar {
             margin-bottom: 3px;
         }
+
         .active {
             background-color: #656D78 !important;
             color: #fff !important;
@@ -1101,7 +1128,7 @@
             height: auto;
         }
 
-                #table-researches-preview span {
+        #table-researches-preview span {
             cursor: pointer;
         }
 
@@ -1163,26 +1190,30 @@
             display: inline-block;
             text-align: center;
         }
-    .h-d:hover{
-        background-color: #eee;
-    }
-    .dir-queue{
+
+        .h-d:hover {
+            background-color: #eee;
+        }
+
+        .dir-queue {
             background-color: #434a54;
-        position: relative;
-    }
-    .res-over{
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-height: 45px;
-        font-family: monospace!important;
-        overflow-wrap: break-word!important;
-        word-wrap: normal!important;
-        word-break: break-all;
-        line-break: auto!important;
-        hyphens: manual!important;
-    }
-    .tr-cancel .status{
-        color: #F4D03F
-    }
+            position: relative;
+        }
+
+        .res-over {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 45px;
+            font-family: monospace !important;
+            overflow-wrap: break-word !important;
+            word-wrap: normal !important;
+            word-break: break-all;
+            line-break: auto !important;
+            hyphens: manual !important;
+        }
+
+        .tr-cancel .status {
+            color: #F4D03F
+        }
     </style>
 {% endblock %}
