@@ -41,7 +41,9 @@
         }
 
         $(document).ready(function () {
-
+            $("#search-field").bind('keyup', 'return', function () {
+                search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
+            });
         });
         function checkType(tr) {
             if (tr) {
