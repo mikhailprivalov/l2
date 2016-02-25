@@ -16,11 +16,7 @@
                     <label class="btn btn-blue-nb">
                         <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"
                                autocomplete="off"> Стационар
-                    </label><!--
-                    <label class="btn btn-default">
-                        <input type="radio" name="type" id="option3" value="all" autocomplete="off"> Все категории
                     </label>
--->
                 </div>
             </div>
             <div class="input-group">
@@ -33,36 +29,31 @@
             </div>
             <br/>
 
-            <table class="table table-bordered table-condensed" style="width: 100%; margin-bottom: 10px">
+            <table class="table table-bordered table-condensed" style="width: auto">
                 <tr>
-                    <td style="width: 135px">Тип:&nbsp;</td>
-                    <td id="card-type"></td>
+                    <td class="table-header-row">Тип:&nbsp;</td>
+                    <td id="card-type" class="table-content-row"></td>
+                    <td class="table-header-row">Номер карты:&nbsp;</td>
+                    <td id="card-num" class="table-content-row"></td>
                 </tr>
                 <tr>
-                    <td style="width: 135px">Номер карты:&nbsp;</td>
-                    <td id="card-num"></td>
+                    <td class="table-header-row">ФИО:&nbsp;</td>
+                    <td id="card-fio" class="table-content-row" colspan="2"></td>
+                    <td class="table-content-row"><a href="#" onclick='open_search_results();return false;' id="search-results-link">поиск результатов</a></td>
                 </tr>
                 <tr>
-                    <td style="width: 135px">ФИО:&nbsp;</td>
-                    <td id="card-fio"></td>
-                </tr>
-                <tr>
-                    <td style="width: 135px">Дата рождения:&nbsp;</td>
-                    <td id="card-bth" style="vertical-align: middle"></td>
-                </tr>
-                <tr>
-                    <td style="width: 135px">Пол:&nbsp;</td>
-                    <td id="card-sx"></td>
+                    <td class="table-header-row">Дата рождения:&nbsp;</td>
+                    <td id="card-bth" class="table-content-row"></td>
+                    <td class="table-header-row">Пол:&nbsp;</td>
+                    <td id="card-sx" class="table-content-row"></td>
                 </tr>
                 <tr id="history-num-tr">
-                    <td style="width: 135px">Номер истории:&nbsp;</td>
-                    <td><input type="text" class="form-control" maxlength="11"/></td>
+                    <td class="table-header-row">Номер истории:&nbsp;</td>
+                    <td class="table-content-row" colspan="3"><input type="text" class="form-control" maxlength="11"/></td>
                 </tr>
                 <tr id="ballast">
-                    <td style="width: 135px">&nbsp;</td>
-                    <td>
-                        <div style="height: 34px">&nbsp;</div>
-                    </td>
+                    <td class="table-header-row">&nbsp;</td>
+                    <td class="table-content-row" colspan="3"><div style="height: 34px">&nbsp;</div></td>
                 </tr>
             </table>
             {% if operator %}
@@ -260,6 +251,25 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="results-search-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Поиск результатов</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="tree-modal">
+                        <ul></ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="results-modal">
         <div class="modal-dialog" style="min-width: 50%;    width: auto; max-width: 85%">
             <div class="modal-content" style="width: auto">
@@ -322,6 +332,7 @@
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/js/jquery.tablesorter.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script src="/static/tree/jquery.easytree.min.js"></script>
     <script>
         function selectText(element) {
             var doc = document;
@@ -344,6 +355,7 @@
         var types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
         var res = [];  // Кэш поиска
         var active_lab = -1;
+        var easyTree;
         var labs = {
         {% for v in labs %}{{ v.pk }} :
         "{{ v.title }}",
@@ -365,7 +377,9 @@
         $(document).ready(function () {
             //$("#div2 input, #div2 button").prop("disabled", true);
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
+            $('head').append('<link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />');
             $("#fin_stat").hide();
+            $("#search-results-link").hide();
             //$("#fin_poli input:first").parent('.btn').addClass('active');
             $("#search-field").bind('keyup', 'return', function () {
                 search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
@@ -711,6 +725,7 @@
             $("#card-sx").html("");
             $("#table-researches").html("");
             $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
+            $("#search-results-link").hide();
 
         }
         function show_res(id, pk) { // Функция показа результата из списка нескольких
@@ -724,6 +739,7 @@
             //$("#div2 input, #div2 button").prop("disabled", false);
             load_client_dirs(pk);
             clear(); // Вызов функции очистки
+            $("#search-results-link").show();
             client_id = pk;
             fio = fields.family + " " + fields.name + " " + fields.twoname; // Формирование ФИО
             dbth = fields.birthday.split(" ")[0]; // Формирование даты рождения
@@ -1031,6 +1047,23 @@
             });
             window.open('/directions/xls?napr_id=' + JSON.stringify(ex_array), '_blank');
         }
+    function open_search_results(){
+        $("#tree-modal ul").html("");
+        $.each(labs, function(k,v){
+            $("#tree-modal ul").append("<li data-pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
+        });
+        function openLazyNode(event, nodes, node, hasChildren) {
+            if (hasChildren) {
+                return false;
+            }
+            node.lazyUrl = '/directory/researches/list';
+            node.lazyUrlJson = JSON.stringify({ lab_id: $("#" + node.id).attr("data-pk") });
+        }
+        $("#results-search-modal").modal();
+         easyTree = $('#tree-modal').easytree({
+                openLazyNode: openLazyNode
+            });
+    }
     </script>
     <style>
         #results-modal .modal-body {
@@ -1215,5 +1248,13 @@
         .tr-cancel .status {
             color: #F4D03F
         }
+    .table-header-row{
+        width: 20%;
+        font-weight: bolder;
+    }
+     .table-content-row{
+         width: 3%;
+        min-width: 200px;
+     }
     </style>
 {% endblock %}

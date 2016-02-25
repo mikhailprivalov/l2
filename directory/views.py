@@ -104,11 +104,10 @@ def directory_researches(request):
 def directory_researches_list(request):
     """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
     return_result = []
-    if request.method == "GET":
-        lab_id = request.GET["lab_id"]
-        researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
-        for research in researches:
-            return_result.append({"pk": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}})
+    lab_id = request.REQUEST["lab_id"]
+    researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
+    for research in researches:
+        return_result.append({"pk": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}})
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
