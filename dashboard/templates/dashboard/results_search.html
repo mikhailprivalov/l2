@@ -19,9 +19,11 @@
         <div class="input-group">
             <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
                    data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                   placeholder="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456" title="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456">
+                   placeholder="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456"
+                   title="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456">
               <span class="input-group-btn">
-                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск</button>
+                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск
+                    </button>
               </span>
         </div>
     </div>
@@ -29,9 +31,27 @@
 
 {% block scripts %}
     <script>
+        var type = "poli", num = -1;
         $(document).ready(function () {
 
         });
+        function checkType(tr) {
+            if (tr) {
+                tmp = $('input[name=type]:checked').val();
+                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                    search($('#search-field').val());
+                }
+            }
+            type = $('input[name=type]:checked').val();
+            $("#history-num-tr").hide();
+            $("#ballast").hide();
+            if (type == "stat") {
+                $("#history-num-tr").show();
+            }
+            else {
+                $("#ballast").show();
+            }
+        }
     </script>
     <style>
 
