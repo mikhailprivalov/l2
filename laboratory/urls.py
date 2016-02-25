@@ -4,14 +4,15 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
 from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
-    users_dosync, dir_multiprint, dashboard_from
+    users_dosync, dir_multiprint, dashboard_from, view_log, load_logs
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
-from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, print_history, \
+from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
+    print_history, \
     get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get
 from receivematerial.views import receive, tubes_get
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results
+    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, results_search
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -63,7 +64,9 @@ urlpatterns = [
                   url(r'^dashboard/ldap_sync$', ldap_sync),
                   url(r'^dashboard/directions$', directions),
                   url(r'^dashboard/receive', receive),
+                  url(r'^dashboard/view_log$', view_log),
                   url(r'^tubes/get', tubes_get),
+                  url(r'^results/search', results_search),
                   url(r'^results/enter', enter),
                   url(r'^results/save', results_save),
                   url(r'^results/loadready', loadready),
@@ -79,6 +82,7 @@ urlpatterns = [
                   url(r'^results/day', get_day_results),
                   url(r'^statistic$', statistic_page),
                   url(r'^statistic/xls$', statistic_xls),
+                  url(r'^view_logs$', load_logs),
 
                   url(r'^users/count$', users_count),
                   url(r'^users/ldap/dosync$', users_dosync),

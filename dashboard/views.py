@@ -20,10 +20,7 @@ import simplejson as json
 @login_required
 def dashboard(request):  # Представление панели управления
     from laboratory import settings
-
-
     dt = ""
-
     menu = []
     groups = [str(x) for x in request.user.groups.all()]
 
@@ -41,6 +38,8 @@ def dashboard(request):  # Представление панели управл�
         menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
     if "Просмотр статистики" in groups:
         menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
+    #if "Лечащий врач" in groups or "Зав. отделением" in groups:
+    #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
 
     if request.user.is_superuser:
         menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
@@ -48,12 +47,48 @@ def dashboard(request):  # Представление панели управл�
         menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
         if settings.LDAP and settings.LDAP["enable"]:
             menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
+        menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
 
     menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
 
     menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
     return render(request, 'dashboard.html', {"menu": menu_st})
 
+
+@login_required
+@staff_member_required
+def view_log(request):
+    import slog.models as slog
+    types = []
+    for t in slog.Log.TYPES:
+        types.append({"pk": t[0], "val": t[1]})
+    return render(request, 'dashboard/manage_view_log.html', {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+
+@csrf_exempt
+@login_required
+@staff_member_required
+def load_logs(request):
+    import slog.models as slog
+    result = {"data": []}
+
+    offset = int(request.REQUEST["offset"])
+    size = int(request.REQUEST["size"])
+    states = json.loads(request.REQUEST["searchdata"])
+
+    obj = slog.Log.objects.all().order_by("-id")
+    if states["user"] != -1:
+        obj = obj.filter(user__pk=states["user"])
+    if states["type"] != -1:
+        obj = obj.filter(type=states["type"])
+    if states["pk"] != "-1":
+        obj = obj.filter(key__contains=states["pk"])
+
+    for row in obj[offset:size+offset]:
+        tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username, "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(), "time": str(row.time)}
+        result["data"].append(tmp_object)
+
+    result["s"] = states
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 # @cache_page(60 * 15)
 @login_required

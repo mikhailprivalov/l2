@@ -1,0 +1,320 @@
+{% extends "dbase.html" %}
+{% block title %}Просмотр логов{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default panel-flt">
+        <div class="panel-body">
+            <div class="row">
+                <label class="col-md-3">
+                    <select class="select-b" data-width="100%" data-live-search="true" id="user">
+                        <option selected value="-1">Все пользователи</option>
+                        {% for u in users %}
+                            <option value="{{ u.pk }}">{{ u.fio }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="col-md-3">
+                    <select class="select-b" data-width="100%" data-live-search="true" id="type">
+                        <option selected value="-1">Все виды действий</option>
+                        {% for t in types %}
+                            <option value="{{ t.pk }}">{{ t.val }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="col-md-1">
+                    <input type="text" class="form-control" placeholder="Ключ (LIKE)" id="key"/>
+                </label>
+                <button class="btn btn-blue-nb col-md-1" onclick="update();">Обновить</button>
+            </div>
+        </div>
+    </div>
+    <div id="table_cont">
+        <table class="table table-bordered floatThead ct" id="log_table">
+            <thead>
+            <tr>
+                <th class="col-md-1">ID записи</th>
+                <th class="col-md-1">ФИО</th>
+                <th class="col-md-1">ID user</th>
+                <th class="col-md-3">Вид действия</th>
+                <th class="col-md-2">Ключ объекта</th>
+                <th class="col-md-2">Данные действия</th>
+                <th>Дата, время</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        var loaded = -1;
+        var loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>';
+        var end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>';
+        var loading = '<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div> \
+  <span></span>\
+  <span></span>\
+  <span></span>\
+</div></td></tr>';
+        var searchdata = {"user": -1, "type": -1, "pk": "-1"};
+        $(document).ready(function () {
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
+            $("#table_cont").scroll(function () {
+                if ($("#table_cont").scrollTop() + $("#table_cont").height() >= $("#log_table").height() + 20 && !endF && !inload) {
+                    loadlog(loaded + 1);
+                }
+            });
+            $("#log_table").append(loadmore);
+            loadlog(loaded + 1);
+        });
+        var endF = false;
+        var inload = false;
+        function loadlog(offset, replace) {
+            if(inload) return;
+            inload = true;
+            if (replace) {
+                $("#log_table tbody").html("");
+            }
+            $(".loadmore").remove();
+            $(".loading").remove();
+            $("#log_table tbody").append(loading);
+            n = 0;
+            $.ajax({
+                method: "GET",
+                url: "/view_logs",
+                data: {offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
+            }).done(function (d) {
+                $.each(d.data, function (k, v) {
+                    dbody = v.body;
+                    try {
+                        par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
+                        dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                            return n != undefined
+                        }) : par), null, 2));
+                    }
+                    catch (e) {
+                        dbody = syntaxHighlight(v.body);
+                    }
+                    try {
+                        park = JSON.parse(v.key.replaceAll("\"", ""));
+                        dkey = syntaxHighlight(JSON.stringify(park, null, 2));
+                    }
+                    catch (e) {
+                        dkey = syntaxHighlight(v.key);
+                    }
+                    $("#log_table tbody").append("<tr>" +
+                            "<td>{0}</td>".f(v.id) +
+                            "<td>{0}</td>".f(v.user_fio) +
+                            "<td>{0}</td>".f(v.user_pk) +
+                            "<td>{0}</td>".f(v.type) +
+                            "<td><pre>{0}</pre></td>".f(dkey) +
+                            "<td><pre>{0}</pre></td>".f(dbody) +
+                            "<td>{0}</td>".f(v.time) +
+                            "</tr>");
+                    n++;
+                });
+                if (n > 0) {
+                    $("#log_table tbody").append(loadmore);
+                    loaded += n;
+                    endF = false;
+                }
+                else {
+                    $("#log_table tbody").append(end);
+                    endF = true;
+                }
+                resize();
+                $("tr.loading").remove();
+                inload = false;
+            });
+        }
+        function resize() {
+            $('#table_cont').height($(window).height() - $('#table_cont').position().top - 70);
+            $('#table_cont').perfectScrollbar();
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
+        }
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        function update() {
+            searchdata = {
+                "user": parseInt($("#user").val()),
+                "type": parseInt($("#type").val()),
+                "pk": $("#key").val() == "" ? '-1' : $("#key").val()
+            };
+            loaded = -1;
+            $("#table_cont").scrollTop(0);
+            loadlog(loaded + 1, true);
+        }
+    </script>
+    <style>
+
+        .floatThead th {
+            background: #fff;
+        }
+
+        #table_cont {
+
+            padding-right: 15px;
+            position: relative;
+        }
+
+        table.ct td {
+            padding: 2px !important;
+        }
+
+        table.ct, .ct th, .ct td, .ct tr, .ct tbody, .ct thead {
+            border: 1px solid black !important;
+            font-weight: normal;
+            background-color: #fff;
+        }
+
+        table {
+            table-layout: fixed;
+        }
+
+        td {
+            word-wrap: break-word
+        }
+
+        .string {
+            color: green;
+        }
+
+        .number {
+            color: darkorange;
+        }
+
+        .boolean {
+            color: blue;
+        }
+
+        .null {
+            color: magenta;
+        }
+
+        .key {
+            color: red;
+        }
+
+        .loading_dots {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 3px;
+            box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3),
+            0 1px 0 rgba(255, 255, 255, 0.3);
+
+            font-size: 12pt;
+
+            line-height: 1.1;
+            padding: 4px;
+            position: relative;
+            display: inline-block;
+        }
+        .loading_dots div{
+            font-size: 12pt;
+            color: #fff
+        }
+
+        .loading_dots span {
+            background: transparent;
+            border-radius: 50%;
+            box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            height: 0.6em;
+            width: 0.6em;
+
+            -webkit-animation: loading_dots 0.8s linear infinite;
+            -moz-animation: loading_dots 0.8s linear infinite;
+            -ms-animation: loading_dots 0.8s linear infinite;
+            animation: loading_dots 0.8s linear infinite;
+        }
+
+        .loading_dots span:nth-child(2) {
+            -webkit-animation-delay: 0.2s;
+            -moz-animation-delay: 0.2s;
+            -ms-animation-delay: 0.2s;
+            animation-delay: 0.2s;
+        }
+
+        .loading_dots span:nth-child(1) {
+            -webkit-animation-delay: 0.4s;
+            -moz-animation-delay: 0.4s;
+            -ms-animation-delay: 0.4s;
+            animation-delay: 0.4s;
+        }
+
+        @-webkit-keyframes loading_dots {
+            0% {
+                background: transparent;
+            }
+            50% {
+                background: #E4E4E4;
+            }
+            100% {
+                background: transparent;
+            }
+        }
+
+        @-moz-keyframes loading_dots {
+            0% {
+                background: transparent;
+            }
+            50% {
+                background: #E4E4E4;
+            }
+            100% {
+                background: transparent;
+            }
+        }
+
+        @-ms-keyframes loading_dots {
+            0% {
+                background: transparent;
+            }
+            50% {
+                background: #E4E4E4;
+            }
+            100% {
+                background: transparent;
+            }
+        }
+
+        @keyframes loading_dots {
+            0% {
+                background: transparent;
+            }
+            50% {
+                background: #E4E4E4;
+            }
+            100% {
+                background: transparent;
+            }
+        }
+    </style>
+{% endblock %}
