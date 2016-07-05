@@ -28,3 +28,4 @@ pylint
 django-selenium
 msgpack-python
 pyaml
+docutils
