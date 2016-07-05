@@ -1,0 +1,290 @@
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
+import simplejson as json
+import directions.models as directions
+import slog.models as slog
+
+
+@csrf_exempt
+@login_required
+def directory_researches(request):
+    """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
+    return_result = {"tubes_r": []}
+    if request.method == "POST":
+        research = json.loads(request.POST["research"])
+        if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
+                research__pk=int(research["id"])).exists():
+            return_result = {"ok": False, "tubes_r": []}
+        else:
+            if research["id"] == -1:
+                research_obj = Researches(subgroup=Subgroups.objects.get(pk=research["lab_group"]))
+            else:
+                research_obj = Researches.objects.get(pk=int(research["id"]))
+
+            research_obj.title = research["title"]
+            if not research["preparation"]:
+                research["preparation"] = "Не требуется"
+            research_obj.preparation = research["preparation"]
+            if not research["quota_oms"] or research["quota_oms"] < 0:
+                research["quota_oms"] = -1
+            research_obj.quota_oms = research["quota_oms"]
+            research_obj.save()
+            type = 4
+            if research["id"] == -1:
+                type = 3
+            #slog.Log(key=str(research_obj.pk), type=type, body="{'data': " + request.POST["research"] + "}",
+            #         user=request.user.doctorprofile).save()
+            #Fractions.objects.filter(research=research_obj).delete()
+            fractions_pk = []
+            return_result["F"] = []
+            for key in research["fraction"].keys():
+                tube_relation = ReleationsFT.objects.get(pk=int(key.split("-")[1]))
+                for fraction in research["fraction"][key]["fractions"]:
+                    if int(fraction["pk"]) < 0:
+                        fraction_obj = Fractions(title=fraction["title"], research=research_obj,
+                                                 units=fraction["units"],
+                                                 relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
+                                                 ref_f=json.dumps(fraction["ref_f"]))
+                        fraction_obj.save()
+                        return_result["F"].append((tube_relation.pk, fraction_obj.pk, key, int(key.split("-")[1])))
+                    else:
+                        fraction_obj = Fractions.objects.get(pk=fraction["pk"])
+                        fraction_obj.title = fraction["title"]
+                        fraction_obj.research = research_obj
+                        fraction_obj.units = fraction["units"]
+                        fraction_obj.ref_m = fraction["ref_m"]
+                        fraction_obj.ref_f = fraction["ref_f"]
+                        # fraction_obj
+                        fractions_pk.append(fraction["pk"])
+                        fraction_obj.save()
+            '''fractions = Fractions.objects.filter(research=research_obj)
+            for fraction in fractions:
+                if fraction.pk not in fractions_pk:
+                    fraction.delete()'''
+            return_result = {"ok": True, "id": research_obj.pk, "title": research_obj.title,
+                             "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
+    elif request.method == "GET":
+        return_result = {"researches": []}
+        subgroup_id = request.GET["lab_group"]
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        for research in researches:
+            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False,
+                       "hide": research.hide}
+            if directions.Issledovaniya.objects.filter(research=research).exists():
+                resdict["readonly"] = True
+            fractions = Fractions.objects.filter(research=research)
+            for fraction in fractions:
+                if fraction.relation.pk not in resdict["tubes"].keys():
+                    resdict["tubes_c"] += 1
+                    resdict["tubes"][fraction.relation.pk] = {"id": fraction.relation.pk,
+                                                              "color": fraction.relation.tube.color,
+                                                              "title": fraction.relation.tube.title}
+            return_result["researches"].append(resdict)
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_list(request):
+    """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
+    return_result = []
+    if request.method == "GET":
+        lab_id = request.GET["lab_id"]
+        researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
+        for research in researches:
+            return_result.append({"pk": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}})
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+
+@csrf_exempt
+@login_required
+def directory_researches_update_uet(request):
+    """POST: обновление УЕТов"""
+    return_result = {"ok": False}
+    if request.method == "POST":
+        name = request.POST["name"]
+        pk = request.POST["pk"]
+        value = request.POST["value"]
+        if value != "":
+            fraction = Fractions.objects.get(pk=pk)
+            if name == "lab-uet":
+                fraction.uet_lab = value
+            else:
+                fraction.uet_doc = value
+            fraction.save()
+            return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_update_mode(request):
+    """POST: обновление режима для лаборанта"""
+    return_result = {"ok": False}
+    if request.method == "POST":
+        pk = request.POST["pk"]
+        value = request.POST["value"]
+        if value != "":
+            research = Researches.objects.get(pk=pk)
+            research.edit_mode = value
+            research.save()
+            return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_toggle_hide_research(request):
+    result = {}
+    pk = request.REQUEST["pk"]
+    research = Researches.objects.get(pk=int(pk))
+    research.hide = not research.hide
+    research.save()
+    slog.Log(key=request.REQUEST["pk"], type=19, body=json.dumps({"hide": research.hide}),
+             user=request.user.doctorprofile).save()
+    return HttpResponse(json.dumps({"status_hide": research.hide}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_copy_research(request):
+    pk = request.REQUEST["pk"]
+    research = Researches.objects.get(pk=int(pk))
+    research.pk = None
+    research.save()
+    return HttpResponse(json.dumps({"pk": research.pk}), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_research(request):
+    """GET: получение исследования и фракций"""
+    return_result = {}
+    if request.method == "GET":
+        id = int(request.GET["id"])
+        research = Researches.objects.get(pk=id)
+        return_result["title"] = research.title
+        return_result["quota"] = research.quota_oms
+        return_result["preparation"] = research.preparation
+        return_result["edit_mode"] = research.edit_mode
+        return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
+        return_result["hide"] = research.hide
+        return_result["fractiontubes"] = {}
+        return_result["uet_doc"] = {}
+        return_result["uet_lab"] = {}
+        fractions = Fractions.objects.filter(research=research)
+        for fraction in fractions:
+            if "tube-" + str(fraction.relation.pk) not in return_result["fractiontubes"].keys():
+                return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)] = {"fractions": [],
+                                                                                       "color": fraction.relation.tube.color,
+                                                                                       "title": fraction.relation.tube.title,
+                                                                                       "sel": "tube-" + str(
+                                                                                           fraction.relation.pk)}
+            return_result["uet_doc"][fraction.pk] = fraction.uet_doc
+            return_result["uet_lab"][fraction.pk] = fraction.uet_lab
+            ref_m = fraction.ref_m
+            ref_f = fraction.ref_f
+            if isinstance(ref_m, str):
+                ref_m = json.loads(ref_m)
+            if isinstance(ref_f, str):
+                ref_f = json.loads(ref_f)
+            return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
+                {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
+                 "ref_f": ref_f, "pk": fraction.pk});
+        '''
+        sel: id,
+        color: color,
+        title: title,
+        '''
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_researches_group(request):
+    """GET: получение списка исследований для группы. POST: добавление новой или выбор существующей группы и привязка исследований к ней"""
+    return_result = {}
+    if request.method == "GET":
+        return_result = {"researches": []}
+        subgroup_id = request.GET["lab_group"]
+        gid = int(request.GET["gid"])
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+
+        for research in researches:
+            resdict = {"pk": research.pk, "title": research.title}
+            if gid < 0:
+                if not research.direction:
+                    return_result["researches"].append(resdict)
+            else:
+                if research.direction and research.direction.pk == gid:
+                    return_result["researches"].append(resdict)
+
+    elif request.method == "POST":
+        gid = int(request.POST["group"])
+        if gid < 0:
+            direction = DirectionsGroup()
+            direction.save()
+            type = 5
+        else:
+            direction = DirectionsGroup.objects.get(pk=gid)
+            type = 6
+        slog.Log(key=direction.pk, type=type, body="{'data': " + request.POST["researches"] + "}",
+                 user=request.user.doctorprofile).save()
+        tmp_researches = Researches.objects.filter(direction=direction)
+        for v in tmp_researches:
+            v.direction = None
+            v.save()
+
+        researches = json.loads(request.POST["researches"])
+        for k in researches.keys():
+            if researches[k]:
+                if k == "" or not k.isdigit() or not Researches.objects.filter(pk=k).exists(): continue
+                research = Researches.objects.get(pk=k)
+                research.direction = direction
+                research.save()
+
+        return_result["gid"] = direction.pk
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def directory_get_directions(request):
+    """GET: получение списка групп (по направлениям)"""
+    return_result = {}
+    if request.method == "GET":
+        return_result = {"directions": {}}
+        subgroup_id = request.GET["lab_group"]
+        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        for research in researches:
+            if not research.direction: continue
+            if research.direction.pk not in return_result["directions"].keys():
+                return_result["directions"][research.direction.pk] = []
+            return_result["directions"][research.direction.pk].append(research.title)
+
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def researches_get_details(request):
+    """GET: получение детальной информации из анализа"""
+    return_result = {}
+    if request.method == "GET":
+        pk = request.GET["pk"]
+        research_obj = Researches.objects.get(pk=pk)
+        return_result["title"] = research_obj.title
+        return_result["edit_mode"] = research_obj.edit_mode
+        return_result["uets"] = []
+        fractions = Fractions.objects.filter(research=research_obj)
+        for fraction in fractions:
+            return_result["uets"].append(
+                {"pk": fraction.pk, "title": fraction.title, "lab": fraction.uet_lab, "doc": fraction.uet_doc})
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

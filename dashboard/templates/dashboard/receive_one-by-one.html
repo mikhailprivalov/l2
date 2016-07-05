@@ -1,0 +1,384 @@
+{% extends "dbase.html" %}
+{% block title %}Прием материала по одному{% endblock %}
+{% block container %}container{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
+                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                       placeholder="Номер емкости" maxlength="13" autofocus>
+              <span class="input-group-btn">
+                    <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
+                    </button>
+              </span>
+            </div>
+            <br/>
+            <span id="rec-message">Емкость №<b></b> принята</span>
+        </div>
+        <div class="col-md-4" style="text-align: center;padding-top: 5px; border-right: 1px solid lightgray; border-left: 1px solid lightgray; min-height: 160px">
+            <div style="font-size: 60px; display: inline-block;vertical-align: middle">
+                <span style="color: lightgray">№</span> <span id="day-num"></span>
+            </div>
+            <br/>
+            <br/>
+            <label>Следующий номер: <input class="form-control" type="number" value="0" id="next_num" style="width: 60px;display: inline-block" /></label>
+            <small><a href="#" onclick="upd_next_num(); return false;">сброс</a></small>
+        </div>
+        <div class="col-md-4">
+            <h5 style="padding: 0;margin: 0; font-weight: normal">Исследования:</h5>
+            <div id="researches-scroll">
+                <div id="researches-container"></div>
+            </div>
+        </div>
+    </div>
+    <h5><small class="fastlinks" style="display: inline-block;float: right"><a href="/dashboard/receive/journal_form" target="_blank">Журнал приема</a>&nbsp;<a href="#" onclick="openexeclist();return false">Лист исполнения</a></small> Принятые за сегодня </h5>
+    <div id="history-container">
+        <table class="table table-bordered table-responsive floatThead">
+            <thead>
+                <tr>
+                    <th class="col-md-2">№ принятия</th>
+                    <th class="col-md-3">Тип емкости</th>
+                    <th class="col-md-2">№ емкости</th>
+                    <th>Исследования</th>
+                    <th style="width: 50px">Ш/к</th>
+                </tr>
+            </thead>
+            <tbody id="history-data">
+
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="list-modal">
+        <div class="modal-dialog" style="width: 64%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Создание листа исполения</h4>
+                </div>
+                <div class="modal-body">
+                    <label><span style="display: inline-block;">Дата приема материала:</span> <span
+                            style="display: inline-block;"><input type="text" class="form-control no-context"
+                                                                  style="display: inline-block" name="dateday"/></span></label>
+                    <div style="height: 400px">
+                        <div id="table-researches"></div>
+                    </div>
+                    <br/>
+                    <hr/>
+                    <div class="row" style="text-align: center;width: 100%">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-6" style="margin: 0 auto">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', true);sync_checks();return false;">
+                                        Выбрать всe
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', false);sync_checks();return false;">
+                                        Снять всe
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createlist(1);return false;">Создать лист по выбранному периоду
+                            </button>
+                        </div>
+                        <div class="col-md-3"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" onclick='$("#receive-field").focus();'>Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script src="/static/js/jquery.idle.min.js"></script>
+    <style>
+        #history-container, #researches-scroll {
+            padding-right: 15px;
+            position: relative;
+        }
+        .floatThead th {
+            background-color: #fff;
+        }
+        td {
+            padding: 2px !important;
+        }
+
+        td label input {
+            vertical-align: middle;
+            margin-top: 15px;
+        }
+
+        td label:hover {
+            background-color: #efefef;
+        }
+        td.tube {
+            padding: 2px !important;
+            border-radius: 0;
+        }
+
+        .c {
+            text-align: center;
+            padding: 0 !important;
+        }
+        .last {
+            background-color: #D4E6C2;
+        }
+        #researches-scroll{
+            height: 140px;
+        }
+        #researches-container{
+
+        }
+    .btn-bc{
+        padding: 2px;
+        width: 100%;
+    }
+    </style>
+    <audio id="snd-scan" preload="none">
+        <source src="/static/sound/scan.mp3" type="audio/mpeg">
+        <source src="/static/sound/scan.ogg" type="audio/ogg">
+    </audio>
+    <audio id="snd-warn" preload="none">
+        <source src="/static/sound/warn.mp3" type="audio/mpeg">
+        <source src="/static/sound/warn.ogg" type="audio/ogg">
+    </audio>
+<script>
+var before_num = 0;
+$(document).ready(function(){
+    $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
+    $("#receive-field").bind('keydown', 'return', function () {
+        do_receive($('#receive-field').val());
+    });
+    clr();
+    load_history(-1);
+    resize();
+    $(window).resize(function () {
+        resize();
+    });
+    var today = new Date();
+
+    $("[name='dateday']").val(getFormattedDate(today));
+    $('[name=dateday]').datepicker({
+        format: "dd.mm.yyyy",
+        todayBtn: "linked",
+        language: "ru",
+        autoclose: true,
+        todayHighlight: true
+    });
+    upd_next_num();
+    $("#next_num").change(function(){
+        v = parseInt($("#next_num").val());
+        if(v <= before_num) {
+            $("#next_num").val(before_num + 1);
+        }
+    });
+    $(document).idle({
+        onIdle: function(){
+            if(!$("#receive-field").is(":focus"))
+                $("#receive-field").focus();
+        },
+        idle: 4000
+    });
+    $("body").on("change", "#table-researches .btn input", sync_checks);
+    $("#snd-scan").trigger('load');
+    $("#snd-warn").trigger('load');
+});
+function sync_checks(){
+    $(".btn").removeClass("active-b");
+    var elements = document.querySelectorAll("input[name='sel']:checked");
+    Array.prototype.forEach.call(elements, function (el, i) {
+        $(el).parent().addClass("active-b");
+    });
+}
+var block = false;
+function do_receive(pk){
+    pk = pk.trim();
+    if(pk == ""){
+        clr();
+        set_msg("Не найдено! Введен пустой запрос");
+        return;
+    }
+    if(block) return;
+    block = true;
+    sl();
+    clr();
+    $("#receive-field").prop("disabled", true);
+    $("#receive-field").blur();
+
+    v = parseInt($("#next_num").val());
+    if(v <= before_num) {
+        v = before_num + 1;
+        $("#next_num").val(v);
+    }
+
+    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v}}).done(function(data){
+        block = false;
+        $("#receive-field").prop("disabled", false);
+        $('#receive-field').val("").focus();
+        upd_next_num();
+        hl();
+        if(data.r == 2){
+            set_msg("Ошибка! Емкость предназначена для<br/> <b>{0}</b>".f(data.lab));
+            play_warn();
+            return;
+        }
+        else if(data.r == 3){
+            set_msg("Ошибка! Емкость № {0} <b>не найдена</b>".f(pk));
+            play_warn();
+            return;
+        } else if(data.new){
+            set_msg("Емкость № <b>{0} принята</b><br/><br/>".f(pk));
+        } else {
+            set_msg("Емкость № {0} была <b>принята ранее</b>. {1}<br/><br/>".f(pk, data.receivedate));
+        }
+        play_scan();
+        before_num = data.n;
+        set_n(data.n);
+        set_researches(data.researches);
+        load_history(pk);
+    });
+}
+function set_msg(ht){
+    $("#rec-message").html(ht);
+}
+function set_researches(res){
+    $r_cont = $("#researches-container");
+    $r_cont.html("");
+    $.each(res, function(k, v){
+        $r_cont.append("<div class='research-row'>{0}</div>".f(v));
+    });
+    $r_cont.perfectScrollbar();
+    $r_cont.scrollTop(0);
+}
+function set_n(n){
+    $("#day-num").text(n);
+}
+function clr(){
+    set_msg("<br/><br/>");
+    set_n("--");
+    set_researches(["--"]);
+}
+var block2 = false;
+function load_history(highlight){
+    if(block2) return;
+    block2 = true;
+    $.ajax({method: "GET", url: "/dashboard/receive/history"}).done(function(data){
+        block2 = false;
+        $("#history-data").html("");
+        if(data.rows.length == 0){
+            $("#history-data").html("<tr><td colspan='4' style='text-align: center;'>Нет данных</td></tr>");
+            return;
+        }
+        $.each(data.rows, function(k, v){
+            $("#history-data").append("<tr>" +
+                    "<td>{0}</td>".f(v.n) +
+                    "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.color, v.type) +
+                    "<td>{0}</td>".f(v.pk) +
+                    "<td>{0}</td>".f(v.researches.join(", ")) +
+                    "<td><a class=\'btn btn-sm btn-blue-nb btn-bc\' href=\'/barcodes/tubes?tubes_id=[{0}]\' target=\"_blank\"><i class=\"fa fa-barcode\"></i></a></td>".f(v.pk) +
+                    "</tr>");
+        });
+        resize();
+
+        $('#history-container').scrollTop(0);
+    });
+}
+function resize() {
+    $('#history-container').height($(window).height() - $('#history-container').position().top - 80);
+    $('#history-container').perfectScrollbar();
+    $(".floatThead").floatThead('reflow');
+    $(".floatThead").floatThead({
+        useAbsolutePositioning: false,
+        scrollContainer: function ($table) {
+            return $table.closest("div");
+        }
+    });
+}
+function load_researches(cont)
+{
+    $o = $("#table-researches");
+    if(cont != undefined)
+        $o = $(cont);
+    $o.html("");
+    $o.append(lang.table_researches_header);
+    $.ajax({ // AJAX запрос
+        url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.length == 0) {
+            $o.append(lang.table_researches_not_found);
+            return;
+        }
+        $o.html("");
+        $o.append(lang.table_researches_header);
+        $.each(data, function (k, v) {
+            $o.append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+        });
+    });
+}
+function openexeclist(){
+    load_researches();
+    $("#list-modal").modal();
+}
+function upd_next_num(){
+    $.ajax({ // AJAX запрос
+        url: "/dashboard/receive/last_received",// Установка адреса и параметров запроса
+        dataType: 'json'
+    }).done(function (data) {
+        before_num = data.last_n;
+        $("#next_num").val(before_num+1);
+    });
+}
+function createlist() {
+    date = "";
+    researches = [];
+    $.each($("#table-researches .research-sel:checked"), function (k, v) {
+        researches.push(parseInt($(v).val()));
+    });
+    if (researches.length == 0) {
+        $.amaran({
+            'theme': 'awesome wrn',
+            'content': {
+                title: "Создание невозможно",
+                message: "Ничего не выбрано",
+                info: '',
+                icon: 'fa fa-exclamation'
+            },
+            'position': 'bottom right',
+            delay: 6000
+        });
+        return;
+    }
+
+    date = $("[name=dateday]").val();
+    window.open('/dashboard/receive/execlist?date=' + date + "&researches=" + JSON.stringify(researches), '_blank');
+}
+
+function play_scan() {
+    try{
+       $("#snd-scan").prop("currentTime", 0);
+       $("#snd-scan").trigger('play');
+    }catch(e){
+
+    }
+ }
+function play_warn() {
+    try{
+       $("#snd-warn").prop("currentTime", 0);
+       $("#snd-warn").trigger('play');
+    }catch(e){
+
+    }
+ }
+</script>
+{% endblock %}
