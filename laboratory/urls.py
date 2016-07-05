@@ -13,7 +13,8 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
 from receivematerial.views import receive, tubes_get, receive_obo, receive_history, receive_execlist, last_received, \
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, results_search
+    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, \
+    results_search
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -96,12 +97,13 @@ urlpatterns = [
                   url(r'^users/count$', users_count),
                   url(r'^users/ldap/dosync$', users_dosync),
                   url(r'^ajax_select/', include(ajax_select_urls)),
+                  url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^logout/$', 'django.contrib.auth.views.logout',
-                      {'next_page': '/'}),
+                      {'next_page': '/'})
               ] + staticfiles_urlpatterns()
 
 if settings.DEBUG:
