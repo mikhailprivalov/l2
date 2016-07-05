@@ -55,6 +55,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
+    'django.contrib.admindocs.middleware.XViewMiddleware'
 )
 
 ROOT_URLCONF = 'laboratory.urls'
