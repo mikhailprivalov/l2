@@ -1,0 +1,63 @@
+{% extends "dbase.html" %}
+{% block title %}Печать журнала приема{% endblock %}
+
+{% block content %}
+    <div class="row" style="display: flex">
+        <div class="col-xs-1">
+
+        </div>
+        <div class="col-xs-7">
+            <div class="row">
+                <div class="col-xs-5">
+                    <label for="select-group">Группа исследований </label>
+                </div>
+                <div class="col-xs-7">
+                    <select class="select-b" data-width="100%" id="select-group">
+                        <option value="-2" selected>Все исследования</option>
+                        <option value="-1">Без группы</option>{% for x in groups %}
+                        <option value="{{ x.pk }}">{{ x.title }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <br/>
+            <div class="row">
+                <div class="col-xs-5">
+                    <label for="start-from">Начать с </label>
+                </div>
+                <div class="col-xs-7">
+                    <input type="number" name="start-from" id="start-from" value="1" class="form-control" min="1">
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-3" style="display: flex">
+            <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch" onclick="window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}`, '_blank');">
+                Печать
+            </button>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+             $("#start-from").bind('keydown', 'return', function () {
+                $("#print-btn").click();
+            });
+        });
+    </script>
+    <style>
+        .btn-blue-nb3, .btn-blue-nb3:active, .btn-blue-nb3:visited, .btn-blue-nb3:focus{
+            background: transparent;
+            border: #049372 solid 2px;
+            color: #049372
+        }
+
+        .btn-blue-nb3:hover{
+            background: #049372;
+            border: #049372 solid 2px;
+            color: #fff
+        }
+
+    </style>
+{% endblock %}

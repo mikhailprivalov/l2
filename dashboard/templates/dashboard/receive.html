@@ -2,20 +2,30 @@
 {% block title %}Прием материала{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <!--TODO: интерфейс-->
     <div class="row" style="margin: 0">
+        <div class="fastlinks">
+            <a href="/dashboard/receive/one_by_one">Прием матриала по одному</a>
+            <a href="/dashboard/receive/journal_form" target="_blank">Журнал приема</a>
+        </div>
         <table class="table table-bordered">
             <tr>
                 <td style="width: 320px"><h6>Лаборатория:&nbsp;&nbsp;</h6></td>
                 <td>
                     <h6>{{ request.user.doctorprofile.podrazileniye.title }}</h6>
                 </td>
-                <td>
-                    <div style="text-align: right">
-                        <h6>Дата:
-                            <script>var today = new Date();
-                            document.write(getFormattedDate(today));</script>
-                        </h6>
+                <td rowspan="2">
+                    <div class="row" style="margin-bottom: 5px">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-10">
+                            Дата забора материала:
+                            <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
+                                <input type="text" class="input-sm form-control no-context" name="date-start"/>
+                            <span class="input-group-addon"
+                                  style="background-color: #fff;color: #000">&mdash;</span>
+                                <input type="text" class="input-sm form-control no-context" name="date-end"/>
+                            </div>
+                        </div>
+                        <div class="col-md-1"></div>
                     </div>
                 </td>
             </tr>
@@ -27,7 +37,6 @@
                         {% for v in groups %}
                             <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
                 </td>
-                <td></td>
             </tr>
             <tr>
                 <td style="width: 320px"><h6>Отделение (от кого):&nbsp;&nbsp;</h6></td>
@@ -36,7 +45,15 @@
                         {% for v in podrazdeleniya %}
                             <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
                 </td>
-                <td style="width: 350px">Состояние сканера:<br/><span id="barcode">----</span></td>
+                <td style="width: 350px">
+                    <div class="row" style="margin-bottom: 5px">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-10">
+                            Состояние сканера:<br/><span id="barcode">----</span>
+                        </div>
+                        <div class="col-md-1"></div>
+                    </div>
+                </td>
             </tr>
         </table>
     </div>
@@ -67,34 +84,56 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
+        var loadt = false;
         $(document).ready(function () {
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             loadfrom();
             resize();
             $(window).resize(function () {
                 resize();
             });
+            var today = new Date();
+            var daybefore = new Date();
+            daybefore.setDate(daybefore.getDate() - 1);
+
+            $("[name='date-start']").val(getFormattedDate(daybefore));
+            $("[name='date-end']").val(getFormattedDate(today));
+            $("[name='date-start'],[name='date-end']").datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+            $("[name='date-end'],[name='date-start']").change(function(){
+                if(loadt) return;
+                loadt = true;
+                load_tubes();
+            });
         });
-        function highlight(th){
+        function highlight(th) {
             $tr = $("tr[pk={0}]".f($(th).val()));
-            if($(th).prop("checked"))
-            {
+            if ($(th).prop("checked")) {
                 $tr.addClass("highlight");
             }
-            else{
+            else {
                 $tr.removeClass("highlight");
             }
         }
         function load_tubes() {
             sl();
             $("#tubes").html("");
-            $.ajax({url: "/tubes/get?subgroup=" + $("#subgroup option:selected").attr("num") + "&from=" + $("#from option:selected").attr("num")}).done(function (data) {
+            $.ajax({url: "/tubes/get?subgroup={0}&from={1}&datestart={2}&dateend={3}".f($("#subgroup option:selected").attr("num"), $("#from option:selected").attr("num"), $("[name='date-start']").val(), $("[name='date-end']").val())}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     var x = a.tube.id,
                             y = b.tube.id;
                     return x < y ? -1 : x > y ? 1 : 0;
-                });var i = 0;
+                });
+                var i = 0;
                 $.each(data, function (k, v) {
                     i++;
                     tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
@@ -105,11 +144,12 @@
                     else
                         $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input onchange='highlight(this);' id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                 });
-                if(i == 0){
+                if (i == 0) {
                     $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
                 }
                 $('[data-toggle="tooltip"]').tooltip();
                 $('#scroll-tb').scrollTop(0);
+                loadt = false;
                 hl();
             });
         }
@@ -155,60 +195,60 @@
             $('#scroll-tb').perfectScrollbar();
         }
 
-        function loadfrom(){
+        function loadfrom() {
             var from = $("#from");
             $(from).html("");
-             $.ajax({
+            $.ajax({
                 url: "/dashboard/from",
                 method: "GET",
                 type: "json"
             }).done(function (data) {
-                 $.each(data, function(k, v){
-                     console.log(v.pk, v.title, v.tubes);
-                     $(from).append("<option num='{0}'>{1}</option>".f(v.pk, v.title));
-                 });
-                 $(from).selectpicker("refresh");
-                 load_tubes();
-             });
+                $.each(data, function (k, v) {
+                    console.log(v.pk, v.title, v.tubes);
+                    $(from).append("<option num='{0}'>{1}</option>".f(v.pk, v.title));
+                });
+                $(from).selectpicker("refresh");
+                load_tubes();
+            });
         }
 
         var timeoutID = -2;
-        $(document).ready(function() {
+        $(document).ready(function () {
             var pressed = false;
             var chars = [];
-            $(window).keypress(function(e) {
+            $(window).keypress(function (e) {
                 if (e.which >= 48 && e.which <= 57) {
                     chars.push(String.fromCharCode(e.which));
                 }
                 if (pressed == false) {
-                        clearTimeout(timeoutID);
-                        ttimeoutID = setTimeout(function () {
-                            var barcode = chars.join("");
-                            chars = [];
-                            pressed = false;
-                            $ch = $("[value={0}]".f(barcode));
-                            if ($ch.length) {
-                                if(!$ch.prop("checked"))
-                                    $ch.click();
-                                $("#barcode").text("Последнее просканированное: " + barcode);
-                            }
-                            else {
-                                $("#barcode").text('Пробирка {0} в списке не найдена'.f(barcode));
-                                $.amaran({
-                                    'theme': 'awesome no',
-                                    'content': {
-                                        title: 'Пробирка {0} в списке не найдена'.f(barcode),
-                                        message: "",
-                                        info: '',
-                                        icon: 'fa fa-exclamation'
-                                    },
-                                    'position': 'top right',
-                                    delay: 6000
-                                });
-                            }
-                        }, 350);
-                    }
-                    pressed = true;
+                    clearTimeout(timeoutID);
+                    ttimeoutID = setTimeout(function () {
+                        var barcode = chars.join("");
+                        chars = [];
+                        pressed = false;
+                        $ch = $("[value={0}]".f(barcode));
+                        if ($ch.length) {
+                            if (!$ch.prop("checked"))
+                                $ch.click();
+                            $("#barcode").text("Последнее просканированное: " + barcode);
+                        }
+                        else {
+                            $("#barcode").text('Пробирка {0} в списке не найдена'.f(barcode));
+                            $.amaran({
+                                'theme': 'awesome no',
+                                'content': {
+                                    title: 'Пробирка {0} в списке не найдена'.f(barcode),
+                                    message: "",
+                                    info: '',
+                                    icon: 'fa fa-exclamation'
+                                },
+                                'position': 'top right',
+                                delay: 6000
+                            });
+                        }
+                    }, 350);
+                }
+                pressed = true;
             });
         });
     </script>
@@ -307,12 +347,23 @@
             padding: 0 !important;
             margin: 0 !important;
         }
-    tr.highlight, tr.highlight .tube, tr.highlight input{
-        background-color: #e4f6d2;
-    }
-    .fh {
-        display: block;
-        height: 100%;
-    }
+
+        tr.highlight, tr.highlight .tube, tr.highlight input {
+            background-color: #e4f6d2;
+        }
+
+        .fh {
+            display: block;
+            height: 100%;
+        }
+
+        .fastlinks a {
+            cursor: pointer;
+        }
+
+        .fastlinks {
+            margin-top: -13px;
+            margin-bottom: 5px;
+        }
     </style>
 {% endblock %}

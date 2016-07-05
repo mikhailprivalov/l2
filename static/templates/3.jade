@@ -1,10 +1,12 @@
-div.col-md-8
+div.col-md-4
 div.col-md-2
     button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
 div.col-md-2
     .row
-        button(onclick="confirm();")#confirm-btn.btn.btn-primary-nb Подтвердить
-h4(style="margin-top: 0") Исследование #{title}
+        button(onclick="confirm_result();")#confirm-btn.btn.btn-primary-nb Подтвердить
+div.col-md-4
+    button(onclick="save(true,confirm_result);")#confirm-andsave-btn.btn.btn-primary-nb Сохранить и подтвердить
+h4(style="margin-top: 0") Исследование - #{title}
 form(onsubmit="return false;")
     input(type="hidden", value=res_id)#issledovaniye_id
     #result-jade-form
@@ -15,27 +17,30 @@ form(onsubmit="return false;")
                 th.col-md-3 Нормы М
                 th.col-md-3 Нормы Ж
             each fraction in fractions
-                tr
-                    td.col-md-3
-                        label= fraction.title
-                    td
-                        .input-group
-                            input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
-                            span.input-group-btn
-                                a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
-                                    i.fa.fa-circle
-                    td.col-md-1
-                        table.table.table-bordered.table-responsive
-                            each norm, index in fraction.references.m
-                                tr
-                                    td= index
-                                    td.col-md-5= norm
-                    td.col-md-1
-                        table.table.table-bordered.table-responsive
-                            each norm, index in fraction.references.f
-                                tr
-                                    td= index
-                                    td.col-md-5= norm
+                if !fraction.hide
+                    tr
+                        td.col-md-3
+                            label= fraction.title
+                        td
+                            .input-group
+                                input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                                span.input-group-btn
+                                    a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
+                                        i.fa.fa-circle
+                        td.col-md-1
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.m
+                                    tr
+                                        td= index
+                                        td.col-md-5
+                                            !{norm}
+                        td.col-md-1
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.f
+                                    tr
+                                        td= index
+                                        td.col-md-5
+                                            !{norm}
 script(src="/static/templates/3.js")
 .modal.fade#res-modal
     .modal-dialog

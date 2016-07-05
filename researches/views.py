@@ -54,7 +54,7 @@ def researches_get_one(request):
             #res["fractions"].append(
             #   {"title": val.title, "pk": val.pk, "unit": val.units,
             #     "references": {"m": ref_m, "f": ref_f}})
-            tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "type": val.type,"references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight}
+            tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "hide": val.hide, "render_type": val.render_type, "options": val.options.split(",") ,"type": val.type,"references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight}
             if val.sort_weight and val.sort_weight > 0:
                 res["fractions"][val.sort_weight] = tmp
             else:

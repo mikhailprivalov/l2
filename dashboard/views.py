@@ -14,6 +14,7 @@ import slog.models as slog
 import simplejson as json
 from django.http import HttpResponse
 import simplejson as json
+import directory.models as directory
 
 
 # @cache_page(60 * 15)
@@ -25,11 +26,13 @@ def dashboard(request):  # Представление панели управл�
     groups = [str(x) for x in request.user.groups.all()]
 
     if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
-        menu.append({"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
+        menu.append({"url": "/dashboard/directions", "title": "Направления и результаты", "keys": "Shift+n", "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append({"url": "/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
     if "Получатель биоматериала" in groups:
         menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
+        menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o", "nt": False})
+        menu.append({"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
     if "Врач-лаборант" in groups or "Лаборант" in groups:
         menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
         menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
@@ -71,21 +74,29 @@ def load_logs(request):
     import slog.models as slog
     result = {"data": []}
 
-    offset = int(request.REQUEST["offset"])
-    size = int(request.REQUEST["size"])
+    check_new = int(request.REQUEST["checknew"])
     states = json.loads(request.REQUEST["searchdata"])
 
-    obj = slog.Log.objects.all().order_by("-id")
-    if states["user"] != -1:
-        obj = obj.filter(user__pk=states["user"])
-    if states["type"] != -1:
-        obj = obj.filter(type=states["type"])
-    if states["pk"] != "-1":
-        obj = obj.filter(key__contains=states["pk"])
+    if check_new == 0:
+        offset = int(request.REQUEST["offset"])
+        size = int(request.REQUEST["size"])
+        obj = slog.Log.objects.all().order_by("-id")
+        if states["user"] != -1:
+            obj = obj.filter(user__pk=states["user"])
+        if states["type"] != -1:
+            obj = obj.filter(type=states["type"])
+        if states["pk"] != "-1":
+            obj = obj.filter(key__contains=states["pk"])
 
-    for row in obj[offset:size+offset]:
-        tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username, "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(), "time": str(row.time)}
-        result["data"].append(tmp_object)
+        for row in obj[offset:size+offset]:
+            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username, "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(), "time": str(row.time)}
+            result["data"].append(tmp_object)
+    else:
+        for row in slog.Log.objects.filter(pk__gt=int(request.REQUEST["last_n"])):
+            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
+                          "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
+                          "time": str(row.time)}
+            result["data"].append(tmp_object)
 
     result["s"] = states
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -96,6 +107,31 @@ def load_logs(request):
 def researches_control(request):
     tubes = Tubes.objects.all()
     return render(request, 'dashboard/recive_material.html', {"tubes": tubes})
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def receive_journal_form(request):
+    groups = directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)
+    return render(request, 'dashboard/receive_journal.html', {"groups": groups})
+
+
+@csrf_exempt
+@login_required
+@staff_member_required
+def confirm_reset(request):
+    result = {"ok": False}
+
+    if "pk" in request.REQUEST.keys():
+        pk = int(request.REQUEST["pk"])
+        if Issledovaniya.objects.filter(pk=pk).exists():
+            iss = Issledovaniya.objects.get(pk=pk)
+            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
+            iss.doc_confirmation = iss.time_confirmation = None
+            iss.save()
+            result = {"ok": True}
+            slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @login_required
@@ -286,6 +322,13 @@ def users_dosync(request):
 
             profile = DoctorProfile.objects.create()  # Создание профиля
             profile.user = user  # Привязка профиля к пользователю
+            profile.podrazileniye = pod
+
+            profile.labtype = 0
+            if "врач" in emp or "зав" in emp:
+                profile.labtype = 1
+            elif "лаб" in emp or "лаборант" in emp:
+                profile.labtype = 2
         else:
             user = User.objects.get(username=username)
             user.set_password(password)
@@ -293,15 +336,8 @@ def users_dosync(request):
             user.save()
             profile = DoctorProfile.objects.get(user=user)
         emp = ldap_user["attributes"]["employeeType"][0].lower()
-
-        profile.labtype = 0
-        if "врач" in emp or "зав" in emp:
-            profile.labtype = 1
-        elif "лаб" in emp or "лаборант" in emp:
-            profile.labtype = 2
         profile.isLDAP_user = True
         profile.fio = dn
-        profile.podrazileniye = pod
         profile.save()
     c.unbind()
     return HttpResponse(json.dumps(groups), content_type="application/json")

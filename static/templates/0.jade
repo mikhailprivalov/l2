@@ -1,38 +1,55 @@
-div.col-md-8
-div.col-md-2
-    button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
-div.col-md-2
-    .row
-        button(onclick="confirm();")#confirm-btn.btn.btn-primary-nb Подтвердить
-h4(style="margin-top: 0") Исследование - #{title}
-form(onsubmit="return false;")
-    input(type="hidden", value=res_id)#issledovaniye_id
-    #result-jade-form
-        table.table.table-bordered.table-sm-pd
-            thead
-                th.col-md-3 Фракция
-                th.col-md-3 Значение
-                th.col-md-3 Нормы М
-                th.col-md-3 Нормы Ж
-            each fraction in fractions
-                tr
-                    td.col-md-3
-                        label= fraction.title
-                    td.col-md-3
-                        if fraction.type == -1
-                            input(type="text", data-pk=fraction.pk).form-control.result-enter
-                        else
-                            input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
-                        .center= fraction.unit
-                    td.col-md-3
-                        table.table.table-bordered.table-responsive
-                            each norm, index in fraction.references.m
-                                tr
-                                    td= index
-                                    td.col-md-6= norm
-                    td.col-md-3
-                        table.table.table-bordered.table-responsive
-                            each norm, index in fraction.references.f
-                                tr
-                                    td= index
-                                    td.col-md-6= norm
+.row(style="margin-bottom: 6px")
+    .col-md-2
+    .col-md-10
+        .btn-group.btn-group-justified(role="group")
+            a(onclick="restore_values();save(); return false;", href="#")#save-btn.btn.btn-sm.btn-primary-nb Сохранить
+            a(onclick="confirm_result(); return false;", href="#")#confirm-btn.btn.btn-sm.btn-primary-nb Подтвердить
+            a(onclick="restore_values();save(true,confirm_result); return false;", href="#")#confirm-andsave-btn.btn.btn-sm.btn-primary-nb Сохранить и подтвердить
+h4(style="margin-top: 2px") Исследование - #{title}
+input(type="hidden", value=res_id)#issledovaniye_id
+#result-jade-form
+    table.table.table-bordered.table-sm-pd
+        thead
+            th Фракция
+            th Значение
+            th.col-md-3 Нормы М
+            th.col-md-3 Нормы Ж
+        each fraction in fractions
+            if !fraction.hide
+                if fraction.render_type == 0
+                    tr
+                        td(style="width: 24%")
+                            label.labtitle= fraction.title
+                        td.col-md-3
+                            if fraction.type == -1
+                                input(type="text", data-pk=fraction.pk).form-control.result-enter
+                            else
+                                input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
+                            .center= fraction.unit
+                        td.col-md-3
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.m
+                                    tr
+                                        td= index
+                                        td.col-md-6
+                                            | !{norm}
+                        td.col-md-3
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.f
+                                    tr
+                                        td= index
+                                        td.col-md-6
+                                            | !{norm}
+                else if fraction.render_type == 1
+                    tr(style="border-top: 3px solid #ddd")
+                        td(style="width: 20%")
+                            label= fraction.title
+                            input(type="hidden", data-pk=fraction.pk).result-enter.json-result
+                        td(colspan="3")
+                            table(container-pk=fraction.pk).row-container.table.table-bordered.table-responsive
+                                thead
+                                    tr
+                                        th(style="width: 37%") Название
+                                        th Значения
+                                tbody
+script(src="/static/templates/0.js")

@@ -1,48 +1,182 @@
-{% extends "base.html" %}
+{% extends "dbase.html" %}
 {% block title %}Настройка параметров анализов{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block nav %}{% endblock %}
 {% block content %}
-    <form class="form form-inline">
+    <div class="form form-inline" style="padding-bottom: 60px">
         <p>
-            Название анализа: <span id="research_title"></span><br/>
+            Название анализа: <span id="research_title"></span><br/><!--
             Исполнители:<br/>
             <label><input type="radio" name="edit_mode" value="0" onchange="update_mode();"/> Лаборант</label><br/>
             <label><input type="radio" name="edit_mode" value="1" onchange="update_mode();"/> Врач</label><br/>
-            <label><input type="radio" name="edit_mode" value="2" onchange="update_mode();"/> Лаборант+Врач</label>
+            <label><input type="radio" name="edit_mode" value="2" onchange="update_mode();"/> Лаборант+Врач</label>-->
         </p>
-
-        <p>
-        <h5>Настройка УЕТов</h5>
-        <table class="table table-bordered table-responsive">
+        <div class="row">
+            <div class="col-md-3">
+                Варианты комментариев:
+            </div>
+            <div class="col-md-6">
+                <select class="select-b" id="select-comments" data-width="100%"
+                        title='Варианты комментариев' disabled>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                Шаблон формы:
+            </div>
+            <div class="col-md-6">
+                <select class="select-b" id="select-template" data-width="100%"
+                        title='Шаблон формы ввода результатов' disabled>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-default btn-blue-nb" style="width:100%;" onclick="save_template();return false;">Сохранить</button>
+            </div>
+        </div>
+        <h5>Настройка фракций</h5>
+        <table id="table-fractions" class="table table-bordered table-responsive">
             <thead>
-            <tr>
-                <th>Фракция</th>
-                <th class="col-md-2">Повторения</th>
-                <th class="col-md-2">УЕТ лаборант</th>
-                <th class="col-md-2">УЕТ врач</th>
-            </tr>
+                <tr>
+                    <th class="col-md-4">Фракция</th>
+                    <th class="col-md-1">Скрытие</th>
+                    <th>Тип поля</th>
+                    <th class="col-md-3">Варианты</th>
+                </tr>
             </thead>
-            <tbody id="uets"></tbody>
+            <tbody>
+
+            </tbody>
         </table>
-        </p>
-    </form>
+        <button class="btn btn-default btn-blue2-nb" style="width:100%;" onclick="save_fractions();return false;">Сохранить настройки фракций</button>
+        <br/>
+        <br/>
+    </div>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/bootstrap-editable.min.js"></script>
-    <style></style>
+    <style>
+    html,body {
+        height:100%;
+    }
+
+    td label:not(.radio-l) {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        cursor: pointer;
+        vertical-align: middle;
+        display: inline-block;
+
+    }
+
+    td {
+        padding: 0 !important;
+    }
+
+    td label input {
+        vertical-align: middle;
+        margin-top: 5px;
+    }
+
+    td label:hover {
+        background-color: #efefef;
+    }
+
+    .c {
+        text-align: center;
+        padding: 0 !important;
+    }
+    .radio-l{
+        padding-right: 5px;
+        padding-left: 5px;
+        cursor: pointer;
+        display: inline-block;
+        vertical-align: middle;
+        height: 25px;
+        margin: 0;
+    }
+    .w100{
+        width: 100%!important;
+    }
+    .tdi{
+        padding: 0;
+    }
+    .tdi input, .tdi .bootstrap-tagsinput{
+        border: none;
+        border-radius: 0;
+        margin: 0;
+        padding: 2px;
+        height: 25px;
+        box-shadow: none;
+        outline: none;
+    }
+    .bootstrap-tagsinput{
+        height: auto!important;
+        max-width: inherit;
+        display: block;
+    }
+    .tdi .tag{
+        vertical-align: super
+    }
+    </style>
+    <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
     <script>
         var pk = {{ pk }};
+        var $comments;
         $(document).ready(function () {
-            $("head").append("<link rel='stylesheet' type='text/css' href='/static/css/bootstrap-editable.css' />");
+            $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
+            $comments = $("#select-comments");
+            $.each(material_types, function (k,v) {
+                $comments.append(`<option value="${k}">${v.join("/")}</option>`);
+            });
+            update_data();
+        });
+
+        function update_data(){
+            sl();
             $.ajax({url: "/construct/researches/get_details", method: "GET", data: {pk: pk}}).done(function (data) {
                 $("#research_title").html(data.title);
                 $("[type='radio'][value='" + data.edit_mode + "']").attr('checked', 'checked');
-                $.fn.editable.defaults.send = "always";
-                $.each(data.uets, function (k, v) {
-                    $("#uets").append("<tr class='uet-tr' pk='" + v.pk + "'><td>" + v.title + "</td><td class=\"col-md-2\"><a href='#' data-type='text' data-name='max-iterations' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите максимальное количество повторений для фракции " + v.title + "' data-value='" + v.iterations + "'></a></td><td class=\"col-md-2\"><a href='#' data-type='text' data-name='lab-uet' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите УЕТ для фракции " + v.title + " для лаборанта' data-value='" + v.lab + "'></a></td><td class=\"col-md-2\"><a href='#' data-name='doc-uet' data-type='text' data-url='/directory/researches/update_uet' data-pk='" + v.pk + "' data-title='Введите УЕТ для фракции " + v.title + " для врача' data-value='" + v.doc + "'></a></td></tr>");
+                $("#select-template").val(data.template);
+                $("#select-template").removeProp("disabled");
+                $comments.removeProp("disabled");
+                $("#select-template").selectpicker('refresh');
+                $comments.val(data.comment_template);
+                $comments.selectpicker('refresh');
+                $("#table-fractions tbody").html("");
+                var radios = "<td>";
+                $.each([{pk: 0, title: "Базовый тип"}, {pk: 1, title: "Динамическое число полей"}], function(k,v){
+                    radios += "<label class='radio-l'>{0} <input type='radio' value='{1}'".f(v.title, v.pk) + " name='fraction-type-{0}' /></label> ";
                 });
-                $('tr a').editable();
+                radios += "</td>";
+                $.each(data.fractions, function(k,v){
+                    $("#table-fractions tbody").append("<tr pk='{0}'>".f(v.pk) +
+                            "<td>&nbsp;{0}</td>".f(v.title) +
+                            "<td><label class='c'><input type='checkbox' name='hide-{0}' /></label></td>".f(v.pk) +
+                            radios.f(v.pk) +
+                            `<td class='tdi'><input type='text' class='form-control w100' data-role='tagsinput' value='${v.options}' /></td>` +
+                            "</tr>");
+                    $("[name=hide-{0}]".f(v.pk)).prop("checked", v.hide);
+                    $("[name=fraction-type-{0}][value={1}]".f(v.pk, v.render_type)).prop("checked", true);
+                });
+                hl();
+                $("[data-role='tagsinput']").tagsinput({
+                    trimValue: true
+                });
             });
-        });
+
+        }
+
+        function save_template(){
+            sl();
+            $.ajax({url: "/directory/researches/update_template", method: "POST", data: {pk: pk, template: $("#select-template").val(), comment_template: $comments.val()}}).done(function(){
+                update_data();
+            });
+        }
 
         function update_mode() {
             if ($("[type='radio']:checked").val() == 0) {
@@ -56,6 +190,22 @@
                 data: {pk: pk, value: $("[type='radio']:checked").val()}
             });
         }
+
+    function save_fractions(){
+        sl();
+        var res = [];
+        $.each($("#table-fractions tbody tr"), function(k,v){
+            var tpk = parseInt($(v).attr("pk"));
+            res.push({pk: tpk, hide: $("[name=hide-{0}]".f(tpk)).prop("checked"), render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()), options: $("[data-role='tagsinput']", v).val()});
+        });
+        $.ajax({
+                url: "/construct/researches/get_details",
+                method: "POST",
+                data: {data: JSON.stringify(res)}
+        }).done(function(data){
+            update_data();
+        });
+    }
 
     </script>
 {% endblock %}

@@ -331,9 +331,13 @@
             min-width: 28px;
         }
 
-        .btn-blue2-nb:hover, .btn-blue-nb:active {
+        .btn-blue2-nb:hover {
             background-color: #3BAFDA !important;
             border: 1px solid #3BAFDA !important;
+        }
+        .btn-blue-nb:active {
+            background-color: #37BC9B !important;
+            border: 1px solid #37BC9B !important;
         }
 
         .tube .label {
@@ -380,7 +384,7 @@
             margin-top: 5px;
         }
 
-        .dash-buttons .col-md-3 {
+        .dash-buttons > div, .dash-btn {
             padding-right: 2px;
             padding-left: 2px;
         }
@@ -394,6 +398,10 @@
             z-index: 99;
             position: relative;
             transition: .1s linear;
+        }
+        .bw100{
+            display: block;
+            width: 100%;
         }
 
         .dash-buttons .panel-body:hover {
@@ -468,6 +476,12 @@
             background-color: #FC6E51 !important;
             background-color: #049372 !important;
         }
+        .navbar-xs { min-height:28px; height: 28px; }
+        .navbar-xs .navbar-brand{ padding: 0px 12px;font-size: 16px;line-height: 28px; }
+        .navbar-xs .navbar-nav > li > a {  padding-top: 0px; padding-bottom: 0px; line-height: 28px; }
+        .navbar-sm { min-height:40px; height: 40px; }
+        .navbar-sm .navbar-brand{ padding: 0px 12px;font-size: 16px;line-height: 40px; }
+        .navbar-sm > li > a {  padding-top: 0px; padding-bottom: 0px; line-height: 40px; }
 
         .panel-flt .panel-heading {
             background-color: #95A5A6;
@@ -501,18 +515,20 @@
             font-size: 10pt;
             left: 33%;
             right: 33%;
-            z-index: 0;
             overflow: visible;
             word-break: keep-all;
             white-space: nowrap;
             opacity: 1;
+            padding: 1px;
+            background-color: #fff;
+            z-index: 100;
         }
 
         .footer-float div {
         }
 
         .footer-float:hover {
-            opacity: .3;
+            opacity: 0;
         }
 
         .navbar-inverse .navbar-nav > .open > a {
@@ -721,6 +737,9 @@
             line-height: 1.42857143;
             color: #333333;
         }
+        .tt-menu .tt-suggestion:not(:last-child){
+            border-bottom: 1px solid grey;
+        }
 
         .tt-dropdown-menu .tt-suggestion.tt-cursor,
         .tt-menu .tt-suggestion.tt-cursor,
@@ -760,33 +779,60 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 22px 70px 4px rgba(0, 0, 0, 0.56), 0 0 0 1px rgba(0, 0, 0, 0.3) !important;
         }
 
-        #table-researches .btn {
+        #table-researches .btn, .table-researches .btn {
             display: inline-block;
             text-align: left;
             overflow-wrap: normal;
-            vertical-align: top;
-            width: 25% !important;
+            vertical-align: middle;
+            /*width: 25% !important;*/
             float: left;
             border-radius: 0;
             border-collapse: collapse !important;
-            height: 36px !important;
+            height: 31px !important;
 
             border: 1px solid #6C7A89 !important;
 
             white-space: nowrap;
             text-overflow: ellipsis;
-            overflow: hidden
+            overflow: hidden;
+            font-size: 13px;
+            padding-top: 2px;
+            transition: .07s linear box-shadow, .07s linear background;
+            padding-left: 3px;
+            padding-right: 3px;
+        }
+        #table-researches .btn input, .table-researches .btn input{
+            display: none;
+        }
+        #table-researches .btn.active-b, .table-researches .btn.active-b{
+            border: 1px solid #434A54 !important;
+            background: #049372;
+            color: #fff;
         }
 
-        #table-researches .btn:hover {
-            border: 1px solid #6C7A89 !important;
-            background: #6C7A89;
+        #table-researches .btn:hover:not(.active-b), .table-researches .btn:hover:not(.active-b) {
+            border: 1px solid #434A54 !important;
+            background: #fff;
+            color: #434A54;
+        }
+
+        #table-researches .btn:hover, .table-researches .btn:hover {
+            box-shadow: inset 0 0 8px rgba(0,0,0,.8) !important;
         }
 
         #page-preloader {
             display: none;
+            opacity: 0;
         }
-
+        .txt-r{
+            text-align: right;
+        }
+        .pd-r-5{
+            padding-right: 5px;
+        }
+        .b-top-bord{
+            border-top: 2px solid slategray;
+        }
         body.showloader #page-preloader {
             display: -webkit-box;
             display: -webkit-flex;
@@ -810,10 +856,12 @@
         }
 
         .sk-fading-circle {
-            margin: 10px auto;
-            width: 40px;
-            height: 40px;
+            width: 28px;
+            height: 28px;
             position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            margin-top: 10px;
         }
 
         .sk-fading-circle .sk-circle {
@@ -974,55 +1022,213 @@
                 opacity: 1;
             }
         }
+
+        .split {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            padding: 5px;
+        }
+
+        .content {
+            border: 1px solid #C0C0C0;
+            box-shadow: inset 0 1px 2px #e4e4e4;
+            background-color: #fff;
+        }
+
+        .gutter {
+            background-color: transparent;
+
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter.gutter-horizontal {
+            cursor: col-resize;
+            background-image: url('/static/img/vertical.png');
+        }
+
+        .gutter.gutter-vertical {
+            cursor: row-resize;
+            background-image: url('/static/img/horizontal.png');
+        }
+
+        .split-horizontal{
+            padding: 0;
+        }
+
+        .split.split-horizontal, .gutter.gutter-horizontal {
+            height: 100%;
+            float: left;
+        }
+
+        .dash-buttons .col-md-3 a, .dash-btn a {
+            height: 122px;
+            position: relative;
+        }
+
+
+        .dash-buttons a .badge {
+            position: absolute;
+            bottom: 10px;
+            right: 100px;
+            left: 100px;
+        }
+        sup {font-size:xx-small; vertical-align:super;}
+        .nav-loader{
+            display: none;
+            max-height: 50px;
+            box-sizing: border-box;
+        }
+        .sloader .nav-loader{
+            display: block;
+        }
+        .sloader .nav-cont{
+            display: none;
+        }
+        .card {
+            background: #fff;
+            border-radius: 2px;
+            display: block;
+            margin: 1rem;
+            position: relative;
+            min-height: 10px;
+            box-sizing: border-box;
+        }
+
+        .card-1 {
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+          transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+
+        .card-1:hover {
+          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        }
+
+        .card-2 {
+          box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+
+        .card-3 {
+          box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+        }
+
+        .card-4 {
+          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        }
+
+        .card-5 {
+          box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+        }
+
+        .field-22{
+            min-height: 22px;
+        }
+        .c{
+            text-align: center;
+        }
+
+        .disable-hover,
+        .disable-hover * {
+            pointer-events: none !important;
+        }
+
+
+        .btn-ell {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>{% load has_group %}
 <div class="{% block container %}container{% endblock %}">
+{% block nav %}
     <nav class="navbar navbar-inverse">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                    aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+        <div class="nav-cont">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
+                        <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+                            <li><a href="/dashboard">Главная</a></li>
+                            <li><a href="/logout">Выход из профиля</a></li>
+                            <li class="divider"></li>
+                            <li><a href="/directions/multiprint" target="_blank">Печать направлений</a></li>
+                            {% if request.user|has_group:"Получатель биоматериала" %}
+                                <li class="divider"></li>
+                                <li><a href="/dashboard/receive/one_by_one">Прием материала по одному</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right" id="right-navbar">
+                    {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
+                        <li><a href="/dashboard/directions">Направления</a></li>
+                    {% endif %}
+                    {% if request.user|has_group:"Заборщик биоматериала" %}
+                        <li><a href="/researches/control">Взятие материала</a></li>
+                    {% endif %}
+                    {% if request.user|has_group:"Получатель биоматериала" %}
+                        <li><a href="/dashboard/receive">Прием материала</a></li>
+                    {% endif %}
+                    {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
+                        <li><a href="/results/enter">Ввод результатов</a></li>
+                        <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
-                    <ul class="dropdown-menu" role="menu" style="z-index: 10000">
-                        <li><a href="/dashboard">Главная</a></li>
-                        <li><a href="/logout">Выход из профиля</a></li>
-                        <li class="divider"></li>
-                        <li><a href="/directions/multiprint" target="_blank">Печать направлений</a></li>
-                    </ul>
-                </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right" id="right-navbar">
-                {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
-                    <li><a href="/dashboard/directions">Направления</a></li>
-                {% endif %}
-                {% if request.user|has_group:"Заборщик биоматериала" %}
-                    <li><a href="/researches/control">Взятие материала</a></li>
-                {% endif %}
-                {% if request.user|has_group:"Получатель биоматериала" %}
-                    <li><a href="/dashboard/receive">Прием материала</a></li>
-                {% endif %}
-                {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
-                    <li><a href="/results/enter">Ввод результатов</a></li>
-                    <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
-                {% endif %}
-            </ul>
+        <div class="nav-loader center">
+            <div class="navbar-header">
+                <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+            </div>
+            <div class="din-spinner" style="text-align: center">
+                <div class="sk-fading-circle">
+                    <div class="sk-circle1 sk-circle"></div>
+                    <div class="sk-circle2 sk-circle"></div>
+                    <div class="sk-circle3 sk-circle"></div>
+                    <div class="sk-circle4 sk-circle"></div>
+                    <div class="sk-circle5 sk-circle"></div>
+                    <div class="sk-circle6 sk-circle"></div>
+                    <div class="sk-circle7 sk-circle"></div>
+                    <div class="sk-circle8 sk-circle"></div>
+                    <div class="sk-circle9 sk-circle"></div>
+                    <div class="sk-circle10 sk-circle"></div>
+                    <div class="sk-circle11 sk-circle"></div>
+                    <div class="sk-circle12 sk-circle"></div>
+                </div>
+                <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;margin-top:10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
+            </div>
         </div>
     </nav>
+{% endblock %}
     {% block content %}{% endblock %}
+{% block foot %}
     <div class="footer-float">
         Клиники ГБОУ ВПО ИГМУ Минздрава РФ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span>
     </div>
+{% endblock %}
 </div>
+<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" >
+    <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10" id="contextNumber" class="form-control w50" /></label> <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt" /></label></a></li>
+    <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со степенью</a></li>
+    <li class="divider context-st"></li>
+    <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
+</ul>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
 <script src="/static/js/typeahead.bundle.min.js"></script>
@@ -1039,6 +1245,7 @@
 <script src="/static/js/jquery.amaran.min.js"></script>
 <script src="/static/js/jquery.tooltipster.min.js"></script>
 <script src="/static/js/jquery.floatThead.min.js"></script>
+<script src="/static/js/context.jq.bs.js"></script>
 <script>
     $body = $("body");
     var $loader = {};
@@ -1135,7 +1342,7 @@
         $loader.draw();
         $loader.tick++;
     };
-    String.prototype.replaceAll = function(search, replacement) {
+    String.prototype.replaceAll = function (search, replacement) {
         var target = this;
         return target.split(search).join(replacement);
     };
@@ -1154,7 +1361,6 @@
         for (var i = this.length; i--;) {
             arr.push(this[i]);
         }
-        ;
         return arr;
     };
 
@@ -1201,11 +1407,13 @@
         document.title = title;
     }
     function sl() {
-        $("#page-preloader").fadeIn(100);
+        $(".navbar").addClass("sloader");
+        $("#page-preloader").show();
         //$loader.init();
     }
     function hl() {
-        $("#page-preloader").fadeOut(100);
+        $(".navbar").removeClass("sloader");
+        $("#page-preloader").hide();
         exitLoop = true;
     }
     $(document).ready(function () {
@@ -1213,9 +1421,66 @@
         startTime();
         $("#page-preloader").hide();
         $body.addClass("showloader");
+        alive();
+        $(".context-st").hide();
+        $.contextMenu({
+            elementSelector: "input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)",
+            menuSelector: "#contextMenu",
+            menuSelected: function (invokedOn, selectedMenu) {
+                switch(selectedMenu.attr("action")){
+                    case "clear":
+                            invokedOn.val("").typeahead('val', "").focus();
+                        break;
+                    case "addnum":
+                            val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
+                            $(invokedOn).val(val);
+                            $(invokedOn).typeahead('val', val);
+                            $("#contextNumber").val(10);
+                            $("#contextSt").val(1);
+                            invokedOn.focus();
+                        break;
+                }
+            }
+        });
     });
+    function alive(){
+        $.ajax({method: "GET", url: "/dashboard", statusCode: {
+            500: function() {
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Сервер недоступен',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 10000
+                });
+            },
+            302: function() {
+                document.location.href = "/";
+            }
+          }}).done(function(){
+                setTimeout(alive, 15000);
+        });
+    }
+    $(document).ajaxComplete(checkSession);
+    function checkSession(event, xhr, ajaxOptions)
+    {
+        if (xhr.readyState == 4)
+        {
+            if(xhr.getResponseHeader("Login-Screen") != null && xhr.getResponseHeader("Login-Screen").length)
+            {
+                document.location.href = "/";
+            }
+        }
+    }
+
 </script>
 {% block scripts %}{% endblock %}
+<div id="page-preloader" style="text-align: center"></div>
+<!--
 <div id="page-preloader" style="text-align: center">
     <div class="din-spinner" style="text-align: center">
         <div class="sk-fading-circle">
@@ -1236,7 +1501,7 @@
         <span style="color: #fff; font-size: 16pt;font-weight: 200;text-align: center">ЗАГРУЗКА...</span>
     </div>
 </div>
-<!-- Piwik -->
+ -->
 <script type="text/javascript">
     var _paq = _paq || [];
     _paq.push(['trackPageView']);

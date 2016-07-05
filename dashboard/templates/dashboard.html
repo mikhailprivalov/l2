@@ -11,15 +11,16 @@
                 <small><a href="/logout">Выход</a></small>
             </li>
             <li class="list-group-item">ФИО: {{ request.user.doctorprofile }}</li>
-            <li class="list-group-item">Группы: {% for v in request.user.groups.all %}
-                <span class="label label-default">{{ v }}</span>&nbsp;{% endfor %}</li>
+            <li class="list-group-item">Группы:
+                <div class="row dash-buttons" style="padding: 0;margin-right: 0;margin-left: 0">{% for v in request.user.groups.all %}<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5"><div class="label label-default bw100">{{ v }}</div></div>{% endfor %}</div>
+            </li>
         </ul>
     </div>
     <h4 class='f-h' style="text-align: center;">Меню</h4>
-    {% for line in menu %}
         <div class="row dash-buttons">
+    {% for line in menu %}
             {% for item in line %}
-            <div class="col-md-3">
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
                 <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
                     {{ item.title }}
                     <small class="badge badge-default">{{ item.keys }}</small>
@@ -33,24 +34,16 @@
                 });
             </script>
             {% endfor %}
-        </div>{% endfor %}
+    {% endfor %}
+        </div>
 {% endblock %}
 {% block scripts %}
     <style>
-        .dash-buttons .col-md-3 a {
-            height: 122px;
-            position: relative;
-        }
-
-
-        .dash-buttons a .badge {
-            position: absolute;
-            bottom: 10px;
-            right: 100px;
-            left: 100px;
-        }
         h4 {
             margin: 5px;
         }
+    .mb5{
+        margin-bottom: 5px;
+    }
     </style>
 {% endblock %}

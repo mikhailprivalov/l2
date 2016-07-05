@@ -4,20 +4,21 @@ from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
 from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
-    users_dosync, dir_multiprint, dashboard_from, view_log, load_logs
+    users_dosync, dir_multiprint, dashboard_from, view_log, load_logs, confirm_reset, receive_journal_form
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
     print_history, \
     get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get
-from receivematerial.views import receive, tubes_get
+from receivematerial.views import receive, tubes_get, receive_obo, receive_history, receive_execlist, last_received, \
+    receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
     result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, results_search
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
     directory_researches_update_mode, directory_toggle_hide_research, directory_copy_research, \
-    directory_researches_update_sort
+    directory_researches_update_sort, researches_update_template
 from statistic.views import statistic_page, statistic_xls
 import api.urls as api_urls
 import barcodes.urls as barcodes_urls
@@ -54,6 +55,7 @@ urlpatterns = [
                   url(r'^directory/researches/list$', directory_researches_list),
                   url(r'^directory/researches/update_uet$', directory_researches_update_uet),
                   url(r'^directory/researches/update_mode$', directory_researches_update_mode),
+                  url(r'^directory/researches/update_template$', researches_update_template),
                   url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/control$', researches_control),
                   url(r'^researches/get/one', researches_get_one),
@@ -63,8 +65,15 @@ urlpatterns = [
                   url(r'^dashboard/create_podr$', create_pod),
                   url(r'^dashboard/ldap_sync$', ldap_sync),
                   url(r'^dashboard/directions$', directions),
-                  url(r'^dashboard/receive', receive),
+                  url(r'^dashboard/receive$', receive),
+                  url(r'^dashboard/receive/one_by_one$', receive_obo),
+                  url(r'^dashboard/receive/last_received$', last_received),
+                  url(r'^dashboard/receive/execlist$', receive_execlist),
+                  url(r'^dashboard/receive/history$', receive_history),
+                  url(r'^dashboard/receive/journal$', receive_journal),
+                  url(r'^dashboard/receive/journal_form$', receive_journal_form),
                   url(r'^dashboard/view_log$', view_log),
+                  url(r'^dashboard/confirm_reset$', confirm_reset),
                   url(r'^tubes/get', tubes_get),
                   url(r'^results/search', results_search),
                   url(r'^results/enter', enter),

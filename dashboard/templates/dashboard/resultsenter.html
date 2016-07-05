@@ -2,22 +2,26 @@
 {% block title %}Ввод результатов{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <div class="col-md-3">
-        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a href="#" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;<a href="#" onclick="dayprint();return false">Печать результатов за день</a></div>
-        <div class="panel panel-flt m5">
-            <div class="panel-body">
+    <div class="col-xs-3" style="padding-right: 0">
+        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a
+                href="#" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;<a href="#"
+                                                                                       onclick="dayprint();return false">Печать
+            результатов за день</a></div>
+        <div class="panel panel-flt m5" style="margin-bottom: 10px">
+            <div class="panel-body" style="padding:10px;">
                 <div class="input-group" style="margin-bottom: 5px">
-                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13" autofocus/>
+                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13"
+                           autofocus/>
                     <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
                     </span>
                 </div>
                 <div class="btn-group" data-toggle="buttons" style="display: inline-block; width: 100%">
-                    <label class="btn btn-default active" style="width: 50%">
+                    <label class="btn btn-blue-nb btn-ell active" style="width: 50%">
                         <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
                         Номер направления
                     </label>
-                    <label class="btn btn-default" style="width: 50%">
+                    <label class="btn btn-blue-nb btn-ell" style="width: 50%">
                         <input type="radio" name="type" id="option1" value="0" autocomplete="off">
                         Номер пробирки
                     </label>
@@ -25,37 +29,44 @@
             </div>
         </div>
         <div class="panel panel-flt m2">
-            <div class="panel-body">
-                <label style="float: right;">отложенные <input type="checkbox" name="def" onchange="tgfreeze(this);"/></label>Дата приема материала:
+            <div class="panel-body" style="padding: 5px 10px;">
+                <label style="float: right;">отложенные <input type="checkbox" name="def"
+                                                               onchange="tgfreeze(this);"/></label>Дата приема
+                материала:
                 <div class="row" style="margin-bottom: 5px">
-                    <div class="col-md-9" style="padding-right: 0;">
+                    <div class="col-xs-9" style="padding-right: 0;">
                         <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
-                            <input type="text" class="input-sm form-control" name="datemain-start"/>
+                            <input type="text" class="input-sm form-control no-context" name="datemain-start"/>
                             <span class="input-group-addon"
                                   style="background-color: #fff;color: #000">&mdash;</span>
-                            <input type="text" class="input-sm form-control" name="datemain-end"/>
+                            <input type="text" class="input-sm form-control no-context" name="datemain-end"/>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary-nb" onclick="load_tubes_and_dirs();return false;"><i class="fa fa-refresh"></i></button>
+                    <div class="col-xs-3">
+                        <button class="btn btn-primary-nb" onclick="load_tubes_and_dirs();return false;"><i
+                                class="fa fa-refresh"></i></button>
                     </div>
                 </div>
                 <div id="lists">
-                    <div class="col-md-6" id="dirs-list">
+                    <div class="col-xs-6" id="dirs-list">
                         <table class="table table-bordered floatThead">
                             <thead>
                             <tr>
-                                <th style="text-align: center">Направления <small class="badge">0</small></th>
+                                <th style="text-align: center">Направления
+                                    <small class="badge">0</small>
+                                </th>
                             </tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div class="col-md-6" id="tubes-list">
+                    <div class="col-xs-6" id="tubes-list">
                         <table class="table table-bordered floatThead">
                             <thead>
                             <tr>
-                                <th style="text-align: center">Пробирки <small class="badge">0</small></th>
+                                <th style="text-align: center">Пробирки
+                                    <small class="badge">0</small>
+                                </th>
                             </tr>
                             </thead>
                             <tbody></tbody>
@@ -63,28 +74,20 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6" style="text-align: right">
-                        <small >дата создания направления</small>
+                    <div class="col-xs-6" style="text-align: right">
+                        <small>дата создания направления</small>
                     </div>
-                    <div class="col-md-6" style="text-align: right">
+                    <div class="col-xs-6" style="text-align: right">
                         <small>дата приема материала</small>
                     </div>
                 </div>
             </div>
-            </div>
         </div>
-    <div class="col-md-3">
-        <div class="row" style="margin-bottom: 10px">
-            <div class="col-md-6">
-                <button onclick="print_results();" id="result-print" disabled
-                        class="btn btn-primary-nb">Печать результатов
-                </button>
-            </div>
-            <div class="col-md-6">
-                <button onclick="confirm_results();" id="result-confirm" disabled
-                        class="btn btn-primary-nb">Подтвердить результаты
-                </button>
-            </div>
+    </div>
+    <div class="col-xs-3" style="margin-top: -10px">
+        <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
+            <a href="#" onclick="print_results(); return false;" id="result-print" disabled class="btn btn-sm btn-primary-nb">Печать результатов</a>
+            <a href="#" onclick="confirm_results(); return false;" id="result-confirm" disabled class="btn btn-sm btn-primary-nb">Подтвердить результаты</a>
         </div>
         <table class="table table-bordered" id="dir_info">
             <tr>
@@ -119,109 +122,165 @@
                 <td style="width: 150px">Лечащий врач</td>
                 <td id="directioner"></td>
             </tr>
+            <tr>
+                <td style="width: 150px">Отделение</td>
+                <td id="otd"></td>
+            </tr>
         </table>
         <div id="issledovaniya-scroll">
+            <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
             <ul id="issledovaniya"></ul>
         </div>
     </div>
-    <div class="col-md-6" id="form-scroll">
-        <div id="result-form">
-
-        </div>
+    <div class="col-xs-6" id="form-scroll" style="margin-top: -10px;">
+        <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
+        <div id="result-form"></div>
     </div>
-<div class="modal fade" id="list-modal">
-    <div class="modal-dialog" style="width: 64%;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Создание листа исполения</h4>
-            </div>
-            <div class="modal-body">
-                Дата приема материала:
-                <br/>
-                <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                    <input type="text" class="input-sm form-control" name="date-start"/>
+    <div class="modal fade" id="list-modal">
+        <div class="modal-dialog" style="width: 64%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Создание листа исполения</h4>
+                </div>
+                <div class="modal-body">
+                    Дата приема материала:
+                    <br/>
+                    <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                        <input type="text" class="input-sm form-control no-context" name="date-start"/>
                     <span class="input-group-addon"
                           style="background-color: #fff;color: #000">&mdash;</span>
-                    <input type="text" class="input-sm form-control" name="date-end"/>
-                </div>
-                <div style="height: 400px">
-                    <div id="table-researches"></div>
-                </div>
-                <hr/>
-                <div class="row" style="text-align: center;width: 100%">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-6" style="margin: 0 auto">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="$('#table-researches input[type=checkbox]').prop('checked', true);return false;">Выбрать всe</button>
+                        <input type="text" class="input-sm form-control no-context" name="date-end"/>
+                    </div>
+                    <div style="height: 400px">
+                        <div id="table-researches" class="table-researches"></div>
+                    </div>
+                    <br/>
+                    <hr/>
+                    <div class="row" style="text-align: center;width: 100%">
+                        <div class="col-xs-3"></div>
+                        <div class="col-xs-6" style="margin: 0 auto">
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', true);sync_checks();return false;">
+                                        Выбрать всe
+                                    </button>
+                                </div>
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', false);sync_checks();return false;">
+                                        Снять всe
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="$('#table-researches input[type=checkbox]').prop('checked', false);return false;">Снять всe</button>
-                            </div>
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createlist(1);return false;">Создать лист по выбранному периоду
+                            </button>
+                            <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">
+                                Создать лист по отложенным
+                            </button>
                         </div>
-                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createlist(1);return false;">Создать лист по выбранному периоду</button>
-                        <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">Создать лист по отложенным</button>
+                        <div class="col-xs-3"></div>
                     </div>
-                    <div class="col-md-3"></div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
-</div><div class="modal fade" id="journal-modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Журнал</h4>
-            </div>
-            <div class="modal-body">
-                <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span style="display: inline-block;"><input type="text" class="form-control" style="display: inline-block" name="date-confirm"/></span></label>
-                <hr/>
-                <div class="row" style="text-align: center;width: 100%">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-8" style="margin: 0 auto">
-                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="createjournal();return false;">Создать журнал по выбранной дате</button>
-                    </div>
-                    <div class="col-md-2"></div>
+    <div class="modal fade" id="journal-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Журнал</h4>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                <div class="modal-body">
+                    <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span
+                            style="display: inline-block;"><input type="text" class="form-control no-context"
+                                                                  style="display: inline-block"
+                                                                  name="date-confirm"/></span></label>
+                    <hr/>
+                    <div class="row" style="text-align: center;width: 100%">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8" style="margin: 0 auto">
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createjournal();return false;">Создать журнал по выбранной дате
+                            </button>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="results-day-modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Печать результатов за день</h4>
-            </div>
-            <div class="modal-body">
-                <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span style="display: inline-block;"><input type="text" class="form-control" style="display: inline-block" name="dateday-confirm"/></span></label>
-                <hr/>
-                <div class="row" style="text-align: center;width: 100%">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-8" style="margin: 0 auto">
-                        <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px" onclick="dayprint_do();return false;">Печать результатов за выбранную дату</button>
-                    </div>
-                    <div class="col-md-2"></div>
+    <div class="modal fade" id="results-day-modal">
+        <div class="modal-dialog" style="width: 64%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Печать результатов за день</h4>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                <div class="modal-body">
+                    <label><span style="display: inline-block;">Дата подтверждения результата:</span> <span
+                            style="display: inline-block;"><input type="text" class="form-control no-context"
+                                                                  style="display: inline-block" name="dateday-confirm"/></span></label>
+                    <div style="height: 400px">
+                        <div id="dayprint-table-researches" class="table-researches"></div>
+                    </div>
+                    <br/>
+                    <hr/>
+                    <div class="row" style="text-align: center;width: 100%">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8" style="margin: 0 auto">
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#dayprint-table-researches input[type=checkbox]').prop('checked', true);sync_checks();return false;">
+                                        Выбрать всe
+                                    </button>
+                                </div>
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="$('#dayprint-table-researches input[type=checkbox]').prop('checked', false);sync_checks();return false;">
+                                        Снять всe
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="dayprint_do();return false;">Печать результатов за выбранную дату
+                            </button>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <div id="dataConfirmModal" class="modal fade" role="dialog" aria-labelledby="dataConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="dataConfirmLabel">Некоторые исследования были сохранены другим пользователем</h3></div>
+                <div class="modal-body">Вы уведены, что хотите подтвердить всё?</div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Отмена</button>
+                    <a class="btn btn-primary" id="dataConfirmOK">Подтвердить</a></div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/runtime.js"></script>
@@ -229,10 +288,12 @@
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
-        var type = 0;
+        var type = 0, su = false;
         $(document).ready(function () {
+            {% if request.user.is_superuser %}su = true;{% endif %}
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            $("#result-print").attr("disabled", 1);
+            $("#result-print").prop("disabled", true);
+            $("#result-confirm").prop("disabled", true);
             $(window).resize(function () {
                 resize();
             });
@@ -257,14 +318,13 @@
             });
 
             $("#search-field").bind('keydown', 'return', function () {
-
                 load_d_fast();
             });
-            $("body").on('keyup', '.result-enter', function (e) {
+            $("body").on('keyup', ':not(.row-container) .result-enter', function (e) {
                 if (e.which === 13) {
-                    var index = $('.result-enter').index(this) + 1;
-                    if ($('.result-enter').eq(index).length)
-                        $('.result-enter').eq(index).focus();
+                    var index = $('.result-enter:not(.tt-hint)').index(this) + 1;
+                    if ($('.result-enter:not(.tt-hint)').eq(index).length)
+                        $('.result-enter:not(.tt-hint)').eq(index).focus();
                     else
                         save();
                 }
@@ -279,11 +339,22 @@
                 autoclose: true,
                 todayHighlight: true
             });
+            $(".context-st").show();
 
             load_tubes_and_dirs();
             resize();
+
+            $("body").on("change", ".table-researches .btn input", sync_checks);
+
         });
-        function tgfreeze(th){
+        function sync_checks() {
+            $(".btn").removeClass("active-b");
+            var elements = document.querySelectorAll("input[name='sel']:checked");
+            Array.prototype.forEach.call(elements, function (el, i) {
+                $(el).parent().addClass("active-b");
+            });
+        }
+        function tgfreeze(th) {
             $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
         }
         request = "";
@@ -302,17 +373,20 @@
         var dir_data = {};
         var statuses = {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден", "o": "Отложен"};
-        var iss_pks = [];
-        function load_data(id, type, select_el) {
-            $("#result-print").prop("disabled", true);
-            $("#result-confirm").prop("disabled", true);
+        var iss_pks = [], has_o = false;
+        function load_data(id, type, select_el, noclear) {
+            sl();
+            $("#result-print").attr("disabled", 1);
+            $("#result-confirm").attr("disabled", 1);
             iss_pks = [];
+            $("#search-field").attr("placeholder", "");
             $.ajax({
                 url: "/directions/get/issledovaniya",
                 type: "json",
                 method: "GET",
                 data: {id: id, type: type}
             }).done(function (data) {
+                hl();
                 if (!data.ok) {
                     $("#search-field").parent().addClass("has-error");
                     $('#search-field').tooltipster({
@@ -325,11 +399,16 @@
                     return;
                 }
 
+                if(!noclear){
+                    $("#search-field").val("");
+                }
+                {% comment %}
+
                 $("#issledovaniya").isLoading({
                     text: "Загрузка списка исследований",
                     position: "inside",
                     'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
-                });
+                });{% endcomment %}
 
                 $(".has-error").removeClass("has-error");
                 try {
@@ -341,6 +420,8 @@
                 request = id;
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
+                $(".not-loaded").hide();
+                $("#issledovaniya").show();
                 $(".select-dir.active, .select-tube.active").removeClass("active");
                 $("#result-form").empty();
                 $("#issledovaniya").empty();
@@ -352,66 +433,97 @@
                 $("#client_sex").html(data.client_sex);
                 $("#client_hisnum").html(data.client_hisnum);
                 $("#fin_source").html(data.fin_source);
-                var status = "n", all_saved = false, firstch = true, has_n = false;
+                $("#otd").html(data.otd);
+                var status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
+                has_o = false;
+                $(".select-tube").removeClass(function (index, css) {
+                    return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
+                });
+
+                tmp_types = {"1": "направление", "0": "пробирка"};
+                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type+""],id));
+
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
                     else if (v.saved && v.confirmed) status = "c";
-                    else if(!v.deff) status = "n";
+                    else if (!v.deff) status = "n";
                     else status = "o";
 
 
-                    if(status == "s"){
-                        iss_pks.push(v.pk);
-                        if(firstch && !all_saved && !has_n){
+                    if (status == "s") {
+                        if (firstch && !all_saved && !has_n) {
                             all_saved = firstch = true;
                         }
                     }
-                    else if(status == "n"){
+                    else if (status == "n") {
                         all_saved = false;
                         has_n = true;
                     }
-                    deffc = "";
-                    if(status != "c"){
-                        if(v.deff === false)
-                            deffc = "<br/><div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
+                    deffc = sv = "";
+                    if (status != "c") {
+                        if (v.deff === false) {
+                            iss_pks.push(v.pk);
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
+                            all_o = false;
+                        }
                         else {
-                            deffc = "<br/><div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
                             status = "o";
                         }
+                        if (v.current_doc_save == 0) {
+                            sv = "<br/><span class='save-other'>сохранил: {0}</span>".f(v.doc_save_fio);
+                            has_o = true;
+                        }
+                        if (v.tube.pk == "") {
+                            sv = "&nbsp;<span class='no-tube'>Пробирка {0} не принята</span>".f(v.not_received_tubes);
+                        }
+                        deffc = "<br/>" + deffc;
                     }
-                    $("#issledovaniya").append("<li num='{1}' onclick='load_form({1}, {6})'><div title='{5}' class='status status-{3}'>{4}{7}</div></div>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk, status, statuses[status], statuses_titles[status], v.template,deffc));
-                    if (type == 0) {
-                        tubessplit = v.tube.pk.split(', ');
-                        $.each(tubessplit, function (k, v) {
-                            $(".select-tube[tube='{0}']".f(v)).addClass("active");
-                        });
+                    else {
+                        all_o = false;
+                        if (su)
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
                     }
+                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group}' onclick='load_form(${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
+
+                    tubessplit = v.tube.pk.split(',');
+                    $.each(tubessplit, function (k, vt) {
+                        $(".select-tube[tube='{0}']".f(vt)).addClass("tb-group-" + v.group);
+                        if (type == 0) {
+                            $(".select-tube[tube='{0}']".f(vt)).addClass("active");
+                        }
+                    });
                 });
-                if (type == 0) {
-                    $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
-                    $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
-                }
-                if (type == 1) {
-                    $("[direction='{0}']".f(data.napr_pk)).addClass("active");
-                    $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
+
+                if ($('[direction=\'{0}\']'.f(data.napr_pk)).length) {
+                    if (type == 0) {
+                        $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
+                        $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
+                    }
+                    if (type == 1) {
+                        $("[direction='{0}']".f(data.napr_pk)).addClass("active");
+                        $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
+                    }
                 }
                 if (!select_el)
-                $("#issledovaniya li").first().click();
+                    $("#issledovaniya li").first().click();
                 else
                     $("#issledovaniya li[num='{0}']".f(select_el)).click();
                 $('#issledovaniya-scroll').scrollTop(0);
-                if(all_saved){
-                    $("#result-confirm").prop("disabled", false);
+                if (all_saved) {
+                    $("#result-confirm").removeAttr("disabled");
                 }
-                if (data.all_confirmed) {
-                    $("#result-print").prop("disabled", false);
+                if (data.all_confirmed && !all_o) {
+                    $("#result-print").removeAttr("disabled");
+                    $("#result-confirm").attr("disabled", 1);
                 }
             });
         }
         var loaded_research = -1;
         var datatype = -1;
+        var loaded_fractions = {};
         function load_form(id, templateid) {
-            if(typeof templateid == "undefined"){
+            if (typeof templateid == "undefined") {
                 templateid = 0;
             }
             $("#result-form").isLoading({
@@ -419,7 +531,12 @@
                 position: "inside",
                 'tpl': loading_tpl
             });
-            $.ajax({url: "/static/templates/{0}.jade".f(templateid), type: "text", method: "GET", cache: false}).done(function (data) {
+            $.ajax({
+                url: "/static/templates/{0}.jade".f(templateid),
+                type: "text",
+                method: "GET",
+                cache: false
+            }).done(function (data) {
                 template = data;
                 $.ajax({
                     url: "/researches/get/one",
@@ -437,38 +554,46 @@
                     $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
                     var autoIsF = false;
                     var num = 0;
-                    $.each(data2.fractions, function(fk, fv){
+                    loaded_fractions = {};
+                    $.each(data2.fractions, function (fk, fv) {
+                        loaded_fractions[fv.pk] = fv;
                         num++;
-                        if(fv.type != -1){
-                            if(num == 1) autoIsF = true;
-                            var ft = $.map(fraction_types[fv.type+""], function(item){
+                        if (fv.type != -1) {
+                            if (num == 1) autoIsF = true;
+                            var ft = $.map(fraction_types[fv.type + ""], function (item) {
                                 return {value: item};
                             });
                             var typeVals = new Bloodhound({
                                 datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                                 queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                identify: function(obj) { return obj.value; },
+                                identify: function (obj) {
+                                    return obj.value;
+                                },
                                 local: ft
                             });
-                            function typeValsDefaults(q, sync) {
-                                if (q === '') {
-                                    sync(typeVals.get(fraction_types[fv.type+""]));
-                                }
 
-                                else {
-                                    typeVals.search(q, sync);
-                                }
+                            function typeValsDefaults(q, sync) {
+                                //if (q === '') {
+                                sync(typeVals.get(fraction_types[fv.type + ""]));
+                                /*}
+
+                                 else {
+                                 typeVals.search(q, sync);
+                                 }*/
                             }
+
                             $d = $("[data-pk='{0}']".f(fv.pk));
-                            $val =  $d.val();
+                            $val = $d.val();
                             $d.typeahead({
                                 minLength: 0,
+                                limit: 40,
                                 highlight: true,
                                 hint: $val == ""
                             }, {
                                 name: 'typeval',
                                 display: 'value',
-                                source: typeValsDefaults
+                                source: typeValsDefaults,
+                                limit: 40
                             });
                             $d.typeahead('val', $val);
                             $("[data-pk='{0}']".f(fv.pk)).val($val);
@@ -480,11 +605,17 @@
 
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
-                            if(v != "")
+                            if (v != "")
                                 $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
                             $("[data-pk='" + k + "']").val(v);
                             $("[data-div-pk='{0}']".f(k)).html(v);
                         });
+                        try {
+                            if (jQuery.type(dready) != "undefined" && $.isFunction(dready)) {
+                                dready();
+                            }
+                        } catch (e) {
+                        }
                     });
 
                     resize();
@@ -493,16 +624,19 @@
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").attr("disabled", 1);
+                        $("#confirm-andsave-btn").attr("disabled", 1);
                         datatype = 2;
                     }
                     else if (data2.saved) {
                         $("#confirm-btn").removeAttr("disabled");
                         $("#save-btn").removeAttr("disabled");
+                        $("#confirm-andsave-btn").removeAttr("disabled");
                         datatype = 1;
                     }
                     else {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").removeAttr("disabled");
+                        $("#confirm-andsave-btn").removeAttr("disabled");
                     }
                     $('#result-jade-form').scrollTop(0);
                 });
@@ -526,39 +660,51 @@
                 position: "inside",
                 'tpl': loadingtable,
             });
-            $.ajax({url: "/results/loadready", data: {datestart: $("[name=datemain-start]").val(), dateend: $("[name=datemain-end]").val(), def: $("[name=def]").prop("checked")? 1 : 0}, type: "json", method: "GET"}).done(function (data) {
+            $.ajax({
+                url: "/results/loadready",
+                data: {
+                    datestart: $("[name=datemain-start]").val(),
+                    dateend: $("[name=datemain-end]").val(),
+                    def: $("[name=def]").prop("checked") ? 1 : 0
+                },
+                type: "json",
+                method: "GET"
+            }).done(function (data) {
                 $("#tubes-list tbody").isLoading("hide");
                 $("#dirs-list tbody").isLoading("hide");
 
-                $("#tubes-list tbody").html("");
-                $("#dirs-list tbody").html("");
+                document.querySelector("#tubes-list tbody").innerHTML = "";
+                document.querySelector("#dirs-list tbody").innerHTML = "";
 
-                if(data.tubes.length == 0)
-                    $("#tubes-list tbody").append("<tr><td>Не найдено</td></tr>");
-                if(data.directions.length == 0)
-                    $("#dirs-list tbody").append("<tr><td>Не найдено</td></tr>");
-                tubesn = 0;
-                dirsn = 0;
-                $.each(data.tubes, function (k, v) {
-                    $("#tubes-list tbody").append("<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date))
-                    tubesn++;
-                });
-                $.each(data.directions, function (k, v) {
-                    $("#dirs-list tbody").append("<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date))
-                    dirsn++;
-                });
-                $("#tubes-list th small").text(tubesn);
-                $("#dirs-list th small").text(dirsn);
+                tubesn = data.tubes.length;
+                dirsn = data.directions.length;
+
+                if (tubesn == 0)
+                    $("#tubes-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
+                if (dirsn == 0)
+                    $("#dirs-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
+                var i = 0;
+                for (i = 0; i < tubesn; i++) {
+                    v = data.tubes[i];
+                    document.querySelector("#tubes-list tbody").innerHTML += "<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date);
+                }
+                for (i = 0; i < dirsn; i++) {
+                    v = data.directions[i];
+                    document.querySelector("#dirs-list tbody").innerHTML += "<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date);
+                }
+                document.querySelector("#tubes-list th small").textContent = tubesn;
+                document.querySelector("#dirs-list th small").textContent = dirsn;
                 $('#dirs-list').scrollTop(0);
                 $('#tubes-list').scrollTop(0);
                 resize();
                 hl();
+                $("#tubes-list tr, #dirs-list tr").addClass("animated");
             });
         }
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 110);
-            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 80);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 110);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 100);
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 95);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
@@ -573,22 +719,27 @@
 
             if (!$('#result-jade-form').length) return;
             $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 120);
-            $('#result-jade-form').perfectScrollbar();
+            $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
         }
-        function save() {
+        function save(noreload, fc) {
+            $("#confirm-btn").attr("disabled", 1);
+            $("#save-btn").attr("disabled", 1);
+            $("#confirm-andsave-btn").attr("disabled", 1);
             if (datatype == 2) return;
             $(this).disabled = true;
             var result = {issledovaniye: -1, fractions: {}}
             result.issledovaniye = $("#issledovaniye_id").val();
-            $.each($(".result-enter"), function (k, v) {
+            $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
                 result.fractions[$(v).data("pk")] = $(v).val();
             });
             result.fractions = JSON.stringify(result.fractions);
             $(this).disabled = false;
-            console.log(result);
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
-                console.log(data);
-                reload_fast();
+                if (!noreload)
+                    reload_fast();
+                else {
+                    fc();
+                }
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
@@ -603,8 +754,16 @@
             });
         }
 
-        function confirm_results(){
+        function confirm_results(ignore) {
+
             $(this).prop("disabled", true);
+            if (has_o && !ignore) {
+                $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
+                $('#dataConfirmOK').attr('onclick', "confirm_results(true);$('#dataConfirmModal').modal('hide');return false;");
+                $('#dataConfirmModal').modal({show: true});
+                return false;
+            }
+
             $.ajax({
                 "url": "/results/confirm/list",
                 method: "POST",
@@ -612,7 +771,7 @@
                 data: {list: JSON.stringify(iss_pks)}
             }).done(function (data) {
                 reload_fast();
-                if(data.ok) {
+                if (data.ok) {
                     $.amaran({
                         'theme': 'awesome ok',
                         'content': {
@@ -625,11 +784,14 @@
                         delay: 6000
                     });
                 }
-                $(this).prop("disabled", false);
+                $("#result-confirm").attr("disabled", 1);
             });
         }
 
-        function confirm() {
+        function confirm_result() {
+            $("#confirm_result-btn").attr("disabled", 1);
+            $("#save-btn").attr("disabled", 1);
+            $("#confirm_result-andsave-btn").attr("disabled", 1);
             $.ajax({
                 "url": "/results/confirm",
                 method: "POST",
@@ -656,76 +818,99 @@
             // list_reload = true;
             //$('[direction="' + dir_data.napr_pk + '"]').remove();
         }
-        function createjournal(){
+        function createjournal() {
             date = $("[name=date-confirm]").val()
             window.open('/results/journal?date=' + date, '_blank');
         }
-        var substringMatcher = function(strs) {
+        var substringMatcher = function (strs) {
             return function findMatches(q, cb) {
-            var matches, substringRegex;
-            matches = [];
-            substrRegex = new RegExp(q, 'i');
-            $.each(strs, function(i, str) {
-                if (substrRegex.test(str)) {
-                    matches.push(str);
-                }
-            });
+                var matches, substringRegex;
+                matches = [];
+                substrRegex = new RegExp(q, 'i');
+                $.each(strs, function (i, str) {
+                    if (substrRegex.test(str)) {
+                        matches.push(str);
+                    }
+                });
 
-            cb(matches);
-          };
+                cb(matches);
+            };
         };
-    function openexeclist(){
-        load_researches();
-        $("#list-modal").modal();
-    }
-    function openjournal(){
-        $("#journal-modal").modal();
-    }
-    function dayprint(){
-        $("#results-day-modal").modal();
-    }
-    var lockdeff = false;
-    function deff(status, pk){
-        if(lockdeff) return;
-        lockdeff = true;
-        $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function(data){
-            lockdeff = false;
-            reload_fast();
-        });
-    }
-    function dayprint_do(){
-        if(lockdeff) return;
-        lockdeff = true;
-        $.ajax({url: "/results/day", data: {date: $("[name=dateday-confirm]").val()}}).done(function(data){
-            lockdeff = false;
-            if(data.directions.length > 0) {
-                st = "?pk=" + JSON.stringify(data.directions);
-                window.open('/results/pdf' + st, '_blank');
-                $("#results-day-modal").modal('close');
-            }
-            else{
+        function openexeclist() {
+            load_researches();
+            $("#list-modal").modal();
+        }
+        function openjournal() {
+            $("#journal-modal").modal();
+        }
+        function dayprint() {
+            load_researches("#dayprint-table-researches");
+            $("#results-day-modal").modal();
+        }
+        var lockdeff = false;
+        function deff(status, pk) {
+            if (lockdeff) return;
+            lockdeff = true;
+            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function (data) {
+                lockdeff = false;
+                reload_fast();
+            });
+        }
+        function dayprint_do() {
+            if (lockdeff) return;
+            lockdeff = true;
+            var researches = [];
+            $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
+                researches.push(parseInt($(v).val()));
+            });
+            if (researches.length == 0) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
                         title: "Печать невозможна",
-                        message: "Ничего не найдено",
+                        message: "Ничего не выбрано",
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 6000
                 });
+                lockdeff = false;
+                return;
             }
-        });
-    }
-    function createlist(type){
-        datestart = dateend = "";
-        researches = [];
-        $.each($(".research-sel:checked"), function(k,v){
-            researches.push(parseInt($(v).val()));
-        });
-        if(researches.length == 0){
-            $.amaran({
+            $.ajax({
+                url: "/results/day",
+                data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches)}
+            }).done(function (data) {
+                lockdeff = false;
+                if (data.directions.length > 0) {
+                    st = "?pk=" + JSON.stringify(data.directions);
+                    window.open('/results/pdf' + st, '_blank');
+                    $("#results-day-modal").modal('close');
+                }
+                else {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: "Печать невозможна",
+                            message: "Ничего не найдено",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
+            });
+        }
+        function createlist(type) {
+            datestart = dateend = "";
+            researches = [];
+            $.each($("#table-researches .research-sel:checked"), function (k, v) {
+                researches.push(parseInt($(v).val()));
+            });
+            if (researches.length == 0) {
+                $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
                         title: "Создание невозможно",
@@ -736,49 +921,90 @@
                     'position': 'bottom right',
                     delay: 6000
                 });
-            return;
-        }
-        switch(type){
-            case 2:
+                return;
+            }
+            switch (type) {
+                case 2:
                     console.log("2");
-                break;
-            default:
+                    break;
+                default:
                     datestart = $("[name=date-start]").val();
                     dateend = $("[name=date-end]").val();
                     console.log(datestart, dateend);
-                break;
+                    break;
+            }
+            window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
         }
-        window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
-    }
-    function load_researches() {
-            $("#table-researches").html("");
-            $("#table-researches").append(lang.table_researches_header);
+        function load_researches(cont) {
+            $o = $("#table-researches");
+            if (cont != undefined)
+                $o = $(cont);
+            $o.html("");
+            $o.append(lang.table_researches_header);
             $.ajax({ // AJAX запрос
                 url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
                 if (data.length == 0) {
-                    $("#table-researches").append(lang.table_researches_not_found);
+                    $o.append(lang.table_researches_not_found);
                     return;
                 }
-                $("#table-researches").html("");
-                $("#table-researches").append(lang.table_researches_header);
+                $o.html("");
+                $o.append(lang.table_researches_header);
                 $.each(data, function (k, v) {
-                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $o.append("<label title='{1}' class=\"btn btn-default col-xs-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                });
+            });
+        }
+        function reset_confirm(id, rtitle, tube) {
+            sl();
+            var msg = "Сбросить подтверждение исследования №{0} - {1}, пробирка №{2}?".f(id, rtitle, tube);
+            console.log(msg);
+            var doreset = confirm(msg);
+            if (doreset === false || doreset === null) {
+                hl();
+                return;
+            }
+            $.ajax({
+                "url": "/dashboard/confirm_reset",
+                method: "POST",
+                data: {pk: id}
+            }).done(function () {
+                hl();
+                reload_fast();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Подтверждение сброшено',
+                        message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
                 });
             });
         }
     </script>
     <style>
-    th small{
+        .w50 {
+            width: 70px;
+            display: inline-block;
+            margin-left: 5px;
+        }
 
-    }
-    label{
-        cursor: pointer!important;
-    }
+        th small {
+
+        }
+
+        label {
+            cursor: pointer !important;
+        }
+
         .floatThead th {
             background-color: #fff;
         }
+
         .status {
             float: right;
             display: inline-block;
@@ -809,12 +1035,17 @@
             background-color: #434A54;
             color: #fff
         }
-        #dirs-list{
+
+        #dirs-list {
             padding-left: 0;
+            padding-right: 11px;
         }
-        #tubes-list{
-            padding-left: 10px;
+
+        #tubes-list {
+            padding-left: 0;
+            padding-right: 11px;
         }
+
         #dirs-list tbody, #tubes-list tbody {
             min-height: 100px;
         }
@@ -827,13 +1058,14 @@
         li.active {
             background-color: #fff !important;
             color: #000 !important;
-            outline: 2px solid #6C7A89
+            padding-left: 6px !important;
         }
 
         .select-dir.active td, .select-tube.active td {
             background-color: #6C7A89 !important;
             color: #fff !important;
         }
+
         .select-dir td, .select-tube td {
             background-color: #fff;
         }
@@ -843,7 +1075,16 @@
         }
 
         .highlight, .select-tube:hover, .select-dir:hover {
-            background-color: #F0F0F0;
+        }
+
+        .select-tube:hover .num, .select-dir:hover .num {
+            background-color: #FAFAFA;
+            z-index: 10;
+        }
+
+        .select-tube .num, .select-dir .num {
+            background-color: #FFF;
+            z-index: 1;
         }
 
         html, body {
@@ -855,8 +1096,9 @@
             margin: 0;
             padding: 0;
         }
-        #lists{
-                margin-right: -10px;
+
+        #lists {
+            margin-right: -10px;
         }
 
         #tubes-list, #dirs-list, #issledovaniya-scroll, #result-jade-form {
@@ -879,28 +1121,33 @@
             padding: 6px;
             cursor: pointer;
             margin: 3px;
-            background-color: #ECF0F1;
+            background-color: #f8fcfd;
+            border-left: 3px solid #ECF0F1;
+            border-top: 1px solid #ECF0F1;
+            border-right: 1px solid #ECF0F1;
+            border-bottom: 1px solid #ECF0F1;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            transition: left .15s linear;
+            position: relative;
+            left: 3px;
+            padding-left: 9px;
         }
 
-        /*
-                #issledovaniya li.active small{
-                    color: rgba(255,255,255,.55);
-                    font-size: 8pt;
-                }
-        */
         #issledovaniya li small {
-            color: rgba(0, 0, 0, .4);
+            color: rgba(0, 0, 0, .5);
             font-size: 8pt;
         }
 
         #issledovaniya li:hover {
-            background-color: #E6E9ED;
+            background-color: #eef1f5;
         }
 
         #issledovaniya li .hiddenlinks {
             opacity: 0;
             transition: .1s linear;
         }
+
         #issledovaniya li:hover .hiddenlinks {
             opacity: 1;
         }
@@ -909,11 +1156,6 @@
             color: #000
         }
 
-        /*
-                #issledovaniya li.active:hover small{
-                    color: #fff
-                }
-        */
         #dir_info td {
             padding: 5px;
         }
@@ -921,50 +1163,241 @@
         .center {
             text-align: center;
         }
-    .tt-hint{
-        display: none!important;
-    }
-    span.twitter-typeahead {
-      width: 100%;
-    }
-    .input-group span.twitter-typeahead {
-      display: block !important;
-    }
-    .input-group span.twitter-typeahead .tt-dropdown-menu {
-      top: 32px !important;
-    }
-    .input-group.input-group-lg span.twitter-typeahead .tt-dropdown-menu {
-      top: 44px !important;
-    }
-    .input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {
-      top: 28px !important;
-    }
-    .fastlinks a{
-        cursor: pointer;
-    }
-    .fastlinks{
-        margin-top: -13px;
-        margin-bottom: 5px;
-    }
-    #issledovaniya .fastlinks{
-        margin: 0;
-    }
-    .hiddenlinks{
-        font-weight: 400;
-        margin-top: 3px;
-        margin-bottom: 2px;
-        padding-bottom: 3px;
-    }
-    .hiddenlinks a{
-        font-size: 9pt;
-        margin-right: -5px;
-        padding: 2px!important;
-    }
-    .m2{
 
-    }
-    .datepicker{
-        z-index: 10005!important;
-    }
+        .tt-hint {
+            display: none !important;
+        }
+
+        span.twitter-typeahead {
+            width: 100%;
+        }
+
+        .input-group span.twitter-typeahead {
+            display: block !important;
+        }
+
+        .input-group span.twitter-typeahead .tt-dropdown-menu {
+            top: 32px !important;
+        }
+
+        .input-group.input-group-lg span.twitter-typeahead .tt-dropdown-menu {
+            top: 44px !important;
+        }
+
+        .input-group.input-group-sm span.twitter-typeahead .tt-dropdown-menu {
+            top: 28px !important;
+        }
+
+        .fastlinks a {
+            cursor: pointer;
+        }
+
+        .fastlinks {
+            margin-top: -13px;
+            margin-bottom: 5px;
+        }
+
+        #issledovaniya .fastlinks {
+            margin: 0;
+        }
+
+        .hiddenlinks {
+            font-weight: 400;
+            margin-top: 3px;
+            margin-bottom: 2px;
+            padding-bottom: 3px;
+        }
+
+        .hiddenlinks a {
+            font-size: 9pt;
+            margin-right: -5px;
+            padding: 2px !important;
+            white-space: nowrap;
+        }
+
+        .m2 {
+
+        }
+
+        .datepicker {
+            z-index: 10005 !important;
+        }
+
+        .save-other {
+            font-weight: 500;
+            font-size: 10pt;
+            color: #E08A1E
+        }
+
+
+        .no-tube {
+            font-weight: 500;
+            font-size: 10pt;
+            font-weight: bold;
+            color: #e74c3c
+        }
+
+        .rd-cont {
+            padding-left: 2px;
+            padding-right: 2px;
+            text-align: center;
+        }
+
+        .rd-row input[type="radio"]:checked + label {
+            color: #049372 !important;
+            background-color: #ECF0F1;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+        }
+
+        .rd-row input[type="radio"] {
+            display: none;
+        }
+
+        .rd-cont {
+            padding-left: 2px;
+            padding-right: 2px;
+            text-align: center;
+        }
+
+        .rd-cont label {
+            display: block;
+            cursor: pointer;
+            padding-top: 2px;
+            padding-bottom: 3px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            transition: all 0.11s ease-in-out;
+        }
+
+        .rd-cont label:hover {
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+            background-color: #fafafa;
+        }
+
+        .rd-row {
+            margin: 0;
+        }
+
+        .labtitle {
+            font-weight: normal;
+        }
+
+        .form-control.result-enter,
+        .subgroup-title {
+            padding-top: 1px;
+            padding-bottom: 1px;
+            height: 25px;
+        }
+
+        .btn25 {
+            padding-top: 1px;
+            padding-bottom: 1px;
+            height: 25px;
+        }
+
+        .tb-group-1 {
+            border-left: 3px #16a085 solid !important;
+        }
+
+        .tb-group-2 {
+            border-left: 3px #8e44ad solid !important;
+        }
+
+        .tb-group-3 {
+            border-left: 3px #2e8dcd solid !important;
+        }
+
+        .tb-group-4 {
+            border-left: 3px #2c3e50 solid !important;
+        }
+
+        .tb-group-5 {
+            border-left: 3px #27ae60 solid !important;
+        }
+
+        .tb-group-6 {
+            border-left: 3px #f1c40f solid !important;
+        }
+
+        .tb-group-7 {
+            border-left: 3px #e67e22 solid !important;
+        }
+
+        .tb-group-8 {
+            border-left: 3px #e74c3c solid !important;
+        }
+
+        .select-tube{
+            transition: .3s linear all;
+        }
+
+        .select-tube.active{
+            border-left-width: 8px!important;
+        }
+
+        li.tb-group-1.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #16a085 !important;
+            border-right: 1px solid #16a085 !important;
+            border-bottom: 1px solid #16a085 !important;
+        }
+
+        li.tb-group-2.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #8e44ad !important;
+            border-right: 1px solid #8e44ad !important;
+            border-bottom: 1px solid #8e44ad !important;
+        }
+
+        li.tb-group-3.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #2e8dcd !important;
+            border-right: 1px solid #2e8dcd !important;
+            border-bottom: 1px solid #2e8dcd !important;
+        }
+
+        li.tb-group-4.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #2c3e50 !important;
+            border-right: 1px solid #2c3e50 !important;
+            border-bottom: 1px solid #2c3e50 !important;
+        }
+
+        li.tb-group-5.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #27ae60 !important;
+            border-right: 1px solid #27ae60 !important;
+            border-bottom: 1px solid #27ae60 !important;
+        }
+
+        li.tb-group-6.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #f1c40f !important;
+            border-right: 1px solid #f1c40f !important;
+            border-bottom: 1px solid #f1c40f !important;
+        }
+
+        li.tb-group-7.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #e67e22 !important;
+            border-right: 1px solid #e67e22 !important;
+            border-bottom: 1px solid #e67e22 !important;
+        }
+
+        li.tb-group-8.active {
+            border-left-width: 6px !important;
+            border-top: 1px solid #e74c3c !important;
+            border-right: 1px solid #e74c3c !important;
+            border-bottom: 1px solid #e74c3c !important;
+        }
+
+        #search-field:focus::-webkit-input-placeholder { color:transparent; }
+        #search-field:focus:-moz-placeholder { color:transparent; }
+        #search-field:focus::-moz-placeholder { color:transparent; }
+        #search-field:focus:-ms-input-placeholder { color:transparent; }
+
+        #result-form th{
+            padding: 2px 2px 2px 8px;
+        }
     </style>
 {% endblock %}

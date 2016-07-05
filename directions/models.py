@@ -22,6 +22,26 @@ class TubesRegistration(models.Model):
 
     notice = models.CharField(max_length=512, default="")  # Замечания
 
+    daynum = models.IntegerField(default=0, blank=True, null=True)
+
+    def day_num(self, doc, num):
+        new_t = False
+        if not self.rstatus():
+            new_t = True
+            self.set_r(doc)
+        if not self.daynum:
+            '''from django.utils import timezone, datetime_safe
+            last_num = 0
+            date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+            date2 = datetime_safe.datetime.now()
+            if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazileniye).exists():
+                last_num = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazileniye)])
+            self.daynum = last_num + 1'''
+            self.daynum = num
+            self.save()
+
+        return {"n": self.daynum, "new": new_t}
+
     def set_get(self, doc_get):
         """
         Установка статуса взятия
@@ -150,7 +170,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, doc_current,
-                                      researches):
+                                      researches, comments):
         res = {}  # Словарь с направлениями, сгруппированными по лабораториям
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
@@ -242,6 +262,7 @@ class Napravleniya(models.Model):
                                                       # Установка направления для группы этого исследования
                                                       research=research,
                                                       deferred=False)  # Создание направления на исследование
+                        issledovaniye.comment = comments.get(str(research.pk), "")
                         issledovaniye.save()  # Сохранение направления на исследование
 
                 result["r"] = True  # Флаг успешной вставки в True
@@ -253,6 +274,15 @@ class Napravleniya(models.Model):
                 result["r"] = False
                 result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
         return result
+
+    def has_confirm(self):
+        return any([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+
+    def is_all_confirm(self):
+        return all([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+
+    def is_has_deff(self):
+        return not self.is_all_confirm() and any([x.deferred for x in Issledovaniya.objects.filter(napravleniye=self)])
 
 
 
@@ -267,11 +297,18 @@ class Issledovaniya(models.Model):
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True)
     deferred = models.BooleanField(default=False, blank=True)
+    comment = models.CharField(max_length=10, default="", blank=True)
+
+    def is_get_material(self):
+        return self.tubes.filter().exists() and all([x.doc_get is not None for x in self.tubes.filter()])
+
+    def is_receive_material(self):
+        return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
 
 class Result(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True)
     fraction = models.ForeignKey(directory.Fractions)
-    value = models.CharField(max_length=255, null=True, blank=True)
+    value = models.TextField(null=True, blank=True)
     iteration = models.IntegerField(default=1, null=True)

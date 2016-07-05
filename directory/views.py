@@ -41,7 +41,7 @@ def directory_researches(request):
             # Fractions.objects.filter(research=research_obj).delete()
             fractions_pk = []
             return_result["F"] = []
-            sort_list = []
+            sort_list = [0]
             for key in research["fraction"].keys():
                 tube_relation = ReleationsFT.objects.get(pk=int(key.split("-")[1]))
                 for fr in Fractions.objects.filter(relation=tube_relation):
@@ -107,7 +107,7 @@ def directory_researches_list(request):
     lab_id = request.REQUEST["lab_id"]
     researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     for research in researches:
-        return_result.append({"pk": research.pk, "id": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}, "isFolder": False, "text": research.title})
+        return_result.append({"pk": research.pk, "id": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}, "isFolder": False, "text": research.title, "comment_template": research.comment_template})
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
@@ -319,10 +319,39 @@ def researches_get_details(request):
         pk = request.GET["pk"]
         research_obj = Researches.objects.get(pk=pk)
         return_result["title"] = research_obj.title
+        return_result["comment_template"] = research_obj.comment_template
         return_result["edit_mode"] = research_obj.edit_mode
-        return_result["uets"] = []
-        fractions = Fractions.objects.filter(research=research_obj)
-        for fraction in fractions:
-            return_result["uets"].append(
-                {"pk": fraction.pk, "title": fraction.title, "lab": fraction.uet_lab, "doc": fraction.uet_doc})
+        return_result["fractions"] = []
+        return_result["template"] = research_obj.template
+        for fraction in Fractions.objects.filter(research=research_obj).order_by("sort_weight"):
+            return_result["fractions"].append(
+                {"pk": fraction.pk, "title": fraction.title, "hide": fraction.hide, "render_type": fraction.render_type,
+                 "sw": fraction.sort_weight, "options": fraction.options})
+    else:
+        data = json.loads(request.POST["data"])
+        for row in data:
+            if Fractions.objects.filter(pk=row["pk"]).exists():
+                temp_fraction = Fractions.objects.get(pk=row["pk"])
+                temp_fraction.hide = row["hide"]
+                temp_fraction.render_type = row["render_type"]
+                temp_fraction.options = row["options"]
+                temp_fraction.save()
+        return_result["ok"] = True
+    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+
+
+@csrf_exempt
+@login_required
+def researches_update_template(request):
+    """POST: установка шаблона формы ввода результата"""
+    return_result = {"ok": False}
+    if request.method == "POST":
+        pk = request.POST["pk"]
+        research_obj = Researches.objects.get(pk=pk)
+        research_obj.template = int(request.POST["template"])
+        research_obj.comment_template = int(request.POST["comment_template"])
+        research_obj.save()
+        return_result["ok"] = True
+        return_result["comment_template_saved"] = research_obj.comment_template
+        return_result["comment_template"] = request.POST["comment_template"]
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

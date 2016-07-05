@@ -52,6 +52,7 @@
 {% block scripts %}
     <script>
         var loaded = -1;
+        var last_n = 0;
         var loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>';
         var end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>';
         var loading = '<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div> \
@@ -72,9 +73,53 @@
             });
             $("#log_table").append(loadmore);
             loadlog(loaded + 1);
+            setTimeout(function(){
+                setInterval(check_new_rows, 1000);
+            }, 2000);
         });
         var endF = false;
         var inload = false;
+        function check_new_rows() {
+            if(inload) return;
+            inload = true;
+             $.ajax({
+                method: "GET",
+                url: "/view_logs",
+                data: {checknew: 1, last_n: last_n, searchdata: JSON.stringify(searchdata)}
+            }).done(function (d) {
+                 $.each(d.data, function (k, v) {
+                    dbody = v.body;
+                    try {
+                        par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
+                        dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                            return n != undefined
+                        }) : par), null, 2));
+                    }
+                    catch (e) {
+                        dbody = syntaxHighlight(v.body);
+                    }
+                    try {
+                        park = JSON.parse(v.key.replaceAll("\"", ""));
+                        dkey = syntaxHighlight(JSON.stringify(park, null, 2));
+                    }
+                    catch (e) {
+                        dkey = syntaxHighlight(v.key);
+                    }
+                    last_n = Math.max(last_n, v.id);
+                    $("#log_table tbody").prepend("<tr>" +
+                            "<td>{0}</td>".f(v.id) +
+                            "<td>{0}</td>".f(v.user_fio) +
+                            "<td>{0}</td>".f(v.user_pk) +
+                            "<td>{0}</td>".f(v.type) +
+                            "<td><pre>{0}</pre></td>".f(dkey) +
+                            "<td><pre>{0}</pre></td>".f(dbody) +
+                            "<td>{0}</td>".f(v.time) +
+                            "</tr>");
+                    n++;
+                });
+                inload = false;
+             });
+        }
         function loadlog(offset, replace) {
             if(inload) return;
             inload = true;
@@ -88,7 +133,7 @@
             $.ajax({
                 method: "GET",
                 url: "/view_logs",
-                data: {offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
+                data: {checknew: 0, offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                 $.each(d.data, function (k, v) {
                     dbody = v.body;
@@ -108,6 +153,7 @@
                     catch (e) {
                         dkey = syntaxHighlight(v.key);
                     }
+                    last_n = Math.max(last_n, v.id);
                     $("#log_table tbody").append("<tr>" +
                             "<td>{0}</td>".f(v.id) +
                             "<td>{0}</td>".f(v.user_fio) +

@@ -5,6 +5,8 @@ import simplejson as json
 import directions.models as directions
 import directory.models as directory
 import users.models as users
+import yaml
+from slog import models as slog
 
 def translit(locallangstring):
     """
@@ -60,42 +62,67 @@ def send(request):
     :return:
     """
     result = {"ok": False}
-    resdict = json.loads(request.REQUEST["result"].replace("'", "\""))
-    key = request.REQUEST["key"]
-    if resdict["pk"] and resdict["pk"].isdigit() and key and models.Application.objects.filter(key=key).exists():
-        direction = directions.Napravleniya.objects.get(pk=resdict["pk"])
-        for key in resdict["result"].keys():
-            if models.RelationFractionASTM.objects.filter(astm_field=key).exists():
-                fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
-                for fractionRel in fractionRels:
-                    fraction = fractionRel.fraction
-                    if directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                               research=fraction.research).exists():
-                        issled = directions.Issledovaniya.objects.get(napravleniye=direction,
-                                                                      research=fraction.research)
-                        fraction_result = None
-                        if directions.Result.objects.filter(issledovaniye=issled,
-                                                            fraction=fraction).exists():  # Если результат для фракции существует
-                            fraction_result = directions.Result.objects.get(issledovaniye=issled,
-                                                                            fraction__pk=fraction.pk)  # Выборка результата из базы
-                        else:
-                            fraction_result = directions.Result(issledovaniye=issled,
-                                                                fraction=fraction)  # Создание нового результата
-                        fraction_result.value = resdict["result"][key]  # Установка значения
-                        if fractionRel.get_multiplier_display() > 1:
-                            import re
-                            find = re.findall("\d+.\d+", fraction_result.value)
-                            if len(find) > 0:
-                                val = int(float(find[0]) * fractionRel.get_multiplier_display())
-                                fraction_result.value = fraction_result.value.replace(find[0], str(val))
-                        fraction_result.iteration = 1  # Установка итерации
-                        fraction_result.save()  # Сохранение
-                        fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
-                                user__pk=866).first()  # Кто сохранил
-                        from datetime import datetime
-                        fraction_result.issledovaniye.time_save = datetime.now()  # Время сохранения
-                        fraction_result.issledovaniye.save()
-        result["ok"] = True
+    try:
+        resdict = yaml.load(request.REQUEST["result"])
+        appkey = request.REQUEST["key"]
+        astm_user = users.DoctorProfile.objects.filter(user__pk=866).first()
+        if "LYMPH%" in resdict["result"]:
+            resdict["orders"] = {}
+
+        dpk = -1
+        if "bydirection" in request.REQUEST:
+            dpk = resdict["pk"]
+
+            if dpk >= 4600000000000:
+                dpk -= 4600000000000
+                dpk //= 10
+
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=resdict["pk"]).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=resdict["pk"]).first().pk
+            else:
+                resdict["pk"] = -1
+
+        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+            tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
+            direction = tubei.issledovaniya_set.first().napravleniye
+            for key in resdict["result"].keys():
+                if models.RelationFractionASTM.objects.filter(astm_field=key).exists():
+                    fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
+                    for fractionRel in fractionRels:
+                        fraction = fractionRel.fraction
+                        if directions.Issledovaniya.objects.filter(napravleniye=direction,
+                                                                   research=fraction.research).exists():
+                            issled = directions.Issledovaniya.objects.get(napravleniye=direction,
+                                                                          research=fraction.research)
+                            fraction_result = None
+                            if directions.Result.objects.filter(issledovaniye=issled,
+                                                                fraction=fraction).exists():  # Если результат для фракции существует
+                                fraction_result = directions.Result.objects.get(issledovaniye=issled,
+                                                                                fraction__pk=fraction.pk)  # Выборка результата из базы
+                            else:
+                                fraction_result = directions.Result(issledovaniye=issled,
+                                                                    fraction=fraction)  # Создание нового результата
+                            fraction_result.value = resdict["result"][key]  # Установка значения
+                            if fractionRel.get_multiplier_display() > 1:
+                                import re
+                                find = re.findall("\d+.\d+", fraction_result.value)
+                                if len(find) > 0:
+                                    val = int(float(find[0]) * fractionRel.get_multiplier_display())
+                                    fraction_result.value = fraction_result.value.replace(find[0], str(val))
+                            fraction_result.iteration = 1  # Установка итерации
+                            fraction_result.save()  # Сохранение
+                            fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
+                            from datetime import datetime
+                            fraction_result.issledovaniye.time_save = datetime.now()  # Время сохранения
+                            fraction_result.issledovaniye.save()
+            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=astm_user).save()
+            result["ok"] = True
+        elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+            if dpk > -1:
+                resdict["pk"] = dpk
+            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=astm_user).save()
+    except Exception:
+        result = {"ok": False, "Exception": True}
     return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON
 
 

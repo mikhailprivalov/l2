@@ -61,10 +61,10 @@
             <div style="margin-bottom: 25px;margin-top: -5px">
                 <div class="row">
                     <div class="col-md-3">
-
+                        <button class="btn btn-primary btn-primary-nb" onclick="cancel_direction();return false;" id="can-dir">Отмена направления</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary btn-primary-nb"onclick="barcodes_print();return false;" id="print-bc">Печать штрих-кодов</button>
+                        <button class="btn btn-primary btn-primary-nb" onclick="barcodes_print();return false;" id="print-bc">Печать штрих-кодов</button>
                     </div>
                     <div class="col-md-3">
                         <button class="btn btn-primary-nb" tabindex="9" id="success-b" style="margin-bottom: 5px" onclick="save_research();return false;">Сохранить</button>
@@ -147,7 +147,7 @@
         var SFinFocus = false;
         var checkboxed = [];
         $(document).ready(function () {
-            $("#print-bc-save, #print-bc, #success-b").prop("disabled", true);
+            $("#print-bc-save, #print-bc, #success-b, #can-dir").prop("disabled", true);
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
             });
@@ -186,6 +186,18 @@
                 save_research();
             });
         });
+        function cancel_direction(){
+            $("#can-dir").prop("disabled", true);
+            sl();
+            $.ajax({
+                url: "/direction/researches/cancel",
+                method: "POST",
+                data: {status: !cancel_d, pk: dnum}
+            }).done(function (data) {
+                search(dnum, true);
+                hl();
+            });
+        }
         function worklist(){
             $("#getconfirmbtn").prop("disabled", true);
             $("#work-modal").modal();
@@ -239,11 +251,12 @@
                 }
             }
         }
-        var com = false;
+        var com = false, cancel_d = false;;
         function search(q, reload) {
             com = true;
             input_buffer_scan = "";
             if (!q || q == "") return;
+            sl();
             $("#search-field").val("");
             $(".has-error").removeClass("has-error");
             $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", true);
@@ -252,13 +265,14 @@
                         url: "/directions/get/one?id=" + q,
                     }
             ).done(function (data) {
+                hl();
                         com = false;
                         if (data && data.direction && data.direction.pk) {
 
                             dnum = data.direction.pk
                             $("#success-b").show();
                             $(".btn#success-b").removeAttr("disabled");
-                            $("#dir-num").html(data.direction.pk);
+                            $("#dir-num").html(data.direction.pk + (data.direction.cancel? " отменено" : ""));
                             $("#date").html(data.direction.date);
                             $("#fio").html(data.client.fio);
                             $("#sx").html(data.client.sx);
@@ -266,6 +280,7 @@
                             $("#doc-fio").html(data.direction.doc.fio);
                             $("#doc-otd").html(data.direction.doc.otd);
                             $("#lab").html(data.direction.lab);
+                            cancel_d = data.direction.cancel;
                             if(!reload)
                                 $(".last").removeClass("last");
                             $("#researches-tb").html("<tr><th>Исследования</th><th class='col-md-4'>Тип пробирки</th><th class='col-md-2'>Номер пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint3'  checked /></label></th></tr>");
@@ -306,10 +321,10 @@
                             });
                             $("#researches-tb").append("<tr><td style='text-align:right;font-size:10pt' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
 
-                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", false);
+                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", false);
                             if (complete) {
                                 com = true;
-                                $("#researches-tb .allprint, #print-bc-save, #success-b").prop("disabled", true);
+                                $("#researches-tb .allprint, #print-bc-save, #success-b, #can-dir").prop("disabled", true);
                             }
                             $("input[name=complete-res]").first().focus();
                         }
@@ -326,7 +341,7 @@
                             $(".btn#success-b").attr("disabled", "true");
                             $("#search-field").focus();
                             $("#search-field").parent().addClass("has-error");
-                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", true);
+                            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", true);
                         }
 
                     });
@@ -460,6 +475,7 @@
                 window.open('/direction/researches/update/history/print?filter=' + JSON.stringify(checkboxed), '_blank');
             }
         }
+
     </script>
     <style>
         .mw, .mw:active, .mw:focus {

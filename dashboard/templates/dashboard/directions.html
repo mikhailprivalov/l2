@@ -2,124 +2,169 @@
 {% block title %}Направления{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="col-md-6" id="div1" style="height: 380px">
-            <div>
-                <h5>Категория пациентов:</h5>
-
-                <div class="btn-group" data-toggle="buttons" style="margin-bottom: 20px">
-                    <label class="btn btn-blue-nb">
-                        <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"
-                               autocomplete="off">
-                        Поликлиника
-                    </label>
-                    <label class="btn btn-blue-nb">
-                        <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"
-                               autocomplete="off"> Стационар
-                    </label>
+    <div class="fp-cont" style="display: none">
+        <div id="a" class="split split-horizontal">
+            <div id="c" class="split content">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5 style="margin-bottom: 4px;margin-top: 2px;    font-size: 16px;" class="btn-ell">
+                            Категория:</h5>
+                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-bottom: 13px">
+                            <label class="btn btn-blue-nb btn-ell" title="Поликлиника">
+                                <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"
+                                       autocomplete="off">
+                                Поликлиника
+                            </label>
+                            <label class="btn btn-blue-nb btn-ell" title="Стационар">
+                                <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"
+                                       autocomplete="off"> Стационар
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h5 style="margin-bottom: 4px;margin-top: 2px">&nbsp;</h5>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="search-field" name="search-field"
+                                   data-container="body"
+                                   data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                                   placeholder="Введите ФИО и дату рождения или номер карты, например: пнв01011990 или Пакулова Наталья Владимировна 01.01.1990 или 123456"
+                                   title="Введите ФИО и дату рождения или номер карты, например: пнв01011990 или Пакулова Наталья Владимировна 01.01.1990 или 123456">
+                            <span class="input-group-btn">
+                                <button class="btn btn-blue-nb" onclick="search($('#search-field').val());"
+                                        type="button">
+                                    Поиск
+                                </button>
+                            </span>
+                        </div>
+                    </div>
                 </div>
+                <div class="row" style=" margin: 0; margin-top: -4px; padding: 0;margin-bottom: 4px;">
+                    <table class="col-xs-12 table table-bordered table-condensed table-responsive"
+                           style="table-layout: fixed;margin: 0; padding: 0">
+                        <tr>
+                            <td class="table-header-row">Тип:&nbsp;</td>
+                            <td id="card-type" class="table-content-row"></td>
+                            <td class="table-header-row">Номер карты:&nbsp;</td>
+                            <td id="card-num" class="table-content-row"></td>
+                        </tr>
+                        <tr>
+                            <td class="table-header-row">ФИО:&nbsp;</td>
+                            <td id="card-fio" class="table-content-row" colspan="2"></td>
+                            <td class="table-content-row">
+                                {% if not operator %}
+                                    <a href="#" onclick='open_search_results();return false;'
+                                       id="search-results-link">поиск результатов</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="table-header-row">Дата рождения:&nbsp;</td>
+                            <td id="card-bth" class="table-content-row"></td>
+                            <td class="table-header-row">Пол:&nbsp;</td>
+                            <td id="card-sx" class="table-content-row"></td>
+                        </tr>
+                        <tr id="history-num-tr">
+                            <td class="table-header-row">Номер истории:&nbsp;</td>
+                            <td class="table-content-row" colspan="3"><input type="text" class="form-control"
+                                                                             maxlength="11"/></td>
+                        </tr>
+                        <tr id="ballast">
+                            <td class="table-header-row">&nbsp;</td>
+                            <td class="table-content-row" colspan="3">
+                                <div style="height: 34px">&nbsp;</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                {% if operator %}
+                    <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
+                        {% for v in docs %}
+                            <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                        {% endfor %}
+                    </select></label>
+                {% endif %}
             </div>
-            <div class="input-group">
-                <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
-                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                       placeholder="Введите ФИО и дату рождения или номер карты, например: Пакулова Наталья Владимировна 01.01.1990 или пнв01011990 или 123456">
-          <span class="input-group-btn">
-                <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск</button>
-          </span>
+            <div id="d" class="split content">
+                <div class="row">
+                    <div class="col-md-5">
+                        <form onsubmit="return false;">
+                            <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
+                                    title='Выберите лабораторию...' disabled>
+                                {% for v in labs %}
+                                    <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="select-b" id="select-template" data-width="100%"
+                                title='Шаблоны' disabled>
+                            <option value="1" selected>Шаблон: Липидограмма</option>
+                            <option value="2">Шаблон: Коагулограмма</option>
+                            <option value="3">Шаблон: Индекс атерогенности</option>
+                            <option value="4">Шаблон: Группа крови</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-blue-nb btn-ell" title="Загрузить" disabled style="width: 100%;"
+                                id="select-template-btn">Загрузить
+                        </button>
+                    </div>
+                </div>
+                <div id="table-researches"></div>
             </div>
-            <br/>
-
-            <table class="table table-bordered table-condensed" style="width: auto;table-layout:fixed;">
-                <tr>
-                    <td class="table-header-row">Тип:&nbsp;</td>
-                    <td id="card-type" class="table-content-row"></td>
-                    <td class="table-header-row">Номер карты:&nbsp;</td>
-                    <td id="card-num" class="table-content-row"></td>
-                </tr>
-                <tr>
-                    <td class="table-header-row">ФИО:&nbsp;</td>
-                    <td id="card-fio" class="table-content-row" colspan="2"></td>
-                    <td class="table-content-row"><a href="#" onclick='open_search_results();return false;' id="search-results-link">поиск результатов</a></td>
-                </tr>
-                <tr>
-                    <td class="table-header-row">Дата рождения:&nbsp;</td>
-                    <td id="card-bth" class="table-content-row"></td>
-                    <td class="table-header-row">Пол:&nbsp;</td>
-                    <td id="card-sx" class="table-content-row"></td>
-                </tr>
-                <tr id="history-num-tr">
-                    <td class="table-header-row">Номер истории:&nbsp;</td>
-                    <td class="table-content-row" colspan="3"><input type="text" class="form-control" maxlength="11"/></td>
-                </tr>
-                <tr id="ballast">
-                    <td class="table-header-row">&nbsp;</td>
-                    <td class="table-content-row" colspan="3"><div style="height: 34px">&nbsp;</div></td>
-                </tr>
-            </table>
-            {% if operator %}
-                <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
-                    {% for v in docs %}
-                        <option value="{{ v.pk }}">{{ v.get_fio }}</option>
-                    {% endfor %}
-                </select></label>
-            {% endif %}
         </div>
-        <div class="col-md-6" id="div2" style="height: 380px">
-            <div class="row">
-                <div class="col-md-3">
-                    <h6>Дата назначения:</h6>
+        <div id="b" class="split split-horizontal">
+            <div id="e" class="split content">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>Дата назначения:</h6>
 
-                    <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                        <input type="text" class="input-sm form-control" name="date-start"/>
-                        <span class="input-group-addon"
-                              style="background-color: #fff;color: #000">&mdash;</span>
-                        <input type="text" class="input-sm form-control" name="date-end"/>
+                        <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
+                            <input type="text" class="input-sm form-control no-context" name="date-start"/>
+                            <span class="input-group-addon"
+                                  style="background-color: #fff;color: #000">&mdash;</span>
+                            <input type="text" class="input-sm form-control no-context" name="date-end"/>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <h6>Статус:</h6>
-                    <select class="select-b" data-live-search="false" onchange="fast_ld_dirs();return false;"
-                            data-width="275px" id="status">
-                        <option value="3">Любой</option>
-                        <option value="0">Выписаные</option>
-                        <option value="1">Материал доставлен в лабораторию</option>
-                        <option value="2">Подтвержденные</option>
-                        <option value="4">Выписаные исполнителем</option>
-                    </select>
-                </div>
-                <div class="col-md-1">
+                    <div class="col-md-4">
+                        <h6>Статус:</h6>
+                        <select class="select-b" data-live-search="false" onchange="fast_ld_dirs();return false;"
+                                data-width="100%" id="status">
+                            <option value="3">Любой</option>
+                            <option value="0">Выписаные</option>
+                            <option value="1">Материал доставлен в лабораторию</option>
+                            <option value="2">Подтвержденные</option>
+                            <option value="4">Выписаные исполнителем</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><h6><br/></h6>
+                        <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb btn-ell"
+                                style="width: 100%">Обновить список
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <h6><br/></h6>
+                        <div class="btn-group btn-group-justified">
+                            <div class="btn btn-blue-nb"
+                                 title="Печать выбраных направлений"
+                                 onclick="batch_print();return false;"><i class="fa fa-print"></i></div>
+                            <div class="btn btn-blue-nb"
+                                 title="Печать штрих-кодов"
+                                 onclick="batch_print_bc();return false;"><i class="fa fa-barcode"></i></div>
+                            <div class="btn btn-blue-nb"
+                                 title="Экспорт сводной таблицы по выбранным направлениям"
+                                 onclick="batch_table_print();return false;"><i class="fa fa-table"></i></div>
 
-                </div>
-                <div class="col-md-3" style="width: 20%;padding-right: 5px"><h6><br/></h6>
-                    <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb">Обновить список</button>
-                </div>
-                <div class="col-md-2" style="width: 21.66666667%;padding-left: 0">
-                    <h6><br/></h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <button class="btn btn-primary btn-primary-nb fa fa-print"
-                                    style="" title="Печать выбраных направлений"
-                                    onclick="batch_print();return false;"></button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary btn-primary-nb fa fa-barcode"
-                                    style="" title="Печать штрих-кодов"
-                                    onclick="batch_print_bc();return false;"></button>
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary btn-primary-nb fa fa-table"
-                                    style="" title="Экспорт сводной таблицы по выбранным направлениям"
-                                    onclick="batch_table_print();return false;"></button>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div style="padding-top: 10px;padding-right: 15px;margin-top: 5px" id="story-list">
-                <table class="table table-hover table-bordered floatThead">
+                <!--<div style="padding-top: 10px;padding-right: 15px;margin-top: 5px" id="story-list">-->
+                <table style="padding-top: 10px;padding-right: 15px;margin-top: 5px"
+                       class="table table-hover table-bordered floatThead">
                     <thead>
                     <tr>
                         <th style="width: 46px">Дата</th>
-                        <th style="width: 80px">№<br/>напр-ия</th>
+                        <th style="width: 110px">№ напр.</th>
                         <th style="width: 120px">Лаборатория</th>
                         <th>Анализы</th>
                         <th style="width: 45px">Статус</th>
@@ -133,103 +178,81 @@
                     </thead>
                     <tbody id="story-table"></tbody>
                 </table>
+                <!--</div>-->
             </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6" id="div3">
-            <div class="row">
-                <div class="col-md-4">
-                    <form onsubmit="return false;">
-                        <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
-                                title='Выберите лабораторию...' disabled>
-                            {% for v in labs %}
-                                <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
-                        </select>
-                    </form>
-                </div>
-                <div class="col-md-3">
-                </div>
-                <div class="col-md-3">
-                    <select class="select-b" id="select-template" data-width="100%"
-                            title='Шаблоны' disabled>
-                        <option value="1" selected>Липидограмма</option>
-                        <option value="2">Коагулограмма</option>
-                        <option value="3">Индекс атерогенности</option>
-                        <option value="4">Группа крови</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-blue-nb" disabled style="width: 100%" id="select-template-btn">Загрузить
-                    </button>
-                </div>
-            </div>
-            <div id="table-researches"></div>
-        </div>
-        <div class="col-md-6" id="div4" style="margin-bottom: 20px">
-            <div class="row">
-                <div class="col-md-12">
-                    <div style="margin-bottom: 20px">
-                        <div class="col-md-7" style="padding-left: 0">
-                            <input name="diagnos" id="diagnos-field" class="form-control"
-                                   placeholder="Направительный диагноз"
-                                   onkeyup="sync(true);" style="margin-bottom: 20px"/>
-                        </div>
-                        <div class="col-md-5" id="sources" style="text-align: center">
-                            <div class="btn-group" id="fin_poli" data-toggle="buttons" style="display: inline-block;">
-                                {% for v in fin_poli %}
-                                    <label class="btn btn-blue-nb"><input type="radio" name="source" value="{{ v.pk }}"
-                                                                          autocomplete="off"> {{ v.tilie }}</label>
-                                {% endfor %}
+            <div id="f" class="split content">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div style="margin-bottom: 20px">
+                            <div class="col-md-4" style="padding-left: 0">
+                                <input name="diagnos" id="diagnos-field" class="form-control"
+                                       placeholder="Диагноз"
+                                       onkeyup="sync(true);" style="margin-bottom: 20px"/>
                             </div>
-                            <div class="btn-group" id="fin_stat" data-toggle="buttons" style="display: inline-block;">
-                                {% for v in fin_stat %}
-                                    <label class="btn btn-blue-nb"><input type="radio" name="source" value="{{ v.pk }}"
-                                                                          autocomplete="off"> {{ v.tilie }}</label>
-                                {% endfor %}
+                            <div class="col-md-8" id="sources" style="text-align: center">
+                                <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
+                                     style="display: inline-block;">
+                                    {% for v in fin_poli %}
+                                        <label class="btn btn-blue-nb btn-ell"><input type="radio" name="source"
+                                                                                      value="{{ v.pk }}"
+                                                                                      autocomplete="off"> {{ v.tilie }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <div class="btn-group btn-group-justified" id="fin_stat" data-toggle="buttons"
+                                     style="display: inline-block;">
+                                    {% for v in fin_stat %}
+                                        <label class="btn btn-blue-nb btn-ell"><input type="radio" name="source"
+                                                                                      value="{{ v.pk }}"
+                                                                                      autocomplete="off"> {{ v.tilie }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <table class="table table-hover table-bordered table-condensed"
-                           id="table-researches-preview"></table>
-                    <div class="row">
-                        <div class="col-md-5">
-                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled onclick="save_direction();"
-                                    style="margin-bottom: 5px">
-                                Сохранить и распечатать направления
-                            </button>
-                            <br/>
-                            <button class="btn btn-primary-nb ctrl" id="save-btn" disabled
-                                    onclick="save_direction(true, true);">
-                                Сохранить и распечатать штрих-коды
-                            </button>
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary-nb ctrl" id="save-just-btn" disabled
-                                    onclick="save_direction(true);">
-                                Сохранить
-                            </button>
-                        </div>
+                        <table class="table table-bordered table-condensed"
+                               id="table-researches-preview"></table>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn" disabled
+                                        onclick="save_direction();"
+                                        style="margin-bottom: 5px" title="Сохр. и распечатать направления">
+                                    Сохр. и распечатать направления
+                                </button>
+                                <br/>
+                                <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn" disabled
+                                        onclick="save_direction(true, true);" title="Сохр. и распечатать штрих-коды">
+                                    Сохр. и распечатать штрих-коды
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary-nb ctrl btn-ell" id="save-just-btn" disabled
+                                        onclick="save_direction(true);" title="Сохранить">
+                                    Сохранить
+                                </button>
+                            </div>
 
-                        <div class="col-md-3">
-                            <button onclick="clear_direction();" class="btn btn-blue-nb ctrl" disabled>Очистить</button>
+                            <div class="col-md-3">
+                                <button onclick="clear_direction();" class="btn btn-primary-nb  ctrl btn-ell"
+                                        title="Очистить" disabled>Очистить
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-2 dir-queue" style="display: none">
-                    <div class="row" style="margin-top: 10px">
-                        <div class="col-md-6">
-                            <button class="btn btn-primary-nb ctrl" id="queue-clear-btn" disabled
-                                    onclick="save_direction(true);">X
-                            </button>
+                    <div class="col-md-2 dir-queue" style="display: none">
+                        <div class="row" style="margin-top: 10px">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-nb ctrl" id="queue-clear-btn" disabled
+                                        onclick="save_direction(true);">X
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-nb ctrl" id="queue-print-btn" disabled
+                                        onclick="save_direction();"><i class="fa fa-print"></i></button>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-primary-nb ctrl" id="queue-print-btn" disabled
-                                    onclick="save_direction();"><i class="fa fa-print"></i></button>
-                        </div>
+                        <div class="list"></div>
                     </div>
-                    <div class="list"></div>
                 </div>
             </div>
         </div>
@@ -252,7 +275,7 @@
         </div>
     </div>
     <div class="modal fade" id="results-search-modal">
-        <div class="modal-dialog" style="min-width: 50%;    width: auto; max-width: 85%">
+        <div class="modal-dialog" style="min-width: 50%; width: auto; max-width: 85%">
             <div class="modal-content" style="width: auto">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
@@ -337,6 +360,37 @@
             </div>
         </div>
     </div>
+    <div class="modal modal-c fade" id="comments-modal">
+        <div class="modal-dialog">
+            <div class="modal-content" style="width: auto">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Выберите комментарий для материала</h4>
+                </div>
+                <div class="modal-body" id="results-body" style="width: auto">
+                    <label>
+                        Комментарий (материал):
+                        <select id="comments-select"></select>
+                    </label>
+                </div>
+                <div class="modal-footer" style="text-align: right">
+                    <button type="button" id="comment-ok" class="btn btn-primary-nb" style="margin-bottom: 5px; width: 40%!important;" data-dismiss="modal">Ок</button><br/>
+                    <button type="button" class="btn btn-default" style="width: 40%" data-dismiss="modal">Не добавлять комментарий</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<ul id="contextMenuResearches" class="dropdown-menu" role="menu" style="display:none" >
+    <li><a class="noclick" id="conextTitle"></a></li>
+    <li class="divider"></li>
+    <li><a class="noclick" onclick="return false;"><label>Комментарий:<input type="text" maxlength="9" id="contentComment" value="" class="form-control no-context" /></label></a></li>
+    <li><a action="savecomment" onclick="return false;" tabindex="-1" href="#">Ок</a></li>
+</ul>
+
+
+
 {% endblock %}
 
 {% block scripts %}
@@ -344,6 +398,7 @@
     <script src="/static/js/jquery.tablesorter.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script src="/static/tree/jquery.easytree.min.js"></script>
+    <script src="/static/js/split.js"></script>
     <script>
         function selectText(element) {
             var doc = document;
@@ -362,6 +417,8 @@
             }
         }
 
+        var researches_cache = {}
+
         var client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
         var types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
         var res = [];  // Кэш поиска
@@ -378,15 +435,86 @@
         var checked = [];
         var dict = [];
         var callback;
+        var comments = {};
+
+        function get_research_from_cache(pk) {
+            for(var lab in researches_cache){
+                var result = $.grep(researches_cache[lab], function (e) {
+                    return e.pk == pk;
+                });
+                if(result.length > 0){
+                    return result[0];
+                }
+            }
+        }
+        function open_add_comment_window(pk){
+            $("#comments-select").html("");
+            res = get_research_from_cache(pk);
+            $.each(material_types[res.comment_template], function(k,v){
+                $("#comments-select").append(`<option value="${k}">${v}</option>`);
+            });
+            $("#comment-ok").attr("onclick", `set_comment(${pk});`);
+            $("#comments-modal").modal("show");
+        }
+        function set_comment(pk){
+            res = get_research_from_cache(pk);
+            comments[pk] = material_types[res.comment_template][parseInt($("#comments-select").val())];
+            sync(true);
+        }
+        checkedall = [];
         function sync_checks() {
             checked[active_lab] = [];
-            $.each($("input[name='sel']:checked"), function () {
-                checked[active_lab].push($(this).val());
+            tmp = [];
+            $(".btn").removeClass("active-b");
+            var elements = document.querySelectorAll("input[name='sel']:checked");
+            Array.prototype.forEach.call(elements, function (el, i) {
+                if(!(el.value in comments)){
+                    res = get_research_from_cache(el.value);
+                    if(res.comment_template >= 0 && material_types[res.comment_template].length == 1)
+                    {
+                        comments[el.value] = material_types[res.comment_template][0];
+                    }
+                    else if(material_types[res.comment_template].length > 1 && checkedall.indexOf(parseInt(el.value)) == -1){
+                        open_add_comment_window(el.value);
+                    }
+                }
+                tmp.push(parseInt(el.value));
+                checked[active_lab].push(el.value);
+                $(el).parent().addClass("active-b");
             });
+            checkedall = tmp;
             sync(true);
         }
         $(document).ready(function () {
-            //$("#div2 input, #div2 button").prop("disabled", true);
+            $(".fp-cont").show();
+            resize();
+            $(window).resize(function () {
+                resize();
+
+            });
+            Split(['#a', '#b'], {
+                    gutterSize: 8,
+                    cursor: 'col-resize',
+                    minSize: 200,
+                    onDrag: resize
+                });
+
+            Split(['#c', '#d'], {
+                direction: 'vertical',
+                gutterSize: 8,
+                cursor: 'row-resize',
+                minSize: 200,
+                onDrag: resize
+            });
+
+            Split(['#e', '#f'], {
+                direction: 'vertical',
+                gutterSize: 8,
+                cursor: 'row-resize',
+                minSize: 200,
+                onDrag: resize
+            });
+
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             $('head').append('<link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />');
             $("#fin_stat").hide();
@@ -396,7 +524,7 @@
                 search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
             });
             $("#select-lab").change(function () {
-                active_lab = $("#select-lab").val();
+                active_lab = document.querySelector("#select-lab").value;
                 if (checked[active_lab] == undefined)
                     checked[active_lab] = [];
                 load_researches();
@@ -411,10 +539,10 @@
             };
 
             $("#select-template-btn").click(function () {
-                active_template = $("#select-template").val();
+                active_template = document.querySelector("#select-template").value;
                 callback = function () {
-                    $.each(templates[active_template].iss, function (k, v) {
-                        $("[value={0}]".f(v)).prop("checked", true);
+                    Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
+                        $("[value={0}]".f(el)).prop("checked", true);
                     });
                     sync_checks();
                 };
@@ -440,14 +568,69 @@
                     $(this).prop('checked', checkedStatus);
                 });
             });
+            $.contextMenu2({
+                elementSelector: ".h-d",
+                menuSelector: "#contextMenuResearches",
+                onopen: function(invokedOn, menu){
+                    $comment = parseInt($(invokedOn).attr("ctemplate"));
+                    $d = $("#contentComment");
+                    $d.typeahead('destroy');
 
-            resize();
-            $(window).resize(function () {
-                resize();
+                    $("#conextTitle").text($(invokedOn).text());
+                    $("#contentComment").val("");
+                    if($(invokedOn).is("[comment]"))
+                        $("#contentComment").val($(invokedOn).attr("comment"));
+
+                    if($comment >= 0) {
+                        var ft = $.map(material_types[$comment], function (item) {
+                            return {value: item};
+                        });
+                        var typeVals = new Bloodhound({
+                            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+                            queryTokenizer: Bloodhound.tokenizers.whitespace,
+                            identify: function (obj) {
+                                return obj.value;
+                            },
+                            local: ft
+                        });
+
+                        function typeValsDefaults(q, sync) {
+                            sync(typeVals.get(material_types[$comment]));
+                        }
+                        $val = $d.val();
+                        $d.typeahead({
+                            minLength: 0,
+                            highlight: true,
+                            limit: 40
+                        }, {
+                            name: 'typeval',
+                            display: 'value',
+                            limit: 40,
+                            source: typeValsDefaults
+                        });
+                        $d.typeahead('val', $val);
+                    }
+                    $d.focus();
+                },
+                menuSelected: function (invokedOn, selectedMenu) {
+                    switch(selectedMenu.attr("action")){
+                        case "savecomment":
+                            $(invokedOn).attr("comment", $("#contentComment").val().trim());
+                            if($(invokedOn).attr("comment") == "")
+                                    $(invokedOn).removeAttr("comment");
+                            $("#contentComment").val("");
+
+                            comments = {};
+                            $.each($(".h-d[comment]"), function(k,v){
+                                comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
+                            });
+                            break;
+                    }
+                }
             });
-            checkType();
 
-            console.log(uHash());
+            checkType();
+            //console.log(uHash());
         });
 
         function checkType(tr) {
@@ -467,8 +650,10 @@
                 $("#ballast").show();
             }
         }
-
+        var lock_show_results = false;
         function show_results(rpk) {
+            if (lock_show_results) return;
+            lock_show_results = true;
             $("#results-modal #res-dir-num span").text("");
             $("#results-modal #res-date").text("");
             $("#results-modal #res-fio").text("");
@@ -533,13 +718,14 @@
                 });
                 $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
                 $("#results-modal").modal();
+                lock_show_results = false;
             });
         }
 
         function sync(notfull) {
             $("#table-researches-preview").html("");
             $("#table-researches-preview").append(lang.table_researches_preview_header);
-            $("#div4 .ctrl").attr('disabled', 1);
+            $("#f .ctrl").attr('disabled', 1);
             $.each(checked, function (k, v) {
                 if (v == undefined || v.length == 0) return;
                 if (!$("#selected-" + k).length) {
@@ -550,12 +736,15 @@
                 var keys = Object.keys(v);
                 var last = keys[keys.length - 1];
                 $.each(v, function (key, val) {
-                    $("#selected-" + k).append("<span class='h-d' onclick=\"rem(" + k + "," + key + ");\">" + dict[val] + "</span>");
+                    $("#selected-" + k).append(`<span class='h-d' pk='${val}' onclick=\"rem(` + k + "," + key + `);\" ctemplate='${get_research_from_cache(val).comment_template}'>` + dict[val] + "</span>");
+                    if(comments[val] && comments[val] != ""){
+                        $(`.h-d[pk='${val}']`).attr("comment", comments[val])
+                    }
                     if (key != last)
                         $("#selected-" + k).append("&nbsp;|&nbsp;");
                 });
 
-                $("#div4 .ctrl").removeAttr('disabled');
+                $("#f .ctrl").removeAttr('disabled');
             });
             if ($('#sources .active-s .btn.active input[name=source]').length)
                 fs = parseInt($('#sources .active-s .btn.active input[name=source]').val());
@@ -567,9 +756,15 @@
                 diagnos: $("#diagnos-field").val().trim(),
                 fin_source: fs
             };
+
+            comments = {};
+            $.each($(".h-d[comment]"), function(k,v){
+                comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
+            });
+
             if (notfull == undefined)
                 load_researches();
-            console.log(JSON.stringify(tmp_direction.researches))
+            //console.log(JSON.stringify(tmp_direction.researches))
         }
         function fast_ld_dirs() {
             load_client_dirs(client_id);
@@ -581,7 +776,12 @@
             2: "Результаты подтверждены",
             "-1": "Направление отменено"
         };
+        var load_client_dirs_lock = false;
         function load_client_dirs(id) {
+            if (load_client_dirs_lock) return;
+            load_client_dirs_lock = true;
+            $('#story-list').scrollTop(0);
+            $("#story-table").html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
             var data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
             data.status = $("#status").val();
             $.ajax({url: "/directions/list/client", data: data}).done(function (data) {
@@ -615,7 +815,7 @@
                     });
                 }
                 resize();
-                $('#story-list').scrollTop(0);
+                load_client_dirs_lock = false;
             });
         }
 
@@ -647,6 +847,11 @@
             if ($("input[value='" + id + "']").length) {
                 $("input[value='" + id + "']").removeAttr("checked");
                 $("input[value='" + id + "']").change();
+
+                comments = {};
+                $.each($(".h-d[comment]"), function(k,v){
+                    comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
+                });
             }
             else {
                 if (checked[k].length == 1) delete checked[k];
@@ -800,6 +1005,10 @@
             if (client_id == -1 || active_lab == -1) return;
             $("#table-researches").html("");
             $("#table-researches").append(lang.table_researches_header);
+            if(active_lab in researches_cache){
+                show_researches(active_lab);
+                return;
+            }
             $.ajax({ // AJAX запрос
                 url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
                 dataType: 'json'
@@ -808,35 +1017,49 @@
                     $("#table-researches").append(lang.table_researches_not_found);
                     return;
                 }
-                $("#table-researches").html("");
-                $("#table-researches").append(lang.table_researches_header);
-                $.each(data, function (k, v) {
-                    ind = false;
-                    for (var prop in checked[v.fields.id_lab_fk]) {
-                        if (checked[v.fields.id_lab_fk].hasOwnProperty(prop)) {
-                            if (checked[v.fields.id_lab_fk][prop] == v.pk) {
-                                ind = true;
-                            }
+                researches_cache[active_lab] = data;
+                show_researches(active_lab);
+            });
+        }
+        function show_researches(lab){
+            data = [];
+            if(lab in researches_cache){
+                data = researches_cache[lab];
+            }
+            if (data.length == 0) {
+                $("#table-researches").append(lang.table_researches_not_found);
+                return;
+            }
+            $("#table-researches").html("");
+            $("#table-researches").append(lang.table_researches_header);
+            $(".btn").removeClass("active-b");
+            $.each(data, function (k, v) {
+                ind = false;
+                for (var prop in checked[v.fields.id_lab_fk]) {
+                    if (checked[v.fields.id_lab_fk].hasOwnProperty(prop)) {
+                        if (checked[v.fields.id_lab_fk][prop] == v.pk) {
+                            ind = true;
                         }
                     }
-                    if (!ind)
-                        $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-md-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
-                    else
-                        $("#table-researches").append("<label class=\"btn btn-default col-md-3\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
-                    dict[v.pk] = v.fields.ref_title;
-                });
-                if (typeof callback == typeof load_researches) {
-                    callback();
-                    callback = null;
                 }
+                if (!ind)
+                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                else
+                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                dict[v.pk] = v.fields.ref_title;
             });
-
+            if (typeof callback == typeof load_researches) {
+                callback();
+                callback = null;
+            }
         }
+
         function remove_researches(index) {
             //bootbox.confirm(lang.table_researches_preview_realy_delete.f(labs[index]), function (result) {
             //if (!result) return;
             delete checked[index];
             sync();
+            sync_checks();
 
             $.amaran({
                 'theme': 'awesome wrn',
@@ -856,6 +1079,7 @@
                 return;
             }
             checked = [];
+            checkedall = [];
             $("#diagnos-field").val("");
             sync();
         }
@@ -866,6 +1090,7 @@
             // bootbox.confirm(lang.clear_direction, function (result) {
             //     if (!result) return;
             checked = [];
+            checkedall = [];
             sync();
 
             $.amaran({
@@ -910,11 +1135,15 @@
                 return;
             }
             sync();
-            $("#div4 .ctrl").attr('disabled', 1);
+            $("#f .ctrl").attr('disabled', 1);
             ofname = -1;
             {% if operator %}
                 ofname = $("#select-doc").val();
             {% endif %}
+            comments = {};
+            $.each($(".h-d[comment]"), function(k,v){
+                comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
+            });
             $.ajax({
                 type: "POST",
                 url: "/directions/ajax/save",
@@ -922,7 +1151,8 @@
                     dict: JSON.stringify(tmp_direction),
                     ofname: ofname,
                     history_num: $("#history-num-tr input").val(),
-                    type: type
+                    type: type,
+                    comments: JSON.stringify(comments)
                 },
                 statusCode: {
                     500: function () {
@@ -940,7 +1170,7 @@
                     }
                 }
             }).done(function (data) {
-                console.log(JSON.stringify(data));
+                //console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
                     if (!tr) {
                         window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
@@ -982,10 +1212,11 @@
         }
 
         function resize() {
-            $('#story-list').height(300);
-            $('#story-list').perfectScrollbar();
-            $('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
-            $('.dir-queue').perfectScrollbar();
+            //$('#story-list').height(300);
+            //$('#story-list').perfectScrollbar();
+            //$('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
+            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 40);
+            //$('.dir-queue').perfectScrollbar();
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({
                 useAbsolutePositioning: false,
@@ -1058,42 +1289,61 @@
             });
             window.open('/directions/xls?napr_id=' + JSON.stringify(ex_array), '_blank');
         }
-    function open_search_results(){
-        $("#results_container").html("<b>Ничего не выбрано</b>");
-        $("#tree-modal ul").html("");
-        $.each(labs, function(k,v){
-            $("#tree-modal ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
-        });
-        function openLazyNode(event, nodes, node, hasChildren) {
-            if (hasChildren) {
-                return false;
-            }
-            node.lazyUrl = '/directory/researches/list?tree=1&lab_id='+parseInt(node.id.split("-")[2]);
-        }
-        function Toggling(e, nodes, node){
-            if(node.isFolder || !node.isActive) return;
-            $("#results_container").html("<h5>Поиск результатов для исследования {0}</h5><br/>Пациент: {1}<br/><br/>".f(node.text, $("#card-fio").text()));
-            $("#results_container").append("<div id='results_m_list'><div style='text-align: center'>загрузка...</div></div>");
-            $.ajax({url: "/results/search", method: "POST", data: {client_id: client_id, research_id: parseInt(node.pk)}, type: "json"}).done(function(d){
-                if(d.directions.length == 0) {
-                    $("#results_m_list").html("Ничего не найдено");
-                }else{
-                    $("#results_m_list").html("Результаты найдены в следующих направлениях:<br/>");
-                    d.directions.reverse();
-                    $.each(d.directions, function(k, v){
-                        $("#results_m_list").append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
-                    });
-                }
-                console.log(d);
+        function open_search_results() {
+            $("#results_container").html("<b>Ничего не выбрано</b>");
+            $("#tree-modal ul").html("");
+            $.each(labs, function (k, v) {
+                $("#tree-modal ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
             });
-            console.log(node.pk, node.text);
-        }
-        $("#results-search-modal").modal();
-         easyTree = $('#tree-modal').easytree({
+            function openLazyNode(event, nodes, node, hasChildren) {
+                if (hasChildren) {
+                    return false;
+                }
+                node.lazyUrl = '/directory/researches/list?tree=1&lab_id=' + parseInt(node.id.split("-")[2]);
+            }
+
+            function Toggling(e, nodes, node) {
+                if (node.isFolder || !node.isActive) return;
+                $("#results_container").html("<h5>Поиск результатов для исследования {0}</h5><br/>Пациент: {1}<br/><br/>".f(node.text, $("#card-fio").text()));
+                $("#results_container").append("<div id='results_m_list'><div>загрузка...</div></div>");
+                $.ajax({
+                    url: "/results/search",
+                    method: "POST",
+                    data: {client_id: client_id, research_id: parseInt(node.pk)},
+                    type: "json"
+                }).done(function (d) {
+                    if (d.directions.length == 0 && d.other_dirs.length == 0) {
+                        $("#results_m_list").html("Ничего не найдено");
+                    } else {
+                        var types = {0: "Забор материала не выполнен", 1: "Забор материала выполнен", 2: "Материал принят лабораторией", 3: "Исследования отложены"};
+                        $("#results_m_list").html("");
+                        if(d.directions.length > 0) {
+                            $("#results_m_list").append("Результаты найдены в следующих направлениях:<br/>");
+                            d.directions.reverse();
+                            $.each(d.directions, function (k, v) {
+                                $("#results_m_list").append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
+                            });
+                        }
+                        if(d.other_dirs.length > 0) {
+                            d.other_dirs.reverse();
+                            $("#results_m_list").append("Найдены незавершенные направления:<br/>");
+                            $.each(d.other_dirs, function (k, v) {
+                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, types[v.type], v.date));
+                            });
+                        }
+
+                    }
+                    //console.log(d);
+                });
+                //console.log(node.pk, node.text);
+            }
+
+            $("#results-search-modal").modal();
+            easyTree = $('#tree-modal').easytree({
                 openLazyNode: openLazyNode,
                 toggling: Toggling
             });
-    }
+        }
     </script>
     <style>
         #results-modal .modal-body {
@@ -1117,7 +1367,18 @@
             font-weight: normal;
             background-color: #fff;
         }
-
+        .h-d{
+            padding: 1px;
+            display: inline-block;
+        }
+        .h-d[comment]:after {
+            content: " [" attr(comment) "]";
+            color: #049372;
+            font-weight: 600;
+        }
+        .h-d:hover{
+            outline: 1px solid #bbb
+        }
         .btn-sm.btn-blue-nb {
             margin: 2px;
             width: 105px;
@@ -1278,21 +1539,47 @@
         .tr-cancel .status {
             color: #F4D03F
         }
-    .table-header-row{
-        width: 150px!important;
-        font-weight: bolder;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-     .table-content-row{
-        min-width: 250px;
-     }
-    #tree-cont{
-        height: 700px;
-        overflow-x: hidden;
-        overflow-y: auto;
-        display: block;
-        position: relative;
-    }
+
+        .btn-ell {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table-header-row {
+            font-weight: bolder;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table-content-row {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #tree-cont {
+            height: 700px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            display: block;
+            position: relative;
+        }
+    .modal-c {
+  text-align: center;
+}
+
+@media screen and (min-width: 768px) {
+  .modal-c:before {
+    display: inline-block;
+    vertical-align: middle;
+    content: " ";
+    height: 100%;
+  }
+}
+
+.modal-c .modal-dialog {
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
     </style>
 {% endblock %}

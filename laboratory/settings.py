@@ -12,7 +12,7 @@ ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 DEBUG = False
 
 INSTALLED_APPS = (
@@ -73,6 +73,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'laboratory.wsgi.application'
 LOGIN_URL = '/'
@@ -213,7 +214,7 @@ LDAP = {
     "base": "dc=fc-ismu,dc=local"
 
 }
-
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
@@ -243,5 +244,6 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  'django_jenkins.tasks.run_pep8',
                  'django_jenkins.tasks.run_pyflakes'
                  )
+TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 
-#DEBUG = True
+DEBUG = True

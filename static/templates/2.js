@@ -1,6 +1,6 @@
 var k = -1;
-var group = -1;
-var groups = {0: "Oαβ (I)", 1: "A<sub>β</sub> (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB₀ (IV)", 5: "A₂B₀ (IV)"};
+var dgroup = -1;
+var dgroups = {0: "Oαβ (I)", 1: "A<sub>β</sub> (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB₀ (IV)", 5: "A₂B₀ (IV)"};
 function genresult(th){
     k = pk = $(th).attr("pk");
     $("#res-modal h4").text($(th).attr("ftitle"));
@@ -29,12 +29,12 @@ function updateresmodal(th){
             val = $("[name='subgroup2']").first().val();
         }
     }
-    group = parseInt(val);
+    dgroup = parseInt(val);
 }
 
 function saveresmodal(){
-    if(group >= 0){
-        $("[data-div-pk="+k+"]").html(groups[group]);
-        $("[data-pk="+k+"]").val(groups[group]);
+    if(dgroup >= 0){
+        $("[data-div-pk="+k+"]").html(dgroups[dgroup]);
+        $("[data-pk="+k+"]").val(dgroups[dgroup]);
     }
 }

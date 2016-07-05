@@ -34,7 +34,10 @@ class Importedclients(models.Model):
         """
         :return: Короткое ФИО
         """
-        return self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
+        if self.twoname and len(self.twoname) > 0:
+            return self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
+        else:
+            return self.family + " " + self.name[0] + "."
 
     def bd(self):
         """

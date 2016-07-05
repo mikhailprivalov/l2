@@ -22,7 +22,7 @@ function saveresmodal(){
     checked = $("[name='result-v']:checked");
     result = types_directory[checked.val()];
     if(checked.val() == "1"){
-        result += " (Кпол {0}; Ккор {1})".f($("[name=kpol]").val(),$("[name=kkor]").val());
+        result += " (КП core {0}; КП NS {1})".f($("[name=kpol]").val(),$("[name=kkor]").val());
     }
     $("[data-pk="+k+"]").val(result);
 }

@@ -12,7 +12,7 @@ class Tubes(models.Model):
     title = models.CharField(max_length=255)  # Название
 
     def __str__(self):
-        return self.title + " пробирка"
+        return self.title
 
 
 class Researches(models.Model):
@@ -35,6 +35,8 @@ class Researches(models.Model):
 
     tube_weight_group = models.IntegerField(default=0, db_column='tube_weight_group')
     tube_weight = models.IntegerField(default=0, null=True, db_column='tube_weight')
+
+    comment_template = models.IntegerField(default=-1, null=True, blank=True)
 
     hide = models.IntegerField(default=0, db_column="hide")
     auto_add = models.IntegerField(default=0, db_column="auto_add")

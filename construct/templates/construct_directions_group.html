@@ -322,7 +322,7 @@
             $(".active").removeClass("active");
             cache = [];
             if (!group_id) group_id = -1;
-            selected["group"] = group_id;
+            selected["dgroup"] = group_id;
             selected["researches"] = {};
             if (group_id < 0) {
                 $.ajax({

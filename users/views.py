@@ -63,4 +63,6 @@ def home(request):
             return render(request, 'auth.html', {'error': True, 'username': username})  # Сообщение об ошибке
     if request.user.is_authenticated():  # Проверка статуса автоизации
         return HttpResponseRedirect(next)  # Редирект в п/у
-    return render(request, 'auth.html', {'error': False, 'username': ''})  # Вывод формы авторизации
+    response = render(request, 'auth.html', {'error': False, 'username': ''}, )  # Вывод формы авторизации
+    response["Login-Screen"] = 1
+    return response

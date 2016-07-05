@@ -38,10 +38,10 @@
                                 <h6><br/></h6>
 
                                 <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                                    <input type="text" class="input-sm form-control" name="date-start"/>
+                                    <input type="text" class="input-sm form-control no-context" name="date-start"/>
                                     <span class="input-group-addon"
                                           style="background-color: #fff;color: #000">&mdash;</span>
-                                    <input type="text" class="input-sm form-control" name="date-end"/>
+                                    <input type="text" class="input-sm form-control no-context" name="date-end"/>
                                 </div>
                             </div>
                         </div>
@@ -119,13 +119,13 @@
                 </div>
             </div>
 
-            <div id="fractions-list">
+            <div id="fractions-list" style="position: relative;padding-right: 15px">
                 <table class="table table-bordered floatThead">
-                    <thead>
+                    <thead style="background: #fff">
                     <tr>
-                        <td>Исследование</td>
-                        <td>Значение</td>
-                        <td>Е/и</td>
+                        <td class="col-md-9">Исследование</td>
+                        <td class="col-md-2">Значение</td>
+                        <td class="col-md-1">Е/и</td>
                     </tr>
                     </thead>
                     <tbody id="fractions">
@@ -270,6 +270,7 @@
         var ts = false;
         var last_dir = "";
         function load_data() {
+            sl();
             $(".confirm-btn").attr("disabled", 1);
             $("#researches-list").html("");
             var req_data = {};
@@ -293,6 +294,7 @@
                 }
                 else {
                     $("#researches-list").append("<tr><td class='well' colspan='5'>Не найдено</td></tr>");
+                    hl();
                 }
                 $("#dir-id").val("");
                 freeze();
@@ -300,6 +302,7 @@
             console.log(req_data);
         }
         function load_research(id, dir) {
+            sl();
             $.ajax({
                 url: "/directions/get/issledovaniya",
                 type: "json",
@@ -322,18 +325,45 @@
                     $(".active").removeClass("active");
                     data2 = JSON.parse(data2);
                     $.each(data2.fractions, function (k, v) {
-                        $("#fractions").append("<tr><td>{0}</td><td data-pk='{3}'>{1}</td><td>{2}</td></tr>".f(v.title, "", v.unit, v.pk));
+                        $("#fractions").append(`<tr class='field-row'><td class='field-title'>${v.title}</td><td render-type='${v.render_type}' data-pk='${v.pk}'></td><td>${v.unit}</td></tr>`);
                     });
                     $("#research-title").html(data2.title);
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data3) {
                         $.each(data3.results, function (k, v) {
-                            $("[data-pk='" + k + "']").html(v);
+                            $field = $(`[data-pk='${k}']`);
+                            if(parseInt($field.attr("render-type")) == 1){
+                                $tr = $field.parent(".field-row");
+                                parsed = JSON.parse(v).rows;
+                                draw_data = [];
+                                $.each(parsed, function(kk, vv){
+                                    tmp_data = {title: vv.title, rows: []};
+                                    $.each(vv.rows, function(kkk, vvv){
+                                        if(vvv.value != "null"){
+                                            tmp_data.rows.push(vvv);
+                                        }
+                                    });
+                                    draw_data.push(tmp_data);
+                                });
+                                $.each(draw_data, function(kk,vv){
+                                    $pt = $(`<tr class='b-top-bord'><td colspan='3'>${$(".field-title", $tr).text()}: ${vv.title}</td></tr>`);
+                                    $pt.insertAfter($tr);
+                                    $.each(vv.rows, function(kkk,vvv){
+                                        $tmp = $(`<tr><td>${vvv.title}</td><td colspan='2'>${vvv.value}</td></tr>`);
+                                        $tmp.insertAfter($pt);
+                                        $pt = $tmp;
+                                    });
+                                });
+                                $tr.remove();
+                                console.log(draw_data);
+                                return;
+                            }
+                            $field.html(v);
                         });
                     });
                     $("[pk='{0}']".f(id)).addClass("active");
                     $("#issledovaniye_id").val(id);
                     if (data2.confirmed) {
-                        $(".confirm-btn").prop("disabled", false);
+                        $(".confirm-btn").prop("disabled", true);
                         $("#print-btn").prop("disabled", false);
                     }
                     else if (data2.saved) {
@@ -344,7 +374,10 @@
                         $(".confirm-btn").prop("disabled", true);
                         $("#print-btn").prop("disabled", true);
                     }
+
                     resize();
+                    $("#fractions-list").scrollTop(0);
+                    hl();
                 });
             });
         }
