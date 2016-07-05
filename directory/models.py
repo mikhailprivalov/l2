@@ -15,12 +15,15 @@ class ReleationsFT(models.Model):
     """
     (многие-ко-многим) фракции к пробиркам
     """
-    tube = models.ForeignKey(Tubes)
+    tube = models.ForeignKey(Tubes, help_text='Пробирка')
 
 
 class ResearchGroup(models.Model):
-    title = models.CharField(max_length=63)
-    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True)
+    """
+    Группы исследований
+    """
+    title = models.CharField(max_length=63, help_text='Название группы')
+    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Лаборатория')
 
     def __str__(self):
         return "%s" % self.title
@@ -30,19 +33,19 @@ class Researches(models.Model):
     """
     Вид исследования
     """
-    direction = models.ForeignKey(DirectionsGroup, null=True, blank=True)
-    title = models.CharField(max_length=255, default="")
-    subgroup = models.ForeignKey(Subgroups, related_name="subgroup")
-    quota_oms = models.IntegerField(default=-1)
-    preparation = models.CharField(max_length=2047, default="")
+    direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления')
+    title = models.CharField(max_length=255, default="", help_text='Название исследования')
+    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории')
+    quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
+    preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
     edit_mode = models.IntegerField(
-        default=0)  # 0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить
-    hide = models.BooleanField(default=False, blank=True)
-    no_attach = models.IntegerField(default=0, null=True, blank=True)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True)
-    template = models.IntegerField(default=0, blank=True)
-    comment_template = models.IntegerField(default=-1, null=True, blank=True)
-    groups = models.ManyToManyField(ResearchGroup)
+        default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования')
+    no_attach = models.IntegerField(default=0, null=True, blank=True, help_text='Группа исследований, которые не могут быть назначены вместе')
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
+    template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
+    comment_template = models.IntegerField(default=-1, null=True, blank=True, help_text='Варианты комментариев к материалу')
+    groups = models.ManyToManyField(ResearchGroup, help_text='Группа исследований в лаборатории')
 
     def __str__(self):
         return "%s" % self.title
@@ -52,20 +55,20 @@ class Fractions(models.Model):
     """
     Фракции для исследований
     """
-    title = models.CharField(max_length=255)
-    research = models.ForeignKey(Researches, db_index=True)
-    units = models.CharField(max_length=255)
-    ref_m = JSONField()
-    ref_f = JSONField()
-    relation = models.ForeignKey(ReleationsFT)
-    uet_doc = models.FloatField(default=0)
-    uet_lab = models.FloatField(default=0)
-    max_iterations = models.IntegerField(default=1)
-    type = models.IntegerField(default=-1, blank=True, null=True)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True)
-    render_type = models.IntegerField(default=0, blank=True)
-    options = models.CharField(max_length=511, default="", blank=True)
+    title = models.CharField(max_length=255, help_text='Название фракции')
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция')
+    units = models.CharField(max_length=255, help_text='Еденицы измерения')
+    ref_m = JSONField(help_text='Референсы (М)')
+    ref_f = JSONField(help_text='Референсы (Ж)')
+    relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')
+    uet_doc = models.FloatField(default=0, help_text='УЕТы для врача')
+    uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта')
+    max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций')
+    type = models.IntegerField(default=-1, blank=True, null=True, help_text='Варианты подсказок результатов')
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
+    render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
+    options = models.CharField(max_length=511, default="", blank=True, help_text='Варианты для динамического числа полей')
 
     def __str__(self):
         return self.research.title + " | " + self.title
@@ -75,8 +78,8 @@ class Absorption(models.Model):
     """
     Поглощение
     """
-    fupper = models.ForeignKey(Fractions, related_name="fupper")
-    flower = models.ForeignKey(Fractions, related_name="flower")
+    fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее')
+    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглащяется главной')
 
     def __str__(self):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
