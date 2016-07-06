@@ -250,9 +250,15 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  )
 TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 
-import time
+import time, datetime
+
 DJVERSION_VERSION = "1.0.0"
-__w = '../.'
-DJVERSION_UPDATED = None if not os.path.isfile(__w) and not os.path.exists(__w) else time.strftime('%d.%m.%Y', time.gmtime(os.path.getmtime(__w)))
+__w = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+if os.path.exists(__w):
+    (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(__w)
+    mtime = datetime.datetime.fromtimestamp(mtime)
+    DJVERSION_UPDATED = mtime
+
+DJVERSION_FORMAT_STRING = '{version} ({updated})'
 
 DEBUG = True
