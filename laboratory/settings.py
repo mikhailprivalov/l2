@@ -259,6 +259,6 @@ if os.path.exists(__w):
     mtime = datetime.datetime.fromtimestamp(mtime)
     DJVERSION_UPDATED = mtime
 
-DJVERSION_FORMAT_STRING = '{version} ({updated})'
+DJVERSION_FORMAT_STRING = '{version}'
 
-DEBUG = True
+DEBUG = False
