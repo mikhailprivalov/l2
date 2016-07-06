@@ -1,7 +1,7 @@
 from django import template
 import time
 import os
-import lis
+import laboratory
 
 register = template.Library()
 
