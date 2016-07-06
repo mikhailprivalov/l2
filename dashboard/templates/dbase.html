@@ -1219,13 +1219,40 @@
     {% block content %}{% endblock %}
 {% block foot %}
     <div class="footer-float">
-        Клиники ГБОУ ВПО ИГМУ Минздрава РФ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span>
+        Клиники ГБОУ ВПО ИГМУ Минздрава России &copy; 2016 | ЛИС | <span id="clock"> 0:00:00</span>
     </div>
 {% endblock %}
 </div>
-<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" >
+<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000" >
     <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10" id="contextNumber" class="form-control w50" /></label> <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt" /></label></a></li>
     <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со степенью</a></li>
+    <li class="divider context-st"></li>
+    <li class="context-st">
+        <div class="input-group" style="max-width: 450px">
+              <input type="text" class="noclick form-control" id="recalcValue" placeholder="Пересчитанное значение">
+              <span class="input-group-btn">
+                    <a action="addrecalc" class="btn btn-primary-nb">Дописать пересчет</a>
+              </span>
+        </div>
+    </li>
+    <li class="divider context-st"></li>
+    <li class="context-st">
+        <div class="input-group" style="max-width: 450px">
+            <span class="input-group-addon noclick">п</span>
+            <input type="text" class="noclick form-control" id="leicP" maxlength="3" placeholder="п">
+            <span class="input-group-addon noclick">c</span>
+            <input type="text" class="noclick form-control" id="leicS" maxlength="3" placeholder="c">
+            <span class="input-group-addon noclick">э</span>
+            <input type="text" class="noclick form-control" id="leicE" maxlength="3" placeholder="э">
+            <span class="input-group-addon noclick">м</span>
+            <input type="text" class="noclick form-control" id="leicM" maxlength="3" placeholder="м">
+            <span class="input-group-addon noclick">л</span>
+            <input type="text" class="noclick form-control" id="leicL" maxlength="3" placeholder="л">
+            <span class="input-group-btn">
+                <a action="addleic" class="btn btn-primary-nb">Ок</a>
+            </span>
+        </div>
+    </li>
     <li class="divider context-st"></li>
     <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
 </ul>
@@ -1429,7 +1456,7 @@
             menuSelected: function (invokedOn, selectedMenu) {
                 switch(selectedMenu.attr("action")){
                     case "clear":
-                            invokedOn.val("").typeahead('val', "").focus();
+                            invokedOn.val("").typeahead('val', "");
                         break;
                     case "addnum":
                             val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
@@ -1437,9 +1464,21 @@
                             $(invokedOn).typeahead('val', val);
                             $("#contextNumber").val(10);
                             $("#contextSt").val(1);
-                            invokedOn.focus();
+                        break;
+                    case "addrecalc":
+                            val = `${invokedOn.val()} (пересчитано ${$("#recalcValue").val()})`;
+                            $(invokedOn).val(val);
+                            $(invokedOn).typeahead('val', val);
+                            $("#recalcValue").val("");
+                        break;
+                    case "addleic":
+                            val = `${invokedOn.val()}п${$("#leicP").val()}\\с${$("#leicS").val()}\\э${$("#leicE").val()}\\м${$("#leicM").val()}\\л${$("#leicL").val()}`;
+                            $(invokedOn).val(val);
+                            $(invokedOn).typeahead('val', val);
+                            $("#leicP,#leicE,#leicL,#leicM,#leicS").val("");
                         break;
                 }
+                invokedOn.focus();
             }
         });
     });

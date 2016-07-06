@@ -473,7 +473,7 @@ def result_print(request):
             tmp.append(Paragraph('<font face="OpenSans" size="8">Дата заб.</font>', styleSheet["BodyText"]))
             tmp.append(Paragraph('<font face="OpenSans" size="8">Дата исп.</font>', styleSheet["BodyText"]))
             data.append(tmp)
-            cw = [int(tw * 0.305), int(tw * 0.12), int(tw * 0.075), int(tw * 0.19), int(tw * 0.15), int(tw * 0.08), int(tw * 0.08)]
+            cw = [int(tw * 0.295), int(tw * 0.13), int(tw * 0.075), int(tw * 0.19), int(tw * 0.15), int(tw * 0.08), int(tw * 0.08)]
             t = Table(data, colWidths=cw)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
