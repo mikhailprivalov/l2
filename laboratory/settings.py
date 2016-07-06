@@ -40,7 +40,8 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
-    'ajax_select'
+    'ajax_select',
+    'djversion'
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -71,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'djversion.context_processors.version'
             ],
         },
     },
@@ -247,5 +249,10 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  'django_jenkins.tasks.run_pyflakes'
                  )
 TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
+
+import time
+DJVERSION_VERSION = "1.0.0"
+__w = '../.'
+DJVERSION_UPDATED = None if not os.path.isfile(__w) and not os.path.exists(__w) else time.strftime('%d.%m.%Y', time.gmtime(os.path.getmtime(__w)))
 
 DEBUG = True
