@@ -71,6 +71,7 @@ def result_conformation(request):
     return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
 
 
+import datetime
 @csrf_exempt
 @login_required
 def loadready(request):
@@ -79,7 +80,6 @@ def loadready(request):
     date_start = request.REQUEST["datestart"]
     date_end = request.REQUEST["dateend"]
     deff = int(request.REQUEST["def"])
-    import datetime
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
     tlist = []
@@ -87,26 +87,29 @@ def loadready(request):
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start,date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
+                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                                 issledovaniya__isnull=False)
     else:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__isnull=False,
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye, issledovaniya__deferred=True)
+                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                                 issledovaniya__deferred=True, issledovaniya__isnull=False)
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
     for tube in tlist:  # перебор результатов выборки
         # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
-        if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
-        complete = False  # Завершен ли анализ
+        # if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
+        # complete = False  # Завершен ли анализ
         direction = tube.issledovaniya_set.first().napravleniye  # Выборка направления для пробирки
 
         date_tmp = dateformat.format(tube.time_recive, settings.DATE_FORMAT).split(".")
         date_tmp = "%s.%s.%s" % (date_tmp[0], date_tmp[1], date_tmp[2][2:4])
 
         dicttube = {"id": tube.pk, "direction": direction.pk, "date": date_tmp}  # Временный словарь с информацией о пробирке
-        if not complete and dicttube not in result[
+        # if not complete and dicttube not in result[
+        if dicttube not in result[
             "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
 

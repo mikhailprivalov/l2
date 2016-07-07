@@ -702,9 +702,9 @@
             });
         }
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 100);
-            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 95);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 75);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
             $('#tubes-list').perfectScrollbar();
             $('#issledovaniya-scroll').perfectScrollbar();
             $('#dirs-list').perfectScrollbar();
@@ -718,7 +718,7 @@
             });
 
             if (!$('#result-jade-form').length) return;
-            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 120);
+            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 110);
             $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
         }
         function save(noreload, fc) {

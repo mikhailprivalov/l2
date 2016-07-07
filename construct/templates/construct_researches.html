@@ -71,6 +71,13 @@
 {% endblock %}
 {% block scripts %}
     <style>
+        .footer-float {
+            display: none;
+        }
+
+        body {
+            padding-bottom: 5px !important;
+        }
         #researches-container > div {
             border: 1px solid;
             border-color: #e5e6e9 #dfe0e4 #d0d1d5;
@@ -815,10 +822,10 @@
          */
         function resize(f) {
             if (!f) {
-                $('#researches-container').height($(window).height() - $('#researches-container').position().top - 155);
+                $('#researches-container').height($(window).height() - $('#researches-container').position().top - 145);
                 $('#researches-container').perfectScrollbar();
                 if ($('#tubes').length) {
-                    $('#tubes').height($(window).height() - $('#tubes').position().top - 205);
+                    $('#tubes').height($(window).height() - $('#tubes').position().top - 195);
                     $('#tubes').perfectScrollbar();
                 }
             }
