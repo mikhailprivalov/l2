@@ -481,10 +481,21 @@
                 tmp.push(parseInt(el.value));
                 checked[active_lab].push(el.value);
                 $(el).parent().addClass("active-b");
+                check_ow(parseInt(el.value));
             });
             checkedall = tmp;
             sync(true);
         }
+
+        function check_ow(top) {
+            ow = parseInt($(`input[value=${top}]`).attr("data-with"));
+            if (ow > -1 && checked[active_lab].indexOf("" + ow) == -1) {
+                checked[active_lab].push("" + ow);
+                $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
+                check_ow(ow);
+            }
+        }
+
         $(document).ready(function () {
             $(".fp-cont").show();
             resize();
@@ -1043,9 +1054,9 @@
                     }
                 }
                 if (!ind)
-                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 else
-                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 dict[v.pk] = v.fields.ref_title;
             });
             if (typeof callback == typeof load_researches) {

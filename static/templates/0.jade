@@ -21,10 +21,17 @@ input(type="hidden", value=res_id)#issledovaniye_id
                         td(style="width: 24%")
                             label.labtitle= fraction.title
                         td.col-md-3
-                            if fraction.type == -1
-                                input(type="text", data-pk=fraction.pk).form-control.result-enter
+                            if fraction.formula == ""
+                                if fraction.type == -1
+                                    input(type="text", data-pk=fraction.pk).form-control.result-enter
+                                else
+                                    input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
                             else
-                                input(type="text", data-pk=fraction.pk).typeahead.form-control.result-enter
+                                .input-group
+                                    input(type="text", data-pk=fraction.pk, data-formula=fraction.formula, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                                    span.input-group-btn
+                                        a(title="Расчет результата", href="#", onclick="exec_formula(this);return false;", pk=fraction.pk).btn.btn-default.btn-primary-nb.btn25
+                                            i.fa.fa-circle
                             .center= fraction.unit
                         td.col-md-3
                             table.table.table-bordered.table-responsive

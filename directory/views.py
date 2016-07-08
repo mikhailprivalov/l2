@@ -15,8 +15,8 @@ def directory_researches(request):
     return_result = {"tubes_r": []}
     if request.method == "POST":
         research = json.loads(request.POST["research"])
-        #if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
-   #        research__pk=int(research["id"])).exists():
+        # if not research["title"] or not research["id"] or directions.Issledovaniya.objects.filter(
+        #        research__pk=int(research["id"])).exists():
         if not research["title"] or not research["id"]:
             return_result = {"ok": False, "tubes_r": []}
         else:
@@ -68,7 +68,7 @@ def directory_researches(request):
             if research["id"] == -1:
                 research_obj.sort_weight = max(sort_list) + 1
                 research_obj.save()
-            #fL = Fractions.objects.filter()
+            # fL = Fractions.objects.filter()
             '''fractions = Fractions.objects.filter(research=research_obj)
             for fraction in fractions:
                 if fraction.pk not in fractions_pk:
@@ -92,8 +92,9 @@ def directory_researches(request):
                     resdict["tubes_c"] += 1
                     resdict["tubes"][fraction.relation.pk] = {"id": fraction.relation.pk,
                                                               "color": fraction.relation.tube.color,
-                                                              "title": fraction.relation.tube.title, "num": fraction.sort_weight}
-            #return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
+                                                              "title": fraction.relation.tube.title,
+                                                              "num": fraction.sort_weight}
+            # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
@@ -107,10 +108,12 @@ def directory_researches_list(request):
     lab_id = request.REQUEST["lab_id"]
     researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     for research in researches:
-        return_result.append({"pk": research.pk, "id": research.pk, "fields": {"id_lab_fk": lab_id, "ref_title": research.title}, "isFolder": False, "text": research.title, "comment_template": research.comment_template})
+        return_result.append(
+            {"pk": research.pk, "id": research.pk, "onlywith": -1 if not research.onlywith else research.onlywith.pk,
+             "fields": {"id_lab_fk": lab_id, "ref_title": research.title},
+             "isFolder": False, "text": research.title, "comment_template": research.comment_template})
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
-
 
 
 @csrf_exempt
@@ -211,6 +214,7 @@ def directory_research(request):
         return_result["edit_mode"] = research.edit_mode
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
         return_result["hide"] = research.hide
+        return_result["onlywith"] = -1 if not research.onlywith else research.onlywith.pk
         return_result["fractiontubes"] = {}
         return_result["uet_doc"] = {}
         return_result["uet_lab"] = {}
@@ -234,7 +238,8 @@ def directory_research(request):
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
                  "ref_f": ref_f, "pk": fraction.pk, "type": fraction.type, "num": fraction.sort_weight})
         for key in return_result["fractiontubes"].keys():
-            return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"], key=lambda k: k['num'])
+            return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"],
+                                                                      key=lambda k: k['num'])
         '''
         sel: id,
         color: color,
@@ -326,6 +331,7 @@ def researches_get_details(request):
         for fraction in Fractions.objects.filter(research=research_obj).order_by("sort_weight"):
             return_result["fractions"].append(
                 {"pk": fraction.pk, "title": fraction.title, "hide": fraction.hide, "render_type": fraction.render_type,
+                 "formula": fraction.formula,
                  "sw": fraction.sort_weight, "options": fraction.options})
     else:
         data = json.loads(request.POST["data"])
@@ -335,6 +341,7 @@ def researches_get_details(request):
                 temp_fraction.hide = row["hide"]
                 temp_fraction.render_type = row["render_type"]
                 temp_fraction.options = row["options"]
+                temp_fraction.formula = row["formula"].strip()
                 temp_fraction.save()
         return_result["ok"] = True
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON

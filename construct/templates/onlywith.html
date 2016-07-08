@@ -1,0 +1,158 @@
+{% extends "dbase.html" %}
+{% block title %}Настройка назначения анализов вместе{% endblock %}
+
+{% block content %}
+    <ol class="breadcrumb breadcrumb-arrow">
+        <li><a href="/dashboard/">Панель управления</a></li>
+        <li><a href="/construct/menu">Конструктор</a></li>
+        <li class="active"><span>Настройка назначения анализов вместе</span></li>
+    </ol>
+    <div class="row" style="padding: 0;margin: 0">
+        <div class="col-md-4" style="padding: 5px">
+            <select class="select-b" id="select-lab" data-live-search="true" onchange="loadreslist();"
+                    data-width="100%">
+                {% for v in lab_subgroups %}
+                    <option value="{{ v.pk }}">{{ v }}</option>
+                {% endfor %}
+            </select>
+
+            <div id="researches-list" style="margin-top: 10px">
+                <div style="margin-left: 5px;height: 55px">
+                    <div style="float: left;">
+                        <h4 style="color: #fff">Анализы</h4>
+                    </div>
+                </div>
+                <div id="researches-container"></div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="wrapper" id="research-form">Ничего не выбрано</div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <style>
+
+        #researches-container > div {
+            border: 1px solid;
+            border-color: #e5e6e9 #dfe0e4 #d0d1d5;
+            border-radius: 3px;;
+            overflow: hidden;
+        }
+
+        #researches-container, #research-form, #tubes {
+            height: 100%;
+            position: relative;
+            padding-right: 30px;
+            padding-left: 20px;
+        }
+
+        #researches-list {
+            background-color: #434A54;
+            padding-right: 0;
+            padding-left: 10px;
+            padding-bottom: 20px;
+        }
+
+        #researches-container hr {
+            margin: 2px 0;
+        }
+
+        #researches-container .res {
+            cursor: pointer;
+            margin-bottom: 5px;
+            padding: 4px;
+        }
+
+        #researches-container .res.active, #researches-container .direction.active {
+            background-color: #CCD1D9 !important;
+        }
+
+        #researches-container .res:hover {
+            background-color: #E6E9ED;
+        }
+
+        .btn-td {
+            border-radius: 0;
+            margin: 0;
+            padding: 0;
+            display: table-cell;
+            border: 0 !important;
+        }
+
+        .btn-td:hover {
+            border: 0 !important;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            loadreslist();
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
+        });
+        var res = [];
+        function loadreslist() {
+            sl();
+            $.ajax({
+                url: "/directory/researches",
+                method: "GET",
+                data: {lab_group: $("#select-lab option:selected").val()}
+            }).done(function (data) {
+                $("#researches-container").html("");
+                res = [{id: -1, title: "Ничего не выбрано"}];
+                $.each(data.researches, function (k, v) {
+                    res.push({id: v.pk, title: v.title});
+                    $("#researches-container").append("<div class='well bw res' pk='{1}' onclick='load_research({1});'>{0}</div>".f(v.title, v.pk));
+                });
+                hl();
+            });
+        }
+        function load_research(pk) {
+            sl();
+            $("#research-form").html("");
+            $.ajax({url: "/directory/research?id=" + pk, method: "GET"}).done(function (data) {
+                $(".active").removeClass("active");
+                $("[pk='{0}']".f(pk)).addClass("active");
+                div1 = $("<div></div>").appendTo("#research-form");
+                $(div1).append("<h5>{0}</h5>".f(data.title));
+                div2 = $("<label for='select-res'>Исследование может быть назначено только с:</label><br/><select class=\"select-b\" id=\"select-res\" data-live-search='true' data-width=\"100%\"></select>");
+                $(div2).appendTo(div1);
+                for (var i = 0; i < res.length; i++) {
+                    $('#select-res').append(`<option value='${res[i].id}'>${res[i].title}</option>`);
+                }
+                $(`#select-res`).val(data.onlywith).selectpicker();
+                $(div1).append(`<br/><br/><button onclick="save(${pk});" class="btn btn-primary-nb" type="button">Сохранить</button>`);
+                hl();
+            });
+        }
+        function resize(f) {
+            $('#researches-container').height($(window).height() - $('#researches-container').position().top - 145);
+            $('#researches-container').perfectScrollbar();
+        }
+        var allres = 0;
+        var cres = 0;
+        function save(pk) {
+            sl();
+            $.ajax({
+                method: "POST",
+                url: "/construct/with",
+                data: {pk: pk, onlywith: $(`#select-res`).val()}
+            }).done(function () {
+                load_research(pk);
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: "Изменения сохранены",
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-check'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+    </script>
+{% endblock %}

@@ -42,7 +42,8 @@
         <table id="table-fractions" class="table table-bordered table-responsive">
             <thead>
                 <tr>
-                    <th class="col-md-4">Фракция</th>
+                    <th class="col-md-2">Фракция (id)</th>
+                    <th class="col-md-2">Формула</th>
                     <th class="col-md-1">Скрытие</th>
                     <th>Тип поля</th>
                     <th class="col-md-3">Варианты</th>
@@ -122,6 +123,10 @@
     .tdi .tag{
         vertical-align: super
     }
+
+    .w100 {
+        width: 100%;
+    }
     </style>
     <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
     <script>
@@ -155,7 +160,8 @@
                 radios += "</td>";
                 $.each(data.fractions, function(k,v){
                     $("#table-fractions tbody").append("<tr pk='{0}'>".f(v.pk) +
-                            "<td>&nbsp;{0}</td>".f(v.title) +
+                            "<td>&nbsp;{0} ({1})</td>".f(v.title, v.pk) +
+                            "<td><textarea class='form-control w100' rows='1' id='formula-{1}'>{0}</textarea></td>".f(v.formula, v.pk) +
                             "<td><label class='c'><input type='checkbox' name='hide-{0}' /></label></td>".f(v.pk) +
                             radios.f(v.pk) +
                             `<td class='tdi'><input type='text' class='form-control w100' data-role='tagsinput' value='${v.options}' /></td>` +
@@ -196,7 +202,13 @@
         var res = [];
         $.each($("#table-fractions tbody tr"), function(k,v){
             var tpk = parseInt($(v).attr("pk"));
-            res.push({pk: tpk, hide: $("[name=hide-{0}]".f(tpk)).prop("checked"), render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()), options: $("[data-role='tagsinput']", v).val()});
+            res.push({
+                pk: tpk,
+                hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
+                render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()),
+                options: $("[data-role='tagsinput']", v).val(),
+                formula: $("#formula-" + tpk).val()
+            });
         });
         $.ajax({
                 url: "/construct/researches/get_details",

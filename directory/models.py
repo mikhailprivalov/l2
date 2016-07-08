@@ -46,6 +46,8 @@ class Researches(models.Model):
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
     comment_template = models.IntegerField(default=-1, null=True, blank=True, help_text='Варианты комментариев к материалу')
     groups = models.ManyToManyField(ResearchGroup, help_text='Группа исследований в лаборатории')
+    onlywith = models.ForeignKey('self', null=True, blank=True,
+                                 help_text='Без выбранного анализа не можеть быть назначено')
 
     def __str__(self):
         return "%s" % self.title
@@ -69,6 +71,7 @@ class Fractions(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
     render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
     options = models.CharField(max_length=511, default="", blank=True, help_text='Варианты для динамического числа полей')
+    formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
 
     def __str__(self):
         return self.research.title + " | " + self.title

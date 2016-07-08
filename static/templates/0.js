@@ -216,3 +216,24 @@ function hide_vals(gpk, th) {
           }
       }
   }
+
+function exec_formula(th) {
+    formula = {fraction: parseInt($(th).attr("pk"))};
+    formula.body = $(`input[data-pk=${formula.fraction}]`).attr("data-formula");
+    formula.necessary = formula.body.match(/\{(\d*)\}/g);
+    formula.tmp = formula.body;
+    for (var i = 0; i < formula.necessary.length; i++) {
+        formula.necessary[i] = formula.necessary[i].replace(/\{|\}/g, "");
+        fval = 0;
+        try {
+            fval = parseFloat($(`[data-pk="${formula.necessary[i]}"]`).val().trim().replace(",", "."));
+        }
+        catch (e) {
+        }
+        if (!fval) {
+            fval = 0;
+        }
+        formula.tmp = formula.tmp.replace(`{${formula.necessary[i]}}`, fval);
+    }
+    $(`input[data-pk=${formula.fraction}]`).val(new Function("return " + formula.tmp + ";")());
+}
