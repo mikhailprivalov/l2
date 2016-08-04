@@ -74,8 +74,8 @@
             $("#log_table").append(loadmore);
             loadlog(loaded + 1);
             setTimeout(function(){
-                setInterval(check_new_rows, 1000);
-            }, 2000);
+                setInterval(check_new_rows, 333);
+            }, 1500);
         });
         var endF = false;
         var inload = false;
@@ -179,9 +179,17 @@
                 inload = false;
             });
         }
+
+        var first_resize = true;
         function resize() {
             $('#table_cont').height($(window).height() - $('#table_cont').position().top - 60);
-            $('#table_cont').perfectScrollbar();
+            if (first_resize) {
+                $('#table_cont').perfectScrollbar();
+                first_resize = false;
+            } else {
+                $('#table_cont').perfectScrollbar('update');
+            }
+
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({
                 useAbsolutePositioning: false,

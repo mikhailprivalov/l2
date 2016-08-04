@@ -2,6 +2,7 @@
 {% block title %}Печать журнала приема{% endblock %}
 
 {% block content %}
+    <h4 class='f-h' style="text-align: center;">Журнал принятых пробирок</h4>
     <div class="row" style="display: flex">
         <div class="col-xs-1">
 
@@ -35,6 +36,20 @@
             </button>
         </div>
     </div>
+    <div class="row" style="display: flex">
+        <div class="col-xs-1">
+
+        </div>
+        <div class="col-xs-7">
+
+        </div>
+        <div class="col-xs-3" style="display: flex">
+            <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch; margin-top: 5px"
+                    onclick="print_directions();">
+                Направления
+            </button>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -45,6 +60,20 @@
                 $("#print-btn").click();
             });
         });
+        function print_directions() {
+            sl();
+            $.ajax({
+                method: "get",
+                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions`
+            }).done(function (data) {
+                hl();
+                data.sort(sortNumber);
+                window.open('/directions/pdf?napr_id=' + JSON.stringify(data), '_blank');
+            });
+        }
+        function sortNumber(a, b) {
+            return a - b;
+        }
     </script>
     <style>
         .btn-blue-nb3, .btn-blue-nb3:active, .btn-blue-nb3:visited, .btn-blue-nb3:focus{

@@ -293,9 +293,18 @@ function load_history(highlight){
         $('#history-container').scrollTop(0);
     });
 }
+
+var first_resize = true;
 function resize() {
     $('#history-container').height($(window).height() - $('#history-container').position().top - 70);
-    $('#history-container').perfectScrollbar();
+
+    if (first_resize) {
+        $('#history-container').perfectScrollbar();
+        first_resize = false;
+    } else {
+        $('#history-container').perfectScrollbar('update');
+    }
+
     $(".floatThead").floatThead('reflow');
     $(".floatThead").floatThead({
         useAbsolutePositioning: false,

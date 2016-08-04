@@ -220,20 +220,84 @@ function hide_vals(gpk, th) {
 function exec_formula(th) {
     formula = {fraction: parseInt($(th).attr("pk"))};
     formula.body = $(`input[data-pk=${formula.fraction}]`).attr("data-formula");
-    formula.necessary = formula.body.match(/\{(\d*)\}/g);
+    formula.necessary = formula.body.match(/\{(\d{1,})\}/g);
+    formula.necessary_complex = formula.body.match(/\{\d{1,}\|\d{1,}\}/g);
     formula.tmp = formula.body;
-    for (var i = 0; i < formula.necessary.length; i++) {
-        formula.necessary[i] = formula.necessary[i].replace(/\{|\}/g, "");
-        fval = 0;
-        try {
-            fval = parseFloat($(`[data-pk="${formula.necessary[i]}"]`).val().trim().replace(",", "."));
-        }
-        catch (e) {
-        }
-        if (!fval) {
+    formula.str = formula.body;
+
+    if (formula.necessary != null) {
+        for (i = 0; i < formula.necessary.length; i++) {
+            formula.necessary[i] = formula.necessary[i].replace(/\{|\}/g, "");
             fval = 0;
+            try {
+                fval = parseFloat($(`[data-pk="${formula.necessary[i]}"]`).val().trim().replace(",", "."));
+            }
+            catch (e) {
+            }
+            if (!fval) {
+                fval = 0;
+            }
+            formula.tmp = formula.tmp.replace(`{${formula.necessary[i]}}`, fval);
         }
-        formula.tmp = formula.tmp.replace(`{${formula.necessary[i]}}`, fval);
     }
-    $(`input[data-pk=${formula.fraction}]`).val(new Function("return " + formula.tmp + ";")());
+
+    sl();
+    function perform_complex(k) {
+        formula.necessary_complex[k] = formula.necessary_complex[k].split("|");
+
+        formula.necessary_complex[k][0] = parseInt(formula.necessary_complex[k][0].replace(/\{|\}/g, ""));
+        formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/\{|\}/g, ""));
+
+        fval = 0;
+        iss_obj = $.grep(dir_data.issledovaniya, function (e) {
+            return e.research_pk == formula.necessary_complex[k][0];
+        })[0];
+        formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, iss_obj.title);
+        fraction = formula.necessary_complex[k][1];
+        $.ajax({url: "/results/get", data: {iss_id: iss_obj.pk}}).done(function (data) {
+            fval = "0";
+            if (fraction in data.results) {
+                g = data.results[fraction] + "";
+                fval = g.replace(",", ".");
+            }
+            formula.tmp = formula.tmp.replace(`{${iss_obj.research_pk}|${fraction}}`, fval);
+            if (k == formula.necessary_complex.length - 1) {
+                ready_formula(formula);
+            }
+            else {
+                perform_complex(k + 1);
+            }
+        });
+    }
+
+    if (formula.necessary_complex != null) {
+        perform_complex(0);
+    } else {
+        ready_formula(formula);
+    }
+
+}
+
+function ready_formula(formula) {
+    v = new Function("return " + formula.tmp + ";")();
+    if (is_float(v)) {
+        v = Math.round(parseFloat(v) * 10) / 10;
+    }
+    $(`input[data-pk=${formula.fraction}]`).val(v);
+    hl();
+    $.amaran({
+        'theme': 'awesome ok',
+        'content': {
+            title: 'Результат посчитан',
+            message: "Формула:<br/>" + formula.str + "<br/>Процесс подсчета:<br/>" + formula.tmp,
+            info: '',
+            icon: 'fa fa-exclamation'
+        },
+        'position': 'bottom right',
+        delay: 10000
+    });
+}
+
+function is_float(str) {
+    return /^\d+\.\d+$/.test(str);
 }

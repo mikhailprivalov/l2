@@ -77,11 +77,27 @@
                     </table>
                 </div>
                 {% if operator %}
-                    <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
+                    <div class="col-xs-2" style="text-align: right">
+                        <b>Выписать от имени:</b>
+                    </div>
+                    <div class="col-xs-4">
+                        <select class="select-b" data-width="100%" id="select-otd" onchange="update_av_docs();">
+                            {% for v in notlabs %}
+                                {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                    <option selected value="{{ v.pk }}">{{ v.title }}</option>
+                                {% else %}
+                                    <option value="{{ v.pk }}">{{ v.title }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xs-4">
+                        <select class="select-b" data-width="100%" id="select-doc">
                         {% for v in docs %}
                             <option value="{{ v.pk }}">{{ v.get_fio }}</option>
                         {% endfor %}
-                    </select></label>
+                        </select>
+                    </div>
                 {% endif %}
             </div>
             <div id="d" class="split content">
@@ -389,8 +405,6 @@
     <li><a action="savecomment" onclick="return false;" tabindex="-1" href="#">Ок</a></li>
 </ul>
 
-
-
 {% endblock %}
 
 {% block scripts %}
@@ -400,6 +414,20 @@
     <script src="/static/tree/jquery.easytree.min.js"></script>
     <script src="/static/js/split.js"></script>
     <script>
+        var users_av = {{ users|safe }};
+        function update_av_docs() {
+            $("#select-doc").html("");
+            kv = parseInt($("#select-otd").val());
+            for (var i = 0; i < users_av.length; i++) {
+                if (kv == users_av[i].pk) {
+                    for (var j = 0; j < users_av[i].docs.length; j++)
+                        $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+                    break;
+                }
+            }
+            $("#select-doc").selectpicker('refresh');
+        }
+
         function selectText(element) {
             var doc = document;
             var text = doc.getElementById(element);
@@ -1146,11 +1174,25 @@
                 return;
             }
             sync();
-            $("#f .ctrl").attr('disabled', 1);
             ofname = -1;
             {% if operator %}
                 ofname = $("#select-doc").val();
+                if (ofname == null) {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Не выбрано, от чьего имени выписываются направления',
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                    return;
+                }
             {% endif %}
+            $("#f .ctrl").attr('disabled', 1);
             comments = {};
             $.each($(".h-d[comment]"), function(k,v){
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");

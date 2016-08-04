@@ -27,6 +27,8 @@ INSTALLED_APPS = (
     'debug_panel',
     'django_jenkins',
     'cachalot',
+    'ajax_select',
+    'djversion',
     'clients',
     'users',
     'dashboard',
@@ -39,9 +41,7 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
-    'api',
-    'ajax_select',
-    'djversion'
+    'api'
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -261,4 +261,4 @@ if os.path.exists(__w):
 
 DJVERSION_FORMAT_STRING = '{version}'
 
-DEBUG = False
+DEBUG = True

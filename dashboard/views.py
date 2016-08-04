@@ -1,3 +1,6 @@
+from collections import defaultdict
+from copy import deepcopy
+
 from astm.tests.test_server import null_dispatcher
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -228,12 +231,21 @@ def directions(request):
     if oper:
         docs = DoctorProfile.objects.filter(podrazileniye=request.user.doctorprofile.podrazileniye,
                                             user__groups__name="Лечащий врач")
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    users = []
+    for p in podrazdeleniya:
+        pd = {"pk": p.pk, "title": p.title, "docs": []}
+        for d in DoctorProfile.objects.filter(podrazileniye=p,
+                                              user__groups__name="Лечащий врач"):
+            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
+        users.append(pd)
     return render(request, 'dashboard/directions.html', {'labs': podr,
-                                                         'fin_poli':
-                                                             IstochnikiFinansirovaniya.objects.filter(istype="poli"),
-                                                         'fin_stat':
-                                                             IstochnikiFinansirovaniya.objects.filter(istype="stat"),
-                                                         "operator": oper, "docs": docs})
+                                                         'fin_poli': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="poli"),
+                                                         'fin_stat': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="stat"),
+                                                         "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
+                                                         "users": json.dumps(users)})
 
 
 @login_required

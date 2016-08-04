@@ -190,9 +190,15 @@
             });
         }
 
+        var first_resize = true;
         function resize() {
             $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 65);
-            $('#scroll-tb').perfectScrollbar();
+            if (first_resize) {
+                $('#scroll-tb').perfectScrollbar();
+                first_resize = false;
+            } else {
+                $('#scroll-tb').perfectScrollbar('update');
+            }
         }
 
         function loadfrom() {

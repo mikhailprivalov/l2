@@ -344,7 +344,7 @@ def printDirection(c, n, dir):
 
     c.setFont('OpenSans', 10)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn,
-                        "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+                        "Клиники ФГБОУ ВО ИГМУ Минздрава России")
 
     c.setFont('OpenSans', 8)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn,
@@ -740,8 +740,8 @@ def print_history(request):
         idv = v.id
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + str(iss[
-                                                                        0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = v.doc_get.podrazileniye.title + "@" + str(iss[
+                                                          0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
@@ -752,7 +752,7 @@ def print_history(request):
                      "client-type": iss[0].napravleniye.client.type,
                      "lab_title": iss[0].research.subgroup.title,
                      "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
-                     "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                     "podr": v.doc_get.podrazileniye.title,
                      "reciver": None,
                      "tube_id": str(v.id),
                      "history_num": iss[0].napravleniye.history_num,
@@ -867,7 +867,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "АКТ приема-передачи емкостей с биоматериалом")
 
@@ -993,6 +993,7 @@ def get_issledovaniya(request):
                             cnt += 1
                             groups[tb] = cnt
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                     "research_pk": issledovaniye.research.pk,
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved,
                                                      "confirmed": confirmed,

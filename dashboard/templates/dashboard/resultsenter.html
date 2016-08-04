@@ -370,6 +370,9 @@
 
             //load_form(loaded_research);
         }
+        function get_age(s_age) {
+            return parseInt(s_age.split(" ")[0]);
+        }
         var dir_data = {};
         var statuses = {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден", "o": "Отложен"};
@@ -547,7 +550,7 @@
                     $("#form-scroll").isLoading("hide");
                     $("#issledovaniya .active").removeClass("active");
                     data2 = JSON.parse(data2);
-                    console.log(data2);
+                    //console.log(data2);
                     data2["sex"] = dir_data.client_sex;
                     data2["age"] = dir_data.client_vozrast;
                     $("#result-form").html(jade.compile(template)(data2));
@@ -701,13 +704,22 @@
                 $("#tubes-list tr, #dirs-list tr").addClass("animated");
             });
         }
+        var first_resize = true;
         function resize() {
             $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
             $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 75);
             $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
-            $('#tubes-list').perfectScrollbar();
-            $('#issledovaniya-scroll').perfectScrollbar();
-            $('#dirs-list').perfectScrollbar();
+            if (first_resize) {
+                $('#tubes-list').perfectScrollbar();
+                $('#issledovaniya-scroll').perfectScrollbar();
+                $('#dirs-list').perfectScrollbar();
+                first_resize = false;
+            }
+            else {
+                $('#tubes-list').perfectScrollbar('update');
+                $('#issledovaniya-scroll').perfectScrollbar('update');
+                $('#dirs-list').perfectScrollbar('update');
+            }
 
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({
@@ -878,15 +890,22 @@
                 lockdeff = false;
                 return;
             }
+            sl();
             $.ajax({
                 url: "/results/day",
                 data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches)}
             }).done(function (data) {
                 lockdeff = false;
-                if (data.directions.length > 0) {
-                    st = "?pk=" + JSON.stringify(data.directions);
+                if (Object.keys(data.directions).length > 0) {
+                    strs = [];
+                    for (var l = 0; l < Object.keys(data.directions).length; l++) {
+                        strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
+                        console.log(data.directions[Object.keys(data.directions)[l]].join(","));
+                    }
+
+                    st = "?pk=[" + strs.join(",") + "]";
                     window.open('/results/pdf' + st, '_blank');
-                    $("#results-day-modal").modal('close');
+                    $("#results-day-modal").modal('hide');
                 }
                 else {
                     $.amaran({
@@ -901,6 +920,7 @@
                         delay: 6000
                     });
                 }
+                hl();
             });
         }
         function createlist(type) {
@@ -959,7 +979,7 @@
         function reset_confirm(id, rtitle, tube) {
             sl();
             var msg = "Сбросить подтверждение исследования №{0} - {1}, пробирка №{2}?".f(id, rtitle, tube);
-            console.log(msg);
+            //console.log(msg);
             var doreset = confirm(msg);
             if (doreset === false || doreset === null) {
                 hl();
@@ -1048,6 +1068,10 @@
 
         #dirs-list tbody, #tubes-list tbody {
             min-height: 100px;
+        }
+
+        #dirs-list td, #tubes-list td, #dirs-list th, #tubes-list th {
+            padding: 6px;
         }
 
         .active {
