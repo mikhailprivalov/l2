@@ -200,10 +200,10 @@ def gen_pdf_execlist(request):
             iss_list = Issledovaniya.objects.filter(tubes__doc_recive_id__isnull=False,
                                                     tubes__time_recive__range=(date_start, date_end),
                                                     doc_confirmation_id__isnull=True, research__pk=res.pk,
-                                                    deferred=False)
+                                                    deferred=False).order_by('tubes__time_recive')
         else:
             iss_list = Issledovaniya.objects.filter(research__pk=res.pk, deferred=True, doc_confirmation__isnull=True,
-                                                    tubes__doc_recive__isnull=False)
+                                                    tubes__doc_recive__isnull=False).order_by('tubes__time_recive')
 
         if iss_list.count() == 0:
             # if not hb:
@@ -344,7 +344,7 @@ def printDirection(c, n, dir):
 
     c.setFont('OpenSans', 10)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn,
-                        "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+                        "Клиники ФГБОУ ВО ИГМУ Минздрава России")
 
     c.setFont('OpenSans', 8)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn,
@@ -580,14 +580,21 @@ def setdef(request):
     :return:
     """
     response = {"ok": False}
-    if "pk" in request.REQUEST.keys():
+
+    if "pk" in request.POST.keys() or "pk" in request.GET.keys():
         status = False
-        if "status" in request.REQUEST.keys():
-            status = request.REQUEST["status"]
+        if "status" in request.POST.keys() or "status" in request.GET.keys():
+            if request.method == "POST":
+                status = request.POST["status"]
+            else:
+                status = request.GET["status"]
             if isinstance(status, str):
                 status = status == "true"
         response["s"] = status
-        pk = request.REQUEST["pk"]
+        if request.method == "POST":
+            pk = request.POST["pk"]
+        else:
+            pk = request.GET["pk"]
         iss = Issledovaniya.objects.get(pk=int(pk))
         iss.deferred = status
         iss.save()
@@ -600,14 +607,20 @@ def cancel_direction(request):
     """Функция отмены направления"""
 
     response = {"ok": False}
-    if "pk" in request.REQUEST.keys():
+    if "pk" in request.POST.keys() or "pk" in request.GET.keys():
         cancel = False
-        if "status" in request.REQUEST.keys():
-            cancel = request.REQUEST["status"]
+        if "status" in request.POST.keys() or "status" in request.GET.keys():
+            if request.method == "POST":
+                cancel = request.POST["status"]
+            else:
+                cancel = request.GET["status"]
             if isinstance(cancel, str):
                 cancel = cancel == "true"
         response["s"] = cancel
-        pk = request.REQUEST["pk"]
+        if request.method == "POST":
+            pk = request.POST["pk"]
+        else:
+            pk = request.GET["pk"]
         nap = Napravleniya.objects.get(pk=int(pk))
         nap.cancel = cancel
         nap.save()
@@ -740,8 +753,8 @@ def print_history(request):
         idv = v.id
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = iss[0].napravleniye.doc.podrazileniye.title + "@" + str(iss[
-                                                                        0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+        k = v.doc_get.podrazileniye.title + "@" + str(iss[
+                                                          0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
@@ -752,7 +765,7 @@ def print_history(request):
                      "client-type": iss[0].napravleniye.client.type,
                      "lab_title": iss[0].research.subgroup.title,
                      "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
-                     "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                     "podr": v.doc_get.podrazileniye.title,
                      "reciver": None,
                      "tube_id": str(v.id),
                      "history_num": iss[0].napravleniye.history_num,
@@ -867,7 +880,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "АКТ приема-передачи емкостей с биоматериалом")
 
@@ -892,6 +905,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
 @login_required
 def get_issledovaniya(request):
     """ Получение списка исследований и направления для ввода результатов"""
+    import time
     res = {"issledovaniya": [], "ok": False}
     if request.method == "GET":
         iss = []
@@ -992,7 +1006,12 @@ def get_issledovaniya(request):
                         if tb not in groups.keys():
                             cnt += 1
                             groups[tb] = cnt
+                        ctp = int(0 if not issledovaniye.time_confirmation else int(
+                            time.mktime(issledovaniye.time_confirmation.timetuple()))) + 8 * 60 * 60
+                        ctime = int(time.time())
+                        cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                     "research_pk": issledovaniye.research.pk,
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved,
                                                      "confirmed": confirmed,
@@ -1005,6 +1024,13 @@ def get_issledovaniya(request):
                                                      "doc_save_fio": doc_save_fio,
                                                      "doc_save_id": doc_save_id,
                                                      "current_doc_save": current_doc_save,
+                                                     "allow_disable_confirm": ((
+                                                                               ctime - ctp < 15 * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser) and confirmed,
+                                                     "ctp": ctp,
+                                                     "ctime": ctime,
+                                                     "ctime_ctp": ctime - ctp,
+                                                     "ctime_ctp_t": ctime - ctp < 15 * 60,
+                                                     "period_sec": 15 * 60,
                                                      "group": groups[tb]
                                                      })
                 import collections

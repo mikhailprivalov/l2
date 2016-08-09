@@ -63,24 +63,31 @@ def send(request):
     """
     result = {"ok": False}
     try:
-        resdict = yaml.load(request.REQUEST["result"])
-        appkey = request.REQUEST["key"]
+        if request.method == "POST":
+            resdict = yaml.load(request.POST["result"])
+            appkey = request.POST["key"]
+        else:
+            resdict = yaml.load(request.GET["result"])
+            appkey = request.GET["key"]
+
         astm_user = users.DoctorProfile.objects.filter(user__pk=866).first()
         if "LYMPH%" in resdict["result"]:
             resdict["orders"] = {}
 
         dpk = -1
-        if "bydirection" in request.REQUEST:
+        if "bydirection" in request.POST or "bydirection" in request.GET:
             dpk = resdict["pk"]
 
             if dpk >= 4600000000000:
                 dpk -= 4600000000000
                 dpk //= 10
 
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=resdict["pk"]).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=resdict["pk"]).first().pk
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(
+                    issledovaniya__napravleniye__pk=dpk).first().pk
             else:
                 resdict["pk"] = -1
+            resdict["bysapphire"] = True
 
         if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
@@ -137,7 +144,11 @@ def get_order(request):
     from time import gmtime, strftime
     sdt = strftime("%Y%m%d%H%M%S", gmtime())
     ra = [["H","\\^&","","",["Host","P_1"],"","","","",["BIOLIS NEO","System1"],"","P","1",sdt]]
-    sample_id = request.REQUEST["sample_id"]
+
+    if request.method == "POST":
+        sample_id = request.POST["sample_id"]
+    else:
+        sample_id = request.GET["sample_id"]
     tubei = directions.TubesRegistration.objects.get(pk=sample_id)
     issledovaniya = directions.Issledovaniya.objects.filter(tubes=tubei)
     client = issledovaniya.first().napravleniye.client
@@ -177,8 +188,14 @@ def results(request):
     :return:
     """
     result = {"ok": False}
-    resdict = json.loads(request.REQUEST["result"].replace("'", "\""))
-    key = request.REQUEST["key"]
+    if request.method == "POST":
+        resdict = request.POST["result"]
+        key = request.POST["key"]
+    else:
+        resdict = request.GET["result"]
+        key = request.GET["key"]
+    resdict = json.loads(resdict.replace("'", "\""))
+
     if key and models.Application.objects.filter(key=key).exists():
         for patient in resdict["PATIENTS"]:
             for order in patient["ORDERS"]:
@@ -227,8 +244,13 @@ def results_normal(request):
     :return:
     """
     result = {"ok": False}
-    resdict = json.loads(request.REQUEST["result"].replace("'", "\""))
-    key = request.REQUEST["key"]
+    if request.method == "POST":
+        resdict = request.POST["result"]
+        key = request.POST["key"]
+    else:
+        resdict = request.GET["result"]
+        key = request.GET["key"]
+    resdict = json.loads(resdict.replace("'", "\""))
     if key and models.Application.objects.filter(key=key).exists():
         for patient in resdict["PATIENTS"]:
             for order in patient["ORDERS"]:

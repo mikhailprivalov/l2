@@ -9,20 +9,22 @@ import users.models as umodels
 import slog.models as slog
 
 class TubesRegistration(models.Model):
-    # Таблица с пробирками для исследований
+    """
+    Таблица с пробирками для исследований
+    """
     id = models.AutoField(primary_key=True)
-    type = models.ForeignKey(directory.ReleationsFT)  # Тип пробирки
-    time_get = models.DateTimeField(null=True, blank=True)  # Время взятия материала
+    type = models.ForeignKey(directory.ReleationsFT, help_text='Тип пробирки')
+    time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала')
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
-                                related_name='docget')  # Кто взял материал
-    time_recive = models.DateTimeField(null=True, blank=True)  # Время получения материала
+                                related_name='docget', help_text='Кто взял материал')
+    time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала')
     doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
-                                   related_name='docrecive')  # Кто получил материал
-    barcode = models.CharField(max_length=255, null=True, blank=True)  # Штрих-код или номер пробирки
+                                   related_name='docrecive', help_text='Кто получил материал')
+    barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер пробирки')
 
-    notice = models.CharField(max_length=512, default="")  # Замечания
+    notice = models.CharField(max_length=512, default="", help_text='Замечания')
 
-    daynum = models.IntegerField(default=0, blank=True, null=True)
+    daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия пробирки среди дня в лаборатории')
 
     def day_num(self, doc, num):
         new_t = False
@@ -109,25 +111,29 @@ class TubesRegistration(models.Model):
 
 
 class IstochnikiFinansirovaniya(models.Model):
-    # Таблица источников финансирования
-    tilie = models.CharField(max_length=511)  # Название
-    active_status = models.BooleanField(default=True)  # Статус активности
-    istype = models.CharField(max_length=4, default="poli")  # К поликлинике или стационару относится источник
+    """
+    Таблица источников финансирования
+    """
+    tilie = models.CharField(max_length=511, help_text='Название')
+    active_status = models.BooleanField(default=True, help_text='Статус активности')
+    istype = models.CharField(max_length=4, default="poli", help_text='К поликлинике или стационару относится источник')
 
 
 class Napravleniya(models.Model):
-    # Таблица направлений
-    data_sozdaniya = models.DateTimeField(auto_now_add=True)  # Дата создания направления
-    diagnos = models.CharField(max_length=511)  # Время взятия материала
-    client = models.ForeignKey(Importedclients, db_index=True)  # Пациент
-    doc = models.ForeignKey(DoctorProfile, db_index=True)  # Лечащий врач
-    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True)  # Источник финансирования
-    is_printed = models.BooleanField(default=False, blank=True)
-    time_print = models.DateTimeField(default=None, blank=True, null=True)
-    history_num = models.CharField(max_length=255, default=None, blank=True, null=True)
-    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print")
-    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create")  # Создатель направления
-    cancel = models.BooleanField(default=False, blank=True)
+    """
+    Таблица направлений
+    """
+    data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления')
+    diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
+    client = models.ForeignKey(Importedclients, db_index=True, help_text='Пациент')
+    doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач')
+    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования')
+    is_printed = models.BooleanField(default=False, blank=True, help_text='Флаг - напечатано ли направление')
+    time_print = models.DateTimeField(default=None, blank=True, null=True, help_text='Время печати')
+    history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
+    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print", help_text='Профиль, который был использован при печати')
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления')
+    cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
 
     @staticmethod
     def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
@@ -276,39 +282,63 @@ class Napravleniya(models.Model):
         return result
 
     def has_confirm(self):
+        """
+        Есть ли подтверждение у одного или более исследований в направлении
+        :return: True, если есть подтверждение у одного или более
+        """
         return any([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
     def is_all_confirm(self):
+        """
+        Есть ли подтверждение у всех исследований в направлении
+        :return: True, если всё подтверждено
+        """
         return all([x.doc_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
 
     def is_has_deff(self):
+        """
+        Есть ли отложенные исследования
+        :return: True, если подтверждены не все и есть одно или более отложенное исследование
+        """
         return not self.is_all_confirm() and any([x.deferred for x in Issledovaniya.objects.filter(napravleniye=self)])
 
 
 
 class Issledovaniya(models.Model):
-    # Направления на исследования
-    napravleniye = models.ForeignKey(Napravleniya)  # Направление
-    research = models.ForeignKey(directory.Researches, null=True, blank=True)  # Вид исследования из справочника
-    # resultat = JSONField()  # Результат исследования в JSON
-    tubes = models.ManyToManyField(TubesRegistration)
-    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True)
-    time_save = models.DateTimeField(null=True, blank=True, db_index=True)
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True)
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True)
-    deferred = models.BooleanField(default=False, blank=True)
-    comment = models.CharField(max_length=10, default="", blank=True)
+    """
+    Направления на исследования
+    """
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
+    research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника')
+    tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования')
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True, help_text='Профиль пользователя, сохранившего результат')
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат')
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование')
+    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
 
     def is_get_material(self):
+        """
+        Осуществлен ли забор всего материала для исследования
+        :return: True, если весь материал взят
+        """
         return self.tubes.filter().exists() and all([x.doc_get is not None for x in self.tubes.filter()])
 
     def is_receive_material(self):
+        """
+        Осуществлен ли прием материала лабораторией
+        :return: True, если весь материал принят
+        """
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
 
 class Result(models.Model):
-    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True)
-    fraction = models.ForeignKey(directory.Fractions)
-    value = models.TextField(null=True, blank=True)
-    iteration = models.IntegerField(default=1, null=True)
+    """
+    Результат исследований
+    """
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат')
+    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования')
+    value = models.TextField(null=True, blank=True, help_text='Значение')
+    iteration = models.IntegerField(default=1, null=True, help_text='Итерация')

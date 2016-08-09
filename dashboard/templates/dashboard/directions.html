@@ -77,11 +77,27 @@
                     </table>
                 </div>
                 {% if operator %}
-                    <label>Направления выписываются от имени: <select class="select-b" id="select-doc">
+                    <div class="col-xs-2" style="text-align: right">
+                        <b>Выписать от имени:</b>
+                    </div>
+                    <div class="col-xs-4">
+                        <select class="select-b" data-width="100%" id="select-otd" onchange="update_av_docs();">
+                            {% for v in notlabs %}
+                                {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                    <option selected value="{{ v.pk }}">{{ v.title }}</option>
+                                {% else %}
+                                    <option value="{{ v.pk }}">{{ v.title }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xs-4">
+                        <select class="select-b" data-width="100%" id="select-doc">
                         {% for v in docs %}
                             <option value="{{ v.pk }}">{{ v.get_fio }}</option>
                         {% endfor %}
-                    </select></label>
+                        </select>
+                    </div>
                 {% endif %}
             </div>
             <div id="d" class="split content">
@@ -389,8 +405,6 @@
     <li><a action="savecomment" onclick="return false;" tabindex="-1" href="#">Ок</a></li>
 </ul>
 
-
-
 {% endblock %}
 
 {% block scripts %}
@@ -400,6 +414,20 @@
     <script src="/static/tree/jquery.easytree.min.js"></script>
     <script src="/static/js/split.js"></script>
     <script>
+        var users_av = {{ users|safe }};
+        function update_av_docs() {
+            $("#select-doc").html("");
+            kv = parseInt($("#select-otd").val());
+            for (var i = 0; i < users_av.length; i++) {
+                if (kv == users_av[i].pk) {
+                    for (var j = 0; j < users_av[i].docs.length; j++)
+                        $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+                    break;
+                }
+            }
+            $("#select-doc").selectpicker('refresh');
+        }
+
         function selectText(element) {
             var doc = document;
             var text = doc.getElementById(element);
@@ -481,10 +509,21 @@
                 tmp.push(parseInt(el.value));
                 checked[active_lab].push(el.value);
                 $(el).parent().addClass("active-b");
+                check_ow(parseInt(el.value));
             });
             checkedall = tmp;
             sync(true);
         }
+
+        function check_ow(top) {
+            ow = parseInt($(`input[value=${top}]`).attr("data-with"));
+            if (ow > -1 && checked[active_lab].indexOf("" + ow) == -1) {
+                checked[active_lab].push("" + ow);
+                $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
+                check_ow(ow);
+            }
+        }
+
         $(document).ready(function () {
             $(".fp-cont").show();
             resize();
@@ -1043,9 +1082,9 @@
                     }
                 }
                 if (!ind)
-                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 else
-                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 dict[v.pk] = v.fields.ref_title;
             });
             if (typeof callback == typeof load_researches) {
@@ -1135,11 +1174,25 @@
                 return;
             }
             sync();
-            $("#f .ctrl").attr('disabled', 1);
             ofname = -1;
             {% if operator %}
                 ofname = $("#select-doc").val();
+                if (ofname == null) {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Не выбрано, от чьего имени выписываются направления',
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                    return;
+                }
             {% endif %}
+            $("#f .ctrl").attr('disabled', 1);
             comments = {};
             $.each($(".h-d[comment]"), function(k,v){
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
@@ -1215,7 +1268,7 @@
             //$('#story-list').height(300);
             //$('#story-list').perfectScrollbar();
             //$('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
-            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 40);
+            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 20);
             //$('.dir-queue').perfectScrollbar();
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({

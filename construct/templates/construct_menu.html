@@ -8,24 +8,29 @@
         <li class="active"><span>Меню</span></li>
     </ol>
     <div class="row dash-buttons">
-        <div class="col-md-3">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
             <a href="/construct/tubes" class="panel-body">
                 Добавление и редактирование пробирок
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
             <a href="/construct/researches" class="panel-body">
                 Добавление и редактирование анализов
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
             <a href="/construct/directions_group" class="panel-body">
                 Группировка анализов по направлениям
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
+            <a href="/construct/with" class="panel-body">
+                Настройка назначения анализов вместе
+            </a>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
             <a href="/construct/uets" class="panel-body">
-                Настройка УЕТов<br/><br/><br/>
+                Настройка УЕТов
             </a>
         </div>
     </div><br/>
@@ -33,4 +38,9 @@
 {% block scripts %}
     <script>
     </script>
+    <style>
+        .mb5 {
+            margin-bottom: 5px;
+        }
+    </style>
 {% endblock %}

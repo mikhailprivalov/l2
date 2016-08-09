@@ -1,3 +1,6 @@
+from collections import defaultdict
+from copy import deepcopy
+
 from astm.tests.test_server import null_dispatcher
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -74,12 +77,22 @@ def load_logs(request):
     import slog.models as slog
     result = {"data": []}
 
-    check_new = int(request.REQUEST["checknew"])
-    states = json.loads(request.REQUEST["searchdata"])
+    if request.method == "POST":
+        check_new = int(request.POST["checknew"])
+        states = json.loads(request.POST["searchdata"])
+    else:
+        check_new = int(request.GET["checknew"])
+        states = json.loads(request.GET["searchdata"])
+
 
     if check_new == 0:
-        offset = int(request.REQUEST["offset"])
-        size = int(request.REQUEST["size"])
+        if request.method == "POST":
+            offset = int(request.POST["offset"])
+            size = int(request.POST["size"])
+        else:
+            offset = int(request.GET["offset"])
+            size = int(request.GET["size"])
+
         obj = slog.Log.objects.all().order_by("-id")
         if states["user"] != -1:
             obj = obj.filter(user__pk=states["user"])
@@ -92,7 +105,13 @@ def load_logs(request):
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username, "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(), "time": str(row.time)}
             result["data"].append(tmp_object)
     else:
-        for row in slog.Log.objects.filter(pk__gt=int(request.REQUEST["last_n"])):
+
+        if request.method == "POST":
+            pkgt = int(request.POST["last_n"])
+        else:
+            pkgt = int(request.GET["last_n"])
+
+        for row in slog.Log.objects.filter(pk__gt=pkgt):
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
                           "time": str(row.time)}
@@ -113,24 +132,37 @@ def researches_control(request):
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
     groups = directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)
-    return render(request, 'dashboard/receive_journal.html', {"groups": groups})
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya})
 
 
 @csrf_exempt
 @login_required
-@staff_member_required
 def confirm_reset(request):
-    result = {"ok": False}
+    result = {"ok": False, "msg": "Ошибка"}
 
-    if "pk" in request.REQUEST.keys():
-        pk = int(request.REQUEST["pk"])
+    if "pk" in request.POST.keys() or "pk" in request.GET.keys():
+        if request.method == "POST":
+            pk = int(request.POST["pk"])
+        else:
+            pk = int(request.GET["pk"])
+
         if Issledovaniya.objects.filter(pk=pk).exists():
             iss = Issledovaniya.objects.get(pk=pk)
-            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
-            iss.doc_confirmation = iss.time_confirmation = None
-            iss.save()
-            result = {"ok": True}
-            slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
+
+            import time
+            ctp = int(
+                0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
+            ctime = int(time.time())
+            cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
+            if (ctime - ctp < 15 * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser:
+                predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
+                iss.doc_confirmation = iss.time_confirmation = None
+                iss.save()
+                result = {"ok": True}
+                slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
+            else:
+                result["msg"] = "Сброс подтверждения разрешен в течении 15 минут"
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -228,12 +260,21 @@ def directions(request):
     if oper:
         docs = DoctorProfile.objects.filter(podrazileniye=request.user.doctorprofile.podrazileniye,
                                             user__groups__name="Лечащий врач")
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    users = []
+    for p in podrazdeleniya:
+        pd = {"pk": p.pk, "title": p.title, "docs": []}
+        for d in DoctorProfile.objects.filter(podrazileniye=p,
+                                              user__groups__name="Лечащий врач"):
+            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
+        users.append(pd)
     return render(request, 'dashboard/directions.html', {'labs': podr,
-                                                         'fin_poli':
-                                                             IstochnikiFinansirovaniya.objects.filter(istype="poli"),
-                                                         'fin_stat':
-                                                             IstochnikiFinansirovaniya.objects.filter(istype="stat"),
-                                                         "operator": oper, "docs": docs})
+                                                         'fin_poli': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="poli"),
+                                                         'fin_stat': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="stat"),
+                                                         "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
+                                                         "users": json.dumps(users)})
 
 
 @login_required

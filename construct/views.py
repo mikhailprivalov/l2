@@ -1,8 +1,12 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Subgroups
-
+import directory.models as directory
+import simplejson as json
 
 @login_required
 @group_required("Оператор")
@@ -48,3 +52,24 @@ def uets(request):
     """ Настройка УЕТов """
     lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
     return render(request, 'uets.html', {"lab_subgroups": lab_subgroups})
+
+
+@csrf_exempt
+@login_required
+@group_required("Оператор")
+def onlywith(request):
+    """ Настройка назначения анализов вместе """
+    if request.method == "GET":
+        lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
+        return render(request, 'onlywith.html', {"lab_subgroups": lab_subgroups})
+    elif request.method == "POST":
+        pk = int(request.POST["pk"])
+        onlywith_value = int(request.POST.get("onlywith", "-1"))
+        res = directory.Researches.objects.get(pk=pk)
+        if onlywith_value > -1:
+            res.onlywith = directory.Researches.objects.get(pk=onlywith_value)
+            res.save()
+        else:
+            res.onlywith = None
+            res.save()
+        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")

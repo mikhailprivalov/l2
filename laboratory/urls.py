@@ -1,4 +1,4 @@
-from django.conf.urls import include, url, patterns
+from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -13,7 +13,8 @@ from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_directio
 from receivematerial.views import receive, tubes_get, receive_obo, receive_history, receive_execlist, last_received, \
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
-    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, results_search
+    result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, \
+    results_search
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -23,6 +24,7 @@ from statistic.views import statistic_page, statistic_xls
 import api.urls as api_urls
 import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
+from django.contrib.auth.views import logout
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -96,17 +98,15 @@ urlpatterns = [
                   url(r'^users/count$', users_count),
                   url(r'^users/ldap/dosync$', users_dosync),
                   url(r'^ajax_select/', include(ajax_select_urls)),
+                  url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                   url(r'^admin/', include(admin.site.urls)),
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
-                  url(r'^logout/$', 'django.contrib.auth.views.logout',
-                      {'next_page': '/'}),
+                  url(r'^logout/$', logout, {'next_page': '/'})
               ] + staticfiles_urlpatterns()
 
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns += patterns('',
-                            url(r'^__debug__/', include(debug_toolbar.urls)),
-                            )
+    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))

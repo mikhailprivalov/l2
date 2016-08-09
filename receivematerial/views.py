@@ -297,11 +297,14 @@ def receive_journal(request):
     import pytz
     import copy
 
-    start = str(request.GET.get("start", "1"))
+    start = "1"  # str(request.GET.get("start", "1"))
     group = str(request.GET.get("group", "-2"))
+    return_type = str(request.GET.get("return", "pdf"))
+    otd = str(request.GET.get("otd", "-1"))
 
     start = 1 if not start.isdigit() else int(start)
     group = -2 if group not in ["-2", "-1"] and (not group.isdigit() or not directory.ResearchGroup.objects.filter(pk=int(group)).exists()) else int(group)
+    otd = int(otd)
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
     pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
@@ -314,13 +317,21 @@ def receive_journal(request):
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-
-    tubes = TubesRegistration.objects.filter(
-        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-        time_get__gte=datetime.now().date()).order_by('time_recive')
+    tubes = []
+    if otd <= -1:
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_recive__isnull=False).order_by(
+            'issledovaniya__napravleniye__client__pk')
+    elif otd > -1:
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk=otd, doc_recive__isnull=False).order_by(
+            'issledovaniya__napravleniye__client__pk')
 
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
+    directions = set()
     vids = set()
 
     perpage = 47
@@ -338,7 +349,9 @@ def receive_journal(request):
             iss = iss.filter(research__groups__pk=group)
 
         iss_list = collections.OrderedDict()  # Список исследований
-        k = "1"
+
+        k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
+
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
             iss_list[val.research.sort_weight] = val.research.title
 
@@ -348,30 +361,35 @@ def receive_journal(request):
             n += 1
             continue
 
-        if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
-            labs[k] = []
+        directions.add(iss[0].napravleniye.pk)
+        if return_type == "pdf":
+            if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+                labs[k] = []
 
-        if perpage - len(labs[k]) % perpage < len(iss_list):
-            pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
-            pre["researches"] = ""
-            for x in range(0, perpage - len(labs[k]) % perpage):
-                labs[k].append(pre)
-
-        for value in iss_list:  # Перебор списка исследований
-            labs[k].append(
-                {"type": v.type.tube.title, "researches": iss_list[value],
-                 "client-type": iss[0].napravleniye.client.type,
-                 "lab_title": iss[0].research.subgroup.title,
-                 "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
-                 "dir_id": iss[0].napravleniye.pk,
-                 "podr": iss[0].napravleniye.doc.podrazileniye.title,
-                 "receive_n": str(n),
-                 "tube_id": str(v.id),
-                 "direction": str(iss[0].napravleniye.pk),
-                 "history_num": iss[0].napravleniye.history_num,
-                 "fio": iss[
-                     0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+            if perpage - len(labs[k]) % perpage < len(iss_list):
+                pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
+                pre["researches"] = ""
+                for x in range(0, perpage - len(labs[k]) % perpage):
+                    labs[k].append(pre)
+            for value in iss_list:  # Перебор списка исследований
+                labs[k].append(
+                    {"type": v.type.tube.title, "researches": iss_list[value],
+                     "client-type": iss[0].napravleniye.client.type,
+                     "lab_title": iss[0].research.subgroup.title,
+                     "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
+                     "dir_id": iss[0].napravleniye.pk,
+                     "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                     "receive_n": str(n),
+                     "tube_id": str(v.id),
+                     "direction": str(iss[0].napravleniye.pk),
+                     "history_num": iss[0].napravleniye.history_num,
+                     "fio": iss[
+                         0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
         n += 1
+    directions = list(directions)
+    if return_type == "directions":
+        return HttpResponse(json.dumps(directions), content_type="application/json")
+
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)
 
@@ -392,11 +410,13 @@ def receive_journal(request):
         if doc_num >= 2:
             c.showPage()
 
+        nn = 0
+
         gid = "-1"
         for pg_num in p.page_range:
             pg = p.page(pg_num)
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group)
+                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1])
             data = []
             tmp = []
             for v in data_header:
@@ -405,7 +425,6 @@ def receive_journal(request):
             merge_list = {}
             num = 0
             lastid = "-1"
-
             for obj in pg.object_list:
                 tmp = []
                 if lastid != obj["tube_id"]:
@@ -420,7 +439,9 @@ def receive_journal(request):
                     merge_list[lastid].append(num)
 
                 if shownum:
-                    tmp.append(Paragraph("--" if obj["receive_n"] == "0" else obj["receive_n"], styleSheet["BodyText"]))
+                    nn += 1
+                    tmp.append(Paragraph(str(nn), styleSheet[
+                        "BodyText"]))  # "--" if obj["receive_n"] == "0" else obj["receive_n"], styleSheet["BodyText"]))
                     fio = obj["fio"]
                     if obj["history_num"] and len(obj["history_num"]) > 0:
                         fio += ", " + obj["history_num"]
@@ -486,13 +507,13 @@ def receive_journal(request):
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, lab="", group=-2):
+def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ГБОУ ВПО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "Журнал приема материала")
     group_str = "Все исследования"
@@ -504,11 +525,13 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab="", group=-2):
     else:
         group_str = "Без группы"
 
-    c.drawString(paddingx, h - 70, "Группа: %s" % group_str)
+    c.drawString(paddingx, h - 65, "Группа: %s" % group_str)
+
+    c.drawString(paddingx, h - 78, "Отделение: %s" % otd)
 
     c.setFont('OpenSans', 10)
     # c.drawString(paddingx * 3, h - 70, "№ " + str(doc_num))
-    c.drawRightString(w - paddingx, h - 70,
+    c.drawRightString(w - paddingx, h - 65,
                       "Дата: " + str(dateformat.format(date.today(), settings.DATE_FORMAT)))
 
     c.drawRightString(w - paddingx, 20, "Страница " + str(page) + " из " + str(pages))

@@ -30,10 +30,17 @@ def statistic_xls(request):
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
-    pk = request.REQUEST["pk"]  # Первичный ключ
-    tp = request.REQUEST["type"]  # Тип статистики
-    date_start = request.REQUEST["date-start"]  # Начало периода
-    date_end = request.REQUEST["date-end"]  # Конец периода
+    if request.method == "POST":
+        pk = request.POST["pk"]  # Первичный ключ
+        tp = request.POST["type"]  # Тип статистики
+        date_start = request.POST["date-start"]  # Начало периода
+        date_end = request.POST["date-end"]  # Конец периода
+    else:
+        pk = request.GET["pk"]  # Первичный ключ
+        tp = request.GET["type"]  # Тип статистики
+        date_start = request.GET["date-start"]  # Начало периода
+        date_end = request.GET["date-end"]  # Конец периода
+
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
            u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации

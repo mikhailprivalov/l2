@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^tubes', views.tubes),
     url(r'^directions_group', views.directions_group),
     url(r'^uets$', views.uets),
+    url(r'^with$', views.onlywith),
 ]

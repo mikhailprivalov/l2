@@ -512,9 +512,10 @@
             position: fixed;
             bottom: 0;
             text-align: center;
-            font-size: 10pt;
-            left: 33%;
-            right: 33%;
+            font-size: 9pt;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
             overflow: visible;
             word-break: keep-all;
             white-space: nowrap;
@@ -529,6 +530,27 @@
 
         .footer-float:hover {
             opacity: 0;
+        }
+
+        body {
+            padding-bottom: 20px;
+        }
+
+        .navbar-nav > li > a, .navbar-brand {
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .navbar-brand {
+            height: 16px !important;
+        }
+
+        .navbar-toggle {
+            padding: 3px 10px;
+        }
+
+        .navbar {
+            min-height: 16px !important;
         }
 
         .navbar-inverse .navbar-nav > .open > a {
@@ -856,12 +878,13 @@
         }
 
         .sk-fading-circle {
-            width: 28px;
-            height: 28px;
+            width: 20px;
+            height: 20px;
             position: relative;
             display: inline-block;
             vertical-align: middle;
             margin-top: 10px;
+            margin-bottom: 8px;
         }
 
         .sk-fading-circle .sk-circle {
@@ -1081,7 +1104,7 @@
         sup {font-size:xx-small; vertical-align:super;}
         .nav-loader{
             display: none;
-            max-height: 50px;
+            max-height: 36px;
             box-sizing: border-box;
         }
         .sloader .nav-loader{
@@ -1211,7 +1234,7 @@
                     <div class="sk-circle11 sk-circle"></div>
                     <div class="sk-circle12 sk-circle"></div>
                 </div>
-                <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;margin-top:10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
+                <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
             </div>
         </div>
     </nav>
@@ -1219,13 +1242,40 @@
     {% block content %}{% endblock %}
 {% block foot %}
     <div class="footer-float">
-        Клиники ГБОУ ВПО ИГМУ Минздрава РФ &copy; 2015 | ЛИС | <span id="clock"> 0:00:00</span>
+        Клиники ФГБОУ ВО ИГМУ Минздрава России | ЛИС | <span class='version'>{{ VERSION }}</span>
     </div>
 {% endblock %}
 </div>
-<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" >
+<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000" >
     <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10" id="contextNumber" class="form-control w50" /></label> <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt" /></label></a></li>
     <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со степенью</a></li>
+    <li class="divider context-st"></li>
+    <li class="context-st">
+        <div class="input-group" style="max-width: 450px">
+              <input type="text" class="noclick form-control" id="recalcValue" placeholder="Пересчитанное значение">
+              <span class="input-group-btn">
+                    <a action="addrecalc" class="btn btn-primary-nb">Дописать пересчет</a>
+              </span>
+        </div>
+    </li>
+    <li class="divider context-st"></li>
+    <li class="context-st">
+        <div class="input-group" style="max-width: 450px">
+            <span class="input-group-addon noclick">п</span>
+            <input type="text" class="noclick form-control" id="leicP" maxlength="3" placeholder="п">
+            <span class="input-group-addon noclick">c</span>
+            <input type="text" class="noclick form-control" id="leicS" maxlength="3" placeholder="c">
+            <span class="input-group-addon noclick">э</span>
+            <input type="text" class="noclick form-control" id="leicE" maxlength="3" placeholder="э">
+            <span class="input-group-addon noclick">м</span>
+            <input type="text" class="noclick form-control" id="leicM" maxlength="3" placeholder="м">
+            <span class="input-group-addon noclick">л</span>
+            <input type="text" class="noclick form-control" id="leicL" maxlength="3" placeholder="л">
+            <span class="input-group-btn">
+                <a action="addleic" class="btn btn-primary-nb">Ок</a>
+            </span>
+        </div>
+    </li>
     <li class="divider context-st"></li>
     <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
 </ul>
@@ -1234,8 +1284,8 @@
 <script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/bootstrap-select.js"></script>
 <script src="/static/js/bootbox.min.js"></script>
-<script src="/static/js/lang.ru.js"></script>
-<script src="/static/js/perfect-scrollbar.jquery.min.js"></script>
+<script src="/static/js/lang.ru.js?n=2"></script>
+<script src="/static/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jquery.isloading.min.js"></script>
 <script src="/static/js/jquery.scrollTo.js"></script>
@@ -1372,7 +1422,7 @@
         if (h < 10) h = " " + h;
         m = checkTime(m);
         s = checkTime(s);
-        document.getElementById('clock').innerHTML = h + ":" + m + ":" + s;
+        //document.getElementById('clock').innerHTML = h + ":" + m + ":" + s;
         var t = setTimeout(function () {
             startTime()
         }, 500);
@@ -1418,7 +1468,7 @@
     }
     $(document).ready(function () {
         $('.select-b').selectpicker();
-        startTime();
+        //startTime();
         $("#page-preloader").hide();
         $body.addClass("showloader");
         alive();
@@ -1429,7 +1479,7 @@
             menuSelected: function (invokedOn, selectedMenu) {
                 switch(selectedMenu.attr("action")){
                     case "clear":
-                            invokedOn.val("").typeahead('val', "").focus();
+                            invokedOn.val("").typeahead('val', "");
                         break;
                     case "addnum":
                             val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
@@ -1437,9 +1487,21 @@
                             $(invokedOn).typeahead('val', val);
                             $("#contextNumber").val(10);
                             $("#contextSt").val(1);
-                            invokedOn.focus();
+                        break;
+                    case "addrecalc":
+                            val = `${invokedOn.val()} (пересчитано ${$("#recalcValue").val()})`;
+                            $(invokedOn).val(val);
+                            $(invokedOn).typeahead('val', val);
+                            $("#recalcValue").val("");
+                        break;
+                    case "addleic":
+                            val = `${invokedOn.val()}п${$("#leicP").val()}\\с${$("#leicS").val()}\\э${$("#leicE").val()}\\м${$("#leicM").val()}\\л${$("#leicL").val()}`;
+                            $(invokedOn).val(val);
+                            $(invokedOn).typeahead('val', val);
+                            $("#leicP,#leicE,#leicL,#leicM,#leicS").val("");
                         break;
                 }
+                invokedOn.focus();
             }
         });
     });

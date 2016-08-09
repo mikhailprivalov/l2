@@ -28,3 +28,5 @@ pylint
 django-selenium
 msgpack-python
 pyaml
+docutils
+django-project-version

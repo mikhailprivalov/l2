@@ -91,7 +91,7 @@
                 <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
             <div id="scroll-tb" style="position: relative;padding-right: 15px ; ">
-                <table class="table table-bordered" id="history-tb"></table>
+                <table class="table table-bordered table-hover" id="history-tb"></table>
             </div>
             <div class="btn-group" style="margin-top: 10px">
                 <a href="/direction/researches/update/history/print" onclick="print_history();return false;" target="_blank" class="btn btn-primary-nb mw">Печать</a>
@@ -109,7 +109,7 @@
                 <h4 class="modal-title">Лист подтверждений</h4>
             </div>
             <div class="modal-body">
-                <table class="table table-bordered">
+                <table class="table table-bordered table-hover">
                     <thead><tr><th class="col-md-4">ФИО</th><th>№ напр.</th><th>№ пробирки</th><th>Тип пробирки</th><th style='width: 20px;text-align:right'><label><input class="allprint" type='checkbox' onchange='sync_checkboxes(this);' name='allprint2' checked /></label></th></tr></thead>
                     <tbody><tr><td style="text-align: center" colspan="5">загрузка...</td></tr></tbody>
                 </table>
@@ -186,6 +186,11 @@
                 save_research();
             });
         });
+
+        function toggle_check(th) {
+            $("[type=checkbox]", th).prop("checked", !$("[type=checkbox]", th).prop("checked"));
+        }
+
         function cancel_direction(){
             $("#can-dir").prop("disabled", true);
             sl();
@@ -211,7 +216,7 @@
                  $("#work-modal .allprint").prop("checked", true);
                  if(d.rows.length > 0) {
                      $.each(d.rows, function (k, v) {
-                         $("#work-modal tbody").append("<tr><td>{0}</td><td>{3}</td><td>{1}</td><td><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {4}'></div></div>{2}</div></div></td><td class='label-c'><label><input class='custom_print' checked type='checkbox' value='{1}' name='complete-res-fast'/></label></td></tr>".f(v.patient, v.pk, v.title, v.direction, v.color));
+                         $("#work-modal tbody").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td>{3}</td><td>{1}</td><td><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {4}'></div></div>{2}</div></div></td><td class='label-c'><label onclick='toggle_check(this);'><input class='custom_print' checked type='checkbox' value='{1}' name='complete-res-fast'/></label></td></tr>".f(v.patient, v.pk, v.title, v.direction, v.color));
                      });
                      $("#getconfirmbtn").prop("disabled", false);
                  }
@@ -303,7 +308,7 @@
                                     probirki[v.title] = 1
                                 else
                                     probirki[v.title]++;
-                                $("#researches-tb").append("<tr><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                                $("#researches-tb").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label onclick='toggle_check(this);'><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                             });
 
                             tmpstr = "";
@@ -442,11 +447,20 @@
                 });
             });
         }
+
+        var first_resize = true;
         function resize() {
-            $('#scroll-tb').height($(window).height() - 200);
-            $('#scroll-tb').perfectScrollbar();
-            $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 80);
-            $('#scroll-res').perfectScrollbar();
+            $('#scroll-tb').height($(window).height() - 165);
+            $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 65);
+            if (first_resize) {
+                $('#scroll-res').perfectScrollbar();
+                $('#scroll-tb').perfectScrollbar();
+                first_resize = true;
+            }
+            else {
+                $('#scroll-res').perfectScrollbar('update');
+                $('#scroll-tb').perfectScrollbar('update');
+            }
         }
         function sync_checkboxes(th){
             $table = $(th).parents(".table").first();

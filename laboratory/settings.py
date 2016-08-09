@@ -22,10 +22,13 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.admindocs',
     'debug_toolbar',
     'debug_panel',
     'django_jenkins',
     'cachalot',
+    'ajax_select',
+    'djversion',
     'clients',
     'users',
     'dashboard',
@@ -38,8 +41,7 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
-    'api',
-    'ajax_select'
+    'api'
 )
 
 LOGIN_REDIRECT_URL = '/'
@@ -54,6 +56,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
+    'django.contrib.admindocs.middleware.XViewMiddleware'
 )
 
 ROOT_URLCONF = 'laboratory.urls'
@@ -69,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'djversion.context_processors.version'
             ],
         },
     },
@@ -154,7 +158,7 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = '/home/lisuser/lis/static/'
-DEBUG = False
+DEBUG = True
 if DEBUG:
     STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
 '''
@@ -246,4 +250,13 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  )
 TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 
-DEBUG = True
+import time, datetime
+
+DJVERSION_VERSION = "1.0.0"
+__w = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+if os.path.exists(__w):
+    (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(__w)
+    mtime = datetime.datetime.fromtimestamp(mtime)
+    DJVERSION_UPDATED = mtime
+
+DJVERSION_FORMAT_STRING = '{version}'
