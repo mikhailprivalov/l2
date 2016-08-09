@@ -20,7 +20,7 @@ class DirectionsTests(TestCase):
         self.assertTrue(self.client.login(username='kamshekinaea', password='123456'))
 
         response = self.client.get('/dashboard/directions')
-        self.assertContains(response, 'Категория пациентов')
+        self.assertContains(response, 'Категория')
         self.assertTrue(clients.Importedclients.objects.filter(num="65222").exists())
         self.cl = clients.Importedclients.objects.get(num="65222")
 
@@ -31,25 +31,25 @@ class DirectionsTests(TestCase):
         self.assertContains(response, json.dumps("Общий анализ крови"))
 
         liq = dm.Napravleniya.gen_napravleniya_by_issledovaniya(self.cl.pk, str(uuid.uuid4()),
-                                                               "1", "",
-                                                               users.DoctorProfile.objects.get(
+                                                                "1", "",
+                                                                users.DoctorProfile.objects.get(
                                                                    user__username="promenashevate").pk,
-                                                               "poli", u.doctorprofile, [["63", "71", "65", "54", "56", "57", "66", "69",
+                                                                "poli", u.doctorprofile, [["63", "71", "65", "54", "56", "57", "66", "69",
                                                                          "70", "61", "64", "60", "58", "52", "154",
                                                                          "59", "55", "53", "67", "68"],
-                                                                        ["123", "131", "143", "130", "145", "134",
+                                                                                          ["123", "131", "143", "130", "145", "134",
                                                                          "133", "166", "165", "124", "172", "122",
                                                                          "142", "120", "115", "144", "129", "170",
                                                                          "169", "110", "111", "117", "126", "139",
                                                                          "118", "119", "136", "135", "132", "113",
                                                                          "114", "128", "127", "137", "121", "112",
                                                                          "140", "141", "138", "116", "125"],
-                                                                        ["84", "97", "82", "104", "83", "159", "162",
+                                                                                          ["84", "97", "82", "104", "83", "159", "162",
                                                                          "74", "76", "75", "158", "86", "73", "94",
                                                                          "78", "92", "93", "89", "96", "98", "81", "80",
                                                                          "161", "160", "91", "88", "87", "156", "95",
                                                                          "90", "106", "79", "167", "157", "77",
-                                                                         "85"]])
+                                                                                           "85"]], {})
         self.assertTrue(liq["r"])
         self.assertTrue(len(liq["list_id"]) > 0)
         for n in json.loads(liq["list_id"]):

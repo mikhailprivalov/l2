@@ -1,11 +1,11 @@
-#
+import sys, logging
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
-DEBUG = True
+DEBUG = False or 'debug' in sys.argv[1:]
 
 ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost']
 
@@ -13,7 +13,6 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-DEBUG = False
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -146,8 +145,6 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -157,10 +154,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
-STATIC_ROOT = '/home/lisuser/lis/static/'
-DEBUG = True
-if DEBUG:
-    STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
 '''
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
@@ -222,7 +218,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
-import sys, logging
 class DisableMigrations(object):
 
     def __contains__(self, item):
@@ -248,7 +243,7 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  'django_jenkins.tasks.run_pep8',
                  'django_jenkins.tasks.run_pyflakes'
                  )
-TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
+# TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 
 import time, datetime
 
