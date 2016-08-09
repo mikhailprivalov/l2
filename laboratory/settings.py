@@ -158,7 +158,7 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = '/home/lisuser/lis/static/'
-DEBUG = False
+DEBUG = True
 if DEBUG:
     STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
 '''
@@ -260,5 +260,3 @@ if os.path.exists(__w):
     DJVERSION_UPDATED = mtime
 
 DJVERSION_FORMAT_STRING = '{version}'
-
-DEBUG = True

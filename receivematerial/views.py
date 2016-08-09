@@ -297,12 +297,14 @@ def receive_journal(request):
     import pytz
     import copy
 
-    start = str(request.GET.get("start", "1"))
+    start = "1"  # str(request.GET.get("start", "1"))
     group = str(request.GET.get("group", "-2"))
     return_type = str(request.GET.get("return", "pdf"))
+    otd = str(request.GET.get("otd", "-1"))
 
     start = 1 if not start.isdigit() else int(start)
     group = -2 if group not in ["-2", "-1"] and (not group.isdigit() or not directory.ResearchGroup.objects.filter(pk=int(group)).exists()) else int(group)
+    otd = int(otd)
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
     pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
@@ -315,10 +317,17 @@ def receive_journal(request):
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-
-    tubes = TubesRegistration.objects.filter(
-        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-        time_recive__gte=datetime.now().date()).order_by('time_recive')
+    tubes = []
+    if otd <= -1:
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_recive__isnull=False).order_by(
+            'issledovaniya__napravleniye__client__pk')
+    elif otd > -1:
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk=otd, doc_recive__isnull=False).order_by(
+            'issledovaniya__napravleniye__client__pk')
 
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
@@ -401,6 +410,8 @@ def receive_journal(request):
         if doc_num >= 2:
             c.showPage()
 
+        nn = 0
+
         gid = "-1"
         for pg_num in p.page_range:
             pg = p.page(pg_num)
@@ -414,7 +425,6 @@ def receive_journal(request):
             merge_list = {}
             num = 0
             lastid = "-1"
-            nn = 0
             for obj in pg.object_list:
                 tmp = []
                 if lastid != obj["tube_id"]:

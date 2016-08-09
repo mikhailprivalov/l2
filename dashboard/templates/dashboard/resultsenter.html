@@ -484,7 +484,7 @@
                     }
                     else {
                         all_o = false;
-                        if (su)
+                        if (v.allow_disable_confirm)
                             deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
                     }
                     $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group}' onclick='load_form(${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
@@ -989,20 +989,35 @@
                 "url": "/dashboard/confirm_reset",
                 method: "POST",
                 data: {pk: id}
-            }).done(function () {
+            }).done(function (data) {
                 hl();
-                reload_fast();
-                $.amaran({
-                    'theme': 'awesome ok',
-                    'content': {
-                        title: 'Подтверждение сброшено',
-                        message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
-                        info: '',
-                        icon: 'glyphicon glyphicon-ok'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
+                if (data.ok) {
+                    reload_fast();
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Подтверждение сброшено',
+                            message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                } else {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: 'Ошибка',
+                            message: data.msg,
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+
+                }
             });
         }
     </script>

@@ -79,9 +79,15 @@ import datetime
 def loadready(request):
     """ Представление, возвращающее JSON со списками пробирок и направлений, принятых в лабораторию """
     result = {"tubes": [], "directions": []}
-    date_start = request.REQUEST["datestart"]
-    date_end = request.REQUEST["dateend"]
-    deff = int(request.REQUEST["def"])
+    if request.method == "POST":
+        date_start = request.POST["datestart"]
+        date_end = request.POST["dateend"]
+        deff = int(request.POST["def"])
+    else:
+        date_start = request.GET["datestart"]
+        date_end = request.GET["dateend"]
+        deff = int(request.GET["def"])
+
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
     tlist = []
@@ -1310,13 +1316,10 @@ def result_journal_print(request):
     styles["Normal"].fontName = "OpenSans"
     styles["Normal"].fontSize = 12
 
+    from collections import defaultdict
+    from reportlab.platypus import PageBreak
 
-    data = []
-    data_header = ["№", "ФИО", "Направление: Результаты"]
-    tmp = []
-    for v in data_header:
-        tmp.append(Paragraph(str(v), styles["Normal"]))
-    data.append(tmp)
+    otds = defaultdict(dict)
     clientresults = {}
     for iss in iss_list.order_by("napravleniye__client__family"):
         key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
@@ -1337,40 +1340,51 @@ def result_journal_print(request):
             if fres.exists():
                 clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(
                     fr.title + ": " + fres.first().value)
+        otds[iss.napravleniye.doc.podrazileniye.title][key] = clientresults[key]
     i = 0
-    clientresults = collections.OrderedDict(sorted(clientresults.items()))
-    for cleint_pk in clientresults.keys():
-        client = clientresults[cleint_pk]
-        data_tmp = ""
-        for dir_pk in client["directions"].keys():
-            i += 1
-            dir = client["directions"][dir_pk]
-            data_tmp += "Направление: " + str(dir_pk) + " | "
-            for research_pk in dir["researches"].keys():
-                research_obj = dir["researches"][research_pk]
-                if len(research_obj["res"]) == 1:
-                    data_tmp += research_obj["res"][0]
-                else:
-                    data_tmp += research_obj["title"] + ":" + "; ".join(research_obj["res"])
-                # data_tmp += ". "
-                data_tmp += "<br/>"
-        data.append([Paragraph('<font face="OpenSans" size="8">' + str(i) + "</font>", styles["Normal"]),
-                     Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
-                     Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
-    st = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                     ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                     ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                     ('LEFTPADDING', (0, 0), (-1, -1), 1),
-                     ('TOPPADDING', (0, 1), (-1, -1), 0),
-                     ('TOPPADDING', (0, 0), (-1, 0), 2),
-                     ('BOTTOMPADDING', (0, 0), (-1, 0), 3),
-                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                     ('BOTTOMPADDING', (0, 1), (-1, -1), 0), ])
-    tw = pw - 25 * mm
-    t = Table(data, colWidths=[tw * 0.05, tw * 0.15, tw * 0.8])
-    t.setStyle(st)
-    elements.append(t)
+    # clientresults = collections.OrderedDict(sorted(clientresults.items()))
+    for otd in otds.keys():
+        data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
+        tmp = []
+        data_header = ["№", "ФИО", "Направление: Результаты"]
+        for v in data_header:
+            tmp.append(Paragraph(str(v), styles["Normal"]))
+        data.append(tmp)
+        clientresults = collections.OrderedDict(sorted(otds[otd].items()))
+        for cleint_pk in clientresults.keys():
+            client = clientresults[cleint_pk]
+            data_tmp = ""
+            for dir_pk in client["directions"].keys():
+                i += 1
+                dir = client["directions"][dir_pk]
+                data_tmp += "Направление: " + str(dir_pk) + " | "
+                for research_pk in dir["researches"].keys():
+                    research_obj = dir["researches"][research_pk]
+                    if len(research_obj["res"]) == 1:
+                        data_tmp += research_obj["res"][0]
+                    else:
+                        data_tmp += research_obj["title"] + ":" + "; ".join(research_obj["res"])
+                    # data_tmp += ". "
+                    data_tmp += "<br/>"
+            data.append([Paragraph('<font face="OpenSans" size="8">' + str(i) + "</font>", styles["Normal"]),
+                         Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
+                         Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
+        st = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                         ('SPAN', (0, 0), (-1, 0)),
+                         ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                         ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                         ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                         ('TOPPADDING', (0, 2), (-1, -1), 0),
+                         ('TOPPADDING', (0, 0), (-1, 1), 2),
+                         ('BOTTOMPADDING', (0, 0), (-1, 1), 3),
+                         ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                         ('BOTTOMPADDING', (0, 2), (-1, -1), 0), ])
+        tw = pw - 25 * mm
+        t = Table(data, colWidths=[tw * 0.05, tw * 0.15, tw * 0.8])
+        t.setStyle(st)
+        elements.append(t)
+        elements.append(PageBreak())
     doc.multiBuild(elements, canvasmaker=FooterCanvas)
     pdf = buffer.getvalue()
     buffer.close()
@@ -1425,8 +1439,12 @@ def get_day_results(request):
     import datetime
     from datetime import timedelta
     from collections import defaultdict
-    researches = json.loads(request.REQUEST["researches"])
-    day = request.REQUEST["date"]
+    if request.method == "POST":
+        researches = json.loads(request.POST["researches"])
+        day = request.POST["date"]
+    else:
+        researches = json.loads(request.GET["researches"])
+        day = request.GET["date"]
     day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]),int(day.split(".")[0]))
     day2 = day1 + timedelta(days=1)
     directions = defaultdict(list)

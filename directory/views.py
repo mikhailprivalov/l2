@@ -105,7 +105,10 @@ def directory_researches(request):
 def directory_researches_list(request):
     """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
     return_result = []
-    lab_id = request.REQUEST["lab_id"]
+    if request.method == "POST":
+        lab_id = request.POST["lab_id"]
+    else:
+        lab_id = request.GET["lab_id"]
     researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     for research in researches:
         return_result.append(
@@ -176,11 +179,14 @@ def directory_toggle_hide_research(request):
     :return:
     """
     result = {}
-    pk = request.REQUEST["pk"]
+    if request.method == "POST":
+        pk = request.POST["pk"]
+    else:
+        pk = request.GET["pk"]
     research = Researches.objects.get(pk=int(pk))
     research.hide = not research.hide
     research.save()
-    slog.Log(key=request.REQUEST["pk"], type=19, body=json.dumps({"hide": research.hide}),
+    slog.Log(key=pk, type=19, body=json.dumps({"hide": research.hide}),
              user=request.user.doctorprofile).save()
     return HttpResponse(json.dumps({"status_hide": research.hide}), content_type="application/json")  # Создание JSON
 
@@ -193,7 +199,10 @@ def directory_copy_research(request):
     :param request:
     :return:
     """
-    pk = request.REQUEST["pk"]
+    if request.method == "POST":
+        pk = request.POST["pk"]
+    else:
+        pk = request.GET["pk"]
     research = Researches.objects.get(pk=int(pk))
     research.pk = None
     research.save()

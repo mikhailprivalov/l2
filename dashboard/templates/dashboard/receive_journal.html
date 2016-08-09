@@ -20,8 +20,7 @@
                     </select>
                 </div>
             </div>
-            <br/>
-            <div class="row">
+            <div class="row" style="margin-top: 5px">
                 <div class="col-xs-5">
                     <label for="start-from">Начать с </label>
                 </div>
@@ -31,7 +30,8 @@
             </div>
         </div>
         <div class="col-xs-3" style="display: flex">
-            <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch" onclick="window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}`, '_blank');">
+            <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch"
+                    onclick="window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=${$('#select-otd').val()}`, '_blank');">
                 Печать
             </button>
         </div>
@@ -41,7 +41,19 @@
 
         </div>
         <div class="col-xs-7">
-
+            <div class="row" style="margin-top: 5px">
+                <div class="col-xs-5">
+                    <label for="select-otd">Отделение</label>
+                </div>
+                <div class="col-xs-7">
+                    <select class="select-b" data-width="100%" id="select-otd">
+                        <option value="-1" selected>Все отделения</option>
+                        {% for p in podrazdeleniya %}
+                            <option value="{{ p.pk }}">{{ p.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
         </div>
         <div class="col-xs-3" style="display: flex">
             <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch; margin-top: 5px"
@@ -56,7 +68,7 @@
 {% block scripts %}
     <script>
         $(document).ready(function () {
-             $("#start-from").bind('keydown', 'return', function () {
+            $("#start-from").bind('keydown', 'return', function () {
                 $("#print-btn").click();
             });
         });
@@ -64,7 +76,7 @@
             sl();
             $.ajax({
                 method: "get",
-                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions`
+                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=${$('#select-otd').val()}`
             }).done(function (data) {
                 hl();
                 data.sort(sortNumber);
@@ -76,13 +88,13 @@
         }
     </script>
     <style>
-        .btn-blue-nb3, .btn-blue-nb3:active, .btn-blue-nb3:visited, .btn-blue-nb3:focus{
+        .btn-blue-nb3, .btn-blue-nb3:active, .btn-blue-nb3:visited, .btn-blue-nb3:focus {
             background: transparent;
             border: #049372 solid 2px;
             color: #049372
         }
 
-        .btn-blue-nb3:hover{
+        .btn-blue-nb3:hover {
             background: #049372;
             border: #049372 solid 2px;
             color: #fff
