@@ -5,7 +5,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
-DEBUG = False or 'debug' in sys.argv[1:]
+DEBUG = "DLIS" in os.environ
 
 ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost']
 
@@ -43,7 +43,6 @@ INSTALLED_APPS = (
     'api'
 )
 
-LOGIN_REDIRECT_URL = '/'
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -98,19 +97,19 @@ DATABASES = {
     }
 }
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'lis2',  # TODO: lis
-            'USER': 'postgres',
-            'PASSWORD': '123456',
-            # 'HOST': '192.168.122.45',
-            'HOST': '192.168.0.105',
-            # 'HOST': '127.0.0.1',
-            'PORT': '5432',
-        }
-    }
+# if DEBUG:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#             'NAME': 'lis2',  # TODO: lis
+#             'USER': 'postgres',
+#             'PASSWORD': '123456',
+#             # 'HOST': '192.168.122.45',
+#             'HOST': '192.168.0.105',
+#             # 'HOST': '127.0.0.1',
+#             'PORT': '5432',
+#         }
+#     }
 
 CACHES = {
     'default': {
