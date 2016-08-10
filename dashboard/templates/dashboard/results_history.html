@@ -2,13 +2,46 @@
 {% block title %}Аналитика и печать результатов{% endblock %}
 
 {% block content %}
+    <div class="row">
+        <div class="col-xs-4 col-xs-offset-4">
+            <div class="row">
+                <div class="col-xs-7" style="text-align: right;line-height: 1.26;">
+                    <label for="dateday-otd">
+                        Дата подтверждения результата:
+                    </label>
+                </div>
+                <div class="col-xs-5">
+                    <input type="text" class="form-control no-context" id="dateday-otd" style="display: inline-block"
+                           name="dateday-otd"/>
+                </div>
+            </div>
+            <div class="btn btn-blue-nb" style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
+                Печать результатов для отделения
+            </div>
+            <br/>
+            <div class="btn btn-blue-nb" style="display: inline-block;width: 100%">Печать результатов для пациентов
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         $(document).ready(function () {
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
 
+            $("[name='dateday-otd']").val(getFormattedDate(new Date())).datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true,
+                enableOnReadonly: true,
+                orientation: "top left"
+            });
         });
     </script>
     <style>
