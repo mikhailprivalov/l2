@@ -1,9 +1,16 @@
-from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from debug_panel.cache import cache
+
+import appconf.models as appconf
 
 
-class SettingManager(models.Manager):
-    def dict_for_object(self, object):
-        ct = ContentType.get_for_model(object)
-        pk = object.pk
-        return dict(self.filter(object_id=pk, content_type__id=ct.id).values_list('name', 'value'))
+class SettingManager:
+    def get(self, key):
+        value = ""
+        if not cache.get(key):
+            if appconf.Setting.objects.filter(name=key).exists():
+                row = appconf.Setting.objects.get(name=key)
+                value = row.nval()
+                cache.set(key, value, 60*60*8)
+        else:
+            value = cache.get(key)
+        return value
