@@ -1,4 +1,6 @@
 from django.conf.urls import url
+from django.views.generic import TemplateView
+
 from . import views
 
 urlpatterns = [
@@ -16,5 +18,5 @@ urlpatterns = [
     url(r'^view_logs$', views.load_logs),
     url(r'^users/count$', views.users_count),
     url(r'^users/ldap/dosync$', views.users_dosync),
-    url(r'^results_history$', views.results_history),
+    url(r'^results_history$', TemplateView.as_view(template_name="dashboard/results_history.html")),
 ]
