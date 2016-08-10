@@ -1,3 +1,4 @@
 from django.contrib import admin
+import appconf.models as appconf
 
-# Register your models here.
+admin.register(appconf.Setting)
