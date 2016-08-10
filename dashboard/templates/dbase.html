@@ -1190,7 +1190,7 @@
                             <li><a href="/dashboard">Главная</a></li>
                             <li><a href="/logout">Выход из профиля</a></li>
                             <li class="divider"></li>
-                            <li><a href="/directions/multiprint" target="_blank">Печать направлений</a></li>
+                            <li><a href="/dashboard/directions/multiprint" target="_blank">Печать направлений</a></li>
                             {% if request.user|has_group:"Получатель биоматериала" %}
                                 <li class="divider"></li>
                                 <li><a href="/dashboard/receive/one_by_one">Прием материала по одному</a></li>
@@ -1203,7 +1203,7 @@
                         <li><a href="/dashboard/directions">Направления</a></li>
                     {% endif %}
                     {% if request.user|has_group:"Заборщик биоматериала" %}
-                        <li><a href="/researches/control">Взятие материала</a></li>
+                        <li><a href="/dashboard/researches/control">Взятие материала</a></li>
                     {% endif %}
                     {% if request.user|has_group:"Получатель биоматериала" %}
                         <li><a href="/dashboard/receive">Прием материала</a></li>
