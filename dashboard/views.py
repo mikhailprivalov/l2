@@ -29,13 +29,16 @@ def dashboard(request):  # Представление панели управл�
     groups = [str(x) for x in request.user.groups.all()]
 
     if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
-        menu.append({"url": "/dashboard/directions", "title": "Направления и результаты", "keys": "Shift+n", "nt": False})
+        menu.append(
+            {"url": "/dashboard/directions", "title": "Направления и результаты", "keys": "Shift+n", "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append({"url": "/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
     if "Получатель биоматериала" in groups:
         menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
-        menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o", "nt": False})
-        menu.append({"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
+        menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
+                     "nt": False})
+        menu.append(
+            {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
     if "Врач-лаборант" in groups or "Лаборант" in groups:
         menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
         menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
@@ -44,7 +47,7 @@ def dashboard(request):  # Представление панели управл�
         menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
     if "Просмотр статистики" in groups:
         menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
-    #if "Лечащий врач" in groups or "Зав. отделением" in groups:
+    # if "Лечащий врач" in groups or "Зав. отделением" in groups:
     #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
 
     if request.user.is_superuser:
@@ -68,7 +71,9 @@ def view_log(request):
     types = []
     for t in slog.Log.TYPES:
         types.append({"pk": t[0], "val": t[1]})
-    return render(request, 'dashboard/manage_view_log.html', {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+    return render(request, 'dashboard/manage_view_log.html',
+                  {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+
 
 @csrf_exempt
 @login_required
@@ -83,7 +88,6 @@ def load_logs(request):
     else:
         check_new = int(request.GET["checknew"])
         states = json.loads(request.GET["searchdata"])
-
 
     if check_new == 0:
         if request.method == "POST":
@@ -101,8 +105,10 @@ def load_logs(request):
         if states["pk"] != "-1":
             obj = obj.filter(key__contains=states["pk"])
 
-        for row in obj[offset:size+offset]:
-            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username, "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(), "time": str(row.time)}
+        for row in obj[offset:size + offset]:
+            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
+                          "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
+                          "time": str(row.time)}
             result["data"].append(tmp_object)
     else:
 
@@ -119,6 +125,7 @@ def load_logs(request):
 
     result["s"] = states
     return HttpResponse(json.dumps(result), content_type="application/json")
+
 
 # @cache_page(60 * 15)
 @login_required
@@ -296,10 +303,10 @@ def dashboard_from(request):
     i = 0
     for podr in podrazdeleniya:
         i += 1
-        #tubes = TubesRegistration.objects.filter(doc_get__isnull=False, doc_get__podrazileniye=podr)
+        # tubes = TubesRegistration.objects.filter(doc_get__isnull=False, doc_get__podrazileniye=podr)
         result[i] = {"tubes": 0, "title": podr.title, "pk": podr.pk}
 
-        #for t in tubes:
+        # for t in tubes:
         #   if not t.doc_get is None and not t.rstatus() and t.notice == "":
         #        result[podr.pk]["tubes"] += 1
 
