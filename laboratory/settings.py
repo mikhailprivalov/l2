@@ -62,7 +62,7 @@ ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -160,9 +160,9 @@ FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
 
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'templates'),
-)
+# TEMPLATE_DIRS = (
+#    os.path.join(BASE_DIR, 'templates'),
+# )
 
 AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 
