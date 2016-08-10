@@ -31,6 +31,9 @@ def dashboard(request):  # Представление панели управл�
     if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
         menu.append(
             {"url": "/dashboard/directions", "title": "Направления и результаты", "keys": "Shift+n", "nt": False})
+        menu.append(
+            {"url": "/dashboard/results_history", "title": "Аналитика и печать результатов", "keys": "Shift+i",
+             "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append({"url": "/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
     if "Получатель биоматериала" in groups:
