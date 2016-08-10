@@ -3,8 +3,6 @@ from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
-# from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
-#     users_dosync, dir_multiprint, dashboard_from, view_log, load_logs, confirm_reset, receive_journal_form
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
@@ -23,7 +21,6 @@ from directory.views import directory_researches, directory_research, directory_
 from statistic.views import statistic_page, statistic_xls
 import api.urls as api_urls
 import barcodes.urls as barcodes_urls
-import dashboard.urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
 
@@ -59,17 +56,14 @@ urlpatterns = [
                   url(r'^directory/researches/update_mode$', directory_researches_update_mode),
                   url(r'^directory/researches/update_template$', researches_update_template),
                   url(r'^researches/ajax/search$', ajax_search_res),
-                  url(r'^researches/get/one', researches_get_one),
-
-                  url(r'^dashboard/$', dashboard.urls),
-
+                  url(r'^researches/get/one$', researches_get_one),
+                  url(r'^dashboard/', include('dashboard.urls')),
                   url(r'^dashboard/receive$', receive),
                   url(r'^dashboard/receive/one_by_one$', receive_obo),
                   url(r'^dashboard/receive/last_received$', last_received),
                   url(r'^dashboard/receive/execlist$', receive_execlist),
                   url(r'^dashboard/receive/history$', receive_history),
                   url(r'^dashboard/receive/journal$', receive_journal),
-                  url(r'^dashboard/', admin.site.urls),
                   url(r'^tubes/get', tubes_get),
                   url(r'^results/search', results_search),
                   url(r'^results/enter', enter),
