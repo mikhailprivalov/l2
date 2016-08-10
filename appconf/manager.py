@@ -4,7 +4,9 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    def get(self, key):
+
+    @staticmethod
+    def get(key):
         value = ""
         if not cache.get(key):
             if appconf.Setting.objects.filter(name=key).exists():
