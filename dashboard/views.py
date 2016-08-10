@@ -1,6 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 
+import datetime
 from astm.tests.test_server import null_dispatcher
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -14,7 +15,6 @@ from researches.models import Tubes
 from django.views.decorators.cache import cache_page
 from laboratory.decorators import group_required
 import slog.models as slog
-import simplejson as json
 from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
@@ -30,9 +30,9 @@ def dashboard(request):  # Представление панели управл�
 
     if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
         menu.append(
-            {"url": "/dashboard/directions", "title": "Направления и результаты", "keys": "Shift+n", "nt": False})
+            {"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
         menu.append(
-            {"url": "/dashboard/results_history", "title": "Аналитика и печать результатов", "keys": "Shift+i",
+            {"url": "/dashboard/results_history", "title": "Печать результатов", "keys": "Shift+i",
              "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append(
@@ -295,6 +295,33 @@ def users_count(request):
     result = {"all": 0, "ldap": 0}
     result["all"] = User.objects.all().count()
     result["ldap"] = DoctorProfile.objects.filter(isLDAP_user=True).count()
+
+    return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@login_required
+def results_history_search(request):
+    result = []
+    type = request.GET.get("type", "otd")
+    day = request.GET.get("date", datetime.datetime.today().strftime('%d.%m.%Y'))
+
+    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+    day2 = day1 + datetime.timedelta(days=1)
+    import directions.models as d
+    if type == "otd":
+        collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                                issledovaniya__time_confirmation__range=(day1, day2),
+                                                doc__podrazileniye=request.user.doctorprofile.podrazileniye)
+    else:
+        collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                                issledovaniya__time_confirmation__range=(day1, day2),
+                                                doc=request.user.doctorprofile)
+
+    for dir in collect.order_by("doc", "client"):
+        dpk = dir.pk
+        if all([x.doc_confirmation is not None for x in d.Issledovaniya.objects.filter(napravleniye__pk=dpk)]):
+            if dpk not in result:
+                result.append(dpk)
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 

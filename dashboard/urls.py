@@ -19,4 +19,5 @@ urlpatterns = [
     url(r'^users/count$', views.users_count),
     url(r'^users/ldap/dosync$', views.users_dosync),
     url(r'^results_history$', TemplateView.as_view(template_name="dashboard/results_history.html")),
+    url(r'^results_history/search$', views.results_history_search),
 ]

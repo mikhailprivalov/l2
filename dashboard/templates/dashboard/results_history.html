@@ -1,5 +1,5 @@
 {% extends "dbase.html" %}
-{% block title %}Аналитика и печать результатов{% endblock %}
+{% block title %}Печать результатов{% endblock %}
 
 {% block content %}
     <div class="row">
@@ -15,11 +15,13 @@
                            name="dateday-otd"/>
                 </div>
             </div>
-            <div class="btn btn-blue-nb" style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
+            <div class="btn btn-blue-nb" onclick="print_results('otd');"
+                 style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
                 Печать результатов для отделения
             </div>
             <br/>
-            <div class="btn btn-blue-nb" style="display: inline-block;width: 100%">Печать результатов для пациентов
+            <div class="btn btn-blue-nb" onclick="print_results('pac');" style="display: inline-block;width: 100%">
+                Печать результатов для пациентов
             </div>
         </div>
     </div>
@@ -43,6 +45,51 @@
                 orientation: "top left"
             });
         });
+        function chunk(arr, len) {
+            var chunks = [],
+                    i = 0,
+                    n = arr.length;
+
+            while (i < n) {
+                chunks.push(arr.slice(i, i += len));
+            }
+
+            return chunks;
+        }
+
+        function print_results(type) {
+            sl();
+            $.ajax({
+                url: "/dashboard/results_history/search",
+                data: {type: type, date: $("[name='dateday-otd']").val()},
+                method: "GET"
+            }).done(function (data) {
+                hl();
+                if (data.length == 0) {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: "Печать невозможна",
+                            message: "Ничего не найдено",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                } else {
+                    c = chunk(data, 155);
+                    for (var k = 0; k < c.length; k++) {
+                        (function (e) {
+                            setTimeout(function () {
+                                st = "?pk=[" + c[e].join(",") + "]";
+                                window.open('/results/pdf' + st, '_blank');
+                            }, 1000 * e);
+                        })(k);
+                    }
+                }
+            });
+        }
     </script>
     <style>
 
