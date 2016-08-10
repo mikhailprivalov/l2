@@ -27,7 +27,7 @@ INSTALLED_APPS = (
     'django_jenkins',
     'cachalot',
     'ajax_select',
-    'djversion',
+    #'djversion',
     'clients',
     'users',
     'dashboard',
