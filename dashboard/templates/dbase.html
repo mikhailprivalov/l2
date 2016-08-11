@@ -1242,7 +1242,9 @@
     {% block content %}{% endblock %}
 {% block foot %}
     <div class="footer-float">
-        Клиники ФГБОУ ВО ИГМУ Минздрава России | ЛИС | <span class='version'>{{ VERSION }}</span>
+        {% load setting %}
+        {% s_get "org_title" as org_title %}
+        {{ org_title }} | ЛИС | <span class='version'>{{ VERSION }}</span>
     </div>
 {% endblock %}
 </div>

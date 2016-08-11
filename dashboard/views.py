@@ -7,6 +7,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User, Group
+
+from appconf.manager import SettingManager
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
@@ -166,14 +168,14 @@ def confirm_reset(request):
                 0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
             ctime = int(time.time())
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
-            if (ctime - ctp < 15 * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser:
+            if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser:
                 predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 result = {"ok": True}
                 slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
             else:
-                result["msg"] = "Сброс подтверждения разрешен в течении 15 минут"
+                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 

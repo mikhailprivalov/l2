@@ -14,6 +14,7 @@ from django.conf import settings
 from django.utils import dateformat
 import slog.models as slog
 from reportlab.pdfbase import pdfdoc
+from appconf.manager import SettingManager
 
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -478,9 +479,9 @@ def result_print(request):
                         height=20 * mm, anchor="nw")
 
             c.setFont('OpenSans', 7)
-            c.drawString(pxr(56), py(21), "Клиники ФГБОУ ВО ИГМУ Минздрава России")
-            c.drawString(pxr(45), py(23.7), "факультетские-клиники.рф")
-            c.drawString(pxr(42), py(26.4), "тел.: 28-08-08, 28-08-09")
+            c.drawString(pxr(56), py(21), SettingManager.get("org_title"))
+            c.drawString(pxr(45), py(23.7), SettingManager.get("org_www"))
+            c.drawString(pxr(42), py(26.4), SettingManager.get("org_phones"))
 
             c.setFont('Consolas', 10)
 
@@ -512,9 +513,9 @@ def result_print(request):
             c.drawRightString(pxr(), py(30), "Отделение: " + dir.doc.podrazileniye.title)
 
             c.setFont('OpenSans', 8)
-            c.drawString(px(), py(25), "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+            c.drawString(px(), py(25), SettingManager.get("org_title"))
             c.drawString(px(), py(28), "г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809")
-            c.drawString(px(), py(31), "http://факультетские-клиники.рф")
+            c.drawString(px(), py(31), SettingManager.get("org_www"))
             '''
             #iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__pk", "research__sort_weight")
 
@@ -1072,9 +1073,9 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     last_iss = napr.issledovaniya_set.filter(time_confirmation__isnull=False).order_by("-time_confirmation").first()
 
     c.setFont('OpenSans', 10)
-    c.drawCentredString(w / 4 + s, h - 18, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+    c.drawCentredString(w / 4 + s, h - 18, SettingManager.get("org_title"))
     c.setFont('OpenSans', 8)
-    c.drawCentredString(w / 4 + s, h - 28, "(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
+    c.drawCentredString(w / 4 + s, h - 28, "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),)) #"(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
     c.setFont('OpenSans', 10)
     c.drawString(paddingx + s, h - 42, "Результаты анализов")
 

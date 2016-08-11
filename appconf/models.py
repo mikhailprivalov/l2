@@ -23,6 +23,6 @@ class Setting(models.Model):
 
     def save(self, *args, **kwargs):
         super(Setting, self).save(*args, **kwargs)
-        from django.core.cache import cache
-        cache.delete(self.name)
-        cache.set(self.name, self.nval(), 60 * 60 * 8)
+        #from django.core.cache import cache
+        #cache.delete(self.name)
+        #cache.set(self.name, self.nval(), 60 * 60 * 8)

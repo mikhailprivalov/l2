@@ -20,6 +20,7 @@ from reportlab.pdfgen import canvas
 import directory.models as directory
 import slog.models as slog
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
+from appconf.manager import SettingManager
 
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -344,11 +345,11 @@ def printDirection(c, n, dir):
 
     c.setFont('OpenSans', 10)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn,
-                        "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+                        SettingManager.get("org_title"))
 
     c.setFont('OpenSans', 8)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn,
-                        "(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
+                        "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
 
     c.setFont('OpenSans', 14)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление")
@@ -880,7 +881,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "АКТ приема-передачи емкостей с биоматериалом")
 
@@ -1010,6 +1011,7 @@ def get_issledovaniya(request):
                             time.mktime(issledovaniye.time_confirmation.timetuple()))) + 8 * 60 * 60
                         ctime = int(time.time())
                         cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
+                        rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                         res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                                      "research_pk": issledovaniye.research.pk,
                                                      "sort": issledovaniye.research.sort_weight,
@@ -1025,12 +1027,12 @@ def get_issledovaniya(request):
                                                      "doc_save_id": doc_save_id,
                                                      "current_doc_save": current_doc_save,
                                                      "allow_disable_confirm": ((
-                                                                               ctime - ctp < 15 * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser) and confirmed,
+                                                                               ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser) and confirmed,
                                                      "ctp": ctp,
                                                      "ctime": ctime,
                                                      "ctime_ctp": ctime - ctp,
-                                                     "ctime_ctp_t": ctime - ctp < 15 * 60,
-                                                     "period_sec": 15 * 60,
+                                                     "ctime_ctp_t": ctime - ctp < rt,
+                                                     "period_sec": rt,
                                                      "group": groups[tb]
                                                      })
                 import collections

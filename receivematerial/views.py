@@ -15,6 +15,8 @@ from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 import slog.models as slog
 import directory.models as directory
+from appconf.manager import SettingManager
+
 
 @csrf_exempt
 @login_required
@@ -513,7 +515,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2):
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "Журнал приема материала")
     group_str = "Все исследования"
