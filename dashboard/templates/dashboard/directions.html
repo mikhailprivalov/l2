@@ -93,9 +93,9 @@
                     </div>
                     <div class="col-xs-4">
                         <select class="select-b" data-width="100%" id="select-doc">
-                        {% for v in docs %}
-                            <option value="{{ v.pk }}">{{ v.get_fio }}</option>
-                        {% endfor %}
+                            {% for v in docs %}
+                                <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 {% endif %}
@@ -153,12 +153,11 @@
                             <option value="4">Выписаные исполнителем</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><h6><br/></h6>
+                    <div class="col-md-2"><h6><br/></h6>
                         <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb btn-ell"
-                                style="width: 100%">Обновить список
-                        </button>
+                                style="width: 100%" title="Обновить список"><i class="fa fa-refresh"></i></button>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <h6><br/></h6>
                         <div class="btn-group btn-group-justified">
                             <div class="btn btn-blue-nb"
@@ -167,6 +166,9 @@
                             <div class="btn btn-blue-nb"
                                  title="Печать штрих-кодов"
                                  onclick="batch_print_bc();return false;"><i class="fa fa-barcode"></i></div>
+                            <div class="btn btn-blue-nb"
+                                 title="Печать результатов"
+                                 onclick="batch_print_results();return false;"><i class="fa fa-file-text-o"></i></div>
                             <div class="btn btn-blue-nb"
                                  title="Экспорт сводной таблицы по выбранным направлениям"
                                  onclick="batch_table_print();return false;"><i class="fa fa-table"></i></div>
@@ -391,19 +393,27 @@
                     </label>
                 </div>
                 <div class="modal-footer" style="text-align: right">
-                    <button type="button" id="comment-ok" class="btn btn-primary-nb" style="margin-bottom: 5px; width: 40%!important;" data-dismiss="modal">Ок</button><br/>
-                    <button type="button" class="btn btn-default" style="width: 40%" data-dismiss="modal">Не добавлять комментарий</button>
+                    <button type="button" id="comment-ok" class="btn btn-primary-nb"
+                            style="margin-bottom: 5px; width: 40%!important;" data-dismiss="modal">Ок
+                    </button>
+                    <br/>
+                    <button type="button" class="btn btn-default" style="width: 40%" data-dismiss="modal">Не добавлять
+                        комментарий
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-<ul id="contextMenuResearches" class="dropdown-menu" role="menu" style="display:none" >
-    <li><a class="noclick" id="conextTitle"></a></li>
-    <li class="divider"></li>
-    <li><a class="noclick" onclick="return false;"><label>Комментарий:<input type="text" maxlength="9" id="contentComment" value="" class="form-control no-context" /></label></a></li>
-    <li><a action="savecomment" onclick="return false;" tabindex="-1" href="#">Ок</a></li>
-</ul>
+    <ul id="contextMenuResearches" class="dropdown-menu" role="menu" style="display:none">
+        <li><a class="noclick" id="conextTitle"></a></li>
+        <li class="divider"></li>
+        <li><a class="noclick" onclick="return false;"><label>Комментарий:<input type="text" maxlength="9"
+                                                                                 id="contentComment" value=""
+                                                                                 class="form-control no-context"/></label></a>
+        </li>
+        <li><a action="savecomment" onclick="return false;" tabindex="-1" href="#">Ок</a></li>
+    </ul>
 
 {% endblock %}
 
@@ -466,25 +476,25 @@
         var comments = {};
 
         function get_research_from_cache(pk) {
-            for(var lab in researches_cache){
+            for (var lab in researches_cache) {
                 var result = $.grep(researches_cache[lab], function (e) {
                     return e.pk == pk;
                 });
-                if(result.length > 0){
+                if (result.length > 0) {
                     return result[0];
                 }
             }
         }
-        function open_add_comment_window(pk){
+        function open_add_comment_window(pk) {
             $("#comments-select").html("");
             res = get_research_from_cache(pk);
-            $.each(material_types[res.comment_template], function(k,v){
+            $.each(material_types[res.comment_template], function (k, v) {
                 $("#comments-select").append(`<option value="${k}">${v}</option>`);
             });
             $("#comment-ok").attr("onclick", `set_comment(${pk});`);
             $("#comments-modal").modal("show");
         }
-        function set_comment(pk){
+        function set_comment(pk) {
             res = get_research_from_cache(pk);
             comments[pk] = material_types[res.comment_template][parseInt($("#comments-select").val())];
             sync(true);
@@ -496,13 +506,12 @@
             $(".btn").removeClass("active-b");
             var elements = document.querySelectorAll("input[name='sel']:checked");
             Array.prototype.forEach.call(elements, function (el, i) {
-                if(!(el.value in comments)){
+                if (!(el.value in comments)) {
                     res = get_research_from_cache(el.value);
-                    if(res.comment_template >= 0 && material_types[res.comment_template].length == 1)
-                    {
+                    if (res.comment_template >= 0 && material_types[res.comment_template].length == 1) {
                         comments[el.value] = material_types[res.comment_template][0];
                     }
-                    else if(material_types[res.comment_template].length > 1 && checkedall.indexOf(parseInt(el.value)) == -1){
+                    else if (material_types[res.comment_template].length > 1 && checkedall.indexOf(parseInt(el.value)) == -1) {
                         open_add_comment_window(el.value);
                     }
                 }
@@ -532,11 +541,11 @@
 
             });
             Split(['#a', '#b'], {
-                    gutterSize: 8,
-                    cursor: 'col-resize',
-                    minSize: 200,
-                    onDrag: resize
-                });
+                gutterSize: 8,
+                cursor: 'col-resize',
+                minSize: 200,
+                onDrag: resize
+            });
 
             Split(['#c', '#d'], {
                 direction: 'vertical',
@@ -610,17 +619,17 @@
             $.contextMenu2({
                 elementSelector: ".h-d",
                 menuSelector: "#contextMenuResearches",
-                onopen: function(invokedOn, menu){
+                onopen: function (invokedOn, menu) {
                     $comment = parseInt($(invokedOn).attr("ctemplate"));
                     $d = $("#contentComment");
                     $d.typeahead('destroy');
 
                     $("#conextTitle").text($(invokedOn).text());
                     $("#contentComment").val("");
-                    if($(invokedOn).is("[comment]"))
+                    if ($(invokedOn).is("[comment]"))
                         $("#contentComment").val($(invokedOn).attr("comment"));
 
-                    if($comment >= 0) {
+                    if ($comment >= 0) {
                         var ft = $.map(material_types[$comment], function (item) {
                             return {value: item};
                         });
@@ -636,6 +645,7 @@
                         function typeValsDefaults(q, sync) {
                             sync(typeVals.get(material_types[$comment]));
                         }
+
                         $val = $d.val();
                         $d.typeahead({
                             minLength: 0,
@@ -652,15 +662,15 @@
                     $d.focus();
                 },
                 menuSelected: function (invokedOn, selectedMenu) {
-                    switch(selectedMenu.attr("action")){
+                    switch (selectedMenu.attr("action")) {
                         case "savecomment":
                             $(invokedOn).attr("comment", $("#contentComment").val().trim());
-                            if($(invokedOn).attr("comment") == "")
-                                    $(invokedOn).removeAttr("comment");
+                            if ($(invokedOn).attr("comment") == "")
+                                $(invokedOn).removeAttr("comment");
                             $("#contentComment").val("");
 
                             comments = {};
-                            $.each($(".h-d[comment]"), function(k,v){
+                            $.each($(".h-d[comment]"), function (k, v) {
                                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
                             });
                             break;
@@ -776,7 +786,7 @@
                 var last = keys[keys.length - 1];
                 $.each(v, function (key, val) {
                     $("#selected-" + k).append(`<span class='h-d' pk='${val}' onclick=\"rem(` + k + "," + key + `);\" ctemplate='${get_research_from_cache(val).comment_template}'>` + dict[val] + "</span>");
-                    if(comments[val] && comments[val] != ""){
+                    if (comments[val] && comments[val] != "") {
                         $(`.h-d[pk='${val}']`).attr("comment", comments[val])
                     }
                     if (key != last)
@@ -797,7 +807,7 @@
             };
 
             comments = {};
-            $.each($(".h-d[comment]"), function(k,v){
+            $.each($(".h-d[comment]"), function (k, v) {
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
             });
 
@@ -888,7 +898,7 @@
                 $("input[value='" + id + "']").change();
 
                 comments = {};
-                $.each($(".h-d[comment]"), function(k,v){
+                $.each($(".h-d[comment]"), function (k, v) {
                     comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
                 });
             }
@@ -1044,7 +1054,7 @@
             if (client_id == -1 || active_lab == -1) return;
             $("#table-researches").html("");
             $("#table-researches").append(lang.table_researches_header);
-            if(active_lab in researches_cache){
+            if (active_lab in researches_cache) {
                 show_researches(active_lab);
                 return;
             }
@@ -1060,9 +1070,9 @@
                 show_researches(active_lab);
             });
         }
-        function show_researches(lab){
+        function show_researches(lab) {
             data = [];
-            if(lab in researches_cache){
+            if (lab in researches_cache) {
                 data = researches_cache[lab];
             }
             if (data.length == 0) {
@@ -1194,7 +1204,7 @@
             {% endif %}
             $("#f .ctrl").attr('disabled', 1);
             comments = {};
-            $.each($(".h-d[comment]"), function(k,v){
+            $.each($(".h-d[comment]"), function (k, v) {
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
             });
             $.ajax({
@@ -1300,6 +1310,28 @@
             });
             window.open('/directions/pdf?napr_id=' + JSON.stringify(print_array), '_blank');
         }
+
+        function batch_print_results() {
+            if ($(".batch-print:checked").length < 1) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Печать не возможна",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            var print_array = [];
+            $.each($(".batch-print:checked"), function (k, v) {
+                print_array.push(parseInt($(v).attr("pk")));
+            });
+            window.open('/results/pdf?pk=' + JSON.stringify(print_array), '_blank');
+        }
         function batch_print_bc() {
             if ($(".batch-print:checked").length < 1) {
                 $.amaran({
@@ -1368,16 +1400,21 @@
                     if (d.directions.length == 0 && d.other_dirs.length == 0) {
                         $("#results_m_list").html("Ничего не найдено");
                     } else {
-                        var types = {0: "Забор материала не выполнен", 1: "Забор материала выполнен", 2: "Материал принят лабораторией", 3: "Исследования отложены"};
+                        var types = {
+                            0: "Забор материала не выполнен",
+                            1: "Забор материала выполнен",
+                            2: "Материал принят лабораторией",
+                            3: "Исследования отложены"
+                        };
                         $("#results_m_list").html("");
-                        if(d.directions.length > 0) {
+                        if (d.directions.length > 0) {
                             $("#results_m_list").append("Результаты найдены в следующих направлениях:<br/>");
                             d.directions.reverse();
                             $.each(d.directions, function (k, v) {
                                 $("#results_m_list").append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
                             });
                         }
-                        if(d.other_dirs.length > 0) {
+                        if (d.other_dirs.length > 0) {
                             d.other_dirs.reverse();
                             $("#results_m_list").append("Найдены незавершенные направления:<br/>");
                             $.each(d.other_dirs, function (k, v) {
@@ -1420,18 +1457,22 @@
             font-weight: normal;
             background-color: #fff;
         }
-        .h-d{
+
+        .h-d {
             padding: 1px;
             display: inline-block;
         }
+
         .h-d[comment]:after {
             content: " [" attr(comment) "]";
             color: #049372;
             font-weight: 600;
         }
-        .h-d:hover{
+
+        .h-d:hover {
             outline: 1px solid #bbb
         }
+
         .btn-sm.btn-blue-nb {
             margin: 2px;
             width: 105px;
@@ -1616,23 +1657,24 @@
             display: block;
             position: relative;
         }
-    .modal-c {
-  text-align: center;
-}
 
-@media screen and (min-width: 768px) {
-  .modal-c:before {
-    display: inline-block;
-    vertical-align: middle;
-    content: " ";
-    height: 100%;
-  }
-}
+        .modal-c {
+            text-align: center;
+        }
 
-.modal-c .modal-dialog {
-  display: inline-block;
-  text-align: left;
-  vertical-align: middle;
-}
+        @media screen and (min-width: 768px) {
+            .modal-c:before {
+                display: inline-block;
+                vertical-align: middle;
+                content: " ";
+                height: 100%;
+            }
+        }
+
+        .modal-c .modal-dialog {
+            display: inline-block;
+            text-align: left;
+            vertical-align: middle;
+        }
     </style>
 {% endblock %}
