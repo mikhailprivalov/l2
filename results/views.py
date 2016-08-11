@@ -157,9 +157,9 @@ def results_save(request):
                 fraction_result.iteration = 1  # Установка итерации
                 fraction_result.save()  # Сохранение
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
-            from datetime import datetime
+            from django.utils import timezone
 
-            issledovaniye.time_save = datetime.now()  # Время сохранения
+            issledovaniye.time_save = timezone.now()  # Время сохранения
             issledovaniye.save()
             result = {"ok": True}
 
@@ -178,9 +178,9 @@ def result_confirm(request):
             pk=int(request.POST["pk"]))  # Загрузка исследования из запроса и выборка из базы данных
         if issledovaniye.doc_save:  # Если исследование сохранено
             issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
-            from datetime import datetime
+            from django.utils import timezone
             from statistic.models import Uet
-            issledovaniye.time_confirmation = datetime.now()  # Время подтверждения
+            issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
             slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
             Uet.add(request.user.doctorprofile,issledovaniye.research,issledovaniye.napravleniye.pk)
@@ -200,9 +200,9 @@ def result_confirm_list(request):
             issledovaniye = Issledovaniya.objects.get(pk=int(pk))
             if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
-                from datetime import datetime
+                from django.utils import timezone
 
-                issledovaniye.time_confirmation = datetime.now()  # Время подтверждения
+                issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
                 issledovaniye.save()
         result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")
