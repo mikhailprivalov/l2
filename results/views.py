@@ -427,11 +427,11 @@ def result_print(request):
 
         c = canvas.Canvas(buffer, pagesize=A4)
         w, h = A4
-
+        lmargin = 55 * mm
         marginx = 5 * mm
         marginy = 10*mm
 
-        pw = w - marginx - 55 * mm
+        pw = w - marginx - lmargin
         ph = h-marginy*2
 
         def py(y=0.0):
@@ -440,7 +440,7 @@ def result_print(request):
 
         def px(x=0.0):
             x *= mm
-            return x+marginx
+            return x + lmargin
 
         def pxc(x=0.0):
             x *= mm
@@ -475,13 +475,13 @@ def result_print(request):
             iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__direction_id", "research__pk",
                                                                                "research__sort_weight")
 
-            c.drawImage(PROJECT_ROOT + '/../static/img/cliches.jpg', pxr(54), py(18), preserveAspectRatio=True,
+            c.drawImage(PROJECT_ROOT + '/../static/img/cliches.jpg', pxr(3.5), py(18), preserveAspectRatio=True,
                         height=20 * mm, anchor="nw")
 
             c.setFont('OpenSans', 7)
-            c.drawString(pxr(56), py(21), SettingManager.get("org_title"))
-            c.drawString(pxr(45), py(23.7), SettingManager.get("org_www"))
-            c.drawString(pxr(42), py(26.4), SettingManager.get("org_phones"))
+            c.drawString(pxr(5.5), py(21), SettingManager.get("org_title"))
+            c.drawString(pxr(-5.5), py(23.7), SettingManager.get("org_www"))
+            c.drawString(pxr(-8.5), py(26.4), SettingManager.get("org_phones"))
 
             c.setFont('Consolas', 10)
 
