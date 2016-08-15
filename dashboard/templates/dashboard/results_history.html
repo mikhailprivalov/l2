@@ -47,7 +47,12 @@
                     </div>
                     <div class="row" style="margin-top: 17px">
                         <div class="col-xs-12">
-                            <input class="form-control" type="text" placeholder="Введите поисковый запрос"/>
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="search-field" placeholder="Введите поисковый запрос"/>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск</button>
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 17px">
@@ -63,7 +68,7 @@
                                            autocomplete="off"> Стационар
                                 </label>
                                 <label class="btn btn-blue-nb btn-ell active" title="Не учитывать категорию">
-                                    <input type="radio" checked name="type" id="option3" value="no"
+                                    <input type="radio" checked name="type" id="option3" value="*"
                                            autocomplete="off"> Не учитывать категорию
                                 </label>
                             </div>
@@ -107,6 +112,30 @@
             </div>
         </div>
     </div>
+    <div class="row local_nav">
+        <a href="#"><i class="fa fa-angle-double-left" aria-hidden="true"></i></a>
+        <a href="#"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
+        <a href="#"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
+        <a href="#"><i class="fa fa-angle-double-right" aria-hidden="true"></i></a>
+        1 из 3
+    </div>
+    <div id="dirs-list">
+        <table class="table table-hover table-bordered floatThead">
+            <thead>
+                <tr>
+                    <th style="width: 6%">№</th>
+                    <th style="width: 50%">ФИО</th>
+                    <th style="width: 14%">Дата рождения</th>
+                    <th style="width: 10%">№ карты</th>
+                    <th style="width: 10%">Число направлений</th>
+                    <th style="width: 10%">Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
 
 {% endblock %}
 
@@ -128,7 +157,26 @@
             });
             $(".year").val((new Date().getFullYear()));
             change_type();
+            $(window).resize(function () {
+                resize();
+            });
+            resize();
         });
+
+        function search(query){
+            $("#dirs-list tbody").html("");
+            for(var i = 0; i < 40; i++){
+                $("#dirs-list tbody").append("<tr>" +
+                        `<td>${i}</td>` +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>");
+            }
+            //$.ajax({method: "GET", url: "/results/search/directions"})
+        }
 
         function checkType(tr) {
             if (tr) {
@@ -163,6 +211,25 @@
 
             return chunks;
         }
+        var first_resize = true;
+
+        function resize() {
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 20);
+            if (first_resize) {
+                $('#dirs-list').perfectScrollbar();
+                first_resize = false;
+            }
+            else {
+                $('#dirs-list').perfectScrollbar('update');
+            }
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
+        }
 
         function print_results(type) {
             sl();
@@ -185,7 +252,7 @@
                         delay: 6000
                     });
                 } else {
-                    c = chunk(data, 155);
+                    c = chunk(data, 200);
                     for (var k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
@@ -200,10 +267,34 @@
     </script>
     <style>
 
+        .floatThead th {
+            background: #fff;
+        }
+
         .active {
             background-color: #656D78 !important;
             color: #fff !important;
         }
 
+        .local_nav {
+            margin: 0;
+            cursor: default;
+        }
+        #dirs-list{
+            position: relative;
+            padding-right: 13px;
+
+        }
+        #dirs-list tbody tr{
+            cursor: pointer;
+        }
+        .local_nav a {
+            margin: 3px;
+            padding: 5px;
+        }
+
+        .panel-flt {
+            margin-bottom: 5px;
+        }
     </style>
 {% endblock %}
