@@ -3,25 +3,107 @@
 
 {% block content %}
     <div class="row">
-        <div class="col-xs-4 col-xs-offset-4">
-            <div class="row">
-                <div class="col-xs-7" style="text-align: right;line-height: 1.26;">
-                    <label for="dateday-otd">
-                        Дата подтверждения результата:
-                    </label>
-                </div>
-                <div class="col-xs-5">
-                    <input type="text" class="form-control no-context" id="dateday-otd" style="display: inline-block"
-                           name="dateday-otd"/>
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-4" style="padding-right: 3px;">
+                            <select class="selectpicker" data-width="100%" id="search-type" onchange="change_type();">
+                                <option value="d">За день</option>
+                                <option value="m">За месяц</option>
+                                <option value="y">За год</option>
+                            </select>
+                        </div>
+                        <div class="col-xs-8">
+                            <div class="hide-panel" id="d-controls">
+                                <input type="text" class="form-control no-context" id="dateday-type"
+                                       name="dateday-type"/>
+                            </div>
+                            <div class="hide-panel row" id="m-controls">
+                                <div class="col-xs-6" style="padding-right: 3px;">
+                                    <select class="selectpicker" data-width="100%" id="m-type">
+                                        <option value="1">Январь</option>
+                                        <option value="2">Февраль</option>
+                                        <option value="3">Март</option>
+                                        <option value="4">Апрель</option>
+                                        <option value="5">Май</option>
+                                        <option value="6">Июнь</option>
+                                        <option value="7">Июль</option>
+                                        <option value="8">Август</option>
+                                        <option value="9">Сентябрь</option>
+                                        <option value="10">Октябрь</option>
+                                        <option value="11">Ноябрь</option>
+                                        <option value="12">Декабрь</option>
+                                    </select>
+                                </div>
+                                <div class="col-xs-6">
+                                    <input type="number" class="form-control year" value="" min="2015" max="2100"/>
+                                </div>
+                            </div>
+                            <div class="hide-panel" id="y-controls">
+                                <input type="number" class="form-control year" value="" min="2015" max="2100"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-12">
+                            <input class="form-control" type="text" placeholder="Введите поисковый запрос"/>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-12">
+                            <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                <label class="btn btn-blue-nb btn-ell" title="Поликлиника">
+                                    <input type="radio" name="type" id="option1" value="poli"
+                                           autocomplete="off">
+                                    Поликлиника
+                                </label>
+                                <label class="btn btn-blue-nb btn-ell" title="Стационар">
+                                    <input type="radio" name="type" id="option2" value="stat"
+                                           autocomplete="off"> Стационар
+                                </label>
+                                <label class="btn btn-blue-nb btn-ell active" title="Не учитывать категорию">
+                                    <input type="radio" checked name="type" id="option3" value="no"
+                                           autocomplete="off"> Не учитывать категорию
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="btn btn-blue-nb" onclick="print_results('otd');"
-                 style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
-                Печать результатов для отделения
-            </div>
-            <br/>
-            <div class="btn btn-blue-nb" onclick="print_results('pac');" style="display: inline-block;width: 100%">
-                Печать результатов для пациентов
+        </div>
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;">
+                            <label for="dateday-otd">
+                                Дата подтверждения результата:
+                            </label>
+                        </div>
+                        <div class="col-xs-6">
+                            <input type="text" class="form-control no-context" id="dateday-otd"
+                                   style="display: inline-block"
+                                   name="dateday-otd"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;"><br/>
+                            <b>Печать результатов:</b>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="btn btn-blue-nb" onclick="print_results('otd');"
+                                 style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
+                                Для отделения
+                            </div>
+                            <br/>
+                            <div class="btn btn-blue-nb" onclick="print_results('pac');"
+                                 style="display: inline-block;width: 100%">
+                                Для пациентов <br/>данного пользователя
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -35,7 +117,7 @@
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
 
-            $("[name='dateday-otd']").val(getFormattedDate(new Date())).datepicker({
+            $("[name='dateday-otd'],[name='dateday-type']").val(getFormattedDate(new Date())).datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
                 language: "ru",
@@ -44,7 +126,32 @@
                 enableOnReadonly: true,
                 orientation: "top left"
             });
+            $(".year").val((new Date().getFullYear()));
+            change_type();
         });
+
+        function checkType(tr) {
+            if (tr) {
+                tmp = $('input[name=type]:checked').val();
+                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                    search($('#search-field').val());
+                }
+            }
+            type = $('input[name=type]:checked').val();
+            if (type == "stat") {
+                $("#history-num-tr").show();
+            }
+            else {
+                $("#ballast").show();
+            }
+        }
+
+        function change_type() {
+            $(".hide-panel").hide();
+            v = $("#search-type").val();
+            $(`#${v}-controls`).show();
+        }
+
         function chunk(arr, len) {
             var chunks = [],
                     i = 0,
@@ -92,6 +199,11 @@
         }
     </script>
     <style>
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
 
     </style>
 {% endblock %}

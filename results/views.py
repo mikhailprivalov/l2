@@ -57,7 +57,10 @@ def results_search(request):
 @group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     """ Представление для страницы ввода результатов """
-    return render(request, 'dashboard/resultsenter.html')
+
+    from podrazdeleniya.models import Podrazdeleniya
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya})
 
 
 @login_required
@@ -1443,18 +1446,31 @@ def get_day_results(request):
     if request.method == "POST":
         researches = json.loads(request.POST["researches"])
         day = request.POST["date"]
+        otd = request.POST.get("otd", "-1")
     else:
         researches = json.loads(request.GET["researches"])
         day = request.GET["date"]
+        otd = request.GET.get("otd", "-1")
+
     day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]),int(day.split(".")[0]))
     day2 = day1 + timedelta(days=1)
     directions = defaultdict(list)
-    for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
-                                           issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-                                           issledovaniya__research_id__in=researches).order_by("pk"):
+    otd = int(otd)
 
-        if dir.pk not in directions[dir.doc.podrazileniye.title]:
-            directions[dir.doc.podrazileniye.title].append(dir.pk)
+    if otd == -1:
+        for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
+                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                               issledovaniya__research_id__in=researches).order_by("client__pk"):
+
+            if dir.pk not in directions[dir.doc.podrazileniye.title]:
+                directions[dir.doc.podrazileniye.title].append(dir.pk)
+    else:
+        for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
+                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                               issledovaniya__research_id__in=researches, doc__podrazileniye__pk=otd).order_by("client__pk"):
+            if dir.pk not in directions[dir.doc.podrazileniye.title]:
+                directions[dir.doc.podrazileniye.title].append(dir.pk)
+
     return HttpResponse(json.dumps({"directions": directions}), content_type="application/json")
 
 

@@ -86,8 +86,10 @@
     </div>
     <div class="col-xs-3" style="margin-top: -10px">
         <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
-            <a href="#" onclick="print_results(); return false;" id="result-print" disabled class="btn btn-sm btn-primary-nb">Печать результатов</a>
-            <a href="#" onclick="confirm_results(); return false;" id="result-confirm" disabled class="btn btn-sm btn-primary-nb">Подтвердить результаты</a>
+            <a href="#" onclick="print_results(); return false;" id="result-print" disabled
+               class="btn btn-sm btn-primary-nb">Печать результатов</a>
+            <a href="#" onclick="confirm_results(); return false;" id="result-confirm" disabled
+               class="btn btn-sm btn-primary-nb">Подтвердить результаты</a>
         </div>
         <table class="table table-bordered" id="dir_info">
             <tr>
@@ -149,8 +151,8 @@
                     <br/>
                     <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
                         <input type="text" class="input-sm form-control no-context" name="date-start"/>
-                    <span class="input-group-addon"
-                          style="background-color: #fff;color: #000">&mdash;</span>
+                        <span class="input-group-addon"
+                              style="background-color: #fff;color: #000">&mdash;</span>
                         <input type="text" class="input-sm form-control no-context" name="date-end"/>
                     </div>
                     <div style="height: 400px">
@@ -255,9 +257,22 @@
                                     </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
-                                    onclick="dayprint_do();return false;">Печать результатов за выбранную дату
-                            </button>
+                            <br/>
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <select class="selectpicker" data-width="100%" style="width: 100%" id="print-results-otd">
+                                        <option value="-1">Все отделения</option>
+                                        {% for v in podrazdeleniya %}
+                                            <option value='{{ v.pk }}'>{{ v.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="dayprint_do();return false;">Печать результатов за выбранную дату
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-xs-2"></div>
                     </div>
@@ -402,7 +417,7 @@
                     return;
                 }
 
-                if(!noclear){
+                if (!noclear) {
                     $("#search-field").val("");
                 }
                 {% comment %}
@@ -444,7 +459,7 @@
                 });
 
                 tmp_types = {"1": "направление", "0": "пробирка"};
-                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type+""],id));
+                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type + ""], id));
 
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
@@ -893,7 +908,7 @@
             sl();
             $.ajax({
                 url: "/results/day",
-                data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches)}
+                data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches), otd: $("#print-results-otd").val()}
             }).done(function (data) {
                 lockdeff = false;
                 if (Object.keys(data.directions).length > 0) {
@@ -1267,7 +1282,6 @@
             color: #E08A1E
         }
 
-
         .no-tube {
             font-weight: 500;
             font-size: 10pt;
@@ -1365,12 +1379,12 @@
             border-left: 3px #e74c3c solid !important;
         }
 
-        .select-tube{
+        .select-tube {
             transition: .3s linear all;
         }
 
-        .select-tube.active{
-            border-left-width: 8px!important;
+        .select-tube.active {
+            border-left-width: 8px !important;
         }
 
         li.tb-group-1.active {
@@ -1429,12 +1443,23 @@
             border-bottom: 1px solid #e74c3c !important;
         }
 
-        #search-field:focus::-webkit-input-placeholder { color:transparent; }
-        #search-field:focus:-moz-placeholder { color:transparent; }
-        #search-field:focus::-moz-placeholder { color:transparent; }
-        #search-field:focus:-ms-input-placeholder { color:transparent; }
+        #search-field:focus::-webkit-input-placeholder {
+            color: transparent;
+        }
 
-        #result-form th{
+        #search-field:focus:-moz-placeholder {
+            color: transparent;
+        }
+
+        #search-field:focus::-moz-placeholder {
+            color: transparent;
+        }
+
+        #search-field:focus:-ms-input-placeholder {
+            color: transparent;
+        }
+
+        #result-form th {
             padding: 2px 2px 2px 8px;
         }
     </style>
