@@ -584,6 +584,8 @@
                     checked[active_lab] = [];
                 load_researches();
             });
+            $("#clients-base").val(Object.keys(clients_bases)[0]);
+            $("#clients-base").selectpicker('refresh');
 
             // TODO: DYNAMIC IT
             var templates = {
