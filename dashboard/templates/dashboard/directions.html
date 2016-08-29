@@ -775,6 +775,9 @@
                 });
                 $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
                 $("#results-modal").modal();
+                if(!data.full){
+                    alert("Результаты подтверждены не полностью. Данные могут быть изменены");
+                }
                 lock_show_results = false;
             });
         }
