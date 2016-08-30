@@ -10,7 +10,7 @@
                         <h5 style="margin-bottom: 4px;margin-top: 2px;    font-size: 16px;" class="btn-ell">
                             Категория:</h5>
                         <div>
-                            <select data-width="100%" id="clients-base" class="select-b"></select>
+                            <select data-width="100%" id="clients-base" onchange="checkType(true)" class="select-b"></select>
                         </div>
 {#                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-bottom: 13px">#}
 {#                            <label class="btn btn-blue-nb btn-ell" title="Поликлиника">#}
@@ -41,7 +41,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row" style=" margin: 0; margin-top: -2px; padding: 0;margin-bottom: 4px;">
+                <div class="row" style="padding: 0;margin: 5px 0 4px;">
                     <table class="col-xs-12 table table-bordered table-condensed table-responsive"
                            style="table-layout: fixed;margin: 0; padding: 0">
                         <tr>
@@ -701,12 +701,12 @@
 
         function checkType(tr) {
             if (tr) {
-                tmp = $('input[name=type]:checked').val();
+                tmp = $('#clients-base').val();
                 if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
                     search($('#search-field').val());
                 }
             }
-            type = $('input[name=type]:checked').val();
+            type = $('#clients-base').val();
             $("#history-num-tr").hide();
             $("#ballast").hide();
             if (type == "stat") {
@@ -967,7 +967,7 @@
                 {
                     $.each(data, function (key, val) { // Перебор результатов
                         $("#results-data").append("<a href='#' onclick='$(\"#res-modal\").modal(\"hide\");return show_res("
-                                + key + "," + val.pk + ");'>" + types[val.fields.type] + " | Карта №" + val.fields.num + " | "
+                                + key + "," + val.pk + ");'>" + clients_bases[val.fields.type] + " | Карта №" + val.fields.num + " | "
                                 + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
                                 + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
                     });
@@ -1033,7 +1033,7 @@
             num = fields.num;
             // Установка полей таблицы карты пациента
 
-            $("#card-type").text(types[type]);
+            $("#card-type").text(clients_bases[type]);
             $("#card-num").text(num);
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);
@@ -1438,7 +1438,7 @@
                             d.other_dirs.reverse();
                             $("#results_m_list").append("Найдены незавершенные направления:<br/>");
                             $.each(d.other_dirs, function (k, v) {
-                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, types[v.type], v.date));
+                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, clients_bases[v.type], v.date));
                             });
                         }
 
