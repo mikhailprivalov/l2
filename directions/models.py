@@ -26,6 +26,9 @@ class TubesRegistration(models.Model):
 
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия пробирки среди дня в лаборатории')
 
+    def __str__(self):
+        return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
+
     def day_num(self, doc, num):
         new_t = False
         if not self.rstatus():
@@ -134,6 +137,9 @@ class Napravleniya(models.Model):
     doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print", help_text='Профиль, который был использован при печати')
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления')
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
+
+    def __str__(self):
+        return "%d для пациента %s (врач %s, выписал %s)" % (self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
 
     @staticmethod
     def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
@@ -318,6 +324,9 @@ class Issledovaniya(models.Model):
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование')
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
 
+    def __str__(self):
+        return "%d %s" % (self.napravleniye.pk, self.research.title)
+
     def is_get_material(self):
         """
         Осуществлен ли забор всего материала для исследования
@@ -342,3 +351,119 @@ class Result(models.Model):
     fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования')
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
+    is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
+
+    def get_is_norm(self):
+        norm = self.calc_normal()
+        if self.is_normal != norm:
+            self.save()
+        return norm
+
+    def save(self, *args, **kw):
+        self.is_normal = self.calc_normal()
+        super(Result, self).save(*args, **kw)
+
+    def calc_normal(self):
+        import operator
+        from functools import reduce
+        trues = {True: ["полож.", "положительно", "да"], False: ["отриц.", "отрицательно", "нет"]}
+        signs = {">": [">", "более"], "<": ["<", "до"]}
+
+        calc = "maybe"
+
+        value = self.value
+        sex = self.issledovaniye.napravleniye.client.sex.lower()
+        age = self.issledovaniye.napravleniye.client.age()
+
+        ref_m = self.fraction.ref_m
+        ref_f = self.fraction.ref_f
+        if isinstance(ref_m, str):
+            ref_m = json.loads(ref_m)
+        if isinstance(ref_f, str):
+            ref_f = json.loads(ref_f)
+        if not ref_m:
+            ref_m = {}
+        if not ref_f:
+            ref_f = {}
+
+        ref = ref_f
+        if sex == "м":
+            ref = ref_m
+
+        def isnum(r):
+            return r.replace(".", "", 1).isdigit()
+
+        def val_normalize(v: str):
+            import re
+            tmp = re.findall("\d+\,\d+", v)
+            for t in tmp:
+                v = v.replace(t, t.replace(",", "."))
+            tmp = re.findall("\d+\.\d+", v)
+            if len(tmp) == 0:
+                tmp = re.findall('\d+', v)
+                if len(tmp) == 0:
+                    return False
+            return tmp[-1]
+
+        def rigths(r):
+            if r == "все" or r == "":
+                return 0, 200
+            spl = r.split("-")
+            if len(spl) == 2 and spl[0].isdigit() and spl[1].isdigit():
+                return int(spl[0]), int(spl[1])
+            return False
+
+        def rigths_v(r):
+            trues_vars = [x for x in trues.values()]
+            trues_vars = reduce(operator.add, trues_vars)
+            if any([x in r for x in trues_vars]):
+                return r in trues[True]
+            spl = r.split("-")
+            if len(spl) == 2 and isnum(spl[0]) and isnum(spl[1]):
+                return (float(spl[0]), float(spl[1]))
+            signs_vars = [x for x in signs.values()]
+            signs_vars = reduce(operator.add, signs_vars)
+            if any([x in r for x in signs_vars]):
+                val_r = val_normalize(r)
+                if not val_r:
+                    val_r = "0.0"
+                if any([x in r for x in signs["<"]]):
+                    return (0.0, float(val_r) - 0.00001)
+                else:
+                    import math
+                    return (float(val_r) + 0.00001, math.inf)
+            return ""
+
+        def test_value(right, value):
+            if isinstance(right, bool):
+                return value.lower() in trues[right]
+            if right == "":
+                return True
+            if isinstance(right, tuple) and len(right) == 2:
+                if isinstance(right[0], float) and isinstance(right[1], float):
+                    value = val_normalize(value)
+                    if not isinstance(right, bool):
+                        return right[0] <= float(value) <= right[1]
+
+            return False
+
+        def clc(r, val):
+            result = "normal"
+            for k in r.keys():
+                tmp_result = "normal"
+                rigth = rigths(k.strip().lower())
+
+                if not rigth:
+                    tmp_result = "maybe"
+                elif rigth[0] <= age <= rigth[1]:
+                    rigth_v = rigths_v(r[k].strip().lower())
+                    test_v = test_value(rigth_v, val)
+                    if not test_v:
+                        tmp_result = "not_normal"
+                if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
+                    result = tmp_result
+            return result
+
+        calc = clc(ref, value)
+        return calc
+

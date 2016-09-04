@@ -174,7 +174,7 @@ def receive_execlist(request):
                                                                                                 date1, date2),
                                                                                                 research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye).exists():
             research = directory.Researches.objects.get(pk=pk)
-            fractions = [x.title for x in directory.Fractions.objects.filter(research=research)]
+            fractions = [x.title for x in directory.Fractions.objects.filter(research=research).order_by("sort_weight")]
             tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
                                                                     doc_recive=request.user.doctorprofile,
                                                                     issledovaniya__research=research).order_by(
@@ -351,8 +351,11 @@ def receive_journal(request):
             iss = iss.filter(research__groups__pk=group)
 
         iss_list = collections.OrderedDict()  # Список исследований
-
-        k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
+        k = "_"
+        if v.doc_get:
+            k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
+        else:
+            k = str(iss.first().napravleniye.doc.podrazileniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazileniye)
 
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
             iss_list[val.research.sort_weight] = val.research.title

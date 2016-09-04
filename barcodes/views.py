@@ -49,7 +49,7 @@ def tubes(request):
     buffer = BytesIO()
     pdfdoc.PDFInfo.title = 'Barcodes'
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm))
-    dt = {"poli": "Поликлиника", "stat": "Стационар"}
+    dt = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стом."}
     if istubes:
         direction_id = set([x.napravleniye.pk for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
     for d in direction_id:

@@ -330,15 +330,15 @@
         </div>
     </div>
     <div class="modal fade" id="results-modal">
-        <div class="modal-dialog" style="min-width: 50%;    width: auto; max-width: 85%">
+        <div class="modal-dialog" style="width: 900px">
             <div class="modal-content" style="width: auto">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title">Результаты анализов</h4>
                 </div>
-                <div class="modal-body" id="results-body" style="width: auto">
-                    <table style="width: 100%">
+                <div class="modal-body" id="results-body">
+                    <table style="width: 680px">
                         <tr>
                             <td style="text-align: left" id="res-dir-num">№ <span></span></td>
                             <td style="text-align: center"></td>
@@ -355,7 +355,7 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table ct" id="results-tb" style="width: 100%">
+                    <table class="table ct" id="results-tb"  style="width: 600px">
                         <thead>
                         <tr>
                             <th style="padding: 2px">Исследование</th>
@@ -371,12 +371,11 @@
                 </div>
                 <div class="modal-footer">
                     <div class='row'>
-                        <div class="col-md-3"></div>
-                        <div class="col-md-3"><a href="#" onclick="selectText('results-body');return false;"
+                        <div class="col-md-4"><a href="#" onclick="selectText('results-tb');return false;"
                                                  class="btn btn-primary-nb btn-blue-nb">Выделить результаты</a></div>
-                        <div class="col-md-3"><a href="/results/pdf?pk=[614]" target="_blank"
+                        <div class="col-md-4"><a href="/results/pdf?pk=[614]" target="_blank"
                                                  class="btn btn-primary-nb print-b">Печать результатов</a></div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть
                             </button>
                         </div>
@@ -720,6 +719,7 @@
         function show_results(rpk) {
             if (lock_show_results) return;
             lock_show_results = true;
+            sl();
             $("#results-modal #res-dir-num span").text("");
             $("#results-modal #res-date").text("");
             $("#results-modal #res-fio").text("");
@@ -749,32 +749,45 @@
                             ref = JSON.parse(v.fractions[key_v].ref_m);
                         ref_array = []
                         $.each(ref, function (key, value) {
-                            ref_array.push("{0} : {1}".f(key, value));
+                            if(value != ""){
+                                if(key.toLowerCase() != "все")
+                                    ref_array.push("{0} : {1}".f(key, value));
+                                else
+                                    ref_array.push("{0}".f(value));
+                            }
                         });
-                        ref_str = ref_array.join(" | ");
+                        ref_str = ref_array.join("<br/>");
                         $("#results-modal .ct tbody").append("<tr><td><b>{0}</b></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v.title, v.fractions[key_v].result, v.fractions[key_v].units, ref_str));
                     }
                     else if (Object.keys(v.fractions).length > 1) {
-                        td_str = "";
-                        td2_str = "";
-                        td3_str = "";
-                        td4_str = "";
+                        td_str = td2_str = td3_str = td4_str = "<br/>";
                         $.each(v.fractions, function (kk, vv) {
                             ref = JSON.parse(vv.ref_f);
                             if (data.client.sex.toLowerCase().trim() == "м")
                                 ref = JSON.parse(vv.ref_m);
-                            ref_array = []
+                            ref_array = [];
                             $.each(ref, function (key, value) {
-                                ref_array.push("{0} : {1}".f(key, value));
+                                if(value != ""){
+                                    if(key.toLowerCase() != "все")
+                                        ref_array.push("{0} : {1}".f(key, value));
+                                    else
+                                        ref_array.push("{0}".f(value));
+                                }
                             });
-                            ref_str = ref_array.join(" | ");
-                            td_str += "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title + "<br/>";
-                            td2_str += vv.result + "<br/>";
-                            td3_str += vv.units + "<br/>";
+                            ref_str = ref_array.join("<br/>");
+                            br_str = "";
+                            for(var io = 0; io < ref_array.length; io++){
+                                br_str += "<br/>";
+                            }
+                            if(br_str == ""){
+                                br_str = "<br/>";
+                            }
+                            td_str += "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title + br_str;
+                            td2_str += vv.result + br_str;
+                            td3_str += vv.units + br_str;
                             td4_str += ref_str + "<br/>";
                         });
-                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b><br/>{1}</td><td><br/>{2}</td><td><br/>{3}</td><td><br/>{4}</td></tr>".f(v.title, td_str, td2_str, td3_str, td4_str));
-
+                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.title, td_str, td2_str, td3_str, td4_str));
                     }
                 });
                 $("#results-modal .ct td, #results-modal .ct th").css({
@@ -782,12 +795,14 @@
                     padding: 2,
                     fontSize: 14
                 });
+                $('#results-modal .ct').find('*').css({"lineHeight": 1.2, "fontSize": 14});
                 $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
                 $("#results-modal").modal();
                 if(!data.full){
                     alert("Результаты подтверждены не полностью. Данные могут быть изменены");
                 }
                 lock_show_results = false;
+                hl();
             });
         }
 

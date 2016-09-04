@@ -91,44 +91,41 @@
             <a href="#" onclick="confirm_results(); return false;" id="result-confirm" disabled
                class="btn btn-sm btn-primary-nb">Подтвердить результаты</a>
         </div>
-        <table class="table table-bordered" id="dir_info">
+        <table class="table table-bordered table-condensed" id="dir_info">
             <tr>
-                <td style="width: 150px">№ Направления</td>
-                <td id="dir_num"></td>
+                <th style="width: 34%">Направление</th>
+                <td style="width: 16%"><span class="dir-datafield" id="dir_num"></span></td>
+                <th style="width: 34%">Ист.фин.</th>
+                <td style="width: 16%"><span class="dir-datafield" id="fin_source"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Ист. фин.</td>
-                <td id="fin_source"></td>
+                <th style="width: 34%">ФИО Пациента</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="dir_client_fio"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">ФИО Пациента</td>
-                <td id="dir_client_fio"></td>
+                <th style="width: 34%">Пол</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_sex"></span></td>
+                <th style="width: 34%">Возраст</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_vozrast"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Пол</td>
-                <td id="client_sex"></td>
+                <th style="width: 34%">Карта</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_cardnum"></span></td>
+                <th style="width: 34%">История</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_hisnum"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Номер карты</td>
-                <td id="client_cardnum"></td>
+                <th style="width: 34%">Лечащий врач</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Номер истории</td>
-                <td id="client_hisnum"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Возраст</td>
-                <td id="client_vozrast"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Лечащий врач</td>
-                <td id="directioner"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Отделение</td>
-                <td id="otd"></td>
+                <th style="width: 34%">Отделение</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="otd"></span></td>
             </tr>
         </table>
+        <div class="fastlinks" id="loaded-buttons" style="min-height: 20px">
+            <a href="#" onclick="open_fill_form();return false;">Заполнить поля</a>
+        </div>
         <div id="issledovaniya-scroll">
             <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
             <ul id="issledovaniya"></ul>
@@ -260,7 +257,8 @@
                             <br/>
                             <div class="row">
                                 <div class="col-xs-6">
-                                    <select class="selectpicker" data-width="100%" style="width: 100%" id="print-results-otd">
+                                    <select class="selectpicker" data-width="100%" style="width: 100%"
+                                            id="print-results-otd">
                                         <option value="-1">Все отделения</option>
                                         {% for v in podrazdeleniya %}
                                             <option value='{{ v.pk }}'>{{ v.title }}</option>
@@ -296,12 +294,50 @@
             </div>
         </div>
     </div>
+    <div id="fillform-modal" class="modal fade" role="dialog" aria-labelledby="fillform-modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="fillform-modalLabel">Заполнение полей</h3></div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <label style="width: 100%">
+                                Пробирка:<br/><select class="form-control" style="width: 100%" id="fillform-tubes"></select>
+                            </label>
+                        </div>
+                        <div class="col-xs-6">
+                            <label style="width: 100%">
+                                Текст заполнения:<br/>
+                                <input type="text" style="width: 100%" class="form-control" id="fillform-text"/>
+                            </label>
+                        </div>
+                    </div>
+                    <label><input type="radio" name="fillform-type" value="empty" checked/> Только пустые</label><br/>
+                    <label><input type="radio" name="fillform-type" value="all"/> Все</label>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <button class="btn btn-primary-nb" id="fill-hide" data-dismiss="modal" aria-hidden="true">Отмена</button>
+                        </div>
+                        <div class="col-xs-6">
+                            <button class="btn btn-primary-nb" onclick="do_fill();" id="fillform-ok">Подтвердить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/runtime.js"></script>
     <script src="/static/js/jade.min.js"></script>
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script src="/static/js/ajaxq.js"></script>
     <script>
         var type = 0, su = false;
         $(document).ready(function () {
@@ -360,6 +396,7 @@
             resize();
 
             $("body").on("change", ".table-researches .btn input", sync_checks);
+            $("#loaded-buttons a").fadeOut(100);
 
         });
         function sync_checks() {
@@ -398,6 +435,9 @@
             $("#result-confirm").attr("disabled", 1);
             iss_pks = [];
             $("#search-field").attr("placeholder", "");
+
+            $("#loaded-buttons a").fadeOut(100);
+            $(".dir-datafield").fadeOut(100);
             $.ajax({
                 url: "/directions/get/issledovaniya",
                 type: "json",
@@ -414,6 +454,8 @@
                     });
                     $('#search-field').tooltipster('show');
                     load_tubes_and_dirs();
+                    $("#loaded-buttons a").fadeIn(100);
+                    $(".dir-datafield").fadeIn(100);
                     return;
                 }
 
@@ -452,6 +494,7 @@
                 $("#client_hisnum").html(data.client_hisnum);
                 $("#fin_source").html(data.fin_source);
                 $("#otd").html(data.otd);
+                $(".dir-datafield").fadeIn(100);
                 var status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
                 has_o = false;
                 $(".select-tube").removeClass(function (index, css) {
@@ -535,6 +578,8 @@
                     $("#result-print").removeAttr("disabled");
                     $("#result-confirm").attr("disabled", 1);
                 }
+
+                $("#loaded-buttons a").fadeIn(100);
             });
         }
         var loaded_research = -1;
@@ -549,6 +594,7 @@
                 position: "inside",
                 'tpl': loading_tpl
             });
+
             $.ajax({
                 url: "/static/templates/{0}.jade".f(templateid),
                 type: "text",
@@ -616,6 +662,8 @@
                             $d.typeahead('val', $val);
                             $("[data-pk='{0}']".f(fv.pk)).val($val);
                         }
+
+
                     });
                     f = $('.result-enter:not(.tt-hint)').eq(0);
                     $(f).focus();
@@ -627,6 +675,9 @@
                                 $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
                             $("[data-pk='" + k + "']").val(v);
                             $("[data-div-pk='{0}']".f(k)).html(v);
+                            if(data.norms[k]){
+                                $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`);
+                            }
                         });
                         try {
                             if (jQuery.type(dready) != "undefined" && $.isFunction(dready)) {
@@ -863,6 +914,98 @@
                 cb(matches);
             };
         };
+        var fill_researches = {};
+        function open_fill_form() {
+            sl();
+            var tubes = new Set();
+            fill_researches = {};
+            for (var iss of dir_data.issledovaniya) {
+                for (var tube of iss.tube.pk.split(",")) {
+                    tubes.add(parseInt(tube));
+                    if (fill_researches[tube] == undefined)
+                        fill_researches[tube] = new Set();
+                    fill_researches[tube].add({pk: iss.pk, research_pk: iss.research_pk});
+                }
+            }
+            $("#fillform-tubes").html("");
+            for (var tube of tubes) {
+                $("#fillform-tubes").append(`<option value='${tube}'>${tube}</option>`);
+            }
+            $("#fillform-text").val("");
+            $("[name=fillform-type][value=empty]").prop("checked", true);
+            $("#fillform-modal").modal();
+            hl();
+        }
+        var queue_fill = [];
+        function do_fill() {
+            sl();
+            var tube = parseInt($("#fillform-tubes").val());
+            var all = $("[name=fillform-type]:checked").val() == "all";
+            var researches = fill_researches[tube];
+            var text_to_fill = $("#fillform-text").val();
+            for (var res of researches) {
+                (function (res_pk) {
+                    queue_fill.push(res_pk);
+                    $.ajaxq('/researches/get/one', {
+                        url: "/researches/get/one",
+                        type: "text",
+                        method: "GET",
+                        data: {id: res_pk}
+                    }).done(function (data) {
+                        data = JSON.parse(data);
+                        $.ajaxq('/results/get', {
+                            url: "/results/get",
+                            type: "text",
+                            method: "GET",
+                            data: {iss_id: res_pk}
+                        }).done(function (results_data) {
+                            sl();
+                            var fractions_data = data.fractions;
+                            var result = {issledovaniye: res_pk, fractions: {}};
+                            var isnorm = results_data.norms;
+                            results_data = results_data.results;
+                            for (var fk of Object.keys(fractions_data)) {
+                                var fv = fractions_data[fk];
+                                fv.pk = fv.pk + "";
+                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] == "") && fv.render_type == 0) {
+                                    result.fractions[fv.pk] = text_to_fill;
+                                } else if ((fv.render_type == 1 || !all) && fv.pk in results_data) {
+                                    result.fractions[fv.pk] = results_data[fv.pk];
+                                }
+                            }
+                            if (Object.keys(result.fractions).length > 0) {
+                                result.fractions = JSON.stringify(result.fractions);
+                                $.ajax({
+                                    url: "/results/save",
+                                    method: "POST",
+                                    data: result
+                                }).done(function () {
+                                    var index = queue_fill.indexOf(res_pk);
+                                    if (index > -1) {
+                                        queue_fill.splice(index, 1);
+                                    }
+                                    if (queue_fill.length == 0) {
+                                        hl();
+                                        reload_fast();
+                                    }
+                                });
+                            }
+                            else {
+                                var index = queue_fill.indexOf(res_pk);
+                                if (index > -1) {
+                                    queue_fill.splice(index, 1);
+                                }
+                                if (queue_fill.length == 0) {
+                                    $("#fill-hide").click();
+                                    hl();
+                                    reload_fast();
+                                }
+                            }
+                        });
+                    });
+                })(res.pk);
+            }
+        }
         function openexeclist() {
             load_researches();
             $("#list-modal").modal();
@@ -908,7 +1051,11 @@
             sl();
             $.ajax({
                 url: "/results/day",
-                data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches), otd: $("#print-results-otd").val()}
+                data: {
+                    date: $("[name=dateday-confirm]").val(),
+                    researches: JSON.stringify(researches),
+                    otd: $("#print-results-otd").val()
+                }
             }).done(function (data) {
                 lockdeff = false;
                 if (Object.keys(data.directions).length > 0) {
@@ -1036,6 +1183,17 @@
         }
     </script>
     <style>
+        .isnorm_normal input[type=text]{}
+        .isnorm_maybe input[type=text]{
+            border-color: darkgoldenrod;
+            box-shadow: 0 0 4px darkgoldenrod;
+        }
+        .isnorm_not_normal input[type=text]{
+            border-color: darkred;
+            box-shadow: 0 0 4px darkred;
+        }
+
+
         .w50 {
             width: 70px;
             display: inline-block;

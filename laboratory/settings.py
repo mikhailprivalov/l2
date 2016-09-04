@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
-    'api'
+    'api',
 )
 
 
@@ -71,7 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'djversion.context_processors.version'
-            ],
+            ]
         },
     },
 ]
@@ -254,3 +254,5 @@ if os.path.exists(__w):
     DJVERSION_UPDATED = mtime
 
 DJVERSION_FORMAT_STRING = '{version}'
+CACHALOT_ENABLED = True
+#DEBUG = False

@@ -22,35 +22,39 @@
                             <div class="hide-panel row" id="m-controls">
                                 <div class="col-xs-6" style="padding-right: 3px;">
                                     <select class="selectpicker" data-width="100%" id="m-type">
-                                        <option value="1">Январь</option>
-                                        <option value="2">Февраль</option>
-                                        <option value="3">Март</option>
-                                        <option value="4">Апрель</option>
-                                        <option value="5">Май</option>
-                                        <option value="6">Июнь</option>
-                                        <option value="7">Июль</option>
-                                        <option value="8">Август</option>
-                                        <option value="9">Сентябрь</option>
-                                        <option value="10">Октябрь</option>
-                                        <option value="11">Ноябрь</option>
-                                        <option value="12">Декабрь</option>
+                                        <option value="0">Январь</option>
+                                        <option value="1">Февраль</option>
+                                        <option value="2">Март</option>
+                                        <option value="3">Апрель</option>
+                                        <option value="4">Май</option>
+                                        <option value="5">Июнь</option>
+                                        <option value="6">Июль</option>
+                                        <option value="7">Август</option>
+                                        <option value="8">Сентябрь</option>
+                                        <option value="9">Октябрь</option>
+                                        <option value="10">Ноябрь</option>
+                                        <option value="11">Декабрь</option>
                                     </select>
                                 </div>
                                 <div class="col-xs-6">
-                                    <input type="number" class="form-control year" value="" min="2015" max="2100"/>
+                                    <input type="number" class="form-control year" id="m-year" value="" min="2015"
+                                           max="2100"/>
                                 </div>
                             </div>
                             <div class="hide-panel" id="y-controls">
-                                <input type="number" class="form-control year" value="" min="2015" max="2100"/>
+                                <input type="number" class="form-control year" id="year" value="" min="2015"
+                                       max="2100"/>
                             </div>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 17px">
                         <div class="col-xs-12">
                             <div class="input-group">
-                                <input class="form-control" type="text" id="search-field" placeholder="Введите поисковый запрос"/>
+                                <input class="form-control" type="text" id="search-field"
+                                       placeholder="Поиск (номер карты или ФИО, например: Иванов или 65222)"/>
                                 <span class="input-group-btn">
-                                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск</button>
+                                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());"
+                                            type="button">Поиск</button>
                                 </span>
                             </div>
                         </div>
@@ -68,7 +72,7 @@
                                            autocomplete="off"> Стационар
                                 </label>
                                 <label class="btn btn-blue-nb btn-ell active" title="Не учитывать категорию">
-                                    <input type="radio" checked name="type" id="option3" value="*"
+                                    <input type="radio" checked name="type" id="option3" value="%"
                                            autocomplete="off"> Не учитывать категорию
                                 </label>
                             </div>
@@ -112,29 +116,49 @@
             </div>
         </div>
     </div>
-    <div class="row local_nav">
-        <a href="#"><i class="fa fa-angle-double-left" aria-hidden="true"></i></a>
-        <a href="#"><i class="fa fa-angle-left" aria-hidden="true"></i></a>
-        <a href="#"><i class="fa fa-angle-right" aria-hidden="true"></i></a>
-        <a href="#"><i class="fa fa-angle-double-right" aria-hidden="true"></i></a>
-        1 из 3
-    </div>
+    <h5 style="text-align: right; margin: 4px 10px 4px 4px;"><span style="float: left">Поиск результатов:</span><small class="fastlinks" style="display: block; padding: 3px"><a href="#" onclick="print_selected();return false">Печать выбранных</a></small></h5>
     <div id="dirs-list">
-        <table class="table table-hover table-bordered floatThead">
+        <table class="table table-hover table-bordered floatThead table-condensed">
             <thead>
-                <tr>
-                    <th style="width: 6%">№</th>
-                    <th style="width: 50%">ФИО</th>
-                    <th style="width: 14%">Дата рождения</th>
-                    <th style="width: 10%">№ карты</th>
-                    <th style="width: 10%">Число направлений</th>
-                    <th style="width: 10%">Дата</th>
-                </tr>
+            <tr>
+                <th style="width: 6%">№</th>
+                <th>ФИО</th>
+                <th style="width: 14%">Дата рождения</th>
+                <th style="width: 10%">№ карты</th>
+                <th style="width: 10%">Число направлений</th>
+                <th style="width: 10%">Дата</th>
+                <th style="width: 30px">
+                    <label>
+                        <input type="checkbox" name="select_all_rows" id="select_all_rows" onchange="sync_checkboxes(this);"/>
+                    </label>
+                </th>
+            </tr>
             </thead>
             <tbody>
 
             </tbody>
         </table>
+    </div>
+    <div id="directions-modal" class="modal fade" role="dialog" aria-labelledby="directions-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="directions-label"></h3>
+                </div>
+                <div class="modal-body">
+                    Пациент: <span id="dir-fio"></span><br/>
+                    Карта: <span id="dir-card"></span><br/>
+                    <div id="directions_list">
+
+                    </div>
+                    <a id="printall" target="_blank">печать всех результатов</a>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Закрыть</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 {% endblock %}
@@ -145,8 +169,8 @@
     <script>
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-
-            $("[name='dateday-otd'],[name='dateday-type']").val(getFormattedDate(new Date())).datepicker({
+            var today = new Date();
+            $("[name='dateday-otd'],[name='dateday-type']").val(getFormattedDate(today)).datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
                 language: "ru",
@@ -155,27 +179,137 @@
                 enableOnReadonly: true,
                 orientation: "top left"
             });
-            $(".year").val((new Date().getFullYear()));
+            $(".year").val((today.getFullYear()));
+            $("#m-type").val(today.getMonth());
             change_type();
+            $("#search-field").bind('keydown', 'return', function () {
+                search($('#search-field').val());
+            });
             $(window).resize(function () {
                 resize();
             });
             resize();
         });
+        var card_types = {"poli": "поликлиника", "stat": "стационар"};
+        var page = 1;
+        var request = {};
+        var tmp_data = {};
+        function search(query, gpage) {
+            sl();
+            if (typeof gpage == 'undefined') {
+                page = 1;
+                $("#dirs-list tbody").html("");
+                try {
+                    $('.ttip').tooltipster('destroy');
+                }
+                catch (e) {
 
-        function search(query){
-            $("#dirs-list tbody").html("");
-            for(var i = 0; i < 40; i++){
-                $("#dirs-list tbody").append("<tr>" +
-                        `<td>${i}</td>` +
-                        "<td></td>" +
-                        "<td></td>" +
-                        "<td></td>" +
-                        "<td></td>" +
-                        "<td></td>" +
-                        "</tr>");
+                }
+                var period = {type: $("#search-type").val()};
+                switch (period.type) {
+                    case "d":
+                        period.date = $("#dateday-type").val();
+                        break;
+                    case "m":
+                        period.month = $("#m-type").val();
+                        period.year = $("#m-year").val();
+                        break;
+                    case "y":
+                        period.year = $("#year").val();
+                        break;
+
+                }
+                request = {
+                    method: "GET", url: "/results/search/directions",
+                    data: {
+                        query: query, type_patient: $('[name="type"]:checked').val(),
+                        page: page,
+                        period: JSON.stringify(period)
+                    }
+                };
             }
-            //$.ajax({method: "GET", url: "/results/search/directions"})
+            else {
+                request.data.page = gpage;
+            }
+            $.ajax(request).done(function (data) {
+                i = Object.keys(data).length;
+                tmp_data = data;
+                $("#dirs-list input[type=checkbox]").prop("checked", false);
+                if (i > 0) {
+                    for (var key in data) {
+                        row = data[key];
+
+                        $("#dirs-list tbody").append(`<tr class='ttip' pk='${key}'><td onclick="open_print_form('${key}', ${i});">${i}</td><td onclick="open_print_form('${key}', ${i});">${row.fio}</td><td onclick="open_print_form('${key}', ${i});">${row.birthdate}</td><td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${card_types[row.type]}</td><td onclick="open_print_form('${key}', ${i});">${row.directions.length}</td><td onclick="open_print_form('${key}', ${i});">${row.date}</td><td><label><input type='checkbox' class='batch-print' pk='${key}' /></label></td></tr>`);
+
+                        researches_str = $.map(tmp_data[key].directions, function(vv,kk){ return vv.researches.join("<br/>");}).join("<br/>");
+                        $(`tr[pk='${key}']`).tooltipster({
+                            theme: "tooltipster-shadow",
+                            side: "bottom",
+                            content: `<b>Исследования:</b> ${researches_str}`,
+                            contentAsHTML: true,
+                            animationDuration: 150,
+                            arrow: false,
+                            distance: 1
+                        });
+
+                        //${i}, ${row.fio}&lt;br/&gt;Исследования:&lt;br/&gt;${researches_str}
+                        i--;
+                    }
+                    if (Object.keys(data).length >= 40) {
+                        $.amaran({
+                            'theme': 'awesome wrn',
+                            'content': {
+                                title: "Неточный запрос",
+                                message: "Отображены последние 40 результатов",
+                                info: '',
+                                icon: 'fa fa-exclamation'
+                            },
+                            'position': 'bottom right',
+                            delay: 10000
+                        });
+                    }
+                }
+                else {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: "Не найдено",
+                            message: "Результатов для такого поискового запроса не найдено",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
+            }).always(function () {
+                hl();
+                resize();
+            });
+        }
+
+        function open_print_form(key, n) {
+            row = tmp_data[key];
+            $('#directions-label').html(`#${n}, ${row.date}`);
+            $('#dir-fio').html(row.fio);
+            $('#dir-card').html(`${row.cardnum}, ${card_types[row.type]}`);
+            dirs = [];
+            $("#directions_list").html("");
+            for(var i = 0; i < row.directions.length; i++){
+                dir = row.directions[i];
+                $("#directions_list").append(`<div class='direction' id='direction-${dir.pk}'>
+<a style='float: right' href='/results/pdf?pk=[${dir.pk}]' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
+<ul class='direction-researches'></ul>
+</div>`);
+                for(var row2 of dir.researches) {
+                    $(`#direction-${dir.pk} .direction-researches`).append(`<li class='research'>${row2}</li>`);
+                }
+                dirs.push(dir.pk);
+            }
+            data = "?pk=" + JSON.stringify(dirs);
+            $("#printall").attr("href", '/results/pdf' + data);
+            resize();
+            $('#directions-modal').modal({show: true});
         }
 
         function checkType(tr) {
@@ -214,13 +348,13 @@
         var first_resize = true;
 
         function resize() {
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 20);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 30);
             if (first_resize) {
-                $('#dirs-list').perfectScrollbar();
+                $('#dirs-list, #directions_list').perfectScrollbar();
                 first_resize = false;
             }
             else {
-                $('#dirs-list').perfectScrollbar('update');
+                $('#dirs-list, #directions_list').perfectScrollbar('update');
             }
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({
@@ -264,9 +398,18 @@
                 }
             });
         }
+        function sync_checkboxes(th){
+            $(".batch-print").prop("checked", $("#select_all_rows").is(':checked'));
+        }
+        function print_selected(){
+            var print_array = [];
+            $.each($(".batch-print:checked"), function (k, v) {
+                print_array = print_array.concat($.map(tmp_data[$(v).attr("pk")].directions, function(vv,kk){ return vv.pk;}));
+            });
+            window.open('/results/pdf?pk=' + JSON.stringify(print_array), '_blank');
+        }
     </script>
     <style>
-
         .floatThead th {
             background: #fff;
         }
@@ -280,14 +423,31 @@
             margin: 0;
             cursor: default;
         }
-        #dirs-list{
+
+        #directions_list {
+            position: relative;
+            padding-right: 25px;
+            height: 400px;
+        }
+
+        .direction{
+            width: 100%;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #ECF0F1;
+            padding: 10px;
+        }
+
+        #dirs-list {
             position: relative;
             padding-right: 13px;
 
         }
-        #dirs-list tbody tr{
+
+        #dirs-list tbody tr {
             cursor: pointer;
         }
+
         .local_nav a {
             margin: 3px;
             padding: 5px;
@@ -295,6 +455,20 @@
 
         .panel-flt {
             margin-bottom: 5px;
+        }
+
+        .datepicker{
+            z-index: 1005!important;
+        }
+
+        td > label, th > label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            text-align: center;
         }
     </style>
 {% endblock %}

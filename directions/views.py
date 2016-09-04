@@ -191,6 +191,7 @@ def gen_pdf_execlist(request):
     from reportlab.pdfbase.ttfonts import TTFont
     import numpy as np
     import os.path
+    from django.utils.text import Truncator
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
     pdfmetrics.registerFont(
             TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
@@ -239,7 +240,7 @@ def gen_pdf_execlist(request):
                     data[-1].append(inobj.issledovaniya_set.first().napravleniye.client.shortfio() + ", " + str(
                         inobj.issledovaniya_set.first().napravleniye.client.age()) + "<br/>№ напр.: " + str(
                         inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ пробирки.: " + str(
-                        inobj.pk) + "<br/><br/><br/>")
+                        inobj.pk) + "<br/>" + Truncator(inobj.issledovaniya_set.first().napravleniye.doc.podrazileniye.title).chars(19) + "<br/><br/>")
             if len(data) < ysize:
                 for i in range(len(data), ysize):
                     data.append([])
@@ -378,7 +379,7 @@ def printDirection(c, n, dir):
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз: " + dir.diagnos)
 
-    d = {"poli": "Поликлиника", "stat": "Стационар"}
+    d = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стом."}
 
     if dir.istochnik_f:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,

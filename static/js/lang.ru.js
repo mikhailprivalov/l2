@@ -75,7 +75,9 @@ var getNorms = function (sex, age, ref, units) {
     }
     html_ret += "</table>";
     return html_ret;
-}
+};
+
+var clients_bases = {poli: "Поликлиника", stat: "Стационар", poli_stom: "Поликлиника-стоматология"};
 
 
 var fraction_types = {
@@ -122,5 +124,7 @@ var material_types = {
     "8": ["Ухо"],
     "9": ["Кал"],
     "10": ["Кон/глаз"],
-    "11": ["Рот"]
+    "11": ["Рот"],
+    "12": ["Лев/ухо", "Прав/ухо"],
+    "13": ["Лев/глаз", "Прав/глаз"]
 };

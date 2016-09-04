@@ -377,16 +377,16 @@
 
         /** Сохранение изменений в загруженой группе */
         function save() {
+            dgroup = selected.dgroup;
             $.each(selected.researches, function (k, v) {
                 if (!$.inArray(k, cache)) delete selected.researches[k];
             });
-            console.log(selected);
             $.ajax({
                 url: "/directory/researches/group",
                 method: "POST",
-                data: {group: selected.group, researches: JSON.stringify(selected.researches)}
+                data: {group: dgroup, researches: JSON.stringify(selected.researches)}
             }).done(function (data) {
-                selected.group = data.gid;
+                selected.dgroup = data.gid;
                 $("#mes").show();
                 $("#form").hide();
                 loadreslist();

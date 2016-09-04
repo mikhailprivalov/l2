@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+import collections
 from django.shortcuts import render
 from django.http import HttpResponse
 import simplejson as json
@@ -18,6 +19,7 @@ from appconf.manager import SettingManager
 
 pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
+
 @login_required
 @group_required("Лечащий врач", "Зав. отделением")
 @csrf_exempt
@@ -25,17 +27,23 @@ def results_search(request):
     """ Представление для поиска результатов исследований у пациента """
     if request.method == "POST":
         dirs = set()
-        result = {"directions": [], "client_id": int(request.POST["client_id"]), "research_id": int(request.POST["research_id"]), "other_dirs": []}
-        for r in Result.objects.filter(fraction__research_id=result["research_id"], issledovaniye__napravleniye__client_id=result["client_id"], issledovaniye__doc_confirmation__isnull=False):
+        result = {"directions": [], "client_id": int(request.POST["client_id"]),
+                  "research_id": int(request.POST["research_id"]), "other_dirs": []}
+        for r in Result.objects.filter(fraction__research_id=result["research_id"],
+                                       issledovaniye__napravleniye__client_id=result["client_id"],
+                                       issledovaniye__doc_confirmation__isnull=False):
             dirs.add(r.issledovaniye.napravleniye.pk)
-        for d in Napravleniya.objects.filter(client_id=result["client_id"], issledovaniya__research_id=result["research_id"]):
+        for d in Napravleniya.objects.filter(client_id=result["client_id"],
+                                             issledovaniya__research_id=result["research_id"]):
             tmp_d = {"pk": d.pk}
             if d.pk in dirs:
-                tmp_d["date"] = Issledovaniya.objects.filter(napravleniye=d).first().time_confirmation.strftime('%d.%m.%Y')
+                tmp_d["date"] = Issledovaniya.objects.filter(napravleniye=d).first().time_confirmation.strftime(
+                    '%d.%m.%Y')
                 result["directions"].append(tmp_d)
             else:
                 tmp_d["get_material"] = all([x.is_get_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
-                tmp_d["is_receive_material"] = all([x.is_receive_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
+                tmp_d["is_receive_material"] = all(
+                    [x.is_receive_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
                 tmp_d["is_has_deff"] = d.is_has_deff()
                 tmp_d["type"] = 0
                 if tmp_d["get_material"]:
@@ -78,6 +86,8 @@ def result_conformation(request):
 
 
 import datetime
+
+
 @csrf_exempt
 @login_required
 def loadready(request):
@@ -92,11 +102,13 @@ def loadready(request):
         date_end = request.GET["dateend"]
         deff = int(request.GET["def"])
 
-    date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),int(date_start.split(".")[0]))
-    date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
+    date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                               int(date_start.split(".")[0]))
+    date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                             int(date_end.split(".")[0])) + datetime.timedelta(1)
     tlist = []
     if deff == 0:
-        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start,date_end),
+        tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
                                                  issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
@@ -119,7 +131,8 @@ def loadready(request):
         date_tmp = dateformat.format(tube.time_recive, settings.DATE_FORMAT).split(".")
         date_tmp = "%s.%s.%s" % (date_tmp[0], date_tmp[1], date_tmp[2][2:4])
 
-        dicttube = {"id": tube.pk, "direction": direction.pk, "date": date_tmp}  # Временный словарь с информацией о пробирке
+        dicttube = {"id": tube.pk, "direction": direction.pk,
+                    "date": date_tmp}  # Временный словарь с информацией о пробирке
         # if not complete and dicttube not in result[
         if dicttube not in result[
             "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
@@ -186,8 +199,7 @@ def result_confirm(request):
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
             slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
-            Uet.add(request.user.doctorprofile,issledovaniye.research,issledovaniye.napravleniye.pk)
-
+            Uet.add(request.user.doctorprofile, issledovaniye.research, issledovaniye.napravleniye.pk)
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -228,7 +240,9 @@ def get_full_result(request):
                 dates[dt] += 1
 
         import operator
-        maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+        maxdate = ""
+        if dates != {}:
+            maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
 
         iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__direction__pk",
                                                                             "research__sort_weight")  # Выборка списка исследований из базы по направлению
@@ -239,8 +253,16 @@ def get_full_result(request):
             result["direction"] = {}  # Направление
             result["direction"]["pk"] = napr.pk  # ID
             result["direction"]["doc"] = ""
+            result["full"] = False
             if iss_list.filter(doc_confirmation__isnull=False).exists():
-                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[0].doc_confirmation.get_fio()  # ФИО подтвердившего
+                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
+                    0].doc_confirmation.get_fio()  # ФИО подтвердившего
+                if iss_list.filter(doc_confirmation__isnull=True, deferred=False).exists():
+                    result["direction"]["doc"] = result["direction"]["doc"] + " (выполнено не полностью)"
+                else:
+                    result["full"] = True
+            else:
+                result["direction"]["doc"] = "Не подтверждено"
             result["direction"]["date"] = maxdate  # Дата подтверждения
 
             result["client"] = {}  # Пациент
@@ -250,11 +272,11 @@ def get_full_result(request):
             result["client"]["cardnum"] = napr.client.num  # Номер карты
             result["client"]["dr"] = str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT))  # Дата рождения
 
-            result["results"] = {}  # Результаты
+            result["results"] = collections.OrderedDict()  # Результаты
             for issledovaniye in iss_list:  # Перебор списка исследований
                 kint += 1
                 result["results"][kint] = {"title": issledovaniye.research.title,
-                                           "fractions": {},
+                                           "fractions": collections.OrderedDict(),
                                            "sort": issledovaniye.research.sort_weight}  # Словарь результата
                 if not issledovaniye.deferred or issledovaniye.doc_confirmation:
                     results = Result.objects.filter(issledovaniye=issledovaniye).order_by(
@@ -263,25 +285,65 @@ def get_full_result(request):
                         pk = res.fraction.sort_weight
                         if not pk or pk <= 0:
                             pk = res.fraction.pk
-                        if pk not in result["results"][kint]["fractions"].keys():
-                            result["results"][kint]["fractions"][pk] = {}
+                        if res.fraction.render_type == 0:
+                            if pk not in result["results"][kint]["fractions"].keys():
+                                result["results"][kint]["fractions"][pk] = {}
 
-                        result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
-                        if maxdate != str(dateformat.format(issledovaniye.time_save, settings.DATE_FORMAT)):
-                            result["results"][kint]["fractions"][pk]["result"] += "<br/>" + str(
-                                dateformat.format(iss.time_save, settings.DATE_FORMAT))
-                        result["results"][kint]["fractions"][pk][
-                            "title"] = res.fraction.title  # Название фракции
-                        result["results"][kint]["fractions"][pk][
-                            "units"] = res.fraction.units  # Еденицы измерения
-                        ref_m = res.fraction.ref_m
-                        ref_f = res.fraction.ref_f
-                        if not isinstance(ref_m, str):
-                            ref_m = json.dumps(ref_m)
-                        if not isinstance(ref_f, str):
-                            ref_f = json.dumps(ref_f)
-                        result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
-                        result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+                            result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
+                            #if maxdate != str(dateformat.format(issledovaniye.time_save, settings.DATE_FORMAT)):
+                            #    result["results"][kint]["fractions"][pk]["result"] += "<br/>" + str(
+                            #        dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                            result["results"][kint]["fractions"][pk][
+                                "title"] = res.fraction.title  # Название фракции
+                            result["results"][kint]["fractions"][pk][
+                                "units"] = res.fraction.units  # Еденицы измерения
+                            ref_m = res.fraction.ref_m
+                            ref_f = res.fraction.ref_f
+                            if not isinstance(ref_m, str):
+                                ref_m = json.dumps(ref_m)
+                            if not isinstance(ref_f, str):
+                                ref_f = json.dumps(ref_f)
+                            result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                            result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+                        else:
+                            try:
+                                tmp_results = json.loads("{}" if not res.value else res.value).get("rows", {})
+                            except(Exception):
+                                tmp_results = {}
+
+                            n = 0
+                            for row in tmp_results.values():
+                                n += 1
+                                tmp_pk = "%d_%d" % (pk, n)
+                                if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                    result["results"][kint]["fractions"][tmp_pk] = {}
+                                result["results"][kint]["fractions"][tmp_pk]["title"] = "Выделенная культура"
+                                result["results"][kint]["fractions"][tmp_pk]["result"] = row["title"]
+                                result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                                result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                                result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                                for subrow in row["rows"].values():
+                                    if "null" in subrow["value"]:
+                                        continue
+                                    n += 1
+                                    tmp_pk = "%d_%d" % (pk, n)
+                                    if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                        result["results"][kint]["fractions"][tmp_pk] = {}
+                                    result["results"][kint]["fractions"][tmp_pk]["title"] = subrow["title"]
+                                    result["results"][kint]["fractions"][tmp_pk]["result"] = subrow["value"]
+                                    result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                                    result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                                    result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+
+                            n += 1
+                            tmp_pk = "%d_%d" % (pk, n)
+                            if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                result["results"][kint]["fractions"][tmp_pk] = {}
+                            result["results"][kint]["fractions"][tmp_pk]["title"] = "S - чувствителен; R - резистентен; I - промежуточная чувствительность;"
+                            result["results"][kint]["fractions"][tmp_pk]["result"] = ""
+                            result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                            result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                            result["results"][kint]["fractions"][tmp_pk]["units"] = ""
                 else:
                     fr_list = directory.Fractions.objects.filter(research=issledovaniye.research)
                     for fr in fr_list:
@@ -390,6 +452,133 @@ def result_normal(s):
     # s = lr(s).replace(" ", "&nbsp;")
     return s
 
+@login_required
+def result_html(request):
+    pk = json.loads(request.GET["pk"])
+    results_rows = []
+    for dpk in pk:
+        if not Napravleniya.objects.filter(pk=dpk).exists():
+            continue
+        dir = Napravleniya.objects.get(pk=dpk)
+        if not dir.has_confirm(): continue
+        dates = {}
+        date_t = ""
+        for iss in Issledovaniya.objects.filter(napravleniye=dir, time_save__isnull=False):
+            if iss.time_save:
+                dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                if dt not in dates.keys():
+                    dates[dt] = 0
+                dates[dt] += 1
+            if iss.tubes.exists() and iss.tubes.first().time_get:
+                date_t = iss.tubes.first().time_get.strftime('%d.%m.%Y')
+
+        import operator
+        maxdate = ""
+        if dates != {}:
+            maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+
+        iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__direction_id", "research__pk",
+                                                                           "research__sort_weight")
+        result = {"pk": dpk, "date": maxdate, "patient": {"cardnum": dir.client.num, "fio": dir.client.fio(), "sex": dir.client.sex, "age": dir.client.age_s()}, "results": collections.OrderedDict()}
+
+        kint = 0
+        for issledovaniye in iss_list:  # Перебор списка исследований
+            kint += 1
+            result["results"][kint] = {"title": issledovaniye.research.title,
+                                       "fractions": collections.OrderedDict(),
+                                       "sort": issledovaniye.research.sort_weight}  # Словарь результата
+            if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                results = Result.objects.filter(issledovaniye=issledovaniye).order_by(
+                    "fraction__sort_weight")  # Выборка результатов из базы
+                for res in results:  # Перебор результатов
+                    pk = res.fraction.sort_weight
+                    if not pk or pk <= 0:
+                        pk = res.fraction.pk
+                    if res.fraction.render_type == 0:
+                        if pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][pk] = {}
+
+                        result["results"][kint]["fractions"][pk]["result"] = res.value  # Значение
+                        # if maxdate != str(dateformat.format(issledovaniye.time_save, settings.DATE_FORMAT)):
+                        #    result["results"][kint]["fractions"][pk]["result"] += "<br/>" + str(
+                        #        dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                        result["results"][kint]["fractions"][pk][
+                            "title"] = res.fraction.title  # Название фракции
+                        result["results"][kint]["fractions"][pk][
+                            "units"] = res.fraction.units  # Еденицы измерения
+                        ref_m = res.fraction.ref_m
+                        ref_f = res.fraction.ref_f
+                        if not isinstance(ref_m, str):
+                            ref_m = json.dumps(ref_m)
+                        if not isinstance(ref_f, str):
+                            ref_f = json.dumps(ref_f)
+                        result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                        result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+                    else:
+                        try:
+                            tmp_results = json.loads("{}" if not res.value else res.value).get("rows", {})
+                        except(Exception):
+                            tmp_results = {}
+
+                        n = 0
+                        for row in tmp_results.values():
+                            n += 1
+                            tmp_pk = "%d_%d" % (pk, n)
+                            if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                result["results"][kint]["fractions"][tmp_pk] = {}
+                            result["results"][kint]["fractions"][tmp_pk]["title"] = "Выделенная культура"
+                            result["results"][kint]["fractions"][tmp_pk]["result"] = row["title"]
+                            result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                            result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                            result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                            for subrow in row["rows"].values():
+                                if "null" in subrow["value"]:
+                                    continue
+                                n += 1
+                                tmp_pk = "%d_%d" % (pk, n)
+                                if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                    result["results"][kint]["fractions"][tmp_pk] = {}
+                                result["results"][kint]["fractions"][tmp_pk]["title"] = subrow["title"]
+                                result["results"][kint]["fractions"][tmp_pk]["result"] = subrow["value"]
+                                result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                                result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                                result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+
+                        n += 1
+                        tmp_pk = "%d_%d" % (pk, n)
+                        if tmp_pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][tmp_pk] = {}
+                        result["results"][kint]["fractions"][tmp_pk][
+                            "title"] = "S - чувствителен; R - резистентен; I - промежуточная чувствительность;"
+                        result["results"][kint]["fractions"][tmp_pk]["result"] = ""
+                        result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                        result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                        result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+            else:
+                fr_list = directory.Fractions.objects.filter(research=issledovaniye.research)
+                for fr in fr_list:
+                    pk = fr.sort_weight
+                    if not pk or pk <= 0:
+                        pk = fr.pk
+                    if pk not in result["results"][kint]["fractions"].keys():
+                        result["results"][kint]["fractions"][pk] = {}
+
+                    result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
+                    result["results"][kint]["fractions"][pk][
+                        "title"] = fr.title  # Название фракции
+                    result["results"][kint]["fractions"][pk][
+                        "units"] = fr.units  # Еденицы измерения
+                    ref_m = fr.ref_m
+                    ref_f = fr.ref_f
+                    if not isinstance(ref_m, str):
+                        ref_m = json.dumps(ref_m)
+                    if not isinstance(ref_f, str):
+                        ref_f = json.dumps(ref_f)
+                    result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                    result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+        results_rows.append(result)
+
+    return render(request, "dashboard/results_html.html", {"results": results_rows})
 
 @login_required
 def result_print(request):
@@ -432,14 +621,14 @@ def result_print(request):
         w, h = A4
         lmargin = 55 * mm
         marginx = 5 * mm
-        marginy = 10*mm
+        marginy = 10 * mm
 
         pw = w - marginx - lmargin
-        ph = h-marginy*2
+        ph = h - marginy * 2
 
         def py(y=0.0):
             y *= mm
-            return h-y-marginy
+            return h - y - marginy
 
         def px(x=0.0):
             x *= mm
@@ -447,7 +636,7 @@ def result_print(request):
 
         def pxc(x=0.0):
             x *= mm
-            return w/2 + x
+            return w / 2 + x
 
         def pxr(x=0.0):
             x *= mm
@@ -473,7 +662,9 @@ def result_print(request):
                     date_t = iss.tubes.first().time_get.strftime('%d.%m.%Y')
 
             import operator
-            maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+            maxdate = ""
+            if dates != {}:
+                maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
 
             iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__direction_id", "research__pk",
                                                                                "research__sort_weight")
@@ -520,10 +711,10 @@ def result_print(request):
             c.drawString(px(), py(28), "г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809")
             c.drawString(px(), py(31), SettingManager.get("org_www"))
             '''
-            #iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__pk", "research__sort_weight")
+            # iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__pk", "research__sort_weight")
 
             # c.setFont('OpenSans', 9)
-            #c.drawString(px(), py(35), iss_list.first().research.subgroup.podrazdeleniye.title)
+            # c.drawString(px(), py(35), iss_list.first().research.subgroup.podrazdeleniye.title)
 
             c.setFont('OpenSans', 8)
             from reportlab.platypus import Table, TableStyle
@@ -561,15 +752,15 @@ def result_print(request):
             cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.164), int(tw * 0.14), int(tw * 0.178), int(tw * 0.08)]
             t = Table(data, colWidths=cw)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                   ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                   ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                   ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                   ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                   ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                   ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                   ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                   ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                   ])
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                ])
             style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
             style.add('TOPPADDING', (0, 0), (-1, 0), 0)
 
@@ -578,7 +769,9 @@ def result_print(request):
             t.canv = c
             wt, ht = t.wrap(0, 0)
             pos = py(38)
-            has0 = directory.Fractions.objects.filter(research__pk__in=[x.research.pk for x in Issledovaniya.objects.filter(napravleniye=dir)], hide=False, render_type=0).exists()
+            has0 = directory.Fractions.objects.filter(
+                research__pk__in=[x.research.pk for x in Issledovaniya.objects.filter(napravleniye=dir)], hide=False,
+                render_type=0).exists()
             if has0:
                 t.drawOn(c, px(), py(45))
                 pos = py(45)
@@ -618,7 +811,7 @@ def result_print(request):
                         tmp = []
                         tmp.append(Paragraph(
                             '&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + (
-                            "" if len(norm_vals) == 0 else f.title + ": ") + val["title"] + "</font>",
+                                "" if len(norm_vals) == 0 else f.title + ": ") + val["title"] + "</font>",
                             styleSheet["BodyText"]))
                         tmp.append("")
                         tmp.append("")
@@ -659,42 +852,45 @@ def result_print(request):
 
             for iss in iss_list:
                 data = []
-                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False, render_type=0).order_by("pk").order_by("sort_weight")
+                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
+                                                               render_type=0).order_by("pk").order_by("sort_weight")
                 if fractions.count() > 0:
                     if fractions.count() == 1:
                         tmp = []
                         tmp.append(Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
                                              styleSheet["BodyText"]))
-                        result = ""
+                        result = "не завершено"
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             result = result_normal(Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value)
 
                         if not iss.doc_confirmation and iss.deferred:
                             result = "отложен"
                         elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
-                            pass #result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                            pass  # result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                         f = fractions[0]
                         st = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                               ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                               ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                               ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                               ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                         ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                         ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                         ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
 
-                                               ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                         ('LEFTPADDING', (0, 0), (-1, -1), 4),
                                          ('TOPPADDING', (0, 0), (-1, -1), 3),
-                                               ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                         ('RIGHTPADDING', (0, 0), (-1, -1), 2),
                                          ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
-                                               ])
+                                         ])
 
                         if f.render_type == 0:
 
                             tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", stl))
                             if dir.client.sex.lower() == "м":
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_m) + "</font>",
-                                                     stl))
+                                tmp.append(
+                                    Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_m) + "</font>",
+                                              stl))
                             else:
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_f) + "</font>",
-                                                     stl))
+                                tmp.append(
+                                    Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_f) + "</font>",
+                                              stl))
                             tmp.append(
                                 Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
 
@@ -723,9 +919,15 @@ def result_print(request):
                             tmp.append("")
 
                             if iss.doc_confirmation:
-                                tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(), styleSheet["BodyText"]))
-                                tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime('%d.%m.%Y')), styleSheet["BodyText"]))
-                                tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % iss.time_confirmation.strftime('%d.%m.%Y'), styleSheet["BodyText"]))
+                                tmp.append(Paragraph(
+                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(),
+                                    styleSheet["BodyText"]))
+                                tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % (
+                                    "" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime(
+                                        '%d.%m.%Y')), styleSheet["BodyText"]))
+                                tmp.append(Paragraph(
+                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.time_confirmation.strftime(
+                                        '%d.%m.%Y'), styleSheet["BodyText"]))
                             else:
                                 tmp.append("")
                                 tmp.append(Paragraph(
@@ -740,7 +942,7 @@ def result_print(request):
                                 styleSheet["BodyText"])])
                             st.add('SPAN', (0, j), (-1, j))
                             st.add('BOX', (0, j), (-1, j), 1, colors.white)
-                            st.add('BOX', (0, j-1), (-1, j-1), 1, colors.black)
+                            st.add('BOX', (0, j - 1), (-1, j - 1), 1, colors.black)
 
                         t = Table(data, colWidths=cw)
                         t.setStyle(st)
@@ -768,16 +970,16 @@ def result_print(request):
 
                         data.append(tmp)
                         ts = [('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                            # ('SPAN',(0,0),(-1,0)),
-                                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                              # ('SPAN',(0,0),(-1,0)),
+                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                               ('INNERGRID', (0, 0), (-1, -1), 0.1, colors.white),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                            ('TOPPADDING', (0, 0), (-1, -1), 3),
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                            ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
-                                            ]
+                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                              ('TOPPADDING', (0, 0), (-1, -1), 3),
+                              ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                              ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
+                              ]
 
                         style = TableStyle(ts)
                         j = 0
@@ -789,7 +991,7 @@ def result_print(request):
                             if f.render_type == 0:
                                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.title + "</font>",
                                                      styleSheet["BodyText"]))
-                                result = ""
+                                result = "не завершено"
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     result = result_normal(Result.objects.get(issledovaniye=iss, fraction=f).value)
                                 if not iss.doc_confirmation and iss.deferred:
@@ -812,11 +1014,12 @@ def result_print(request):
                                 j = print_vtype(data, f, iss, j, style, styleSheet)
 
                                 if j - jp > 2:
-                                    data.append([Paragraph('<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])])
+                                    data.append([Paragraph(
+                                        '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
+                                        styleSheet["BodyText"])])
                                     style.add('SPAN', (0, j), (-1, j))
                                     style.add('BOX', (0, j), (-1, j), 1, colors.white)
                                     j -= 1
-
 
                         for k in range(0, 6):
                             style.add('INNERGRID', (k, 0),
@@ -834,7 +1037,8 @@ def result_print(request):
                     t.drawOn(c, px(), pos - ht)
                     pos = pos - ht
 
-                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False, render_type=1).order_by("pk").order_by("sort_weight")
+                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
+                                                               render_type=1).order_by("pk").order_by("sort_weight")
                 if fractions.count() > 0:
                     pos = pos - 3 * mm
                     data = []
@@ -848,7 +1052,7 @@ def result_print(request):
                         tmp.append(Paragraph('<font face="OpenSansBold" size="8">Дата исполнения</font>',
                                              styleSheet["BodyText"]))
                         tmp.append(Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>',
-                                      styleSheet["BodyText"]))
+                                             styleSheet["BodyText"]))
                         data.append(tmp)
 
                         tmp = []
@@ -856,13 +1060,18 @@ def result_print(request):
                             Paragraph('<font face="OpenSansBold" size="8">%s</font>' % iss.research.title,
                                       styleSheet["BodyText"]))
                         tmp.append(
-                            Paragraph('<font face="OpenSans" size="8">%s</font>' % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime('%d.%m.%Y')),
+                            Paragraph('<font face="OpenSans" size="8">%s</font>' % (
+                                "" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime(
+                                    '%d.%m.%Y')),
                                       styleSheet["BodyText"]))
                         tmp.append(
-                            Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else iss.time_confirmation.strftime('%d.%m.%Y')),
+                            Paragraph('<font face="OpenSans" size="8">%s</font>' % (
+                                "Не подтверждено" if not iss.time_confirmation else iss.time_confirmation.strftime(
+                                    '%d.%m.%Y')),
                                       styleSheet["BodyText"]))
                         tmp.append(
-                            Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
+                            Paragraph('<font face="OpenSans" size="8">%s</font>' % (
+                                "Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
                                       styleSheet["BodyText"]))
                         data.append(tmp)
 
@@ -908,7 +1117,9 @@ def result_print(request):
                                                                  "k": int(rowk)})
                                     tmp = []
                                     tmp.append(Paragraph(
-                                        '<font face="OpenSansBold" size="8">' + (val["title"] if len(norm_vals) == 0 else "Выделенная культура: " + val["title"]) + "</font>",
+                                        '<font face="OpenSansBold" size="8">' + (
+                                            val["title"] if len(norm_vals) == 0 else "Выделенная культура: " + val[
+                                                "title"]) + "</font>",
                                         styleSheet["BodyText"]))
                                     tmp.append("")
                                     tmp.append("")
@@ -960,7 +1171,9 @@ def result_print(request):
                                         if li % 3 < 2:
                                             data.append(tmp)
                                             j += 1
-                                    cw = [int(tw * 0.23),int(tw * 0.11),int(tw * 0.22),int(tw * 0.11),int(tw * 0.22),int(tw * 0.11)]
+                                    cw = [int(tw * 0.28), int(tw * 0.06),
+                                          int(tw * 0.27), int(tw * 0.06),
+                                          int(tw * 0.27), int(tw * 0.06)]
                                     t = Table(data, colWidths=cw)
 
                                     style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -988,7 +1201,9 @@ def result_print(request):
                     if has_anti:
                         data = []
                         tmp = []
-                        tmp.append([Paragraph('<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])])
+                        tmp.append([Paragraph(
+                            '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
+                            styleSheet["BodyText"])])
                         tmp.append("")
                         tmp.append("")
                         tmp.append("")
@@ -1015,9 +1230,9 @@ def result_print(request):
                         t.setStyle(style)
                         t.canv = c
                         wt, ht = t.wrap(0, 0)
-                        t.drawOn(c, px(), pos - ht - 1*mm)
+                        t.drawOn(c, px(), pos - ht - 1 * mm)
                         pos = pos - ht
-                    pos -= 2*mm
+                    pos -= 2 * mm
 
             if not dir.is_printed:
                 dir.is_printed = True
@@ -1027,7 +1242,6 @@ def result_print(request):
                 dir.doc_print = request.user.doctorprofile
                 dir.save()
             c.showPage()
-
 
         c.save()
     elif type == "a5":
@@ -1054,7 +1268,6 @@ def result_print(request):
     return response
 
 
-
 def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     w, h = landscape(A4)
     napr = Napravleniya.objects.get(pk=obj)
@@ -1078,7 +1291,8 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     c.setFont('OpenSans', 10)
     c.drawCentredString(w / 4 + s, h - 18, SettingManager.get("org_title"))
     c.setFont('OpenSans', 8)
-    c.drawCentredString(w / 4 + s, h - 28, "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),)) #"(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
+    c.drawCentredString(w / 4 + s, h - 28, "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get(
+        "org_phones"),))  # "(г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809)")
     c.setFont('OpenSans', 10)
     c.drawString(paddingx + s, h - 42, "Результаты анализов")
 
@@ -1100,10 +1314,10 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
         dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + ")")
     if last_iss and last_iss.doc_confirmation:
         c.drawString(s + paddingx, 18, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
-                 last_iss.doc_confirmation.fio.split(" ")[1][0] + "." + last_iss.doc_confirmation.fio.split(" ")[2][
-                     0] + ".   ____________________   (подпись)")
+                     last_iss.doc_confirmation.fio.split(" ")[1][0] + "." + last_iss.doc_confirmation.fio.split(" ")[2][
+                         0] + ".   ____________________   (подпись)")
     else:
-         c.drawString(s + paddingx, 18, "Результат не подтвержден")
+        c.drawString(s + paddingx, 18, "Результат не подтвержден")
     c.setFont('OpenSans', 8)
 
     iss_list = Issledovaniya.objects.filter(napravleniye=napr).order_by("research__pk", "research__sort_weight")
@@ -1153,7 +1367,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             tmp = []
             tmp.append(Paragraph('<font face="OpenSansBold" size="7">' + iss.research.title + "</font>",
                                  styleSheet["BodyText"]))
-            result = ""
+            result = "не завершено"
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 result = Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value
 
@@ -1205,7 +1419,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp = []
                 tmp.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="7">' + f.title + "</font>",
                                      styleSheet["BodyText"]))
-                result = ""
+                result = "не завершено"
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     result = Result.objects.get(issledovaniye=iss, fraction=f).value
                 if not iss.doc_confirmation and iss.deferred:
@@ -1287,6 +1501,7 @@ def result_journal_print(request):
     elements = []
     doc = SimpleDocTemplate(buffer, rightMargin=5 * mm, leftMargin=20 * mm, topMargin=15 * mm, bottomMargin=17 * mm,
                             pagesize=A4)
+
     class FooterCanvas(canvas.Canvas):
         def __init__(self, *args, **kwargs):
             canvas.Canvas.__init__(self, *args, **kwargs)
@@ -1306,15 +1521,16 @@ def result_journal_print(request):
 
         def draw_canvas(self, page_count):
             self.setFont('OpenSans', 12)
-            self.drawCentredString((A4[0]-25*mm)/2 + 20*mm, ph - 12*mm, request.user.doctorprofile.podrazileniye.title + ", " + dateo)
+            self.drawCentredString((A4[0] - 25 * mm) / 2 + 20 * mm, ph - 12 * mm,
+                                   request.user.doctorprofile.podrazileniye.title + ", " + dateo)
             page = "Страница %s из %s" % (self._pageNumber, page_count)
             self.saveState()
             self.setStrokeColorRGB(0, 0, 0)
             self.setLineWidth(0.5)
-            self.line(20*mm, 24, A4[0] - 5*mm, 24)
+            self.line(20 * mm, 24, A4[0] - 5 * mm, 24)
             self.setFont('OpenSans', 8)
-            self.drawRightString(A4[0]-8*mm, 17, page)
-            self.drawString(23*mm, 17, dateo)
+            self.drawRightString(A4[0] - 8 * mm, 17, page)
+            self.drawString(23 * mm, 17, dateo)
             self.restoreState()
 
     styles["Normal"].fontName = "OpenSans"
@@ -1329,8 +1545,10 @@ def result_journal_print(request):
         key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
-                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + str(iss.napravleniye.client.num) +
-                                         (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
+                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + str(
+                                      iss.napravleniye.client.num) +
+                                         ((
+                                              "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
@@ -1428,12 +1646,13 @@ def get_r(ref) -> str:
 @login_required
 def result_get(request):
     """ Получение результатов для исследования """
-    result = {"results": {}}
+    result = {"results": {}, "norms": {}}
     if request.method == "GET":
         issledovaniye = Issledovaniya.objects.get(pk=int(request.GET["iss_id"]))
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
+            result["norms"][str(v.fraction.pk)] = v.get_is_norm()
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -1452,7 +1671,7 @@ def get_day_results(request):
         day = request.GET["date"]
         otd = request.GET.get("otd", "-1")
 
-    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]),int(day.split(".")[0]))
+    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
     day2 = day1 + timedelta(days=1)
     directions = defaultdict(list)
     otd = int(otd)
@@ -1467,7 +1686,8 @@ def get_day_results(request):
     else:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                                issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-                                               issledovaniya__research_id__in=researches, doc__podrazileniye__pk=otd).order_by("client__pk"):
+                                               issledovaniya__research_id__in=researches,
+                                               doc__podrazileniye__pk=otd).order_by("client__pk"):
             if dir.pk not in directions[dir.doc.podrazileniye.title]:
                 directions[dir.doc.podrazileniye.title].append(dir.pk)
 
@@ -1545,3 +1765,107 @@ def result_filter(request):
                 result["list"][v.pk] = res
             result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
+def results_search_directions(request):
+    data = {}
+    if request.method == "POST":
+        data = request.POST
+    else:
+        data = request.GET
+
+    period = json.loads(data.get("period", "{}"))
+    type = period.get("type", "d")
+    type_patient = data.get("type_patient", "%").replace("%", "")
+    query = data.get("query", "").strip()
+    # page = int(data.get("page", "1"))
+
+    if type not in ["d", "m", "y"]:
+        type = "d"
+        period = {}
+
+    from collections import defaultdict
+
+    filter_type = "any"
+    family = ""
+    name = ""
+    twoname = ""
+    bdate = ""
+
+    if query.isdigit():
+        filter_type = "card_number"
+    elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
+            query)):
+        filter_type = "fio"
+        split = query.split()
+        if len(split) > 0:
+            family = split[0]
+        if len(split) > 1:
+            name = split[1]
+        if len(split) > 2:
+            twoname = split[2]
+        if len(split) > 2:
+            twoname = split[2]
+        if len(split) > 3:
+            bdate = split[3]
+
+    if type == "d":
+        day = period.get("date", "01.01.2015")
+        day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+        day2 = day1 + datetime.timedelta(days=1)
+    elif type == "m":
+        month = int(period.get("month", "0")) + 1
+        next_m = month + 1 if month < 12 else 1
+        year = int(period.get("year", "2015"))
+        next_y = year + 1 if next_m == 1 else year
+        day1 = datetime.date(year, month, 1)
+        day2 = datetime.date(next_y, next_m, 1)
+    else:
+        year = int(period.get("year", "2015"))
+        day1 = datetime.date(year, 1, 1)
+        day2 = datetime.date(year+1, 1, 1)
+
+    collection = Napravleniya.objects.filter(client__type__contains=type_patient,
+                                             issledovaniya__time_confirmation__range=(day1, day2),
+                                             issledovaniya__time_confirmation__isnull=False)
+    if filter_type == "fio":
+        collection = collection.filter(client__family__contains=family,
+                                       client__name__contains=name,
+                                       client__twoname__contains=twoname,
+                                       client__birthday__contains=bdate)
+
+    if filter_type == "card_number":
+        collection = collection.filter(client__num=int(query))
+
+    import collections
+    rows = collections.OrderedDict()
+    n = 0
+    directions_pks = []
+    for direction in collection.order_by("-issledovaniya__time_confirmation"):
+        if direction.pk in directions_pks:
+            continue
+        datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(
+            "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
+        key = "%s_%s@%s" % (datec, direction.client.num, direction.client.type,)
+        if key not in rows:
+            n += 1
+            if n > 40:
+                break
+            rows[key] = {"fio": direction.client.fio(),
+                         "birthdate": str(dateformat.format(direction.client.bd(), settings.DATE_FORMAT)),
+                         "sex": direction.client.sex.upper(),
+                         "cardnum": direction.client.num,
+                         "type": direction.client.type,
+                         "date": datec,
+                         "directions_cnt": 0,
+                         "directions": []}
+        rows[key]["directions_cnt"] += 1
+        researches = [x.research.title for x in direction.issledovaniya_set.all()]
+        rows[key]["directions"].append({"pk": direction.pk,
+                                        "laboratory": direction.issledovaniya_set.first().research.subgroup.podrazdeleniye.title,
+                                        "researches": researches})
+        directions_pks.append(direction.pk)
+
+    return HttpResponse(json.dumps(rows), content_type="application/json")

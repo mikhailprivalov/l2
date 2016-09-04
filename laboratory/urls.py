@@ -12,7 +12,7 @@ from receivematerial.views import receive, tubes_get, receive_obo, receive_histo
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
     result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, \
-    results_search
+    results_search, results_search_directions, result_html
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -23,6 +23,7 @@ import api.urls as api_urls
 import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
+
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -66,6 +67,7 @@ urlpatterns = [
                   url(r'^dashboard/receive/journal$', receive_journal),
                   url(r'^tubes/get$', tubes_get),
                   url(r'^results/search$', results_search),
+                  url(r'^results/search/directions$', results_search_directions),
                   url(r'^results/enter$', enter),
                   url(r'^results/save$', results_save),
                   url(r'^results/loadready$', loadready),
@@ -76,6 +78,7 @@ urlpatterns = [
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/confirm/list$', result_confirm_list),
                   url(r'^results/pdf$', result_print),
+                  url(r'^results/html$', result_html),
                   url(r'^results/journal$', result_journal_print),
                   url(r'^results/filter$', result_filter),
                   url(r'^results/day$', get_day_results),
