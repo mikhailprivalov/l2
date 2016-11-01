@@ -1,0 +1,208 @@
+{% extends "dbase.html" %}
+{% block title %}Печать результатов{% endblock %}
+{% block container %}container{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-3">
+        </div>
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Быстрая печать результатов</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;">
+                            <label for="dateday-otd">
+                                Дата подтверждения результата:
+                            </label>
+                        </div>
+                        <div class="col-xs-6">
+                            <input type="text" class="form-control no-context" id="dateday-otd"
+                                   style="display: inline-block"
+                                   name="dateday-otd"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;"><br/>
+                            <b>Печать результатов:</b>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="btn btn-blue-nb" onclick="print_results('otd');"
+                                 style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
+                                Для отделения
+                            </div>
+                            <br/>
+                            <div class="btn btn-blue-nb" onclick="print_results('pac');"
+                                 style="display: inline-block;width: 100%">
+                                Для пациентов <br/>данного пользователя
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-3">
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
+            var today = new Date();
+            $("[name='dateday-otd']").val(getFormattedDate(today)).datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true,
+                enableOnReadonly: true,
+                orientation: "top left"
+            });
+            $(window).resize(function () {
+                resize();
+            });
+            resize();
+        });
+
+        function chunk(arr, len) {
+            var chunks = [],
+                    i = 0,
+                    n = arr.length;
+
+            while (i < n) {
+                chunks.push(arr.slice(i, i += len));
+            }
+
+            return chunks;
+        }
+        var first_resize = true;
+
+        function resize() {
+            if (first_resize) {
+                first_resize = false;
+            }
+            else {
+            }
+        }
+
+        function print_results(type) {
+            sl();
+            $.ajax({
+                url: "/dashboard/results_history/search",
+                data: {type: type, date: $("[name='dateday-otd']").val()},
+                method: "GET"
+            }).done(function (data) {
+                hl();
+                if (data.length == 0) {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: "Печать невозможна",
+                            message: "Ничего не найдено",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                } else {
+                    c = chunk(data, 200);
+                    for (var k = 0; k < c.length; k++) {
+                        (function (e) {
+                            setTimeout(function () {
+                                st = "?pk=[" + c[e].join(",") + "]";
+                                window.open('/results/pdf' + st, '_blank');
+                            }, 1000 * e);
+                        })(k);
+                    }
+                }
+            });
+        }
+    </script>
+    <style>
+        .floatThead th {
+            background: #fff;
+        }
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        .local_nav {
+            margin: 0;
+            cursor: default;
+        }
+
+        #directions_list {
+            position: relative;
+            padding-right: 25px;
+            height: 400px;
+        }
+
+        .direction {
+            width: 100%;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #ECF0F1;
+            padding: 10px;
+        }
+
+        #dirs-list {
+            position: relative;
+            padding-right: 13px;
+
+        }
+
+        #dirs-list tbody tr {
+            cursor: pointer;
+            background: #fff;
+        }
+
+        #dirs-list {
+            background: #fff;
+        }
+
+        .local_nav a {
+            margin: 3px;
+            padding: 5px;
+        }
+
+        .panel-flt {
+            margin-bottom: 5px;
+        }
+
+        .datepicker {
+            z-index: 1005 !important;
+        }
+
+        td > label, th > label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            text-align: center;
+        }
+        .isnormal-not_normal a, .isnormal-maybe a, .isnormal-normal a{
+            color: #fff;
+        }
+        .isnormal-not_normal{
+            background: #E68364!important;
+        }
+        .isnormal-maybe{
+            background: #F5D76E!important;
+        }
+        .isnormal-normal{
+            background: #87D37C!important;
+        }
+    </style>
+{% endblock %}

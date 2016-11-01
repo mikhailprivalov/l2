@@ -74,7 +74,7 @@
             $("#log_table").append(loadmore);
             loadlog(loaded + 1);
             setTimeout(function(){
-                setInterval(check_new_rows, 333);
+                setInterval(check_new_rows, 500);
             }, 1500);
         });
         var endF = false;
@@ -82,6 +82,11 @@
         function check_new_rows() {
             if(inload) return;
             inload = true;
+            searchdata = {
+                "user": parseInt($("#user").val()),
+                "type": parseInt($("#type").val()),
+                "pk": $("#key").val() == "" ? '-1' : $("#key").val()
+            };
              $.ajax({
                 method: "GET",
                  url: "/dashboard/view_logs",

@@ -236,6 +236,11 @@ function do_receive(pk){
             set_msg("Ошибка! Емкость № {0} <b>не найдена</b>".f(pk));
             play_warn();
             return;
+        }
+        else if(data.r == 4){
+            set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
+            play_warn();
+            return;
         } else if(data.new){
             set_msg("Емкость № <b>{0} принята</b><br/><br/>".f(pk));
         } else {

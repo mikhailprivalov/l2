@@ -12,7 +12,7 @@ from receivematerial.views import receive, tubes_get, receive_obo, receive_histo
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
     result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, \
-    results_search, results_search_directions, result_html
+    results_search, results_search_directions, result_html, result_journal_table_print
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -80,6 +80,7 @@ urlpatterns = [
                   url(r'^results/pdf$', result_print),
                   url(r'^results/html$', result_html),
                   url(r'^results/journal$', result_journal_print),
+                  url(r'^results/journal_table$', result_journal_table_print),
                   url(r'^results/filter$', result_filter),
                   url(r'^results/day$', get_day_results),
                   url(r'^statistic$', statistic_page),
@@ -95,5 +96,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
-
     urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))

@@ -54,13 +54,19 @@ def receive_obo(request):
         pk = int(request.POST["pk"])
         if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
             tube = TubesRegistration.objects.get(pk=pk)
-            if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
-                status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
-                result = {"r": 1, "n": status["n"], "new": status["new"],
-                          "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
-                          "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+            if tube.getstatus():
+                if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
+                    status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
+                    result = {"r": 1, "n": status["n"], "new": status["new"],
+                              "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
+                              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+                else:
+                    result = {"r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
             else:
-                result = {"r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
+                otd = tube.issledovaniya_set.first().napravleniye.doc.podrazileniye
+                if tube.issledovaniya_set.first().napravleniye.doc_who_create:
+                    otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazileniye
+                result = {"r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
         else:
             result = {"r": 3}
     else:
@@ -93,10 +99,10 @@ def last_received(request):
     date2 = datetime_safe.datetime.now()
     last_num = 0
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye).exists():
+                                        doc_recive=request.user.doctorprofile).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                                         issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)])
+                                        doc_recive=request.user.doctorprofile)])
     return HttpResponse(json.dumps({"last_n": last_num}), content_type="application/json")
 
 
@@ -193,7 +199,7 @@ def receive_execlist(request):
                 data = []
                 tmp = []
                 tmp.append(Paragraph('<font face="OpenSansB" size="8">№</font>', styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSansB" size="8">ФИО, № истории</font>', styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSansB" size="8">ФИО, № истории<br/>отделение</font>', styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"]))
                 for fraction in fractions:
                     fraction = fraction[:int(100 / len(fractions))]
@@ -209,7 +215,7 @@ def receive_execlist(request):
                     tmp.append(
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum), styleSheet["BodyText"]))
                     tmp.append(Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.fio() + (
-                    "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num)),
+                    "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
                                          styleSheet["BodyText"]))
                     tmp.append(
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube_pk), styleSheet["BodyText"]))
@@ -229,8 +235,10 @@ def receive_execlist(request):
                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                                        ('LEFTPADDING', (0, 0), (-1, -1), 2),
                                        ('TOPPADDING', (0, 0), (-1, -1), 9),
+                                       ('TOPPADDING', (1, 0), (1, -1), 3),
                                        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
                                        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+                                       ('BOTTOMPADDING', (1, 0), (1, -1), 3),
                                        ]))
                 t.canv = c
                 wt, ht = t.wrap(0, 0)
@@ -302,11 +310,11 @@ def receive_journal(request):
     start = "1"  # str(request.GET.get("start", "1"))
     group = str(request.GET.get("group", "-2"))
     return_type = str(request.GET.get("return", "pdf"))
-    otd = str(request.GET.get("otd", "-1"))
+    otd = str(request.GET.get("otd", "[]"))
 
     start = 1 if not start.isdigit() else int(start)
     group = -2 if group not in ["-2", "-1"] and (not group.isdigit() or not directory.ResearchGroup.objects.filter(pk=int(group)).exists()) else int(group)
-    otd = int(otd)
+    otd = [int(x) for x in json.loads(otd)]
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
     pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
@@ -319,17 +327,10 @@ def receive_journal(request):
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-    tubes = []
-    if otd <= -1:
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-            time_recive__gte=datetime.now().date(), doc_recive__isnull=False).order_by(
-            'issledovaniya__napravleniye__client__pk')
-    elif otd > -1:
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk=otd, doc_recive__isnull=False).order_by(
-            'issledovaniya__napravleniye__client__pk')
+    tubes = TubesRegistration.objects.filter(
+        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+        time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd, doc_recive__isnull=False).order_by(
+        'issledovaniya__napravleniye__client__pk')
 
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории

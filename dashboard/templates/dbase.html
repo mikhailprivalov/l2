@@ -27,6 +27,24 @@
             return day + '.' + month + '.' + year;
         }
     </script>
+    <script type="text/javascript">
+        var _paq = _paq || [];
+        _paq.push(['trackPageView']);
+        _paq.push(['enableLinkTracking']);
+        (function () {
+            var u = "//home/piwik/";
+            _paq.push(['setTrackerUrl', u + 'piwik.php']);
+            _paq.push(['setSiteId', 2]);
+            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+            g.type = 'text/javascript';
+            g.async = true;
+            g.defer = true;
+            g.src = u + 'piwik.js';
+            s.parentNode.insertBefore(g, s);
+        })();
+    </script>
+    <noscript><p><img src="//home/piwik/piwik.php?idsite=2" style="border:0;" alt=""/></p></noscript>
+    <!-- End Piwik Code -->
     <style>
         @font-face {
             font-family: 'Open Sans';
@@ -51,6 +69,11 @@
 
         * {
             font-family: 'Open Sans', sans-serif;
+        }
+
+        .animated.fast{
+          -webkit-animation-duration: .3s;
+          animation-duration: .3s;
         }
 
         a.panel-body {
@@ -335,6 +358,7 @@
             background-color: #3BAFDA !important;
             border: 1px solid #3BAFDA !important;
         }
+
         .btn-blue-nb:active {
             background-color: #37BC9B !important;
             border: 1px solid #37BC9B !important;
@@ -399,7 +423,8 @@
             position: relative;
             transition: .1s linear;
         }
-        .bw100{
+
+        .bw100 {
             display: block;
             width: 100%;
         }
@@ -476,12 +501,44 @@
             background-color: #FC6E51 !important;
             background-color: #049372 !important;
         }
-        .navbar-xs { min-height:28px; height: 28px; }
-        .navbar-xs .navbar-brand{ padding: 0px 12px;font-size: 16px;line-height: 28px; }
-        .navbar-xs .navbar-nav > li > a {  padding-top: 0px; padding-bottom: 0px; line-height: 28px; }
-        .navbar-sm { min-height:40px; height: 40px; }
-        .navbar-sm .navbar-brand{ padding: 0px 12px;font-size: 16px;line-height: 40px; }
-        .navbar-sm > li > a {  padding-top: 0px; padding-bottom: 0px; line-height: 40px; }
+
+        .open .dropdown-toggle.btn-default {
+            background-color: #434a54 !important;
+        }
+
+        .navbar-xs {
+            min-height: 28px;
+            height: 28px;
+        }
+
+        .navbar-xs .navbar-brand {
+            padding: 0px 12px;
+            font-size: 16px;
+            line-height: 28px;
+        }
+
+        .navbar-xs .navbar-nav > li > a {
+            padding-top: 0px;
+            padding-bottom: 0px;
+            line-height: 28px;
+        }
+
+        .navbar-sm {
+            min-height: 40px;
+            height: 40px;
+        }
+
+        .navbar-sm .navbar-brand {
+            padding: 0px 12px;
+            font-size: 16px;
+            line-height: 40px;
+        }
+
+        .navbar-sm > li > a {
+            padding-top: 0px;
+            padding-bottom: 0px;
+            line-height: 40px;
+        }
 
         .panel-flt .panel-heading {
             background-color: #95A5A6;
@@ -494,6 +551,15 @@
 
         .panel-flt .panel-body, .panel-flt .list-group-item {
             background-color: #ECF0F1;
+        }
+
+        .panel-flt hr {
+            border: 0;
+            height: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
 
         .f-h {
@@ -759,7 +825,8 @@
             line-height: 1.42857143;
             color: #333333;
         }
-        .tt-menu .tt-suggestion:not(:last-child){
+
+        .tt-menu .tt-suggestion:not(:last-child) {
             border-bottom: 1px solid grey;
         }
 
@@ -823,10 +890,12 @@
             padding-left: 3px;
             padding-right: 3px;
         }
-        #table-researches .btn input, .table-researches .btn input{
+
+        #table-researches .btn input, .table-researches .btn input {
             display: none;
         }
-        #table-researches .btn.active-b, .table-researches .btn.active-b{
+
+        #table-researches .btn.active-b, .table-researches .btn.active-b {
             border: 1px solid #434A54 !important;
             background: #049372;
             color: #fff;
@@ -839,22 +908,26 @@
         }
 
         #table-researches .btn:hover, .table-researches .btn:hover {
-            box-shadow: inset 0 0 8px rgba(0,0,0,.8) !important;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
         }
 
         #page-preloader {
             display: none;
             opacity: 0;
         }
-        .txt-r{
+
+        .txt-r {
             text-align: right;
         }
-        .pd-r-5{
+
+        .pd-r-5 {
             padding-right: 5px;
         }
-        .b-top-bord{
+
+        .b-top-bord {
             border-top: 2px solid slategray;
         }
+
         body.showloader #page-preloader {
             display: -webkit-box;
             display: -webkit-flex;
@@ -1080,7 +1153,7 @@
             background-image: url('/static/img/horizontal.png');
         }
 
-        .split-horizontal{
+        .split-horizontal {
             padding: 0;
         }
 
@@ -1094,25 +1167,32 @@
             position: relative;
         }
 
-
         .dash-buttons a .badge {
             position: absolute;
             bottom: 10px;
             right: 100px;
             left: 100px;
         }
-        sup {font-size:xx-small; vertical-align:super;}
-        .nav-loader{
+
+        sup {
+            font-size: xx-small;
+            vertical-align: super;
+        }
+
+        .nav-loader {
             display: none;
             max-height: 36px;
             box-sizing: border-box;
         }
-        .sloader .nav-loader{
+
+        .sloader .nav-loader {
             display: block;
         }
-        .sloader .nav-cont{
+
+        .sloader .nav-cont {
             display: none;
         }
+
         .card {
             background: #fff;
             border-radius: 2px;
@@ -1124,34 +1204,35 @@
         }
 
         .card-1 {
-          box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-          transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
         }
 
         .card-1:hover {
-          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
         }
 
         .card-2 {
-          box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
         }
 
         .card-3 {
-          box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
         }
 
         .card-4 {
-          box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
         }
 
         .card-5 {
-          box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+            box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
         }
 
-        .field-22{
+        .field-22 {
             min-height: 22px;
         }
-        .c{
+
+        .c {
             text-align: center;
         }
 
@@ -1159,7 +1240,6 @@
         .disable-hover * {
             pointer-events: none !important;
         }
-
 
         .btn-ell {
             overflow: hidden;
@@ -1169,93 +1249,98 @@
 </head>
 <body>{% load has_group %}
 <div class="{% block container %}container{% endblock %}">
-{% block nav %}
-    <nav class="navbar navbar-inverse">
-        <div class="nav-cont">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-                        aria-expanded="false" aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
-                        <ul class="dropdown-menu" role="menu" style="z-index: 10000">
-                            <li><a href="/dashboard">Главная</a></li>
-                            <li><a href="/logout">Выход из профиля</a></li>
-                            <li class="divider"></li>
-                            <li><a href="/dashboard/directions/multiprint" target="_blank">Печать направлений</a></li>
-                            {% if request.user|has_group:"Получатель биоматериала" %}
-                                <li class="divider"></li>
-                                <li><a href="/dashboard/receive/one_by_one">Прием материала по одному</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                </ul>
-                <ul class="nav navbar-nav navbar-right" id="right-navbar">
-                    {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
-                        <li><a href="/dashboard/directions">Направления</a></li>
-                    {% endif %}
-                    {% if request.user|has_group:"Заборщик биоматериала" %}
-                        <li><a href="/dashboard/researches/control">Взятие материала</a></li>
-                    {% endif %}
-                    {% if request.user|has_group:"Получатель биоматериала" %}
-                        <li><a href="/dashboard/receive">Прием материала</a></li>
-                    {% endif %}
-                    {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
-                        <li><a href="/results/enter">Ввод результатов</a></li>
-                        <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-        <div class="nav-loader center">
-            <div class="navbar-header">
-                <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
-            </div>
-            <div class="din-spinner" style="text-align: center">
-                <div class="sk-fading-circle">
-                    <div class="sk-circle1 sk-circle"></div>
-                    <div class="sk-circle2 sk-circle"></div>
-                    <div class="sk-circle3 sk-circle"></div>
-                    <div class="sk-circle4 sk-circle"></div>
-                    <div class="sk-circle5 sk-circle"></div>
-                    <div class="sk-circle6 sk-circle"></div>
-                    <div class="sk-circle7 sk-circle"></div>
-                    <div class="sk-circle8 sk-circle"></div>
-                    <div class="sk-circle9 sk-circle"></div>
-                    <div class="sk-circle10 sk-circle"></div>
-                    <div class="sk-circle11 sk-circle"></div>
-                    <div class="sk-circle12 sk-circle"></div>
+    {% block nav %}
+        <nav class="navbar navbar-inverse">
+            <div class="nav-cont">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                            aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
                 </div>
-                <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+                                <li><a href="/dashboard">Главная</a></li>
+                                <li><a href="/logout">Выход из профиля</a></li>
+                                <li class="divider"></li>
+                                <li><a href="/dashboard/directions/multiprint" target="_blank">Печать направлений</a>
+                                </li>
+                                {% if request.user|has_group:"Получатель биоматериала" %}
+                                    <li class="divider"></li>
+                                    <li><a href="/dashboard/receive/one_by_one">Прием материала по одному</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right" id="right-navbar">
+                        {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
+                            <li><a href="/dashboard/directions">Направления</a></li>
+                        {% endif %}
+                        {% if request.user|has_group:"Заборщик биоматериала" %}
+                            <li><a href="/dashboard/researches/control">Взятие материала</a></li>
+                        {% endif %}
+                        {% if request.user|has_group:"Получатель биоматериала" %}
+                            <li><a href="/dashboard/receive">Прием материала</a></li>
+                        {% endif %}
+                        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
+                            <li><a href="/results/enter">Ввод результатов</a></li>
+                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
-{% endblock %}
+            <div class="nav-loader center">
+                <div class="navbar-header">
+                    <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+                </div>
+                <div class="din-spinner" style="text-align: center">
+                    <div class="sk-fading-circle">
+                        <div class="sk-circle1 sk-circle"></div>
+                        <div class="sk-circle2 sk-circle"></div>
+                        <div class="sk-circle3 sk-circle"></div>
+                        <div class="sk-circle4 sk-circle"></div>
+                        <div class="sk-circle5 sk-circle"></div>
+                        <div class="sk-circle6 sk-circle"></div>
+                        <div class="sk-circle7 sk-circle"></div>
+                        <div class="sk-circle8 sk-circle"></div>
+                        <div class="sk-circle9 sk-circle"></div>
+                        <div class="sk-circle10 sk-circle"></div>
+                        <div class="sk-circle11 sk-circle"></div>
+                        <div class="sk-circle12 sk-circle"></div>
+                    </div>
+                    <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
+                </div>
+            </div>
+        </nav>
+    {% endblock %}
     {% block content %}{% endblock %}
-{% block foot %}
-    <div class="footer-float">
-        {% load setting %}
-        {% s_get "org_title" as org_title %}
-        {{ org_title }} | ЛИС | <span class='version'>{{ VERSION }}</span>
-    </div>
-{% endblock %}
+    {% block foot %}
+        <div class="footer-float">
+            {% load setting %}
+            {% s_get "org_title" as org_title %}
+            {{ org_title }} | ЛИС | <span class='version'>{{ VERSION }}</span>
+        </div>
+    {% endblock %}
 </div>
-<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000" >
-    <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10" id="contextNumber" class="form-control w50" /></label> <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt" /></label></a></li>
-    <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со степенью</a></li>
+<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
+    <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10"
+                                                                                          id="contextNumber"
+                                                                                          class="form-control w50"/></label>
+        <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt"/></label></a></li>
+    <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со
+        степенью</a></li>
     <li class="divider context-st"></li>
     <li class="context-st">
         <div class="input-group" style="max-width: 450px">
-              <input type="text" class="noclick form-control" id="recalcValue" placeholder="Пересчитанное значение">
-              <span class="input-group-btn">
+            <input type="text" class="noclick form-control" id="recalcValue" placeholder="Пересчитанное значение">
+            <span class="input-group-btn">
                     <a action="addrecalc" class="btn btn-primary-nb">Дописать пересчет</a>
               </span>
         </div>
@@ -1398,6 +1483,17 @@
         var target = this;
         return target.split(search).join(replacement);
     };
+    String.prototype.capitalize = function () {
+        return this.charAt(0).toUpperCase() + this.slice(1);
+    };
+    String.prototype.capitalizeAll = function () {
+        var r;
+        r = this;
+        for (var s of this.split(" ")) {
+            r = r.replace(s, s.capitalize());
+        }
+        return r;
+    };
 
     String.prototype.format = String.prototype.f = function () { //  Форматирование строк. используется алиас "".f()
         var s = this,
@@ -1469,7 +1565,11 @@
         exitLoop = true;
     }
     $(document).ready(function () {
-        $('.select-b').selectpicker();
+        $('.select-b').selectpicker({
+            deselectAllText: "Снять выбор",
+            selectAllText: "Выбрать всё",
+            noneSelectedText: "Ничего не выбрано"
+        });
         //startTime();
         $("#page-preloader").hide();
         $body.addClass("showloader");
@@ -1479,66 +1579,162 @@
             elementSelector: "input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)",
             menuSelector: "#contextMenu",
             menuSelected: function (invokedOn, selectedMenu) {
-                switch(selectedMenu.attr("action")){
+                switch (selectedMenu.attr("action")) {
                     case "clear":
-                            invokedOn.val("").typeahead('val', "");
+                        invokedOn.val("").typeahead('val', "");
                         break;
                     case "addnum":
-                            val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
-                            $(invokedOn).val(val);
-                            $(invokedOn).typeahead('val', val);
-                            $("#contextNumber").val(10);
-                            $("#contextSt").val(1);
+                        val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
+                        $(invokedOn).val(val);
+                        $(invokedOn).typeahead('val', val);
+                        $("#contextNumber").val(10);
+                        $("#contextSt").val(1);
                         break;
                     case "addrecalc":
-                            val = `${invokedOn.val()} (пересчитано ${$("#recalcValue").val()})`;
-                            $(invokedOn).val(val);
-                            $(invokedOn).typeahead('val', val);
-                            $("#recalcValue").val("");
+                        r = $("#recalcValue").val();
+                        if(r != ""){
+                            r = " " + r;
+                        }
+                        val = `${invokedOn.val()} (пересчитано${r})`;
+                        $(invokedOn).val(val);
+                        $(invokedOn).typeahead('val', val);
+                        $("#recalcValue").val("");
                         break;
                     case "addleic":
-                            val = `${invokedOn.val()}п${$("#leicP").val()}\\с${$("#leicS").val()}\\э${$("#leicE").val()}\\м${$("#leicM").val()}\\л${$("#leicL").val()}`;
-                            $(invokedOn).val(val);
-                            $(invokedOn).typeahead('val', val);
-                            $("#leicP,#leicE,#leicL,#leicM,#leicS").val("");
+                        val = `${invokedOn.val()}п${$("#leicP").val()}\\с${$("#leicS").val()}\\э${$("#leicE").val()}\\м${$("#leicM").val()}\\л${$("#leicL").val()}`;
+                        $(invokedOn).val(val);
+                        $(invokedOn).typeahead('val', val);
+                        $("#leicP,#leicE,#leicL,#leicM,#leicS").val("");
                         break;
                 }
                 invokedOn.focus();
             }
         });
     });
-    function alive(){
-        $.ajax({method: "GET", url: "/dashboard", statusCode: {
-            500: function() {
-                $.amaran({
-                    'theme': 'awesome no',
-                    'content': {
-                        title: 'Сервер недоступен',
-                        message: "",
-                        info: '',
-                        icon: 'fa fa-exclamation'
-                    },
-                    'position': 'bottom right',
-                    delay: 10000
-                });
-            },
-            302: function() {
-                document.location.href = "/";
+    function alive() {
+        $.ajax({
+            method: "GET", url: "/dashboard", statusCode: {
+                500: function () {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Сервер недоступен',
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 10000
+                    });
+                },
+                302: function () {
+                    document.location.href = "/";
+                }
             }
-          }}).done(function(){
-                setTimeout(alive, 15000);
+        }).done(function () {
+            setTimeout(alive, 15000);
         });
     }
     $(document).ajaxComplete(checkSession);
-    function checkSession(event, xhr, ajaxOptions)
-    {
-        if (xhr.readyState == 4)
-        {
-            if(xhr.getResponseHeader("Login-Screen") != null && xhr.getResponseHeader("Login-Screen").length)
-            {
+    function checkSession(event, xhr, ajaxOptions) {
+        if (xhr.readyState == 4) {
+            if (xhr.getResponseHeader("Login-Screen") != null && xhr.getResponseHeader("Login-Screen").length) {
                 document.location.href = "/";
             }
         }
+    }
+
+    function convertArrayOfObjectsToCSV(args) {
+        var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+
+        data = args.data || null;
+        if (data == null || !data.length) {
+            return null;
+        }
+
+        columnDelimiter = args.columnDelimiter || ';';
+        lineDelimiter = args.lineDelimiter || '\n';
+
+        keys = Object.keys(data[0]);
+
+        result = '';
+        result += keys.join(columnDelimiter);
+        result += lineDelimiter;
+
+        data.forEach(function (item) {
+            ctr = 0;
+            keys.forEach(function (key) {
+                if (ctr > 0) result += columnDelimiter;
+
+                result += item[key];
+                ctr++;
+            });
+            result += lineDelimiter;
+        });
+
+        return result;
+    }
+
+    function downloadCSV(args) {
+        var data, filename, link;
+
+        var csv = convertArrayOfObjectsToCSV({
+            data: args.data || {}
+        });
+        if (csv == null) return;
+
+        filename = args.filename || 'export.csv';
+
+        if (!csv.match(/^data:text\/csv/i)) {
+            csv = 'data:text/csv;charset=utf-8,' + csv;
+        }
+        data = encodeURI(csv);
+
+        link = document.createElement('a');
+        link.setAttribute('href', data);
+        link.setAttribute('download', filename);
+        link.click();
+    }
+
+    function okmessage(title, body, delay) {
+        $.amaran({
+            'theme': 'awesome ok',
+            'content': {
+                title: title,
+                message: body || "",
+                info: '',
+                icon: 'fa fa-exclamation'
+            },
+            'position': 'bottom right',
+            delay: delay || 5000
+        });
+    }
+
+    function errmessage(title, body, delay) {
+        $.amaran({
+            'theme': 'awesome no',
+            'content': {
+                title: title,
+                message: body || "",
+                info: '',
+                icon: 'fa fa-exclamation'
+            },
+            'position': 'bottom right',
+            delay: delay || 5000
+        });
+    }
+    var blink_animated = {};
+    function okblink(selector, effect){
+        if(blink_animated[selector]) return;
+        e = effect || 'fadeIn';
+        $(selector).removeClass(e).removeClass('animated fast');
+        $(selector).addClass(e).addClass("animated fast");
+        blink_animated[selector] = true;
+        setTimeout(function(s){
+            $(selector).removeClass(e).removeClass('animated fast');
+            blink_animated[s] = false;
+        }.bind(this, selector), 334);
+
     }
 
 </script>
@@ -1566,23 +1762,5 @@
     </div>
 </div>
  -->
-<script type="text/javascript">
-    var _paq = _paq || [];
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-    (function () {
-        var u = "//home/piwik/";
-        _paq.push(['setTrackerUrl', u + 'piwik.php']);
-        _paq.push(['setSiteId', 2]);
-        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-        g.type = 'text/javascript';
-        g.async = true;
-        g.defer = true;
-        g.src = u + 'piwik.js';
-        s.parentNode.insertBefore(g, s);
-    })();
-</script>
-<noscript><p><img src="//home/piwik/piwik.php?idsite=2" style="border:0;" alt=""/></p></noscript>
-<!-- End Piwik Code -->
 </body>
 </html>

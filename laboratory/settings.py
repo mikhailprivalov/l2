@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
 DEBUG = "DLIS" in os.environ
-
+INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
 ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost']
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -22,10 +22,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
-    'debug_toolbar',
-    'debug_panel',
-    'django_jenkins',
     'cachalot',
+    'django_jenkins',
     'ajax_select',
     'appconf',
     'clients',
@@ -41,21 +39,27 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
+    'debug_panel',
+    'debug_toolbar',
 )
 
-
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.contrib.admindocs.middleware.XViewMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
-    'django.contrib.admindocs.middleware.XViewMiddleware'
-)
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+'''
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'debug_panel.middleware.DebugPanelMiddleware'
+)'''
 
 ROOT_URLCONF = 'laboratory.urls'
 
@@ -114,7 +118,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '192.168.0.252:11211',  # TODO: 11211
+        'LOCATION': '192.168.0.252:11211',
         'KEY_PREFIX': 'lis_test'
     },
     'debug-panel': {
@@ -255,4 +259,4 @@ if os.path.exists(__w):
 
 DJVERSION_FORMAT_STRING = '{version}'
 CACHALOT_ENABLED = True
-#DEBUG = False
+DEBUG = True

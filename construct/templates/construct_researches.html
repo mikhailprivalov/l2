@@ -204,7 +204,6 @@
 
         .list-header {
             font-weight: 500;
-            font-size: 12pt;
             margin: 3px;
             margin-top: 0;
             font-size: 16px;
@@ -290,7 +289,11 @@
             background-color: #FFF;
         }
 
-        .wellfractions, .wellfractions .add {
+        .wellfractions{
+            margin: 10px;
+
+        }
+        .wellfractions .add {
             margin: 0;
         }
 
@@ -772,7 +775,7 @@
 
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
             syncFractions();
-            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, ref_m: {"": ""}, ref_f: {"": ""}});
+            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, num: fractiontubes[tube].fractions.slice(-1)[0].num+1, ref_m: {"": ""}, ref_f: {"": ""}});
             showtubes(true);
             // $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
@@ -807,10 +810,14 @@
                 }
 
                 $("[type='f']", $(this)).each(function (index) {
-                    fractiontubes[k].fractions[key].ref_f[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
+                    rkey = $(".refkey", $(this)).val().trim();
+                    if(rkey == "") return;
+                    fractiontubes[k].fractions[key].ref_f[rkey] = $(".refcondition", $(this)).val();
                 });
                 $("[type='m']", $(this)).each(function (index) {
-                    fractiontubes[k].fractions[key].ref_m[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
+                    rkey = $(".refkey", $(this)).val().trim();
+                    if(rkey == "") return;
+                    fractiontubes[k].fractions[key].ref_m[rkey] = $(".refcondition", $(this)).val();
                 });
             });
             console.log(fractiontubes);

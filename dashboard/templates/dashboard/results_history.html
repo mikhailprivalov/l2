@@ -1,14 +1,19 @@
 {% extends "dbase.html" %}
-{% block title %}Печать результатов{% endblock %}
+{% block title %}Поиск результатов{% endblock %}
+{% block container %}container-fluid{% endblock %}
 
 {% block content %}
     <div class="row">
-        <div class="col-xs-6">
+        <div class="col-xs-4">
             <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Поиск</h3>
+                </div>
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-xs-4" style="padding-right: 3px;">
-                            <select class="selectpicker" data-width="100%" id="search-type" onchange="change_type();">
+                            <select class="selectpicker" data-width="100%" id="search-type"
+                                    onchange="change_type();">
                                 <option value="d">За день</option>
                                 <option value="m">За месяц</option>
                                 <option value="y">За год</option>
@@ -37,7 +42,8 @@
                                     </select>
                                 </div>
                                 <div class="col-xs-6">
-                                    <input type="number" class="form-control year" id="m-year" value="" min="2015"
+                                    <input type="number" class="form-control year" id="m-year" value=""
+                                           min="2015"
                                            max="2100"/>
                                 </div>
                             </div>
@@ -49,13 +55,9 @@
                     </div>
                     <div class="row" style="margin-top: 17px">
                         <div class="col-xs-12">
+                            <input class="form-control" type="text" id="search-field"
+                                   placeholder="Поисковый запрос (номер карты или ФИО, например: Иванов или 65222)"/>
                             <div class="input-group">
-                                <input class="form-control" type="text" id="search-field"
-                                       placeholder="Поиск (номер карты или ФИО, например: Иванов или 65222)"/>
-                                <span class="input-group-btn">
-                                    <button class="btn btn-blue-nb" onclick="search($('#search-field').val());"
-                                            type="button">Поиск</button>
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -78,67 +80,194 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xs-6">
-            <div class="panel panel-default panel-flt">
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;">
-                            <label for="dateday-otd">
-                                Дата подтверждения результата:
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-6" style="padding-right: 3px;">
+                            <select class="select-b" id="select-otd" data-width="100%" onchange="update_av_docs();">
+                                {% for v in notlabs %}
+                                    {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                        <option selected value="{{ v.pk }}">{{ v.title }}</option>
+                                    {% else %}
+                                        <option value="{{ v.pk }}">{{ v.title }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="use-otd">
+                                <input type="checkbox" name="use-otd" onchange="sync_otd_doc();" id="use-otd"/>
+                                учитывать
                             </label>
                         </div>
                         <div class="col-xs-6">
-                            <input type="text" class="form-control no-context" id="dateday-otd"
-                                   style="display: inline-block"
-                                   name="dateday-otd"/>
+                            <select class="select-b" id="select-doc" data-width="100%">
+                                {% for v in docs %}
+                                    {% if request.user.doctorprofile.pk == v.pk %}
+                                        <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                    {% else %}
+                                        <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="use-doc">
+                                <input type="checkbox" name="use-doc" onchange="sync_otd_doc();" id="use-doc"/>
+                                учитывать
+                            </label>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-xs-6" style="text-align: right;line-height: 1.26;"><br/>
-                            <b>Печать результатов:</b>
+                    {% comment %}<div class="row" style="margin-top: 10px">
+                        <div class="col-xs-6">
+                            <label>
+                                <input type="checkbox" name="perform_norms" id="perform_norms"/>
+                                Обработка норм
+                            </label>
                         </div>
                         <div class="col-xs-6">
-                            <div class="btn btn-blue-nb" onclick="print_results('otd');"
-                                 style="display: inline-block;width: 100%;margin-bottom: 5px;margin-top: 5px">
-                                Для отделения
+                            <label>
+                                <input type="checkbox" name="otd_search" id="otd_search"/>
+                                Поиск всех результатов для отделения
+                            </label>
+                        </div>
+                    </div>{% endcomment %}
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-6">
+                        </div>
+                        <div class="col-xs-6">
+                            <button class="btn btn-blue-nb" style="width: 100%"
+                                    onclick="search($('#search-field').val());" type="button">Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default panel-flt" style="margin-top: 30px">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Настройка отображения результатов</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-2">
+                            <label>
+                                <input type="checkbox" name="perform_norms" id="perform_norms"/>
+                                Нормы
+                            </label>
+                        </div>
+                        <div class="col-xs-3">
+                            <span class="sq isnormal-normal"></span><span> - норма </span>
+                        </div>
+                        <div class="col-xs-3">
+                            <span class="sq isnormal-not_normal"></span><span> - не норма </span>
+                        </div>
+                        <div class="col-xs-4">
+                            <span class="sq isnormal-maybe"></span><span> - возможно не норма </span>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row" style="margin-top: 5px">
+                        <div class="col-xs-12">
+                            <label>Группировка:</label><br/>
+                            <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                <label class="btn btn-blue-nb btn-ell active" title="Пациент за день">
+                                    <input type="radio" name="grouping" value="patient"
+                                           autocomplete="off">
+                                    Пациент за день
+                                </label>
+                                <label class="btn btn-blue-nb btn-ell" title="Вид исследования">
+                                    <input type="radio" name="grouping" value="researches"
+                                           autocomplete="off">
+                                    Вид исследования
+                                </label>
+                                <!--<label class="btn btn-blue-nb btn-ell" title="Направление">
+                                    <input type="radio" name="grouping" value="directions"
+                                           autocomplete="off">
+                                    Направление
+                                </label>-->
                             </div>
-                            <br/>
-                            <div class="btn btn-blue-nb" onclick="print_results('pac');"
-                                 style="display: inline-block;width: 100%">
-                                Для пациентов <br/>данного пользователя
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row" style="margin-top: 5px">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-3" style="padding-right: 3px;">
+                                    <label>Сортировка:</label>
+                                </div>
+                                <div class="col-xs-5" style="padding-right: 3px;">
+                                    <select class="select-b" data-width="100%" id="sort-type">
+                                        <option value="confirm-date">Дата подтверждения</option>
+                                        <option value="patient" selected>ФИО пациента</option>
+                                    </select>
+                                </div>
+                                <div class="col-xs-4">
+                                    <select class="select-b" data-width="100%" id="sort-dir">
+                                        <option value="up" selected>По возрастанию</option>
+                                        <option value="down">По убыванию</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <h5 style="text-align: right; margin: 4px 10px 4px 4px;"><span style="float: left">Поиск результатов:</span><small class="fastlinks" style="display: block; padding: 3px"><a href="#" onclick="print_selected();return false">Печать выбранных</a></small></h5>
-    <div id="dirs-list">
-        <table class="table table-hover table-bordered floatThead table-condensed">
-            <thead>
-            <tr>
-                <th style="width: 6%">№</th>
-                <th>ФИО</th>
-                <th style="width: 14%">Дата рождения</th>
-                <th style="width: 10%">№ карты</th>
-                <th style="width: 10%">Число направлений</th>
-                <th style="width: 10%">Дата</th>
-                <th style="width: 30px">
-                    <label>
-                        <input type="checkbox" name="select_all_rows" id="select_all_rows" onchange="sync_checkboxes(this);"/>
-                    </label>
-                </th>
-            </tr>
-            </thead>
-            <tbody>
+        <div class="col-xs-8">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Результаты поиска</h3>
+                </div>
+                <div class="panel-body">
+                    <h5 style="text-align: right; margin: 4px 10px 4px 4px;">
+                        <small class="fastlinks" style="display: block; padding: 3px">
+                            {% if request.user.is_staff %}
+                                <a href="#"
+                                   onclick="downloadCSV({data: tmp_rows, filename: 'export.csv'});return false;">Экспорт
+                                    в CSV</a>
+                            {% endif %}
+                            <a href="#"
+                               onclick="$('.batch-print,[name=select_all_rows]').prop('checked',false);$('tr.isnormal-not_normal input,tr.isnormal-maybe input').prop('checked',true);return false">Выбрать
+                                не норму</a>
+                            <a href="#" onclick="print_selected();return false">Печать выбранных</a>
+                        </small>
+                    </h5>
+                    <div id="dirs-list">
+                        <table class="table table-hover table-bordered floatThead table-condensed">
+                            <thead>
+                            <tr id="patient-view">
+                                {#                                <th style="width: 6%">№</th>#}
+                                <th>ФИО</th>
+                                <th style="width: 10%">Возраст</th>
+                                <th style="width: 14%">№ карты</th>
+                                <th style="width: 10%">Число направлений</th>
+                                <th style="width: 10%">Дата</th>
+                                <th style="width: 30px">
+                                    <label>
+                                        <input type="checkbox" name="select_all_rows" id="select_all_rows"
+                                               onchange="sync_checkboxes(this);"/>
+                                    </label>
+                                </th>
+                            </tr>
+                            <tr id="researches-view">
+                                <th>ФИО</th>
+                                <th style="width: 10%">Возраст</th>
+                                <th style="width: 14%">№ карты</th>
+                                <th style="width: 10%">Дата</th>
+                                <th style="width: 34%">Вид исследования</th>
+                                <th style="width: 30px">
+                                    <label>
+                                        <input type="checkbox" name="select_all_rows" id="select_all_rows_r"
+                                               onchange="sync_checkboxes(this);"/>
+                                    </label>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
 
-            </tbody>
-        </table>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
     <div id="directions-modal" class="modal fade" role="dialog" aria-labelledby="directions-label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -181,6 +310,7 @@
             });
             $(".year").val((today.getFullYear()));
             $("#m-type").val(today.getMonth());
+            $("#patient-view,#researches-view,#directions-view").hide();
             change_type();
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
@@ -189,13 +319,56 @@
                 resize();
             });
             resize();
+            update_av_docs();
+            sync_otd_doc();
         });
-        var card_types = {"poli": "поликлиника", "stat": "стационар"};
+
+
+        var users_av = {{ users|safe }};
+        var current_user_pk = "{{ request.user.doctorprofile.pk }}";
+
+        function update_av_docs() {
+            $("#select-doc").html("");
+            kv = parseInt($("#select-otd").val());
+            for (var i = 0; i < users_av.length; i++) {
+                if (kv == users_av[i].pk) {
+                    for (var j = 0; j < users_av[i].docs.length; j++)
+                        $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+                    break;
+                }
+            }
+            $("#select-doc").val(current_user_pk);
+            sync_otd_doc();
+        }
+        function sync_otd_doc() {
+            $("#select-doc,#select-otd,#use-doc").prop("disabled", true);
+            $("#select-doc,#select-otd,#use-doc").closest("label").addClass("disabled");
+            var otd = $("#use-otd").is(":checked");
+            var doc = otd && $("#use-doc").is(":checked");
+            if (otd) {
+                $("#select-otd").prop("disabled", false).closest("label").removeClass("disabled");
+                $("#use-doc").prop("disabled", false).closest("label").removeClass("disabled");
+            }
+            if (doc) {
+                $("#select-doc").prop("disabled", false).closest("label").removeClass("disabled");
+            }
+            $("#select-doc,#select-otd").selectpicker('refresh');
+            var selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
+            if (!!selection) selection.empty ? selection.empty() : selection.removeAllRanges();
+        }
+
+
+        var card_types = {"poli": "поликлиника", "stat": "стационар", "poli_stom": "поликлиника-стом"};
         var page = 1;
         var request = {};
         var tmp_data = {};
+        var tmp_rows = [];
+        var show_norms = 0;
         function search(query, gpage) {
             sl();
+            $('#dirs-list').scrollTop(0);
+            query = query.capitalizeAll();
+            $("#select_all_rows,#select_all_rows_r").prop("checked", false);
             if (typeof gpage == 'undefined') {
                 page = 1;
                 $("#dirs-list tbody").html("");
@@ -224,52 +397,112 @@
                     data: {
                         query: query, type_patient: $('[name="type"]:checked').val(),
                         page: page,
-                        period: JSON.stringify(period)
+                        period: JSON.stringify(period),
+                        perform_norms: $("#perform_norms").is(":checked"),
+                        otd: $("#use-otd").is(":checked") ? $("#select-otd").val() : -1,
+                        doc: $("#use-doc").is(":checked") && $("#use-otd").is(":checked") ? $("#select-doc").val() : -1,
+                        grouping: $(".active [name='grouping']").val(),
+                        sorting: $("#sort-type").val(),
+                        sorting_direction: $("#sort-dir").val(),
                     }
                 };
+                show_norms = 0;
+                if (request.data.perform_norms) {
+                    show_norms = 1;
+                }
             }
             else {
                 request.data.page = gpage;
             }
             $.ajax(request).done(function (data) {
-                i = Object.keys(data).length;
-                tmp_data = data;
+                tmp_data = data.rows;
+                i = Object.keys(data.rows).length;
                 $("#dirs-list input[type=checkbox]").prop("checked", false);
+                $("#patient-view,#researches-view,#directions-view").hide();
+                tmp_rows = [];
                 if (i > 0) {
-                    for (var key in data) {
-                        row = data[key];
+                    $(`#${data.grouping}-view`).show();
+                    if (data.grouping == "patient") {
+                        for (var key in data.rows) {
+                            row = data.rows[key];
 
-                        $("#dirs-list tbody").append(`<tr class='ttip' pk='${key}'><td onclick="open_print_form('${key}', ${i});">${i}</td><td onclick="open_print_form('${key}', ${i});">${row.fio}</td><td onclick="open_print_form('${key}', ${i});">${row.birthdate}</td><td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${card_types[row.type]}</td><td onclick="open_print_form('${key}', ${i});">${row.directions.length}</td><td onclick="open_print_form('${key}', ${i});">${row.date}</td><td><label><input type='checkbox' class='batch-print' pk='${key}' /></label></td></tr>`);
+                            $("#dirs-list tbody").append(`<tr class='ttip isnormal-${tmp_data[key].is_normal}' pk='${key}'>
+<td onclick="open_print_form('${key}', ${i});">${row.fio}</td>
+<td onclick="open_print_form('${key}', ${i});">${row.birthdate}</td>
+<td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${card_types[row.type]}</td>
+<td onclick="open_print_form('${key}', ${i});">${row.directions.length}</td>
+<td onclick="open_print_form('${key}', ${i});">${row.date}</td>
+<td><label><input type='checkbox' class='batch-print' pk='${key}' /></label></td>
+</tr>`);
+                            tmp_rows.push({
+                                //"№": i,
+                                "ФИО": row.fio,
+                                "Возраст": row.birthdate,
+                                "Номер карты": `${card_types[row.type]} - ${row.cardnum}`,
+                                "Число направлений": row.directions.length,
+                                "Дата": row.date,
+                            });
+                            researches_str = $.map(tmp_data[key].directions, function (vv, kk) {
+                                return $.map(vv.researches, function (vvv, kkk) {
+                                    return vvv.title
+                                }).join("<br/>");
+                            }).join("<br/>");
+                            $(`tr[pk='${key}']`).tooltipster({
+                                theme: "tooltipster-shadow",
+                                side: "bottom",
+                                content: `<b>Исследования:</b> ${researches_str}`,
+                                contentAsHTML: true,
+                                animationDuration: 150,
+                                arrow: false,
+                                distance: 1
+                            });
+                            i--;
+                        }
+                    } else if (data.grouping == "researches") {
+                        for (var key in data.rows) {
+                            row = data.rows[key];
 
-                        researches_str = $.map(tmp_data[key].directions, function(vv,kk){ return vv.researches.join("<br/>");}).join("<br/>");
-                        $(`tr[pk='${key}']`).tooltipster({
-                            theme: "tooltipster-shadow",
-                            side: "bottom",
-                            content: `<b>Исследования:</b> ${researches_str}`,
-                            contentAsHTML: true,
-                            animationDuration: 150,
-                            arrow: false,
-                            distance: 1
-                        });
+                            for (var direction of tmp_data[key].directions) {
+                                for (var research of direction.researches) {
+                                    $("#dirs-list tbody").append(`<tr class='isnormal-${research.is_normal}'>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${card_types[row.type]}</td>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.date}</td>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${research.title}</td>
+<td><label><input type='checkbox' class='batch-print' direction='${direction.pk}' /></label></td>
+</tr>`);
+                                    tmp_rows.push({
+                                        "ФИО": row.fio,
+                                        "Возраст": row.birthdate,
+                                        "Номер карты": `${card_types[row.type]} - ${row.cardnum}`,
+                                        "Исследование": research.title,
+                                        "Норма": norm[research.is_normal],
+                                        "Отделение": direction.otd,
+                                        "Лечащий врач": direction.doc,
+                                    });
+                                }
+                            }
+                        }
+                    } else if (data.grouping == "directions") {
 
-                        //${i}, ${row.fio}&lt;br/&gt;Исследования:&lt;br/&gt;${researches_str}
-                        i--;
                     }
-                    if (Object.keys(data).length >= 40) {
-                        $.amaran({
-                            'theme': 'awesome wrn',
-                            'content': {
-                                title: "Неточный запрос",
-                                message: "Отображены последние 40 результатов",
-                                info: '',
-                                icon: 'fa fa-exclamation'
-                            },
-                            'position': 'bottom right',
-                            delay: 10000
-                        });
-                    }
+                    /*if (Object.keys(data).length >= 40) {
+                     $.amaran({
+                     'theme': 'awesome wrn',
+                     'content': {
+                     title: "Неточный запрос",
+                     message: "Отображены последние 40 результатов",
+                     info: '',
+                     icon: 'fa fa-exclamation'
+                     },
+                     'position': 'bottom right',
+                     delay: 10000
+                     });
+                     }*/
                 }
                 else {
+                    $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
                     $.amaran({
                         'theme': 'awesome wrn',
                         'content': {
@@ -287,26 +520,39 @@
                 resize();
             });
         }
-
+        var norm = {
+            "none": "Не обработано",
+            "normal": "Норма",
+            "maybe": "Некорректный результат или норма",
+            "not_normal": "Результат вне нормы"
+        };
         function open_print_form(key, n) {
             row = tmp_data[key];
-            $('#directions-label').html(`#${n}, ${row.date}`);
+            $('#directions-label').html(`${row.date}`);
             $('#dir-fio').html(row.fio);
             $('#dir-card').html(`${row.cardnum}, ${card_types[row.type]}`);
             dirs = [];
             $("#directions_list").html("");
-            for(var i = 0; i < row.directions.length; i++){
+            for (var i = 0; i < row.directions.length; i++) {
                 dir = row.directions[i];
-                $("#directions_list").append(`<div class='direction' id='direction-${dir.pk}'>
-<a style='float: right' href='/results/pdf?pk=[${dir.pk}]' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
+                $("#directions_list").append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
+<a style='float: right' href='/results/pdf?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
 <ul class='direction-researches'></ul>
 </div>`);
-                for(var row2 of dir.researches) {
-                    $(`#direction-${dir.pk} .direction-researches`).append(`<li class='research'>${row2}</li>`);
+
+                for (var row2 of dir.researches) {
+                    data = row2.title;
+                    if (row2.is_normal != "none") {
+                        data += " - " + norm[row2.is_normal];
+                        if (row2.is_normal != "normal") {
+                            data = `<b>${data}</b>`;
+                        }
+                    }
+                    $(`#direction-${dir.pk} .direction-researches`).append(`<li class='research'>${data}</li>`);
                 }
                 dirs.push(dir.pk);
             }
-            data = "?pk=" + JSON.stringify(dirs);
+            data = "?pk=" + JSON.stringify(dirs) + "&show_norms=" + show_norms;
             $("#printall").attr("href", '/results/pdf' + data);
             resize();
             $('#directions-modal').modal({show: true});
@@ -348,7 +594,7 @@
         var first_resize = true;
 
         function resize() {
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 30);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
             if (first_resize) {
                 $('#dirs-list, #directions_list').perfectScrollbar();
                 first_resize = false;
@@ -390,7 +636,7 @@
                     for (var k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
-                                st = "?pk=[" + c[e].join(",") + "]";
+                                st = "?pk=[" + c[e].join(",") + "]&show_norms=" + show_norms;
                                 window.open('/results/pdf' + st, '_blank');
                             }, 1000 * e);
                         })(k);
@@ -398,15 +644,24 @@
                 }
             });
         }
-        function sync_checkboxes(th){
-            $(".batch-print").prop("checked", $("#select_all_rows").is(':checked'));
+        function sync_checkboxes(th) {
+            $(".batch-print").prop("checked", $("[name=select_all_rows]:visible").is(':checked'));
         }
-        function print_selected(){
+        function print_selected() {
             var print_array = [];
             $.each($(".batch-print:checked"), function (k, v) {
-                print_array = print_array.concat($.map(tmp_data[$(v).attr("pk")].directions, function(vv,kk){ return vv.pk;}));
+                var pk = $(v).attr("pk") || $(v).attr("direction");
+                if ($(v).is("[pk]")) {
+                    print_array = print_array.concat($.map(tmp_data[$(v).attr("pk")].directions, function (vv, kk) {
+                        return vv.pk;
+                    }));
+                }
+                else {
+                    if (print_array.indexOf(parseInt(pk)) == -1)
+                        print_array.push(parseInt(pk));
+                }
             });
-            window.open('/results/pdf?pk=' + JSON.stringify(print_array), '_blank');
+            window.open('/results/pdf?pk=' + JSON.stringify(print_array) + "&show_norms=" + show_norms, '_blank');
         }
     </script>
     <style>
@@ -430,7 +685,7 @@
             height: 400px;
         }
 
-        .direction{
+        .direction {
             width: 100%;
             margin: 5px;
             border-radius: 5px;
@@ -446,6 +701,11 @@
 
         #dirs-list tbody tr {
             cursor: pointer;
+            background: #fff;
+        }
+
+        #dirs-list {
+            background: #fff;
         }
 
         .local_nav a {
@@ -457,8 +717,8 @@
             margin-bottom: 5px;
         }
 
-        .datepicker{
-            z-index: 1005!important;
+        .datepicker {
+            z-index: 1005 !important;
         }
 
         td > label, th > label {
@@ -469,6 +729,31 @@
             vertical-align: middle;
             display: inline-block;
             text-align: center;
+        }
+
+        .isnormal-not_normal a, .isnormal-maybe a, .isnormal-normal a {
+            color: #fff;
+        }
+
+        .isnormal-not_normal {
+            background: #E68364 !important;
+        }
+
+        .isnormal-maybe {
+            background: #F5D76E !important;
+        }
+
+        .isnormal-normal {
+            background: #87D37C !important;
+        }
+
+        .sq {
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        label.disabled {
+            color: rgba(0, 0, 0, .33);
         }
     </style>
 {% endblock %}

@@ -34,7 +34,10 @@ def dashboard(request):  # Представление панели управл�
         menu.append(
             {"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
         menu.append(
-            {"url": "/dashboard/results_history", "title": "Печать результатов", "keys": "Shift+i",
+            {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "keys": "Shift+p",
+             "nt": False})
+        menu.append(
+            {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
              "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append(
@@ -51,7 +54,7 @@ def dashboard(request):  # Представление панели управл�
                      "nt": False})
     if "Оператор" in groups:
         menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
-    if "Просмотр статистики" in groups:
+    if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
         menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
     # if "Лечащий врач" in groups or "Зав. отделением" in groups:
     #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
@@ -95,6 +98,14 @@ def load_logs(request):
         check_new = int(request.GET["checknew"])
         states = json.loads(request.GET["searchdata"])
 
+    obj = slog.Log.objects.all()
+    if states["user"] != -1:
+        obj = obj.filter(user__pk=states["user"])
+    if states["type"] != -1:
+        obj = obj.filter(type=states["type"])
+    if states["pk"] != "-1":
+        obj = obj.filter(key__contains=states["pk"])
+
     if check_new == 0:
         if request.method == "POST":
             offset = int(request.POST["offset"])
@@ -102,28 +113,18 @@ def load_logs(request):
         else:
             offset = int(request.GET["offset"])
             size = int(request.GET["size"])
-
-        obj = slog.Log.objects.all().order_by("-id")
-        if states["user"] != -1:
-            obj = obj.filter(user__pk=states["user"])
-        if states["type"] != -1:
-            obj = obj.filter(type=states["type"])
-        if states["pk"] != "-1":
-            obj = obj.filter(key__contains=states["pk"])
-
-        for row in obj[offset:size + offset]:
+        for row in obj.order_by("-pk")[offset:size + offset]:
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
                           "time": str(row.time)}
             result["data"].append(tmp_object)
     else:
-
         if request.method == "POST":
             pkgt = int(request.POST["last_n"])
         else:
             pkgt = int(request.GET["last_n"])
 
-        for row in slog.Log.objects.filter(pk__gt=pkgt):
+        for row in obj.filter(pk__gt=pkgt).order_by("pk"):
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
                           "time": str(row.time)}
@@ -287,6 +288,25 @@ def directions(request):
                                                          'fin_stat': IstochnikiFinansirovaniya.objects.filter(
                                                              istype="stat"),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
+                                                         "users": json.dumps(users)})
+@login_required
+def results_history(request):
+    podr = Podrazdeleniya.objects.filter(isLab=True)
+
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    users = []
+    for p in podrazdeleniya:
+        pd = {"pk": p.pk, "title": p.title, "docs": []}
+        for d in DoctorProfile.objects.filter(podrazileniye=p,
+                                              user__groups__name="Лечащий врач"):
+            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
+        users.append(pd)
+    return render(request, 'dashboard/results_history.html', {'labs': podr,
+                                                         'fin_poli': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="poli"),
+                                                         'fin_stat': IstochnikiFinansirovaniya.objects.filter(
+                                                             istype="stat"),
+                                                         "notlabs": podrazdeleniya,
                                                          "users": json.dumps(users)})
 
 

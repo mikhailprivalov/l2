@@ -10,19 +10,20 @@
                         <h5 style="margin-bottom: 4px;margin-top: 2px;    font-size: 16px;" class="btn-ell">
                             Категория:</h5>
                         <div>
-                            <select data-width="100%" id="clients-base" onchange="checkType(true)" class="select-b"></select>
+                            <select data-width="100%" id="clients-base" onchange="checkType(true)"
+                                    class="select-b"></select>
                         </div>
-{#                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-bottom: 13px">#}
-{#                            <label class="btn btn-blue-nb btn-ell" title="Поликлиника">#}
-{#                                <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"#}
-{#                                       autocomplete="off">#}
-{#                                Поликлиника#}
-{#                            </label>#}
-{#                            <label class="btn btn-blue-nb btn-ell" title="Стационар">#}
-{#                                <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"#}
-{#                                       autocomplete="off"> Стационар#}
-{#                            </label>#}
-{#                        </div>#}
+                        {#                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-bottom: 13px">#}
+                        {#                            <label class="btn btn-blue-nb btn-ell" title="Поликлиника">#}
+                        {#                                <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"#}
+                        {#                                       autocomplete="off">#}
+                        {#                                Поликлиника#}
+                        {#                            </label>#}
+                        {#                            <label class="btn btn-blue-nb btn-ell" title="Стационар">#}
+                        {#                                <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"#}
+                        {#                                       autocomplete="off"> Стационар#}
+                        {#                            </label>#}
+                        {#                        </div>#}
                     </div>
                     <div class="col-md-8">
                         <h5 style="margin-bottom: 0;margin-top: 4px">&nbsp;</h5>
@@ -138,7 +139,7 @@
         </div>
         <div id="b" class="split split-horizontal">
             <div id="e" class="split content">
-                <div class="row">
+                <div class="row" style="background: #fff;">
                     <div class="col-md-3">
                         <h6>Дата назначения:</h6>
 
@@ -179,12 +180,10 @@
                             <div class="btn btn-blue-nb"
                                  title="Экспорт сводной таблицы по выбранным направлениям"
                                  onclick="batch_table_print();return false;"><i class="fa fa-table"></i></div>
-
                         </div>
                     </div>
                 </div>
-                <!--<div style="padding-top: 10px;padding-right: 15px;margin-top: 5px" id="story-list">-->
-                <table style="padding-top: 10px;padding-right: 15px;margin-top: 5px"
+                <table style="padding-top: 0;padding-right: 15px;margin-top: 5px;position: relative;z-index: 9!important;"
                        class="table table-hover table-bordered floatThead">
                     <thead>
                     <tr>
@@ -203,7 +202,6 @@
                     </thead>
                     <tbody id="story-table"></tbody>
                 </table>
-                <!--</div>-->
             </div>
             <div id="f" class="split content">
                 <div class="row">
@@ -355,12 +353,12 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table ct" id="results-tb"  style="width: 600px">
+                    <table class="table ct" id="results-tb" style="width: 600px">
                         <thead>
                         <tr>
                             <th style="padding: 2px">Исследование</th>
                             <th style="padding: 2px;width: 190px">Значение</th>
-                            <th style="padding: 2px;width: 110px">Еденицы измерения</th>
+                            <th style="padding: 2px;width: 110px">Единицы измерения</th>
                             <th style="padding: 2px;width: 35%">Референсы</th>
                         </tr>
                         </thead>
@@ -371,8 +369,14 @@
                 </div>
                 <div class="modal-footer">
                     <div class='row'>
-                        <div class="col-md-4"><a href="#" onclick="selectText('results-tb');return false;"
-                                                 class="btn btn-primary-nb btn-blue-nb">Выделить результаты</a></div>
+                        <div class="col-md-4">
+                            <a href="#"
+                               onclick="selectText('results-tb');document.execCommand('copy');clearselection();okblink('#results-tb');okmessage('Результаты скопированы', 'Ок');return false;"
+                               class="btn btn-primary-nb btn-blue-nb">Копировать результаты</a><br/><br/><a href="#"
+                                                                                                            onclick="selectText('results-tb');return false;"
+                                                                                                            class="btn btn-primary-nb btn-blue-nb">Выделить
+                            результаты</a>
+                        </div>
                         <div class="col-md-4"><a href="/results/pdf?pk=[614]" target="_blank"
                                                  class="btn btn-primary-nb print-b">Печать результатов</a></div>
                         <div class="col-md-4">
@@ -584,7 +588,7 @@
                 load_researches();
             });
 
-            for(var base_key in clients_bases){
+            for (var base_key in clients_bases) {
                 $("#clients-base").append(`<option value="${base_key}">${clients_bases[base_key]}</option>`);
             }
             $("#clients-base").val(Object.keys(clients_bases)[0]);
@@ -596,7 +600,10 @@
                 2: {lab: 34, iss: [156, 157, 158, 159]},
                 3: {lab: 34, iss: [78, 81, 80, 77]},
                 4: {lab: 33, iss: [110, 111]},
-                5: {lab: 34, iss: [84, 82, 104, 83, 74, 76, 75, 86, 73, 78, 92, 93, 89, 81, 80, 161, 87, 79, 157, 77, 85]},
+                5: {
+                    lab: 34,
+                    iss: [84, 82, 104, 83, 74, 76, 75, 86, 73, 78, 92, 93, 89, 81, 80, 161, 87, 79, 157, 77, 85]
+                },
                 6: {lab: 34, iss: [74, 76, 75, 73, 78, 81, 80, 161, 87, 77]},
                 7: {lab: 35, iss: [190, 177, 178]},
                 8: {lab: 33, iss: [131, 130, 137]}
@@ -693,8 +700,10 @@
                     }
                 }
             });
-
+            clear();
             checkType();
+            $("#e").resize(resize);
+            setTimeout(resize, 100);
             //console.log(uHash());
         });
 
@@ -749,8 +758,8 @@
                             ref = JSON.parse(v.fractions[key_v].ref_m);
                         ref_array = []
                         $.each(ref, function (key, value) {
-                            if(value != ""){
-                                if(key.toLowerCase() != "все")
+                            if (value != "") {
+                                if (key.toLowerCase() != "все")
                                     ref_array.push("{0} : {1}".f(key, value));
                                 else
                                     ref_array.push("{0}".f(value));
@@ -761,33 +770,28 @@
                     }
                     else if (Object.keys(v.fractions).length > 1) {
                         td_str = td2_str = td3_str = td4_str = "<br/>";
+                        $("#results-modal .ct tbody").append("<tr><td colspan='4'><b>{0}</b></td></tr>".f(v.title));
                         $.each(v.fractions, function (kk, vv) {
                             ref = JSON.parse(vv.ref_f);
                             if (data.client.sex.toLowerCase().trim() == "м")
                                 ref = JSON.parse(vv.ref_m);
                             ref_array = [];
                             $.each(ref, function (key, value) {
-                                if(value != ""){
-                                    if(key.toLowerCase() != "все")
+                                if (value != "") {
+                                    if (key.toLowerCase() != "все")
                                         ref_array.push("{0} : {1}".f(key, value));
                                     else
                                         ref_array.push("{0}".f(value));
                                 }
                             });
                             ref_str = ref_array.join("<br/>");
-                            br_str = "";
-                            for(var io = 0; io < ref_array.length; io++){
-                                br_str += "<br/>";
-                            }
-                            if(br_str == ""){
-                                br_str = "<br/>";
-                            }
-                            td_str += "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title + br_str;
-                            td2_str += vv.result + br_str;
-                            td3_str += vv.units + br_str;
-                            td4_str += ref_str + "<br/>";
+
+                            v1 = "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title;
+                            v2 = vv.result;
+                            v3 = vv.units;
+                            v4 = ref_str;
+                            $("#results-modal .ct tbody").append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v1, v2, v3, v4));
                         });
-                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.title, td_str, td2_str, td3_str, td4_str));
                     }
                 });
                 $("#results-modal .ct td, #results-modal .ct th").css({
@@ -795,15 +799,34 @@
                     padding: 2,
                     fontSize: 14
                 });
-                $('#results-modal .ct').find('*').css({"lineHeight": 1.2, "fontSize": 14});
+                $('#results-modal .ct').find('*').css({
+                    "lineHeight": 1.15,
+                    "fontSize": "12pt",
+                    "fontFamily": "'Times New Roman', 'Liberation Serifs', Times, serif",
+                    margin: 0,
+                    paddingTop: 2,
+                    paddingBottom: 2
+                });
                 $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
                 $("#results-modal").modal();
-                if(!data.full){
+                if (!data.full) {
                     alert("Результаты подтверждены не полностью. Данные могут быть изменены");
                 }
                 lock_show_results = false;
                 hl();
             });
+        }
+
+        function clearselection() {
+            if (window.getSelection) {
+                if (window.getSelection().empty) {  // Chrome
+                    window.getSelection().empty();
+                } else if (window.getSelection().removeAllRanges) {  // Firefox
+                    window.getSelection().removeAllRanges();
+                }
+            } else if (document.selection) {  // IE?
+                document.selection.empty();
+            }
         }
 
         function sync(notfull) {
@@ -863,11 +886,13 @@
         var load_client_dirs_lock = false;
         function load_client_dirs(id) {
             if (load_client_dirs_lock) return;
+            sl();
             load_client_dirs_lock = true;
             $('#story-list').scrollTop(0);
             $("#story-table").html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
             var data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
             data.status = $("#status").val();
+            //_paq.push(['trackSiteSearch', JSON.stringify(data), "load_client_dirs"]);
             $.ajax({url: "/directions/list/client", data: data}).done(function (data) {
                 $("#selectAllDirs").prop("checked", false);
                 $("#story-table").html("");
@@ -898,8 +923,13 @@
                         }
                     });
                 }
-                resize();
                 load_client_dirs_lock = false;
+            }).always(function (jqXHR, textStatus) {
+                if (textStatus != "success") {
+                    errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
+                }
+                hl();
+                resize();
             });
         }
 
@@ -913,11 +943,13 @@
                 data: {status: val, pk: pk}
             }).done(function (data) {
                 if (tr.hasClass("tr-cancel")) {
+                    _paq.push(['trackEvent', "Направления", "Сброс отмены направления"]);
                     tr.removeClass("tr-cancel");
                     $(".status", tr).text($(".status", tr).attr("rstatus"));
                     $(".status", tr).attr("title", statuses_titles[$(".status", tr).text()]);
                 }
                 else {
+                    _paq.push(['trackEvent', "Направления", "Отмена направления"]);
                     tr.addClass("tr-cancel");
                     $(".status", tr).attr("rstatus", $(".status", tr).text());
                     $(".status", tr).attr("title", statuses_titles["-1"]);
@@ -963,6 +995,7 @@
                 });
                 return;
             }
+            sl();
             query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
             $("#sources .active").removeClass("active");
@@ -972,6 +1005,7 @@
             catch (e) {
 
             }
+            _paq.push(['trackSiteSearch', "query=" + query + "&type=" + type, "Поиск пациента"]);
             $.ajax({ // AJAX запрос
                 url: "/clients/ajax/search?query=" + query + "&type=" + type // Установка адреса и параметров запроса
             }).done(function (data) { // Выполняется по завершению запроса и получению ответа
@@ -1013,6 +1047,11 @@
                     $("#story-table").html("");
                 }
                 $("#diagnos-field").val("");
+            }).always(function (jqXHR, textStatus) {
+                if (textStatus != "success") {
+                    errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
+                }
+                hl();
             });
         }
         function clear() { // Функция очистки результатов
@@ -1026,6 +1065,7 @@
             $("#table-researches").html("");
             $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
             $("#search-results-link").hide();
+            $("#history-num-tr input").prop("disabled", true);
 
         }
         function show_res(id, pk) { // Функция показа результата из списка нескольких
@@ -1062,6 +1102,8 @@
 
                 $("#fin_poli").removeClass("active-s");
                 $("#fin_stat").addClass("active-s");
+
+                $("#history-num-tr input").prop("disabled", false);
             }
             else {
                 $("#fin_poli").show();
@@ -1093,6 +1135,7 @@
                 show_researches(active_lab);
                 return;
             }
+            sl();
             $.ajax({ // AJAX запрос
                 url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
                 dataType: 'json'
@@ -1103,6 +1146,11 @@
                 }
                 researches_cache[active_lab] = data;
                 show_researches(active_lab);
+            }).always(function (jqXHR, textStatus) {
+                if (textStatus != "success") {
+                    errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
+                }
+                hl();
             });
         }
         function show_researches(lab) {
@@ -1270,6 +1318,7 @@
             }).done(function (data) {
                 //console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
+                    _paq.push(['trackEvent', "Направления", "Создание направлений"]);
                     if (!tr) {
                         window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
                     } else {
@@ -1310,8 +1359,8 @@
         }
 
         function resize() {
-            //$('#story-list').height(300);
-            //$('#story-list').perfectScrollbar();
+            //$('#directions-search-list').height($("#e").height() - 72);
+            //$('#directions-search-list').perfectScrollbar();
             //$('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
             $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 20);
             //$('.dir-queue').perfectScrollbar();
@@ -1436,7 +1485,7 @@
                         $("#results_m_list").html("Ничего не найдено");
                     } else {
                         var types = {
-                            0: "Забор материала не выполнен",
+                            0: "Не выполнен забор материала",
                             1: "Забор материала выполнен",
                             2: "Материал принят лабораторией",
                             3: "Исследования отложены"
@@ -1453,7 +1502,7 @@
                             d.other_dirs.reverse();
                             $("#results_m_list").append("Найдены незавершенные направления:<br/>");
                             $.each(d.other_dirs, function (k, v) {
-                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, clients_bases[v.type], v.date));
+                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, types[v.type], v.date));
                             });
                         }
 

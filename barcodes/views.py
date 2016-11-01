@@ -103,10 +103,14 @@ def tubes(request):
             # c.setFont('OpenSans', 8)
             c.setFont('clacon', 12)
             c.drawString(2 * mm, ph * mm - 3 * mm, "№" + str(d) + "," + dt[tmp2.istochnik_f.istype][0])
-            otd = tmp2.doc.podrazileniye.title.split(" ")
+            otd = list(tmp2.doc.podrazileniye.title.split(" "))
             st = ""
+
             if len(otd) > 1:
-                st = otd[0][:3] + "/" + otd[1][:1]
+                if "отделение" in otd[0].lower():
+                    st = otd[1][:3] + "/о"
+                else:
+                    st = otd[0][:3] + "/" + otd[1][:1]
             elif len(otd) == 1:
                 st = otd[0][:3]
             st += u"=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[

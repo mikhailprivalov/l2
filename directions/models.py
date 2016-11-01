@@ -342,6 +342,7 @@ class Issledovaniya(models.Model):
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
+import math
 
 class Result(models.Model):
     """
@@ -366,8 +367,8 @@ class Result(models.Model):
     def calc_normal(self):
         import operator
         from functools import reduce
-        trues = {True: ["полож.", "положительно", "да"], False: ["отриц.", "отрицательно", "нет"]}
-        signs = {">": [">", "более"], "<": ["<", "до"]}
+        trues = {True: ["полож.", "положительно", "да", "положительный"], False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный"]}
+        signs = {">": [">", "более", "старше"], "<": ["<", "до", "младше", "менее"]}
 
         calc = "maybe"
 
@@ -393,7 +394,19 @@ class Result(models.Model):
         def isnum(r):
             return r.replace(".", "", 1).isdigit()
 
-        def val_normalize(v: str):
+        def replace_pow(v):
+            v = str(v).strip()
+            for j in range(1, 9):
+                for i in range(0, 12):
+                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j*(10**i)))
+            for i in range(0, 12):
+                v = v.replace("10<sup>%s</sup>" % str(i), str(10**i))
+            return v
+
+        def val_normalize(v):
+            if v == float("inf"):
+                return v
+            v = replace_pow(v)
             import re
             tmp = re.findall("\d+\,\d+", v)
             for t in tmp:
@@ -408,19 +421,40 @@ class Result(models.Model):
         def rigths(r):
             if r == "все" or r == "":
                 return 0, 200
+
+            if "старше" in r.lower():
+                r = r.replace("старше", "").strip()
+                if r.isdigit():
+                    return int(r), 200
+
+            if "младше" in r.lower():
+                r = r.replace("младше", "").strip()
+                if r.isdigit():
+                    return 0, int(r)
+
             spl = r.split("-")
             if len(spl) == 2 and spl[0].isdigit() and spl[1].isdigit():
                 return int(spl[0]), int(spl[1])
             return False
 
         def rigths_v(r):
+            r = replace_pow(r.replace(" ", ""))
+            if r == "":
+                return -float("inf"), float("inf")
+            if "един" in r.lower():
+                r = "0-2"
+            if "отсутств" in r.lower():
+                r = "0-0"
             trues_vars = [x for x in trues.values()]
             trues_vars = reduce(operator.add, trues_vars)
             if any([x in r for x in trues_vars]):
                 return r in trues[True]
             spl = r.split("-")
-            if len(spl) == 2 and isnum(spl[0]) and isnum(spl[1]):
-                return (float(spl[0]), float(spl[1]))
+            if len(spl) == 2:
+                x = spl[0]
+                y = spl[1]
+                if isnum(x) and isnum(y):
+                    return float(x), float(y)
             signs_vars = [x for x in signs.values()]
             signs_vars = reduce(operator.add, signs_vars)
             if any([x in r for x in signs_vars]):
@@ -428,40 +462,66 @@ class Result(models.Model):
                 if not val_r:
                     val_r = "0.0"
                 if any([x in r for x in signs["<"]]):
-                    return (0.0, float(val_r) - 0.00001)
-                else:
-                    import math
-                    return (float(val_r) + 0.00001, math.inf)
-            return ""
+                    return -float("inf"), float(val_r) - 0.00001
+                elif any([x in r for x in signs[">"]]):
+                    return float(val_r) + 0.00001, float("inf")
+            return r.lower().strip()
 
         def test_value(right, value):
+            import re
             if isinstance(right, bool):
                 return value.lower() in trues[right]
             if right == "":
                 return True
             if isinstance(right, tuple) and len(right) == 2:
                 if isinstance(right[0], float) and isinstance(right[1], float):
-                    value = val_normalize(value)
+                    if "един" in value.lower():
+                        value = "1"
+                    if "отсутств" in value.lower():
+                        value = "0"
+                    if "сплошь" in value.lower() or "++" in value or "+ +" in value or "++++" in value or "+" == value.strip() or "оксал ед" in value:
+                        value = float("inf")
+                    elif "<" in value and ">" not in value:
+                        value = val_normalize(value)
+                        if value and not isinstance(value, bool):
+                            value = str(float(value) - 0.1)
+                    elif ">" in value and "<" not in value:
+                        value = val_normalize(value)
+                        if value and not isinstance(value, bool):
+                            value = str(float(value) + 0.1)
+                    if isinstance(value, str) and re.match(r"(\d)\'(\d{1,2})\"", value):
+                        m = re.search(r"(\d)\'(\d{1,2})\"", value)
+                        min = int(m.group(1))
+                        sec = int(m.group(2))
+                        value = "{0:.2f}".format(min+sec/60)
+                    else:
+                        value = val_normalize(value)
                     if not isinstance(right, bool):
                         return right[0] <= float(value) <= right[1]
-
+            if isinstance(right, str):
+                value = value.replace(".", "").lower().strip()
+                return value in right
             return False
 
         def clc(r, val):
             result = "normal"
-            for k in r.keys():
-                tmp_result = "normal"
-                rigth = rigths(k.strip().lower())
+            if val.strip() != "":
+                for k in r.keys():
+                    tmp_result = "normal"
+                    rigth = rigths(k.strip().lower())
 
-                if not rigth:
-                    tmp_result = "maybe"
-                elif rigth[0] <= age <= rigth[1]:
-                    rigth_v = rigths_v(r[k].strip().lower())
-                    test_v = test_value(rigth_v, val)
-                    if not test_v:
-                        tmp_result = "not_normal"
-                if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
-                    result = tmp_result
+                    if not rigth:
+                        tmp_result = "maybe"
+                    elif rigth[0] <= age <= rigth[1]:
+                        rigth_v = rigths_v(r[k].strip().lower())
+                        if rigth_v == "":
+                            tmp_result = "maybe"
+                        else:
+                            test_v = test_value(rigth_v, val)
+                            if not test_v:
+                                tmp_result = "not_normal"
+                    if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
+                        result = tmp_result
             return result
 
         calc = clc(ref, value)
