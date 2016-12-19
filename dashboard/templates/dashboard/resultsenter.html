@@ -88,11 +88,13 @@
         <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
             <div class="btn-group">
                 <button onclick="print_results(); return false;" id="result-print" disabled
-               class="btn btn-sm btn-primary-nb">Печать результатов</button>
+                        class="btn btn-sm btn-primary-nb">Печать результатов
+                </button>
             </div>
             <div class="btn-group">
                 <button onclick="confirm_results(); return false;" id="result-confirm" disabled
-               class="btn btn-sm btn-primary-nb">Подтвердить результаты</button>
+                        class="btn btn-sm btn-primary-nb">Подтвердить результаты
+                </button>
             </div>
         </div>
         <table class="table table-bordered table-condensed" id="dir_info">
@@ -386,7 +388,7 @@
     </div>
 {% endblock %}
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
     <style>
         .isnorm_normal input[type=text] {
         }
@@ -427,9 +429,11 @@
             text-align: right;
             padding-bottom: 3px;
         }
-        .active .status{
+
+        .active .status {
             /*font-weight: 600;*/
         }
+
         .status-n {
             color: #CF3A24;
             font-weight: bold;
@@ -521,6 +525,7 @@
         #lists {
             margin-right: -10px;
         }
+
         #tubes-list, #dirs-list, #issledovaniya-scroll, #result-jade-form {
             position: relative;
             overflow-y: auto;
@@ -529,6 +534,10 @@
 
         #issledovaniya-scroll, #result-jade-form {
             padding-right: 15px;
+        }
+
+        #result-jade-form > table {
+            width: 100% !important;
         }
 
         #issledovaniya {
@@ -639,7 +648,6 @@
 
         }
 
-
         .datepicker {
             z-index: 10005 !important;
         }
@@ -709,16 +717,19 @@
             height: 30px;
             padding-left: 5px;
         }
-        .val{
+
+        .val {
             position: relative;
         }
-        .val .unit{
+
+        .val .unit {
             color: #888;
             top: 1px;
             right: 2px;
             display: block;
         }
-        .val .unit:not(:empty){
+
+        .val .unit:not(:empty) {
             z-index: 1;
             word-break: keep-all;
             white-space: nowrap;
@@ -733,22 +744,49 @@
             font-size: 12px;
             max-width: 64px;
         }
-        .val .result-enter[unit]:not([unit=""]){
+
+        .val .result-enter[unit]:not([unit=""]) {
             padding-right: calc(64px / 9 * var(--x) + 7px);
             top: 0;
             left: 0;
             display: block;
         }
 
-        [data-x="1"] { --x: 1; }
-        [data-x="2"] { --x: 2; }
-        [data-x="3"] { --x: 3; }
-        [data-x="4"] { --x: 4; }
-        [data-x="5"] { --x: 5; }
-        [data-x="6"] { --x: 6; }
-        [data-x="7"] { --x: 7; }
-        [data-x="8"] { --x: 8; }
-        [data-x="9"] { --x: 9; }
+        [data-x="1"] {
+            --x: 1;
+        }
+
+        [data-x="2"] {
+            --x: 2;
+        }
+
+        [data-x="3"] {
+            --x: 3;
+        }
+
+        [data-x="4"] {
+            --x: 4;
+        }
+
+        [data-x="5"] {
+            --x: 5;
+        }
+
+        [data-x="6"] {
+            --x: 6;
+        }
+
+        [data-x="7"] {
+            --x: 7;
+        }
+
+        [data-x="8"] {
+            --x: 8;
+        }
+
+        [data-x="9"] {
+            --x: 9;
+        }
 
         .btn25 {
             padding-top: 1px;
@@ -896,9 +934,9 @@
             left: calc(50% - 1px);
         }
 
-        .ref table{
+        .ref table {
             width: 100%;
-            background: transparent!important;
+            background: transparent !important;
         }
 
         .ref table td, .ref table th {
@@ -909,6 +947,7 @@
         .ref table tr {
             background: transparent;
         }
+
         .ref table td {
             width: 50%;
             font-size: 12px;
@@ -965,7 +1004,7 @@
                 dataType: 'json'
             }).done(function (data) {
                 var vv = [];
-                for(var v of data){
+                for (var v of data) {
                     vv.push(v.id);
                 }
                 nn++;
@@ -982,7 +1021,7 @@
                     }
                 }).done(function (data2) {
                     data2 = JSON.parse(data2);
-                    for(var v of data2) {
+                    for (var v of data2) {
                         researches_cache[v.i] = {
                             "title": v.title,
                             "fractions": v.fractions,
@@ -1085,7 +1124,12 @@
         }
         var dir_data = {};
         var statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
-        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен, ожидает подтверждения)", "c": "Подтверждён", "o": "Отложен"};
+        var statuses_titles = {
+            "n": "Не обработан",
+            "s": "Обработан (сохранен, ожидает подтверждения)",
+            "c": "Подтверждён",
+            "o": "Отложен"
+        };
         var iss_pks = [], has_o = false;
         function load_data(id, type, select_el, noclear) {
             sl();
@@ -1109,7 +1153,7 @@
                         theme: "tooltipster-shadow"
                     });
                     $('#search-field').tooltipster('show');
-                    if (loaded_research >= 0){
+                    if (loaded_research >= 0) {
 
                         $("#loaded-buttons a").fadeIn(100);
                         $(".dir-datafield").fadeIn(100);
@@ -1248,15 +1292,16 @@
         var loaded_fractions = {};
         var researches_cache = {};
         var rendered_form_cache = {};
+        function fix_signs(input){
+            if(/^(<|>)\s*\d+$/g.test(input)){
+                input = input.replace(">", "&gt;").replace("<", "&lt;");
+            }
+            return input;
+        }
         function load_form(research_pk, id, templateid) {
             if (typeof templateid == "undefined") {
                 templateid = 0;
             }
-            /*$("#result-form").isLoading({
-             text: "Загрузка исследования",
-             position: "inside",
-             'tpl': loading_tpl
-             });*/
             sl(true);
             function callback1(data) {
                 template = data;
@@ -1285,7 +1330,7 @@
                     $.each(data2.fractions, function (fk, fv) {
                         loaded_fractions[fv.pk] = fv;
                         data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9);
-                        for(var mf in data2.fractions[fk].references) {
+                        for (var mf in data2.fractions[fk].references) {
                             var keys = [], k, i, len;
                             if (data2.fractions[fk].references.hasOwnProperty(mf)) {
                                 var tmp = data2.fractions[fk].references[mf];
@@ -1299,22 +1344,20 @@
                                             var xx = 0;
                                             var yy = 0;
                                             try {
-                                                if(x.toLowerCase().indexOf("все") >= 0){
+                                                if (x.toLowerCase().indexOf("все") >= 0) {
                                                     xx = -1;
                                                 }
-                                                else
-                                                if (x.indexOf("-") >= 0) {
+                                                else if (x.indexOf("-") >= 0) {
                                                     xx = x.split("-").last();
                                                 }
                                                 else {
                                                     xx = x.replace(/[^\d.]/g, '');
                                                 }
 
-                                                if(y.toLowerCase().indexOf("все") >= 0){
+                                                if (y.toLowerCase().indexOf("все") >= 0) {
                                                     yy = -1;
                                                 }
-                                                else
-                                                if (y.indexOf("-") >= 0) {
+                                                else if (y.indexOf("-") >= 0) {
                                                     yy = y.split("-").last();
                                                 }
                                                 else {
@@ -1324,10 +1367,10 @@
                                                 xx = parseInt(xx);
                                                 yy = parseInt(yy);
 
-                                                if(x.indexOf("старше") >= 0){
+                                                if (x.indexOf("старше") >= 0) {
                                                     xx++;
                                                 }
-                                                if(y.indexOf("старше") >= 0){
+                                                if (y.indexOf("старше") >= 0) {
                                                     yy++;
                                                 }
 
@@ -1340,7 +1383,7 @@
                                 data2.fractions[fk].references[mf] = {};
                                 for (i = 0; i < len; i++) {
                                     k = keys[i];
-                                    data2.fractions[fk].references[mf][k] = tmp[k];
+                                    data2.fractions[fk].references[mf][k] = fix_signs(tmp[k]);
                                 }
                             }
                         }
@@ -1372,13 +1415,7 @@
                             });
 
                             function typeValsDefaults(q, sync) {
-                                //if (q === '') {
                                 sync(typeVals.get(fraction_types[fv.type + ""]));
-                                /*}
-
-                                 else {
-                                 typeVals.search(q, sync);
-                                 }*/
                             }
 
                             $d = $("[data-pk='{0}']".f(fv.pk));
@@ -1397,12 +1434,8 @@
                             $d.typeahead('val', $val);
                             $("[data-pk='{0}']".f(fv.pk)).val($val);
                         }
-
-
                     });
                     f = $('.result-enter:not(.tt-hint)').eq(0);
-                    $(f).focus();
-
 
                     $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
@@ -1420,6 +1453,10 @@
                                 dready();
                             }
                         } catch (e) {
+                            resize();
+                        } finally {
+                            if($(f).val() == "")
+                                $(f).focus();
                         }
                     });
 
