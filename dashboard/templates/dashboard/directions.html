@@ -6,7 +6,7 @@
         <div id="a" class="split split-horizontal">
             <div id="c" class="split content">
                 <div class="row">
-                    <div class="col-md-4" style="padding-right: 0">
+                    <div class="col-xs-4" style="padding-right: 0">
                         <h5 style="margin-bottom: 4px;margin-top: 2px;    font-size: 16px;" class="btn-ell">
                             Категория:</h5>
                         <div>
@@ -25,7 +25,7 @@
                         {#                            </label>#}
                         {#                        </div>#}
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-xs-8">
                         <h5 style="margin-bottom: 0;margin-top: 4px">&nbsp;</h5>
                         <div class="input-group">
                             <input type="text" class="form-control" id="search-field" name="search-field"
@@ -106,7 +106,7 @@
             </div>
             <div id="d" class="split content">
                 <div class="row">
-                    <div class="col-md-5" style="padding-right: 0">
+                    <div class="col-xs-5" style="padding-right: 0">
                         <form onsubmit="return false;">
                             <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
                                     title='Выберите лабораторию...' disabled>
@@ -115,7 +115,7 @@
                             </select>
                         </form>
                     </div>
-                    <div class="col-md-4" style="padding-right: 0">
+                    <div class="col-xs-4" style="padding-right: 0">
                         <select class="select-b" id="select-template" data-width="100%"
                                 title='Шаблоны' disabled>
                             <option value="1" selected>Шаблон: Липидограмма</option>
@@ -128,7 +128,7 @@
                             <option value="8">Шаблон: Геп.</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xs-3">
                         <button class="btn btn-blue-nb btn-ell" title="Загрузить" disabled style="width: 100%;"
                                 id="select-template-btn">Загрузить
                         </button>
@@ -140,7 +140,7 @@
         <div id="b" class="split split-horizontal">
             <div id="e" class="split content">
                 <div class="row" style="background: #fff;margin-top: 2px">
-                    <div class="col-md-3" style="padding-right: 0">
+                    <div class="col-xs-3" style="padding-right: 0">
                         <h6>Дата назначения:</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
@@ -150,7 +150,7 @@
                             <input type="text" class="input-sm form-control no-context" name="date-end" style="height: 34px"/>
                         </div>
                     </div>
-                    <div class="col-md-4" style="padding-right: 0">
+                    <div class="col-xs-4" style="padding-right: 0">
                         <h6>Статус:</h6>
                         <select class="select-b" data-live-search="false" onchange="fast_ld_dirs();return false;"
                                 data-width="100%" id="status">
@@ -161,11 +161,11 @@
                             <option value="4">Выписаные исполнителем</option>
                         </select>
                     </div>
-                    <div class="col-md-2" style="padding-right: 0"><h6><br/></h6>
+                    <div class="col-xs-2" style="padding-right: 0"><h6><br/></h6>
                         <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb btn-ell"
                                 style="width: 100%" title="Обновить список"><i class="fa fa-refresh"></i></button>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xs-3">
                         <h6><br/></h6>
                         <div class="btn-group btn-group-justified">
                             <div class="btn btn-blue-nb"
@@ -205,14 +205,14 @@
             </div>
             <div id="f" class="split content">
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-xs-12">
                         <div style="margin-bottom: 20px">
-                            <div class="col-md-4" style="padding-left: 0">
+                            <div class="col-xs-4" style="padding-left: 0">
                                 <input name="diagnos" id="diagnos-field" class="form-control"
                                        placeholder="Диагноз"
                                        onkeyup="sync(true);" style="margin-bottom: 20px"/>
                             </div>
-                            <div class="col-md-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
+                            <div class="col-xs-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_poli %}
@@ -236,7 +236,7 @@
                         <table class="table table-bordered table-condensed"
                                id="table-researches-preview"></table>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-xs-6">
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn" disabled
                                         onclick="save_direction();"
                                         style="margin-bottom: 15px" title="Сохр. и распечатать направления">
@@ -248,28 +248,28 @@
                                     Сохр. и распечатать штрих-коды
                                 </button>
                             </div>
-                            <div class="col-md-3" style="padding-left: 0">
+                            <div class="col-xs-3" style="padding-left: 0">
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-just-btn" disabled
                                         onclick="save_direction(true);" title="Сохранить">
                                     Сохранить
                                 </button>
                             </div>
 
-                            <div class="col-md-3" style="padding-left: 0">
+                            <div class="col-xs-3" style="padding-left: 0">
                                 <button onclick="clear_direction();" class="btn btn-primary-nb  ctrl btn-ell"
                                         title="Очистить" disabled>Очистить
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-2 dir-queue" style="display: none">
+                    <div class="col-xs-2 dir-queue" style="display: none">
                         <div class="row" style="margin-top: 10px">
-                            <div class="col-md-6">
+                            <div class="col-xs-6">
                                 <button class="btn btn-primary-nb ctrl" id="queue-clear-btn" disabled
                                         onclick="save_direction(true);">X
                                 </button>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-xs-6">
                                 <button class="btn btn-primary-nb ctrl" id="queue-print-btn" disabled
                                         onclick="save_direction();"><i class="fa fa-print"></i></button>
                             </div>
@@ -307,14 +307,14 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-xs-4">
                             <div id="tree-cont">
                                 <div id="tree-modal">
                                     <ul></ul>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-xs-8">
                             <div id="results_container">
 
                             </div>
@@ -369,7 +369,7 @@
                 </div>
                 <div class="modal-footer">
                     <div class='row'>
-                        <div class="col-md-4">
+                        <div class="col-xs-4">
                             <a href="#"
                                onclick="selectText('results-tb');document.execCommand('copy');clearselection();okblink('#results-tb');okmessage('Результаты скопированы', 'Ок');return false;"
                                class="btn btn-primary-nb btn-blue-nb">Копировать результаты</a><br/><br/><a href="#"
@@ -377,9 +377,9 @@
                                                                                                             class="btn btn-primary-nb btn-blue-nb">Выделить
                             результаты</a>
                         </div>
-                        <div class="col-md-4"><a href="/results/pdf?pk=[614]" target="_blank"
+                        <div class="col-xs-4"><a href="/results/pdf?pk=[614]" target="_blank"
                                                  class="btn btn-primary-nb print-b">Печать результатов</a></div>
-                        <div class="col-md-4">
+                        <div class="col-xs-4">
                             <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть
                             </button>
                         </div>
