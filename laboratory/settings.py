@@ -1,19 +1,18 @@
-#
+import sys, logging
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 
-DEBUG = True
-
+DEBUG = "DLIS" in os.environ
+INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
 ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost']
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-DEBUG = False
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -23,12 +22,10 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
-    'debug_toolbar',
-    'debug_panel',
-    'django_jenkins',
     'cachalot',
+    'django_jenkins',
     'ajax_select',
-    'djversion',
+    'appconf',
     'clients',
     'users',
     'dashboard',
@@ -41,30 +38,34 @@ INSTALLED_APPS = (
     'slog',
     'directory',
     'statistic',
-    'api'
+    'api',
+    'debug_toolbar',
+    'debug_panel',
 )
 
-LOGIN_REDIRECT_URL = '/'
-
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.contrib.admindocs.middleware.XViewMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
-    'django.contrib.admindocs.middleware.XViewMiddleware'
-)
+    'django.middleware.common.CommonMiddleware',
+]
+'''
+MIDDLEWARE_CLASSES = (
+    'debug_panel.middleware.DebugPanelMiddleware'
+)'''
 
 ROOT_URLCONF = 'laboratory.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,7 +74,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'djversion.context_processors.version'
-            ],
+            ]
         },
     },
 ]
@@ -99,24 +100,24 @@ DATABASES = {
     }
 }
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'lis2',  # TODO: lis
-            'USER': 'postgres',
-            'PASSWORD': '123456',
-            # 'HOST': '192.168.122.45',
-            'HOST': '192.168.0.105',
-            # 'HOST': '127.0.0.1',
-            'PORT': '5432',
-        }
-    }
+# if DEBUG:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#             'NAME': 'lis2',  # TODO: lis
+#             'USER': 'postgres',
+#             'PASSWORD': '123456',
+#             # 'HOST': '192.168.122.45',
+#             'HOST': '192.168.0.105',
+#             # 'HOST': '127.0.0.1',
+#             'PORT': '5432',
+#         }
+#     }
 
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '192.168.0.252:11211',  # TODO: 11211
+        'LOCATION': '192.168.0.252:11211',
         'KEY_PREFIX': 'lis_test'
     },
     'debug-panel': {
@@ -146,8 +147,6 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -157,17 +156,16 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
-STATIC_ROOT = '/home/lisuser/lis/static/'
-DEBUG = True
-if DEBUG:
-    STATIC_ROOT = '/webapps/lis2/static/'  # TODO: lis
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
 '''
 if not DEBUG:
     STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
 
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'templates'),
-)
+# TEMPLATE_DIRS = (
+#    os.path.join(BASE_DIR, 'templates'),
+# )
 
 AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 
@@ -222,7 +220,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
-import sys, logging
 class DisableMigrations(object):
 
     def __contains__(self, item):
@@ -248,7 +245,7 @@ JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
                  'django_jenkins.tasks.run_pep8',
                  'django_jenkins.tasks.run_pyflakes'
                  )
-TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
+# TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 
 import time, datetime
 
@@ -260,3 +257,5 @@ if os.path.exists(__w):
     DJVERSION_UPDATED = mtime
 
 DJVERSION_FORMAT_STRING = '{version}'
+CACHALOT_ENABLED = True
+DEBUG = False

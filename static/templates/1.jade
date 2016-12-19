@@ -1,46 +1,78 @@
 .row(style="margin-bottom: 6px")
     .col-md-2
     .col-md-10
-        .btn-group.btn-group-justified(role="group")
-            a(onclick="save(); return false;", href="#")#save-btn.btn.btn-sm.btn-primary-nb Сохранить
-            a(onclick="confirm_result(); return false;", href="#")#confirm-btn.btn.btn-sm.btn-primary-nb Подтвердить
-            a(onclick="save(true,confirm_result); return false;", href="#")#confirm-andsave-btn.btn.btn-sm.btn-primary-nb Сохранить и подтвердить
-h4(style="margin-top: 2px") Исследование - #{title}
+        .btn-group.btn-group-justified
+            .btn-group
+                button(onclick="save();", type="button")#save-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить
+            .btn-group
+                button(onclick="confirm_result();", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb Подтвердить
+            .btn-group
+                button(onclick="save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить и подтвердить
+h4(style="margin-top: 2px") #{title}
 form(onsubmit="return false;")
     input(type="hidden", value=res_id)#issledovaniye_id
     #result-jade-form
         table.table.table-bordered.table-sm-pd
             thead
-                th(style="width: 16%") Фракция
-                th(style="width: 40%") Значение
-                th.col-md-3 Нормы М
-                th.col-md-3 Нормы Ж
+                th(style="width: 29%") Фракция
+                th Значение
+                th(style="width: 23%") Нормы М
+                th(style="width: 23%") Нормы Ж
             each fraction in fractions
                 if !fraction.hide
                     tr
-                        td.col-md-3
-                            label= fraction.title
+                        td
+                            label.labtitle= fraction.title
                         td
                             .input-group
                                 input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
                                 span.input-group-btn
-                                    a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb.btn25
+                                    a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb.btn30
                                         i.fa.fa-circle
-                        td.col-md-1
+                        td.ref
                             table.table.table-bordered.table-responsive
                                 each norm, index in fraction.references.m
                                     tr
                                         td= index
                                         td.col-md-5
-                                        |    !{norm}
-                        td.col-md-1
+                                            |    !{norm}
+                        td.ref
                             table.table.table-bordered.table-responsive
                                 each norm, index in fraction.references.f
                                     tr
                                         td= index
                                         td.col-md-5
-                                        |    !{norm}
-script(src="/static/templates/1.js")
+                                            |    !{norm}
+script.
+    var k = -1;
+    function genresult(th) {
+        k = pk = $(th).attr("pk");
+        $("#res-modal h4").text($(th).attr("ftitle"));
+        $("#res-modal #res-modal-dir").text($("#dir_num a").text());
+        $("#hiddenresmodal").hide();
+        $("[name='result-v']:checked").prop("checked", false);
+        $("[name=kpol]").val("");
+        $("[name=kkor]").val("");
+        $("#res-modal").modal();
+    }
+
+    function updateresmodal(th) {
+        val = $(th).val();
+        $("#hiddenresmodal").hide();
+        if (val == "1") {
+            $("#hiddenresmodal").show();
+        }
+    }
+    var types_directory = {"0": "Отриц.", "1": "Пол.", "2": "Сомнит."};
+    function saveresmodal() {
+        checked = $("[name='result-v']:checked");
+        result = types_directory[checked.val()];
+        if (checked.val() == "1") {
+            result += " (КП core {0}; КП NS {1})".f($("[name=kpol]").val(), $("[name=kkor]").val());
+        }
+        $("[data-pk=" + k + "]").val(result);
+    }
+
 .modal.fade#res-modal
     .modal-dialog
         .modal-content

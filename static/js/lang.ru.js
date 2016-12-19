@@ -17,7 +17,7 @@ lang = {
     table_researches_not_found: "Ничего не найдено",
     table_researches_click_for_show_all: "{0} {1}. Кликните для разворачивания или сворачивания <i class='glyphicon glyphicon-hand-up'></i>",
 
-    table_researches_preview_header: "<tr><th>Лаборатория</th><th>Виды исследований</th><th>Управление</th></tr>",
+    table_researches_preview_header: "<tr><th style='width: 155px'>Лаборатория</th><th>Виды исследований</th><th style='width: 101px'>Управление</th></tr>",
     table_researches_preview_none: "<tr><td>Ничего не добавлено</td><td></td><td></td></tr>",
     table_researches_preview_realy_delete: "Удалить исследования в лаборатории {0} из направления?",
     clear_direction: "Очистить направление?"
@@ -75,7 +75,9 @@ var getNorms = function (sex, age, ref, units) {
     }
     html_ret += "</table>";
     return html_ret;
-}
+};
+
+var clients_bases = {poli: "Поликлиника", stat: "Стационар", poli_stom: "Поликлиника-стоматология"};
 
 
 var fraction_types = {
@@ -106,7 +108,9 @@ var fraction_types = {
         "Грам (+) кокки - 10<sup>2</sup> КОЕ/мл",
         "Грам (-) палки - 10<sup>2</sup> КОЕ/мл"
     ],
-    "17": ["< 50"]
+    "17": ["< 50"],
+    "18": ["Умеренное кол-во", "Большое кол-во", "Небольшое кол-во", "Единичные"],
+    "19": ["Большое кол-во", "Умеренное кол-во", "Единичные"]
 };
 
 var material_types = {
@@ -118,9 +122,11 @@ var material_types = {
     "4": ["Моча"],
     "5": ["Мокрота", "Бронх/см"],
     "6": ["Цервикал", "Влагал"],
-    "7": ["С/пуатул", "Язва", "Десн/кар", "Раневое"],
+    "7": ["Пустулы", "Язва", "Десн/кар", "Раневое"],
     "8": ["Ухо"],
     "9": ["Кал"],
     "10": ["Кон/глаз"],
-    "11": ["Рот"]
+    "11": ["Рот"],
+    "12": ["Лев/ухо", "Прав/ухо"],
+    "13": ["Лев/глаз", "Прав/глаз"]
 };

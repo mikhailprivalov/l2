@@ -1,6 +1,7 @@
 {% extends "dbase.html" %}
 {% block title %}Статистика{% endblock %}
 {% block content %}
+    {% load has_group %}
     <div class="row">
         <div class="col-md-4">
             <h6>Период:</h6>
@@ -21,51 +22,77 @@
     <br/>
     <div class="row">
         <div class="col-md-6">
-             <div class="panel panel-default panel-flt">
+            <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
                     <h3 class="panel-title">Статистика по лабораториям</h3>
                 </div>
                 <ul class="list-group">
-                    <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
+                    {% if request.user.is_superuser %}
+                        <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
+                    {% endif %}
                     {% for lab in labs %}
-                        <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
-                    {% endfor %}
-                </ul>
-            </div><br/>
-             <div class="panel panel-default panel-flt">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по отделениям</h3>
-                </div>
-                <ul class="list-group">
-                    {% for pod in podrs %}
-                        <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>
+                        {% if request.user.is_superuser %}
+                            <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
+                        {% else %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk or request.user|has_group:"Просмотр статистики" %}
+                                <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
+                            {% else %}
+
+                            {% endif %}
+
+                        {% endif %}
                     {% endfor %}
                 </ul>
             </div>
+{#            <br/>#}
+{#            <div class="panel panel-default panel-flt">#}
+{#                <div class="panel-heading">#}
+{#                    <h3 class="panel-title">Статистика по отделениям#}
+{#                        <small>в разработке</small>#}
+{#                    </h3>#}
+{#                </div>#}
+{#                <ul class="list-group">#}
+{#                    {% for pod in podrs %}#}
+{#                        {% if request.user.is_superuser %}#}
+{#                            <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>#}
+{#                        {% else %}#}
+{#                            {% if pod.pk == request.user.doctorprofile.podrazileniye.pk or request.user|has_group:"Просмотр статистики" %}#}
+{#                                <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>#}
+{#                            {% else %}#}
+{##}
+{#                            {% endif %}#}
+{##}
+{#                        {% endif %}#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{#            </div>#}
         </div>
         <div class="col-md-6">
-            <div class="panel panel-default panel-flt">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по емкостям</h3>
-                </div>
-                <ul class="list-group">
-                    <li class="list-group-item" onclick="gen_stat('tubes-using', 0)">Использование пробирок</li>
-                   {% comment %} {% for tube in tubes %}
-                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
-                    {% endfor %} {% endcomment %}
-                </ul>
-            </div><br/>
-            <div class="panel panel-default panel-flt">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по пользователям</h3>
-                </div>
-                <ul class="list-group">
-                    <li class="list-group-item" onclick="gen_stat('uets', 0)">Подсчет УЕТов</li>
-                   {% comment %} {% for tube in tubes %}
-                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>
-                    {% endfor %} {% endcomment %}
-                </ul>
-            </div>
+{#            <div class="panel panel-default panel-flt">#}
+{#                <div class="panel-heading">#}
+{#                    <h3 class="panel-title">Статистика по емкостям#}
+{#                        <small>в разработке</small>#}
+{#                    </h3>#}
+{#                </div>#}
+{#                <ul class="list-group">#}
+{#                    <li class="list-group-item" onclick="gen_stat('tubes-using', 0)">Использование пробирок</li>#}
+{#                    {% comment %} {% for tube in tubes %}#}
+{#                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>#}
+{#                    {% endfor %} {% endcomment %}#}
+{#                </ul>#}
+{#            </div>#}
+{#            <br/>#}
+            {#            <div class="panel panel-default panel-flt">#}
+            {#                <div class="panel-heading">#}
+            {#                    <h3 class="panel-title">Статистика по пользователям</h3>#}
+            {#                </div>#}
+            {#                <ul class="list-group">#}
+            {#                    <li class="list-group-item" onclick="gen_stat('uets', 0)">Подсчет УЕТов</li>#}
+            {#                   {% comment %} {% for tube in tubes %}#}
+            {#                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>#}
+            {#                    {% endfor %} {% endcomment %}#}
+            {#                </ul>#}
+            {#            </div>#}
         </div>
     </div>
 {% endblock %}
@@ -88,17 +115,18 @@
 
             $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
         });
-        function gen_stat(stype, pk){
-            window.open('/statistic/xls?type=' + stype + "&pk="+pk+"&date-start="+$("[name='date-start']").val()+"&date-end="+$("[name='date-end']").val(), '_blank');
+        function gen_stat(stype, pk) {
+            window.open('/statistic/xls?type=' + stype + "&pk=" + pk + "&date-start=" + $("[name='date-start']").val() + "&date-end=" + $("[name='date-end']").val(), '_blank');
         }
     </script>
     <style>
-    .panel-flt .list-group-item{
-        padding: 4px;
-    }
-    .panel-flt .list-group-item:hover{
-        background-color: #fff;
-        cursor: pointer;
-    }
+        .panel-flt .list-group-item {
+            padding: 4px;
+        }
+
+        .panel-flt .list-group-item:hover {
+            background-color: #fff;
+            cursor: pointer;
+        }
     </style>
 {% endblock %}

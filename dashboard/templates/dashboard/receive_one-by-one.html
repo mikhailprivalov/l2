@@ -97,10 +97,8 @@
         </div>
     </div>
 {% endblock %}
-{% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
-    <script src="/static/js/jquery.idle.min.js"></script>
+{% block head_cn %}
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
     <style>
         #history-container, #researches-scroll {
             padding-right: 15px;
@@ -144,6 +142,11 @@
         width: 100%;
     }
     </style>
+{% endblock %}
+{% block scripts %}
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script src="/static/js/jquery.idle.min.js"></script>
     <audio id="snd-scan" preload="none">
         <source src="/static/sound/scan.mp3" type="audio/mpeg">
         <source src="/static/sound/scan.ogg" type="audio/ogg">
@@ -155,7 +158,6 @@
 <script>
 var before_num = 0;
 $(document).ready(function(){
-    $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
     $("#receive-field").bind('keydown', 'return', function () {
         do_receive($('#receive-field').val());
     });
@@ -234,6 +236,11 @@ function do_receive(pk){
         }
         else if(data.r == 3){
             set_msg("Ошибка! Емкость № {0} <b>не найдена</b>".f(pk));
+            play_warn();
+            return;
+        }
+        else if(data.r == 4){
+            set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
             play_warn();
             return;
         } else if(data.new){

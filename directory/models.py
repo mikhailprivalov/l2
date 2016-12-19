@@ -2,7 +2,7 @@ from django.db import models
 from podrazdeleniya.models import Subgroups, Podrazdeleniya
 from jsonfield import JSONField
 from researches.models import Tubes
-
+from users.models import DoctorProfile
 
 class DirectionsGroup(models.Model):
     """
@@ -16,6 +16,9 @@ class ReleationsFT(models.Model):
     (многие-ко-многим) фракции к пробиркам
     """
     tube = models.ForeignKey(Tubes, help_text='Пробирка')
+
+    def __str__(self):
+        return "%d %s" % (self.pk, self.tube.title)
 
 
 class ResearchGroup(models.Model):
@@ -48,6 +51,7 @@ class Researches(models.Model):
     groups = models.ManyToManyField(ResearchGroup, help_text='Группа исследований в лаборатории')
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
+    can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
 
     def __str__(self):
         return "%s" % self.title
@@ -88,3 +92,9 @@ class Absorption(models.Model):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
 
 
+class AssignmentTemplate(models.Model):
+    """
+    Шаблоны назначений
+    """
+    user = models.ForeignKey(DoctorProfile, blank=True, null=True)
+    researches = models.ManyToManyField(Researches)

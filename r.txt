@@ -25,8 +25,8 @@ coverage
 pep8
 pyflakes
 pylint
-django-selenium
 msgpack-python
 pyaml
 docutils
 django-project-version
+django-settings

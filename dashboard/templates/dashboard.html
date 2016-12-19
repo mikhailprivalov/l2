@@ -12,38 +12,38 @@
             </li>
             <li class="list-group-item">ФИО: {{ request.user.doctorprofile }}</li>
             <li class="list-group-item">Группы:
-                <div class="row dash-buttons" style="padding: 0;margin-right: 0;margin-left: 0">{% for v in request.user.groups.all %}<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5"><div class="label label-default bw100">{{ v }}</div></div>{% endfor %}</div>
+                <div class="row dash-buttons" style="padding: 0;margin-right: 0;margin-left: 0">
+                    {% for v in request.user.groups.all %}
+                        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
+                            <div class="label label-default bw100">{{ v }}</div>
+                        </div>{% endfor %}</div>
             </li>
         </ul>
     </div>
     <h4 class='f-h' style="text-align: center;">Меню</h4>
-        <div class="row dash-buttons">
-    {% for line in menu %}
+    <div class="row dash-buttons text-center">
+        {% for line in menu %}
             {% for item in line %}
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5 dash-btn">
-                <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
-                    {{ item.title }}
-                    <small class="badge badge-default">{{ item.keys }}</small>
-                </a>
-            </div>
-            <script>
-                $(document).ready(function () {
-                    $(document).on('keydown', null, '{{ item.keys|lower }}', function () {
-                        window.location.href = "{{ item.url }}";
-                    });
-                });
-            </script>
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
+                    <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
+                        <span>{{ item.title }}</span>
+                    </a>
+                </div>
             {% endfor %}
-    {% endfor %}
-        </div>
+        {% endfor %}
+    </div>
 {% endblock %}
-{% block scripts %}
+{% block head_cn %}
     <style>
         h4 {
             margin: 5px;
         }
-    .mb5{
-        margin-bottom: 5px;
-    }
+
+        .mb5 {
+            margin-bottom: 5px;
+        }
+        .mb10{
+            margin-bottom: 5px;
+        }
     </style>
 {% endblock %}

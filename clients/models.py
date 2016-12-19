@@ -26,6 +26,13 @@ class Importedclients(models.Model):
         managed = TESTING
         db_table = 'ImportedClients'
 
+    def type_str(self, short=False):
+        types = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стоматология"}
+        this_type = types.get(self.type, self.type)
+        if short:
+            this_type = "".join([x[0] for x in this_type.split("-")])
+        return this_type
+
     def fio(self) -> str:
         """
         Функция возврата полного ФИО
@@ -33,15 +40,19 @@ class Importedclients(models.Model):
         """
         return self.family + " " + self.name + " " + self.twoname
 
-    def shortfio(self) -> str:
+    def shortfio(self, supershort=False) -> str:
         """
         Функция возврата сокращенного ФИО
         :return: Короткое ФИО
         """
+        r = ""
         if self.twoname and len(self.twoname) > 0:
-            return self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
+            r = self.family + " " + self.name[0] + ". " + self.twoname[0] + "."
         else:
-            return self.family + " " + self.name[0] + "."
+            r = self.family + " " + self.name[0] + "."
+        if supershort:
+            r = r.replace(". ", "").replace(".", "")
+        return r
 
     def bd(self):
         """

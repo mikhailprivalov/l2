@@ -86,47 +86,57 @@
     </div>
     <div class="col-xs-3" style="margin-top: -10px">
         <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
-            <a href="#" onclick="print_results(); return false;" id="result-print" disabled class="btn btn-sm btn-primary-nb">Печать результатов</a>
-            <a href="#" onclick="confirm_results(); return false;" id="result-confirm" disabled class="btn btn-sm btn-primary-nb">Подтвердить результаты</a>
+            <div class="btn-group">
+                <button onclick="print_results(); return false;" id="result-print" disabled
+               class="btn btn-sm btn-primary-nb">Печать результатов</button>
+            </div>
+            <div class="btn-group">
+                <button onclick="confirm_results(); return false;" id="result-confirm" disabled
+               class="btn btn-sm btn-primary-nb">Подтвердить результаты</button>
+            </div>
         </div>
-        <table class="table table-bordered" id="dir_info">
+        <table class="table table-bordered table-condensed" id="dir_info">
             <tr>
-                <td style="width: 150px">№ Направления</td>
-                <td id="dir_num"></td>
+                <th style="width: 34%">Направление</th>
+                <td style="width: 16%"><span class="dir-datafield" id="dir_num"></span></td>
+                <th style="width: 34%">Ист.фин.</th>
+                <td style="width: 16%"><span class="dir-datafield" id="fin_source"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Ист. фин.</td>
-                <td id="fin_source"></td>
+                <th style="width: 34%">ФИО Пациента</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="dir_client_fio"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">ФИО Пациента</td>
-                <td id="dir_client_fio"></td>
+                <th style="width: 34%">Пол</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_sex"></span></td>
+                <th style="width: 34%">Возраст</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_vozrast"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Пол</td>
-                <td id="client_sex"></td>
+                <th style="width: 34%">Карта</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_cardnum"></span></td>
+                <th style="width: 34%">История</th>
+                <td style="width: 16%"><span class="dir-datafield" id="client_hisnum"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Номер карты</td>
-                <td id="client_cardnum"></td>
+                <th style="width: 34%">Лечащий врач</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
             <tr>
-                <td style="width: 150px">Номер истории</td>
-                <td id="client_hisnum"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Возраст</td>
-                <td id="client_vozrast"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Лечащий врач</td>
-                <td id="directioner"></td>
-            </tr>
-            <tr>
-                <td style="width: 150px">Отделение</td>
-                <td id="otd"></td>
+                <th style="width: 34%">Отделение</th>
+                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="otd"></span></td>
             </tr>
         </table>
+        <div class="fastlinks" id="loaded-buttons" style="min-height: 20px">
+            <div class="row">
+                <div class="col-xs-6">
+                    <a href="#" onclick="open_fill_form();return false;">Заполнить поля</a>
+                </div>
+                <div class="col-xs-6" style="text-align: right">
+                    <a href="#" onclick="reload_fast();return false;">Перезагрузить данные</a>
+                </div>
+            </div>
+        </div>
         <div id="issledovaniya-scroll">
             <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
             <ul id="issledovaniya"></ul>
@@ -149,8 +159,7 @@
                     <br/>
                     <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
                         <input type="text" class="input-sm form-control no-context" name="date-start"/>
-                    <span class="input-group-addon"
-                          style="background-color: #fff;color: #000">&mdash;</span>
+                        <span class="input-group-addon" style="background-color: #fff;color: #000">&mdash;</span>
                         <input type="text" class="input-sm form-control no-context" name="date-end"/>
                     </div>
                     <div style="height: 400px">
@@ -205,11 +214,51 @@
                                                                   style="display: inline-block"
                                                                   name="date-confirm"/></span></label>
                     <hr/>
-                    <div class="row" style="text-align: center;width: 100%">
+                    <div class="row">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8">
+                            <label>
+                                Источник финансирования:
+                                <select class="select-b" data-width="100%" multiple data-actions-box="true" id="ist_f">
+                                    {% for v in ist_f %}
+                                        <option value="{{ v.pk }}">{% if v.istype == "poli" %}Поликлиника{% else %}
+                                            Стационар{% endif %} - {{ v.tilie }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8">
+                            <label>
+                                Группа исследований для журнала-списка:
+                                <select class="select-b" data-width="100%" id="select-journal-group">
+                                    <option value="-2" selected>Все исследования</option>
+                                    <option value="-1">Без группы</option>{% for x in groups %}
+                                    <option value="{{ x.pk }}">{{ x.title }}</option>{% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
+                    <br/>
+                    <div class="row" style="text-align: center">
                         <div class="col-xs-2"></div>
                         <div class="col-xs-8" style="margin: 0 auto">
                             <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
-                                    onclick="createjournal();return false;">Создать журнал по выбранной дате
+                                    onclick="createjournal();return false;">Создать журнал-список
+                            </button>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
+                    <div class="row" style="text-align: center">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8" style="margin: 0 auto">
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createjournaltable();return false;">Создать журнал-таблицу
                             </button>
                         </div>
                         <div class="col-xs-2"></div>
@@ -255,9 +304,23 @@
                                     </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
-                                    onclick="dayprint_do();return false;">Печать результатов за выбранную дату
-                            </button>
+                            <br/>
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <select class="selectpicker" data-width="100%" style="width: 100%"
+                                            id="print-results-otd">
+                                        <option value="-1">Все отделения</option>
+                                        {% for v in podrazdeleniya %}
+                                            <option value='{{ v.pk }}'>{{ v.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-xs-6">
+                                    <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                            onclick="dayprint_do();return false;">Печать результатов за выбранную дату
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-xs-2"></div>
                     </div>
@@ -281,747 +344,63 @@
             </div>
         </div>
     </div>
+    <div id="fillform-modal" class="modal fade" role="dialog" aria-labelledby="fillform-modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="fillform-modalLabel">Заполнение полей</h3></div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <label style="width: 100%">
+                                Пробирка:<br/><select class="form-control" style="width: 100%"
+                                                      id="fillform-tubes"></select>
+                            </label>
+                        </div>
+                        <div class="col-xs-6">
+                            <label style="width: 100%">
+                                Текст заполнения:<br/>
+                                <input type="text" style="width: 100%" class="form-control" id="fillform-text"/>
+                            </label>
+                        </div>
+                    </div>
+                    <label><input type="radio" name="fillform-type" value="empty" checked/> Только пустые</label><br/>
+                    <label><input type="radio" name="fillform-type" value="all"/> Все</label>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <button class="btn btn-primary-nb" id="fill-hide" data-dismiss="modal" aria-hidden="true">
+                                Отмена
+                            </button>
+                        </div>
+                        <div class="col-xs-6">
+                            <button class="btn btn-primary-nb" onclick="do_fill();" id="fillform-ok">Подтвердить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
-{% block scripts %}
-    <script src="/static/js/runtime.js"></script>
-    <script src="/static/js/jade.min.js"></script>
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
-    <script>
-        var type = 0, su = false;
-        $(document).ready(function () {
-            {% if request.user.is_superuser %}su = true;{% endif %}
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            $("#result-print").prop("disabled", true);
-            $("#result-confirm").prop("disabled", true);
-            $(window).resize(function () {
-                resize();
-            });
-            $(document).on("click", ".select-tube", function (e) {
-                fast_search($(this, ".num").attr("tube"));
-                $("#option1").attr("checked", "checked");
-                $("#option2").removeAttr("checked");
-                $("#option1").parent(".btn").addClass('active');
-                $("#option2").parent(".btn").removeClass('active');
-                type = 0;
-                load_d_fast();
-            });
-
-            $(document).on("click", ".select-dir", function (e) {
-                fast_search($(this).attr("direction"));
-                $("#option1").removeAttr("checked");
-                $("#option2").attr("checked", "checked");
-                $("#option1").parent(".btn").removeClass('active');
-                $("#option2").parent(".btn").addClass('active');
-                type = 1;
-                load_d_fast();
-            });
-
-            $("#search-field").bind('keydown', 'return', function () {
-                load_d_fast();
-            });
-            $("body").on('keyup', ':not(.row-container) .result-enter', function (e) {
-                if (e.which === 13) {
-                    var index = $('.result-enter:not(.tt-hint)').index(this) + 1;
-                    if ($('.result-enter:not(.tt-hint)').eq(index).length)
-                        $('.result-enter:not(.tt-hint)').eq(index).focus();
-                    else
-                        save();
-                }
-            });
-            var today = new Date();
-
-            $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
-            $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
-                format: "dd.mm.yyyy",
-                todayBtn: "linked",
-                language: "ru",
-                autoclose: true,
-                todayHighlight: true
-            });
-            $(".context-st").show();
-
-            load_tubes_and_dirs();
-            resize();
-
-            $("body").on("change", ".table-researches .btn input", sync_checks);
-
-        });
-        function sync_checks() {
-            $(".btn").removeClass("active-b");
-            var elements = document.querySelectorAll("input[name='sel']:checked");
-            Array.prototype.forEach.call(elements, function (el, i) {
-                $(el).parent().addClass("active-b");
-            });
-        }
-        function tgfreeze(th) {
-            $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
-        }
-        request = "";
-        function load_d_fast() {
-            type = $('label.btn.active input').val();
-            load_data($('#search-field').val(), type);
-        }
-
-        function reload_fast() {
-            if (loaded_research < 0 && request != "") return;
-
-            load_data(request, type);
-
-            //load_form(loaded_research);
-        }
-        function get_age(s_age) {
-            return parseInt(s_age.split(" ")[0]);
-        }
-        var dir_data = {};
-        var statuses = {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
-        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен)", "c": "Подтвержден", "o": "Отложен"};
-        var iss_pks = [], has_o = false;
-        function load_data(id, type, select_el, noclear) {
-            sl();
-            $("#result-print").attr("disabled", 1);
-            $("#result-confirm").attr("disabled", 1);
-            iss_pks = [];
-            $("#search-field").attr("placeholder", "");
-            $.ajax({
-                url: "/directions/get/issledovaniya",
-                type: "json",
-                method: "GET",
-                data: {id: id, type: type}
-            }).done(function (data) {
-                hl();
-                if (!data.ok) {
-                    $("#search-field").parent().addClass("has-error");
-                    $('#search-field').tooltipster({
-                        content: "Не найдено",
-                        //position: "bottom",
-                        theme: "tooltipster-shadow"
-                    });
-                    $('#search-field').tooltipster('show');
-                    load_tubes_and_dirs();
-                    return;
-                }
-
-                if(!noclear){
-                    $("#search-field").val("");
-                }
-                {% comment %}
-
-                $("#issledovaniya").isLoading({
-                    text: "Загрузка списка исследований",
-                    position: "inside",
-                    'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
-                });{% endcomment %}
-
-                $(".has-error").removeClass("has-error");
-                try {
-                    $('#search-field').tooltipster('destroy');
-                }
-                catch (e) {
-
-                }
-                request = id;
-                dir_data = data;
-                $("#issledovaniya").isLoading("hide");
-                $(".not-loaded").hide();
-                $("#issledovaniya").show();
-                $(".select-dir.active, .select-tube.active").removeClass("active");
-                $("#result-form").empty();
-                $("#issledovaniya").empty();
-                $("#dir_num").html("<a href='/directions/pdf?napr_id=[{0}]' target='_blank'>{0}</a>".f(data.napr_pk));
-                $("#dir_client_fio").html(data.client_fio);
-                $("#directioner").html(data.directioner);
-                $("#client_vozrast").html(data.client_vozrast);
-                $("#client_cardnum").html(data.client_cardnum);
-                $("#client_sex").html(data.client_sex);
-                $("#client_hisnum").html(data.client_hisnum);
-                $("#fin_source").html(data.fin_source);
-                $("#otd").html(data.otd);
-                var status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
-                has_o = false;
-                $(".select-tube").removeClass(function (index, css) {
-                    return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
-                });
-
-                tmp_types = {"1": "направление", "0": "пробирка"};
-                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type+""],id));
-
-                $.each(data.issledovaniya, function (k, v) {
-                    if (v.saved && !v.confirmed) status = "s";
-                    else if (v.saved && v.confirmed) status = "c";
-                    else if (!v.deff) status = "n";
-                    else status = "o";
-
-
-                    if (status == "s") {
-                        if (firstch && !all_saved && !has_n) {
-                            all_saved = firstch = true;
-                        }
-                    }
-                    else if (status == "n") {
-                        all_saved = false;
-                        has_n = true;
-                    }
-                    deffc = sv = "";
-                    if (status != "c") {
-                        if (v.deff === false) {
-                            iss_pks.push(v.pk);
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
-                            all_o = false;
-                        }
-                        else {
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
-                            status = "o";
-                        }
-                        if (v.current_doc_save == 0) {
-                            sv = "<br/><span class='save-other'>сохранил: {0}</span>".f(v.doc_save_fio);
-                            has_o = true;
-                        }
-                        if (v.tube.pk == "") {
-                            sv = "&nbsp;<span class='no-tube'>Пробирка {0} не принята</span>".f(v.not_received_tubes);
-                        }
-                        deffc = "<br/>" + deffc;
-                    }
-                    else {
-                        all_o = false;
-                        if (v.allow_disable_confirm)
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
-                    }
-                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group}' onclick='load_form(${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
-
-                    tubessplit = v.tube.pk.split(',');
-                    $.each(tubessplit, function (k, vt) {
-                        $(".select-tube[tube='{0}']".f(vt)).addClass("tb-group-" + v.group);
-                        if (type == 0) {
-                            $(".select-tube[tube='{0}']".f(vt)).addClass("active");
-                        }
-                    });
-                });
-
-                if ($('[direction=\'{0}\']'.f(data.napr_pk)).length) {
-                    if (type == 0) {
-                        $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
-                        $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
-                    }
-                    if (type == 1) {
-                        $("[direction='{0}']".f(data.napr_pk)).addClass("active");
-                        $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150, {offset: -40});
-                    }
-                }
-                if (!select_el)
-                    $("#issledovaniya li").first().click();
-                else
-                    $("#issledovaniya li[num='{0}']".f(select_el)).click();
-                $('#issledovaniya-scroll').scrollTop(0);
-                if (all_saved) {
-                    $("#result-confirm").removeAttr("disabled");
-                }
-                if (data.all_confirmed && !all_o) {
-                    $("#result-print").removeAttr("disabled");
-                    $("#result-confirm").attr("disabled", 1);
-                }
-            });
-        }
-        var loaded_research = -1;
-        var datatype = -1;
-        var loaded_fractions = {};
-        function load_form(id, templateid) {
-            if (typeof templateid == "undefined") {
-                templateid = 0;
-            }
-            $("#result-form").isLoading({
-                text: "Загрузка исследования",
-                position: "inside",
-                'tpl': loading_tpl
-            });
-            $.ajax({
-                url: "/static/templates/{0}.jade".f(templateid),
-                type: "text",
-                method: "GET",
-                cache: false
-            }).done(function (data) {
-                template = data;
-                $.ajax({
-                    url: "/researches/get/one",
-                    type: "text",
-                    method: "GET",
-                    data: {id: id}
-                }).done(function (data2) {
-                    $("#form-scroll").isLoading("hide");
-                    $("#issledovaniya .active").removeClass("active");
-                    data2 = JSON.parse(data2);
-                    //console.log(data2);
-                    data2["sex"] = dir_data.client_sex;
-                    data2["age"] = dir_data.client_vozrast;
-                    $("#result-form").html(jade.compile(template)(data2));
-                    $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
-                    var autoIsF = false;
-                    var num = 0;
-                    loaded_fractions = {};
-                    $.each(data2.fractions, function (fk, fv) {
-                        loaded_fractions[fv.pk] = fv;
-                        num++;
-                        if (fv.type != -1) {
-                            if (num == 1) autoIsF = true;
-                            var ft = $.map(fraction_types[fv.type + ""], function (item) {
-                                return {value: item};
-                            });
-                            var typeVals = new Bloodhound({
-                                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-                                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                                identify: function (obj) {
-                                    return obj.value;
-                                },
-                                local: ft
-                            });
-
-                            function typeValsDefaults(q, sync) {
-                                //if (q === '') {
-                                sync(typeVals.get(fraction_types[fv.type + ""]));
-                                /*}
-
-                                 else {
-                                 typeVals.search(q, sync);
-                                 }*/
-                            }
-
-                            $d = $("[data-pk='{0}']".f(fv.pk));
-                            $val = $d.val();
-                            $d.typeahead({
-                                minLength: 0,
-                                limit: 40,
-                                highlight: true,
-                                hint: $val == ""
-                            }, {
-                                name: 'typeval',
-                                display: 'value',
-                                source: typeValsDefaults,
-                                limit: 40
-                            });
-                            $d.typeahead('val', $val);
-                            $("[data-pk='{0}']".f(fv.pk)).val($val);
-                        }
-                    });
-                    f = $('.result-enter:not(.tt-hint)').eq(0);
-                    $(f).focus();
-
-
-                    $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data) {
-                        $.each(data.results, function (k, v) {
-                            if (v != "")
-                                $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
-                            $("[data-pk='" + k + "']").val(v);
-                            $("[data-div-pk='{0}']".f(k)).html(v);
-                        });
-                        try {
-                            if (jQuery.type(dready) != "undefined" && $.isFunction(dready)) {
-                                dready();
-                            }
-                        } catch (e) {
-                        }
-                    });
-
-                    resize();
-                    loaded_research = id;
-                    datatype = -1;
-                    if (data2.confirmed) {
-                        $("#confirm-btn").attr("disabled", 1);
-                        $("#save-btn").attr("disabled", 1);
-                        $("#confirm-andsave-btn").attr("disabled", 1);
-                        datatype = 2;
-                    }
-                    else if (data2.saved) {
-                        $("#confirm-btn").removeAttr("disabled");
-                        $("#save-btn").removeAttr("disabled");
-                        $("#confirm-andsave-btn").removeAttr("disabled");
-                        datatype = 1;
-                    }
-                    else {
-                        $("#confirm-btn").attr("disabled", 1);
-                        $("#save-btn").removeAttr("disabled");
-                        $("#confirm-andsave-btn").removeAttr("disabled");
-                    }
-                    $('#result-jade-form').scrollTop(0);
-                });
-            });
-
-        }
-
-        function fast_search(num) {
-            $("#search-field").val(num);
-        }
-        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><!--<td><i class="%class% glyphicon glyphicon-refresh"></i></td>--></tr>';
-        function load_tubes_and_dirs() {
-            sl();
-            $("#tubes-list tbody").isLoading({
-                text: "Загрузка пробирок",
-                position: "inside",
-                'tpl': loadingtable,
-            });
-            $("#dirs-list tbody").isLoading({
-                text: "Загрузка направлений",
-                position: "inside",
-                'tpl': loadingtable,
-            });
-            $.ajax({
-                url: "/results/loadready",
-                data: {
-                    datestart: $("[name=datemain-start]").val(),
-                    dateend: $("[name=datemain-end]").val(),
-                    def: $("[name=def]").prop("checked") ? 1 : 0
-                },
-                type: "json",
-                method: "GET"
-            }).done(function (data) {
-                $("#tubes-list tbody").isLoading("hide");
-                $("#dirs-list tbody").isLoading("hide");
-
-                document.querySelector("#tubes-list tbody").innerHTML = "";
-                document.querySelector("#dirs-list tbody").innerHTML = "";
-
-                tubesn = data.tubes.length;
-                dirsn = data.directions.length;
-
-                if (tubesn == 0)
-                    $("#tubes-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
-                if (dirsn == 0)
-                    $("#dirs-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
-                var i = 0;
-                for (i = 0; i < tubesn; i++) {
-                    v = data.tubes[i];
-                    document.querySelector("#tubes-list tbody").innerHTML += "<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date);
-                }
-                for (i = 0; i < dirsn; i++) {
-                    v = data.directions[i];
-                    document.querySelector("#dirs-list tbody").innerHTML += "<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date);
-                }
-                document.querySelector("#tubes-list th small").textContent = tubesn;
-                document.querySelector("#dirs-list th small").textContent = dirsn;
-                $('#dirs-list').scrollTop(0);
-                $('#tubes-list').scrollTop(0);
-                resize();
-                hl();
-                $("#tubes-list tr, #dirs-list tr").addClass("animated");
-            });
-        }
-        var first_resize = true;
-        function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
-            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 75);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
-            if (first_resize) {
-                $('#tubes-list').perfectScrollbar();
-                $('#issledovaniya-scroll').perfectScrollbar();
-                $('#dirs-list').perfectScrollbar();
-                first_resize = false;
-            }
-            else {
-                $('#tubes-list').perfectScrollbar('update');
-                $('#issledovaniya-scroll').perfectScrollbar('update');
-                $('#dirs-list').perfectScrollbar('update');
-            }
-
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
-                useAbsolutePositioning: false,
-                scrollContainer: function ($table) {
-                    return $table.closest("div");
-                }
-            });
-
-            if (!$('#result-jade-form').length) return;
-            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 110);
-            $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
-        }
-        function save(noreload, fc) {
-            $("#confirm-btn").attr("disabled", 1);
-            $("#save-btn").attr("disabled", 1);
-            $("#confirm-andsave-btn").attr("disabled", 1);
-            if (datatype == 2) return;
-            $(this).disabled = true;
-            var result = {issledovaniye: -1, fractions: {}}
-            result.issledovaniye = $("#issledovaniye_id").val();
-            $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
-                result.fractions[$(v).data("pk")] = $(v).val();
-            });
-            result.fractions = JSON.stringify(result.fractions);
-            $(this).disabled = false;
-            $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
-                if (!noreload)
-                    reload_fast();
-                else {
-                    fc();
-                }
-                $.amaran({
-                    'theme': 'awesome ok',
-                    'content': {
-                        title: 'Результат сохранен',
-                        message: "",
-                        info: '',
-                        icon: 'glyphicon glyphicon-ok'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
-            });
-        }
-
-        function confirm_results(ignore) {
-
-            $(this).prop("disabled", true);
-            if (has_o && !ignore) {
-                $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
-                $('#dataConfirmOK').attr('onclick', "confirm_results(true);$('#dataConfirmModal').modal('hide');return false;");
-                $('#dataConfirmModal').modal({show: true});
-                return false;
-            }
-
-            $.ajax({
-                "url": "/results/confirm/list",
-                method: "POST",
-                type: "json",
-                data: {list: JSON.stringify(iss_pks)}
-            }).done(function (data) {
-                reload_fast();
-                if (data.ok) {
-                    $.amaran({
-                        'theme': 'awesome ok',
-                        'content': {
-                            title: 'Исследования подтверждены',
-                            message: "",
-                            info: '',
-                            icon: 'glyphicon glyphicon-ok'
-                        },
-                        'position': 'bottom right',
-                        delay: 6000
-                    });
-                }
-                $("#result-confirm").attr("disabled", 1);
-            });
-        }
-
-        function confirm_result() {
-            $("#confirm_result-btn").attr("disabled", 1);
-            $("#save-btn").attr("disabled", 1);
-            $("#confirm_result-andsave-btn").attr("disabled", 1);
-            $.ajax({
-                "url": "/results/confirm",
-                method: "POST",
-                data: {pk: $("#issledovaniye_id").val()}
-            }).done(function () {
-                reload_fast();
-                $.amaran({
-                    'theme': 'awesome ok',
-                    'content': {
-                        title: 'Исследование подтверждено',
-                        message: "",
-                        info: '',
-                        icon: 'glyphicon glyphicon-ok'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
-            });
-        }
-        var list_reload = false;
-        function print_results() {
-            data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
-            window.open('/results/pdf' + data, '_blank');
-            // list_reload = true;
-            //$('[direction="' + dir_data.napr_pk + '"]').remove();
-        }
-        function createjournal() {
-            date = $("[name=date-confirm]").val()
-            window.open('/results/journal?date=' + date, '_blank');
-        }
-        var substringMatcher = function (strs) {
-            return function findMatches(q, cb) {
-                var matches, substringRegex;
-                matches = [];
-                substrRegex = new RegExp(q, 'i');
-                $.each(strs, function (i, str) {
-                    if (substrRegex.test(str)) {
-                        matches.push(str);
-                    }
-                });
-
-                cb(matches);
-            };
-        };
-        function openexeclist() {
-            load_researches();
-            $("#list-modal").modal();
-        }
-        function openjournal() {
-            $("#journal-modal").modal();
-        }
-        function dayprint() {
-            load_researches("#dayprint-table-researches");
-            $("#results-day-modal").modal();
-        }
-        var lockdeff = false;
-        function deff(status, pk) {
-            if (lockdeff) return;
-            lockdeff = true;
-            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function (data) {
-                lockdeff = false;
-                reload_fast();
-            });
-        }
-        function dayprint_do() {
-            if (lockdeff) return;
-            lockdeff = true;
-            var researches = [];
-            $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
-                researches.push(parseInt($(v).val()));
-            });
-            if (researches.length == 0) {
-                $.amaran({
-                    'theme': 'awesome wrn',
-                    'content': {
-                        title: "Печать невозможна",
-                        message: "Ничего не выбрано",
-                        info: '',
-                        icon: 'fa fa-exclamation'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
-                lockdeff = false;
-                return;
-            }
-            sl();
-            $.ajax({
-                url: "/results/day",
-                data: {date: $("[name=dateday-confirm]").val(), researches: JSON.stringify(researches)}
-            }).done(function (data) {
-                lockdeff = false;
-                if (Object.keys(data.directions).length > 0) {
-                    strs = [];
-                    for (var l = 0; l < Object.keys(data.directions).length; l++) {
-                        strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
-                        console.log(data.directions[Object.keys(data.directions)[l]].join(","));
-                    }
-
-                    st = "?pk=[" + strs.join(",") + "]";
-                    window.open('/results/pdf' + st, '_blank');
-                    $("#results-day-modal").modal('hide');
-                }
-                else {
-                    $.amaran({
-                        'theme': 'awesome wrn',
-                        'content': {
-                            title: "Печать невозможна",
-                            message: "Ничего не найдено",
-                            info: '',
-                            icon: 'fa fa-exclamation'
-                        },
-                        'position': 'bottom right',
-                        delay: 6000
-                    });
-                }
-                hl();
-            });
-        }
-        function createlist(type) {
-            datestart = dateend = "";
-            researches = [];
-            $.each($("#table-researches .research-sel:checked"), function (k, v) {
-                researches.push(parseInt($(v).val()));
-            });
-            if (researches.length == 0) {
-                $.amaran({
-                    'theme': 'awesome wrn',
-                    'content': {
-                        title: "Создание невозможно",
-                        message: "Ничего не выбрано",
-                        info: '',
-                        icon: 'fa fa-exclamation'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
-                return;
-            }
-            switch (type) {
-                case 2:
-                    console.log("2");
-                    break;
-                default:
-                    datestart = $("[name=date-start]").val();
-                    dateend = $("[name=date-end]").val();
-                    console.log(datestart, dateend);
-                    break;
-            }
-            window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
-        }
-        function load_researches(cont) {
-            $o = $("#table-researches");
-            if (cont != undefined)
-                $o = $(cont);
-            $o.html("");
-            $o.append(lang.table_researches_header);
-            $.ajax({ // AJAX запрос
-                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
-                dataType: 'json'
-            }).done(function (data) {
-                if (data.length == 0) {
-                    $o.append(lang.table_researches_not_found);
-                    return;
-                }
-                $o.html("");
-                $o.append(lang.table_researches_header);
-                $.each(data, function (k, v) {
-                    $o.append("<label title='{1}' class=\"btn btn-default col-xs-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
-                });
-            });
-        }
-        function reset_confirm(id, rtitle, tube) {
-            sl();
-            var msg = "Сбросить подтверждение исследования №{0} - {1}, пробирка №{2}?".f(id, rtitle, tube);
-            //console.log(msg);
-            var doreset = confirm(msg);
-            if (doreset === false || doreset === null) {
-                hl();
-                return;
-            }
-            $.ajax({
-                "url": "/dashboard/confirm_reset",
-                method: "POST",
-                data: {pk: id}
-            }).done(function (data) {
-                hl();
-                if (data.ok) {
-                    reload_fast();
-                    $.amaran({
-                        'theme': 'awesome ok',
-                        'content': {
-                            title: 'Подтверждение сброшено',
-                            message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
-                            info: '',
-                            icon: 'fa fa-exclamation'
-                        },
-                        'position': 'bottom right',
-                        delay: 6000
-                    });
-                } else {
-                    $.amaran({
-                        'theme': 'awesome wrn',
-                        'content': {
-                            title: 'Ошибка',
-                            message: data.msg,
-                            info: '',
-                            icon: 'glyphicon glyphicon-ok'
-                        },
-                        'position': 'bottom right',
-                        delay: 6000
-                    });
-
-                }
-            });
-        }
-    </script>
+{% block head_cn %}
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
     <style>
+        .isnorm_normal input[type=text] {
+        }
+
+        .isnorm_maybe input[type=text] {
+            border-color: darkgoldenrod;
+            box-shadow: 0 0 4px darkgoldenrod;
+        }
+
+        .isnorm_not_normal input[type=text] {
+            border-color: darkred;
+            box-shadow: 0 0 4px darkred;
+        }
+
         .w50 {
             width: 70px;
             display: inline-block;
@@ -1044,18 +423,20 @@
             float: right;
             display: inline-block;
             vertical-align: top;
-            font-weight: 600;
-            font-size: 12pt;
+            font-size: 12px;
             text-align: right;
             padding-bottom: 3px;
         }
-
+        .active .status{
+            /*font-weight: 600;*/
+        }
         .status-n {
-            color: #CF3A24
+            color: #CF3A24;
+            font-weight: bold;
         }
 
         .status-s {
-            color: #4B77BE
+            color: #4B77BE;
         }
 
         .status-c {
@@ -1063,7 +444,8 @@
         }
 
         .status-o {
-            color: #F7CA18
+            color: #F7CA18;
+            font-weight: bold;
         }
 
         .awesome.ok {
@@ -1139,7 +521,6 @@
         #lists {
             margin-right: -10px;
         }
-
         #tubes-list, #dirs-list, #issledovaniya-scroll, #result-jade-form {
             position: relative;
             overflow-y: auto;
@@ -1237,7 +618,7 @@
         }
 
         #issledovaniya .fastlinks {
-            margin: 0;
+            margin: 9px 0 0;
         }
 
         .hiddenlinks {
@@ -1258,6 +639,7 @@
 
         }
 
+
         .datepicker {
             z-index: 10005 !important;
         }
@@ -1268,9 +650,7 @@
             color: #E08A1E
         }
 
-
         .no-tube {
-            font-weight: 500;
             font-size: 10pt;
             font-weight: bold;
             color: #e74c3c
@@ -1319,19 +699,67 @@
 
         .labtitle {
             font-weight: normal;
+            font-size: 14px;
         }
 
         .form-control.result-enter,
         .subgroup-title {
-            padding-top: 1px;
-            padding-bottom: 1px;
-            height: 25px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            height: 30px;
+            padding-left: 5px;
         }
+        .val{
+            position: relative;
+        }
+        .val .unit{
+            color: #888;
+            top: 1px;
+            right: 2px;
+            display: block;
+        }
+        .val .unit:not(:empty){
+            z-index: 1;
+            word-break: keep-all;
+            white-space: nowrap;
+            height: 20px;
+            margin-top: -24px;
+            padding-bottom: 4px;
+            padding-right: 5px;
+            float: right;
+            text-align: right;
+            box-sizing: border-box;
+            overflow: hidden;
+            font-size: 12px;
+            max-width: 64px;
+        }
+        .val .result-enter[unit]:not([unit=""]){
+            padding-right: calc(64px / 9 * var(--x) + 7px);
+            top: 0;
+            left: 0;
+            display: block;
+        }
+
+        [data-x="1"] { --x: 1; }
+        [data-x="2"] { --x: 2; }
+        [data-x="3"] { --x: 3; }
+        [data-x="4"] { --x: 4; }
+        [data-x="5"] { --x: 5; }
+        [data-x="6"] { --x: 6; }
+        [data-x="7"] { --x: 7; }
+        [data-x="8"] { --x: 8; }
+        [data-x="9"] { --x: 9; }
 
         .btn25 {
             padding-top: 1px;
             padding-bottom: 1px;
             height: 25px;
+        }
+
+        .btn30 {
+            padding-top: 3px;
+            padding-bottom: 2px;
+            height: 30px;
         }
 
         .tb-group-1 {
@@ -1366,12 +794,12 @@
             border-left: 3px #e74c3c solid !important;
         }
 
-        .select-tube{
+        .select-tube {
             transition: .3s linear all;
         }
 
-        .select-tube.active{
-            border-left-width: 8px!important;
+        .select-tube.active {
+            border-left-width: 8px !important;
         }
 
         li.tb-group-1.active {
@@ -1430,13 +858,1133 @@
             border-bottom: 1px solid #e74c3c !important;
         }
 
-        #search-field:focus::-webkit-input-placeholder { color:transparent; }
-        #search-field:focus:-moz-placeholder { color:transparent; }
-        #search-field:focus::-moz-placeholder { color:transparent; }
-        #search-field:focus:-ms-input-placeholder { color:transparent; }
+        #search-field:focus::-webkit-input-placeholder {
+            color: transparent;
+        }
 
-        #result-form th{
+        #search-field:focus:-moz-placeholder {
+            color: transparent;
+        }
+
+        #search-field:focus::-moz-placeholder {
+            color: transparent;
+        }
+
+        #search-field:focus:-ms-input-placeholder {
+            color: transparent;
+        }
+
+        #result-form th {
             padding: 2px 2px 2px 8px;
         }
+
+        .ref {
+            padding: 0 !important;
+            position: relative;
+            z-index: 0;
+        }
+
+        .ref:before {
+            background-color: #ddd;
+            content: "";
+            display: block;
+            width: 1px;
+            height: 100%;
+            position: absolute;
+            z-index: -1;
+            top: 0;
+            left: calc(50% - 1px);
+        }
+
+        .ref table{
+            width: 100%;
+            background: transparent!important;
+        }
+
+        .ref table td, .ref table th {
+            border: 1px solid #ddd;
+            background: transparent;
+        }
+
+        .ref table tr {
+            background: transparent;
+        }
+        .ref table td {
+            width: 50%;
+            font-size: 12px;
+        }
+
+        .ref table tr:first-child th {
+            border-top: 0 !important;
+        }
+
+        .ref table tr:first-child td {
+            border-top: 0 !important;
+        }
+
+        .ref table tr:last-child th {
+            border-bottom: 0 !important;
+        }
+
+        .ref table tr:last-child td {
+            border-bottom: 0 !important;
+        }
+
+        .ref table tr td {
+            border-left: 0 !important;
+        }
+
+        .ref table tr td {
+            border-right: 0 !important;
+        }
+
     </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/runtime.js"></script>
+    <script src="/static/js/jade.min.js"></script>
+    <script src="/static/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+    <script src="/static/js/ajaxq.js"></script>
+    <script>
+        var type = 0, su = false;
+        var cached_templates = {};
+        var cached_researches = {};
+        var nn = 0;
+        $(document).ready(function () {
+            {% if request.user.is_superuser %}su = true;{% endif %}
+            $("#result-print").prop("disabled", true);
+            $("#result-confirm").prop("disabled", true);
+            $(window).resize(function () {
+                resize();
+            });
+            decsl();
+            $.ajax({ // AJAX запрос
+                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+                dataType: 'json'
+            }).done(function (data) {
+                var vv = [];
+                for(var v of data){
+                    vv.push(v.id);
+                }
+                nn++;
+                $.ajaxq('precache', {
+                    url: "/researches/get/one",
+                    type: "text",
+                    method: "GET",
+                    cache: false,
+                    data: {
+                        id: JSON.stringify(vv),
+                        isresearch: true,
+                        cached: false,
+                        multi: true
+                    }
+                }).done(function (data2) {
+                    data2 = JSON.parse(data2);
+                    for(var v of data2) {
+                        researches_cache[v.i] = {
+                            "title": v.title,
+                            "fractions": v.fractions,
+                            "can_comment": v.can_comment
+                        };
+                    }
+                }).always(dechl);
+
+                for (var i = 0; i < 4; i++) {
+                    nn++;
+                    (function (i) {
+                        $.ajaxq('precache', {
+                            url: "/static/templates/{0}.jade".f(i),
+                            type: "text",
+                            cache: false,
+                            method: "GET"
+                        }).done(function (data) {
+                            cached_templates[i] = data;
+                        }).always(dechl);
+                    })(i);
+                }
+            }).always(dechl);
+
+            $(document).on("click", ".select-tube", function (e) {
+                fast_search($(this, ".num").attr("tube"));
+                $("#option1").attr("checked", "checked");
+                $("#option2").removeAttr("checked");
+                $("#option1").parent(".btn").addClass('active');
+                $("#option2").parent(".btn").removeClass('active');
+                type = 0;
+                load_d_fast();
+            });
+
+            $(document).on("click", ".select-dir", function (e) {
+                fast_search($(this).attr("direction"));
+                $("#option1").removeAttr("checked");
+                $("#option2").attr("checked", "checked");
+                $("#option1").parent(".btn").removeClass('active');
+                $("#option2").parent(".btn").addClass('active');
+                type = 1;
+                load_d_fast();
+            });
+
+            $("#search-field").bind('keydown', 'return', function () {
+                load_d_fast();
+            });
+            $("body").on('keyup', ':not(.row-container) .result-enter', function (e) {
+                if (e.which === 13) {
+                    var index = $('.result-enter:not(.tt-hint)').index(this) + 1;
+                    if ($('.result-enter:not(.tt-hint)').eq(index).length)
+                        $('.result-enter:not(.tt-hint)').eq(index).focus();
+                    else
+                        save();
+                }
+            });
+            var today = new Date();
+
+            $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
+            $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+            $(".context-st").show();
+            resize();
+
+            load_tubes_and_dirs();
+
+            $("body").on("change", ".table-researches .btn input", sync_checks);
+            $("#loaded-buttons a").fadeOut(100);
+
+        });
+        function sync_checks() {
+            $(".btn").removeClass("active-b");
+            var elements = document.querySelectorAll("input[name='sel']:checked");
+            Array.prototype.forEach.call(elements, function (el, i) {
+                $(el).parent().addClass("active-b");
+            });
+        }
+        function tgfreeze(th) {
+            $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
+        }
+        request = "";
+        function load_d_fast() {
+            type = $('label.btn.active input').val();
+            load_data($('#search-field').val(), type);
+        }
+
+        function reload_fast() {
+            if (loaded_research < 0 && request != "") return;
+
+            load_data(request, type);
+
+            //load_form(loaded_research);
+        }
+        function get_age(s_age) {
+            return parseInt(s_age.split(" ")[0]);
+        }
+        var dir_data = {};
+        var statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
+        var statuses_titles = {"n": "Не обработан", "s": "Обработан (сохранен, ожидает подтверждения)", "c": "Подтверждён", "o": "Отложен"};
+        var iss_pks = [], has_o = false;
+        function load_data(id, type, select_el, noclear) {
+            sl();
+            iss_pks = [];
+            $("#search-field").attr("placeholder", "");
+
+            $("#loaded-buttons a").fadeOut(100);
+            $(".dir-datafield").fadeOut(100);
+            $.ajax({
+                url: "/directions/get/issledovaniya",
+                type: "json",
+                method: "GET",
+                data: {id: id, type: type}
+            }).done(function (data) {
+                hl();
+                if (!data.ok) {
+                    $("#search-field").parent().addClass("has-error");
+                    $('#search-field').tooltipster({
+                        content: "Не найдено",
+                        //position: "bottom",
+                        theme: "tooltipster-shadow"
+                    });
+                    $('#search-field').tooltipster('show');
+                    if (loaded_research >= 0){
+
+                        $("#loaded-buttons a").fadeIn(100);
+                        $(".dir-datafield").fadeIn(100);
+                    }
+                    //load_tubes_and_dirs();
+                    return;
+                }
+                $("#result-print").attr("disabled", 1);
+                $("#result-confirm").attr("disabled", 1);
+
+                if (!noclear) {
+                    $("#search-field").val("");
+                }
+                {% comment %}
+
+                $("#issledovaniya").isLoading({
+                    text: "Загрузка списка исследований",
+                    position: "inside",
+                    'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
+                });{% endcomment %}
+
+                $(".has-error").removeClass("has-error");
+                try {
+                    $('#search-field').tooltipster('destroy');
+                }
+                catch (e) {
+
+                }
+                request = id;
+                dir_data = data;
+                $("#issledovaniya").isLoading("hide");
+                $(".not-loaded").hide();
+                $("#issledovaniya").show();
+                $(".select-dir.active, .select-tube.active").removeClass("active");
+                $("#result-form").empty();
+                $("#issledovaniya").empty();
+                $("#dir_num").html("<a href='/directions/pdf?napr_id=[{0}]' target='_blank'>{0}</a>".f(data.napr_pk));
+                $("#dir_client_fio").html(data.client_fio);
+                $("#directioner").html(data.directioner);
+                $("#client_vozrast").html(data.client_vozrast);
+                $("#client_cardnum").html(data.client_cardnum);
+                $("#client_sex").html(data.client_sex);
+                $("#client_hisnum").html(data.client_hisnum);
+                $("#fin_source").html(data.fin_source);
+                $("#otd").html(data.otd);
+                $(".dir-datafield").fadeIn(100);
+                var status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
+                has_o = false;
+                $(".select-tube").removeClass(function (index, css) {
+                    return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
+                });
+
+                tmp_types = {"1": "направление", "0": "пробирка"};
+                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type + ""], id));
+
+                $.each(data.issledovaniya, function (k, v) {
+                    if (v.saved && !v.confirmed) status = "s";
+                    else if (v.saved && v.confirmed) status = "c";
+                    else if (!v.deff) status = "n";
+                    else status = "o";
+
+
+                    if (status == "s") {
+                        if (firstch && !all_saved && !has_n) {
+                            all_saved = firstch = true;
+                        }
+                    }
+                    else if (status == "n") {
+                        all_saved = false;
+                        has_n = true;
+                    }
+                    deffc = sv = "";
+                    if (status != "c") {
+                        if (v.deff === false) {
+                            iss_pks.push(v.pk);
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
+                            all_o = false;
+                        }
+                        else {
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
+                            status = "o";
+                        }
+                        if (v.current_doc_save == 0) {
+                            sv = "<br/><span class='save-other'>сохранил: {0}</span>".f(v.doc_save_fio);
+                            has_o = true;
+                        }
+                        if (v.tube.pk == "") {
+                            sv = "&nbsp;<span class='no-tube'>Пробирка {0} не принята</span>".f(v.not_received_tubes);
+                        }
+                        deffc = "<br/>" + deffc;
+                    }
+                    else {
+                        all_o = false;
+                        if (v.allow_disable_confirm)
+                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
+                    }
+                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group}' onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
+
+                    tubessplit = v.tube.pk.split(',');
+                    $.each(tubessplit, function (k, vt) {
+                        $(".select-tube[tube='{0}']".f(vt)).addClass("tb-group-" + v.group);
+                        if (type == 0) {
+                            $(".select-tube[tube='{0}']".f(vt)).addClass("active");
+                        }
+                    });
+                });
+
+                if ($('[direction=\'{0}\']'.f(data.napr_pk)).length) {
+                    if (type == 0) {
+                        $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
+                        $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 0, {offset: -40});
+                    }
+                    if (type == 1) {
+                        $("[direction='{0}']".f(data.napr_pk)).addClass("active");
+                        $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 0, {offset: -40});
+                    }
+                }
+                if (!select_el)
+                    $("#issledovaniya li").first().click();
+                else
+                    $("#issledovaniya li[num='{0}']".f(select_el)).click();
+                $('#issledovaniya-scroll').scrollTop(0);
+                if (all_saved) {
+                    $("#result-confirm").removeAttr("disabled");
+                }
+                if (data.all_confirmed && !all_o) {
+                    $("#result-print").removeAttr("disabled");
+                    $("#result-confirm").attr("disabled", 1);
+                }
+
+                $("#loaded-buttons a").fadeIn(100);
+            });
+        }
+        var loaded_research = -1;
+        var datatype = -1;
+        var loaded_fractions = {};
+        var researches_cache = {};
+        var rendered_form_cache = {};
+        function load_form(research_pk, id, templateid) {
+            if (typeof templateid == "undefined") {
+                templateid = 0;
+            }
+            /*$("#result-form").isLoading({
+             text: "Загрузка исследования",
+             position: "inside",
+             'tpl': loading_tpl
+             });*/
+            sl(true);
+            function callback1(data) {
+                template = data;
+                if (!cached_templates[templateid])
+                    cached_templates[templateid] = data;
+                function callback2(data2) {
+                    $("#form-scroll").isLoading("hide");
+                    $("#issledovaniya .active").removeClass("active");
+                    data2 = JSON.parse(data2);
+                    if (!data2.cached) {
+                        researches_cache[research_pk] = {
+                            "title": data2.title,
+                            "fractions": data2.fractions,
+                            "can_comment": data2.can_comment
+                        }
+                    } else {
+                        data2.title = researches_cache[research_pk].title;
+                        data2.fractions = researches_cache[research_pk].fractions;
+                        data2.can_comment = researches_cache[research_pk].can_comment;
+                    }
+                    data2["sex"] = dir_data.client_sex;
+                    data2["age"] = dir_data.client_vozrast;
+
+
+                    loaded_fractions = {};
+                    $.each(data2.fractions, function (fk, fv) {
+                        loaded_fractions[fv.pk] = fv;
+                        data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9);
+                        for(var mf in data2.fractions[fk].references) {
+                            var keys = [], k, i, len;
+                            if (data2.fractions[fk].references.hasOwnProperty(mf)) {
+                                var tmp = data2.fractions[fk].references[mf];
+                                for (k in tmp) {
+                                    if (tmp.hasOwnProperty(k)) {
+                                        keys.push(k);
+                                    }
+                                }
+                                keys.sort(
+                                        function (x, y) {
+                                            var xx = 0;
+                                            var yy = 0;
+                                            try {
+                                                if(x.toLowerCase().indexOf("все") >= 0){
+                                                    xx = -1;
+                                                }
+                                                else
+                                                if (x.indexOf("-") >= 0) {
+                                                    xx = x.split("-").last();
+                                                }
+                                                else {
+                                                    xx = x.replace(/[^\d.]/g, '');
+                                                }
+
+                                                if(y.toLowerCase().indexOf("все") >= 0){
+                                                    yy = -1;
+                                                }
+                                                else
+                                                if (y.indexOf("-") >= 0) {
+                                                    yy = y.split("-").last();
+                                                }
+                                                else {
+                                                    yy = y.replace(/[^\d.]/g, '');
+                                                }
+
+                                                xx = parseInt(xx);
+                                                yy = parseInt(yy);
+
+                                                if(x.indexOf("старше") >= 0){
+                                                    xx++;
+                                                }
+                                                if(y.indexOf("старше") >= 0){
+                                                    yy++;
+                                                }
+
+                                            } catch (err) {
+                                            }
+                                            return xx - yy;
+                                        }
+                                );
+                                len = keys.length;
+                                data2.fractions[fk].references[mf] = {};
+                                for (i = 0; i < len; i++) {
+                                    k = keys[i];
+                                    data2.fractions[fk].references[mf][k] = tmp[k];
+                                }
+                            }
+                        }
+                    });
+
+                    var rendered = !!rendered_form_cache[research_pk];
+                    if (!rendered)
+                        rendered_form_cache[research_pk] = jade.compile(template)(data2);
+                    $("#result-form").html(rendered_form_cache[research_pk]);
+                    if (rendered)
+                        $("#issledovaniye_id").val(data2.res_id);
+                    $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
+                    var autoIsF = false;
+                    var num = 0;
+                    $.each(data2.fractions, function (fk, fv) {
+                        num++;
+                        if (fv.type != -1) {
+                            if (num == 1) autoIsF = true;
+                            var ft = $.map(fraction_types[fv.type + ""], function (item) {
+                                return {value: item};
+                            });
+                            var typeVals = new Bloodhound({
+                                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+                                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                identify: function (obj) {
+                                    return obj.value;
+                                },
+                                local: ft
+                            });
+
+                            function typeValsDefaults(q, sync) {
+                                //if (q === '') {
+                                sync(typeVals.get(fraction_types[fv.type + ""]));
+                                /*}
+
+                                 else {
+                                 typeVals.search(q, sync);
+                                 }*/
+                            }
+
+                            $d = $("[data-pk='{0}']".f(fv.pk));
+                            $val = $d.val();
+                            $d.typeahead({
+                                minLength: 0,
+                                limit: 40,
+                                highlight: true,
+                                hint: $val == ""
+                            }, {
+                                name: 'typeval',
+                                display: 'value',
+                                source: typeValsDefaults,
+                                limit: 40
+                            });
+                            $d.typeahead('val', $val);
+                            $("[data-pk='{0}']".f(fv.pk)).val($val);
+                        }
+
+
+                    });
+                    f = $('.result-enter:not(.tt-hint)').eq(0);
+                    $(f).focus();
+
+
+                    $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
+                        $.each(data.results, function (k, v) {
+                            if (v != "")
+                                $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
+                            $("[data-pk='" + k + "']").val(v);
+                            $("[data-div-pk='{0}']".f(k)).html(v);
+                            if (data.norms[k]) {
+                                $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`);
+                            }
+                        });
+                        $(".lab_comment").text(data.comment);
+                        try {
+                            if (jQuery.type(dready) != "undefined" && $.isFunction(dready)) {
+                                dready();
+                            }
+                        } catch (e) {
+                        }
+                    });
+
+                    resize();
+                    loaded_research = id;
+                    datatype = -1;
+                    if (data2.confirmed) {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#save-btn").attr("disabled", 1);
+                        $("#confirm-andsave-btn").attr("disabled", 1);
+                        datatype = 2;
+                    }
+                    else if (data2.saved) {
+                        $("#confirm-btn").removeAttr("disabled");
+                        $("#save-btn").removeAttr("disabled");
+                        $("#confirm-andsave-btn").removeAttr("disabled");
+                        datatype = 1;
+                    }
+                    else {
+                        $("#confirm-btn").attr("disabled", 1);
+                        $("#save-btn").removeAttr("disabled");
+                        $("#confirm-andsave-btn").removeAttr("disabled");
+                    }
+                    hl();
+                    $('#result-jade-form').scrollTop(0);
+                }
+
+                $.ajaxq('precache', {
+                    url: "/researches/get/one",
+                    type: "text",
+                    method: "GET",
+                    cache: false,
+                    data: {
+                        id: id,
+                        cached: !!researches_cache[research_pk]
+                    }
+                }).done(callback2);
+
+            }
+
+            if (!cached_templates[templateid]) {
+                $.ajax({
+                    url: "/static/templates/{0}.jade".f(templateid),
+                    type: "text",
+                    cache: false,
+                    method: "GET"
+                }).done(callback1);
+            }
+            else {
+                callback1(cached_templates[templateid]);
+            }
+
+        }
+
+        function fast_search(num) {
+            $("#search-field").val(num);
+        }
+        function dechl() {
+            nn--;
+            if (nn <= 0) {
+                hl();
+            }
+        }
+        function decsl() {
+            nn++;
+            sl();
+        }
+        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><!--<td><i class="%class% glyphicon glyphicon-refresh"></i></td>--></tr>';
+        function load_tubes_and_dirs() {
+            sl();
+            nn++;
+            $("#tubes-list tbody").isLoading({
+                text: "Загрузка пробирок",
+                position: "inside",
+                'tpl': loadingtable,
+            });
+            $("#dirs-list tbody").isLoading({
+                text: "Загрузка направлений",
+                position: "inside",
+                'tpl': loadingtable,
+            });
+            $.ajax({
+                url: "/results/loadready",
+                data: {
+                    datestart: $("[name=datemain-start]").val(),
+                    dateend: $("[name=datemain-end]").val(),
+                    def: $("[name=def]").prop("checked") ? 1 : 0
+                },
+                type: "json",
+                method: "GET"
+            }).done(function (data) {
+                $("#tubes-list tbody").isLoading("hide");
+                $("#dirs-list tbody").isLoading("hide");
+
+                document.querySelector("#tubes-list tbody").innerHTML = "";
+                document.querySelector("#dirs-list tbody").innerHTML = "";
+
+                tubesn = data.tubes.length;
+                dirsn = data.directions.length;
+
+                if (tubesn == 0)
+                    $("#tubes-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
+                if (dirsn == 0)
+                    $("#dirs-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
+                var i = 0;
+                for (i = 0; i < tubesn; i++) {
+                    v = data.tubes[i];
+                    document.querySelector("#tubes-list tbody").innerHTML += "<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date);
+                }
+                for (i = 0; i < dirsn; i++) {
+                    v = data.directions[i];
+                    document.querySelector("#dirs-list tbody").innerHTML += "<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date);
+                }
+                document.querySelector("#tubes-list th small").textContent = tubesn;
+                document.querySelector("#dirs-list th small").textContent = dirsn;
+                $('#dirs-list').scrollTop(0);
+                $('#tubes-list').scrollTop(0);
+                resize();
+                //$("#tubes-list tr, #dirs-list tr").addClass("animated");
+            }).always(dechl);
+        }
+        var first_resize = true;
+        function resize() {
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
+            if (first_resize) {
+                $('#tubes-list').perfectScrollbar();
+                $('#issledovaniya-scroll').perfectScrollbar();
+                $('#dirs-list').perfectScrollbar();
+                first_resize = false;
+            }
+            else {
+                $('#tubes-list').perfectScrollbar('update');
+                $('#issledovaniya-scroll').perfectScrollbar('update');
+                $('#dirs-list').perfectScrollbar('update');
+            }
+
+            $(".floatThead").floatThead('reflow');
+            $(".floatThead").floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
+
+            if (!$('#result-jade-form').length) return;
+            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 50);
+            $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
+        }
+        function save(noreload, fc) {
+            $("#confirm-btn").attr("disabled", 1);
+            $("#save-btn").attr("disabled", 1);
+            $("#confirm-andsave-btn").attr("disabled", 1);
+            if (datatype == 2) return;
+            $(this).disabled = true;
+            var result = {issledovaniye: -1, fractions: {}}
+            result.issledovaniye = $("#issledovaniye_id").val();
+            $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
+                result.fractions[$(v).data("pk")] = $(v).val();
+            });
+            result.comment = $(".lab_comment").val() || "";
+            result.fractions = JSON.stringify(result.fractions);
+            $(this).disabled = false;
+            $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
+                if (!noreload)
+                    reload_fast();
+                else {
+                    fc();
+                }
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Результат сохранен',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+
+        function confirm_results(ignore) {
+
+            $(this).prop("disabled", true);
+            if (has_o && !ignore) {
+                $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
+                $('#dataConfirmOK').attr('onclick', "confirm_results(true);$('#dataConfirmModal').modal('hide');return false;");
+                $('#dataConfirmModal').modal({show: true});
+                return false;
+            }
+
+            $.ajax({
+                "url": "/results/confirm/list",
+                method: "POST",
+                type: "json",
+                data: {list: JSON.stringify(iss_pks)}
+            }).done(function (data) {
+                reload_fast();
+                if (data.ok) {
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Исследования подтверждены',
+                            message: "",
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
+                $("#result-confirm").attr("disabled", 1);
+            });
+        }
+
+        function confirm_result() {
+            $("#confirm_result-btn").attr("disabled", 1);
+            $("#save-btn").attr("disabled", 1);
+            $("#confirm_result-andsave-btn").attr("disabled", 1);
+            $.ajax({
+                "url": "/results/confirm",
+                method: "POST",
+                data: {pk: $("#issledovaniye_id").val()}
+            }).done(function () {
+                reload_fast();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Исследование подтверждено',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+        var list_reload = false;
+        function print_results() {
+            data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
+            window.open('/results/pdf' + data, '_blank');
+            // list_reload = true;
+            //$('[direction="' + dir_data.napr_pk + '"]').remove();
+        }
+        function createjournal() {
+            date = $("[name=date-confirm]").val();
+            v = $("#ist_f").val();
+            if (!v) {
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбран источник финансирования',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 5000
+                });
+                return;
+            }
+            arr = JSON.parse('[' + v + ']');
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val(), '_blank');
+        }
+        function createjournaltable() {
+            date = $("[name=date-confirm]").val();
+            v = $("#ist_f").val();
+            if (!v) {
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбран источник финансирования',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 5000
+                });
+                return;
+            }
+            arr = JSON.parse('[' + v + ']');
+            window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr), '_blank');
+        }
+        var substringMatcher = function (strs) {
+            return function findMatches(q, cb) {
+                var matches, substringRegex;
+                matches = [];
+                substrRegex = new RegExp(q, 'i');
+                $.each(strs, function (i, str) {
+                    if (substrRegex.test(str)) {
+                        matches.push(str);
+                    }
+                });
+
+                cb(matches);
+            };
+        };
+        var fill_researches = {};
+        function open_fill_form() {
+            sl();
+            var tubes = new Set();
+            fill_researches = {};
+            for (var iss of dir_data.issledovaniya) {
+                for (var tube of iss.tube.pk.split(",")) {
+                    tubes.add(parseInt(tube));
+                    if (fill_researches[tube] == undefined)
+                        fill_researches[tube] = new Set();
+                    fill_researches[tube].add({pk: iss.pk, research_pk: iss.research_pk});
+                }
+            }
+            $("#fillform-tubes").html("");
+            for (var tube of tubes) {
+                $("#fillform-tubes").append(`<option value='${tube}'>${tube}</option>`);
+            }
+            $("#fillform-text").val("");
+            $("[name=fillform-type][value=empty]").prop("checked", true);
+            $("#fillform-modal").modal();
+            hl();
+        }
+        var queue_fill = [];
+        function do_fill() {
+            sl();
+            var tube = parseInt($("#fillform-tubes").val());
+            var all = $("[name=fillform-type]:checked").val() == "all";
+            var researches = fill_researches[tube];
+            var text_to_fill = $("#fillform-text").val();
+            for (var res of researches) {
+                (function (res_pk) {
+                    queue_fill.push(res_pk);
+                    $.ajaxq('/researches/get/one', {
+                        url: "/researches/get/one",
+                        type: "text",
+                        method: "GET",
+                        data: {id: res_pk}
+                    }).done(function (data) {
+                        data = JSON.parse(data);
+                        $.ajaxq('/results/get', {
+                            url: "/results/get",
+                            type: "text",
+                            method: "GET",
+                            data: {iss_id: res_pk}
+                        }).done(function (results_data) {
+                            sl();
+                            var fractions_data = data.fractions;
+                            var result = {issledovaniye: res_pk, fractions: {}};
+                            var isnorm = results_data.norms;
+                            results_data = results_data.results;
+                            for (var fk of Object.keys(fractions_data)) {
+                                var fv = fractions_data[fk];
+                                fv.pk = fv.pk + "";
+                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] == "") && fv.render_type == 0) {
+                                    result.fractions[fv.pk] = text_to_fill;
+                                } else if ((fv.render_type == 1 || !all) && fv.pk in results_data) {
+                                    result.fractions[fv.pk] = results_data[fv.pk];
+                                }
+                            }
+                            if (Object.keys(result.fractions).length > 0) {
+                                result.fractions = JSON.stringify(result.fractions);
+                                $.ajax({
+                                    url: "/results/save",
+                                    method: "POST",
+                                    data: result
+                                }).done(function () {
+                                    var index = queue_fill.indexOf(res_pk);
+                                    if (index > -1) {
+                                        queue_fill.splice(index, 1);
+                                    }
+                                    if (queue_fill.length == 0) {
+                                        hl();
+                                        reload_fast();
+                                    }
+                                });
+                            }
+                            else {
+                                var index = queue_fill.indexOf(res_pk);
+                                if (index > -1) {
+                                    queue_fill.splice(index, 1);
+                                }
+                                if (queue_fill.length == 0) {
+                                    $("#fill-hide").click();
+                                    hl();
+                                    reload_fast();
+                                }
+                            }
+                        });
+                    });
+                })(res.pk);
+            }
+        }
+        function openexeclist() {
+            load_researches();
+            $("#list-modal").modal();
+        }
+        function openjournal() {
+            $("#journal-modal").modal();
+        }
+        function dayprint() {
+            load_researches("#dayprint-table-researches");
+            $("#results-day-modal").modal();
+        }
+        var lockdeff = false;
+        function deff(status, pk) {
+            if (lockdeff) return;
+            lockdeff = true;
+            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function (data) {
+                lockdeff = false;
+                reload_fast();
+            });
+        }
+        function dayprint_do() {
+            if (lockdeff) return;
+            lockdeff = true;
+            var researches = [];
+            $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
+                researches.push(parseInt($(v).val()));
+            });
+            if (researches.length == 0) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Печать невозможна",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                lockdeff = false;
+                return;
+            }
+            sl();
+            $.ajax({
+                url: "/results/day",
+                data: {
+                    date: $("[name=dateday-confirm]").val(),
+                    researches: JSON.stringify(researches),
+                    otd: $("#print-results-otd").val()
+                }
+            }).done(function (data) {
+                lockdeff = false;
+                if (Object.keys(data.directions).length > 0) {
+                    strs = [];
+                    for (var l = 0; l < Object.keys(data.directions).length; l++) {
+                        strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
+                    }
+
+                    st = "?pk=[" + strs.join(",") + "]";
+                    window.open('/results/pdf' + st, '_blank');
+                    $("#results-day-modal").modal('hide');
+                }
+                else {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: "Печать невозможна",
+                            message: "Ничего не найдено",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
+                hl();
+            });
+        }
+        function createlist(type) {
+            datestart = dateend = "";
+            researches = [];
+            $.each($("#table-researches .research-sel:checked"), function (k, v) {
+                researches.push(parseInt($(v).val()));
+            });
+            if (researches.length == 0) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Создание невозможно",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            switch (type) {
+                case 2:
+                    break;
+                default:
+                    datestart = $("[name=date-start]").val();
+                    dateend = $("[name=date-end]").val();
+                    break;
+            }
+            window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
+        }
+        function load_researches(cont) {
+            $o = $("#table-researches");
+            if (cont != undefined)
+                $o = $(cont);
+            $o.html("");
+            $o.append(lang.table_researches_header);
+            $.ajax({ // AJAX запрос
+                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+                dataType: 'json'
+            }).done(function (data) {
+                if (data.length == 0) {
+                    $o.append(lang.table_researches_not_found);
+                    return;
+                }
+                $o.html("");
+                $o.append(lang.table_researches_header);
+                $.each(data, function (k, v) {
+                    $o.append("<label title='{1}' class=\"btn btn-default col-xs-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                });
+            });
+        }
+        function reset_confirm(id, rtitle, tube) {
+            sl();
+            var msg = "Сбросить подтверждение исследования №{0} - {1}, пробирка №{2}?".f(id, rtitle, tube);
+            var doreset = confirm(msg);
+            if (doreset === false || doreset === null) {
+                hl();
+                return;
+            }
+            $.ajax({
+                "url": "/dashboard/confirm_reset",
+                method: "POST",
+                data: {pk: id}
+            }).done(function (data) {
+                hl();
+                if (data.ok) {
+                    reload_fast();
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: 'Подтверждение сброшено',
+                            message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                } else {
+                    $.amaran({
+                        'theme': 'awesome wrn',
+                        'content': {
+                            title: 'Ошибка',
+                            message: data.msg,
+                            info: '',
+                            icon: 'glyphicon glyphicon-ok'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+
+                }
+            });
+        }
+    </script>
 {% endblock %}

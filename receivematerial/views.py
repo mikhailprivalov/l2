@@ -7,7 +7,7 @@ from laboratory import settings
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from django.http import HttpResponse
-from users.models import DoctorProfile
+import users.models as users
 import simplejson as json
 from datetime import datetime, date
 from django.views.decorators.csrf import csrf_exempt
@@ -15,6 +15,8 @@ from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 import slog.models as slog
 import directory.models as directory
+from appconf.manager import SettingManager
+
 
 @csrf_exempt
 @login_required
@@ -52,13 +54,19 @@ def receive_obo(request):
         pk = int(request.POST["pk"])
         if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
             tube = TubesRegistration.objects.get(pk=pk)
-            if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
-                status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
-                result = {"r": 1, "n": status["n"], "new": status["new"],
-                          "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
-                          "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+            if tube.getstatus():
+                if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
+                    status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
+                    result = {"r": 1, "n": status["n"], "new": status["new"],
+                              "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
+                              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+                else:
+                    result = {"r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
             else:
-                result = {"r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
+                otd = tube.issledovaniya_set.first().napravleniye.doc.podrazileniye
+                if tube.issledovaniya_set.first().napravleniye.doc_who_create:
+                    otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazileniye
+                result = {"r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
         else:
             result = {"r": 3}
     else:
@@ -91,10 +99,10 @@ def last_received(request):
     date2 = datetime_safe.datetime.now()
     last_num = 0
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye).exists():
+                                        doc_recive=request.user.doctorprofile).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                                         issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)])
+                                        doc_recive=request.user.doctorprofile)])
     return HttpResponse(json.dumps({"last_n": last_num}), content_type="application/json")
 
 
@@ -172,7 +180,7 @@ def receive_execlist(request):
                                                                                                 date1, date2),
                                                                                                 research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye).exists():
             research = directory.Researches.objects.get(pk=pk)
-            fractions = [x.title for x in directory.Fractions.objects.filter(research=research)]
+            fractions = [x.title for x in directory.Fractions.objects.filter(research=research).order_by("sort_weight")]
             tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
                                                                     doc_recive=request.user.doctorprofile,
                                                                     issledovaniya__research=research).order_by(
@@ -191,7 +199,7 @@ def receive_execlist(request):
                 data = []
                 tmp = []
                 tmp.append(Paragraph('<font face="OpenSansB" size="8">№</font>', styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSansB" size="8">ФИО, № истории</font>', styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSansB" size="8">ФИО, № истории<br/>отделение</font>', styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"]))
                 for fraction in fractions:
                     fraction = fraction[:int(100 / len(fractions))]
@@ -207,7 +215,7 @@ def receive_execlist(request):
                     tmp.append(
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum), styleSheet["BodyText"]))
                     tmp.append(Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.fio() + (
-                    "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num)),
+                    "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
                                          styleSheet["BodyText"]))
                     tmp.append(
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube_pk), styleSheet["BodyText"]))
@@ -227,8 +235,10 @@ def receive_execlist(request):
                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                                        ('LEFTPADDING', (0, 0), (-1, -1), 2),
                                        ('TOPPADDING', (0, 0), (-1, -1), 9),
+                                       ('TOPPADDING', (1, 0), (1, -1), 3),
                                        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
                                        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+                                       ('BOTTOMPADDING', (1, 0), (1, -1), 3),
                                        ]))
                 t.canv = c
                 wt, ht = t.wrap(0, 0)
@@ -297,37 +307,30 @@ def receive_journal(request):
     import pytz
     import copy
 
-    start = "1"  # str(request.GET.get("start", "1"))
+    start = str(request.GET.get("start", "1"))
     group = str(request.GET.get("group", "-2"))
     return_type = str(request.GET.get("return", "pdf"))
-    otd = str(request.GET.get("otd", "-1"))
+    otd = str(request.GET.get("otd", "[]"))
 
     start = 1 if not start.isdigit() else int(start)
     group = -2 if group not in ["-2", "-1"] and (not group.isdigit() or not directory.ResearchGroup.objects.filter(pk=int(group)).exists()) else int(group)
-    otd = int(otd)
+    otd = [int(x) for x in json.loads(otd)]
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
     pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа
     response[
-        'Content-Disposition'] = 'inline; filename="napr.pdf"'  # Content-Disposition inline для показа PDF в браузере
+        'Content-Disposition'] = 'inline; filename="zhurnal_priema_materiala.pdf"'  # Content-Disposition inline для показа PDF в браузере
     from io import BytesIO
     buffer = BytesIO()  # Буфер
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-    tubes = []
-    if otd <= -1:
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-            time_recive__gte=datetime.now().date(), doc_recive__isnull=False).order_by(
-            'issledovaniya__napravleniye__client__pk')
-    elif otd > -1:
-        tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk=otd, doc_recive__isnull=False).order_by(
-            'issledovaniya__napravleniye__client__pk')
+    tubes = TubesRegistration.objects.filter(
+        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+        time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd, doc_recive__isnull=False).order_by(
+        'issledovaniya__napravleniye__client__pk')
 
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
@@ -335,6 +338,8 @@ def receive_journal(request):
     vids = set()
 
     perpage = 47
+
+    n_dict = {}
 
     n = 1
     for v in tubes:  # Перебор пробирок
@@ -349,42 +354,50 @@ def receive_journal(request):
             iss = iss.filter(research__groups__pk=group)
 
         iss_list = collections.OrderedDict()  # Список исследований
-
-        k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
-
+        k = "_"
+        if v.doc_get:
+            k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
+        else:
+            k = str(iss.first().napravleniye.doc.podrazileniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazileniye)
+        if k not in n_dict.keys():
+            n_dict[k] = 0
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
             iss_list[val.research.sort_weight] = val.research.title
 
         if len(iss_list) == 0:
             continue
+        '''
         if n < start:
             n += 1
-            continue
+            continue'''
 
         directions.add(iss[0].napravleniye.pk)
         if return_type == "pdf":
-            if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
-                labs[k] = []
+            n_dict[k] += 1
+            if n_dict[k] >= start:
+                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+                    labs[k] = []
 
-            if perpage - len(labs[k]) % perpage < len(iss_list):
-                pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
-                pre["researches"] = ""
-                for x in range(0, perpage - len(labs[k]) % perpage):
-                    labs[k].append(pre)
-            for value in iss_list:  # Перебор списка исследований
-                labs[k].append(
-                    {"type": v.type.tube.title, "researches": iss_list[value],
-                     "client-type": iss[0].napravleniye.client.type,
-                     "lab_title": iss[0].research.subgroup.title,
-                     "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
-                     "dir_id": iss[0].napravleniye.pk,
-                     "podr": iss[0].napravleniye.doc.podrazileniye.title,
-                     "receive_n": str(n),
-                     "tube_id": str(v.id),
-                     "direction": str(iss[0].napravleniye.pk),
-                     "history_num": iss[0].napravleniye.history_num,
-                     "fio": iss[
-                         0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                if perpage - len(labs[k]) % perpage < len(iss_list):
+                    pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
+                    pre["researches"] = ""
+                    for x in range(0, perpage - len(labs[k]) % perpage):
+                        labs[k].append(pre)
+                for value in iss_list:  # Перебор списка исследований
+                    labs[k].append(
+                        {"type": v.type.tube.title, "researches": iss_list[value],
+                         "client-type": iss[0].napravleniye.client.type,
+                         "lab_title": iss[0].research.subgroup.title,
+                         "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
+                         "dir_id": iss[0].napravleniye.pk,
+                         "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                         "receive_n": str(n),
+                         "tube_id": str(v.id),
+                         "direction": str(iss[0].napravleniye.pk),
+                         "history_num": iss[0].napravleniye.history_num,
+                         "n": n_dict[k],
+                         "fio": iss[
+                             0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
         n += 1
     directions = list(directions)
     if return_type == "directions":
@@ -411,12 +424,13 @@ def receive_journal(request):
             c.showPage()
 
         nn = 0
-
         gid = "-1"
         for pg_num in p.page_range:
             pg = p.page(pg_num)
+            if len(pg) == 0:
+                continue
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1])
+                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1], start=start)
             data = []
             tmp = []
             for v in data_header:
@@ -437,10 +451,9 @@ def receive_journal(request):
                     if lastid not in merge_list.keys():
                         merge_list[lastid] = []
                     merge_list[lastid].append(num)
-
                 if shownum:
                     nn += 1
-                    tmp.append(Paragraph(str(nn), styleSheet[
+                    tmp.append(Paragraph(str(obj["n"]), styleSheet[
                         "BodyText"]))  # "--" if obj["receive_n"] == "0" else obj["receive_n"], styleSheet["BodyText"]))
                     fio = obj["fio"]
                     if obj["history_num"] and len(obj["history_num"]) > 0:
@@ -488,7 +501,7 @@ def receive_journal(request):
             t.drawOn(c, tx, h - ht - ty)
             if pg.has_next():
                 c.showPage()
-
+    c.setTitle("Журнал приема материала")
     c.save()
 
     pdf = buffer.getvalue()
@@ -503,17 +516,17 @@ def receive_journal(request):
     else:
         group_str = "Без группы"
 
-    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start}), user=request.user.doctorprofile).save()
+    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start, "otds": ["%s, %s" % (users.Podrazdeleniya.objects.get(pk=int(x)).title, x) for x in otd]}), user=request.user.doctorprofile).save()
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2):
+def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2, start=1):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
     c.setLineWidth(1)
 
-    c.drawCentredString(w / 2, h - 30, "Клиники ФГБОУ ВО ИГМУ Минздрава России")
+    c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "Журнал приема материала")
     group_str = "Все исследования"

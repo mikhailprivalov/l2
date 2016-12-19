@@ -3,8 +3,6 @@ from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from users.views import home
-from dashboard.views import dashboard, create_user, create_pod, directions, researches_control, ldap_sync, users_count, \
-    users_dosync, dir_multiprint, dashboard_from, view_log, load_logs, confirm_reset, receive_journal_form
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
@@ -14,7 +12,7 @@ from receivematerial.views import receive, tubes_get, receive_obo, receive_histo
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
     result_filter, get_full_result, get_odf_result, result_confirm_list, result_journal_print, get_day_results, \
-    results_search
+    results_search, results_search_directions, result_html, result_journal_table_print
 from construct import urls
 from directory.views import directory_researches, directory_research, directory_researches_group, \
     directory_get_directions, directory_researches_list, directory_researches_update_uet, \
@@ -26,6 +24,7 @@ import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
 
+
 urlpatterns = [
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
@@ -36,7 +35,6 @@ urlpatterns = [
                   url(r'^directions/def$', setdef),
                   url(r'^directions/get/one$', get_one_dir),
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
-                  url(r'^directions/multiprint', dir_multiprint),
                   url(r'^directions/list/client$', get_client_directions),
                   url(r'^directions/worklist$', get_worklist),
                   url(r'^directions/group_confirm_get$', group_confirm_get),
@@ -59,44 +57,34 @@ urlpatterns = [
                   url(r'^directory/researches/update_mode$', directory_researches_update_mode),
                   url(r'^directory/researches/update_template$', researches_update_template),
                   url(r'^researches/ajax/search$', ajax_search_res),
-                  url(r'^researches/control$', researches_control),
-                  url(r'^researches/get/one', researches_get_one),
-                  url(r'^dashboard/$', dashboard),
-                  url(r'^dashboard/create_user$', create_user),
-                  url(r'^dashboard/from$', dashboard_from),
-                  url(r'^dashboard/create_podr$', create_pod),
-                  url(r'^dashboard/ldap_sync$', ldap_sync),
-                  url(r'^dashboard/directions$', directions),
+                  url(r'^researches/get/one$', researches_get_one),
+                  url(r'^dashboard/', include('dashboard.urls')),
                   url(r'^dashboard/receive$', receive),
                   url(r'^dashboard/receive/one_by_one$', receive_obo),
                   url(r'^dashboard/receive/last_received$', last_received),
                   url(r'^dashboard/receive/execlist$', receive_execlist),
                   url(r'^dashboard/receive/history$', receive_history),
                   url(r'^dashboard/receive/journal$', receive_journal),
-                  url(r'^dashboard/receive/journal_form$', receive_journal_form),
-                  url(r'^dashboard/view_log$', view_log),
-                  url(r'^dashboard/confirm_reset$', confirm_reset),
-                  url(r'^tubes/get', tubes_get),
-                  url(r'^results/search', results_search),
-                  url(r'^results/enter', enter),
-                  url(r'^results/save', results_save),
-                  url(r'^results/loadready', loadready),
+                  url(r'^tubes/get$', tubes_get),
+                  url(r'^results/search$', results_search),
+                  url(r'^results/search/directions$', results_search_directions),
+                  url(r'^results/enter$', enter),
+                  url(r'^results/save$', results_save),
+                  url(r'^results/loadready$', loadready),
                   url(r'^results/get$', result_get),
                   url(r'^results/get/full$', get_full_result),
                   url(r'^results/get/odf$', get_odf_result),
                   url(r'^results/conformation$', result_conformation),
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/confirm/list$', result_confirm_list),
-                  url(r'^results/pdf', result_print),
+                  url(r'^results/pdf$', result_print),
+                  url(r'^results/html$', result_html),
                   url(r'^results/journal$', result_journal_print),
+                  url(r'^results/journal_table$', result_journal_table_print),
                   url(r'^results/filter$', result_filter),
-                  url(r'^results/day', get_day_results),
+                  url(r'^results/day$', get_day_results),
                   url(r'^statistic$', statistic_page),
                   url(r'^statistic/xls$', statistic_xls),
-                  url(r'^view_logs$', load_logs),
-
-                  url(r'^users/count$', users_count),
-                  url(r'^users/ldap/dosync$', users_dosync),
                   url(r'^ajax_select/', include(ajax_select_urls)),
                   url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                   url(r'^admin/', include(admin.site.urls)),
@@ -108,5 +96,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
-
     urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))

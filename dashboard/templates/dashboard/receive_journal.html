@@ -10,7 +10,7 @@
         <div class="col-xs-7">
             <div class="row">
                 <div class="col-xs-5">
-                    <label for="select-group">Группа исследований </label>
+                    <label for="select-group">Группа исследований</label>
                 </div>
                 <div class="col-xs-7">
                     <select class="select-b" data-width="100%" id="select-group">
@@ -31,7 +31,7 @@
         </div>
         <div class="col-xs-3" style="display: flex">
             <button id="print-btn" class="btn btn-blue-nb3" style="width: 100%;align-items: stretch"
-                    onclick="window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=${$('#select-otd').val()}`, '_blank');">
+                    onclick="print_journal();">
                 Печать
             </button>
         </div>
@@ -46,8 +46,7 @@
                     <label for="select-otd">Отделение</label>
                 </div>
                 <div class="col-xs-7">
-                    <select class="select-b" data-width="100%" id="select-otd">
-                        <option value="-1" selected>Все отделения</option>
+                    <select class="select-b" data-width="100%" id="select-otd" multiple data-actions-box="true">
                         {% for p in podrazdeleniya %}
                             <option value="{{ p.pk }}">{{ p.title }}</option>
                         {% endfor %}
@@ -72,11 +71,44 @@
                 $("#print-btn").click();
             });
         });
+        function print_journal() {
+            otd = $("#select-otd").val();
+            if(!otd){
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбраны отделения',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 5000
+                });
+                return;
+            }
+            window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=[${otd}]`, '_blank')
+        }
         function print_directions() {
+            otd = $("#select-otd").val();
+            if(!otd){
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбраны отделения',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 5000
+                });
+                return;
+            }
             sl();
             $.ajax({
                 method: "get",
-                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=${$('#select-otd').val()}`
+                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=[${otd}]`
             }).done(function (data) {
                 hl();
                 data.sort(sortNumber);

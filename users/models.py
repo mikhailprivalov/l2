@@ -25,9 +25,17 @@ class DoctorProfile(models.Model):
         :param dots:
         :return:
         """
+        fio = self.fio.replace("  ", " ").strip()
+        fio_split = fio.split(" ")
+
+        if len(fio_split) == 1:
+            fio_split.append("")
+        if len(fio_split) == 2:
+            fio_split.append("")
+
         if dots:
-            return self.fio.split(" ")[0] + " " + self.fio.split(" ")[1][0] + "." + self.fio.split(" ")[2][0] + "."
-        return self.fio.split(" ")[0] + " " + self.fio.split(" ")[1][0]  + self.fio.split(" ")[2][0]
+            return fio_split[0] + " " + fio_split[1][0] + "." + fio_split[2][0] + "."
+        return fio_split[0] + " " + fio_split[1][0] + fio_split[2][0]
 
 
     def is_member(self, groups: list) -> bool:

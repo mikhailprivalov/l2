@@ -144,7 +144,7 @@
         function update_data(){
             sl();
             $.ajax({url: "/construct/researches/get_details", method: "GET", data: {pk: pk}}).done(function (data) {
-                $("#research_title").html(data.title);
+                $("#research_title").html(data.title + " (id " + pk + ")");
                 $("[type='radio'][value='" + data.edit_mode + "']").attr('checked', 'checked');
                 $("#select-template").val(data.template);
                 $("#select-template").removeProp("disabled");

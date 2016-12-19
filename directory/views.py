@@ -213,6 +213,7 @@ def directory_copy_research(request):
 @login_required
 def directory_research(request):
     """GET: получение исследования и фракций"""
+    from collections import OrderedDict
     return_result = {}
     if request.method == "GET":
         id = int(request.GET["id"])
@@ -224,10 +225,10 @@ def directory_research(request):
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
         return_result["hide"] = research.hide
         return_result["onlywith"] = -1 if not research.onlywith else research.onlywith.pk
-        return_result["fractiontubes"] = {}
+        return_result["fractiontubes"] = OrderedDict()
         return_result["uet_doc"] = {}
         return_result["uet_lab"] = {}
-        fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
+        fractions = Fractions.objects.filter(research=research).order_by("pk", "relation__tube__id", "sort_weight")
         for fraction in fractions:
             if "tube-" + str(fraction.relation.pk) not in return_result["fractiontubes"].keys():
                 return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)] = {"fractions": [],

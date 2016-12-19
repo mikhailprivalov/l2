@@ -204,7 +204,6 @@
 
         .list-header {
             font-weight: 500;
-            font-size: 12pt;
             margin: 3px;
             margin-top: 0;
             font-size: 16px;
@@ -290,7 +289,11 @@
             background-color: #FFF;
         }
 
-        .wellfractions, .wellfractions .add {
+        .wellfractions{
+            margin: 10px;
+
+        }
+        .wellfractions .add {
             margin: 0;
         }
 
@@ -570,7 +573,7 @@
 
                 fractions += "<th class='col-md-2'>Название фракции</th>";
 
-                fractions += "<th>Еденицы измерения</th>";
+                fractions += "<th>Единицы измерения</th>";
 
                 fractions += "<th>Варианты</th>";
 
@@ -582,11 +585,14 @@
                 fractions += "</thead><tbody>";
                 first = true;
                 $.each(v.fractions, function (key, value) {
-                    pk = -1;
-                    if (value.pk)
-                        pk = value.pk;
-                    fractions += "<tr k='{0}' key='{1}' sel='{2}' pk='{3}' num='{4}' class='fraction-tr'>".f(k, key, v.sel, pk, key+1);
-
+                    if(resid > -1){
+                        pk = -1;
+                        if (value.pk)
+                            pk = value.pk;
+                    }else{
+                        pk = key+1;
+                    }
+                    fractions += `<tr k='${k}' key='${key}' sel='${v.sel}' pk='${pk}' num='${key+1}' class='fraction-tr'>`;
                     fractions += "<td class='col-md-2'>" +
                                 "<div>" +
                                 "<div class='input-group'>" +
@@ -759,7 +765,7 @@
                     }
                 ];
             showtubes(true);
-            $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
+            $('#tubes').scrollTo($('#tubes #addfractionbutton-' + tube), 0, {offset: 10, margin: true});
             return false;
         }
         var scrollto = "";
@@ -772,7 +778,7 @@
 
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
             syncFractions();
-            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, ref_m: {"": ""}, ref_f: {"": ""}});
+            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, num: fractiontubes[tube].fractions.slice(-1)[0].num+1, ref_m: {"": ""}, ref_f: {"": ""}});
             showtubes(true);
             // $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
@@ -796,7 +802,7 @@
                 }
                 if (fractiontubes[k].fractions[key] === undefined) {
                     fractiontubes[k].fractions[key] = {
-                        pk: parseInt($(this).attr("pk")),
+                        pk: (resid > -1) ? parseInt($(this).attr("pk")) : key+1,
                         title: $(".fractiontitle", $(this)).val(),
                         units: $(".refunits", $(this)).val(),
                         type: parseInt($(".fraction-type", $(this)).val()),
@@ -807,13 +813,16 @@
                 }
 
                 $("[type='f']", $(this)).each(function (index) {
-                    fractiontubes[k].fractions[key].ref_f[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
+                    rkey = $(".refkey", $(this)).val().trim();
+                    if(rkey == "") return;
+                    fractiontubes[k].fractions[key].ref_f[rkey] = $(".refcondition", $(this)).val();
                 });
                 $("[type='m']", $(this)).each(function (index) {
-                    fractiontubes[k].fractions[key].ref_m[$(".refkey", $(this)).val()] = $(".refcondition", $(this)).val();
+                    rkey = $(".refkey", $(this)).val().trim();
+                    if(rkey == "") return;
+                    fractiontubes[k].fractions[key].ref_m[rkey] = $(".refcondition", $(this)).val();
                 });
             });
-            console.log(fractiontubes);
         }
 
         /**
@@ -986,13 +995,21 @@
         /** Сохранение исследования */
         function save() {
             syncFractions();
+            var lfractions = fractiontubes;
+            if(resid <= -1) {
+                for (var k in lfractions) {
+                    for (var kk in lfractions[k].fractions) {
+                        lfractions[k].fractions[kk].pk = -1;
+                    }
+                }
+            }
             research = {
                 id: resid,
                 lab_group: $("#select-lab option:selected").val(),
                 title: $("#research_title").val(),
                 quota_oms: parseInt($("#quota").val()),
                 preparation: $("#preparation").val(),
-                fraction: fractiontubes
+                fraction: lfractions
             };
             sl();
             $.ajax({
