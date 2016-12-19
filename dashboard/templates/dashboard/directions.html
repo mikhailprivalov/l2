@@ -31,8 +31,8 @@
                             <input type="text" class="form-control" id="search-field" name="search-field"
                                    data-container="body"
                                    data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                                   placeholder="Введите ФИО и дату рождения или номер карты, например: пнв01011990 или Пакулова Наталья Владимировна 01.01.1990 или 123456"
-                                   title="Введите ФИО и дату рождения или номер карты, например: пнв01011990 или Пакулова Наталья Владимировна 01.01.1990 или 123456">
+                                   placeholder="Введите ФИО и дату рождения или номер карты, например: иип01011990 или Иванов Иван Петрович 01.01.1990 или 123456"
+                                   title="Введите ФИО и дату рождения или номер карты, например: иип01011990 или Иванов Иван Петрович 01.01.1990 или 123456">
                             <span class="input-group-btn">
                                 <button class="btn btn-blue-nb" onclick="search($('#search-field').val());"
                                         type="button">
@@ -55,10 +55,10 @@
                             <td class="table-header-row">ФИО:&nbsp;</td>
                             <td id="card-fio" class="table-content-row" colspan="2"></td>
                             <td class="table-content-row">
-                                {% if not operator %}
+{#                                {% if not operator %}#}
                                     <a href="#" onclick='open_search_results();return false;'
                                        id="search-results-link">поиск результатов</a>
-                                {% endif %}
+{#                                {% endif %}#}
                             </td>
                         </tr>
                         <tr>
@@ -81,10 +81,10 @@
                     </table>
                 </div>
                 {% if operator %}
-                    <div class="col-xs-2" style="text-align: right">
+                    <div class="col-xs-2" style="text-align: right;padding-right: 0;">
                         <b>Выписать от имени:</b>
                     </div>
-                    <div class="col-xs-4">
+                    <div class="col-xs-5" style="padding-right: 0">
                         <select class="select-b" data-width="100%" id="select-otd" onchange="update_av_docs();">
                             {% for v in notlabs %}
                                 {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
@@ -95,7 +95,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-xs-4">
+                    <div class="col-xs-5" style="padding-right: 0">
                         <select class="select-b" data-width="100%" id="select-doc">
                             {% for v in docs %}
                                 <option value="{{ v.pk }}">{{ v.get_fio }}</option>
@@ -106,7 +106,7 @@
             </div>
             <div id="d" class="split content">
                 <div class="row">
-                    <div class="col-md-5">
+                    <div class="col-md-5" style="padding-right: 0">
                         <form onsubmit="return false;">
                             <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
                                     title='Выберите лабораторию...' disabled>
@@ -115,7 +115,7 @@
                             </select>
                         </form>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4" style="padding-right: 0">
                         <select class="select-b" id="select-template" data-width="100%"
                                 title='Шаблоны' disabled>
                             <option value="1" selected>Шаблон: Липидограмма</option>
@@ -139,18 +139,18 @@
         </div>
         <div id="b" class="split split-horizontal">
             <div id="e" class="split content">
-                <div class="row" style="background: #fff;">
-                    <div class="col-md-3">
+                <div class="row" style="background: #fff;margin-top: 2px">
+                    <div class="col-md-3" style="padding-right: 0">
                         <h6>Дата назначения:</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                            <input type="text" class="input-sm form-control no-context" name="date-start"/>
+                            <input type="text" class="input-sm form-control no-context" name="date-start" style="height: 34px"/>
                             <span class="input-group-addon"
-                                  style="background-color: #fff;color: #000">&mdash;</span>
-                            <input type="text" class="input-sm form-control no-context" name="date-end"/>
+                                  style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
+                            <input type="text" class="input-sm form-control no-context" name="date-end" style="height: 34px"/>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4" style="padding-right: 0">
                         <h6>Статус:</h6>
                         <select class="select-b" data-live-search="false" onchange="fast_ld_dirs();return false;"
                                 data-width="100%" id="status">
@@ -161,7 +161,7 @@
                             <option value="4">Выписаные исполнителем</option>
                         </select>
                     </div>
-                    <div class="col-md-2"><h6><br/></h6>
+                    <div class="col-md-2" style="padding-right: 0"><h6><br/></h6>
                         <button onclick="fast_ld_dirs();return false;" class="btn btn-blue-nb btn-ell"
                                 style="width: 100%" title="Обновить список"><i class="fa fa-refresh"></i></button>
                     </div>
@@ -212,7 +212,7 @@
                                        placeholder="Диагноз"
                                        onkeyup="sync(true);" style="margin-bottom: 20px"/>
                             </div>
-                            <div class="col-md-8" id="sources" style="text-align: center">
+                            <div class="col-md-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_poli %}
@@ -239,7 +239,7 @@
                             <div class="col-md-6">
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn" disabled
                                         onclick="save_direction();"
-                                        style="margin-bottom: 5px" title="Сохр. и распечатать направления">
+                                        style="margin-bottom: 15px" title="Сохр. и распечатать направления">
                                     Сохр. и распечатать направления
                                 </button>
                                 <br/>
@@ -248,14 +248,14 @@
                                     Сохр. и распечатать штрих-коды
                                 </button>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3" style="padding-left: 0">
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-just-btn" disabled
                                         onclick="save_direction(true);" title="Сохранить">
                                     Сохранить
                                 </button>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-3" style="padding-left: 0">
                                 <button onclick="clear_direction();" class="btn btn-primary-nb  ctrl btn-ell"
                                         title="Очистить" disabled>Очистить
                                 </button>
@@ -427,6 +427,250 @@
 
 {% endblock %}
 
+{% block head_cn %}
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
+    <link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />
+    <style>
+        #results-modal .modal-body {
+            color: #000
+        }
+
+        table.ct {
+            border-collapse: collapse;
+            margin-top: 5px
+        }
+
+        table.ct td {
+            border-collapse: collapse;
+            margin-top: 5px;
+
+            padding: 2px !important;
+        }
+
+        table.ct, .ct th, .ct td, .ct tr, .ct tbody, .ct thead {
+            border: 1px solid black !important;
+            font-weight: normal;
+            background-color: #fff;
+        }
+
+        .h-d {
+            padding: 1px;
+            display: inline-block;
+        }
+
+        .h-d[comment]:after {
+            content: " [" attr(comment) "]";
+            color: #049372;
+            font-weight: 600;
+        }
+
+        .h-d:hover {
+            outline: 1px solid #bbb
+        }
+
+        .btn-sm.btn-blue-nb {
+            margin: 2px;
+            width: 105px;
+            display: inline-block;
+        }
+
+        .status {
+            vertical-align: middle;
+            font-weight: 600;
+            font-size: 12pt;
+            width: 100%;
+            text-align: center;
+        }
+
+        .status-0 {
+            color: #CF3A24
+        }
+
+        .status-1 {
+            color: #4B77BE
+        }
+
+        .status-2 {
+            color: #049372
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        .tw {
+            border: #ddd 1px solid;
+            min-height: 300px;
+            background: #eee;
+        }
+
+        .div4 {
+            width: 50%;
+            height: 50%;
+            float: left;
+            display: inline-block;
+            padding: 5px;
+            overflow-y: auto;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        body, html {
+            height: 100%;
+        }
+
+        .hideble {
+            height: 32px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hideble table, .hideble-n table {
+            margin: 0;
+        }
+
+        .hideble.opened {
+            height: auto;
+        }
+
+        #table-researches-preview span {
+            cursor: pointer;
+        }
+
+        .has-error {
+            border-color: #E9573F;
+        }
+
+        h6 {
+            margin: 3px;
+        }
+
+        #results-modal .ct tbody td {
+            white-space: nowrap;
+            word-wrap: normal;
+        }
+
+        tbody td {
+            padding: 2px !important;
+        }
+
+        #story-list {
+            position: relative;
+        }
+
+        #story-table td {
+            padding: 2px;
+        }
+
+        .floatThead th {
+            background: #fff;
+        }
+
+        .bclear {
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: .6;
+            color: #881c2f;
+            margin-right: 5px;
+        }
+
+        .bclear:hover {
+            opacity: 1;
+        }
+
+        .btn-sm-m {
+            padding-top: 1px;
+            padding-bottom: 1px;
+        }
+
+        td > label, th > label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .h-d:hover {
+            background-color: #eee;
+        }
+
+        .dir-queue {
+            background-color: #434a54;
+            position: relative;
+        }
+
+        .res-over {
+            font-family: monospace !important;
+            text-overflow: ellipsis;
+            word-break: break-all;
+            overflow: hidden;
+            max-height: 3.3em;
+            line-height: 1.1em;
+            text-align: justify;
+        }
+
+        .tr-cancel .status {
+            color: #F4D03F
+        }
+
+        .btn-ell {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table-header-row {
+            font-weight: bolder;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table-content-row {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #tree-cont {
+            height: 700px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            display: block;
+            position: relative;
+        }
+
+        .modal-c {
+            text-align: center;
+        }
+
+        @media screen and (min-width: 768px) {
+            .modal-c:before {
+                display: inline-block;
+                vertical-align: middle;
+                content: " ";
+                height: 100%;
+            }
+        }
+
+        .modal-c .modal-dialog {
+            display: inline-block;
+            text-align: left;
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
 {% block scripts %}
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/js/jquery.tablesorter.min.js"></script>
@@ -551,7 +795,7 @@
 
             });
             Split(['#a', '#b'], {
-                gutterSize: 8,
+                gutterSize: 5,
                 cursor: 'col-resize',
                 minSize: 200,
                 onDrag: resize
@@ -559,7 +803,7 @@
 
             Split(['#c', '#d'], {
                 direction: 'vertical',
-                gutterSize: 8,
+                gutterSize: 5,
                 cursor: 'row-resize',
                 minSize: 200,
                 onDrag: resize
@@ -567,14 +811,12 @@
 
             Split(['#e', '#f'], {
                 direction: 'vertical',
-                gutterSize: 8,
+                gutterSize: 5,
                 cursor: 'row-resize',
                 minSize: 200,
                 onDrag: resize
             });
 
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            $('head').append('<link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />');
             $("#fin_stat").hide();
             $("#search-results-link").hide();
             //$("#fin_poli input:first").parent('.btn').addClass('active');
@@ -833,10 +1075,11 @@
             $("#table-researches-preview").html("");
             $("#table-researches-preview").append(lang.table_researches_preview_header);
             $("#f .ctrl").attr('disabled', 1);
+            var cnt = 0;
             $.each(checked, function (k, v) {
                 if (v == undefined || v.length == 0) return;
                 if (!$("#selected-" + k).length) {
-                    $("#table-researches-preview").append("<tr><td class='col-md-2'>{0}</td><td id='selected-{1}'></td><td class='col-md-1' style='text-align: right;'><span class='bclear glyphicon glyphicon-remove' style='width: 34px' data-toggle=\"confirmation\" onclick='remove_researches({2});'></span></td></tr>".f(labs[k], k, k));
+                    $("#table-researches-preview").append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='text-right'><span class='bclear glyphicon glyphicon-remove' style='width: 34px' data-toggle=\"confirmation\" onclick='remove_researches({2});'></span></td></tr>".f(labs[k], k, k));
                 }
                 $("#selected-" + k).html("");
 
@@ -852,7 +1095,11 @@
                 });
 
                 $("#f .ctrl").removeAttr('disabled');
+                cnt++;
             });
+            if(cnt == 0){
+                $("#table-researches-preview").append("<tr><td colspan='3' class='text-center'>Ничего не выбрано</td></tr>");
+            }
             if ($('#sources .active-s .btn.active input[name=source]').length)
                 fs = parseInt($('#sources .active-s .btn.active input[name=source]').val());
             else
@@ -898,15 +1145,15 @@
                 $("#story-table").html("");
                 if (data.ok) {
                     $.each(data.directions, function (k, v) {
-                        var sliced = v.researches.slice(0, 55);
-                        if (sliced.length < v.researches.length) {
+                        var sliced = v.researches;//.slice(0, 55);
+                        /*if (sliced.length < v.researches.length) {
                             sliced += '...';
-                        }
+                        }*/
                         $("#story-table").append("<tr pk='{0}'>".f(v.pk) +
                                 "<td>{0}</td>".f(v.date) +
                                 "<td style='text-align: center'>{0}</td>".f(v.pk) +
                                 "<td>{0}</td>".f(v.lab) +
-                                "<td class='res-over' title='{1}'>{0}</td>".f(sliced, v.researches) +
+                                "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
                                 "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
                                 "<td style='text-align: right;'>" +
                                 (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
@@ -922,6 +1169,11 @@
                             $("#story-table tr[pk={0}] .status".f(v.pk)).text(statuses["-1"]);
                         }
                     });
+                    if(data.directions.length == 0){
+                        $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
+                    }
+                }else{
+                    $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
                 }
                 load_client_dirs_lock = false;
             }).always(function (jqXHR, textStatus) {
@@ -1044,7 +1296,6 @@
                     $("#table-researches input").prop("checked", false);
                     clear_fast();
                     clear_direction();
-                    $("#story-table").html("");
                 }
                 $("#diagnos-field").val("");
             }).always(function (jqXHR, textStatus) {
@@ -1066,6 +1317,7 @@
             $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
             $("#search-results-link").hide();
             $("#history-num-tr input").prop("disabled", true);
+            $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не загружено</td></tr>");
 
         }
         function show_res(id, pk) { // Функция показа результата из списка нескольких
@@ -1362,7 +1614,7 @@
             //$('#directions-search-list').height($("#e").height() - 72);
             //$('#directions-search-list').perfectScrollbar();
             //$('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
-            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 20);
+            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 5);
             //$('.dir-queue').perfectScrollbar();
             $(".floatThead").floatThead('reflow');
             $(".floatThead").floatThead({
@@ -1519,246 +1771,4 @@
             });
         }
     </script>
-    <style>
-        #results-modal .modal-body {
-            color: #000
-        }
-
-        table.ct {
-            border-collapse: collapse;
-            margin-top: 5px
-        }
-
-        table.ct td {
-            border-collapse: collapse;
-            margin-top: 5px;
-
-            padding: 2px !important;
-        }
-
-        table.ct, .ct th, .ct td, .ct tr, .ct tbody, .ct thead {
-            border: 1px solid black !important;
-            font-weight: normal;
-            background-color: #fff;
-        }
-
-        .h-d {
-            padding: 1px;
-            display: inline-block;
-        }
-
-        .h-d[comment]:after {
-            content: " [" attr(comment) "]";
-            color: #049372;
-            font-weight: 600;
-        }
-
-        .h-d:hover {
-            outline: 1px solid #bbb
-        }
-
-        .btn-sm.btn-blue-nb {
-            margin: 2px;
-            width: 105px;
-            display: inline-block;
-        }
-
-        .status {
-            vertical-align: middle;
-            font-weight: 600;
-            font-size: 12pt;
-            width: 100%;
-            text-align: center;
-        }
-
-        .status-0 {
-            color: #CF3A24
-        }
-
-        .status-1 {
-            color: #4B77BE
-        }
-
-        .status-2 {
-            color: #049372
-        }
-
-        .navbar {
-            margin-bottom: 3px;
-        }
-
-        .active {
-            background-color: #656D78 !important;
-            color: #fff !important;
-        }
-
-        .tw {
-            border: #ddd 1px solid;
-            min-height: 300px;
-            background: #eee;
-        }
-
-        .div4 {
-            width: 50%;
-            height: 50%;
-            float: left;
-            display: inline-block;
-            padding: 5px;
-            overflow-y: auto;
-        }
-
-        .container-fluid {
-            height: 100%;
-            width: 100%;
-        }
-
-        body, html {
-            height: 100%;
-        }
-
-        .hideble {
-            height: 32px;
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        .hideble table, .hideble-n table {
-            margin: 0;
-        }
-
-        .hideble.opened {
-            height: auto;
-        }
-
-        #table-researches-preview span {
-            cursor: pointer;
-        }
-
-        .has-error {
-            border-color: #E9573F;
-        }
-
-        h6 {
-            margin: 3px;
-        }
-
-        #results-modal .ct tbody td {
-            white-space: nowrap;
-            word-wrap: normal;
-        }
-
-        tbody td {
-            padding: 2px !important;
-        }
-
-        #story-list {
-            position: relative;
-        }
-
-        #story-table td {
-            padding: 2px;
-        }
-
-        .floatThead th {
-            background: #fff;
-        }
-
-        .bclear {
-            bottom: 0;
-            height: 14px;
-            margin: auto;
-            font-size: 14px;
-            cursor: pointer;
-            opacity: .6;
-            color: #881c2f;
-            margin-right: 5px;
-        }
-
-        .bclear:hover {
-            opacity: 1;
-        }
-
-        .btn-sm-m {
-            padding-top: 1px;
-            padding-bottom: 1px;
-        }
-
-        td > label, th > label {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            cursor: pointer;
-            vertical-align: middle;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .h-d:hover {
-            background-color: #eee;
-        }
-
-        .dir-queue {
-            background-color: #434a54;
-            position: relative;
-        }
-
-        .res-over {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-height: 45px;
-            font-family: monospace !important;
-            overflow-wrap: break-word !important;
-            word-wrap: normal !important;
-            word-break: break-all;
-            line-break: auto !important;
-            hyphens: manual !important;
-        }
-
-        .tr-cancel .status {
-            color: #F4D03F
-        }
-
-        .btn-ell {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .table-header-row {
-            font-weight: bolder;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .table-content-row {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        #tree-cont {
-            height: 700px;
-            overflow-x: hidden;
-            overflow-y: auto;
-            display: block;
-            position: relative;
-        }
-
-        .modal-c {
-            text-align: center;
-        }
-
-        @media screen and (min-width: 768px) {
-            .modal-c:before {
-                display: inline-block;
-                vertical-align: middle;
-                content: " ";
-                height: 100%;
-            }
-        }
-
-        .modal-c .modal-dialog {
-            display: inline-block;
-            text-align: left;
-            vertical-align: middle;
-        }
-    </style>
 {% endblock %}

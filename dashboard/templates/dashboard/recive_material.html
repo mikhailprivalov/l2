@@ -2,18 +2,17 @@
 {% block title %}Взятие материала{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <div class="col-md-6">
+    <div class="col-md-6" style="padding-right: 0; padding-left: 0">
         <div class="row">
-            <div class="col-md-3">
-                <button class="btn btn-blue-nb" onclick="worklist();return false;" type="button">Лист подтверждений</button>
+            <div class="col-md-3" style="padding-right: 0;">
+                <button class="btn btn-primary-nb btn-ell" onclick="worklist();return false;" type="button">Лист подтверждений</button>
             </div>
-            <div class="col-md-9">
+            <div class="col-md-9" style="padding-left: 10px">
                 <div class="input-group">
                     <input type="text" class="form-control" id="search-field" name="search-field" data-container="body"
                            data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
                            placeholder="Введите номер направления" maxlength="13" autofocus
-                           onkeyup="bar_scanner($('#search-field').val())">
-                    <span id="searchclear" class="glyphicon glyphicon-remove-circle"></span>
+                           onkeyup="bar_scanner($('#search-field').val())" data-width="100%">
                   <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="search($('#search-field').val());" type="button">Поиск
                         </button>
@@ -22,55 +21,51 @@
 
             </div>
         </div>
-        <table class="table table-bordered table-condensed" id="dir-tb" style="margin-top: 10px">
+        <table class="table table-bordered table-condensed" id="dir-tb" style="margin-top: 10px; margin-bottom: 10px">
             <tr>
-                <td class="col-md-3">Номер направления:&nbsp;</td>
-                <td class="col-md-9"><h2 id="dir-num" style="margin: 2px;padding: 0;">&nbsp;</h2></td>
+                <td>Номер направления</td>
+                <td><h2 id="dir-num" style="margin: 2px;padding: 0;">&nbsp;</h2></td>
             </tr>
             <tr>
-                <td class="col-md-3">Дата назначения:&nbsp;</td>
-                <td id="date" class="col-md-9"></td>
+                <td>Дата назначения</td>
+                <td id="date"></td>
             </tr>
             <tr>
-                <td class="col-md-3">Лаборатория:&nbsp;</td>
-                <td id="lab" class="col-md-9"></td>
+                <td>Лаборатория</td>
+                <td id="lab"></td>
             </tr>
             <tr>
-                <td class="col-md-3">ФИО пациента:&nbsp;</td>
-                <td id="fio" class="col-md-9"></td>
+                <td>ФИО пациента</td>
+                <td id="fio"></td>
             </tr>
             <tr>
-                <td class="col-md-3">Пол:&nbsp;</td>
-                <td id="sx" class="col-md-9"></td>
+                <td>Пол</td>
+                <td id="sx"></td>
             </tr>
             <tr>
-                <td class="col-md-3">Дата рождения:&nbsp;</td>
-                <td id="bth" class="col-md-9"></td>
+                <td>Дата рождения</td>
+                <td id="bth"></td>
             </tr>
             <tr>
-                <td class="col-md-3">ФИО врача:&nbsp;</td>
-                <td id="doc-fio" class="col-md-9"></td>
-            </tr>
-            <tr>
-                <td class="col-md-3">Отделение:&nbsp;</td>
-                <td id="doc-otd" class="col-md-9"></td>
+                <td>Л/врач</td>
+                <td><span id="doc-fio"></span><span id="doc-otd"></span></td>
             </tr>
         </table>
         <div>
 
-            <div style="margin-bottom: 25px;margin-top: -5px">
+            <div style="margin-bottom: 10px">
                 <div class="row">
-                    <div class="col-md-3">
-                        <button class="btn btn-primary btn-primary-nb" onclick="cancel_direction();return false;" id="can-dir">Отмена направления</button>
+                    <div class="col-md-3" style="padding-right: 0;">
+                        <button disabled class="btn btn-primary btn-primary-nb" onclick="cancel_direction();return false;" id="can-dir">Отмена направления</button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary btn-primary-nb" onclick="barcodes_print();return false;" id="print-bc">Печать штрих-кодов</button>
+                    <div class="col-md-3" style="padding-right: 0; padding-left: 10px">
+                        <button disabled class="btn btn-primary btn-primary-nb" onclick="barcodes_print();return false;" id="print-bc">Печать штрих-кодов</button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary-nb" tabindex="9" id="success-b" style="margin-bottom: 5px" onclick="save_research();return false;">Сохранить</button>
+                    <div class="col-md-3" style="padding-right: 0; padding-left: 10px">
+                        <button disabled class="btn btn-primary-nb" tabindex="9" id="success-b" onclick="save_research();return false;">Сохранить</button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary-nb" tabindex="9" onclick="barcodes_print();save_research();return false;" id="print-bc-save">Печать ш/к и сохранить</button>
+                    <div class="col-md-3" style="padding-left: 10px">
+                        <button disabled class="btn btn-primary-nb" tabindex="9" onclick="barcodes_print();save_research();return false;" id="print-bc-save">Печать ш/к и сохранить</button>
                     </div>
                 </div>
             </div>
@@ -82,21 +77,19 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div>
+    <div class="col-md-6" style="padding-left: 10px; padding-right: 0">
+        <div style="min-height: 100px">
             <!--<div style="float: right;margin-top: 3px"><label>Печатать все <input type="radio" name="print_type" checked value="all"/></label>&nbsp;&nbsp;&nbsp;<label>Печатать выбранные <input type="radio" name="print_type" value="selected"/> </label></div>-->
-            <div class="btn-group" style="margin-bottom: 10px">
-                <a href="/direction/researches/update/history/print" onclick="print_history();return false;" target="_blank" class="btn btn-primary-nb mw">Печать</a>
-
-                <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
+            <div class="btn-group btn-group-justified" style="margin-bottom: 10px; width: 50%">
+                <div class="btn-group">
+                    <button onclick="print_history();" class="btn btn-primary-nb btn-ell">Печать</button>
+                </div>
+                <div class="btn-group">
+                    <button onclick="update_history();" class="btn btn-blue-nb btn-ell">Обновить</button>
+                </div>
             </div>
-            <div id="scroll-tb" style="position: relative;padding-right: 15px ; ">
+            <div id="scroll-tb" style="position: relative;padding-right: 15px; min-height: 100px">
                 <table class="table table-bordered table-hover" id="history-tb"></table>
-            </div>
-            <div class="btn-group" style="margin-top: 10px">
-                <a href="/direction/researches/update/history/print" onclick="print_history();return false;" target="_blank" class="btn btn-primary-nb mw">Печать</a>
-
-                <div class="btn btn-blue-nb mw" onclick="update_history();">Обновить</div>
             </div>
         </div>
     </div>
@@ -129,6 +122,102 @@
     </div>
 </div>
 {% endblock %}
+{% block head_cn %}
+    <style>
+        .navbar {
+            margin-bottom: 10px;
+        }
+        .mw, .mw:active, .mw:focus {
+            width: 150px !important;
+        }
+        #searchclear {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        #dir-tb td {
+            vertical-align: middle;
+            padding: 2px;
+        }
+
+        #dir-tb tr td:last-child {
+            text-align: left;
+        }
+
+        #dir-tb tr td:first-child {
+            font-weight: 600;
+            width: 170px;
+            padding-left: 10px;
+        }
+
+        .container-fluid, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        td label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+
+        }
+
+        td {
+            padding: 2px !important;
+        }
+
+        td label input {
+            vertical-align: middle;
+            margin-top: 15px;
+        }
+
+        td label:hover {
+            background-color: #efefef;
+        }
+
+        .c {
+            text-align: center;
+            padding: 0 !important;
+        }
+        .last {
+            background-color: #D4E6C2;
+        }
+    th label, td label{
+        margin: 0;
+    }
+    .label-c{
+        text-align: right;
+        vertical-align: top;
+    }
+    .label-c input{
+        margin: 0;
+        margin-right: 5px;
+    }
+    .cnc{
+        line-height: 1!important;
+    }
+    </style>
+{% endblock %}
 {% block scripts %}
     <script>
         var dnum = -1;
@@ -147,6 +236,7 @@
         var SFinFocus = false;
         var checkboxed = [];
         $(document).ready(function () {
+            resize();
             $("#print-bc-save, #print-bc, #success-b, #can-dir").prop("disabled", true);
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
@@ -164,18 +254,18 @@
                 if (SFinFocus) return;
                 sym = String.fromCharCode(e.which);
                 if (isNaN(sym)) return;
-                console.log("Key: " + sym);
-                console.log("Code: " + e.which);
+{#                console.log("Key: " + sym);#}
+{#                console.log("Code: " + e.which);#}
                 input_buffer_scan += sym;
                 input_buffer_scan = input_buffer_scan.replace("\n", "").trim();
                 bar_scanner(input_buffer_scan);
                 if (input_buffer_scan.length == 13 && input_buffer_scan.substr(0, 3) == "460") {
-                    console.log("ok");
+                    //console.log("ok");
                     bar_scanner(input_buffer_scan);
                     input_buffer_scan = "";
                 }
                 else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) != "460") {
-                    console.log("clear buffer " + input_buffer_scan);
+                    //console.log("clear buffer " + input_buffer_scan);
                     input_buffer_scan = "";
                 }
             });
@@ -203,20 +293,42 @@
                 hl();
             });
         }
-        function worklist(){
-            $("#getconfirmbtn").prop("disabled", true);
-            $("#work-modal").modal();
-            $("#work-modal tbody").html('<tr><td style="text-align: center" colspan="5">загрузка...</td></tr>');
+        function cancel_direction_pk(pk){
+            var tubes = [];
+            $.each($(`#work-modal tr[pk=${pk}] .tube-pk`), function(k,v){
+                tubes.push("№" + $(v).text());
+            });
+            if(confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? "Пробирка" : "Пробирки"} ${tubes.join(", ")} из этого направления ${(tubes.length < 2) ? "будет не доступна" : "будут не доступны"} для подтверждения`)) {
+                sl(true);
+                $.ajax({
+                    url: "/direction/researches/cancel",
+                    method: "POST",
+                    data: {status: true, pk: pk}
+                }).done(function (data) {
+                    //$(`#work-modal tr[pk=${pk}]`).remove();
+                    worklist(true);
+                });
+            }
+        }
+        function worklist(nc){
+            sl();
+            if(!nc){
+                $("#getconfirmbtn").prop("disabled", true);
+                $("#work-modal tbody").html('<tr><td style="text-align: center" colspan="5">загрузка...</td></tr>');
+            }
              $.ajax({
                 url: "/directions/worklist",
                 type: "json",
                 method: "GET"
             }).done(function (d) {
+                 hl();
+                 if(!nc)
+                    $("#work-modal").modal();
                  $("#work-modal tbody").html("");
                  $("#work-modal .allprint").prop("checked", true);
                  if(d.rows.length > 0) {
                      $.each(d.rows, function (k, v) {
-                         $("#work-modal tbody").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td>{3}</td><td>{1}</td><td><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {4}'></div></div>{2}</div></div></td><td class='label-c'><label onclick='toggle_check(this);'><input class='custom_print' checked type='checkbox' value='{1}' name='complete-res-fast'/></label></td></tr>".f(v.patient, v.pk, v.title, v.direction, v.color));
+                         $("#work-modal tbody").append("<tr pk='{3}'><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' style='cursor: pointer'>{0}</td><td class='cnc'>{3}<br/><small><a onclick='cancel_direction_pk({3});return false;' href='#'>отменить</a></small></td><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' class='tube-pk' style='cursor: pointer'>{1}</td><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' style='cursor: pointer'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {4}'></div></div>{2}</div></div></td><td class='label-c'><label><input class='custom_print' checked type='checkbox' value='{1}' name='complete-res-fast'/></label></td></tr>".f(v.patient, v.pk, v.title, v.direction, v.color));
                      });
                      $("#getconfirmbtn").prop("disabled", false);
                  }
@@ -256,7 +368,7 @@
                 }
             }
         }
-        var com = false, cancel_d = false;;
+        var com = false, cancel_d = false;
         function search(q, reload) {
             com = true;
             input_buffer_scan = "";
@@ -283,7 +395,7 @@
                             $("#sx").html(data.client.sx);
                             $("#bth").html(data.client.bth);
                             $("#doc-fio").html(data.direction.doc.fio);
-                            $("#doc-otd").html(data.direction.doc.otd);
+                            $("#doc-otd").html(", " + data.direction.doc.otd);
                             $("#lab").html(data.direction.lab);
                             cancel_d = data.direction.cancel;
                             if(!reload)
@@ -401,6 +513,7 @@
             $("#print-bc").hide();
         }
         function update_history(clearn, dn) {
+            sl();
             $.ajax({
                 url: "/direction/researches/update/history",
                 type: "json",
@@ -434,7 +547,7 @@
                     $("#history-tb").prepend("<tr id='story-{3}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class='label-c'><label><input type='checkbox' name='custom_print' class='custom_print' value='{3}' onchange='checkboxes_to_array();' /></label></td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
                 });
                 $("#history-tb").prepend("<tr><th>Время забора</th><th>Направление</th><th>Исследования</th><th>Номер пробирки</th><th>Тип пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint' checked /></label></th></tr>");
-
+                hl();
                 resize();
                 sync_checkboxes("[name=allprint]");
                 if (!clearn || !dn) return;
@@ -450,7 +563,7 @@
 
         var first_resize = true;
         function resize() {
-            $('#scroll-tb').height($(window).height() - 165);
+            $('#scroll-tb').height($(window).height() - 90);
             $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 65);
             if (first_resize) {
                 $('#scroll-res').perfectScrollbar();
@@ -491,86 +604,4 @@
         }
 
     </script>
-    <style>
-        .mw, .mw:active, .mw:focus {
-            width: 150px !important;
-        }
-        #searchclear {
-            position: absolute;
-            right: 5px;
-            top: 0;
-            bottom: 0;
-            height: 14px;
-            margin: auto;
-            font-size: 14px;
-            cursor: pointer;
-            color: #ccc;
-        }
-
-        #dir-tb td {
-            vertical-align: middle;
-            padding: 2px;
-        }
-
-        #dir-tb tr td:last-child {
-            text-align: left;
-        }
-
-        .container-fluid, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        html, body {
-            overflow: hidden;
-            height: 100%
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        td label {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            cursor: pointer;
-            vertical-align: middle;
-            display: inline-block;
-
-        }
-
-        td {
-            padding: 2px !important;
-        }
-
-        td label input {
-            vertical-align: middle;
-            margin-top: 15px;
-        }
-
-        td label:hover {
-            background-color: #efefef;
-        }
-
-        .c {
-            text-align: center;
-            padding: 0 !important;
-        }
-        .last {
-            background-color: #D4E6C2;
-        }
-    th label, td label{
-        margin: 0;
-    }
-    .label-c{
-        text-align: right;
-        vertical-align: top;
-    }
-    .label-c input{
-        margin: 0;
-        margin-right: 5px;
-    }
-    </style>
 {% endblock %}

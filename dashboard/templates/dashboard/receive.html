@@ -20,8 +20,7 @@
                             Дата забора материала:
                             <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
                                 <input type="text" class="input-sm form-control no-context" name="date-start"/>
-                            <span class="input-group-addon"
-                                  style="background-color: #fff;color: #000">&mdash;</span>
+                                <span class="input-group-addon" style="background-color: #fff;color: #000">&mdash;</span>
                                 <input type="text" class="input-sm form-control no-context" name="date-end"/>
                             </div>
                         </div>
@@ -83,13 +82,134 @@
     </div>
 {% endblock %}
 
+{% block head_cn %}
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
+    <style>
+        .borderless td {
+            border: 0 !important;
+        }
+
+        .r {
+            text-align: right;
+        }
+
+        .c {
+            text-align: center;
+        }
+
+        td {
+            padding: 2px !important;
+        }
+
+        #scroll-tb {
+            padding: 5px 15px 5px 5px;
+            border: 1px solid #ccc;
+        }
+
+        html, body {
+            overflow: hidden;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container-fluid, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #tubes tr, #tubes td {
+            padding: 2px;
+            vertical-align: middle;
+        }
+
+        #tubes input[type=text] {
+            border: 0;
+            margin: 0;
+            width: 100%;
+            padding: 0 5px;
+        }
+
+        #tubes label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        #tubes label:hover {
+            background-color: #efefef;
+        }
+
+        #tubes .btn-group {
+            width: 100%;
+        }
+
+        .searchclear {
+            position: absolute;
+            right: 5px;
+            top: 0;
+            bottom: 0;
+            height: 14px;
+            margin: auto;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: .6;
+            color: #881c2f;
+        }
+
+        .active {
+            background-color: #6C7A89 !important;
+            color: #fff !important;
+        }
+
+        .searchclear:hover {
+            opacity: 1;
+        }
+
+        td h6 {
+            margin: 4px !important;
+        }
+
+        td.tube {
+            padding: 2px !important;
+        }
+
+        td .form-control, .in, .in label {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        tr.highlight, tr.highlight .tube, tr.highlight input {
+            background-color: #e4f6d2;
+        }
+
+        .fh {
+            display: block;
+            height: 100%;
+        }
+
+        .fastlinks a {
+            cursor: pointer;
+        }
+
+        .fastlinks {
+            margin-top: -13px;
+            margin-bottom: 5px;
+        }
+    </style>
+{% endblock %}
 {% block scripts %}
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         var loadt = false;
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
             loadfrom();
             resize();
             $(window).resize(function () {
@@ -99,9 +219,9 @@
             var daybefore = new Date();
             daybefore.setDate(daybefore.getDate() - 1);
 
-            $("[name='date-start']").val(getFormattedDate(daybefore));
-            $("[name='date-end']").val(getFormattedDate(today));
-            $("[name='date-start'],[name='date-end']").datepicker({
+            $("[name='date-start']").val(getFormattedDate(daybefore)).attr("pre-val", getFormattedDate(daybefore));
+            $("[name='date-end']").val(getFormattedDate(today)).attr("pre-val", getFormattedDate(today));
+            $('#datepickermain').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
                 language: "ru",
@@ -109,9 +229,13 @@
                 todayHighlight: true
             });
             $("[name='date-end'],[name='date-start']").change(function(){
-                if(loadt) return;
+                var v = $(this).val();
+                var b = $(this).attr("pre-val");
+
+                if(loadt || v == b) return;
                 loadt = true;
                 load_tubes();
+                $(this).attr("pre-val", v);
             });
         });
         function highlight(th) {
@@ -258,118 +382,4 @@
             });
         });
     </script>
-    <style>
-        .borderless td {
-            border: 0 !important;
-        }
-
-        .r {
-            text-align: right;
-        }
-
-        .c {
-            text-align: center;
-        }
-
-        td {
-            padding: 2px !important;
-        }
-
-        #scroll-tb {
-            padding: 5px 15px 5px 5px;
-            border: 1px solid #ccc;
-        }
-
-        html, body {
-            overflow: hidden;
-            height: 100%
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        .container-fluid, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #tubes tr, #tubes td {
-            padding: 2px;
-            vertical-align: middle;
-        }
-
-        #tubes input[type=text] {
-            border: 0;
-            margin: 0;
-            width: 100%;
-            padding: 0 5px;
-        }
-
-        #tubes label {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            cursor: pointer;
-            vertical-align: middle;
-            display: inline-block;
-        }
-
-        #tubes label:hover {
-            background-color: #efefef;
-        }
-
-        #tubes .btn-group {
-            width: 100%;
-        }
-
-        .searchclear {
-            position: absolute;
-            right: 5px;
-            top: 0;
-            bottom: 0;
-            height: 14px;
-            margin: auto;
-            font-size: 14px;
-            cursor: pointer;
-            opacity: .6;
-            color: #881c2f;
-        }
-
-        .searchclear:hover {
-            opacity: 1;
-        }
-
-        td h6 {
-            margin: 4px !important;
-        }
-
-        td.tube {
-            padding: 2px !important;
-        }
-
-        td .form-control, .in, .in label {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-
-        tr.highlight, tr.highlight .tube, tr.highlight input {
-            background-color: #e4f6d2;
-        }
-
-        .fh {
-            display: block;
-            height: 100%;
-        }
-
-        .fastlinks a {
-            cursor: pointer;
-        }
-
-        .fastlinks {
-            margin-top: -13px;
-            margin-bottom: 5px;
-        }
-    </style>
 {% endblock %}

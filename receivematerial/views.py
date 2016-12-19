@@ -7,7 +7,7 @@ from laboratory import settings
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from django.http import HttpResponse
-from users.models import DoctorProfile
+import users.models as users
 import simplejson as json
 from datetime import datetime, date
 from django.views.decorators.csrf import csrf_exempt
@@ -307,7 +307,7 @@ def receive_journal(request):
     import pytz
     import copy
 
-    start = "1"  # str(request.GET.get("start", "1"))
+    start = str(request.GET.get("start", "1"))
     group = str(request.GET.get("group", "-2"))
     return_type = str(request.GET.get("return", "pdf"))
     otd = str(request.GET.get("otd", "[]"))
@@ -321,7 +321,7 @@ def receive_journal(request):
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа
     response[
-        'Content-Disposition'] = 'inline; filename="napr.pdf"'  # Content-Disposition inline для показа PDF в браузере
+        'Content-Disposition'] = 'inline; filename="zhurnal_priema_materiala.pdf"'  # Content-Disposition inline для показа PDF в браузере
     from io import BytesIO
     buffer = BytesIO()  # Буфер
     from reportlab.pdfgen import canvas
@@ -338,6 +338,8 @@ def receive_journal(request):
     vids = set()
 
     perpage = 47
+
+    n_dict = {}
 
     n = 1
     for v in tubes:  # Перебор пробирок
@@ -357,40 +359,45 @@ def receive_journal(request):
             k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
         else:
             k = str(iss.first().napravleniye.doc.podrazileniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazileniye)
-
+        if k not in n_dict.keys():
+            n_dict[k] = 0
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
             iss_list[val.research.sort_weight] = val.research.title
 
         if len(iss_list) == 0:
             continue
+        '''
         if n < start:
             n += 1
-            continue
+            continue'''
 
         directions.add(iss[0].napravleniye.pk)
         if return_type == "pdf":
-            if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
-                labs[k] = []
+            n_dict[k] += 1
+            if n_dict[k] >= start:
+                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+                    labs[k] = []
 
-            if perpage - len(labs[k]) % perpage < len(iss_list):
-                pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
-                pre["researches"] = ""
-                for x in range(0, perpage - len(labs[k]) % perpage):
-                    labs[k].append(pre)
-            for value in iss_list:  # Перебор списка исследований
-                labs[k].append(
-                    {"type": v.type.tube.title, "researches": iss_list[value],
-                     "client-type": iss[0].napravleniye.client.type,
-                     "lab_title": iss[0].research.subgroup.title,
-                     "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
-                     "dir_id": iss[0].napravleniye.pk,
-                     "podr": iss[0].napravleniye.doc.podrazileniye.title,
-                     "receive_n": str(n),
-                     "tube_id": str(v.id),
-                     "direction": str(iss[0].napravleniye.pk),
-                     "history_num": iss[0].napravleniye.history_num,
-                     "fio": iss[
-                         0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                if perpage - len(labs[k]) % perpage < len(iss_list):
+                    pre = copy.deepcopy(labs[k][len(labs[k]) - 1])
+                    pre["researches"] = ""
+                    for x in range(0, perpage - len(labs[k]) % perpage):
+                        labs[k].append(pre)
+                for value in iss_list:  # Перебор списка исследований
+                    labs[k].append(
+                        {"type": v.type.tube.title, "researches": iss_list[value],
+                         "client-type": iss[0].napravleniye.client.type,
+                         "lab_title": iss[0].research.subgroup.title,
+                         "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
+                         "dir_id": iss[0].napravleniye.pk,
+                         "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                         "receive_n": str(n),
+                         "tube_id": str(v.id),
+                         "direction": str(iss[0].napravleniye.pk),
+                         "history_num": iss[0].napravleniye.history_num,
+                         "n": n_dict[k],
+                         "fio": iss[
+                             0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
         n += 1
     directions = list(directions)
     if return_type == "directions":
@@ -417,12 +424,13 @@ def receive_journal(request):
             c.showPage()
 
         nn = 0
-
         gid = "-1"
         for pg_num in p.page_range:
             pg = p.page(pg_num)
+            if len(pg) == 0:
+                continue
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1])
+                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1], start=start)
             data = []
             tmp = []
             for v in data_header:
@@ -443,10 +451,9 @@ def receive_journal(request):
                     if lastid not in merge_list.keys():
                         merge_list[lastid] = []
                     merge_list[lastid].append(num)
-
                 if shownum:
                     nn += 1
-                    tmp.append(Paragraph(str(nn), styleSheet[
+                    tmp.append(Paragraph(str(obj["n"]), styleSheet[
                         "BodyText"]))  # "--" if obj["receive_n"] == "0" else obj["receive_n"], styleSheet["BodyText"]))
                     fio = obj["fio"]
                     if obj["history_num"] and len(obj["history_num"]) > 0:
@@ -494,7 +501,7 @@ def receive_journal(request):
             t.drawOn(c, tx, h - ht - ty)
             if pg.has_next():
                 c.showPage()
-
+    c.setTitle("Журнал приема материала")
     c.save()
 
     pdf = buffer.getvalue()
@@ -509,11 +516,11 @@ def receive_journal(request):
     else:
         group_str = "Без группы"
 
-    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start}), user=request.user.doctorprofile).save()
+    slog.Log(key="", type=25, body=json.dumps({"group": group_str, "start": start, "otds": ["%s, %s" % (users.Podrazdeleniya.objects.get(pk=int(x)).title, x) for x in otd]}), user=request.user.doctorprofile).save()
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2):
+def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2, start=1):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)

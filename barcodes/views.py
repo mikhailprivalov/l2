@@ -42,13 +42,18 @@ def tubes(request):
     elif "tubes_id" in request.GET.keys():
         tubes_id = set(json.loads(request.GET["tubes_id"]))
         istubes = True
+    doctitle = "Штрих-коды (%s)" % (("направления " + ", ".join(str(v) for v in direction_id)) if not istubes else ("пробирки " + ", ".join(str(v) for v in tubes_id)))
+
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'
-    response['Content-Disposition'] = 'inline; filename="barcodes.pdf"'
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
+    response['Content-Disposition'] = str.translate('inline; filename="%s.pdf"' % doctitle, {ord(a): ord(b) for a, b in zip(*symbols)})
 
     buffer = BytesIO()
     pdfdoc.PDFInfo.title = 'Barcodes'
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm))
+    c.setTitle(doctitle)
     dt = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стом."}
     if istubes:
         direction_id = set([x.napravleniye.pk for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
@@ -134,7 +139,7 @@ def tubes(request):
             # c.setFont('OpenSans', 10)
             c.setFont('clacon', 12)
             types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая",
-                     "зелёная", "контейнер", "зонд", "п ф", "л ф"]
+                     "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]
             tb_t = tubes_buffer[tube_k]["title"].lower()
             pr = ""
             for s in types:

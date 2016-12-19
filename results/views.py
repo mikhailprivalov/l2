@@ -68,7 +68,7 @@ def enter(request):
 
     from podrazdeleniya.models import Podrazdeleniya
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
-    return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya, "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("istype", "pk")})
+    return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya, "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("istype", "pk"), "groups": directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)})
 
 
 @login_required
@@ -106,7 +106,7 @@ def loadready(request):
                                int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                              int(date_end.split(".")[0])) + datetime.timedelta(1)
-    tlist = []
+
     if deff == 0:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
@@ -122,30 +122,35 @@ def loadready(request):
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
-    for tube in tlist:  # перебор результатов выборки
+    dates_cache = {}
+    tubes = set()
+    dirs = set()
+    for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):  # перебор результатов выборки
         # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
         # if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
         # complete = False  # Завершен ли анализ
-        direction = tube.issledovaniya_set.first().napravleniye  # Выборка направления для пробирки
-
-        date_tmp = dateformat.format(tube.time_recive, settings.DATE_FORMAT).split(".")
-        date_tmp = "%s.%s.%s" % (date_tmp[0], date_tmp[1], date_tmp[2][2:4])
-
-        dicttube = {"id": tube.pk, "direction": direction.pk,
-                    "date": date_tmp}  # Временный словарь с информацией о пробирке
-        # if not complete and dicttube not in result[
-        if dicttube not in result[
-            "tubes"]:  # Если исследования не завершены и информация о пробирке не присутствует в ответе
+        direction = None
+        if tube.pk not in tubes:
+            if not direction:
+                direction = tube.issledovaniya_set.first().napravleniye
+            if tube.time_recive.date() not in dates_cache:
+                dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
+            tubes.add(tube.pk)
+            dicttube = {"id": tube.pk, "direction": direction.pk,
+                    "date": dates_cache[tube.time_recive.date()]}  # Временный словарь с информацией о пробирке
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
 
-        date_tmp = dateformat.format(direction.data_sozdaniya, settings.DATE_FORMAT).split(".")
-        date_tmp = "%s.%s.%s" % (date_tmp[0], date_tmp[1], date_tmp[2][2:4])
-
-        dictdir = {"id": direction.pk, "date": date_tmp}  # Временный словарь с информацией о направлении
-        if dictdir not in result["directions"]:  # Если информация о направлении не присутствует в ответе
+        if tube.issledovaniya_set.first().napravleniye.pk not in dirs:
+            if not direction:
+                direction = tube.issledovaniya_set.first().napravleniye
+            if direction.data_sozdaniya.date() not in dates_cache:
+                dates_cache[direction.data_sozdaniya.date()] = dateformat.format(direction.data_sozdaniya, 'd.m.y')
+            dirs.add(direction.pk)
+            dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
             result["directions"].append(dictdir)  # Добавление временного словаря к ответу
-    result["tubes"] = sorted(result["tubes"], key=lambda k: k['id'])  # Сортировка списка пробирок
-    result["directions"] = sorted(result["directions"], key=lambda k: k['id'])  # Сортировка списка направлений
+
+    result["tubes"].sort(key=lambda k: k['id'])
+    result["directions"].sort(key=lambda k: k['id'])
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -159,6 +164,7 @@ def results_save(request):
         issledovaniye = Issledovaniya.objects.get(
             pk=int(request.POST["issledovaniye"]))  # Загрузка исследования из запроса и выборка из базы данных
         if issledovaniye:  # Если исследование найдено
+
             for key in fractions.keys():  # Перебор фракций из запроса
                 fraction_result = None
                 if Result.objects.filter(issledovaniye=issledovaniye,
@@ -176,6 +182,7 @@ def results_save(request):
             from django.utils import timezone
 
             issledovaniye.time_save = timezone.now()  # Время сохранения
+            issledovaniye.lab_comment = request.POST.get("comment", "")
             issledovaniye.save()
             result = {"ok": True}
 
@@ -289,6 +296,8 @@ def get_full_result(request):
                 if not issledovaniye.deferred or issledovaniye.doc_confirmation:
                     results = Result.objects.filter(issledovaniye=issledovaniye).order_by(
                         "fraction__sort_weight")  # Выборка результатов из базы
+
+                    n = 0
                     for res in results:  # Перебор результатов
                         pk = res.fraction.sort_weight
                         if not pk or pk <= 0:
@@ -353,6 +362,16 @@ def get_full_result(request):
                             result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
                             result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
                             result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                    if issledovaniye.lab_comment and issledovaniye.lab_comment != "":
+                        n += 1
+                        tmp_pk = "%d_%d" % (pk, n)
+                        if tmp_pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][tmp_pk] = {}
+                        result["results"][kint]["fractions"][tmp_pk]["title"] = "Комментарий"
+                        result["results"][kint]["fractions"][tmp_pk]["result"] = issledovaniye.lab_comment.replace("\n", "<br/>")
+                        result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
+                        result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
+                        result["results"][kint]["fractions"][tmp_pk]["units"] = ""
                 else:
                     fr_list = directory.Fractions.objects.filter(research=issledovaniye.research)
                     for fr in fr_list:
@@ -1258,11 +1277,11 @@ def result_print(request):
                         cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22),
                               int(tw * 0.13)]
                         t = Table(data, colWidths=cw)
-                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                             ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.white),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.white),
+                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                                             ('LEFTPADDING', (0, 0), (-1, -1), 4),
                                             ('TOPPADDING', (0, 0), (-1, -1), 2),
                                             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
@@ -1278,7 +1297,41 @@ def result_print(request):
                         t.drawOn(c, px(), pos - ht - 1 * mm)
                         pos = pos - ht
                     pos -= 2 * mm
+                if iss.lab_comment and iss.lab_comment != "":
+                    data = []
+                    tmp = []
+                    tmp.append([Paragraph(
+                        '<font face="OpenSans" size="8">Комментарий</font>',
+                        styleSheet["BodyText"])])
+                    tmp.append([Paragraph(
+                        '<font face="OpenSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")),
+                        styleSheet["BodyText"])])
+                    tmp.append("")
+                    tmp.append("")
+                    tmp.append("")
+                    tmp.append("")
+                    data.append(tmp)
+                    cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178), int(tw * 0.08)]
+                    t = Table(data, colWidths=cw)
+                    style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                        ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                        ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                        ])
+                    style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+                    style.add('TOPPADDING', (0, 0), (-1, 0), 0)
+                    style.add('SPAN', (1, 0), (-1, 0))
 
+                    t.setStyle(style)
+                    t.canv = c
+                    wt, ht = t.wrap(0, 0)
+                    t.drawOn(c, px(), pos - ht)
+                    pos = pos - ht
             if not dir.is_printed:
                 dir.is_printed = True
                 from datetime import datetime
@@ -1286,6 +1339,14 @@ def result_print(request):
                 dir.time_print = datetime.now()
                 dir.doc_print = request.user.doctorprofile
                 dir.save()
+
+            dp = request.user.doctorprofile
+            if dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
+                slog.Log(key=dpk, type=998, body=json.dumps(
+                    {"lab": str(Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye),
+                     "doc": str(dir.doc), "print_otd": str(dp.podrazileniye), "patient": str(dir.client.fio())}),
+                         user=request.user.doctorprofile).save()
+
             c.showPage()
 
         c.save()
@@ -1309,6 +1370,7 @@ def result_print(request):
     buffer.close()
     response.write(pdf)
     slog.Log(key=request.GET["pk"], type=15, body="", user=request.user.doctorprofile).save()
+
 
     return response
 
@@ -1744,11 +1806,21 @@ def result_journal_print(request):
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
+    group = int(request.GET.get("group", "-2"))
 
     end_date = date + datetime.timedelta(days=1)
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
                                             research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
+    group_str = "Все исследования"
+    if group != -2:
+        if group == -1:
+            group_str = "Без группы"
+            iss_list = iss_list.filter(research__groups__isnull=True)
+        else:
+            g = directory.ResearchGroup.objects.get(pk=group)
+            group_str = g.title
+            iss_list = iss_list.filter(research__groups=g)
 
     from io import BytesIO
     from reportlab.pdfbase import pdfmetrics
@@ -1798,7 +1870,7 @@ def result_journal_print(request):
         def draw_canvas(self, page_count):
             self.setFont('OpenSans', 12)
             self.drawCentredString((A4[0] - 25 * mm) / 2 + 20 * mm, ph - 12 * mm,
-                                   request.user.doctorprofile.podrazileniye.title + ", " + dateo)
+                                   "%s - %s, %s" % (request.user.doctorprofile.podrazileniye.title, group_str, dateo))
             page = "Страница %s из %s" % (self._pageNumber, page_count)
             self.saveState()
             self.setStrokeColorRGB(0, 0, 0)
@@ -1839,7 +1911,7 @@ def result_journal_print(request):
                 clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(
                     fr.title + ": " + fres.first().value)
         otds[iss.napravleniye.doc.podrazileniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = clientresults[key]
-    i = 0
+    j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():
         data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
@@ -1853,7 +1925,6 @@ def result_journal_print(request):
             client = clientresults[cleint_pk]
             data_tmp = ""
             for dir_pk in client["directions"].keys():
-                i += 1
                 dir = client["directions"][dir_pk]
                 data_tmp += "Направление: " + str(dir_pk) + " | "
                 for research_pk in dir["researches"].keys():
@@ -1864,7 +1935,8 @@ def result_journal_print(request):
                         data_tmp += research_obj["title"] + ":" + "; ".join(research_obj["res"])
                     # data_tmp += ". "
                     data_tmp += "<br/>"
-            data.append([Paragraph('<font face="OpenSans" size="8">' + str(i) + "</font>", styles["Normal"]),
+            j += 1
+            data.append([Paragraph('<font face="OpenSans" size="8">' + str(j) + "</font>", styles["Normal"]),
                          Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
                          Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
         st = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -1922,13 +1994,15 @@ def get_r(ref) -> str:
 @login_required
 def result_get(request):
     """ Получение результатов для исследования """
-    result = {"results": {}, "norms": {}}
+    result = {"results": {}, "norms": {}, "comment": ""}
     if request.method == "GET":
         issledovaniye = Issledovaniya.objects.get(pk=int(request.GET["iss_id"]))
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
             result["norms"][str(v.fraction.pk)] = v.get_is_norm()
+        if issledovaniye.lab_comment:
+            result["comment"] = issledovaniye.lab_comment.strip()
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 

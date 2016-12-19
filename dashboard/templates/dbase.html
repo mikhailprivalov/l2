@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %}</title>
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css?2" rel="stylesheet">
     <link href="/static/bootflat/css/bootflat.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
@@ -15,7 +15,7 @@
     <link href="/static/css/tooltipster.css" rel="stylesheet">
     <link href="/static/css/themes/tooltipster-shadow.css" rel="stylesheet">
 
-    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery.min.js?2"></script>
     <script>
 
         function getFormattedDate(date) {
@@ -192,7 +192,7 @@
             }
         }
 
-        .table-sm-pd td {
+        .table-sm-pd td:not(.ref) {
             padding: 3px !important;
         }
 
@@ -408,9 +408,18 @@
             margin-top: 5px;
         }
 
-        .dash-buttons > div, .dash-btn {
+        .dash-buttons > div:not(.mb10) {
             padding-right: 2px;
             padding-left: 2px;
+        }
+
+        .dash-buttons > div.mb10 {
+            padding-right: 2px;
+            padding-left: 2px;
+            display:inline-block;
+            float:none;
+            margin-right:-4px;
+            vertical-align: bottom;
         }
 
         .dash-buttons .panel-body {
@@ -418,10 +427,27 @@
             border: 1px solid #656D78;
             color: #F5F7FA;
             border-radius: 3px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            /*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);*/
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
             z-index: 99;
             position: relative;
             transition: .1s linear;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+
+            -ms-flex-align: center;
+            -webkit-align-items: center;
+            -webkit-box-align: center;
+
+            align-items: center;
+        }
+        .dash-buttons .panel-body span{
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            vertical-align: middle;
+            margin-bottom: 4px;
         }
 
         .bw100 {
@@ -589,6 +615,7 @@
             padding: 1px;
             background-color: #fff;
             z-index: 100;
+            display: none;
         }
 
         .footer-float div {
@@ -914,6 +941,7 @@
         #page-preloader {
             display: none;
             opacity: 0;
+            cursor: progress;
         }
 
         .txt-r {
@@ -1136,21 +1164,12 @@
             background-color: #fff;
         }
 
-        .gutter {
-            background-color: transparent;
-
-            background-repeat: no-repeat;
-            background-position: 50%;
-        }
-
         .gutter.gutter-horizontal {
             cursor: col-resize;
-            background-image: url('/static/img/vertical.png');
         }
 
         .gutter.gutter-vertical {
             cursor: row-resize;
-            background-image: url('/static/img/horizontal.png');
         }
 
         .split-horizontal {
@@ -1163,7 +1182,7 @@
         }
 
         .dash-buttons .col-md-3 a, .dash-btn a {
-            height: 122px;
+            height: 100px;
             position: relative;
         }
 
@@ -1185,6 +1204,9 @@
             box-sizing: border-box;
         }
 
+        .sloader, .sloader *{
+            z-index: 100001;
+        }
         .sloader .nav-loader {
             display: block;
         }
@@ -1246,6 +1268,7 @@
             text-overflow: ellipsis;
         }
     </style>
+    {% block head_cn %}{% endblock %}
 </head>
 <body>{% load has_group %}
 <div class="{% block container %}container{% endblock %}">
@@ -1366,12 +1389,12 @@
     <li class="divider context-st"></li>
     <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
 </ul>
-<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/bootstrap.min.js?2"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
 <script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/bootstrap-select.js"></script>
 <script src="/static/js/bootbox.min.js"></script>
-<script src="/static/js/lang.ru.js?n=6"></script>
+<script src="/static/js/lang.ru.js?n=9"></script>
 <script src="/static/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jquery.isloading.min.js"></script>
@@ -1381,9 +1404,10 @@
 <script src="/static/bootflat/js/icheck.min.js"></script>
 <script src="/static/js/jquery.amaran.min.js"></script>
 <script src="/static/js/jquery.tooltipster.min.js"></script>
-<script src="/static/js/jquery.floatThead.min.js"></script>
+<script src="/static/js/jquery.floatThead.min.js?3"></script>
 <script src="/static/js/context.jq.bs.js"></script>
 <script>
+    var ajax_cache_token = (new Date()) + "";
     $body = $("body");
     var $loader = {};
 
@@ -1511,6 +1535,11 @@
         }
         return arr;
     };
+    if (!Array.prototype.last){
+        Array.prototype.last = function(){
+            return this[this.length - 1];
+        };
+    };
 
     function startTime() {
         var today = new Date();
@@ -1554,8 +1583,17 @@
     function sTitle(title) {
         document.title = title;
     }
-    function sl() {
-        $(".navbar").addClass("sloader");
+    var stopped = true;
+    function sl(no_sloader) {
+        $("#page-preloader").css({opacity: 0});
+        if(!no_sloader){
+            $(".navbar").addClass("sloader");
+            stopped = false;
+            setTimeout(function(){
+                if(stopped) return;
+                $("#page-preloader").animate({opacity: 1}, 7000);
+            }, 1500);
+        }
         $("#page-preloader").show();
         //$loader.init();
     }
@@ -1563,6 +1601,8 @@
         $(".navbar").removeClass("sloader");
         $("#page-preloader").hide();
         exitLoop = true;
+        stopped = true;
+        $("#page-preloader").stop(true, true);
     }
     $(document).ready(function () {
         $('.select-b').selectpicker({
@@ -1611,28 +1651,62 @@
             }
         });
     });
+    var willbe_error = false;
     function alive() {
         $.ajax({
-            method: "GET", url: "/dashboard", statusCode: {
+            method: "GET", url: "/dashboard", cache: false, statusCode: {
                 500: function () {
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
                             title: 'Сервер недоступен',
-                            message: "",
+                            message: "Ошибка 500. Ожидайте доступность сервера.",
                             info: '',
                             icon: 'fa fa-exclamation'
                         },
                         'position': 'bottom right',
-                        delay: 10000
+                        delay: 13000
                     });
+                    willbe_error = true;
+                    sl(true);
+                },
+                502: function () {
+                    $.amaran({
+                        'theme': 'awesome no',
+                        'content': {
+                            title: 'Сервер недоступен',
+                            message: "Ошибка 502. Ожидайте доступность сервера.",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 13000
+                    });
+                    willbe_error = true;
+                    sl(true);
                 },
                 302: function () {
                     document.location.href = "/";
                 }
             }
-        }).done(function () {
-            setTimeout(alive, 15000);
+        }).done(function(){
+            if(willbe_error){
+                willbe_error = false;
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Сервер доступен',
+                        message: "ОК",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 30000
+                });
+                hl();
+            }
+        }).always(function () {
+            setTimeout(alive, 13000);
         });
     }
     $(document).ajaxComplete(checkSession);

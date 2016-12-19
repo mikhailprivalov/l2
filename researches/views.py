@@ -31,41 +31,60 @@ def ajax_search_res(request):
 @login_required
 def researches_get_one(request):
     """Получение исследования (название, фракции, параметры)"""
-    import collections
-    from operator import itemgetter
-    res = {"res_id": "", "title": "", "fractions": {}, "confirmed": True, "saved": True}
-    if request.method == "GET":
-        id = request.GET["id"]
-        iss = Issledovaniya.objects.get(pk=id)
-        research = iss.research
-        fractions = directory.Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
-        res["res_id"] = id
-        res["title"] = research.title
-        if not iss.doc_save:
-            res["saved"] = False
-        if not iss.doc_confirmation:
-            res["confirmed"] = False
-        for val in fractions:
-            ref_m = val.ref_m
-            ref_f = val.ref_f
-            if isinstance(ref_m, str):
-                ref_m = json.loads(ref_m)
-            if isinstance(ref_f, str):
-                ref_f = json.loads(ref_f)
-            # res["fractions"].append(
-            #   {"title": val.title, "pk": val.pk, "unit": val.units,
-            #     "references": {"m": ref_m, "f": ref_f}})
-            tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "hide": val.hide,
-                   "render_type": val.render_type, "options": val.options.split(","), "type": val.type,
-                   "references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight, "formula": val.formula}
-            if val.sort_weight and val.sort_weight > 0:
-                res["fractions"][val.sort_weight] = tmp
-            else:
-                res["fractions"][val.pk] = tmp
 
-                # res["fractions"] = sorted(res["fractions"], key=itemgetter("num"))
-                # res["fractions"] = collections.OrderedDict(sorted(res["fractions"]))
-    return HttpResponse(json.dumps(res))  # Создание JSON
+    res_o = {"res_id": "", "title": "", "fractions": {}, "confirmed": True, "saved": True, "can_comment": False, "cached": False}
+    from copy import deepcopy
+
+    if request.method == "GET":
+        multi = request.GET.get("multi", "false") == "true"
+        id = request.GET["id"]
+        if not multi:
+            id = "[%s]" % id
+        id = json.loads(id)
+        isresearch = request.GET.get("isresearch", "false") == "true"
+        a = []
+        for i in id:
+            res = deepcopy(res_o)
+            res["cached"] = request.GET.get("cached", "false") != "false"
+            iss = None
+            if not isresearch:
+                iss = Issledovaniya.objects.get(pk=i)
+                res["res_id"] = i
+                if not iss.doc_save:
+                    res["saved"] = False
+                if not iss.doc_confirmation:
+                    res["confirmed"] = False
+
+            if not res["cached"]:
+                if not isresearch:
+                    research = iss.research
+                else:
+                    research = directory.Researches.objects.get(pk=i)
+                fractions = directory.Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
+                res["title"] = research.title
+                res["i"] = i
+                res["can_comment"] = research.can_lab_result_comment
+                for val in fractions:
+                    ref_m = val.ref_m
+                    ref_f = val.ref_f
+                    if isinstance(ref_m, str):
+                        ref_m = json.loads(ref_m)
+                    if isinstance(ref_f, str):
+                        ref_f = json.loads(ref_f)
+                    tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "hide": val.hide,
+                           "render_type": val.render_type, "options": val.options.split(","), "type": val.type,
+                           "references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight, "formula": val.formula}
+                    if val.sort_weight and val.sort_weight > 0:
+                        res["fractions"][val.sort_weight] = tmp
+                    else:
+                        res["fractions"][val.pk] = tmp
+            a.append(res)
+        if multi:
+            return HttpResponse(json.dumps(a))
+        elif len(a) > 0:
+            return HttpResponse(json.dumps(a[0]))
+
+    return HttpResponse(json.dumps(res_o))  # Создание JSON
 
 
 @login_required

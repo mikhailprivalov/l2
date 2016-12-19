@@ -707,6 +707,7 @@ def get_worklist(request):
                                  "pk": t.pk, "color": t.type.tube.color}
     for pk in tmprows.keys():
         res["rows"].append(tmprows[pk])
+    res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
     res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON

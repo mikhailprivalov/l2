@@ -36,9 +36,6 @@ def dashboard(request):  # Представление панели управл�
         menu.append(
             {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "keys": "Shift+p",
              "nt": False})
-        menu.append(
-            {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
-             "nt": False})
     if "Заборщик биоматериала" in groups:
         menu.append(
             {"url": "/dashboard/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
@@ -59,6 +56,10 @@ def dashboard(request):  # Представление панели управл�
     # if "Лечащий врач" in groups or "Зав. отделением" in groups:
     #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
 
+    if "Лечащий врач" in groups or "Оператор лечащего врача" in groups or "Врач-лаборант" in groups or "Лаборант" in groups:
+        menu.append(
+            {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
+             "nt": False})
     if request.user.is_superuser:
         menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
         menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})

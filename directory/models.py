@@ -51,6 +51,7 @@ class Researches(models.Model):
     groups = models.ManyToManyField(ResearchGroup, help_text='Группа исследований в лаборатории')
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
+    can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
 
     def __str__(self):
         return "%s" % self.title

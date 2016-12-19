@@ -323,6 +323,7 @@ class Issledovaniya(models.Model):
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование')
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
+    lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)
@@ -454,7 +455,7 @@ class Result(models.Model):
                 x = spl[0]
                 y = spl[1]
                 if isnum(x) and isnum(y):
-                    return float(x), float(y)
+                    return float(x)-0.05, float(y)+0.05
             signs_vars = [x for x in signs.values()]
             signs_vars = reduce(operator.add, signs_vars)
             if any([x in r for x in signs_vars]):
@@ -473,6 +474,7 @@ class Result(models.Model):
                 return value.lower() in trues[right]
             if right == "":
                 return True
+            value = value.replace("''", "\"")
             if isinstance(right, tuple) and len(right) == 2:
                 if isinstance(right[0], float) and isinstance(right[1], float):
                     if "един" in value.lower():
@@ -489,8 +491,8 @@ class Result(models.Model):
                         value = val_normalize(value)
                         if value and not isinstance(value, bool):
                             value = str(float(value) + 0.1)
-                    if isinstance(value, str) and re.match(r"(\d)\'(\d{1,2})\"", value):
-                        m = re.search(r"(\d)\'(\d{1,2})\"", value)
+                    if isinstance(value, str) and re.match(r"(\d)\'(\d{1,2})\"", value.replace(" ", "")):
+                        m = re.search(r"(\d)\'(\d{1,2})\"", value.replace(" ", ""))
                         min = int(m.group(1))
                         sec = int(m.group(2))
                         value = "{0:.2f}".format(min+sec/60)

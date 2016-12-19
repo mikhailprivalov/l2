@@ -39,8 +39,8 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
-    'debug_panel',
     'debug_toolbar',
+    'debug_panel',
 )
 
 MIDDLEWARE = [
@@ -53,11 +53,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 '''
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware'
 )'''
 
@@ -259,4 +258,4 @@ if os.path.exists(__w):
 
 DJVERSION_FORMAT_STRING = '{version}'
 CACHALOT_ENABLED = True
-DEBUG = True
+DEBUG = False
