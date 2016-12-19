@@ -10,8 +10,7 @@
         <div class="panel panel-flt m5" style="margin-bottom: 10px">
             <div class="panel-body" style="padding:10px;">
                 <div class="input-group" style="margin-bottom: 5px">
-                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13"
-                           autofocus/>
+                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13"/>
                     <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
                     </span>
@@ -1514,10 +1513,15 @@
         function fast_search(num) {
             $("#search-field").val(num);
         }
+        var firstrun = true;
         function dechl() {
             nn--;
             if (nn <= 0) {
                 hl();
+                if(firstrun){
+                    firstrun = false;
+                    $("#search-field").focus();
+                }
             }
         }
         function decsl() {
