@@ -25,53 +25,55 @@ import directory.models as directory
 # @cache_page(60 * 15)
 @login_required
 def dashboard(request):  # Представление панели управления
-    from laboratory import settings
-    dt = ""
-    menu = []
-    groups = [str(x) for x in request.user.groups.all()]
+    if not request.is_ajax():
+        from laboratory import settings
+        dt = ""
+        menu = []
+        groups = [str(x) for x in request.user.groups.all()]
 
-    if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
-        menu.append(
-            {"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
-        menu.append(
-            {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "keys": "Shift+p",
-             "nt": False})
-    if "Заборщик биоматериала" in groups:
-        menu.append(
-            {"url": "/dashboard/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
-    if "Получатель биоматериала" in groups:
-        menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
-        menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
-                     "nt": False})
-        menu.append(
-            {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
-    if "Врач-лаборант" in groups or "Лаборант" in groups:
-        menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
-        menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
-                     "nt": False})
-    if "Оператор" in groups:
-        menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
-    if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
-        menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
-    # if "Лечащий врач" in groups or "Зав. отделением" in groups:
-    #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
+        if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
+            menu.append(
+                {"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
+            menu.append(
+                {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "keys": "Shift+p",
+                 "nt": False})
+        if "Заборщик биоматериала" in groups:
+            menu.append(
+                {"url": "/dashboard/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
+        if "Получатель биоматериала" in groups:
+            menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
+            menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
+                         "nt": False})
+            menu.append(
+                {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
+        if "Врач-лаборант" in groups or "Лаборант" in groups:
+            menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
+            menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
+                         "nt": False})
+        if "Оператор" in groups:
+            menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
+        if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
+            menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
+        # if "Лечащий врач" in groups or "Зав. отделением" in groups:
+        #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
 
-    if "Лечащий врач" in groups or "Оператор лечащего врача" in groups or "Врач-лаборант" in groups or "Лаборант" in groups:
-        menu.append(
-            {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
-             "nt": False})
-    if request.user.is_superuser:
-        menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
-        menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
-        menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
-        if settings.LDAP and settings.LDAP["enable"]:
-            menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
-        menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
+        if "Лечащий врач" in groups or "Оператор лечащего врача" in groups or "Врач-лаборант" in groups or "Лаборант" in groups:
+            menu.append(
+                {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
+                 "nt": False})
+        if request.user.is_superuser:
+            menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
+            menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
+            menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
+            if settings.LDAP and settings.LDAP["enable"]:
+                menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
+            menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
 
-    menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
+        menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
 
-    menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
-    return render(request, 'dashboard.html', {"menu": menu_st})
+        menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
+        return render(request, 'dashboard.html', {"menu": menu_st})
+    return HttpResponse("OK")
 
 
 @login_required

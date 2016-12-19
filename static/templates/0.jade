@@ -11,66 +11,67 @@
 h4(style="margin-top: 2px") #{title}
 input(type="hidden", value=res_id)#issledovaniye_id
 #result-jade-form
-    table.table.table-bordered.table-sm-pd
+    table.table.table-bordered.table-sm-pd.floatThead
         thead
             th(style="width: 29%") Фракция
             th Значение
             th(style="width: 23%") Нормы М
             th(style="width: 23%") Нормы Ж
-        each fraction in fractions
-            if !fraction.hide
-                if fraction.render_type == 0
-                    tr
-                        td
-                            label(for='fraction_' + fraction.pk).labtitle= fraction.title
-                        td.val
-                            if fraction.formula == ""
-                                if fraction.type == -1
-                                    input(type="text", id='fraction_' + fraction.pk, data-x=fraction.unit_count, data-pk=fraction.pk, unit=fraction.unit).form-control.result-enter
+        tbody
+            each fraction in fractions
+                if !fraction.hide
+                    if fraction.render_type == 0
+                        tr
+                            td
+                                label(for='fraction_' + fraction.pk).labtitle= fraction.title
+                            td.val
+                                if fraction.formula == ""
+                                    if fraction.type == -1
+                                        input(type="text", id='fraction_' + fraction.pk, data-x=fraction.unit_count, data-pk=fraction.pk, unit=fraction.unit).form-control.result-enter
+                                    else
+                                        input(type="text", id='fraction_' + fraction.pk, data-x=fraction.unit_count, data-pk=fraction.pk, unit=fraction.unit).typeahead.form-control.result-enter
+                                    .unit= fraction.unit
                                 else
-                                    input(type="text", id='fraction_' + fraction.pk, data-x=fraction.unit_count, data-pk=fraction.pk, unit=fraction.unit).typeahead.form-control.result-enter
-                                .unit= fraction.unit
-                            else
-                                .input-group
-                                    input(type="text", id='fraction_' + fraction.pk, data-pk=fraction.pk, data-formula=fraction.formula, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
-                                    span.input-group-btn
-                                        a(title="Расчет результата", href="#", onclick="exec_formula(this);return false;", pk=fraction.pk).btn.btn-default.btn-primary-nb.btn30
-                                            i.fa.fa-circle
-                                .center= fraction.unit
-                        td.ref
-                            table.table.table-responsive
-                                each norm, index in fraction.references.m
-                                    if (index != "Все" && norm != "") || (index == "Все" && norm != "")
+                                    .input-group
+                                        input(type="text", id='fraction_' + fraction.pk, data-pk=fraction.pk, data-formula=fraction.formula, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                                        span.input-group-btn
+                                            a(title="Расчет результата", href="#", onclick="exec_formula(this);return false;", pk=fraction.pk).btn.btn-default.btn-primary-nb.btn30
+                                                i.fa.fa-circle
+                                    .center= fraction.unit
+                            td.ref
+                                table.table.table-responsive
+                                    each norm, index in fraction.references.m
+                                        if (index != "Все" && norm != "") || (index == "Все" && norm != "")
+                                            tr
+                                                td= index
+                                                td.col-md-6
+                                                    | !{norm}
+                            td.ref
+                                table
+                                    each norm, index in fraction.references.f
+                                        if (index != "Все" && norm != "") || (index == "Все" && norm != "")
+                                            tr
+                                                td= index
+                                                td.col-md-6
+                                                    | !{norm}
+                    else if fraction.render_type == 1
+                        tr(style="border-top: 3px solid #ddd")
+                            td(style="width: 20%")
+                                label= fraction.title
+                                input(type="hidden", data-pk=fraction.pk).result-enter.json-result
+                            td(colspan="3")
+                                table(container-pk=fraction.pk).row-container.table.table-bordered.table-responsive
+                                    thead
                                         tr
-                                            td= index
-                                            td.col-md-6
-                                                | !{norm}
-                        td.ref
-                            table
-                                each norm, index in fraction.references.f
-                                    if (index != "Все" && norm != "") || (index == "Все" && norm != "")
-                                        tr
-                                            td= index
-                                            td.col-md-6
-                                                | !{norm}
-                else if fraction.render_type == 1
-                    tr(style="border-top: 3px solid #ddd")
-                        td(style="width: 20%")
-                            label= fraction.title
-                            input(type="hidden", data-pk=fraction.pk).result-enter.json-result
-                        td(colspan="3")
-                            table(container-pk=fraction.pk).row-container.table.table-bordered.table-responsive
-                                thead
-                                    tr
-                                        th(style="width: 37%") Название
-                                        th Значения
-                                tbody
-        if can_comment
-            tr
-                td
-                    label(for="result_comment").labtitle Комментарий
-                td(colspan="3")
-                    textarea(rows="3").lab_comment.form-control#result_comment
+                                            th(style="width: 37%") Название
+                                            th Значения
+                                    tbody
+            if can_comment
+                tr
+                    td
+                        label(for="result_comment").labtitle Комментарий
+                    td(colspan="3")
+                        textarea(rows="3").lab_comment.form-control#result_comment
 script.
     var nums = {};
     var groups = {};

@@ -4,6 +4,25 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" sizes="57x57" href="/static/icon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/static/icon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/icon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/icon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/static/icon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/static/icon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/icon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/icon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/static/icon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icon/favicon-16x16.png">
+    <link rel="manifest" href="/static/icon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/static/icon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
     <title>{% block title %}{% endblock %}</title>
     <link href="/static/css/bootstrap.min.css?2" rel="stylesheet">
     <link href="/static/bootflat/css/bootflat.min.css" rel="stylesheet">
@@ -71,9 +90,9 @@
             font-family: 'Open Sans', sans-serif;
         }
 
-        .animated.fast{
-          -webkit-animation-duration: .3s;
-          animation-duration: .3s;
+        .animated.fast {
+            -webkit-animation-duration: .3s;
+            animation-duration: .3s;
         }
 
         a.panel-body {
@@ -415,9 +434,9 @@
         .dash-buttons > div.mb10 {
             padding-right: 2px;
             padding-left: 2px;
-            display:inline-block;
-            float:none;
-            margin-right:-4px;
+            display: inline-block;
+            float: none;
+            margin-right: -4px;
             vertical-align: bottom;
         }
 
@@ -427,7 +446,7 @@
             color: #F5F7FA;
             border-radius: 3px;
             /*box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);*/
-            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
             z-index: 99;
             position: relative;
             transition: .1s linear;
@@ -441,7 +460,8 @@
 
             align-items: center;
         }
-        .dash-buttons .panel-body span{
+
+        .dash-buttons .panel-body span {
             display: inline-block;
             text-align: center;
             width: 100%;
@@ -1203,9 +1223,10 @@
             box-sizing: border-box;
         }
 
-        .sloader, .sloader *{
+        .sloader, .sloader * {
             z-index: 100001;
         }
+
         .sloader .nav-loader {
             display: block;
         }
@@ -1320,7 +1341,7 @@
             </div>
             <div class="nav-loader center">
                 <div class="navbar-header">
-                    <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+                    <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
                 </div>
                 <div class="din-spinner" style="text-align: center">
                     <div class="sk-fading-circle">
@@ -1393,7 +1414,7 @@
 <script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/bootstrap-select.js"></script>
 <script src="/static/js/bootbox.min.js"></script>
-<script src="/static/js/lang.ru.js?n=9"></script>
+<script src="/static/js/lang.ru.js?n=10"></script>
 <script src="/static/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jquery.isloading.min.js"></script>
@@ -1534,8 +1555,8 @@
         }
         return arr;
     };
-    if (!Array.prototype.last){
-        Array.prototype.last = function(){
+    if (!Array.prototype.last) {
+        Array.prototype.last = function () {
             return this[this.length - 1];
         };
     }
@@ -1583,13 +1604,18 @@
         document.title = title;
     }
     var stopped = true;
+    var inload = false;
     function sl(no_sloader) {
+        if(!inload){
+            document.title = lang.loading + document.title;
+        }
+        inload = true;
         $("#page-preloader").css({opacity: 0});
-        if(!no_sloader){
+        if (!no_sloader) {
             $(".navbar").addClass("sloader");
             stopped = false;
-            setTimeout(function(){
-                if(stopped) return;
+            setTimeout(function () {
+                if (stopped) return;
                 $("#page-preloader").animate({opacity: 1}, 7000);
             }, 1500);
         }
@@ -1597,6 +1623,8 @@
         //$loader.init();
     }
     function hl() {
+        document.title = document.title.replace(lang.loading, "");
+        inload = false;
         $(".navbar").removeClass("sloader");
         $("#page-preloader").hide();
         exitLoop = true;
@@ -1631,7 +1659,7 @@
                         break;
                     case "addrecalc":
                         r = $("#recalcValue").val();
-                        if(r != ""){
+                        if (r != "") {
                             r = " " + r;
                         }
                         val = `${invokedOn.val()} (пересчитано${r})`;
@@ -1653,7 +1681,7 @@
     var willbe_error = false;
     function alive() {
         $.ajax({
-            method: "GET", url: "/dashboard", cache: false, statusCode: {
+            method: "GET", url: "/dashboard/", cache: false, statusCode: {
                 500: function () {
                     $.amaran({
                         'theme': 'awesome no',
@@ -1688,8 +1716,8 @@
                     document.location.href = "/";
                 }
             }
-        }).done(function(){
-            if(willbe_error){
+        }).done(function () {
+            if (willbe_error) {
                 willbe_error = false;
                 $.amaran({
                     'theme': 'awesome ok',
@@ -1716,6 +1744,11 @@
             }
         }
     }
+    $.extend($.expr[':'], {
+        textboxEmpty: function (el) {
+            return $(el).val() === "";
+        }
+    });
 
     function convertArrayOfObjectsToCSV(args) {
         var result, ctr, keys, columnDelimiter, lineDelimiter, data;
@@ -1797,13 +1830,13 @@
         });
     }
     var blink_animated = {};
-    function okblink(selector, effect){
-        if(blink_animated[selector]) return;
+    function okblink(selector, effect) {
+        if (blink_animated[selector]) return;
         e = effect || 'fadeIn';
         $(selector).removeClass(e).removeClass('animated fast');
         $(selector).addClass(e).addClass("animated fast");
         blink_animated[selector] = true;
-        setTimeout(function(s){
+        setTimeout(function (s) {
             $(selector).removeClass(e).removeClass('animated fast');
             blink_animated[s] = false;
         }.bind(this, selector), 334);

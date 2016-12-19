@@ -707,6 +707,10 @@
         .labtitle {
             font-weight: normal;
             font-size: 14px;
+            display: block;
+            min-height: 100%;
+            height: 100%;
+            margin: 0;
         }
 
         .form-control.result-enter,
@@ -970,10 +974,8 @@
 
         .ref table tr td {
             border-left: 0 !important;
-        }
-
-        .ref table tr td {
             border-right: 0 !important;
+            line-height: 1.2;
         }
 
     </style>
@@ -1291,8 +1293,8 @@
         var loaded_fractions = {};
         var researches_cache = {};
         var rendered_form_cache = {};
-        function fix_signs(input){
-            if(/^(<|>)\s*\d+$/g.test(input)){
+        function fix_signs(input) {
+            if (/^(<|>)\s*\d+$/g.test(input)) {
                 input = input.replace(">", "&gt;").replace("<", "&lt;");
             }
             return input;
@@ -1434,7 +1436,7 @@
                             $("[data-pk='{0}']".f(fv.pk)).val($val);
                         }
                     });
-                    f = $('.result-enter:not(.tt-hint)').eq(0);
+                    //f = $('.result-enter:not(.tt-hint)').eq(0);
 
                     $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
@@ -1454,8 +1456,13 @@
                         } catch (e) {
                             resize();
                         } finally {
-                            if($(f).val() == "")
-                                $(f).focus();
+                            $('.result-enter.tt-input').eq(0).focus().blur();
+                            setTimeout(function(){
+                                if($('.result-enter:not(.tt-hint):textboxEmpty').length){
+                                    $('.result-enter:not(.tt-hint):textboxEmpty').eq(0).focus();
+                                }
+                                resize();
+                            }, 15);
                         }
                     });
 
@@ -1518,7 +1525,7 @@
             nn--;
             if (nn <= 0) {
                 hl();
-                if(firstrun){
+                if (firstrun) {
                     firstrun = false;
                     $("#search-field").focus();
                 }
