@@ -625,6 +625,7 @@ def result_print(request):
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib.units import mm
+    from django.utils import timezone
     import os.path
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
@@ -694,7 +695,7 @@ def result_print(request):
                         dates[dt] = 0
                     dates[dt] += 1
                 if iss.tubes.exists() and iss.tubes.first().time_get:
-                    date_t = iss.tubes.first().time_get.strftime('%d.%m.%Y')
+                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
 
             import operator
             maxdate = ""
@@ -905,7 +906,7 @@ def result_print(request):
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
                             if show_norm:
-                                norm = r.get_is_norm()
+                                norm = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
 
                         if not iss.doc_confirmation and iss.deferred:
@@ -981,7 +982,7 @@ def result_print(request):
                             else:
                                 tmp.append("")
                                 tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.tubes.first().time_get.strftime(
+                                    '<font face="OpenSansBold" size="7">%s</font>' % timezone.localtime(iss.tubes.first().time_get).strftime(
                                         '%d.%m.%Y'), styleSheet["BodyText"]))
                                 tmp.append("")
                             data.append(tmp)
@@ -1048,7 +1049,7 @@ def result_print(request):
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     r = Result.objects.get(issledovaniye=iss, fraction=f)
                                     if show_norm:
-                                        norm = r.get_is_norm()
+                                        norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                 if not iss.doc_confirmation and iss.deferred:
                                     result = "отложен"
@@ -1275,7 +1276,7 @@ def result_print(request):
                         tmp.append("")
                         data.append(tmp)
                         cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22),
-                              int(tw * 0.13)]
+                              int(tw * 0.112)]
                         t = Table(data, colWidths=cw)
                         style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1341,7 +1342,7 @@ def result_print(request):
                 dir.save()
 
             dp = request.user.doctorprofile
-            if dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
+            if not request.user.is_superuser and dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
                 slog.Log(key=dpk, type=998, body=json.dumps(
                     {"lab": str(Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye),
                      "doc": str(dir.doc), "print_otd": str(dp.podrazileniye), "patient": str(dir.client.fio())}),
@@ -2000,7 +2001,7 @@ def result_get(request):
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
-            result["norms"][str(v.fraction.pk)] = v.get_is_norm()
+            result["norms"][str(v.fraction.pk)] = v.get_is_norm(recalc=True)
         if issledovaniye.lab_comment:
             result["comment"] = issledovaniye.lab_comment.strip()
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -2241,7 +2242,7 @@ def results_search_directions(request):
             is_normal = "none"
             if perform_norms:
                 for res_row in Result.objects.filter(issledovaniye=r):
-                    tmp_normal = res_row.get_is_norm()
+                    tmp_normal = res_row.get_is_norm(recalc=True)
                     if is_normal != "not_normal":
                         if is_normal == "maybe":
                             if tmp_normal == "not_normal":

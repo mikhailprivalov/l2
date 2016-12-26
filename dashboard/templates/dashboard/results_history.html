@@ -292,6 +292,100 @@
 
 {% endblock %}
 
+{% block head_cn %}
+    <style>
+        .floatThead th {
+            background: #fff;
+        }
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        .local_nav {
+            margin: 0;
+            cursor: default;
+        }
+
+        #directions_list {
+            position: relative;
+            padding-right: 25px;
+            height: 400px;
+        }
+
+        .direction {
+            width: 100%;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #ECF0F1;
+            padding: 10px;
+        }
+
+        #dirs-list {
+            position: relative;
+            padding-right: 13px;
+
+        }
+
+        #dirs-list tbody tr {
+            cursor: pointer;
+            background: #fff;
+        }
+
+        #dirs-list {
+            background: #fff;
+        }
+
+        .local_nav a {
+            margin: 3px;
+            padding: 5px;
+        }
+
+        .panel-flt {
+            margin-bottom: 5px;
+        }
+
+        .datepicker {
+            z-index: 1005 !important;
+        }
+
+        td > label, th > label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .isnormal-not_normal a, .isnormal-maybe a, .isnormal-normal a {
+            color: #fff;
+        }
+
+        .isnormal-not_normal {
+            background: #E68364 !important;
+        }
+
+        .isnormal-maybe {
+            background: #F5D76E !important;
+        }
+
+        .isnormal-normal {
+            background: #87D37C !important;
+        }
+
+        .sq {
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        label.disabled {
+            color: rgba(0, 0, 0, .33);
+        }
+    </style>
+{% endblock %}
 {% block scripts %}
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
@@ -664,96 +758,4 @@
             window.open('/results/pdf?pk=' + JSON.stringify(print_array) + "&show_norms=" + show_norms, '_blank');
         }
     </script>
-    <style>
-        .floatThead th {
-            background: #fff;
-        }
-
-        .active {
-            background-color: #656D78 !important;
-            color: #fff !important;
-        }
-
-        .local_nav {
-            margin: 0;
-            cursor: default;
-        }
-
-        #directions_list {
-            position: relative;
-            padding-right: 25px;
-            height: 400px;
-        }
-
-        .direction {
-            width: 100%;
-            margin: 5px;
-            border-radius: 5px;
-            background-color: #ECF0F1;
-            padding: 10px;
-        }
-
-        #dirs-list {
-            position: relative;
-            padding-right: 13px;
-
-        }
-
-        #dirs-list tbody tr {
-            cursor: pointer;
-            background: #fff;
-        }
-
-        #dirs-list {
-            background: #fff;
-        }
-
-        .local_nav a {
-            margin: 3px;
-            padding: 5px;
-        }
-
-        .panel-flt {
-            margin-bottom: 5px;
-        }
-
-        .datepicker {
-            z-index: 1005 !important;
-        }
-
-        td > label, th > label {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            cursor: pointer;
-            vertical-align: middle;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .isnormal-not_normal a, .isnormal-maybe a, .isnormal-normal a {
-            color: #fff;
-        }
-
-        .isnormal-not_normal {
-            background: #E68364 !important;
-        }
-
-        .isnormal-maybe {
-            background: #F5D76E !important;
-        }
-
-        .isnormal-normal {
-            background: #87D37C !important;
-        }
-
-        .sq {
-            padding: 5px;
-            border-radius: 50%;
-        }
-
-        label.disabled {
-            color: rgba(0, 0, 0, .33);
-        }
-    </style>
 {% endblock %}

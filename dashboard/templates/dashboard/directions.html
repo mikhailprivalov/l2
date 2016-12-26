@@ -134,7 +134,7 @@
                         </button>
                     </div>
                 </div>
-                <div id="table-researches"></div>
+                <div style="margin-top: 5px" id="table-researches"></div>
             </div>
         </div>
         <div id="b" class="split split-horizontal">
@@ -206,11 +206,11 @@
             <div id="f" class="split content">
                 <div class="row">
                     <div class="col-xs-12">
-                        <div style="margin-bottom: 20px">
+                        <div>
                             <div class="col-xs-4" style="padding-left: 0">
                                 <input name="diagnos" id="diagnos-field" class="form-control"
                                        placeholder="Диагноз"
-                                       onkeyup="sync(true);" style="margin-bottom: 20px"/>
+                                       onkeyup="sync(true);" style="margin-bottom: 5px"/>
                             </div>
                             <div class="col-xs-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
@@ -1079,7 +1079,7 @@
             $.each(checked, function (k, v) {
                 if (v == undefined || v.length == 0) return;
                 if (!$("#selected-" + k).length) {
-                    $("#table-researches-preview").append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='text-right'><span class='bclear glyphicon glyphicon-remove' style='width: 34px' data-toggle=\"confirmation\" onclick='remove_researches({2});'></span></td></tr>".f(labs[k], k, k));
+                    $("#table-researches-preview").append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='text-center'><a href='#' onclick='remove_researches({2});return false;'>очистить</a></td></tr>".f(labs[k], k, k));
                 }
                 $("#selected-" + k).html("");
 
@@ -1382,7 +1382,6 @@
         function load_researches() {
             if (client_id == -1 || active_lab == -1) return;
             $("#table-researches").html("");
-            $("#table-researches").append(lang.table_researches_header);
             if (active_lab in researches_cache) {
                 show_researches(active_lab);
                 return;
@@ -1415,7 +1414,6 @@
                 return;
             }
             $("#table-researches").html("");
-            $("#table-researches").append(lang.table_researches_header);
             $(".btn").removeClass("active-b");
             $.each(data, function (k, v) {
                 ind = false;

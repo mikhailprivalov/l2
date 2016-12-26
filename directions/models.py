@@ -355,10 +355,13 @@ class Result(models.Model):
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
 
-    def get_is_norm(self):
-        norm = self.calc_normal()
-        if self.is_normal != norm:
-            self.save()
+    def get_is_norm(self, recalc=False):
+        if self.is_normal == "" or recalc:
+            norm = self.calc_normal()
+            if self.is_normal != norm:
+                self.save()
+        else:
+            norm = self.is_normal
         return norm
 
     def save(self, *args, **kw):

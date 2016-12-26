@@ -24,7 +24,6 @@ import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
 
-
 urlpatterns = [
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
@@ -96,4 +95,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))

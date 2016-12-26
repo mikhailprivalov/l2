@@ -835,9 +835,9 @@
             border-left: 3px #e74c3c solid !important;
         }
 
-        .select-tube {
+        /*.select-tube {
             transition: .3s linear all;
-        }
+        }*/
 
         .select-tube.active {
             border-left-width: 8px !important;
@@ -846,57 +846,74 @@
         li.tb-group-1.active {
             border-left-width: 6px !important;
             border-top: 1px solid #16a085 !important;
-            border-right: 1px solid #16a085 !important;
             border-bottom: 1px solid #16a085 !important;
+        }
+        li.tb-group-1.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #16a085 !important;
         }
 
         li.tb-group-2.active {
             border-left-width: 6px !important;
             border-top: 1px solid #8e44ad !important;
-            border-right: 1px solid #8e44ad !important;
             border-bottom: 1px solid #8e44ad !important;
         }
+        li.tb-group-2.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #8e44ad !important;
+        }
+
 
         li.tb-group-3.active {
             border-left-width: 6px !important;
             border-top: 1px solid #2e8dcd !important;
-            border-right: 1px solid #2e8dcd !important;
             border-bottom: 1px solid #2e8dcd !important;
+        }
+        li.tb-group-3.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #2e8dcd !important;
         }
 
         li.tb-group-4.active {
             border-left-width: 6px !important;
             border-top: 1px solid #2c3e50 !important;
-            border-right: 1px solid #2c3e50 !important;
             border-bottom: 1px solid #2c3e50 !important;
+        }
+        li.tb-group-4.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #2c3e50 !important;
         }
 
         li.tb-group-5.active {
             border-left-width: 6px !important;
             border-top: 1px solid #27ae60 !important;
-            border-right: 1px solid #27ae60 !important;
             border-bottom: 1px solid #27ae60 !important;
+        }
+        li.tb-group-5.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #27ae60 !important;
         }
 
         li.tb-group-6.active {
             border-left-width: 6px !important;
             border-top: 1px solid #f1c40f !important;
-            border-right: 1px solid #f1c40f !important;
             border-bottom: 1px solid #f1c40f !important;
+        }
+        li.tb-group-6.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #f1c40f !important;
         }
 
         li.tb-group-7.active {
             border-left-width: 6px !important;
             border-top: 1px solid #e67e22 !important;
-            border-right: 1px solid #e67e22 !important;
             border-bottom: 1px solid #e67e22 !important;
+        }
+        li.tb-group-7.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #e67e22 !important;
         }
 
         li.tb-group-8.active {
             border-left-width: 6px !important;
             border-top: 1px solid #e74c3c !important;
-            border-right: 1px solid #e74c3c !important;
             border-bottom: 1px solid #e74c3c !important;
+        }
+        li.tb-group-8.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
+            border-right: 1px solid #e74c3c !important;
         }
 
         #search-field:focus::-webkit-input-placeholder {
@@ -977,7 +994,18 @@
             border-right: 0 !important;
             line-height: 1.2;
         }
-
+        #issledovaniya li:not(.issledovaniya-isnorm-maybe):not(.issledovaniya-isnorm-not_normal){
+            padding-right: 8px;
+        }
+        .issledovaniya-isnorm-maybe, .issledovaniya-isnorm-not_normal {
+            border-right-width: 3px!important;
+        }
+        .issledovaniya-isnorm-not_normal {
+            border-right-color: #E68364!important;
+        }
+        .issledovaniya-isnorm-maybe {
+            border-right-color: #F5D76E!important;
+        }
     </style>
 {% endblock %}
 
@@ -1132,6 +1160,7 @@
             "o": "Отложен"
         };
         var iss_pks = [], has_o = false;
+        var iss_isnorm = {"unknown": "", "normal": "Норма", "not_normal": "Не норма", "maybe": "Не удалось обработать"};
         function load_data(id, type, select_el, noclear) {
             sl();
             iss_pks = [];
@@ -1251,7 +1280,10 @@
                         if (v.allow_disable_confirm)
                             deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
                     }
-                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group}' onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
+                    var t = "";
+                    if(v.saved && v.is_norm != "normal")
+                        t = `title='${iss_isnorm[v.is_norm]}'`;
+                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
 
                     tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {

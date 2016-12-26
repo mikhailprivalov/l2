@@ -34,7 +34,7 @@
                         {% if request.user.is_superuser %}
                             <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
                         {% else %}
-                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk or request.user|has_group:"Просмотр статистики" %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
                             {% else %}
 

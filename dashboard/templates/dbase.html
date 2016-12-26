@@ -931,7 +931,7 @@
             text-overflow: ellipsis;
             overflow: hidden;
             font-size: 13px;
-            padding-top: 2px;
+            padding-top: 4px;
             transition: .07s linear box-shadow, .07s linear background;
             padding-left: 3px;
             padding-right: 3px;
@@ -1286,6 +1286,15 @@
         .btn-ell {
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .container-fluid > .navbar{
+            border-radius: 0;
+            margin-left: -5px;
+            margin-right: -5px;
+        }
+        body > .container-fluid{
+            padding-left: 5px;
+            padding-right: 5px;
         }
     </style>
     {% block head_cn %}{% endblock %}
