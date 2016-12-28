@@ -110,7 +110,7 @@ def send(request):
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled,
                                                                     fraction=fraction)  # Создание нового результата
-                            fraction_result.value = resdict["result"][key]  # Установка значения
+                            fraction_result.value = resdict["result"][key].strip()  # Установка значения
                             if fractionRel.get_multiplier_display() > 1:
                                 import re
                                 find = re.findall("\d+.\d+", fraction_result.value)
@@ -219,7 +219,7 @@ def results(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
-                                    fraction_result.value = rest["VALUE"]  # Установка значения
+                                    fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re
                                         find = re.findall("\d+.\d+", fraction_result.value)
@@ -275,7 +275,7 @@ def results_normal(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
-                                    fraction_result.value = rest["VALUE"]  # Установка значения
+                                    fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re
                                         find = re.findall("\d+.\d+", fraction_result.value)
