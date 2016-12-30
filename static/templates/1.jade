@@ -9,40 +9,41 @@
             .btn-group
                 button(onclick="save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить и подтвердить
 h4(style="margin-top: 2px") #{title}
-form(onsubmit="return false;")
-    input(type="hidden", value=res_id)#issledovaniye_id
-    #result-jade-form
-        table.table.table-bordered.table-sm-pd
-            thead
-                th(style="width: 29%") Фракция
-                th Значение
-                th(style="width: 23%") Нормы М
-                th(style="width: 23%") Нормы Ж
-            each fraction in fractions
-                if !fraction.hide
-                    tr
-                        td
-                            label.labtitle= fraction.title
-                        td
-                            .input-group
-                                input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
-                                span.input-group-btn
-                                    a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb.btn30
-                                        i.fa.fa-circle
-                        td.ref
-                            table.table.table-bordered.table-responsive
-                                each norm, index in fraction.references.m
+input(type="hidden", value=res_id)#issledovaniye_id
+#result-jade-form
+    table.table.table-bordered.table-sm-pd
+        thead
+            th(style="width: 29%") Фракция
+            th Значение
+            th(style="width: 23%") Нормы М
+            th(style="width: 23%") Нормы Ж
+        each fraction in fractions
+            if !fraction.hide
+                tr
+                    td
+                        label.labtitle= fraction.title
+                    td
+                        .input-group
+                            input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                            span.input-group-btn
+                                a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb.btn30
+                                    i.fa.fa-circle
+                    td.ref
+                        table
+                            each norm, index in fraction.references.m
+                                if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                     tr
                                         td= index
-                                        td.col-md-5
-                                            |    !{norm}
-                        td.ref
-                            table.table.table-bordered.table-responsive
-                                each norm, index in fraction.references.f
+                                        td.col-md-6
+                                            | !{norm}
+                    td.ref
+                        table
+                            each norm, index in fraction.references.f
+                                if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                     tr
                                         td= index
-                                        td.col-md-5
-                                            |    !{norm}
+                                        td.col-md-6
+                                            | !{norm}
 script.
     var k = -1;
     function genresult(th) {

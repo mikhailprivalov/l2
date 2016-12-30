@@ -7,6 +7,7 @@ import directory.models as directory
 import users.models as users
 import yaml
 from slog import models as slog
+from django.utils import timezone
 
 def translit(locallangstring):
     """
@@ -109,7 +110,7 @@ def send(request):
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled,
                                                                     fraction=fraction)  # Создание нового результата
-                            fraction_result.value = resdict["result"][key]  # Установка значения
+                            fraction_result.value = resdict["result"][key].strip()  # Установка значения
                             if fractionRel.get_multiplier_display() > 1:
                                 import re
                                 find = re.findall("\d+.\d+", fraction_result.value)
@@ -120,7 +121,7 @@ def send(request):
                             fraction_result.save()  # Сохранение
                             fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
                             from datetime import datetime
-                            fraction_result.issledovaniye.time_save = datetime.now()  # Время сохранения
+                            fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                             fraction_result.issledovaniye.save()
             slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=astm_user).save()
             result["ok"] = True
@@ -218,7 +219,7 @@ def results(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
-                                    fraction_result.value = rest["VALUE"]  # Установка значения
+                                    fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re
                                         find = re.findall("\d+.\d+", fraction_result.value)
@@ -230,7 +231,7 @@ def results(request):
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
                                     from datetime import datetime
-                                    fraction_result.issledovaniye.time_save = datetime.now()  # Время сохранения
+                                    fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                                     fraction_result.issledovaniye.save()
         result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON
@@ -274,7 +275,7 @@ def results_normal(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
-                                    fraction_result.value = rest["VALUE"]  # Установка значения
+                                    fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re
                                         find = re.findall("\d+.\d+", fraction_result.value)
@@ -286,7 +287,7 @@ def results_normal(request):
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
                                     from datetime import datetime
-                                    fraction_result.issledovaniye.time_save = datetime.now()  # Время сохранения
+                                    fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                                     fraction_result.issledovaniye.save()
         result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON

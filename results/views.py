@@ -86,7 +86,7 @@ def result_conformation(request):
 
 
 import datetime
-
+# from django.db import connection
 
 @csrf_exempt
 @login_required
@@ -106,6 +106,26 @@ def loadready(request):
                                int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                              int(date_end.split(".")[0])) + datetime.timedelta(1)
+    # with connection.cursor() as cursor:
+    dates_cache = {}
+    tubes = set()
+    dirs = set()
+
+    # if deff == 0:
+    #     cursor.execute("SELECT * FROM loadready WHERE time_receive BETWEEN %s AND %s AND podr_id = %s", [date_start, date_end, request.user.doctorprofile.podrazileniye.pk])
+    # else:
+    #     cursor.execute("SELECT * FROM loadready WHERE deff = TRUE AND podr_id = %s", [request.user.doctorprofile.podrazileniye.pk])
+    # for row in cursor.fetchall():
+    #     if row[1].date() not in dates_cache:
+    #         dates_cache[row[1].date()] = dateformat.format(row[1], 'd.m.y')
+    #     dicttube = {"id": row[0], "direction": row[3], "date": dates_cache[row[1].date()]}
+    #     result["tubes"].append(dicttube)
+    #     if row[3] not in dirs:
+    #         if row[2].date() not in dates_cache:
+    #             dates_cache[row[2].date()] = dateformat.format(row[2], 'd.m.y')
+    #         dirs.add(row[3])
+    #         dictdir = {"id": row[3], "date": dates_cache[row[2].date()]}
+    #         result["directions"].append(dictdir)
 
     if deff == 0:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
@@ -122,9 +142,7 @@ def loadready(request):
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
-    dates_cache = {}
-    tubes = set()
-    dirs = set()
+
     for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):  # перебор результатов выборки
         # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
         # if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
@@ -148,6 +166,7 @@ def loadready(request):
             dirs.add(direction.pk)
             dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
             result["directions"].append(dictdir)  # Добавление временного словаря к ответу
+
 
     result["tubes"].sort(key=lambda k: k['id'])
     result["directions"].sort(key=lambda k: k['id'])
@@ -625,6 +644,7 @@ def result_print(request):
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib.units import mm
+    from django.utils import timezone
     import os.path
 
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
@@ -694,7 +714,7 @@ def result_print(request):
                         dates[dt] = 0
                     dates[dt] += 1
                 if iss.tubes.exists() and iss.tubes.first().time_get:
-                    date_t = iss.tubes.first().time_get.strftime('%d.%m.%Y')
+                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
 
             import operator
             maxdate = ""
@@ -905,7 +925,7 @@ def result_print(request):
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
                             if show_norm:
-                                norm = r.get_is_norm()
+                                norm = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
 
                         if not iss.doc_confirmation and iss.deferred:
@@ -981,7 +1001,7 @@ def result_print(request):
                             else:
                                 tmp.append("")
                                 tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.tubes.first().time_get.strftime(
+                                    '<font face="OpenSansBold" size="7">%s</font>' % timezone.localtime(iss.tubes.first().time_get).strftime(
                                         '%d.%m.%Y'), styleSheet["BodyText"]))
                                 tmp.append("")
                             data.append(tmp)
@@ -1048,7 +1068,7 @@ def result_print(request):
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     r = Result.objects.get(issledovaniye=iss, fraction=f)
                                     if show_norm:
-                                        norm = r.get_is_norm()
+                                        norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                 if not iss.doc_confirmation and iss.deferred:
                                     result = "отложен"
@@ -1275,7 +1295,7 @@ def result_print(request):
                         tmp.append("")
                         data.append(tmp)
                         cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22),
-                              int(tw * 0.13)]
+                              int(tw * 0.112)]
                         t = Table(data, colWidths=cw)
                         style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1341,7 +1361,7 @@ def result_print(request):
                 dir.save()
 
             dp = request.user.doctorprofile
-            if dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
+            if not request.user.is_superuser and dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
                 slog.Log(key=dpk, type=998, body=json.dumps(
                     {"lab": str(Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye),
                      "doc": str(dir.doc), "print_otd": str(dp.podrazileniye), "patient": str(dir.client.fio())}),
@@ -2000,7 +2020,7 @@ def result_get(request):
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
-            result["norms"][str(v.fraction.pk)] = v.get_is_norm()
+            result["norms"][str(v.fraction.pk)] = v.get_is_norm(recalc=True)
         if issledovaniye.lab_comment:
             result["comment"] = issledovaniye.lab_comment.strip()
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -2241,7 +2261,7 @@ def results_search_directions(request):
             is_normal = "none"
             if perform_norms:
                 for res_row in Result.objects.filter(issledovaniye=r):
-                    tmp_normal = res_row.get_is_norm()
+                    tmp_normal = res_row.get_is_norm(recalc=True)
                     if is_normal != "not_normal":
                         if is_normal == "maybe":
                             if tmp_normal == "not_normal":

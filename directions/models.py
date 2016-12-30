@@ -355,10 +355,13 @@ class Result(models.Model):
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
 
-    def get_is_norm(self):
-        norm = self.calc_normal()
-        if self.is_normal != norm:
-            self.save()
+    def get_is_norm(self, recalc=False):
+        if self.is_normal == "" or recalc:
+            norm = self.calc_normal()
+            if self.is_normal != norm:
+                self.save()
+        else:
+            norm = self.is_normal
         return norm
 
     def save(self, *args, **kw):
@@ -396,7 +399,7 @@ class Result(models.Model):
             return r.replace(".", "", 1).isdigit()
 
         def replace_pow(v):
-            v = str(v).strip()
+            v = str(v).replace(" ", "")
             for j in range(1, 9):
                 for i in range(0, 12):
                     v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j*(10**i)))
@@ -408,6 +411,13 @@ class Result(models.Model):
             if v == float("inf"):
                 return v
             v = replace_pow(v)
+
+            mode = 0
+            if any([x in v for x in signs["<"]]):
+                mode = 1
+            elif any([x in v for x in signs[">"]]):
+                mode = 2
+
             import re
             tmp = re.findall("\d+\,\d+", v)
             for t in tmp:
@@ -483,11 +493,11 @@ class Result(models.Model):
                         value = "0"
                     if "сплошь" in value.lower() or "++" in value or "+ +" in value or "++++" in value or "+" == value.strip() or "оксал ед" in value:
                         value = float("inf")
-                    elif "<" in value and ">" not in value:
+                    elif any([x in replace_pow(value) for x in signs["<"]]):
                         value = val_normalize(value)
                         if value and not isinstance(value, bool):
                             value = str(float(value) - 0.1)
-                    elif ">" in value and "<" not in value:
+                    elif any([x in replace_pow(value) for x in signs[">"]]):
                         value = val_normalize(value)
                         if value and not isinstance(value, bool):
                             value = str(float(value) + 0.1)

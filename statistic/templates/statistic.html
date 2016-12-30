@@ -3,7 +3,7 @@
 {% block content %}
     {% load has_group %}
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-xs-4">
             <h6>Период:</h6>
             <div class="input-daterange input-group" id="datepicker">
                 <input type="text" class="input-sm form-control" name="date-start"/>
@@ -12,16 +12,16 @@
                 <input type="text" class="input-sm form-control" name="date-end"/>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-4">
             <h6></h6>
         </div>
-        <div class="col-md-4">
+        <div class="col-xs-4">
             <h6></h6>
         </div>
     </div>
     <br/>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
                     <h3 class="panel-title">Статистика по лабораториям</h3>
@@ -34,7 +34,7 @@
                         {% if request.user.is_superuser %}
                             <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
                         {% else %}
-                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk or request.user|has_group:"Просмотр статистики" %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
                             {% else %}
 
@@ -67,7 +67,7 @@
 {#                </ul>#}
 {#            </div>#}
         </div>
-        <div class="col-md-6">
+        <div class="col-xs-6">
 {#            <div class="panel panel-default panel-flt">#}
 {#                <div class="panel-heading">#}
 {#                    <h3 class="panel-title">Статистика по емкостям#}

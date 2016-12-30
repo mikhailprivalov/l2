@@ -20,7 +20,8 @@ lang = {
     table_researches_preview_header: "<tr><th style='width: 155px'>Лаборатория</th><th>Виды исследований</th><th style='width: 101px'>Управление</th></tr>",
     table_researches_preview_none: "<tr><td>Ничего не добавлено</td><td></td><td></td></tr>",
     table_researches_preview_realy_delete: "Удалить исследования в лаборатории {0} из направления?",
-    clear_direction: "Очистить направление?"
+    clear_direction: "Очистить направление?",
+    loading: "Загрузка - "
 
 };
 var ref_types = {'a': {'show': false, 's': "Все"}, 'pmp': {'show': true, 's': "любой ключ"}}

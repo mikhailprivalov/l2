@@ -991,6 +991,8 @@ def get_issledovaniya(request):
                         doc_save_fio = ""
                         doc_save_id = -1
                         current_doc_save = -1
+                        isnorm = "unknown"
+
                         if not issledovaniye.doc_save:
                             saved = False
                         else:
@@ -1000,6 +1002,13 @@ def get_issledovaniya(request):
                                 current_doc_save = 1
                             else:
                                 current_doc_save = 0
+                            isnorm = "normal"
+                            if issledovaniye.result_set.count() > 0:
+                                if any([x.get_is_norm() == "not_normal" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "not_normal"
+                                elif any([x.get_is_norm() == "maybe" for x in issledovaniye.result_set.all()]):
+                                    isnorm = "maybe"
+
                         if not issledovaniye.doc_confirmation:
                             confirmed = False
                             if not issledovaniye.deferred:
@@ -1018,6 +1027,7 @@ def get_issledovaniya(request):
                                                      "research_pk": issledovaniye.research.pk,
                                                      "sort": issledovaniye.research.sort_weight,
                                                      "saved": saved,
+                                                     "is_norm": isnorm,
                                                      "confirmed": confirmed,
                                                      "status_key": str(saved)+str(confirmed)+str(issledovaniye.deferred and not confirmed),
                                                      "not_received_tubes": ", ".join(not_received_tubes_list),

@@ -115,23 +115,24 @@ def statistic_xls(request):
                     return False
             return True
 
-        for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk, direction_id__isnull=False):
+        for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk):
             for iss in Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
                                                     time_confirmation__range=(date_start, date_end)):
-                if all(["гемолиз" in y.value.lower() for y in d.Result.objects.filter(issledovaniye=iss)]) or all(
-                        ["забор" in y.value.lower() for y in d.Result.objects.filter(issledovaniye=iss)]) or all(
-                        ["тест" in y.value.lower() for y in d.Result.objects.filter(issledovaniye=iss)]) or all(
-                        ["неправ" in y.value.lower() for y in d.Result.objects.filter(issledovaniye=iss)]) or all(
-                        ["-" in y.value for y in d.Result.objects.filter(issledovaniye=iss)]):
+                n = False
+                for x in d.Result.objects.filter(issledovaniye=iss):
+                    x = x.value.lower().strip()
+                    n = all([y in x for y in ["гемолиз", "забор", "тест", "неправ"]]) or x == "-"
+                    if n:
+                        break
+                if n:
                     continue
+
                 if iss.napravleniye.doc.podrazileniye.pk not in otds:
                     otds[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
                 otds[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
-                if any([y.get_is_norm() in ["maybe", "not_normal"] for y in
-                        d.Result.objects.filter(issledovaniye=iss)]):
-                    if iss.napravleniye.doc.podrazileniye.pk not in otds_pat:
-                        otds_pat[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                    otds_pat[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                if iss.napravleniye.doc.podrazileniye.pk not in otds_pat:
+                    otds_pat[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
+                otds_pat[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
 
         style = xlwt.XFStyle()
         style.borders = borders
