@@ -104,8 +104,8 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '192.168.0.252:11211',
-        'KEY_PREFIX': 'lis_test' + ("" if not DEBUG else "_DBG")
+        'LOCATION': '127.0.0.1:11211',
+        'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")
     },
     'debug-panel': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
