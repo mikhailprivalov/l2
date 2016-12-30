@@ -86,7 +86,7 @@ def result_conformation(request):
 
 
 import datetime
-
+# from django.db import connection
 
 @csrf_exempt
 @login_required
@@ -106,6 +106,26 @@ def loadready(request):
                                int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                              int(date_end.split(".")[0])) + datetime.timedelta(1)
+    # with connection.cursor() as cursor:
+    dates_cache = {}
+    tubes = set()
+    dirs = set()
+
+    # if deff == 0:
+    #     cursor.execute("SELECT * FROM loadready WHERE time_receive BETWEEN %s AND %s AND podr_id = %s", [date_start, date_end, request.user.doctorprofile.podrazileniye.pk])
+    # else:
+    #     cursor.execute("SELECT * FROM loadready WHERE deff = TRUE AND podr_id = %s", [request.user.doctorprofile.podrazileniye.pk])
+    # for row in cursor.fetchall():
+    #     if row[1].date() not in dates_cache:
+    #         dates_cache[row[1].date()] = dateformat.format(row[1], 'd.m.y')
+    #     dicttube = {"id": row[0], "direction": row[3], "date": dates_cache[row[1].date()]}
+    #     result["tubes"].append(dicttube)
+    #     if row[3] not in dirs:
+    #         if row[2].date() not in dates_cache:
+    #             dates_cache[row[2].date()] = dateformat.format(row[2], 'd.m.y')
+    #         dirs.add(row[3])
+    #         dictdir = {"id": row[3], "date": dates_cache[row[2].date()]}
+    #         result["directions"].append(dictdir)
 
     if deff == 0:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
@@ -122,9 +142,7 @@ def loadready(request):
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
     # текущего пользователя, принятых лабораторией и результаты для которых не напечатаны
-    dates_cache = {}
-    tubes = set()
-    dirs = set()
+
     for tube in tlist.prefetch_related('issledovaniya_set__napravleniye'):  # перебор результатов выборки
         # iss_set = tube.issledovaniya_set.all()  # Получение списка исследований для пробирки
         # if tube.issledovaniya_set.count() == 0: continue  # пропуск пробирки, если исследований нет
@@ -148,6 +166,7 @@ def loadready(request):
             dirs.add(direction.pk)
             dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
             result["directions"].append(dictdir)  # Добавление временного словаря к ответу
+
 
     result["tubes"].sort(key=lambda k: k['id'])
     result["directions"].sort(key=lambda k: k['id'])
