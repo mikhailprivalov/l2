@@ -263,7 +263,10 @@ def create_pod(request):
 @staff_member_required
 def ldap_sync(request):
     """ Страница синхронизации с LDAP """
-    return render(request, 'dashboard/ldap_sync.html')
+    import directions.models as dirs
+    d = dirs.Napravleniya.objects.filter(data_sozdaniya__lt=datetime.date(2017, 1, 1))
+    return HttpResponse(json.dumps({"cnt": d.count()}), content_type="application/json")
+    #return render(request, 'dashboard/ldap_sync.html')
 
 
 # @cache_page(60 * 15)
