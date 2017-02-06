@@ -126,6 +126,7 @@
                             <option value="6">Шаблон: Лип.</option>
                             <option value="7">Шаблон: Бак. стандарт</option>
                             <option value="8">Шаблон: Геп.</option>
+                            <option value="9">Шаблон: Проктолог</option>
                         </select>
                     </div>
                     <div class="col-xs-3">
@@ -141,7 +142,7 @@
             <div id="e" class="split content">
                 <div class="row" style="background: #fff;margin-top: 2px">
                     <div class="col-xs-3" style="padding-right: 0">
-                        <h6>Дата назначения:</h6>
+                        <h6>Дата назначения (поиск):</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
                             <input type="text" class="input-sm form-control no-context" name="date-start" style="height: 34px"/>
@@ -677,6 +678,7 @@
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script src="/static/tree/jquery.easytree.min.js"></script>
     <script src="/static/js/split.js"></script>
+    <script src="/static/js/ajaxq.js"></script>
     <script>
         var users_av = {{ users|safe }};
         function update_av_docs() {
@@ -786,6 +788,22 @@
                 check_ow(ow);
             }
         }
+        var nn = 0;
+        var firstrun = true;
+        function dechl() {
+            nn--;
+            if (nn <= 0) {
+                hl();
+                if (firstrun) {
+                    firstrun = false;
+                    $("#search-field").focus();
+                }
+            }
+        }
+        function decsl() {
+            nn++;
+            sl();
+        }
 
         $(document).ready(function () {
             $(".fp-cont").show();
@@ -835,7 +853,25 @@
             }
             $("#clients-base").val(Object.keys(clients_bases)[0]);
             $("#clients-base").selectpicker('refresh');
-
+            $("#table-researches").css({opacity: 0});
+            sl();
+            for (var i = 32; i <= 35; i++) {
+                nn++;
+                (function (i) {
+                    $.ajaxq('precache', {
+                        url: "/directory/researches/list?lab_id=" + i,
+                        dataType: 'json'
+                    }).done(function (data) {
+                        researches_cache[i] = data;
+                        show_researches(i);
+                        dechl();
+                        if(nn <= 0){
+                            $("#table-researches").css({opacity: 1});
+                            $("#table-researches").html("");
+                        }
+                    });
+                })(i);
+            }
             // TODO: DYNAMIC IT
             var templates = {
                 1: {lab: 34, iss: [77, 78, 79, 80, 81, 161]},
@@ -848,18 +884,28 @@
                 },
                 6: {lab: 34, iss: [74, 76, 75, 73, 78, 81, 80, 161, 87, 77]},
                 7: {lab: 35, iss: [190, 177, 178]},
-                8: {lab: 33, iss: [131, 130, 137]}
+                8: {lab: 33, iss: [131, 130, 137]},
+                9: {
+                    multilabs: true,
+                    iss: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,["52","154"],["131","130","145","110","111","137"],["84","82","83","159","74","76","75","158","73","92","89","87","156","157"]]
+                }
             };
 
             $("#select-template-btn").click(function () {
                 active_template = document.querySelector("#select-template").value;
-                callback = function () {
-                    Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
-                        $("[value={0}]".f(el)).prop("checked", true);
-                    });
-                    sync_checks();
-                };
-                $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
+                if(!templates[active_template].multilabs) {
+                    callback = function () {
+                        Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
+                            $("[value={0}]".f(el)).prop("checked", true);
+                        });
+                        sync_checks();
+                    };
+                    $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
+                }else{
+                    checked = JSON.parse(JSON.stringify(templates[active_template].iss));
+                    sync();
+                    $("#select-lab").val(Object.keys(templates[active_template].iss).slice(-1)[0]).change().selectpicker('refresh');
+                }
             });
             $("body").on("change", "#table-researches .btn input", sync_checks);
             sync(true);
