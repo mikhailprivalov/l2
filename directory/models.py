@@ -52,6 +52,7 @@ class Researches(models.Model):
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
+    code = models.CharField(max_length=16, default='', blank=True, help_text='Код исследования')
 
     def __str__(self):
         return "%s" % self.title
