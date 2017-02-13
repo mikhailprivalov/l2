@@ -57,163 +57,177 @@ def statistic_xls(request):
             "attachment; filename='Статистика_Лаборатория_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
                                                                                    date_start_o, date_end_o), tr)
 
-        ws = wb.add_sheet("Выполненых анализов")
-
-        font_style = xlwt.XFStyle()
-        font_style.borders = borders
-        row_num = 0
-        row = [
-            "Период: ",
-            "{0} - {1}".format(date_start_o, date_end_o)
-        ]
 
         import datetime
+        import directions.models as d
+        from operator import itemgetter
         date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
                                    int(date_start_o.split(".")[0]))
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
 
-        for col_num in range(len(row)):
-            if col_num == 0:
-                ws.write(row_num, col_num, row[col_num], font_style)
-            else:
-                ws.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
+        source_types = {"poli": "Поликлиника", "stat": "Стационар"}
+        for source_type in source_types.keys():
 
-        row_num += 1
+            ws = wb.add_sheet(source_types[source_type] + " выполнено")
 
-        font_style = xlwt.XFStyle()
-        font_style.borders = borders
+            font_style = xlwt.XFStyle()
+            font_style.borders = borders
+            row_num = 0
+            row = [
+                "Период: ",
+                "{0} - {1}".format(date_start_o, date_end_o)
+            ]
 
-        row = [
-            (lab.title, 16000)
-        ]
+            for col_num in range(len(row)):
+                if col_num == 0:
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
 
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style)
-            ws.col(col_num).width = row[col_num][1]
-            ws.write(row_num, col_num+1, "", font_style)
+            row_num += 1
 
-        row_num = 2
-        row = [
-            "Выполнено исследований",
-            ""
-        ]
+            font_style = xlwt.XFStyle()
+            font_style.borders = borders
 
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style)
+            row = [
+                (lab.title, 16000)
+            ]
 
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 1
-        font_style.borders = borders
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num][0], font_style)
+                ws.col(col_num).width = row[col_num][1]
+                ws.write(row_num, col_num+1, "", font_style)
 
-        otds = {}
-        otds_pat = {}
-        import directions.models as d
-        def all(iterable):
-            for element in iterable:
-                if not element:
-                    return False
-            return True
+            row_num = 2
+            row = [
+                "Выполнено исследований",
+                source_types[source_type]
+            ]
 
-        for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk):
-            for iss in Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
-                                                    time_confirmation__range=(date_start, date_end)):
-                n = False
-                for x in d.Result.objects.filter(issledovaniye=iss):
-                    x = x.value.lower().strip()
-                    n = all([y in x for y in ["гемолиз", "забор", "тест", "неправ"]]) or x == "-"
+            for col_num in range(len(row)):
+                if col_num == 0:
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num+1, row[col_num], style=font_style)
+
+            font_style = xlwt.XFStyle()
+            font_style.alignment.wrap = 1
+            font_style.borders = borders
+            pki = int(pk)
+            otds = {pki: defaultdict(lambda: 0)}
+            otds_pat = {pki: defaultdict(lambda: 0)}
+            def all(iterable):
+                for element in iterable:
+                    if not element:
+                        return False
+                return True
+
+            for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk):
+                for iss in Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
+                                                        time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f__istype=source_type):
+                    n = False
+                    for x in d.Result.objects.filter(issledovaniye=iss):
+                        x = x.value.lower().strip()
+                        n = all([y in x for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) or x == "-"
+                        if n:
+                            break
                     if n:
-                        break
-                if n:
-                    continue
+                        continue
 
-                if iss.napravleniye.doc.podrazileniye.pk not in otds:
-                    otds[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                otds[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
-                if iss.napravleniye.doc.podrazileniye.pk not in otds_pat:
-                    otds_pat[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                otds_pat[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                    if iss.napravleniye.doc.podrazileniye.pk not in otds:
+                        otds[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
+                    otds[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                    otds[pki][obj.pk] += 1
+                    if any([x.get_is_norm() == "normal" for x in iss.result_set.all()]):
+                        continue
+                    if iss.napravleniye.doc.podrazileniye.pk not in otds_pat:
+                        otds_pat[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
+                    otds_pat[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                    otds_pat[pki][obj.pk] += 1
 
-        style = xlwt.XFStyle()
-        style.borders = borders
-        font = xlwt.Font()
-        font.bold = True
-        style.font = font
-        from operator import itemgetter
-        for otdd in Podrazdeleniya.objects.filter(pk__in=[x for x in otds.keys()]):
-            row_num += 2
-            row = [
-                otdd.title,
-                ""
-            ]
-            for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], style=style)
-            rows = []
-            for obj in directory.Researches.objects.filter(pk__in=[x for x in otds[otdd.pk].keys()]):
+            style = xlwt.XFStyle()
+            style.borders = borders
+            font = xlwt.Font()
+            font.bold = True
+            style.font = font
+            for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys() if x != pki])):
+                row_num += 2
                 row = [
-                    obj.title,
-                    otds[otdd.pk][obj.pk],
+                    otdd.title,
+                    "" if otdd.pk != pki else "Итого",
                 ]
-                rows.append(row)
-            for row in reversed(sorted(rows, key=itemgetter(1))):
-                row_num += 1
                 for col_num in range(len(row)):
-                    ws.write(row_num, col_num, row[col_num], font_style)
+                    ws.write(row_num, col_num, row[col_num], style=style)
+                rows = []
+                for obj in directory.Researches.objects.filter(pk__in=[x for x in otds[otdd.pk].keys()]):
+                    row = [
+                        obj.title,
+                        otds[otdd.pk][obj.pk],
+                    ]
+                    rows.append(row)
+                for row in reversed(sorted(rows, key=itemgetter(1))):
+                    row_num += 1
+                    for col_num in range(len(row)):
+                        ws.write(row_num, col_num, row[col_num], font_style)
 
-        ws = wb.add_sheet("Паталогии")
-        row_num = 0
-        row = [
-            "Период: ",
-            "{0} - {1}".format(date_start_o, date_end_o)
-        ]
-
-        for col_num in range(len(row)):
-            if col_num == 0:
-                ws.write(row_num, col_num, row[col_num], font_style)
-            else:
-                ws.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
-
-        row_num = 1
-        row = [
-            (lab.title, 16000),
-        ]
-
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style)
-            ws.col(col_num).width = row[col_num][1]
-            ws.write(row_num, col_num+1, "", font_style)
-
-        font_style = xlwt.XFStyle()
-        font_style.borders = borders
-
-        row_num = 2
-        row = [
-            "Паталогии",
-            ""
-        ]
-
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style)
-
-        for otdd in Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys()]):
-            row_num += 2
+            ws = wb.add_sheet(source_types[source_type] + " паталогии")
+            row_num = 0
             row = [
-                otdd.title,
-                ""
+                "Период: ",
+                "{0} - {1}".format(date_start_o, date_end_o)
             ]
+
             for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], style=style)
-            rows = []
-            for obj in directory.Researches.objects.filter(pk__in=[x for x in otds_pat[otdd.pk].keys()]):
-                row = [
-                    obj.title,
-                    otds_pat[otdd.pk][obj.pk],
-                ]
-                rows.append(row)
-            for row in reversed(sorted(rows, key=itemgetter(1))):
-                row_num += 1
-                for col_num in range(len(row)):
+                if col_num == 0:
                     ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
+
+            row_num = 1
+            row = [
+                (lab.title, 16000),
+            ]
+
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num][0], font_style)
+                ws.col(col_num).width = row[col_num][1]
+                ws.write(row_num, col_num+1, "", font_style)
+
+            font_style = xlwt.XFStyle()
+            font_style.borders = borders
+
+            row_num = 2
+            row = [
+                "Паталогии",
+                source_types[source_type]
+            ]
+
+            for col_num in range(len(row)):
+                if col_num == 0:
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num+1, row[col_num], style=font_style)
+
+            for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys() if x != pki])):
+                row_num += 2
+                row = [
+                    otdd.title,
+                    "" if otdd.pk != pki else "Итого",
+                ]
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num], style=style)
+                rows = []
+                for obj in directory.Researches.objects.filter(pk__in=[x for x in otds_pat[otdd.pk].keys()]):
+                    row = [
+                        obj.title,
+                        otds_pat[otdd.pk][obj.pk],
+                    ]
+                    rows.append(row)
+                for row in reversed(sorted(rows, key=itemgetter(1))):
+                    row_num += 1
+                    for col_num in range(len(row)):
+                        ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "otd":
         otd = Podrazdeleniya.objects.get(pk=int(pk))

@@ -68,14 +68,14 @@
                             <td id="card-sx" class="table-content-row"></td>
                         </tr>
                         <tr id="history-num-tr">
-                            <td class="table-header-row">Номер истории:&nbsp;</td>
-                            <td class="table-content-row" colspan="3"><input type="text" class="form-control"
-                                                                             maxlength="11"/></td>
-                        </tr>
-                        <tr id="ballast">
-                            <td class="table-header-row">&nbsp;</td>
+                            <td class="table-header-row">
+                                <span class="hospital">Номер истории:&nbsp;</span><span class="poli">Настройка:&nbsp;</span>
+                            </td>
                             <td class="table-content-row" colspan="3">
-                                <div style="height: 34px">&nbsp;</div>
+                                <div style="height: 34px">
+                                    <span class="hospital"><input type="text" class="form-control" maxlength="11"/></span>
+                                    <label class="poli text-left" style="padding-left: 5px"><input style="vertical-align: text-top;" type="checkbox" name="is_hospital" onchange="sync_fin_sources();" /> стационар</label>
+                                </div>
                             </td>
                         </tr>
                     </table>
@@ -98,7 +98,11 @@
                     <div class="col-xs-5" style="padding-right: 0">
                         <select class="select-b" data-width="100%" id="select-doc">
                             {% for v in docs %}
-                                <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% if request.user.doctorprofile.pk == v.pk %}
+                                    <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% else %}
+                                    <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
@@ -1003,13 +1007,13 @@
                 }
             }
             type = $('#clients-base').val();
-            $("#history-num-tr").hide();
-            $("#ballast").hide();
+            $("#history-num-tr .hospital").hide();
+            $("#history-num-tr .poli").hide();
             if (type == "stat") {
-                $("#history-num-tr").show();
+                $("#history-num-tr .hospital").show();
             }
             else {
-                $("#ballast").show();
+                $("#history-num-tr .poli").show();
             }
         }
         var lock_show_results = false;
@@ -1294,6 +1298,7 @@
                 return;
             }
             sl();
+            $("[name=is_hospital]").prop("checked", false);
             query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
             $("#sources .active").removeClass("active");
@@ -1373,6 +1378,22 @@
         function getqueue() {
             $(".dir-queue .list").html("");
         }
+        function sync_fin_sources(){
+            $("#fin_poli input").parent('.btn').removeClass('active');
+            $("#fin_stat input").parent('.btn').removeClass('active');
+            if (type == "stat" || $("[name=is_hospital]").prop('checked')) {
+                $("#fin_poli").hide();
+                $("#fin_stat").show();
+                $("#fin_poli").removeClass("active-s");
+                $("#fin_stat").addClass("active-s");
+            }
+            else {
+                $("#fin_poli").show();
+                $("#fin_stat").hide();
+                $("#fin_poli").addClass("active-s");
+                $("#fin_stat").removeClass("active-s");
+            }
+        }
         function show_card(fields, pk) { // Функция формирования карты пациента
             //$("#div2 input, #div2 button").prop("disabled", false);
             load_client_dirs(pk);
@@ -1391,26 +1412,15 @@
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);
             $("#card-sx").text(sx);
-            $("#fin_poli input").parent('.btn').removeClass('active');
-            $("#fin_stat input").parent('.btn').removeClass('active');
             if (type == "stat") {
-                $("#fin_poli").hide();
-                $("#fin_stat").show();
                 //$("#fin_stat input:first").parent('.btn').addClass('active');
-
-                $("#fin_poli").removeClass("active-s");
-                $("#fin_stat").addClass("active-s");
-
-                $("#history-num-tr input").prop("disabled", false);
+                $("#history-num-tr .hospital input").prop("disabled", false);
             }
             else {
-                $("#fin_poli").show();
-                $("#fin_stat").hide();
                 //$("#fin_poli input:first").parent('.btn').addClass('active');
-
-                $("#fin_poli").addClass("active-s");
-                $("#fin_stat").removeClass("active-s");
+                $("#history-num-tr .poli input").prop("disabled", false);
             }
+            sync_fin_sources();
             $("#select-lab, #select-template, #select-template-btn").removeProp('disabled');
             $("#select-lab, #select-template").selectpicker('refresh');
             tmp_direction = {
@@ -1594,7 +1604,8 @@
                     ofname: ofname,
                     history_num: $("#history-num-tr input").val(),
                     type: type,
-                    comments: JSON.stringify(comments)
+                    comments: JSON.stringify(comments),
+                    is_hospital: type == "stat" || $("[name=is_hospital]").prop("checked")
                 },
                 statusCode: {
                     500: function () {
@@ -1634,6 +1645,7 @@
                         }
                     }
                     $("#sources .active").removeClass("active");
+                    //$("[name=is_hospital]").prop("checked", false);
                     load_client_dirs(client_id);
                     setTimeout(clear_fast, 200);
                 }

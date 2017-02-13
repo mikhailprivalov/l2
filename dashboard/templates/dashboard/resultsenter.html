@@ -264,6 +264,15 @@
                         </div>
                         <div class="col-xs-2"></div>
                     </div>
+                    <div class="row" style="text-align: center">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8" style="margin: 0 auto">
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createjournalcodes();return false;">Создать журнал-список с кодами
+                            </button>
+                        </div>
+                        <div class="col-xs-2"></div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
@@ -1767,6 +1776,26 @@
             }
             arr = JSON.parse('[' + v + ']');
             window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val(), '_blank');
+        }
+        function createjournalcodes() {
+            date = $("[name=date-confirm]").val();
+            v = $("#ist_f").val();
+            if (!v) {
+                $.amaran({
+                    'theme': 'awesome no',
+                    'content': {
+                        title: 'Не выбран источник финансирования',
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 5000
+                });
+                return;
+            }
+            arr = JSON.parse('[' + v + ']');
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&codes=1", '_blank');
         }
         function createjournaltable() {
             date = $("[name=date-confirm]").val();

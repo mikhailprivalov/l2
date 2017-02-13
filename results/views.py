@@ -68,7 +68,11 @@ def enter(request):
 
     from podrazdeleniya.models import Podrazdeleniya
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
-    return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya, "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("istype", "pk"), "groups": directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)})
+    return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
+                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by(
+                                                               "istype", "pk"),
+                                                           "groups": directory.ResearchGroup.objects.filter(
+                                                               lab=request.user.doctorprofile.podrazileniye)})
 
 
 @login_required
@@ -86,6 +90,8 @@ def result_conformation(request):
 
 
 import datetime
+
+
 # from django.db import connection
 
 @csrf_exempt
@@ -155,7 +161,7 @@ def loadready(request):
                 dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
             tubes.add(tube.pk)
             dicttube = {"id": tube.pk, "direction": direction.pk,
-                    "date": dates_cache[tube.time_recive.date()]}  # Временный словарь с информацией о пробирке
+                        "date": dates_cache[tube.time_recive.date()]}  # Временный словарь с информацией о пробирке
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
 
         if tube.issledovaniya_set.first().napravleniye.pk not in dirs:
@@ -164,9 +170,9 @@ def loadready(request):
             if direction.data_sozdaniya.date() not in dates_cache:
                 dates_cache[direction.data_sozdaniya.date()] = dateformat.format(direction.data_sozdaniya, 'd.m.y')
             dirs.add(direction.pk)
-            dictdir = {"id": direction.pk, "date": dates_cache[direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
+            dictdir = {"id": direction.pk, "date": dates_cache[
+                direction.data_sozdaniya.date()]}  # Временный словарь с информацией о направлении
             result["directions"].append(dictdir)  # Добавление временного словаря к ответу
-
 
     result["tubes"].sort(key=lambda k: k['id'])
     result["directions"].sort(key=lambda k: k['id'])
@@ -387,7 +393,8 @@ def get_full_result(request):
                         if tmp_pk not in result["results"][kint]["fractions"].keys():
                             result["results"][kint]["fractions"][tmp_pk] = {}
                         result["results"][kint]["fractions"][tmp_pk]["title"] = "Комментарий"
-                        result["results"][kint]["fractions"][tmp_pk]["result"] = issledovaniye.lab_comment.replace("\n", "<br/>")
+                        result["results"][kint]["fractions"][tmp_pk]["result"] = issledovaniye.lab_comment.replace("\n",
+                                                                                                                   "<br/>")
                         result["results"][kint]["fractions"][tmp_pk]["ref_m"] = "{}"
                         result["results"][kint]["fractions"][tmp_pk]["ref_f"] = "{}"
                         result["results"][kint]["fractions"][tmp_pk]["units"] = ""
@@ -1001,7 +1008,8 @@ def result_print(request):
                             else:
                                 tmp.append("")
                                 tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % timezone.localtime(iss.tubes.first().time_get).strftime(
+                                    '<font face="OpenSansBold" size="7">%s</font>' % timezone.localtime(
+                                        iss.tubes.first().time_get).strftime(
                                         '%d.%m.%Y'), styleSheet["BodyText"]))
                                 tmp.append("")
                             data.append(tmp)
@@ -1331,7 +1339,8 @@ def result_print(request):
                     tmp.append("")
                     tmp.append("")
                     data.append(tmp)
-                    cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178), int(tw * 0.08)]
+                    cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178),
+                          int(tw * 0.08)]
                     t = Table(data, colWidths=cw)
                     style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1361,7 +1370,8 @@ def result_print(request):
                 dir.save()
 
             dp = request.user.doctorprofile
-            if not request.user.is_superuser and dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
+            if not request.user.is_superuser and dp.podrazileniye != Issledovaniya.objects.filter(napravleniye=dir)[
+                0].research.subgroup.podrazdeleniye and dp != dir.doc and dp.podrazileniye != dir.doc.podrazileniye:
                 slog.Log(key=dpk, type=998, body=json.dumps(
                     {"lab": str(Issledovaniya.objects.filter(napravleniye=dir)[0].research.subgroup.podrazdeleniye),
                      "doc": str(dir.doc), "print_otd": str(dp.podrazileniye), "patient": str(dir.client.fio())}),
@@ -1390,7 +1400,6 @@ def result_print(request):
     buffer.close()
     response.write(pdf)
     slog.Log(key=request.GET["pk"], type=15, body="", user=request.user.doctorprofile).save()
-
 
     return response
 
@@ -1617,13 +1626,13 @@ def result_journal_table_print(request):
             patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.tilie, "patients": {}}
         if d.client.pk not in patients[k]["patients"]:
             patients[k]["patients"][d.client.pk] = {"fio": d.client.shortfio(supershort=True),
-                                                         "card": "%d %s" % (
-                                                             d.client.num, d.client.type_str(short=True)),
-                                                         "history": d.history_num,
-                                                         "researches": {}}
+                                                    "card": "%d %s" % (
+                                                        d.client.num, d.client.type_str(short=True)),
+                                                    "history": d.history_num,
+                                                    "researches": {}}
         if iss.research.pk not in patients[k]["patients"][d.client.pk]["researches"]:
             patients[k]["patients"][d.client.pk]["researches"][iss.research.pk] = {"title": iss.research.title,
-                                                                                        "fractions": {}}
+                                                                                   "fractions": {}}
             # researches_pks.add(iss.research.pk)
         for fr in iss.research.fractions_set.all():
             fres = Result.objects.filter(issledovaniye=iss, fraction=fr)
@@ -1741,9 +1750,12 @@ def result_journal_table_print(request):
     ordered = {}
     from django.db.models import Q
     for f in directory.Fractions.objects.filter(Q(research__subgroup__podrazdeleniye=lab, hide=False,
-                                                research__hide=False) | Q(research__subgroup__podrazdeleniye=lab, hide=False,
-                                                research__hide=True, research__pk__in=researches_pks)):
-        k = (9999 if not f.research.direction else f.research.direction.pk) * 1000000 + f.relation.pk * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
+                                                  research__hide=False) | Q(research__subgroup__podrazdeleniye=lab,
+                                                                            hide=False,
+                                                                            research__hide=True,
+                                                                            research__pk__in=researches_pks)):
+        k = (
+                9999 if not f.research.direction else f.research.direction.pk) * 1000000 + f.relation.pk * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
         d = dict(pk=f.pk, title=f.title)
         ordered[k] = d
 
@@ -1756,7 +1768,8 @@ def result_journal_table_print(request):
             resilts_cp = deepcopy(researches_results)
             c.setFont('Calibri', 10)
             c.rotate(90)
-            c.drawString(300, -22, "Журнал: %s - %s за %s (источник - %s)" % (lab.title, otd["title"], dateo, otd["ist_f"]))
+            c.drawString(300, -22,
+                         "Журнал: %s - %s за %s (источник - %s)" % (lab.title, otd["title"], dateo, otd["ist_f"]))
             c.rotate(-90)
             c.drawRightString(pxr(marginx / 2), pyb(-1), "Страница %d из %d" % (pagenum, p.num_pages))
             data = []
@@ -1828,6 +1841,9 @@ def result_journal_print(request):
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
     group = int(request.GET.get("group", "-2"))
 
+    codes = request.GET.get("codes", "-1") == "1"
+    group_to_otd = request.GET.get("group_to_otd", "1") == "1"
+
     end_date = date + datetime.timedelta(days=1)
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
                                             research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
@@ -1846,6 +1862,8 @@ def result_journal_print(request):
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     import os.path
+    from django.utils.text import Truncator
+    from django.utils import timezone
     from reportlab.platypus import Paragraph
     from reportlab.lib.styles import getSampleStyleSheet
     styleSheet = getSampleStyleSheet()
@@ -1864,6 +1882,8 @@ def result_journal_print(request):
         TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/ChampB.ttf'))
     pdfmetrics.registerFont(
         TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('cour', PROJECT_ROOT + '/../static/fonts/cour.ttf'))
 
     buffer = BytesIO()
     elements = []
@@ -1891,14 +1911,23 @@ def result_journal_print(request):
             self.setFont('OpenSans', 12)
             self.drawCentredString((A4[0] - 25 * mm) / 2 + 20 * mm, ph - 12 * mm,
                                    "%s - %s, %s" % (request.user.doctorprofile.podrazileniye.title, group_str, dateo))
-            page = "Страница %s из %s" % (self._pageNumber, page_count)
             self.saveState()
-            self.setStrokeColorRGB(0, 0, 0)
-            self.setLineWidth(0.5)
-            self.line(20 * mm, 24, A4[0] - 5 * mm, 24)
+            if not codes:
+                self.setStrokeColorRGB(0, 0, 0)
+                self.setLineWidth(0.5)
+                self.line(20 * mm, 22, A4[0] - 5 * mm, 22)
             self.setFont('OpenSans', 8)
-            self.drawRightString(A4[0] - 8 * mm, 17, page)
-            self.drawString(23 * mm, 17, dateo)
+            self.drawRightString(A4[0] - 8 * mm, 16, "Страница %s из %s" % (self._pageNumber, page_count))
+            if codes:
+                self.drawCentredString(A4[0] / 2, 16,
+                                       "Проверил: ____________________________ (подпись)")
+            if codes:
+                self.drawString(23 * mm, 16, "Распечатано: " + str(dateformat.format(
+                    timezone.now(),
+                    settings.DATE_FORMAT)))
+                self.drawString(23 * mm, 8, "Распечатал: " + request.user.doctorprofile.get_fio(dots=True))
+            else:
+                self.drawString(23 * mm, 16, dateo)
             self.restoreState()
 
     styles["Normal"].fontName = "OpenSans"
@@ -1913,65 +1942,118 @@ def result_journal_print(request):
         key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
-                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + str(
-                                      iss.napravleniye.client.num) +
+                                  "ist_f": iss.napravleniye.istochnik_f.tilie,
+                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + iss.napravleniye.client.type_str(
+                                      short=True, num=True) +
                                          ((
-                                              "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
+                                          "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
         if iss.research.pk not in clientresults[key]["directions"][iss.napravleniye.pk]["researches"]:
             clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk] = {
-                "title": iss.research.title, "res": []}
+                "title": iss.research.title, "res": [], "code": iss.research.code, "fail": False}
         # for result in results:
         #    pass
         for fr in iss.research.fractions_set.all():
             fres = Result.objects.filter(issledovaniye=iss, fraction=fr)
             if fres.exists():
-                clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(
-                    fr.title + ": " + fres.first().value)
-        otds[iss.napravleniye.doc.podrazileniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = clientresults[key]
+                tres = {"value": fr.title + ": " + fres.first().value, "v": fres.first().value, "code": fr.code, "title": fr.title,"fail": False}
+                if codes:
+                    tmpval = tres["v"].lower().strip()
+                    tres["fail"] = not (all([x not in tmpval for x in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) and tmpval != "" and tmpval != "-")
+                    if tmpval == "":
+                        tres["v"] = "пустой результат"
+                    if tres["fail"]:
+                        clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["fail"] = True
+                clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(tres)
+        if not group_to_otd:
+            otds[iss.napravleniye.doc.podrazileniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = \
+                clientresults[key]
+        else:
+            otds[iss.napravleniye.istochnik_f.tilie][key] = clientresults[key]
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():
-        data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
-        tmp = []
-        data_header = ["№", "ФИО", "Направление: Результаты"]
-        for v in data_header:
-            tmp.append(Paragraph(str(v), styles["Normal"]))
-        data.append(tmp)
+        data = data_header = []
+        if not codes:
+            data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
+            data_header = ["№", "ФИО", "Направление: Результаты"]
+            tmp = []
+            for v in data_header:
+                tmp.append(Paragraph(str(v), styles["Normal"]))
+            data.append(tmp)
+        else:
+            data.append([Paragraph("№", styles["Normal"]), Paragraph("Пациент", styles["Normal"]),
+                         Paragraph('<font face="cour" size="9">' + "Код".ljust(16, '.') + "исследование" + "</font>",
+                                   styles["Normal"])])
+
         clientresults = collections.OrderedDict(sorted(otds[otd].items()))
         for cleint_pk in clientresults.keys():
             client = clientresults[cleint_pk]
             data_tmp = ""
             for dir_pk in client["directions"].keys():
                 dir = client["directions"][dir_pk]
-                data_tmp += "Направление: " + str(dir_pk) + " | "
-                for research_pk in dir["researches"].keys():
-                    research_obj = dir["researches"][research_pk]
-                    if len(research_obj["res"]) == 1:
-                        data_tmp += research_obj["res"][0]
-                    else:
-                        data_tmp += research_obj["title"] + ":" + "; ".join(research_obj["res"])
-                    # data_tmp += ". "
-                    data_tmp += "<br/>"
+                if not codes:
+                    data_tmp += "Направление: " + str(dir_pk) + " | "
+                    for research_pk in dir["researches"].keys():
+                        research_obj = dir["researches"][research_pk]
+                        if len(research_obj["res"]) == 1:
+                            data_tmp += research_obj["res"][0]["value"]
+                        else:
+                            data_tmp += research_obj["title"] + ":" + "; ".join(
+                                [x["value"] for x in research_obj["res"]])
+                        # data_tmp += ". "
+                        data_tmp += "<br/>"
+                else:
+                    for research_pk in dir["researches"].keys():
+                        research_obj = dir["researches"][research_pk]
+                        if research_obj["code"] != '':
+                            if research_obj["fail"]:
+                                for code_res in research_obj["code"].split(";"):
+                                    data_tmp += "%s%s%s<br/>" % (Truncator("Ошибка результ").chars(15).ljust(16, '.'),
+                                        code_res, Truncator(research_obj["title"]).chars(30))
+                            else:
+                                for code_res in research_obj["code"].split(";"):
+                                    data_tmp += "%s%s<br/>" % (
+                                        code_res.ljust(16, '.'), Truncator(research_obj["title"]).chars(48))
+                        else:
+                            for res in research_obj["res"]:
+                                if res["fail"]:
+                                    for code_res in res["code"].split(";"):
+                                        data_tmp += "%s%s%s<br/>" % (Truncator(res["v"]).chars(15).ljust(16, '.'),
+                                            code_res.ljust(16, '.'), Truncator(res["title"]).chars(32))
+                                else:
+                                    for code_res in res["code"].split(";"):
+                                        data_tmp += "%s%s<br/>" % (
+                                            code_res.ljust(16, '.'), Truncator(res["title"]).chars(48))
+                                '''data_tmp += "%s%s<br/>" % (
+                                    res["code"].ljust(16, '.'), Truncator(res["title"]).chars(48))'''
             j += 1
-            data.append([Paragraph('<font face="OpenSans" size="8">' + str(j) + "</font>", styles["Normal"]),
-                         Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
-                         Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
-        st = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                         ('SPAN', (0, 0), (-1, 0)),
-                         ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                         ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                         ('LEFTPADDING', (0, 0), (-1, -1), 1),
-                         ('TOPPADDING', (0, 2), (-1, -1), 0),
-                         ('TOPPADDING', (0, 0), (-1, 1), 2),
-                         ('BOTTOMPADDING', (0, 0), (-1, 1), 3),
-                         ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                         ('BOTTOMPADDING', (0, 2), (-1, -1), 0), ])
+            if not codes:
+                data.append([Paragraph('<font face="OpenSans" size="8">' + str(j) + "</font>", styles["Normal"]),
+                             Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "</font>", styles["Normal"]),
+                             Paragraph('<font face="ChampB" size="8">' + data_tmp + "</font>", styles["Normal"])])
+            else:
+                data.append([Paragraph('<font face="OpenSans" size="8">' + str(j) + "</font>", styles["Normal"]),
+                             Paragraph('<font face="OpenSans" size="8">' + client["fio"] + "<br/>" + client[
+                                 "ist_f"] + "</font>", styles["Normal"]),
+                             Paragraph('<font face="cour" size="9">' + data_tmp + "</font>", styles["Normal"])])
+        sta = [('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+               ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+               ('BOX', (0, 0), (-1, -1), 1, colors.black),
+               ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+               ('LEFTPADDING', (0, 0), (-1, -1), 3),
+               ('TOPPADDING', (0, 2), (-1, -1), 0),
+               ('TOPPADDING', (0, 0), (-1, 1), 2),
+               ('BOTTOMPADDING', (0, 0), (-1, 1), 3),
+               ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+               ('BOTTOMPADDING', (0, 2), (-1, -1), 1), ]
+        if not codes:
+            sta.append(('SPAN', (0, 0), (-1, 0),))
+        st = TableStyle(sta)
         tw = pw - 25 * mm
-        t = Table(data, colWidths=[tw * 0.05, tw * 0.15, tw * 0.8])
+        t = Table(data, colWidths=[tw * 0.05, tw * 0.19, tw * 0.76])
         t.setStyle(st)
         elements.append(t)
         elements.append(PageBreak())

@@ -142,7 +142,7 @@ class Napravleniya(models.Model):
         return "%d для пациента %s (врач %s, выписал %s)" % (self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=None):
         """
         Генерация направления
         :param client_id: id пациента
@@ -154,6 +154,8 @@ class Napravleniya(models.Model):
         :param issledovaniya: исследования (reserved)
         :return: созданое направление
         """
+        if issledovaniya is None:
+            issledovaniya = []
         dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
                             doc=doc,
                             istochnik_f=istochnik_f,
@@ -188,11 +190,11 @@ class Napravleniya(models.Model):
         i = 0
         result = {"r": False, "list_id": []}
         checklist = []
+        ofname = None
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
             result["message"] = "Недостаточно прав для создания направлений"
             return result
         if client_id and researches:  # если client_id получен и исследования получены
-            ofname = None
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
 
@@ -280,7 +282,7 @@ class Napravleniya(models.Model):
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
-                         body=json.dumps(researches)).save()
+                         body=json.dumps({"researches": [x for x in researches if x is not None], "client_id": client_id, "diagnos": diagnos, "finsource": finsource.tilie + " " + finsource.istype, "history_num": history_num, "ofname": str(ofname), "ptype": ptype, "comments": comments})).save()
 
             else:
                 result["r"] = False
@@ -343,7 +345,6 @@ class Issledovaniya(models.Model):
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
-import math
 
 class Result(models.Model):
     """
@@ -518,22 +519,25 @@ class Result(models.Model):
         def clc(r, val):
             result = "normal"
             if val.strip() != "":
-                for k in r.keys():
-                    tmp_result = "normal"
-                    rigth = rigths(k.strip().lower())
+                if val.lower().strip() == "гемолиз":
+                    result = "not_normal"
+                else:
+                    for k in r.keys():
+                        tmp_result = "normal"
+                        rigth = rigths(k.strip().lower())
 
-                    if not rigth:
-                        tmp_result = "maybe"
-                    elif rigth[0] <= age <= rigth[1]:
-                        rigth_v = rigths_v(r[k].strip().lower())
-                        if rigth_v == "":
+                        if not rigth:
                             tmp_result = "maybe"
-                        else:
-                            test_v = test_value(rigth_v, val)
-                            if not test_v:
-                                tmp_result = "not_normal"
-                    if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
-                        result = tmp_result
+                        elif rigth[0] <= age <= rigth[1]:
+                            rigth_v = rigths_v(r[k].strip().lower())
+                            if rigth_v == "":
+                                tmp_result = "maybe"
+                            else:
+                                test_v = test_value(rigth_v, val)
+                                if not test_v:
+                                    tmp_result = "not_normal"
+                        if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
+                            result = tmp_result
             return result
 
         calc = clc(ref, value)

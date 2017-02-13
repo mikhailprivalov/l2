@@ -52,7 +52,7 @@ class Researches(models.Model):
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
-    code = models.CharField(max_length=16, default='', blank=True, help_text='Код исследования')
+    code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
 
     def __str__(self):
         return "%s" % self.title
@@ -64,7 +64,7 @@ class Fractions(models.Model):
     """
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция')
-    units = models.CharField(max_length=255, help_text='Еденицы измерения')
+    units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
     ref_m = JSONField(help_text='Референсы (М)')
     ref_f = JSONField(help_text='Референсы (Ж)')
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')
@@ -77,6 +77,7 @@ class Fractions(models.Model):
     render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
     options = models.CharField(max_length=511, default="", blank=True, help_text='Варианты для динамического числа полей')
     formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
+    code = models.CharField(max_length=16, default='', blank=True, help_text='Код фракции')
 
     def __str__(self):
         return self.research.title + " | " + self.title
