@@ -46,12 +46,9 @@
             </div>
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по лабораториям - исполнители</h3>
+                    <h3 class="panel-title">Статистика по лабораториям - исполнители (в разработке)</h3>
                 </div>
                 <ul class="list-group">
-                    {% if request.user.is_superuser %}
-                        <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
-                    {% endif %}
                     {% for lab in labs %}
                         {% if request.user.is_superuser %}
                             <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>

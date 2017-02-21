@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 from django.shortcuts import render
 from users.models import Podrazdeleniya
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration, Tubes, IstochnikiFinansirovaniya
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, Tubes, IstochnikiFinansirovaniya, Result
 import directory.models as directory
 from django.http import HttpResponse
 from users.models import DoctorProfile
@@ -138,9 +138,9 @@ def statistic_xls(request):
                     else:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f__istype=source_type)
 
-                    for iss in iss_list:
+                    for researches in iss_list:
                         n = False
-                        for x in d.Result.objects.filter(issledovaniye=iss):
+                        for x in d.Result.objects.filter(issledovaniye=researches):
                             x = x.value.lower().strip()
                             n = any([y in x for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) or x == "-"
                             if n:
@@ -148,15 +148,15 @@ def statistic_xls(request):
                         if n:
                             continue
 
-                        if iss.napravleniye.doc.podrazileniye.pk not in otds:
-                            otds[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                        otds[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                        if researches.napravleniye.doc.podrazileniye.pk not in otds:
+                            otds[researches.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
+                        otds[researches.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
                         otds[pki][obj.pk] += 1
-                        if any([x.get_is_norm() == "normal" for x in iss.result_set.all()]):
+                        if any([x.get_is_norm() == "normal" for x in researches.result_set.all()]):
                             continue
-                        if iss.napravleniye.doc.podrazileniye.pk not in otds_pat:
-                            otds_pat[iss.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                        otds_pat[iss.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                        if researches.napravleniye.doc.podrazileniye.pk not in otds_pat:
+                            otds_pat[researches.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
+                        otds_pat[researches.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
                         otds_pat[pki][obj.pk] += 1
 
                 style = xlwt.XFStyle()
@@ -247,6 +247,105 @@ def statistic_xls(request):
                     ws.sheet_visible = False
                     ws_pat.sheet_visible = False
 
+    elif tp == "lab-staff":
+        lab = Podrazdeleniya.objects.get(pk=int(pk))
+        researches = list(directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title'))
+        pods = list(Podrazdeleniya.objects.filter(hide=False, isLab=False).order_by("title"))
+        response['Content-Disposition'] = str.translate(
+            "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
+                                                                                   date_start_o, date_end_o), tr)
+        import datetime
+        import directions.models as d
+        from operator import itemgetter
+        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
+                                   int(date_start_o.split(".")[0]))
+        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
+                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        iss = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
+
+        ws = wb.add_sheet("Статистика по исполнителям")
+
+        font_style_wrap = xlwt.XFStyle()
+        font_style_wrap.alignment.wrap = 1
+        font_style_wrap.borders = borders
+
+        row_num = 0
+        row = [
+            ("Исполнитель", 6000),
+            ("Отделение", 6000)
+        ]
+
+        for research in researches:
+            row.append((research.title, 4000,))
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style_wrap)
+            ws.col(col_num).width = row[col_num][1]
+
+        row_num += 1
+
+        cnt_itogo = {}
+        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(user__username='admin').exclude(labtype=0).exclude(labtype=None).order_by("fio"):
+            data = {"otds": {}, "all": defaultdict(lambda: 0)}
+            itogo_row = [executor.get_fio(dots=True), "Итого"]
+            empty_row = ["", ""]
+            cnt_local_itogo = {}
+            for pod in pods:
+                row = [
+                    executor.get_fio(dots=True),
+                    pod.title
+                ]
+                cnt = {}
+                for research in researches:
+                    if research.title not in cnt.keys():
+                        cnt[research.title] = 0
+                    if research.title not in cnt_local_itogo.keys():
+                        cnt_local_itogo[research.title] = 0
+                    if research.title not in cnt_itogo.keys():
+                        cnt_itogo[research.title] = 0
+
+                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazileniye=pod, research=research):
+                        isadd = False
+                        allempty = True
+                        for r in Result.objects.filter(issledovaniye=i):
+                            value = r.value.lower().strip()
+                            if value != "":
+                                allempty = False
+                                n = any([y in value for y in
+                                         ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало",
+                                          "недостаточно", "реактив"]])
+                                if not n:
+                                    isadd = True
+
+                        if not isadd or allempty:
+                            continue
+
+                        cnt[research.title] += 1
+                        cnt_itogo[research.title] += 1
+                        cnt_local_itogo[research.title] += 1
+                for n in cnt.keys():
+                    row.append(str(cnt[n]))
+                    # data["otds"][pod.title] += 1
+                    # data["all"][pod.title] += 1
+                    # cnt_all[pod.title] += 1
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num], font_style_wrap)
+                row_num += 1
+
+            for research in researches:
+                itogo_row.append(str(cnt_local_itogo[research.title]))
+                empty_row.append("")
+            for col_num in range(len(itogo_row)):
+                ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
+            row_num += 1
+            for col_num in range(len(empty_row)):
+                ws.write(row_num, col_num, empty_row[col_num], font_style_wrap)
+            row_num += 1
+        itogo_row = [lab.title, "Итого"] + [cnt_itogo[x] for x in cnt_itogo.keys()]
+        for col_num in range(len(itogo_row)):
+            ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
+        row_num += 1
+
     elif tp == "otd":
         otd = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
@@ -296,10 +395,10 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
 
         row_num += 1
-        iss = Issledovaniya.objects.filter(napravleniye__doc__podrazileniye=otd,
+        researches = Issledovaniya.objects.filter(napravleniye__doc__podrazileniye=otd,
                                            napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
                                            time_confirmation__isnull=False)
-        naprs = len(set([v.napravleniye.pk for v in iss]))
+        naprs = len(set([v.napravleniye.pk for v in researches]))
         row = [
             u"Завершенных",
             str(naprs)
@@ -561,9 +660,9 @@ def statistic_xls(request):
         for usr in usrs:
             if usr.labtype == 0: continue
             researches_uets = {}
-            iss = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
+            researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
                                                time_save__range=(date_start_o, date_end_o))
-            for issledovaniye in iss:
+            for issledovaniye in researches:
                 uet_tmp = 0
                 if usr.labtype == 1:
                     uet_tmp = sum(
@@ -572,9 +671,9 @@ def statistic_xls(request):
                     uet_tmp = sum(
                         [v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
-            iss = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False,
+            researches = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False,
                                                time_confirmation__range=(date_start_o, date_end_o))
-            for issledovaniye in iss:
+            for issledovaniye in researches:
                 uet_tmp = 0
                 if usr.labtype == 1:
                     uet_tmp = sum(
