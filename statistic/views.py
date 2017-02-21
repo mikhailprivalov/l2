@@ -271,12 +271,12 @@ def statistic_xls(request):
 
         row_num = 0
         row = [
-            ("Исполнитель", 6000),
-            ("Отделение", 6000)
+            ("Исполнитель", 5500),
+            ("Отделение", 5000)
         ]
 
         for research in researches:
-            row.append((research.title, 4000,))
+            row.append((research.title, 3300,))
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_wrap)
