@@ -24,7 +24,7 @@
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по лабораториям</h3>
+                    <h3 class="panel-title">Статистика по лабораториям - выполнено исследований</h3>
                 </div>
                 <ul class="list-group">
                     {% if request.user.is_superuser %}
@@ -36,6 +36,28 @@
                         {% else %}
                             {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
+                            {% else %}
+
+                            {% endif %}
+
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по лабораториям - исполнители</h3>
+                </div>
+                <ul class="list-group">
+                    {% if request.user.is_superuser %}
+                        <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
+                    {% endif %}
+                    {% for lab in labs %}
+                        {% if request.user.is_superuser %}
+                            <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
+                        {% else %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
+                                <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
                             {% else %}
 
                             {% endif %}

@@ -282,7 +282,7 @@ class Napravleniya(models.Model):
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
-                         body=json.dumps({"researches": [x for x in researches if x is not None], "client_id": client_id, "diagnos": diagnos, "finsource": finsource.tilie + " " + finsource.istype, "history_num": history_num, "ofname": str(ofname), "ptype": ptype, "comments": comments})).save()
+                         body=json.dumps({"researches": [x for x in researches if x is not None], "client_num": Importedclients.objects.get(pk=client_id).num, "client_id": client_id, "diagnos": diagnos, "finsource": finsource.tilie + " " + finsource.istype, "history_num": history_num, "ofname": str(ofname), "ptype": ptype, "comments": comments})).save()
 
             else:
                 result["r"] = False
