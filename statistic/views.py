@@ -3,6 +3,8 @@ from collections import defaultdict
 import collections
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+import simplejson as json
+import slog.models as slog
 from laboratory.decorators import group_required
 from django.shortcuts import render
 from users.models import Podrazdeleniya
@@ -41,6 +43,8 @@ def statistic_xls(request):
         tp = request.GET["type"]  # Тип статистики
         date_start_o = request.GET["date-start"]  # Начало периода
         date_end_o = request.GET["date-end"]  # Конец периода
+
+    slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
                u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
