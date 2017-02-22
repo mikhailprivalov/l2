@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import collections
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
@@ -268,6 +269,8 @@ def statistic_xls(request):
         font_style_wrap = xlwt.XFStyle()
         font_style_wrap.alignment.wrap = 1
         font_style_wrap.borders = borders
+        font_style_vertical = xlwt.easyxf('align: rotation 90')
+        font_style_vertical.borders = borders
 
         row_num = 0
         row = [
@@ -275,25 +278,33 @@ def statistic_xls(request):
             ("Отделение", 5000)
         ]
 
+        from django.utils.text import Truncator
+
         for research in researches:
-            row.append((research.title, 3300,))
+            row.append((Truncator(research.title).chars(30), 1000,))
 
         for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_wrap)
+            ws.write(row_num, col_num, row[col_num][0], font_style_wrap if col_num < 2 else font_style_vertical)
             ws.col(col_num).width = row[col_num][1]
 
         row_num += 1
 
+        def val(v):
+            return "" if v == 0 else v
+
+        def nl(v):
+            return v + ("" if len(v) > 19 else "\n")
+
         cnt_itogo = {}
-        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(user__username='admin').exclude(labtype=0).exclude(labtype=None).order_by("fio"):
+        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(labtype=0).exclude(labtype=None).order_by("fio"):
             data = {"otds": {}, "all": defaultdict(lambda: 0)}
-            itogo_row = [executor.get_fio(dots=True), "Итого"]
+            itogo_row = [executor.get_fio(dots=True), nl("Итого")]
             empty_row = ["", ""]
             cnt_local_itogo = {}
             for pod in pods:
                 row = [
                     executor.get_fio(dots=True),
-                    pod.title
+                    nl(pod.title)
                 ]
                 cnt = {}
                 for research in researches:
@@ -323,8 +334,8 @@ def statistic_xls(request):
                         cnt[research.title] += 1
                         cnt_itogo[research.title] += 1
                         cnt_local_itogo[research.title] += 1
-                for n in cnt.keys():
-                    row.append(str(cnt[n]))
+                for n in collections.OrderedDict(sorted(cnt.items())).keys():
+                    row.append(val(cnt[n]))
                     # data["otds"][pod.title] += 1
                     # data["all"][pod.title] += 1
                     # cnt_all[pod.title] += 1
@@ -333,7 +344,7 @@ def statistic_xls(request):
                 row_num += 1
 
             for research in researches:
-                itogo_row.append(str(cnt_local_itogo[research.title]))
+                itogo_row.append(val(cnt_local_itogo[research.title]))
                 empty_row.append("")
             for col_num in range(len(itogo_row)):
                 ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
@@ -341,9 +352,22 @@ def statistic_xls(request):
             for col_num in range(len(empty_row)):
                 ws.write(row_num, col_num, empty_row[col_num], font_style_wrap)
             row_num += 1
-        itogo_row = [lab.title, "Итого"] + [cnt_itogo[x] for x in cnt_itogo.keys()]
+        itogo_row = [lab.title, nl("Итого")] + [val(cnt_itogo[x]) for x in collections.OrderedDict(sorted(cnt_itogo.items())).keys()]
         for col_num in range(len(itogo_row)):
             ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
+        row_num += 1
+
+        row = [
+            "",
+            ""
+        ]
+
+        for research in researches:
+            row.append(Truncator(research.title).chars(30))
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num], font_style_vertical)
+
         row_num += 1
 
     elif tp == "otd":
