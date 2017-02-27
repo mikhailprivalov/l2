@@ -338,8 +338,8 @@ def statistic_xls(request):
                         cnt[research.title] += 1
                         cnt_itogo[research.title] += 1
                         cnt_local_itogo[research.title] += 1
-                for n in collections.OrderedDict(sorted(cnt.items())).keys():
-                    row.append(val(cnt[n]))
+                for research in researches:
+                    row.append(val(cnt[research.title]))
                     # data["otds"][pod.title] += 1
                     # data["all"][pod.title] += 1
                     # cnt_all[pod.title] += 1
@@ -356,7 +356,7 @@ def statistic_xls(request):
             for col_num in range(len(empty_row)):
                 ws.write(row_num, col_num, empty_row[col_num], font_style_wrap)
             row_num += 1
-        itogo_row = [lab.title, nl("Итого")] + [val(cnt_itogo[x]) for x in collections.OrderedDict(sorted(cnt_itogo.items())).keys()]
+        itogo_row = [lab.title, nl("Итого")] + [val(cnt_itogo[research.title]) for research in researches]
         for col_num in range(len(itogo_row)):
             ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
         row_num += 1
