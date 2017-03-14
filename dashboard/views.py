@@ -2,7 +2,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 import datetime
-from astm.tests.test_server import null_dispatcher
+#from astm.tests.test_server import null_dispatcher
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -64,6 +64,7 @@ def dashboard(request):  # Представление панели управл�
         if request.user.is_superuser:
             menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
             menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
+            menu.append({"url": "/dashboard/change_password", "title": "Смена пароля", "keys": "", "nt": False})
             menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
             if settings.LDAP and settings.LDAP["enable"]:
                 menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
@@ -85,6 +86,30 @@ def view_log(request):
         types.append({"pk": t[0], "val": t[1]})
     return render(request, 'dashboard/manage_view_log.html',
                   {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+
+
+@login_required
+@staff_member_required
+def change_password(request):
+    otds = {}
+    for x in Podrazdeleniya.objects.all().order_by('title'):
+        otds[x.title] = []
+        for y in DoctorProfile.objects.filter(podrazileniye=x).order_by('fio'):
+            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
+    return render(request, 'dashboard/change_password.html', {"otds": otds})
+
+
+@login_required
+@staff_member_required
+def update_pass(request):
+    userid = int(request.POST.get("pk", "-1"))
+    password = request.POST.get("pass", "")
+    if request.method == "POST" and userid >= 0 and len(password) > 0:
+        user = DoctorProfile.objects.get(pk=userid).user
+        user.set_password(password)
+        user.save()
+        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+    return HttpResponse(json.dumps({"ok": False}), content_type="application/json")
 
 
 @csrf_exempt

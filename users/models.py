@@ -28,6 +28,8 @@ class DoctorProfile(models.Model):
         fio = self.fio.replace("  ", " ").strip()
         fio_split = fio.split(" ")
 
+        if len(fio_split) == 0:
+            fio_split.append("")
         if len(fio_split) == 1:
             fio_split.append("")
         if len(fio_split) == 2:

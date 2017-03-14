@@ -298,7 +298,7 @@ function ready_formula(formula) {
         v = Math.round(parseFloat(v) * 10) / 10;
     }
     console.log(v);
-    if (!isNaN(v) && isFinite(v)) {
+    if(!isNaN(v) && isFinite(v)) {
         $(`input[data-pk=${formula.fraction}]`).val(v);
         hl();
         $.amaran({

@@ -1,199 +1,174 @@
 /* perfect-scrollbar v0.6.12 */
-(function e(t, n, r) {
-    function s(o, u) {
-        if (!n[o]) {
-            if (!t[o]) {
-                var a = typeof require == "function" && require;
-                if (!u && a)return a(o, !0);
-                if (i)return i(o, !0);
-                var f = new Error("Cannot find module '" + o + "'");
-                throw f.code = "MODULE_NOT_FOUND", f
-            }
-            var l = n[o] = {exports: {}};
-            t[o][0].call(l.exports, function (e) {
-                var n = t[o][1][e];
-                return s(n ? n : e)
-            }, l, l.exports, e, t, n, r)
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+var ps = require('../main');
+var psInstances = require('../plugin/instances');
+
+function mountJQuery(jQuery) {
+  jQuery.fn.perfectScrollbar = function (settingOrCommand) {
+    return this.each(function () {
+      if (typeof settingOrCommand === 'object' ||
+          typeof settingOrCommand === 'undefined') {
+        // If it's an object or none, initialize.
+        var settings = settingOrCommand;
+
+        if (!psInstances.get(this)) {
+          ps.initialize(this, settings);
         }
-        return n[o].exports
+      } else {
+        // Unless, it may be a command.
+        var command = settingOrCommand;
+
+        if (command === 'update') {
+          ps.update(this);
+        } else if (command === 'destroy') {
+          ps.destroy(this);
+        }
+      }
+    });
+  };
+}
+
+if (typeof define === 'function' && define.amd) {
+  // AMD. Register as an anonymous module.
+  define(['jquery'], mountJQuery);
+} else {
+  var jq = window.jQuery ? window.jQuery : window.$;
+  if (typeof jq !== 'undefined') {
+    mountJQuery(jq);
+  }
+}
+
+module.exports = mountJQuery;
+
+},{"../main":7,"../plugin/instances":18}],2:[function(require,module,exports){
+'use strict';
+
+function oldAdd(element, className) {
+  var classes = element.className.split(' ');
+  if (classes.indexOf(className) < 0) {
+    classes.push(className);
+  }
+  element.className = classes.join(' ');
+}
+
+function oldRemove(element, className) {
+  var classes = element.className.split(' ');
+  var idx = classes.indexOf(className);
+  if (idx >= 0) {
+    classes.splice(idx, 1);
+  }
+  element.className = classes.join(' ');
+}
+
+exports.add = function (element, className) {
+  if (element.classList) {
+    element.classList.add(className);
+  } else {
+    oldAdd(element, className);
+  }
+};
+
+exports.remove = function (element, className) {
+  if (element.classList) {
+    element.classList.remove(className);
+  } else {
+    oldRemove(element, className);
+  }
+};
+
+exports.list = function (element) {
+  if (element.classList) {
+    return Array.prototype.slice.apply(element.classList);
+  } else {
+    return element.className.split(' ');
+  }
+};
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+var DOM = {};
+
+DOM.e = function (tagName, className) {
+  var element = document.createElement(tagName);
+  element.className = className;
+  return element;
+};
+
+DOM.appendTo = function (child, parent) {
+  parent.appendChild(child);
+  return child;
+};
+
+function cssGet(element, styleName) {
+  return window.getComputedStyle(element)[styleName];
+}
+
+function cssSet(element, styleName, styleValue) {
+  if (typeof styleValue === 'number') {
+    styleValue = styleValue.toString() + 'px';
+  }
+  element.style[styleName] = styleValue;
+  return element;
+}
+
+function cssMultiSet(element, obj) {
+  for (var key in obj) {
+    var val = obj[key];
+    if (typeof val === 'number') {
+      val = val.toString() + 'px';
     }
+    element.style[key] = val;
+  }
+  return element;
+}
 
-    var i = typeof require == "function" && require;
-    for (var o = 0; o < r.length; o++)s(r[o]);
-    return s
-})({
-    1: [function (require, module, exports) {
-        'use strict';
+DOM.css = function (element, styleNameOrObject, styleValue) {
+  if (typeof styleNameOrObject === 'object') {
+    // multiple set with object
+    return cssMultiSet(element, styleNameOrObject);
+  } else {
+    if (typeof styleValue === 'undefined') {
+      return cssGet(element, styleNameOrObject);
+    } else {
+      return cssSet(element, styleNameOrObject, styleValue);
+    }
+  }
+};
 
-        var ps = require('../main');
-        var psInstances = require('../plugin/instances');
+DOM.matches = function (element, query) {
+  if (typeof element.matches !== 'undefined') {
+    return element.matches(query);
+  } else {
+    if (typeof element.matchesSelector !== 'undefined') {
+      return element.matchesSelector(query);
+    } else if (typeof element.webkitMatchesSelector !== 'undefined') {
+      return element.webkitMatchesSelector(query);
+    } else if (typeof element.mozMatchesSelector !== 'undefined') {
+      return element.mozMatchesSelector(query);
+    } else if (typeof element.msMatchesSelector !== 'undefined') {
+      return element.msMatchesSelector(query);
+    }
+  }
+};
 
-        function mountJQuery(jQuery) {
-            jQuery.fn.perfectScrollbar = function (settingOrCommand) {
-                return this.each(function () {
-                    if (typeof settingOrCommand === 'object' ||
-                        typeof settingOrCommand === 'undefined') {
-                        // If it's an object or none, initialize.
-                        var settings = settingOrCommand;
+DOM.remove = function (element) {
+  if (typeof element.remove !== 'undefined') {
+    element.remove();
+  } else {
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+  }
+};
 
-                        if (!psInstances.get(this)) {
-                            ps.initialize(this, settings);
-                        }
-                    } else {
-                        // Unless, it may be a command.
-                        var command = settingOrCommand;
-
-                        if (command === 'update') {
-                            ps.update(this);
-                        } else if (command === 'destroy') {
-                            ps.destroy(this);
-                        }
-                    }
-                });
-            };
-        }
-
-        if (typeof define === 'function' && define.amd) {
-            // AMD. Register as an anonymous module.
-            define(['jquery'], mountJQuery);
-        } else {
-            var jq = window.jQuery ? window.jQuery : window.$;
-            if (typeof jq !== 'undefined') {
-                mountJQuery(jq);
-            }
-        }
-
-        module.exports = mountJQuery;
-
-    }, {"../main": 7, "../plugin/instances": 18}],
-    2: [function (require, module, exports) {
-        'use strict';
-
-        function oldAdd(element, className) {
-            var classes = element.className.split(' ');
-            if (classes.indexOf(className) < 0) {
-                classes.push(className);
-            }
-            element.className = classes.join(' ');
-        }
-
-        function oldRemove(element, className) {
-            var classes = element.className.split(' ');
-            var idx = classes.indexOf(className);
-            if (idx >= 0) {
-                classes.splice(idx, 1);
-            }
-            element.className = classes.join(' ');
-        }
-
-        exports.add = function (element, className) {
-            if (element.classList) {
-                element.classList.add(className);
-            } else {
-                oldAdd(element, className);
-            }
-        };
-
-        exports.remove = function (element, className) {
-            if (element.classList) {
-                element.classList.remove(className);
-            } else {
-                oldRemove(element, className);
-            }
-        };
-
-        exports.list = function (element) {
-            if (element.classList) {
-                return Array.prototype.slice.apply(element.classList);
-            } else {
-                return element.className.split(' ');
-            }
-        };
-
-    }, {}],
-    3: [function (require, module, exports) {
-        'use strict';
-
-        var DOM = {};
-
-        DOM.e = function (tagName, className) {
-            var element = document.createElement(tagName);
-            element.className = className;
-            return element;
-        };
-
-        DOM.appendTo = function (child, parent) {
-            parent.appendChild(child);
-            return child;
-        };
-
-        function cssGet(element, styleName) {
-            return window.getComputedStyle(element)[styleName];
-        }
-
-        function cssSet(element, styleName, styleValue) {
-            if (typeof styleValue === 'number') {
-                styleValue = styleValue.toString() + 'px';
-            }
-            element.style[styleName] = styleValue;
-            return element;
-        }
-
-        function cssMultiSet(element, obj) {
-            for (var key in obj) {
-                var val = obj[key];
-                if (typeof val === 'number') {
-                    val = val.toString() + 'px';
-                }
-                element.style[key] = val;
-            }
-            return element;
-        }
-
-        DOM.css = function (element, styleNameOrObject, styleValue) {
-            if (typeof styleNameOrObject === 'object') {
-                // multiple set with object
-                return cssMultiSet(element, styleNameOrObject);
-            } else {
-                if (typeof styleValue === 'undefined') {
-                    return cssGet(element, styleNameOrObject);
-                } else {
-                    return cssSet(element, styleNameOrObject, styleValue);
-                }
-            }
-        };
-
-        DOM.matches = function (element, query) {
-            if (typeof element.matches !== 'undefined') {
-                return element.matches(query);
-            } else {
-                if (typeof element.matchesSelector !== 'undefined') {
-                    return element.matchesSelector(query);
-                } else if (typeof element.webkitMatchesSelector !== 'undefined') {
-                    return element.webkitMatchesSelector(query);
-                } else if (typeof element.mozMatchesSelector !== 'undefined') {
-                    return element.mozMatchesSelector(query);
-                } else if (typeof element.msMatchesSelector !== 'undefined') {
-                    return element.msMatchesSelector(query);
-                }
-            }
-        };
-
-        DOM.remove = function (element) {
-            if (typeof element.remove !== 'undefined') {
-                element.remove();
-            } else {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }
-        };
-
-        DOM.queryChildren = function (element, selector) {
-            return Array.prototype.filter.call(element.childNodes, function (child) {
-                return DOM.matches(child, selector);
-            });
-        };
+DOM.queryChildren = function (element, selector) {
+  return Array.prototype.filter.call(element.childNodes, function (child) {
+    return DOM.matches(child, selector);
+  });
+};
 
         module.exports = DOM;
 

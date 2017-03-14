@@ -1,8 +1,7 @@
 from django import template
 import time
 import os
-
-# import lis
+#import lis
 register = template.Library()
 
 @register.simple_tag

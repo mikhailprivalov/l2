@@ -276,7 +276,7 @@ class Napravleniya(models.Model):
                                                       # Установка направления для группы этого исследования
                                                       research=research,
                                                       deferred=False)  # Создание направления на исследование
-                        issledovaniye.comment = comments.get(str(research.pk), "")
+                        issledovaniye.comment = comments.get(str(research.pk), "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
 
                 result["r"] = True  # Флаг успешной вставки в True

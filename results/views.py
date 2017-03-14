@@ -317,8 +317,14 @@ def get_full_result(request):
                                         issledovaniye.research.pk)
                 result["results"][kint] = {"title": issledovaniye.research.title,
                                            "fractions": collections.OrderedDict(),
-                                           "sort": issledovaniye.research.sort_weight}  # Словарь результата
+                                           "sort": issledovaniye.research.sort_weight,
+                                           "tube_time_get": ""}  # Словарь результата
                 if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                    for isstube in issledovaniye.tubes.all():
+                        if isstube.time_get:
+                            result["results"][kint]["tube_time_get"] = str(dateformat.format(isstube.time_get, settings.DATE_FORMAT))
+                            break
+
                     results = Result.objects.filter(issledovaniye=issledovaniye).order_by(
                         "fraction__sort_weight")  # Выборка результатов из базы
 

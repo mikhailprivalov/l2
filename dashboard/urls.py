@@ -21,4 +21,6 @@ urlpatterns = [
     url(r'^results_history$', views.results_history), #TemplateView.as_view(template_name="dashboard/results_history.html")),
     url(r'^results_fastprint$', TemplateView.as_view(template_name="dashboard/results_fastprint.html", )),
     url(r'^results_history/search$', views.results_history_search),
+    url(r'^change_password$', views.change_password),
+    url(r'^update_pass$', views.update_pass),
 ]

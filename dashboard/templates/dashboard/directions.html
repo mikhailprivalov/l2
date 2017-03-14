@@ -55,10 +55,10 @@
                             <td class="table-header-row">ФИО:&nbsp;</td>
                             <td id="card-fio" class="table-content-row" colspan="2"></td>
                             <td class="table-content-row">
-{#                                {% if not operator %}#}
-                                    <a href="#" onclick='open_search_results();return false;'
-                                       id="search-results-link">поиск результатов</a>
-{#                                {% endif %}#}
+                                {#                                {% if not operator %}#}
+                                <a href="#" onclick='open_search_results();return false;'
+                                   id="search-results-link">поиск результатов</a>
+                                {#                                {% endif %}#}
                             </td>
                         </tr>
                         <tr>
@@ -69,12 +69,16 @@
                         </tr>
                         <tr id="history-num-tr">
                             <td class="table-header-row">
-                                <span class="hospital">Номер истории:&nbsp;</span><span class="poli">Настройка:&nbsp;</span>
+                                <span class="hospital">Номер истории:&nbsp;</span><span
+                                    class="poli">Настройка:&nbsp;</span>
                             </td>
                             <td class="table-content-row" colspan="3">
                                 <div style="height: 34px">
-                                    <span class="hospital"><input type="text" class="form-control" maxlength="11"/></span>
-                                    <label class="poli text-left" style="padding-left: 5px"><input style="vertical-align: text-top;" type="checkbox" name="is_hospital" onchange="sync_fin_sources();" /> стационар</label>
+                                    <span class="hospital"><input type="text" class="form-control"
+                                                                  maxlength="11"/></span>
+                                    <label class="poli text-left" style="padding-left: 5px"><input
+                                            style="vertical-align: text-top;" type="checkbox" name="is_hospital"
+                                            onchange="sync_fin_sources();"/> стационар</label>
                                 </div>
                             </td>
                         </tr>
@@ -149,10 +153,12 @@
                         <h6>Дата назначения (поиск):</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                            <input type="text" class="input-sm form-control no-context" name="date-start" style="height: 34px"/>
+                            <input type="text" class="input-sm form-control no-context" name="date-start"
+                                   style="height: 34px"/>
                             <span class="input-group-addon"
                                   style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-                            <input type="text" class="input-sm form-control no-context" name="date-end" style="height: 34px"/>
+                            <input type="text" class="input-sm form-control no-context" name="date-end"
+                                   style="height: 34px"/>
                         </div>
                     </div>
                     <div class="col-xs-4" style="padding-right: 0">
@@ -217,7 +223,8 @@
                                        placeholder="Диагноз"
                                        onkeyup="sync(true);" style="margin-bottom: 5px"/>
                             </div>
-                            <div class="col-xs-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
+                            <div class="col-xs-8" id="sources"
+                                 style="text-align: center; padding-right: 0; padding-left: 0">
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_poli %}
@@ -345,7 +352,7 @@
                         <tr>
                             <td style="text-align: left" id="res-dir-num">№ <span></span></td>
                             <td style="text-align: center"></td>
-                            <td style="text-align: right">Дата: <span id="res-date"></span></td>
+                            <td style="text-align: right"></td>
                         </tr>
                         <tr>
                             <td style="text-align: left" colspan="2">ФИО: <span id="res-fio"></span></td>
@@ -358,25 +365,29 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table ct" id="results-tb" style="width: 600px">
-                        <thead>
-                        <tr>
-                            <th style="padding: 2px">Исследование</th>
-                            <th style="padding: 2px;width: 190px">Значение</th>
-                            <th style="padding: 2px;width: 110px">Единицы измерения</th>
-                            <th style="padding: 2px;width: 35%">Референсы</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                    <div>Врач (лаборант): <span id="res-doc"></span></div>
+                    <div id="results-copy">
+                        <table class="table ct" id="results-tb" style="width: 600px; margin-bottom: 5px">
+                            <thead>
+                            <tr>
+                                <th style="padding: 2px">Исследование</th>
+                                <th style="padding: 2px;width: 190px">Значение</th>
+                                <th style="padding: 2px;width: 110px">Единицы измерения</th>
+                                <th style="padding: 2px;width: 35%">Референсы</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                        <div style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'>Дата выполенения исследования: <span style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;' id="res-date"></span></div>
+                        <div style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'>Дата забора материала: <span style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;' id="res-date-material"></span></div>
+                    </div>
+                    <div style="margin-top: 10px">Врач (лаборант): <span id="res-doc"></span></div>
                 </div>
                 <div class="modal-footer">
                     <div class='row'>
                         <div class="col-xs-4">
                             <a href="#"
-                               onclick="selectText('results-tb');document.execCommand('copy');clearselection();okblink('#results-tb');okmessage('Результаты скопированы', 'Ок');return false;"
+                               onclick="selectText('results-copy');document.execCommand('copy');clearselection();okblink('#results-copy');okmessage('Результаты скопированы', 'Ок');return false;"
                                class="btn btn-primary-nb btn-blue-nb">Копировать результаты</a><br/><br/><a href="#"
                                                                                                             onclick="selectText('results-tb');return false;"
                                                                                                             class="btn btn-primary-nb btn-blue-nb">Выделить
@@ -433,8 +444,8 @@
 {% endblock %}
 
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
-    <link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
+    <link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css"/>
     <style>
         #results-modal .modal-body {
             color: #000
@@ -869,7 +880,7 @@
                         researches_cache[i] = data;
                         show_researches(i);
                         dechl();
-                        if(nn <= 0){
+                        if (nn <= 0) {
                             $("#table-researches").css({opacity: 1});
                             $("#table-researches").html("");
                         }
@@ -891,13 +902,13 @@
                 8: {lab: 33, iss: [131, 130, 137]},
                 9: {
                     multilabs: true,
-                    iss: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,["52","154"],["131","130","145","110","111","137"],["84","82","83","159","74","76","75","158","73","92","89","87","156","157"]]
+                    iss: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, ["52", "154"], ["131", "130", "145", "110", "111", "137"], ["84", "82", "83", "159", "74", "76", "75", "158", "73", "92", "89", "87", "156", "157"]]
                 }
             };
 
             $("#select-template-btn").click(function () {
                 active_template = document.querySelector("#select-template").value;
-                if(!templates[active_template].multilabs) {
+                if (!templates[active_template].multilabs) {
                     callback = function () {
                         Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
                             $("[value={0}]".f(el)).prop("checked", true);
@@ -905,7 +916,7 @@
                         sync_checks();
                     };
                     $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
-                }else{
+                } else {
                     checked = JSON.parse(JSON.stringify(templates[active_template].iss));
                     sync();
                     $("#select-lab").val(Object.keys(templates[active_template].iss).slice(-1)[0]).change().selectpicker('refresh');
@@ -1085,6 +1096,7 @@
                             $("#results-modal .ct tbody").append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v1, v2, v3, v4));
                         });
                     }
+                    $("#res-date-material").html(v.tube_time_get);
                 });
                 $("#results-modal .ct td, #results-modal .ct th").css({
                     border: "1px solid #000",
@@ -1147,7 +1159,7 @@
                 $("#f .ctrl").removeAttr('disabled');
                 cnt++;
             });
-            if(cnt == 0){
+            if (cnt == 0) {
                 $("#table-researches-preview").append("<tr><td colspan='3' class='text-center'>Ничего не выбрано</td></tr>");
             }
             if ($('#sources .active-s .btn.active input[name=source]').length)
@@ -1197,21 +1209,21 @@
                     $.each(data.directions, function (k, v) {
                         var sliced = v.researches;//.slice(0, 55);
                         /*if (sliced.length < v.researches.length) {
-                            sliced += '...';
-                        }*/
+                         sliced += '...';
+                         }*/
                         $("#story-table").append("<tr pk='{0}'>".f(v.pk) +
-                                "<td>{0}</td>".f(v.date) +
-                                "<td style='text-align: center'>{0}</td>".f(v.pk) +
-                                "<td>{0}</td>".f(v.lab) +
-                                "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
-                                "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
-                                "<td style='text-align: right;'>" +
-                                (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
-                                (v.status == 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
-                                "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
-                                "</td>" +
-                                "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
-                                "</tr>");
+                            "<td>{0}</td>".f(v.date) +
+                            "<td style='text-align: center'>{0}</td>".f(v.pk) +
+                            "<td>{0}</td>".f(v.lab) +
+                            "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
+                            "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
+                            "<td style='text-align: right;'>" +
+                            (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
+                            (v.status == 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
+                            "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
+                            "</td>" +
+                            "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
+                            "</tr>");
                         if (v.cancel === true) {
                             $("#story-table tr[pk={0}]".f(v.pk)).addClass("tr-cancel");
                             $("#story-table tr[pk={0}] .status".f(v.pk)).attr("rstatus", $("#story-table tr[pk={0}] .status".f(v.pk)).text());
@@ -1219,10 +1231,10 @@
                             $("#story-table tr[pk={0}] .status".f(v.pk)).text(statuses["-1"]);
                         }
                     });
-                    if(data.directions.length == 0){
+                    if (data.directions.length == 0) {
                         $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
                     }
-                }else{
+                } else {
                     $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
                 }
                 load_client_dirs_lock = false;
@@ -1319,9 +1331,9 @@
                 {
                     $.each(data, function (key, val) { // Перебор результатов
                         $("#results-data").append("<a href='#' onclick='$(\"#res-modal\").modal(\"hide\");return show_res("
-                                + key + "," + val.pk + ");'>" + clients_bases[val.fields.type] + " | Карта №" + val.fields.num + " | "
-                                + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
-                                + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
+                            + key + "," + val.pk + ");'>" + clients_bases[val.fields.type] + " | Карта №" + val.fields.num + " | "
+                            + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
+                            + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
                     });
                     $("#res-modal").modal(); // Открытие модального окна
                 }
@@ -1378,7 +1390,7 @@
         function getqueue() {
             $(".dir-queue .list").html("");
         }
-        function sync_fin_sources(){
+        function sync_fin_sources() {
             $("#fin_poli input").parent('.btn').removeClass('active');
             $("#fin_stat input").parent('.btn').removeClass('active');
             if (type == "stat" || $("[name=is_hospital]").prop('checked')) {
