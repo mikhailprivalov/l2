@@ -1,5 +1,7 @@
-import sys, logging
+import logging
 import os
+import sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
@@ -81,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'lis2',
         'USER': 'postgres',
-        'PASSWORD': '123456',
+        'PASSWORD': '37hellohello37',
         # 'HOST': '192.168.122.45',
         #'HOST': '192.168.0.252',
         'HOST': '127.0.0.1',

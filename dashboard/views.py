@@ -239,7 +239,7 @@ def create_user(request):  # Страница создания пользова�
                 profile.save()  # Сохранение профиля
                 registered = True
                 slog.Log(key=str(profile.pk), user=request.user.doctorprofile, type=16, body=json.dumps(
-                    {"username": username, "password": password, "podr": podrpost, "fio": fio})).save()
+                    {"username": username, "password": "(скрыт)", "podr": podrpost, "fio": fio})).save()
             else:
                 return render(request, 'dashboard/create_user.html',
                               {'error': True, 'mess': 'Пользователь с таким именем пользователя уже существует',
@@ -299,10 +299,13 @@ def directions(request):
     podr = Podrazdeleniya.objects.filter(isLab=True)
     oper = "Оператор лечащего врача" in request.user.groups.values_list('name', flat=True)
     docs = list()
-    if oper:
-        docs = DoctorProfile.objects.filter(podrazileniye=request.user.doctorprofile.podrazileniye,
-                                            user__groups__name="Лечащий врач")
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    if oper:
+        p = podrazdeleniya.first()
+        if not request.user.doctorprofile.podrazileniye.isLab and not request.user.doctorprofile.podrazileniye.hide:
+            p = request.user.doctorprofile.podrazileniye
+        docs = DoctorProfile.objects.filter(podrazileniye=p,
+                                            user__groups__name="Лечащий врач")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
