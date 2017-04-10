@@ -459,36 +459,58 @@ def statistic_xls(request):
 
         row_num = 0
         row = [
-            (lab.title + "\nПринято емкостей\n{0}-{1}".format(date_start_o, date_end_o), 16000),
+            (lab.title + ", принято емкостей за {0}-{1}".format(date_start_o, date_end_o), 16000),
         ]
 
         replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
         otds = {}
         n = len(row) - 1
-        for x in Podrazdeleniya.objects.filter(isLab=False, hide=False):
+        for pod in Podrazdeleniya.objects.filter(isLab=False, hide=False):
             n += 1
-            title = x.title
+            title = pod.title
             for rep in replace:
                 title = title.replace(rep["from"], rep["to"])
 
             tmp = title.split()
             title = []
-
+            nx = 0
             for x in tmp:
                 x = x.strip()
                 if len(x) == 0:
                     continue
 
-                title.append(x if x.isupper() else x[0].upper()+x[1])
+                title.append(x if x.isupper() else x[0].upper()+ ("" if nx > 0 else x[1:7]))
+                nx += 1
 
-            row.append(("".join(title), 3000,))
-            otds[x.pk] = n
+            row.append(("".join(title), 3700,))
+            otds[pod.pk] = n
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style)
             ws.col(col_num).width = row[col_num][1]
 
         row_num += 1
+
+        import directions.models as directions
+
+        for tube in directory.Tubes.objects.filter(releationsft__fractions__research__subgroup__podrazdeleniye=lab).distinct().order_by("title"):
+            row = [
+                tube.title
+            ]
+            for otd, pos in otds.items():
+                gets = directions.TubesRegistration.objects.filter(doc_recive__podrazileniye=lab,
+                                                                   type__tube=tube,
+                                                                   time_recive__range=(date_start, date_end),
+                                                                   issledovaniya__napravleniye__doc__podrazileniye__pk=otd,
+                                                                   notice="")
+                row.insert(pos, "" if not gets.exists() else str(gets.count()))
+
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+            row_num += 1
+
+
+
 
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(isLab=True)

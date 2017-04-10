@@ -305,12 +305,12 @@ def directions(request):
         if not request.user.doctorprofile.podrazileniye.isLab and not request.user.doctorprofile.podrazileniye.hide:
             p = request.user.doctorprofile.podrazileniye
         docs = DoctorProfile.objects.filter(podrazileniye=p,
-                                            user__groups__name="Лечащий врач")
+                                            user__groups__name="Лечащий врач").order_by("fio")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
         for d in DoctorProfile.objects.filter(podrazileniye=p,
-                                              user__groups__name="Лечащий врач"):
+                                              user__groups__name="Лечащий врач").order_by("fio"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
     return render(request, 'dashboard/directions.html', {'labs': podr,

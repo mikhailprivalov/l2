@@ -220,4 +220,4 @@ CACHALOT_ENABLED = True
 import warnings
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
 
-DEBUG = False
+DEBUG = True
