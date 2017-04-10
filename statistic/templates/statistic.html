@@ -36,8 +36,6 @@
                         {% else %}
                             {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% else %}
-
                             {% endif %}
 
                         {% endif %}
@@ -55,8 +53,6 @@
                         {% else %}
                             {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% else %}
-
                             {% endif %}
 
                         {% endif %}
@@ -87,6 +83,22 @@
 {#            </div>#}
         </div>
         <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по лабораториям - принято емкостей</h3>
+                </div>
+                <ul class="list-group">
+                    {% for lab in labs %}
+                        {% if request.user.is_superuser %}
+                            <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
+                        {% else %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
+                                <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
 {#            <div class="panel panel-default panel-flt">#}
 {#                <div class="panel-heading">#}
 {#                    <h3 class="panel-title">Статистика по емкостям#}

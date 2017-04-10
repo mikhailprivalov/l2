@@ -70,9 +70,7 @@ def statistic_xls(request):
                                    int(date_start_o.split(".")[0]))
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
-        excl_sheets = []
-        worksheets = []
-        nsheets = 0
+
         source_types = {"poli": "Полик.", "stat": "Стац."}
         for source_type in sorted(source_types.keys()):
 
@@ -437,6 +435,61 @@ def statistic_xls(request):
 
     elif tp == "tube":
         pass
+    elif tp == "lab-receive":
+        lab = Podrazdeleniya.objects.get(pk=int(pk))
+        response['Content-Disposition'] = str.translate(
+            "attachment; filename='Статистика_Принято_емкостей_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
+                                                                                   date_start_o, date_end_o), tr)
+
+
+        import datetime
+        import directions.models as d
+        from operator import itemgetter
+        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
+                                   int(date_start_o.split(".")[0]))
+        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
+                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        ws = wb.add_sheet(lab.title)
+
+        font_style_wrap = xlwt.XFStyle()
+        font_style_wrap.alignment.wrap = 1
+        font_style_wrap.borders = borders
+        font_style = xlwt.XFStyle()
+        font_style.borders = borders
+
+        row_num = 0
+        row = [
+            (lab.title + "\nПринято емкостей\n{0}-{1}".format(date_start_o, date_end_o), 16000),
+        ]
+
+        replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
+        otds = {}
+        n = len(row) - 1
+        for x in Podrazdeleniya.objects.filter(isLab=False, hide=False):
+            n += 1
+            title = x.title
+            for rep in replace:
+                title = title.replace(rep["from"], rep["to"])
+
+            tmp = title.split()
+            title = []
+
+            for x in tmp:
+                x = x.strip()
+                if len(x) == 0:
+                    continue
+
+                title.append(x if x.isupper() else x[0].upper()+x[1])
+
+            row.append(("".join(title), 3000,))
+            otds[x.pk] = n
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style)
+            ws.col(col_num).width = row[col_num][1]
+
+        row_num += 1
+
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(isLab=True)
         response['Content-Disposition'] = str.translate(

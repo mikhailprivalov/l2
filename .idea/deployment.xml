@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="lis" promptOnLocalOverwrite="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="k105" promptOnLocalOverwrite="false">
     <serverData>
+      <paths name="k105">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="lis">
         <serverdata>
           <mappings>
