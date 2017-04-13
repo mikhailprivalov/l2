@@ -1,6 +1,8 @@
 from collections import defaultdict
 
 import collections
+
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import simplejson as json
@@ -44,7 +46,8 @@ def statistic_xls(request):
         date_start_o = request.GET["date-start"]  # Начало периода
         date_end_o = request.GET["date-end"]  # Конец периода
 
-    slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
+    slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
+             user=request.user.doctorprofile).save()
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
                u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
@@ -61,7 +64,6 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Лаборатория_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
                                                                                    date_start_o, date_end_o), tr)
-
 
         import datetime
         import directions.models as d
@@ -94,7 +96,7 @@ def statistic_xls(request):
                     if col_num == 0:
                         ws.write(row_num, col_num, row[col_num], font_style)
                     else:
-                        ws.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
+                        ws.write_merge(row_num, row_num, col_num, col_num + 2, row[col_num], style=font_style)
 
                 row_num += 1
 
@@ -108,7 +110,7 @@ def statistic_xls(request):
                 for col_num in range(len(row)):
                     ws.write(row_num, col_num, row[col_num][0], font_style)
                     ws.col(col_num).width = row[col_num][1]
-                    ws.write(row_num, col_num+1, "", font_style)
+                    ws.write(row_num, col_num + 1, "", font_style)
 
                 row_num = 2
                 row = [
@@ -120,7 +122,7 @@ def statistic_xls(request):
                     if col_num == 0:
                         ws.write(row_num, col_num, row[col_num], font_style)
                     else:
-                        ws.write_merge(row_num, row_num, col_num, col_num+1, row[col_num], style=font_style)
+                        ws.write_merge(row_num, row_num, col_num, col_num + 1, row[col_num], style=font_style)
 
                 font_style = xlwt.XFStyle()
                 font_style.alignment.wrap = 1
@@ -128,24 +130,32 @@ def statistic_xls(request):
                 pki = int(pk)
                 otds = {pki: defaultdict(lambda: 0)}
                 otds_pat = {pki: defaultdict(lambda: 0)}
+
                 def all(iterable):
                     for element in iterable:
                         if not element:
                             return False
                     return True
+
                 ns = 0
                 for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk):
                     iss_list = []
                     if finsource is not False:
-                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f=finsource)
+                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
+                                                                time_confirmation__range=(date_start, date_end),
+                                                                napravleniye__istochnik_f=finsource)
                     else:
-                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end), napravleniye__istochnik_f__istype=source_type)
+                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
+                                                                time_confirmation__range=(date_start, date_end),
+                                                                napravleniye__istochnik_f__istype=source_type)
 
                     for researches in iss_list:
                         n = False
                         for x in d.Result.objects.filter(issledovaniye=researches):
                             x = x.value.lower().strip()
-                            n = any([y in x for y in ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало", "недостаточно", "реактив"]]) or x == "-"
+                            n = any([y in x for y in
+                                     ["забор", "тест", "неправ", "ошибк", "ошибочный", "кров", "брак", "мало",
+                                      "недостаточно", "реактив"]]) or x == "-"
                             if n:
                                 break
                         if n:
@@ -167,7 +177,8 @@ def statistic_xls(request):
                 font = xlwt.Font()
                 font.bold = True
                 style.font = font
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otds.keys() if x != pki])):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
+                        Podrazdeleniya.objects.filter(pk__in=[x for x in otds.keys() if x != pki])):
                     row_num += 2
                     row = [
                         otdd.title,
@@ -200,7 +211,7 @@ def statistic_xls(request):
                     if col_num == 0:
                         ws_pat.write(row_num, col_num, row[col_num], font_style)
                     else:
-                        ws_pat.write_merge(row_num, row_num, col_num, col_num+2, row[col_num], style=font_style)
+                        ws_pat.write_merge(row_num, row_num, col_num, col_num + 2, row[col_num], style=font_style)
 
                 row_num = 1
                 row = [
@@ -210,7 +221,7 @@ def statistic_xls(request):
                 for col_num in range(len(row)):
                     ws_pat.write(row_num, col_num, row[col_num][0], font_style)
                     ws_pat.col(col_num).width = row[col_num][1]
-                    ws_pat.write(row_num, col_num+1, "", font_style)
+                    ws_pat.write(row_num, col_num + 1, "", font_style)
 
                 font_style = xlwt.XFStyle()
                 font_style.borders = borders
@@ -225,9 +236,10 @@ def statistic_xls(request):
                     if col_num == 0:
                         ws_pat.write(row_num, col_num, row[col_num], font_style)
                     else:
-                        ws_pat.write_merge(row_num, row_num, col_num, col_num+1, row[col_num], style=font_style)
+                        ws_pat.write_merge(row_num, row_num, col_num, col_num + 1, row[col_num], style=font_style)
 
-                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys() if x != pki])):
+                for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
+                        Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys() if x != pki])):
                     row_num += 2
                     row = [
                         otdd.title,
@@ -252,11 +264,13 @@ def statistic_xls(request):
 
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
-        researches = list(directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title'))
+        researches = list(
+            directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title'))
         pods = list(Podrazdeleniya.objects.filter(hide=False, isLab=False).order_by("title"))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
-                                                                                   date_start_o, date_end_o), tr)
+            "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
+                lab.title.replace(" ", "_"),
+                date_start_o, date_end_o), tr)
         import datetime
         import directions.models as d
         from operator import itemgetter
@@ -264,7 +278,8 @@ def statistic_xls(request):
                                    int(date_start_o.split(".")[0]))
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
-        iss = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False, time_confirmation__range=(date_start, date_end))
+        iss = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False,
+                                           time_confirmation__range=(date_start, date_end))
 
         ws = wb.add_sheet("Статистика по исполнителям")
 
@@ -298,7 +313,8 @@ def statistic_xls(request):
             return v + ("" if len(v) > 19 else "\n")
 
         cnt_itogo = {}
-        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(labtype=0).exclude(labtype=None).order_by("fio"):
+        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(labtype=0).exclude(
+                labtype=None).order_by("fio"):
             data = {"otds": {}, "all": defaultdict(lambda: 0)}
             itogo_row = [executor.get_fio(dots=True), nl("Итого")]
             empty_row = ["", ""]
@@ -317,7 +333,8 @@ def statistic_xls(request):
                     if research.title not in cnt_itogo.keys():
                         cnt_itogo[research.title] = 0
 
-                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazileniye=pod, research=research):
+                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazileniye=pod,
+                                        research=research):
                         isadd = False
                         allempty = True
                         for r in Result.objects.filter(issledovaniye=i):
@@ -422,8 +439,8 @@ def statistic_xls(request):
 
         row_num += 1
         researches = Issledovaniya.objects.filter(napravleniye__doc__podrazileniye=otd,
-                                           napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
-                                           time_confirmation__isnull=False)
+                                                  napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
+                                                  time_confirmation__isnull=False)
         naprs = len(set([v.napravleniye.pk for v in researches]))
         row = [
             u"Завершенных",
@@ -439,8 +456,7 @@ def statistic_xls(request):
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Принято_емкостей_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
-                                                                                   date_start_o, date_end_o), tr)
-
+                                                                                        date_start_o, date_end_o), tr)
 
         import datetime
         import directions.models as d
@@ -465,7 +481,8 @@ def statistic_xls(request):
         replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
         otds = {}
         n = len(row) - 1
-        for pod in Podrazdeleniya.objects.filter(isLab=False, hide=False):
+        pods = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+        for pod in pods:
             n += 1
             title = pod.title
             for rep in replace:
@@ -479,12 +496,34 @@ def statistic_xls(request):
                 if len(x) == 0:
                     continue
 
-                title.append(x if x.isupper() else x[0].upper()+ ("" if nx > 0 else x[1:7]))
+                title.append(x if x.isupper() else x[0].upper() + ("" if nx > 0 else x[1:7]))
                 nx += 1
 
             row.append(("".join(title), 3700,))
-            otds[pod.pk] = n
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style)
+            ws.col(col_num).width = row[col_num][1]
+        row_num += 1
 
+        for tube in directory.Tubes.objects.filter(
+                releationsft__fractions__research__subgroup__podrazdeleniye=lab).distinct().order_by("title"):
+            row = [
+                tube.title
+            ]
+            for pod in pods:
+                gets = d.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
+                                                                   type__tube=tube,
+                                                                   time_recive__range=(date_start, date_end),
+                                                                   doc_get__podrazileniye=pod).filter(
+                                                                   Q(notice="") |
+                                                                   Q(notice__isnull=True)).distinct()
+                row.append("" if not gets.exists() else str(gets.count()))
+
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+            row_num += 1
+
+        '''
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style)
             ws.col(col_num).width = row[col_num][1]
@@ -498,18 +537,19 @@ def statistic_xls(request):
                 tube.title
             ]
             for otd, pos in otds.items():
-                gets = directions.TubesRegistration.objects.filter(doc_recive__podrazileniye=lab,
+                gets = directions.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
                                                                    type__tube=tube,
                                                                    time_recive__range=(date_start, date_end),
-                                                                   issledovaniya__napravleniye__doc__podrazileniye__pk=otd,
-                                                                   notice="")
+                                                                   doc_get__podrazileniye__pk=otd).filter(
+                                                                   Q(notice="") |
+                                                                   Q(notice__isnull=True)).distinct()
                 row.insert(pos, "" if not gets.exists() else str(gets.count()))
 
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
 
-
+        '''
 
 
     elif tp == "all-labs":
@@ -764,7 +804,7 @@ def statistic_xls(request):
             if usr.labtype == 0: continue
             researches_uets = {}
             researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
-                                               time_save__range=(date_start_o, date_end_o))
+                                                      time_save__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
                 uet_tmp = 0
                 if usr.labtype == 1:
@@ -775,7 +815,7 @@ def statistic_xls(request):
                         [v.uet_lab for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
                 researches_uets[issledovaniye.pk] = {"uet": uet_tmp}
             researches = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False,
-                                               time_confirmation__range=(date_start_o, date_end_o))
+                                                      time_confirmation__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
                 uet_tmp = 0
                 if usr.labtype == 1:
