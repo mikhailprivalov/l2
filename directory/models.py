@@ -4,6 +4,7 @@ from jsonfield import JSONField
 from researches.models import Tubes
 from users.models import DoctorProfile
 
+
 class DirectionsGroup(models.Model):
     """
     Группы направлений
@@ -42,20 +43,39 @@ class Researches(models.Model):
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
     edit_mode = models.IntegerField(
-        default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
+        default=0,
+        help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования')
-    no_attach = models.IntegerField(default=0, null=True, blank=True, help_text='Группа исследований, которые не могут быть назначены вместе')
+    no_attach = models.IntegerField(default=0, null=True, blank=True,
+                                    help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
-    comment_template = models.IntegerField(default=-1, null=True, blank=True, help_text='Варианты комментариев к материалу')
+    comment_template = models.IntegerField(default=-1, null=True, blank=True,
+                                           help_text='Варианты комментариев к материалу')
     groups = models.ManyToManyField(ResearchGroup, help_text='Группа исследований в лаборатории')
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
-    can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
-    code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
+    can_lab_result_comment = models.BooleanField(default=False, blank=True,
+                                                 help_text='Возможность оставить комментарий лабораторией')
+    code = models.TextField(default='', blank=True,
+                            help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
 
     def __str__(self):
         return "%s" % self.title
+
+
+class References(models.Model):
+    """
+    Справочник референсов
+    """
+    title = models.CharField(max_length=255, help_text='Название')
+    about = models.TextField(help_text='Описание')
+    ref_m = JSONField(help_text='М')
+    ref_f = JSONField(help_text='Ж')
+
+    def __str__(self):
+        from django.utils.text import Truncator
+        return self.title + " | " + Truncator(self.about).chars(20)
 
 
 class Fractions(models.Model):
@@ -65,6 +85,7 @@ class Fractions(models.Model):
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция')
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
+    ref = models.ForeignKey(References, help_text='Референсы', blank=True, null=True, default=None)
     ref_m = JSONField(help_text='Референсы (М)')
     ref_f = JSONField(help_text='Референсы (Ж)')
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')
@@ -74,8 +95,10 @@ class Fractions(models.Model):
     type = models.IntegerField(default=-1, blank=True, null=True, help_text='Варианты подсказок результатов')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
-    render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
-    options = models.CharField(max_length=511, default="", blank=True, help_text='Варианты для динамического числа полей')
+    render_type = models.IntegerField(default=0, blank=True,
+                                      help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
+    options = models.CharField(max_length=511, default="", blank=True,
+                               help_text='Варианты для динамического числа полей')
     formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
     code = models.CharField(max_length=16, default='', blank=True, help_text='Код фракции')
 
