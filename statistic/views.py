@@ -523,35 +523,6 @@ def statistic_xls(request):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
 
-        '''
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style)
-            ws.col(col_num).width = row[col_num][1]
-
-        row_num += 1
-
-        import directions.models as directions
-
-        for tube in directory.Tubes.objects.filter(releationsft__fractions__research__subgroup__podrazdeleniye=lab).distinct().order_by("title"):
-            row = [
-                tube.title
-            ]
-            for otd, pos in otds.items():
-                gets = directions.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
-                                                                   type__tube=tube,
-                                                                   time_recive__range=(date_start, date_end),
-                                                                   doc_get__podrazileniye__pk=otd).filter(
-                                                                   Q(notice="") |
-                                                                   Q(notice__isnull=True)).distinct()
-                row.insert(pos, "" if not gets.exists() else str(gets.count()))
-
-            for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], font_style)
-            row_num += 1
-
-        '''
-
-
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(isLab=True)
         response['Content-Disposition'] = str.translate(
