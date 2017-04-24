@@ -75,7 +75,7 @@ class References(models.Model):
     fraction = models.ForeignKey("Fractions", db_index=True, help_text='Фракция, к которой относится референс')
 
     def __str__(self):
-        return self.fraction + " | " + self.title
+        return str(self.fraction) + " | " + self.title
 
 
 class Fractions(models.Model):
