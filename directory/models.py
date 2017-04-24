@@ -72,10 +72,10 @@ class References(models.Model):
     about = models.TextField(help_text='Описание')
     ref_m = JSONField(help_text='М')
     ref_f = JSONField(help_text='Ж')
+    fraction = models.ForeignKey("Fractions", db_index=True, help_text='Фракция, к которой относится референс')
 
     def __str__(self):
-        from django.utils.text import Truncator
-        return self.title + " | " + Truncator(self.about).chars(20)
+        return self.fraction + " | " + self.title
 
 
 class Fractions(models.Model):
@@ -85,7 +85,7 @@ class Fractions(models.Model):
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция')
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
-    ref = models.ForeignKey(References, help_text='Референсы', blank=True, null=True, default=None)
+    default_ref = models.ForeignKey(References, help_text='Референс по-умолчанию', blank=True, null=True, default=None)
     ref_m = JSONField(help_text='Референсы (М)')
     ref_f = JSONField(help_text='Референсы (Ж)')
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')

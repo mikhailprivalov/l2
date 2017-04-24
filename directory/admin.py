@@ -7,7 +7,8 @@ class ResAdmin(admin.ModelAdmin):
     list_display_links = ('title', )
 
 class RefAdmin(admin.ModelAdmin):
-    list_display = ('title', 'ref_m', 'ref_f', 'about')
+    list_filter = ('fraction',)
+    list_display = ('title', 'fraction', 'ref_m', 'ref_f', 'about')
     list_display_links = ('title', )
 
 admin.site.register(models.ResearchGroup)
