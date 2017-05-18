@@ -298,7 +298,7 @@ def statistic_xls(request):
         from django.utils.text import Truncator
 
         for research in researches:
-            row.append((Truncator(research.title).chars(30), 1000,))
+            row.append((Truncator(research.title).chars(30), 1300,))
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_wrap if col_num < 2 else font_style_vertical)

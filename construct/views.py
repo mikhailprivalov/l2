@@ -73,3 +73,42 @@ def onlywith(request):
             res.onlywith = None
             res.save()
         return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
+def refs(request):
+    """ Настройка назначения анализов вместе """
+    if request.method == "GET":
+        rows = []
+        fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))
+        for r in directory.References.objects.filter(fraction=fraction).order_by("pk"):
+            rows.append({'pk': r.pk, 'title': r.title, 'about': r.about, 'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m, 'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False, 'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
+        return HttpResponse(json.dumps(rows), content_type="application/json")
+    elif request.method == "POST":
+        pk = int(request.POST["pk"])
+        default = int(request.POST["default"])
+        if pk > -1:
+            fraction = directory.Fractions.objects.get(pk=pk)
+            for r in json.loads(request.POST["refs"]):
+                r["ref_m"].pop("", None)
+                r["ref_f"].pop("", None)
+                if r["del"] and r["pk"] != -1:
+                    directory.References.objects.filter(pk=r["pk"]).delete()
+                    if r["pk"] == default:
+                        default = -1
+                elif not r["del"] and r["pk"] == -1:
+                    nrf = directory.References(title=r["title"], about=r["about"], ref_m=r["ref_m"], ref_f=r["ref_f"], fraction=fraction)
+                    nrf.save()
+                    if r["isdefault"]:
+                        default = nrf.pk
+                else:
+                    row = directory.References.objects.get(pk=r["pk"])
+                    row.title = r["title"]
+                    row.about = r["about"]
+                    row.ref_m = json.dumps(r["ref_m"])
+                    row.ref_f = json.dumps(r["ref_f"])
+                    row.save()
+            fraction.default_ref = None if default == -1 else directory.References.objects.get(pk=default)
+            fraction.save()
+        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")

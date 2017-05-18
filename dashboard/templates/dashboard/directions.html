@@ -46,14 +46,16 @@
                     <table class="col-xs-12 table table-bordered table-condensed table-responsive"
                            style="table-layout: fixed;margin: 0; padding: 0">
                         <tr>
-                            <td class="table-header-row">Тип:&nbsp;</td>
-                            <td id="card-type" class="table-content-row"></td>
+                            <td class="table-header-row">ФИО:&nbsp;</td>
+                            <td id="card-fio" class="table-content-row" colspan="2"></td>
                             <td class="table-header-row">Номер карты:&nbsp;</td>
                             <td id="card-num" class="table-content-row"></td>
                         </tr>
                         <tr>
-                            <td class="table-header-row">ФИО:&nbsp;</td>
-                            <td id="card-fio" class="table-content-row" colspan="2"></td>
+                            <td class="table-header-row">Дата рождения:&nbsp;</td>
+                            <td id="card-bth" class="table-content-row"></td>
+                            <td class="table-header-row">Пол:&nbsp;</td>
+                            <td id="card-sx" class="table-content-row"></td>
                             <td class="table-content-row">
                                 {#                                {% if not operator %}#}
                                 <a href="#" onclick='open_search_results();return false;'
@@ -61,18 +63,12 @@
                                 {#                                {% endif %}#}
                             </td>
                         </tr>
-                        <tr>
-                            <td class="table-header-row">Дата рождения:&nbsp;</td>
-                            <td id="card-bth" class="table-content-row"></td>
-                            <td class="table-header-row">Пол:&nbsp;</td>
-                            <td id="card-sx" class="table-content-row"></td>
-                        </tr>
                         <tr id="history-num-tr">
                             <td class="table-header-row">
                                 <span class="hospital">Номер истории:&nbsp;</span><span
                                     class="poli">Настройка:&nbsp;</span>
                             </td>
-                            <td class="table-content-row" colspan="3">
+                            <td class="table-content-row" colspan="4">
                                 <div style="height: 34px">
                                     <span class="hospital"><input type="text" class="form-control"
                                                                   maxlength="11"/></span>
@@ -89,7 +85,7 @@
                         <b>Выписать от имени:</b>
                     </div>
                     <div class="col-xs-5" style="padding-right: 0">
-                        <select class="select-b" data-width="100%" id="select-otd" onchange="update_av_docs();">
+                        <select class="select-b" data-width="100%" data-width="100%" data-container="body" id="select-otd" onchange="update_av_docs();">
                             {% for v in notlabs %}
                                 {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
                                     <option selected value="{{ v.pk }}">{{ v.title }}</option>
@@ -100,7 +96,7 @@
                         </select>
                     </div>
                     <div class="col-xs-5" style="padding-right: 0">
-                        <select class="select-b" data-width="100%" id="select-doc">
+                        <select class="select-b" data-width="100%" data-container="body" id="select-doc">
                             {% for v in docs %}
                                 {% if request.user.doctorprofile.pk == v.pk %}
                                     <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
@@ -1371,7 +1367,6 @@
         function clear() { // Функция очистки результатов
             $('#search-field').attr('data-content', '');
             $("#search-field").parent().removeClass("has-error");
-            $("#card-type").html("");
             $("#card-num").html("");
             $("#card-fio").html("");
             $("#card-bth").html("");
@@ -1419,7 +1414,6 @@
             num = fields.num;
             // Установка полей таблицы карты пациента
 
-            $("#card-type").text(clients_bases[type]);
             $("#card-num").text(num);
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);

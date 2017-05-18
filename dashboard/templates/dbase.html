@@ -1810,7 +1810,7 @@
         link.setAttribute('download', filename);
         link.click();
     }
-
+    var mess_pos = false;
     function okmessage(title, body, delay) {
         $.amaran({
             'theme': 'awesome ok',
@@ -1820,7 +1820,7 @@
                 info: '',
                 icon: 'fa fa-exclamation'
             },
-            'position': 'bottom right',
+            'position': mess_pos || 'bottom right',
             delay: delay || 5000
         });
     }
@@ -1834,7 +1834,7 @@
                 info: '',
                 icon: 'fa fa-exclamation'
             },
-            'position': 'bottom right',
+            'position': mess_pos || 'bottom right',
             delay: delay || 5000
         });
     }

@@ -69,7 +69,7 @@ class References(models.Model):
     Справочник референсов
     """
     title = models.CharField(max_length=255, help_text='Название')
-    about = models.TextField(help_text='Описание')
+    about = models.TextField(help_text='Описание', blank=True)
     ref_m = JSONField(help_text='М')
     ref_f = JSONField(help_text='Ж')
     fraction = models.ForeignKey("Fractions", db_index=True, help_text='Фракция, к которой относится референс')
@@ -86,8 +86,8 @@ class Fractions(models.Model):
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция')
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
     default_ref = models.ForeignKey(References, help_text='Референс по-умолчанию', blank=True, null=True, default=None)
-    ref_m = JSONField(help_text='Референсы (М)')
-    ref_f = JSONField(help_text='Референсы (Ж)')
+    ref_m = JSONField(help_text='Референсы (М)', blank=True)
+    ref_f = JSONField(help_text='Референсы (Ж)', blank=True)
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')
     uet_doc = models.FloatField(default=0, help_text='УЕТы для врача')
     uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта')

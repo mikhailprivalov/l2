@@ -85,7 +85,7 @@
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по лабораториям - принято емкостей (В РАЗРАБОТКЕ)</h3>
+                    <h3 class="panel-title">Статистика по лабораториям - принято емкостей</h3>
                 </div>
                 <ul class="list-group">
                     {% for lab in labs %}
@@ -144,7 +144,7 @@
                 todayHighlight: true
             });
 
-            $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
+            //$("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
         });
         function gen_stat(stype, pk) {
             window.open('/statistic/xls?type=' + stype + "&pk=" + pk + "&date-start=" + $("[name='date-start']").val() + "&date-end=" + $("[name='date-end']").val(), '_blank');

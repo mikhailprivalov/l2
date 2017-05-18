@@ -1053,7 +1053,7 @@
 
         function tune_research(id) {
             $('#tune-modal').modal('show');
-            $("#tune-modal .modal-body").html('<iframe width="100%" height="100%" style="height: 100%; width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
+            $("#tune-modal .modal-body").html('<iframe width="100%" style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
             console.log("ID: {0}".f(id));
         }
 

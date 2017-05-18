@@ -112,6 +112,8 @@ def send(request):
                                                                     fraction=fraction)  # Создание нового результата
                             fraction_result.value = resdict["result"][key].strip()  # Установка значения
                             if fractionRel.get_multiplier_display() > 1:
+                                if fraction_result.value.isdigit():
+                                    fraction_result.value = "%s.0" % fraction_result.value
                                 import re
                                 find = re.findall("\d+.\d+", fraction_result.value)
                                 if len(find) > 0:

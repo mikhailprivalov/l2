@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
+    'discharge',
     'debug_toolbar',
     'debug_panel',
 )
@@ -133,6 +134,8 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
 '''
 if not DEBUG:

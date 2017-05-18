@@ -355,6 +355,33 @@ class Result(models.Model):
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
+    ref = JSONField(default=None, blank=True, null=True, help_text="Референсы")
+
+    def __str__(self):
+        return "%s | %s | %s" % (self.pk, self.fraction, self.ref is not None)
+
+    def get_ref(self, as_str=False):
+        if not self.ref:
+            ref_m = self.fraction.ref_m if self.fraction.default_ref is None else self.fraction.default_ref.ref_m
+            ref_f = self.fraction.ref_f if self.fraction.default_ref is None else self.fraction.default_ref.ref_f
+            ref = ref_f
+            sex = self.issledovaniye.napravleniye.client.sex.lower()
+            if sex == "м":
+                ref = ref_m
+            self.ref = ref
+            self.save()
+
+        ref = self.ref
+
+        if isinstance(ref, str):
+            ref = json.loads(ref)
+        if not ref:
+            ref = {}
+
+        if not as_str:
+            return ref
+        else:
+            return json.dumps(ref)
 
     def get_is_norm(self, recalc=False):
         if self.is_normal == "" or recalc:
@@ -366,10 +393,10 @@ class Result(models.Model):
         return norm
 
     def save(self, *args, **kw):
-        self.is_normal = self.calc_normal()
+        self.is_normal = self.calc_normal(True)
         super(Result, self).save(*args, **kw)
 
-    def calc_normal(self):
+    def calc_normal(self, fromsave=False):
         import operator
         from functools import reduce
         trues = {True: ["полож.", "положительно", "да", "положительный"], False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный"]}
@@ -381,20 +408,7 @@ class Result(models.Model):
         sex = self.issledovaniye.napravleniye.client.sex.lower()
         age = self.issledovaniye.napravleniye.client.age()
 
-        ref_m = self.fraction.ref_m
-        ref_f = self.fraction.ref_f
-        if isinstance(ref_m, str):
-            ref_m = json.loads(ref_m)
-        if isinstance(ref_f, str):
-            ref_f = json.loads(ref_f)
-        if not ref_m:
-            ref_m = {}
-        if not ref_f:
-            ref_f = {}
-
-        ref = ref_f
-        if sex == "м":
-            ref = ref_m
+        ref = self.get_ref()
 
         def isnum(r):
             return r.replace(".", "", 1).isdigit()

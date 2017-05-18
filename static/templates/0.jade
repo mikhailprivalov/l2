@@ -21,7 +21,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
             each fraction in fractions
                 if !fraction.hide
                     if fraction.render_type == 0
-                        tr
+                        tr(data-fraction-pk=fraction.pk)
                             td
                                 label(for='fraction_' + fraction.pk).labtitle= fraction.title
                             td.val
@@ -38,7 +38,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
                                             a(title="Расчет результата", href="#", onclick="exec_formula(this);return false;", pk=fraction.pk).btn.btn-default.btn-primary-nb.btn30
                                                 i.fa.fa-circle
                                     .center= fraction.unit
-                            td.ref
+                            td.ref.ref_m
                                 table.table.table-responsive
                                     each norm, index in fraction.references.m
                                         if (index != "Все" && norm != "") || (index == "Все" && norm != "")
@@ -46,7 +46,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
                                                 td= index
                                                 td.col-md-6
                                                     | !{norm}
-                            td.ref
+                            td.ref.ref_f
                                 table
                                     each norm, index in fraction.references.f
                                         if (index != "Все" && norm != "") || (index == "Все" && norm != "")

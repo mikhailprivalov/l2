@@ -2,13 +2,16 @@ from collections import defaultdict
 from copy import deepcopy
 
 import datetime
-#from astm.tests.test_server import null_dispatcher
+# from astm.tests.test_server import null_dispatcher
+import re
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User, Group
+from django.utils import dateformat
 
 from appconf.manager import SettingManager
+from laboratory import settings
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
@@ -42,14 +45,16 @@ def dashboard(request):  # Представление панели управл�
                 {"url": "/dashboard/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
         if "Получатель биоматериала" in groups:
             menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
-            menu.append({"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
-                         "nt": False})
+            menu.append(
+                {"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
+                 "nt": False})
             menu.append(
                 {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
         if "Врач-лаборант" in groups or "Лаборант" in groups:
             menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
-            menu.append({"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
-                         "nt": False})
+            menu.append(
+                {"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
+                 "nt": False})
         if "Оператор" in groups:
             menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
         if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
@@ -61,13 +66,20 @@ def dashboard(request):  # Представление панели управл�
             menu.append(
                 {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
                  "nt": False})
+        if "Загрузка выписок" in groups or "Поиск выписок" in groups or "Лечащий врач" in groups:
+            menu.append(
+                {"url": "/dashboard/discharge", "title": "Выписки", "keys": "Shift+v",
+                 "nt": False})
         if request.user.is_superuser:
             menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
-            menu.append({"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
+            menu.append(
+                {"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
             menu.append({"url": "/dashboard/change_password", "title": "Смена пароля", "keys": "", "nt": False})
-            menu.append({"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
+            menu.append(
+                {"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
             if settings.LDAP and settings.LDAP["enable"]:
-                menu.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
+                menu.append(
+                    {"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
             menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
 
         menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
@@ -197,14 +209,16 @@ def confirm_reset(request):
                 0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
             ctime = int(time.time())
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
-            if (ctime - ctp < SettingManager.get("lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser:
+            if (ctime - ctp < SettingManager.get(
+                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser:
                 predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 result = {"ok": True}
                 slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
             else:
-                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (str(SettingManager.get("lab_reset_confirm_time_min")))
+                result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (
+                str(SettingManager.get("lab_reset_confirm_time_min")))
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -320,6 +334,8 @@ def directions(request):
                                                              istype="stat"),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
                                                          "users": json.dumps(users)})
+
+
 @login_required
 def results_history(request):
     podr = Podrazdeleniya.objects.filter(isLab=True)
@@ -333,12 +349,158 @@ def results_history(request):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
     return render(request, 'dashboard/results_history.html', {'labs': podr,
-                                                         'fin_poli': IstochnikiFinansirovaniya.objects.filter(
-                                                             istype="poli"),
-                                                         'fin_stat': IstochnikiFinansirovaniya.objects.filter(
-                                                             istype="stat"),
-                                                         "notlabs": podrazdeleniya,
-                                                         "users": json.dumps(users)})
+                                                              'fin_poli': IstochnikiFinansirovaniya.objects.filter(
+                                                                  istype="poli"),
+                                                              'fin_stat': IstochnikiFinansirovaniya.objects.filter(
+                                                                  istype="stat"),
+                                                              "notlabs": podrazdeleniya,
+                                                              "users": json.dumps(users)})
+
+
+@login_required
+@group_required("Лечащий врач", "Загрузка выписок", "Поиск выписок")
+def discharge(request):
+    podr = Podrazdeleniya.objects.filter(isLab=True)
+
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    users = []
+    for p in podrazdeleniya:
+        pd = {"pk": p.pk, "title": p.title, "docs": []}
+        for d in DoctorProfile.objects.filter(podrazileniye=p,
+                                              user__groups__name="Лечащий врач"):
+            pd["docs"].append({"pk": d.pk, "fio": d.fio})
+        users.append(pd)
+    return render(request, 'dashboard/discharge.html', {'labs': podr,
+                                                        'fin_poli': IstochnikiFinansirovaniya.objects.filter(
+                                                            istype="poli"),
+                                                        'fin_stat': IstochnikiFinansirovaniya.objects.filter(
+                                                            istype="stat"),
+                                                        "notlabs": podrazdeleniya,
+                                                        "users": json.dumps(users)})
+
+
+@csrf_exempt
+@login_required
+@group_required("Лечащий врач", "Загрузка выписок")
+def discharge_add(request):
+    r = {"ok": True}
+    if request.method == "POST":
+        import podrazdeleniya.models as pod
+        import discharge.models as discharge
+        client_surname = request.POST.get("client_surname", "").strip()
+        client_name = request.POST.get("client_name", "").strip()
+        client_patronymic = request.POST.get("client_patronymic", "").strip()
+        client_birthday = request.POST.get("client_birthday", "").strip()
+        client_sex = request.POST.get("client_sex", "").strip()
+        client_cardnum = request.POST.get("client_cardnum", "").strip()
+        client_historynum = request.POST.get("client_historynum", "").strip()
+
+        otd = pod.Podrazdeleniya.objects.get(pk=int(request.POST.get("otd", "-1")))
+        doc_fio = request.POST.get("doc_fio", "").strip()
+
+        if "" not in [client_surname, client_name, client_patronymic] and request.FILES.get('file', "") != "":
+            obj = discharge.Discharge(client_surname=client_surname,
+                                      client_name=client_name,
+                                      client_patronymic=client_patronymic,
+                                      client_birthday=client_birthday,
+                                      client_sex=client_sex,
+                                      client_cardnum=client_cardnum,
+                                      client_historynum=client_historynum,
+                                      otd=otd,
+                                      doc_fio=doc_fio,
+                                      creator=request.user.doctorprofile,
+                                      file=request.FILES["file"])
+            obj.save()
+            slog.Log(key=obj.pk, type=1000, body=json.dumps({"client_surname": client_surname,
+                                                             "client_name": client_name,
+                                                             "client_patronymic": client_patronymic,
+                                                             "client_birthday": client_birthday,
+                                                             "client_sex": client_sex,
+                                                             "client_cardnum": client_cardnum,
+                                                             "client_historynum": client_historynum,
+                                                             "otd": otd.title + ", " + str(otd.pk),
+                                                             "doc_fio": doc_fio,
+                                                             "file": obj.file.name}),
+                     user=request.user.doctorprofile).save()
+    return HttpResponse(json.dumps(r), content_type="application/json")
+
+
+@csrf_exempt
+@login_required
+@group_required("Лечащий врач", "Поиск выписок")
+def discharge_search(request):
+    r = {"rows": []}
+    if request.method == "GET":
+        import discharge.models as discharge
+        date_start = request.GET["date_start"]
+        date_end = request.GET["date_end"]
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        query = request.GET.get("q", "")
+        otd_pk = int(request.GET.get("otd", "-1"))
+        doc_fio = request.GET.get("doc_fio", "")
+
+        slog.Log(key=query, type=1001, body=json.dumps({"date_start": request.GET["date_start"],
+                                                         "date_end": request.GET["date_end"],
+                                                         "otd_pk": otd_pk,
+                                                         "doc_fio": doc_fio}),
+                 user=request.user.doctorprofile).save()
+
+        filter_type = "any"
+        family = ""
+        name = ""
+        twoname = ""
+        bdate = ""
+
+        if query.isdigit():
+            filter_type = "card_number"
+        elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
+                query)):
+            filter_type = "fio"
+            split = query.split()
+            if len(split) > 0:
+                family = split[0]
+            if len(split) > 1:
+                name = split[1]
+            if len(split) > 2:
+                twoname = split[2]
+            if len(split) > 2:
+                twoname = split[2]
+            if len(split) > 3:
+                bdate = split[3]
+
+        rows = discharge.Discharge.objects.filter(created_at__range=(date_start, date_end,),
+                                                  doc_fio__icontains=doc_fio)
+
+        if otd_pk > -1:
+            rows = rows.filter(otd__pk=otd_pk)
+
+        if filter_type == "fio":
+            rows = rows.filter(client_surname__contains=family,
+                               client_name__contains=name,
+                               client_patronymic__contains=twoname,
+                               client_birthday__contains=bdate)
+
+        if filter_type == "card_number":
+            rows = rows.filter(client_cardnum=int(query))
+        import os
+        for row in rows.order_by("-created_at"):
+            r["rows"].append({"date": str(dateformat.format(row.created_at.date(), settings.DATE_FORMAT)),
+                              "client": {
+                                  "surname": row.client_surname,
+                                  "name": row.client_name,
+                                  "patronymic": row.client_patronymic,
+                                  "sex": row.client_sex,
+                                  "birthday": row.client_birthday
+                              },
+                              "otd": row.otd.title,
+                              "doc_fio": row.doc_fio,
+                              "filename": os.path.basename(row.file.name),
+                              "fileurl": row.file.url})
+
+    return HttpResponse(json.dumps(r), content_type="application/json")
 
 
 @login_required

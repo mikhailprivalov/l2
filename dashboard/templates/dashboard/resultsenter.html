@@ -134,7 +134,7 @@
                     <a href="#" onclick="open_fill_form();return false;">Заполнить поля</a>
                 </div>
                 <div class="col-xs-6" style="text-align: right">
-                    <a href="#" onclick="reload_fast();return false;">Перезагрузить данные</a>
+                    <a href="#" onclick="reload_fast(true);return false;">Перезагрузить данные</a>
                 </div>
             </div>
         </div>
@@ -494,12 +494,12 @@
             padding-left: 6px !important;
         }
 
-        .select-dir.active td, .select-tube.active td {
+        .select-dir.active td, .select-tube.active td:not(.tube-color-td) {
             background-color: #6C7A89 !important;
             color: #fff !important;
         }
 
-        .select-dir td, .select-tube td {
+        .select-dir td, .select-tube {
             background-color: #fff;
         }
 
@@ -510,14 +510,23 @@
         .highlight, .select-tube:hover, .select-dir:hover {
         }
 
-        .select-tube:hover .num, .select-dir:hover .num {
+        .select-tube:hover, .select-dir:hover .num {
             background-color: #FAFAFA;
             z-index: 10;
         }
 
-        .select-tube .num, .select-dir .num {
+        .select-tube, .select-dir .num {
             background-color: #FFF;
             z-index: 1;
+        }
+
+        .st .tube-color-td {
+            width: 10%;
+            padding: 0 !important;
+        }
+
+        .st td:not(.tube-color-td) {
+            width: 45%;
         }
 
         html, body {
@@ -857,6 +866,7 @@
             border-top: 1px solid #16a085 !important;
             border-bottom: 1px solid #16a085 !important;
         }
+
         li.tb-group-1.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #16a085 !important;
         }
@@ -866,16 +876,17 @@
             border-top: 1px solid #8e44ad !important;
             border-bottom: 1px solid #8e44ad !important;
         }
+
         li.tb-group-2.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #8e44ad !important;
         }
-
 
         li.tb-group-3.active {
             border-left-width: 6px !important;
             border-top: 1px solid #2e8dcd !important;
             border-bottom: 1px solid #2e8dcd !important;
         }
+
         li.tb-group-3.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #2e8dcd !important;
         }
@@ -885,6 +896,7 @@
             border-top: 1px solid #2c3e50 !important;
             border-bottom: 1px solid #2c3e50 !important;
         }
+
         li.tb-group-4.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #2c3e50 !important;
         }
@@ -894,6 +906,7 @@
             border-top: 1px solid #27ae60 !important;
             border-bottom: 1px solid #27ae60 !important;
         }
+
         li.tb-group-5.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #27ae60 !important;
         }
@@ -903,6 +916,7 @@
             border-top: 1px solid #f1c40f !important;
             border-bottom: 1px solid #f1c40f !important;
         }
+
         li.tb-group-6.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #f1c40f !important;
         }
@@ -912,6 +926,7 @@
             border-top: 1px solid #e67e22 !important;
             border-bottom: 1px solid #e67e22 !important;
         }
+
         li.tb-group-7.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #e67e22 !important;
         }
@@ -921,6 +936,7 @@
             border-top: 1px solid #e74c3c !important;
             border-bottom: 1px solid #e74c3c !important;
         }
+
         li.tb-group-8.active:not(.issledovaniya-isnorm-not_normal):not(.issledovaniya-isnorm-maybe) {
             border-right: 1px solid #e74c3c !important;
         }
@@ -1003,18 +1019,40 @@
             border-right: 0 !important;
             line-height: 1.2;
         }
-        #issledovaniya li:not(.issledovaniya-isnorm-maybe):not(.issledovaniya-isnorm-not_normal){
+
+        #issledovaniya li:not(.issledovaniya-isnorm-maybe):not(.issledovaniya-isnorm-not_normal) {
             padding-right: 8px;
         }
+
         .issledovaniya-isnorm-maybe, .issledovaniya-isnorm-not_normal {
-            border-right-width: 3px!important;
+            border-right-width: 3px !important;
         }
+
         .issledovaniya-isnorm-not_normal {
-            border-right-color: #E68364!important;
+            border-right-color: #E68364 !important;
         }
+
         .issledovaniya-isnorm-maybe {
-            border-right-color: #F5D76E!important;
+            border-right-color: #F5D76E !important;
         }
+
+        .circle {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            vertical-align: middle;
+            margin-bottom: 3px;
+        }
+
+        :not(.active) .circle {
+            box-shadow: 0 0 2px #6C7A89;
+        }
+
+        .ref sup {
+            top: 0
+        }
+
     </style>
 {% endblock %}
 
@@ -1025,10 +1063,60 @@
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script src="/static/js/ajaxq.js"></script>
     <script>
-        var type = 0, su = false;
-        var cached_templates = {};
-        var cached_researches = {};
-        var nn = 0;
+        let firstrun = true;
+        let first_resize = true;
+        let list_reload = false;
+        let su = false;
+        let lockdeff = false;
+
+        let type = 0;
+        let cached_templates = {};
+        let nn = 0;
+
+        let loaded_research = -1;
+        let datatype = -1;
+        let loaded_fractions = {};
+        let researches_cache = {};
+        let rendered_form_cache = {};
+
+        let dir_active = -1;
+        let tubes_active = [];
+        let type_active = -1;
+
+        let dir_data = {};
+
+        let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td></tr>';
+
+        let statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
+        let statuses_titles = {
+            "n": "Не обработан",
+            "s": "Обработан (сохранен, ожидает подтверждения)",
+            "c": "Подтверждён",
+            "o": "Отложен"
+        };
+
+        let iss_pks = [];
+        let has_o = false;
+        let iss_isnorm = {"unknown": "", "normal": "Норма", "not_normal": "Не норма", "maybe": "Не удалось обработать"};
+
+        var substringMatcher = function (strs) {
+            return function findMatches(q, cb) {
+                let matches, substringRegex;
+                matches = [];
+                substrRegex = new RegExp(q, 'i');
+                $.each(strs, function (i, str) {
+                    if (substrRegex.test(str)) {
+                        matches.push(str);
+                    }
+                });
+
+                cb(matches);
+            };
+        };
+
+        let fill_researches = {};
+        let queue_fill = [];
+
         $(document).ready(function () {
             {% if request.user.is_superuser %}su = true;{% endif %}
             $("#result-print").prop("disabled", true);
@@ -1041,8 +1129,8 @@
                 url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
-                var vv = [];
-                for (var v of data) {
+                let vv = [];
+                for (let v of data) {
                     vv.push(v.id);
                 }
                 nn++;
@@ -1059,7 +1147,7 @@
                     }
                 }).done(function (data2) {
                     data2 = JSON.parse(data2);
-                    for (var v of data2) {
+                    for (let v of data2) {
                         researches_cache[v.i] = {
                             "title": v.title,
                             "fractions": v.fractions,
@@ -1068,11 +1156,11 @@
                     }
                 }).always(dechl);
 
-                for (var i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; i++) {
                     nn++;
                     (function (i) {
                         $.ajaxq('precache', {
-                            url: "/static/templates/{0}.jade".f(i),
+                            url: `/static/templates/${i}.jade`,
                             type: "text",
                             cache: false,
                             method: "GET"
@@ -1108,14 +1196,14 @@
             });
             $("body").on('keyup', ':not(.row-container) .result-enter', function (e) {
                 if (e.which === 13) {
-                    var index = $('.result-enter:not(.tt-hint)').index(this) + 1;
+                    let index = $('.result-enter:not(.tt-hint)').index(this) + 1;
                     if ($('.result-enter:not(.tt-hint)').eq(index).length)
                         $('.result-enter:not(.tt-hint)').eq(index).focus();
                     else
                         save();
                 }
             });
-            var today = new Date();
+            let today = new Date();
 
             $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
             $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
@@ -1136,7 +1224,7 @@
         });
         function sync_checks() {
             $(".btn").removeClass("active-b");
-            var elements = document.querySelectorAll("input[name='sel']:checked");
+            let elements = document.querySelectorAll("input[name='sel']:checked");
             Array.prototype.forEach.call(elements, function (el, i) {
                 $(el).parent().addClass("active-b");
             });
@@ -1150,27 +1238,45 @@
             load_data($('#search-field').val(), type);
         }
 
-        function reload_fast() {
+        function reload_fast(sync_all_scroll) {
+            let s = !!sync_all_scroll;
+
             if (loaded_research < 0 && request != "") return;
 
-            load_data(request, type);
+            load_data(request, type, false, false, s);
 
             //load_form(loaded_research);
         }
         function get_age(s_age) {
             return parseInt(s_age.split(" ")[0]);
         }
-        var dir_data = {};
-        var statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
-        var statuses_titles = {
-            "n": "Не обработан",
-            "s": "Обработан (сохранен, ожидает подтверждения)",
-            "c": "Подтверждён",
-            "o": "Отложен"
-        };
-        var iss_pks = [], has_o = false;
-        var iss_isnorm = {"unknown": "", "normal": "Норма", "not_normal": "Не норма", "maybe": "Не удалось обработать"};
-        function load_data(id, type, select_el, noclear) {
+
+        function sync_active(resync){
+            let rs = !!resync;
+            $(".select-dir.active, .select-tube.active").removeClass("active");
+            if(dir_active !== -1 && $(`[direction='${dir_active}']`).length) {
+                if (type_active == 0 || rs) {
+                    $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active == 0 ? "active" : ""), 0, {offset: -35});
+                }
+                if (type_active == 1 || rs) {
+                    $(`[direction='${dir_active}']`).addClass(type_active == 1 ? "active" : "");
+                    $('#tubes-list').scrollTo($(`.select-tube[direction='${dir_active}']`), 0, {offset: -35});
+                }
+            }
+            for(let tube of tubes_active){
+                $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group);
+                if (type_active == 0) {
+                    $(`.select-tube[tube='${tube.pk}']`).addClass("active");
+                }
+            }
+        }
+
+        function load_data(id, type, select_el, noclear, s) {
+
+            tubes_active = [];
+            dir_active = -1;
+            type_active = type;
+
             sl();
             iss_pks = [];
             $("#search-field").attr("placeholder", "");
@@ -1226,10 +1332,9 @@
                 $("#issledovaniya").isLoading("hide");
                 $(".not-loaded").hide();
                 $("#issledovaniya").show();
-                $(".select-dir.active, .select-tube.active").removeClass("active");
                 $("#result-form").empty();
                 $("#issledovaniya").empty();
-                $("#dir_num").html("<a href='/directions/pdf?napr_id=[{0}]' target='_blank'>{0}</a>".f(data.napr_pk));
+                $("#dir_num").html(`<a href='/directions/pdf?napr_id=[${data.napr_pk}]' target='_blank'>${data.napr_pk}</a>`);
                 $("#dir_client_fio").html(data.client_fio);
                 $("#directioner").html(data.directioner);
                 $("#client_vozrast").html(data.client_vozrast);
@@ -1239,15 +1344,17 @@
                 $("#fin_source").html(data.fin_source);
                 $("#otd").html(data.otd);
                 $(".dir-datafield").fadeIn(100);
-                var status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
+                let status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
                 has_o = false;
                 $(".select-tube").removeClass(function (index, css) {
                     return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
                 });
 
                 tmp_types = {"1": "направление", "0": "пробирка"};
-                $("#search-field").attr("placeholder", "Загружено: {0} {1}".f(tmp_types[type + ""], id));
+                $("#search-field").attr("placeholder", `Загружено: ${tmp_types[type + ""]} ${id}`);
 
+                dir_active = data.napr_pk;
+                let pks = [];
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
                     else if (v.saved && v.confirmed) status = "c";
@@ -1268,55 +1375,45 @@
                     if (status != "c") {
                         if (v.deff === false) {
                             iss_pks.push(v.pk);
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, {0});return false;'>отложить</a>".f(v.pk);
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, ${v.pk});return false;'>отложить</a>`;
                             all_o = false;
                         }
                         else {
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, {0});return false;'>отм. отложить</a>".f(v.pk);
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, ${v.pk});return false;'>отм. отложить</a>`;
                             status = "o";
                         }
                         if (v.current_doc_save == 0) {
-                            sv = "<br/><span class='save-other'>сохранил: {0}</span>".f(v.doc_save_fio);
+                            sv = `<br/><span class='save-other'>сохранил: ${v.doc_save_fio}</span>`;
                             has_o = true;
                         }
                         if (v.tube.pk == "") {
-                            sv = "&nbsp;<span class='no-tube'>Пробирка {0} не принята</span>".f(v.not_received_tubes);
+                            sv = `&nbsp;<span class='no-tube'>Пробирка ${v.not_received_tubes} не принята</span>`;
                         }
                         deffc = "<br/>" + deffc;
                     }
                     else {
                         all_o = false;
                         if (v.allow_disable_confirm)
-                            deffc = "<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm({0}, \"{1}\", {2});return false;'>Сброс подтверждения</a>".f(v.pk, v.title, v.tube.pk || -1);
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`;
                     }
-                    var t = "";
-                    if(v.saved && v.is_norm != "normal")
+                    let t = "";
+                    if (v.saved && v.is_norm != "normal")
                         t = `title='${iss_isnorm[v.is_norm]}'`;
                     $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
 
                     tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {
-                        $(".select-tube[tube='{0}']".f(vt)).addClass("tb-group-" + v.group);
-                        if (type == 0) {
-                            $(".select-tube[tube='{0}']".f(vt)).addClass("active");
-                        }
+                        if(pks.indexOf(vt) !== -1)
+                            return;
+                        pks.push(vt);
+                        tubes_active.push({pk: vt, group: "tb-group-" + v.group});
                     });
                 });
-
-                if ($('[direction=\'{0}\']'.f(data.napr_pk)).length) {
-                    if (type == 0) {
-                        $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
-                        $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 0, {offset: -40});
-                    }
-                    if (type == 1) {
-                        $("[direction='{0}']".f(data.napr_pk)).addClass("active");
-                        $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 0, {offset: -40});
-                    }
-                }
+                sync_active(!!s);
                 if (!select_el)
                     $("#issledovaniya li").first().click();
                 else
-                    $("#issledovaniya li[num='{0}']".f(select_el)).click();
+                    $(`#issledovaniya li[num='${select_el}']`).click();
                 $('#issledovaniya-scroll').scrollTop(0);
                 if (all_saved) {
                     $("#result-confirm").removeAttr("disabled");
@@ -1329,11 +1426,6 @@
                 $("#loaded-buttons a").fadeIn(100);
             });
         }
-        var loaded_research = -1;
-        var datatype = -1;
-        var loaded_fractions = {};
-        var researches_cache = {};
-        var rendered_form_cache = {};
         function fix_signs(input) {
             if (/^(<|>)\s*\d+$/g.test(input)) {
                 input = input.replace(">", "&gt;").replace("<", "&lt;");
@@ -1372,54 +1464,54 @@
                     $.each(data2.fractions, function (fk, fv) {
                         loaded_fractions[fv.pk] = fv;
                         data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9);
-                        for (var mf in data2.fractions[fk].references) {
-                            var keys = [], k, i, len;
+                        for (let mf in data2.fractions[fk].references) {
+                            let keys = [], k, i, len;
                             if (data2.fractions[fk].references.hasOwnProperty(mf)) {
-                                var tmp = data2.fractions[fk].references[mf];
+                                let tmp = data2.fractions[fk].references[mf];
                                 for (k in tmp) {
                                     if (tmp.hasOwnProperty(k)) {
                                         keys.push(k);
                                     }
                                 }
                                 keys.sort(
-                                        function (x, y) {
-                                            var xx = 0;
-                                            var yy = 0;
-                                            try {
-                                                if (x.toLowerCase().indexOf("все") >= 0) {
-                                                    xx = -1;
-                                                }
-                                                else if (x.indexOf("-") >= 0) {
-                                                    xx = x.split("-").last();
-                                                }
-                                                else {
-                                                    xx = x.replace(/[^\d.]/g, '');
-                                                }
-
-                                                if (y.toLowerCase().indexOf("все") >= 0) {
-                                                    yy = -1;
-                                                }
-                                                else if (y.indexOf("-") >= 0) {
-                                                    yy = y.split("-").last();
-                                                }
-                                                else {
-                                                    yy = y.replace(/[^\d.]/g, '');
-                                                }
-
-                                                xx = parseInt(xx);
-                                                yy = parseInt(yy);
-
-                                                if (x.indexOf("старше") >= 0) {
-                                                    xx++;
-                                                }
-                                                if (y.indexOf("старше") >= 0) {
-                                                    yy++;
-                                                }
-
-                                            } catch (err) {
+                                    function (x, y) {
+                                        let xx = 0;
+                                        let yy = 0;
+                                        try {
+                                            if (x.toLowerCase().indexOf("все") >= 0) {
+                                                xx = -1;
                                             }
-                                            return xx - yy;
+                                            else if (x.indexOf("-") >= 0) {
+                                                xx = x.split("-").last();
+                                            }
+                                            else {
+                                                xx = x.replace(/[^\d.]/g, '');
+                                            }
+
+                                            if (y.toLowerCase().indexOf("все") >= 0) {
+                                                yy = -1;
+                                            }
+                                            else if (y.indexOf("-") >= 0) {
+                                                yy = y.split("-").last();
+                                            }
+                                            else {
+                                                yy = y.replace(/[^\d.]/g, '');
+                                            }
+
+                                            xx = parseInt(xx);
+                                            yy = parseInt(yy);
+
+                                            if (x.indexOf("старше") >= 0) {
+                                                xx++;
+                                            }
+                                            if (y.indexOf("старше") >= 0) {
+                                                yy++;
+                                            }
+
+                                        } catch (err) {
                                         }
+                                        return xx - yy;
+                                    }
                                 );
                                 len = keys.length;
                                 data2.fractions[fk].references[mf] = {};
@@ -1431,23 +1523,23 @@
                         }
                     });
 
-                    var rendered = !!rendered_form_cache[research_pk];
+                    let rendered = !!rendered_form_cache[research_pk];
                     if (!rendered)
                         rendered_form_cache[research_pk] = jade.compile(template)(data2);
                     $("#result-form").html(rendered_form_cache[research_pk]);
                     if (rendered)
                         $("#issledovaniye_id").val(data2.res_id);
-                    $("#issledovaniya [num='{0}']".f(data2.res_id)).addClass("active");
-                    var autoIsF = false;
-                    var num = 0;
+                    $(`#issledovaniya [num='${data2.res_id}']`).addClass("active");
+                    let autoIsF = false;
+                    let num = 0;
                     $.each(data2.fractions, function (fk, fv) {
                         num++;
                         if (fv.type != -1) {
                             if (num == 1) autoIsF = true;
-                            var ft = $.map(fraction_types[fv.type + ""], function (item) {
+                            let ft = $.map(fraction_types[fv.type + ""], function (item) {
                                 return {value: item};
                             });
-                            var typeVals = new Bloodhound({
+                            let typeVals = new Bloodhound({
                                 datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                                 queryTokenizer: Bloodhound.tokenizers.whitespace,
                                 identify: function (obj) {
@@ -1460,7 +1552,7 @@
                                 sync(typeVals.get(fraction_types[fv.type + ""]));
                             }
 
-                            $d = $("[data-pk='{0}']".f(fv.pk));
+                            $d = $(`[data-pk='${fv.pk}']`);
                             $val = $d.val();
                             $d.typeahead({
                                 minLength: 0,
@@ -1474,17 +1566,17 @@
                                 limit: 40
                             });
                             $d.typeahead('val', $val);
-                            $("[data-pk='{0}']".f(fv.pk)).val($val);
+                            $(`[data-pk='${fv.pk}']`).val($val);
                         }
                     });
                     //f = $('.result-enter:not(.tt-hint)').eq(0);
 
                     $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
-                            if (v != "")
-                                $("[data-pk='{0}']".f(k)).typeahead('close').typeahead('val', v).blur();
-                            $("[data-pk='" + k + "']").val(v);
-                            $("[data-div-pk='{0}']".f(k)).html(v);
+                            if (v !== "")
+                                $(`[data-pk='${k}']`).typeahead('close').typeahead('val', v).blur();
+                            $(`[data-pk='${k}']`).val(v);
+                            $(`[data-div-pk='${k}']`).html(v);
                             if (data.norms[k]) {
                                 $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`);
                             }
@@ -1498,8 +1590,8 @@
                             resize();
                         } finally {
                             $('.result-enter.tt-input').eq(0).focus().blur();
-                            setTimeout(function(){
-                                if($('.result-enter:not(.tt-hint):textboxEmpty').length){
+                            setTimeout(function () {
+                                if ($('.result-enter:not(.tt-hint):textboxEmpty').length) {
                                     $('.result-enter:not(.tt-hint):textboxEmpty').eq(0).focus();
                                 }
                                 resize();
@@ -1546,7 +1638,7 @@
 
             if (!cached_templates[templateid]) {
                 $.ajax({
-                    url: "/static/templates/{0}.jade".f(templateid),
+                    url: `/static/templates/${templateid}.jade`,
                     type: "text",
                     cache: false,
                     method: "GET"
@@ -1561,7 +1653,7 @@
         function fast_search(num) {
             $("#search-field").val(num);
         }
-        var firstrun = true;
+
         function dechl() {
             nn--;
             if (nn <= 0) {
@@ -1576,20 +1668,22 @@
             nn++;
             sl();
         }
-        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><!--<td><i class="%class% glyphicon glyphicon-refresh"></i></td>--></tr>';
+
         function load_tubes_and_dirs() {
             sl();
             nn++;
             $("#tubes-list tbody").isLoading({
-                text: "Загрузка пробирок",
+                text: "Загрузка",
                 position: "inside",
                 'tpl': loadingtable,
             });
             $("#dirs-list tbody").isLoading({
-                text: "Загрузка направлений",
+                text: "Загрузка",
                 position: "inside",
                 'tpl': loadingtable,
             });
+            document.querySelector("#dirs-list").scrollTop = 0;
+            document.querySelector("#tubes-list").scrollTop = 0;
             $.ajax({
                 url: "/results/loadready",
                 data: {
@@ -1600,51 +1694,56 @@
                 type: "json",
                 method: "GET"
             }).done(function (data) {
-                $("#tubes-list tbody").isLoading("hide");
-                $("#dirs-list tbody").isLoading("hide");
+                let tubes_list = document.querySelector("#tubes-list tbody");
+                let dirs_list = document.querySelector("#dirs-list tbody");
+                let tubes_html = "";
+                let dirs_html = "";
 
-                document.querySelector("#tubes-list tbody").innerHTML = "";
-                document.querySelector("#dirs-list tbody").innerHTML = "";
+                $(tubes_list).isLoading("hide");
+                $(dirs_list).isLoading("hide");
 
-                tubesn = data.tubes.length;
-                dirsn = data.directions.length;
-
-                if (tubesn == 0)
-                    $("#tubes-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
-                if (dirsn == 0)
-                    $("#dirs-list tbody").append("<tr class='pulse'><td>Не найдено</td></tr>");
-                var i = 0;
-                for (i = 0; i < tubesn; i++) {
-                    v = data.tubes[i];
-                    document.querySelector("#tubes-list tbody").innerHTML += "<tr direction='{1}' tube='{0}' class='select-tube'><td class='num'><span style='float: right'>{2}</span> {0}</td></tr>".f(v.id, v.direction, v.date);
+                if (data.tubes.length === 0) {
+                    tubes_html = "<tr class='pulse'><td>Не найдено</td></tr>";
                 }
-                for (i = 0; i < dirsn; i++) {
-                    v = data.directions[i];
-                    document.querySelector("#dirs-list tbody").innerHTML += "<tr direction='{0}' class='select-dir'><td class='num'><span style='float: right'>{1}</span> {0}</td></tr>".f(v.id, v.date);
+                else {
+                    for (let v of data.tubes) {
+                        tubes_html += `<tr direction='${v.direction}' tube='${v.id}' class='select-tube' title='${v.tube.title}'><td><span style='float: right'>${v.date}</span><div style='background-color: ${v.tube.color}' class='circle'></div> ${v.id}</td></tr>`;
+                    }
                 }
-                document.querySelector("#tubes-list th small").textContent = tubesn;
-                document.querySelector("#dirs-list th small").textContent = dirsn;
-                $('#dirs-list').scrollTop(0);
-                $('#tubes-list').scrollTop(0);
-                resize();
-                //$("#tubes-list tr, #dirs-list tr").addClass("animated");
+                if (data.directions.length === 0) {
+                    dirs_html = "<tr class='pulse'><td>Не найдено</td></tr>";
+                } else {
+                    for (let v of data.directions) {
+                        dirs_html += `<tr direction='${v.id}' class='select-dir'><td class='num'><span style='float: right'>${v.date}</span> ${v.id}</td></tr>`;
+                    }
+                }
+                document.querySelector("#tubes-list th small").textContent = data.tubes.length;
+                document.querySelector("#dirs-list th small").textContent = data.directions.length;
+
+                tubes_list.innerHTML = tubes_html;
+                dirs_list.innerHTML = dirs_html;
+
+                sync_active(true);
+
+                $('#tubes-list').perfectScrollbar('update');
+                $('#dirs-list').perfectScrollbar('update');
             }).always(dechl);
         }
-        var first_resize = true;
+
         function resize() {
             $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
-            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50);
             $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50);
             if (first_resize) {
                 $('#tubes-list').perfectScrollbar();
-                $('#issledovaniya-scroll').perfectScrollbar();
                 $('#dirs-list').perfectScrollbar();
+                $('#issledovaniya-scroll').perfectScrollbar();
                 first_resize = false;
             }
             else {
                 $('#tubes-list').perfectScrollbar('update');
-                $('#issledovaniya-scroll').perfectScrollbar('update');
                 $('#dirs-list').perfectScrollbar('update');
+                $('#issledovaniya-scroll').perfectScrollbar('update');
             }
 
             $(".floatThead").floatThead('reflow');
@@ -1665,7 +1764,7 @@
             $("#confirm-andsave-btn").attr("disabled", 1);
             if (datatype == 2) return;
             $(this).disabled = true;
-            var result = {issledovaniye: -1, fractions: {}}
+            let result = {issledovaniye: -1, fractions: {}};
             result.issledovaniye = $("#issledovaniye_id").val();
             $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
                 result.fractions[$(v).data("pk")] = $(v).val();
@@ -1750,13 +1849,14 @@
                 });
             });
         }
-        var list_reload = false;
+
         function print_results() {
             data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
             window.open('/results/pdf' + data, '_blank');
             // list_reload = true;
             //$('[direction="' + dir_data.napr_pk + '"]').remove();
         }
+
         function createjournal() {
             date = $("[name=date-confirm]").val();
             v = $("#ist_f").val();
@@ -1817,27 +1917,12 @@
             arr = JSON.parse('[' + v + ']');
             window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr), '_blank');
         }
-        var substringMatcher = function (strs) {
-            return function findMatches(q, cb) {
-                var matches, substringRegex;
-                matches = [];
-                substrRegex = new RegExp(q, 'i');
-                $.each(strs, function (i, str) {
-                    if (substrRegex.test(str)) {
-                        matches.push(str);
-                    }
-                });
-
-                cb(matches);
-            };
-        };
-        var fill_researches = {};
         function open_fill_form() {
             sl();
-            var tubes = new Set();
+            let tubes = new Set();
             fill_researches = {};
-            for (var iss of dir_data.issledovaniya) {
-                for (var tube of iss.tube.pk.split(",")) {
+            for (let iss of dir_data.issledovaniya) {
+                for (let tube of iss.tube.pk.split(",")) {
                     tubes.add(parseInt(tube));
                     if (fill_researches[tube] == undefined)
                         fill_researches[tube] = new Set();
@@ -1845,7 +1930,7 @@
                 }
             }
             $("#fillform-tubes").html("");
-            for (var tube of tubes) {
+            for (let tube of tubes) {
                 $("#fillform-tubes").append(`<option value='${tube}'>${tube}</option>`);
             }
             $("#fillform-text").val("");
@@ -1853,14 +1938,14 @@
             $("#fillform-modal").modal();
             hl();
         }
-        var queue_fill = [];
+
         function do_fill() {
             sl();
-            var tube = parseInt($("#fillform-tubes").val());
-            var all = $("[name=fillform-type]:checked").val() == "all";
-            var researches = fill_researches[tube];
-            var text_to_fill = $("#fillform-text").val();
-            for (var res of researches) {
+            let tube = parseInt($("#fillform-tubes").val());
+            let all = $("[name=fillform-type]:checked").val() == "all";
+            let researches = fill_researches[tube];
+            let text_to_fill = $("#fillform-text").val();
+            for (let res of researches) {
                 (function (res_pk) {
                     queue_fill.push(res_pk);
                     $.ajaxq('/researches/get/one', {
@@ -1877,12 +1962,12 @@
                             data: {iss_id: res_pk}
                         }).done(function (results_data) {
                             sl();
-                            var fractions_data = data.fractions;
-                            var result = {issledovaniye: res_pk, fractions: {}};
-                            var isnorm = results_data.norms;
+                            let fractions_data = data.fractions;
+                            let result = {issledovaniye: res_pk, fractions: {}};
+                            let isnorm = results_data.norms;
                             results_data = results_data.results;
-                            for (var fk of Object.keys(fractions_data)) {
-                                var fv = fractions_data[fk];
+                            for (let fk of Object.keys(fractions_data)) {
+                                let fv = fractions_data[fk];
                                 fv.pk = fv.pk + "";
                                 if ((all || !(fv.pk in results_data) || results_data[fv.pk] == "") && fv.render_type == 0) {
                                     result.fractions[fv.pk] = text_to_fill;
@@ -1897,22 +1982,22 @@
                                     method: "POST",
                                     data: result
                                 }).done(function () {
-                                    var index = queue_fill.indexOf(res_pk);
+                                    let index = queue_fill.indexOf(res_pk);
                                     if (index > -1) {
                                         queue_fill.splice(index, 1);
                                     }
-                                    if (queue_fill.length == 0) {
+                                    if (queue_fill.length === 0) {
                                         hl();
                                         reload_fast();
                                     }
                                 });
                             }
                             else {
-                                var index = queue_fill.indexOf(res_pk);
+                                let index = queue_fill.indexOf(res_pk);
                                 if (index > -1) {
                                     queue_fill.splice(index, 1);
                                 }
-                                if (queue_fill.length == 0) {
+                                if (queue_fill.length === 0) {
                                     $("#fill-hide").click();
                                     hl();
                                     reload_fast();
@@ -1934,7 +2019,6 @@
             load_researches("#dayprint-table-researches");
             $("#results-day-modal").modal();
         }
-        var lockdeff = false;
         function deff(status, pk) {
             if (lockdeff) return;
             lockdeff = true;
@@ -1946,7 +2030,7 @@
         function dayprint_do() {
             if (lockdeff) return;
             lockdeff = true;
-            var researches = [];
+            let researches = [];
             $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
                 researches.push(parseInt($(v).val()));
             });
@@ -1977,7 +2061,7 @@
                 lockdeff = false;
                 if (Object.keys(data.directions).length > 0) {
                     strs = [];
-                    for (var l = 0; l < Object.keys(data.directions).length; l++) {
+                    for (let l = 0; l < Object.keys(data.directions).length; l++) {
                         strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
                     }
 
@@ -2048,14 +2132,14 @@
                 $o.html("");
                 $o.append(lang.table_researches_header);
                 $.each(data, function (k, v) {
-                    $o.append("<label title='{1}' class=\"btn btn-default col-xs-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" class=\"research-sel\" autocomplete=\"off\"/> {1}</label>".f(v.pk, v.fields.ref_title));
+                    $o.append(`<label title='${v.fields.ref_title}' class="btn btn-default col-xs-3"><input type="checkbox" name="sel" value="${v.pk}" class="research-sel" autocomplete="off"/> ${v.fields.ref_title}</label>`);
                 });
             });
         }
         function reset_confirm(id, rtitle, tube) {
             sl();
-            var msg = "Сбросить подтверждение исследования №{0} - {1}, пробирка №{2}?".f(id, rtitle, tube);
-            var doreset = confirm(msg);
+            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, пробирка №${tube}?`;
+            let doreset = confirm(msg);
             if (doreset === false || doreset === null) {
                 hl();
                 return;
@@ -2072,7 +2156,7 @@
                         'theme': 'awesome ok',
                         'content': {
                             title: 'Подтверждение сброшено',
-                            message: "№{0} - {1}, пробирка №{2}".f(id, rtitle, tube),
+                            message: `№${id} - ${rtitle}, пробирка №${tube}`,
                             info: '',
                             icon: 'fa fa-exclamation'
                         },

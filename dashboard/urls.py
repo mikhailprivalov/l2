@@ -23,4 +23,7 @@ urlpatterns = [
     url(r'^results_history/search$', views.results_history_search),
     url(r'^change_password$', views.change_password),
     url(r'^update_pass$', views.update_pass),
+    url(r'^discharge$', views.discharge),
+    url(r'^discharge/send$', views.discharge_add),
+    url(r'^discharge/search$', views.discharge_search),
 ]

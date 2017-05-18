@@ -71,9 +71,31 @@ def researches_get_one(request):
                         ref_m = json.loads(ref_m)
                     if isinstance(ref_f, str):
                         ref_f = json.loads(ref_f)
-                    tmp = {"title": val.title, "pk": val.pk, "unit": val.units, "hide": val.hide,
-                           "render_type": val.render_type, "options": val.options.split(","), "type": val.type,
-                           "references": {"m": ref_m, "f": ref_f}, "num": val.sort_weight, "formula": val.formula}
+                    av = {}
+                    for avref in directory.References.objects.filter(fraction=val):
+                        av[avref.pk] = {
+                            "title": avref.title,
+                            "about": avref.about,
+                            "m": json.loads(avref.ref_m) if isinstance(avref.ref_m, str) else avref.ref_m,
+                            "f": json.loads(avref.ref_f) if isinstance(avref.ref_f, str) else avref.ref_f,
+
+                        }
+
+                    tmp = {"title": val.title,
+                           "pk": val.pk,
+                           "unit": val.units,
+                           "hide": val.hide,
+                           "render_type": val.render_type,
+                           "options": val.options.split(","),
+                           "type": val.type,
+                           "references": {
+                               "m": ref_m,
+                               "f": ref_f,
+                               "default": -1 if not val.default_ref else val.default_ref.pk,
+                               "available": av,
+                                          },
+                           "num": val.sort_weight,
+                           "formula": val.formula}
                     if val.sort_weight and val.sort_weight > 0:
                         res["fractions"][val.sort_weight] = tmp
                     else:

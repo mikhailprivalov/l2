@@ -161,7 +161,8 @@ def loadready(request):
                 dates_cache[tube.time_recive.date()] = dateformat.format(tube.time_recive, 'd.m.y')
             tubes.add(tube.pk)
             dicttube = {"id": tube.pk, "direction": direction.pk,
-                        "date": dates_cache[tube.time_recive.date()]}  # Временный словарь с информацией о пробирке
+                        "date": dates_cache[tube.time_recive.date()],
+                        "tube": {"title": tube.type.tube.title, "color": tube.type.tube.color}}  # Временный словарь с информацией о пробирке
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
 
         if tube.issledovaniya_set.first().napravleniye.pk not in dirs:
