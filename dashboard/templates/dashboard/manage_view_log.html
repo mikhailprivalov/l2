@@ -51,16 +51,16 @@
 
 {% block scripts %}
     <script>
-        var loaded = -1;
-        var last_n = 0;
-        var loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>';
-        var end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>';
-        var loading = '<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div> \
+        let loaded = -1;
+        let last_n = 0;
+        const loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>';
+        const end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>';
+        const loading = '<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div> \
   <span></span>\
   <span></span>\
   <span></span>\
 </div></td></tr>';
-        var searchdata = {"user": -1, "type": -1, "pk": "-1"};
+        let searchdata = {"user": -1, "type": -1, "pk": "-1"};
         $(document).ready(function () {
             resize();
             $(window).resize(function () {
@@ -77,15 +77,15 @@
                 setInterval(check_new_rows, 500);
             }, 1500);
         });
-        var endF = false;
-        var inload = false;
+        let endF = false;
+        let inload = false;
         function check_new_rows() {
             if(inload) return;
             inload = true;
             searchdata = {
                 "user": parseInt($("#user").val()),
                 "type": parseInt($("#type").val()),
-                "pk": $("#key").val() == "" ? '-1' : $("#key").val()
+                "pk": $("#key").val() === "" ? '-1' : $("#key").val()
             };
              $.ajax({
                 method: "GET",
@@ -93,18 +93,19 @@
                 data: {checknew: 1, last_n: last_n, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                  $.each(d.data, function (k, v) {
-                    dbody = v.body;
+                    let dbody = v.body;
                     try {
-                        par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
+                        const par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
                         dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
-                            return n != undefined
+                            return n !== undefined
                         }) : par), null, 2));
                     }
                     catch (e) {
                         dbody = syntaxHighlight(v.body);
                     }
+                    let dkey;
                     try {
-                        park = JSON.parse(v.key.replaceAll("\"", ""));
+                        const park = JSON.parse(v.key.replaceAll("\"", ""));
                         dkey = syntaxHighlight(JSON.stringify(park, null, 2));
                     }
                     catch (e) {
@@ -141,18 +142,19 @@
                 data: {checknew: 0, offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                 $.each(d.data, function (k, v) {
-                    dbody = v.body;
+                    let dbody = v.body;
                     try {
-                        par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
+                        const par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
                         dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
-                            return n != undefined
+                            return n !== undefined
                         }) : par), null, 2));
                     }
                     catch (e) {
                         dbody = syntaxHighlight(v.body);
                     }
+                    let dkey;
                     try {
-                        park = JSON.parse(v.key.replaceAll("\"", ""));
+                        const park = JSON.parse(v.key.replaceAll("\"", ""));
                         dkey = syntaxHighlight(JSON.stringify(park, null, 2));
                     }
                     catch (e) {
@@ -185,7 +187,7 @@
             });
         }
 
-        var first_resize = true;
+        let first_resize = true;
         function resize() {
             $('#table_cont').height($(window).height() - $('#table_cont').position().top - 60);
             if (first_resize) {
@@ -206,7 +208,7 @@
         function syntaxHighlight(json) {
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'number';
+                let cls = 'number';
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
                         cls = 'key';
@@ -225,7 +227,7 @@
             searchdata = {
                 "user": parseInt($("#user").val()),
                 "type": parseInt($("#type").val()),
-                "pk": $("#key").val() == "" ? '-1' : $("#key").val()
+                "pk": $("#key").val() === "" ? '-1' : $("#key").val()
             };
             loaded = -1;
             $("#table_cont").scrollTop(0);

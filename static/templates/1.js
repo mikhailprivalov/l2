@@ -1,4 +1,4 @@
-var k = -1;
+let k = -1;
 function genresult(th){
     k = pk = $(th).attr("pk");
     $("#res-modal h4").text($(th).attr("ftitle"));
@@ -17,7 +17,7 @@ function updateresmodal(th){
         $("#hiddenresmodal").show();
     }
 }
-var types_directory = {"0": "Отриц.", "1": "Пол.", "2": "Сомнит."};
+const types_directory = {"0": "Отриц.", "1": "Пол.", "2": "Сомнит."};
 function saveresmodal(){
     checked = $("[name='result-v']:checked");
     result = types_directory[checked.val()];

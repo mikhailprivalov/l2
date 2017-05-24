@@ -400,10 +400,8 @@
         },
 
         createView: function () {
-            var $drop = this.createDropdown(),
-                li = this.createLi();
-
-            $drop.find('ul')[0].innerHTML = li;
+            var $drop = this.createDropdown();
+            $drop.find('ul')[0].innerHTML = this.createLi();
             return $drop;
         },
 
@@ -411,8 +409,7 @@
             //Remove all children.
             this.destroyLi();
             //Re build
-            var li = this.createLi();
-            this.$menuInner[0].innerHTML = li;
+            this.$menuInner[0].innerHTML = this.createLi();
         },
 
         destroyLi: function () {

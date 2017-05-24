@@ -31,10 +31,9 @@
 
 {% block scripts %}
     <script>
-        var type = "poli", num = -1;
-
-        var active_lab = -1;
-        var labs = {
+        let type = "poli", num = -1;
+        let active_lab = -1;
+        const labs = {
         {% for v in labs %}{{ v.pk }} :
         "{{ v.title }}",
         {% endfor %}
@@ -47,15 +46,15 @@
         });
         function checkType(tr) {
             if (tr) {
-                tmp = $('input[name=type]:checked').val();
-                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                let tmp = $('input[name=type]:checked').val();
+                if (type !== tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
                     search($('#search-field').val());
                 }
             }
             type = $('input[name=type]:checked').val();
             $("#history-num-tr").hide();
             $("#ballast").hide();
-            if (type == "stat") {
+            if (type === "stat") {
                 $("#history-num-tr").show();
             }
             else {

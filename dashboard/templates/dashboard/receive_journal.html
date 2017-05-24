@@ -72,7 +72,7 @@
             });
         });
         function print_journal() {
-            otd = $("#select-otd").val();
+            const otd = $("#select-otd").val();
             if(!otd){
                 $.amaran({
                     'theme': 'awesome no',
@@ -90,7 +90,7 @@
             window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=[${otd}]`, '_blank')
         }
         function print_directions() {
-            otd = $("#select-otd").val();
+            const otd = $("#select-otd").val();
             if(!otd){
                 $.amaran({
                     'theme': 'awesome no',

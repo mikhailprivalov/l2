@@ -13,9 +13,8 @@ form .aligned .results_on_deck {
   margin-bottom: 0.5em;
 }
 .ui-autocomplete-loading {
-  background:  url('../images/loading-indicator.gif') no-repeat;
   background-origin: content-box;
-  background-position: right;
+  background: url('../images/loading-indicator.gif') no-repeat right;
 }
 ul.ui-autocomplete {
 	/*

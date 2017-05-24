@@ -87,12 +87,12 @@
         <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
             <div class="btn-group">
                 <button onclick="print_results(); return false;" id="result-print" disabled
-                        class="btn btn-sm btn-primary-nb">Печать результатов
+                        class="btn btn-sm btn-primary-nb btn-ell">Печать результатов
                 </button>
             </div>
             <div class="btn-group">
                 <button onclick="confirm_results(); return false;" id="result-confirm" disabled
-                        class="btn btn-sm btn-primary-nb">Подтвердить результаты
+                        class="btn btn-sm btn-primary-nb btn-ell">Подтвердить результаты
                 </button>
             </div>
         </div>
@@ -394,9 +394,34 @@
             </div>
         </div>
     </div>
+    <div id="refsettings-modal" class="modal fade" role="dialog" aria-labelledby="refsettings-modalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 id="refsettings-modalLabel">Настройка референсов</h4>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-xs-6">
+                        </div>
+                        <div class="col-xs-6">
+                            <button class="btn btn-primary-nb" data-dismiss="modal" aria-hidden="true"
+                                    onclick="apply_refs();">
+                                Ок
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
     <style>
         .isnorm_normal input[type=text] {
         }
@@ -564,20 +589,17 @@
 
         #issledovaniya li {
             list-style: none;
-            padding: 6px;
             cursor: pointer;
             margin: 3px;
             background-color: #f8fcfd;
-            border-left: 3px solid #ECF0F1;
-            border-top: 1px solid #ECF0F1;
-            border-right: 1px solid #ECF0F1;
-            border-bottom: 1px solid #ECF0F1;
+            border: 1px solid #ECF0F1;
+            border-left-width: 3px;
             border-radius: 3px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
             transition: left .15s linear;
             position: relative;
             left: 3px;
-            padding-left: 9px;
+            padding: 6px 6px 6px 9px;
         }
 
         #issledovaniya li small {
@@ -1053,6 +1075,10 @@
             top: 0
         }
 
+        .mt5 {
+            margin-top: 5px;
+        }
+
     </style>
 {% endblock %}
 
@@ -1099,9 +1125,9 @@
         let has_o = false;
         let iss_isnorm = {"unknown": "", "normal": "Норма", "not_normal": "Не норма", "maybe": "Не удалось обработать"};
 
-        var substringMatcher = function (strs) {
+        let substringMatcher = function (strs) {
             return function findMatches(q, cb) {
-                let matches, substringRegex;
+                let matches, substrRegex;
                 matches = [];
                 substrRegex = new RegExp(q, 'i');
                 $.each(strs, function (i, str) {
@@ -1203,7 +1229,6 @@
                         save();
                 }
             });
-            let today = new Date();
 
             $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
             $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
@@ -1241,7 +1266,7 @@
         function reload_fast(sync_all_scroll) {
             let s = !!sync_all_scroll;
 
-            if (loaded_research < 0 && request != "") return;
+            if (loaded_research < 0 && request !== "") return;
 
             load_data(request, type, false, false, s);
 
@@ -1251,19 +1276,19 @@
             return parseInt(s_age.split(" ")[0]);
         }
 
-        function sync_active(resync){
+        function sync_active(resync) {
             let rs = !!resync;
             $(".select-dir.active, .select-tube.active").removeClass("active");
-            if(dir_active !== -1 && $(`[direction='${dir_active}']`).length) {
-                if (type_active == 0 || rs) {
-                    $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active == 0 ? "active" : ""), 0, {offset: -35});
+            if (dir_active !== -1 && $(`[direction='${dir_active}']`).length) {
+                if (type_active === 0 || rs) {
+                    $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active === 0 ? "active" : ""), 0, {offset: -35});
                 }
-                if (type_active == 1 || rs) {
-                    $(`[direction='${dir_active}']`).addClass(type_active == 1 ? "active" : "");
+                if (type_active === 1 || rs) {
+                    $(`[direction='${dir_active}']`).addClass(type_active === 1 ? "active" : "");
                     $('#tubes-list').scrollTo($(`.select-tube[direction='${dir_active}']`), 0, {offset: -35});
                 }
             }
-            for(let tube of tubes_active){
+            for (let tube of tubes_active) {
                 $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group);
                 if (type_active == 0) {
                     $(`.select-tube[tube='${tube.pk}']`).addClass("active");
@@ -1312,13 +1337,6 @@
                 if (!noclear) {
                     $("#search-field").val("");
                 }
-                {% comment %}
-
-                $("#issledovaniya").isLoading({
-                    text: "Загрузка списка исследований",
-                    position: "inside",
-                    'tpl': "<li class=\"isloading-wrapper %wrapper%\">%text% <i class=\"%class% glyphicon glyphicon-refresh\"></i></li>",
-                });{% endcomment %}
 
                 $(".has-error").removeClass("has-error");
                 try {
@@ -1327,7 +1345,7 @@
                 catch (e) {
 
                 }
-                request = id;
+                const request = id;
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
                 $(".not-loaded").hide();
@@ -1350,7 +1368,7 @@
                     return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
                 });
 
-                tmp_types = {"1": "направление", "0": "пробирка"};
+                const tmp_types = {"1": "направление", "0": "пробирка"};
                 $("#search-field").attr("placeholder", `Загружено: ${tmp_types[type + ""]} ${id}`);
 
                 dir_active = data.napr_pk;
@@ -1362,17 +1380,18 @@
                     else status = "o";
 
 
-                    if (status == "s") {
+                    if (status === "s") {
                         if (firstch && !all_saved && !has_n) {
                             all_saved = firstch = true;
                         }
                     }
-                    else if (status == "n") {
+                    else if (status === "n") {
                         all_saved = false;
                         has_n = true;
                     }
+                    let deffc, sv;
                     deffc = sv = "";
-                    if (status != "c") {
+                    if (status !== "c") {
                         if (v.deff === false) {
                             iss_pks.push(v.pk);
                             deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, ${v.pk});return false;'>отложить</a>`;
@@ -1382,11 +1401,11 @@
                             deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, ${v.pk});return false;'>отм. отложить</a>`;
                             status = "o";
                         }
-                        if (v.current_doc_save == 0) {
+                        if (v.current_doc_save === 0) {
                             sv = `<br/><span class='save-other'>сохранил: ${v.doc_save_fio}</span>`;
                             has_o = true;
                         }
-                        if (v.tube.pk == "") {
+                        if (v.tube.pk === "") {
                             sv = `&nbsp;<span class='no-tube'>Пробирка ${v.not_received_tubes} не принята</span>`;
                         }
                         deffc = "<br/>" + deffc;
@@ -1397,13 +1416,13 @@
                             deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`;
                     }
                     let t = "";
-                    if (v.saved && v.is_norm != "normal")
+                    if (v.saved && v.is_norm !== "normal")
                         t = `title='${iss_isnorm[v.is_norm]}'`;
                     $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
 
-                    tubessplit = v.tube.pk.split(',');
+                    const tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {
-                        if(pks.indexOf(vt) !== -1)
+                        if (pks.indexOf(vt) !== -1)
                             return;
                         pks.push(vt);
                         tubes_active.push({pk: vt, group: "tb-group-" + v.group});
@@ -1432,8 +1451,69 @@
             }
             return input;
         }
+
+        function sort_refs(r) {
+            for (let mf of ["m", "f"]) {
+                if (r.hasOwnProperty(mf)) {
+                    let keys = [], k, i, len, tmp = r[mf];
+                    for (k in tmp) {
+                        if (tmp.hasOwnProperty(k)) {
+                            keys.push(k);
+                        }
+                    }
+                    keys.sort(
+                        function (x, y) {
+                            let xx = 0;
+                            let yy = 0;
+                            try {
+                                if (x.toLowerCase().indexOf("все") >= 0) {
+                                    xx = -1;
+                                }
+                                else if (x.indexOf("-") >= 0) {
+                                    xx = x.split("-").last();
+                                }
+                                else {
+                                    xx = x.replace(/[^\d.]/g, '');
+                                }
+
+                                if (y.toLowerCase().indexOf("все") >= 0) {
+                                    yy = -1;
+                                }
+                                else if (y.indexOf("-") >= 0) {
+                                    yy = y.split("-").last();
+                                }
+                                else {
+                                    yy = y.replace(/[^\d.]/g, '');
+                                }
+
+                                xx = parseInt(xx);
+                                yy = parseInt(yy);
+
+                                if (x.indexOf("старше") >= 0) {
+                                    xx++;
+                                }
+                                if (y.indexOf("старше") >= 0) {
+                                    yy++;
+                                }
+
+                            } catch (err) {
+                            }
+                            return xx - yy;
+                        }
+                    );
+                    len = keys.length;
+                    r[mf] = {};
+                    for (i = 0; i < len; i++) {
+                        k = keys[i];
+                        r[mf][k] = fix_signs(tmp[k]);
+                    }
+                }
+            }
+            return r;
+        }
+
         function load_form(research_pk, id, templateid) {
-            if (typeof templateid == "undefined") {
+            if (typeof templateid === "undefined") {
                 templateid = 0;
             }
             sl(true);
@@ -1456,71 +1536,16 @@
                         data2.fractions = researches_cache[research_pk].fractions;
                         data2.can_comment = researches_cache[research_pk].can_comment;
                     }
-                    data2["sex"] = dir_data.client_sex;
-                    data2["age"] = dir_data.client_vozrast;
+                    data2.sex = dir_data.client_sex;
+                    data2.age = dir_data.client_vozrast;
+                    data2.research_pk = research_pk;
 
 
                     loaded_fractions = {};
                     $.each(data2.fractions, function (fk, fv) {
                         loaded_fractions[fv.pk] = fv;
                         data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9);
-                        for (let mf in data2.fractions[fk].references) {
-                            let keys = [], k, i, len;
-                            if (data2.fractions[fk].references.hasOwnProperty(mf)) {
-                                let tmp = data2.fractions[fk].references[mf];
-                                for (k in tmp) {
-                                    if (tmp.hasOwnProperty(k)) {
-                                        keys.push(k);
-                                    }
-                                }
-                                keys.sort(
-                                    function (x, y) {
-                                        let xx = 0;
-                                        let yy = 0;
-                                        try {
-                                            if (x.toLowerCase().indexOf("все") >= 0) {
-                                                xx = -1;
-                                            }
-                                            else if (x.indexOf("-") >= 0) {
-                                                xx = x.split("-").last();
-                                            }
-                                            else {
-                                                xx = x.replace(/[^\d.]/g, '');
-                                            }
-
-                                            if (y.toLowerCase().indexOf("все") >= 0) {
-                                                yy = -1;
-                                            }
-                                            else if (y.indexOf("-") >= 0) {
-                                                yy = y.split("-").last();
-                                            }
-                                            else {
-                                                yy = y.replace(/[^\d.]/g, '');
-                                            }
-
-                                            xx = parseInt(xx);
-                                            yy = parseInt(yy);
-
-                                            if (x.indexOf("старше") >= 0) {
-                                                xx++;
-                                            }
-                                            if (y.indexOf("старше") >= 0) {
-                                                yy++;
-                                            }
-
-                                        } catch (err) {
-                                        }
-                                        return xx - yy;
-                                    }
-                                );
-                                len = keys.length;
-                                data2.fractions[fk].references[mf] = {};
-                                for (i = 0; i < len; i++) {
-                                    k = keys[i];
-                                    data2.fractions[fk].references[mf][k] = fix_signs(tmp[k]);
-                                }
-                            }
-                        }
+                        data2.fractions[fk].references = sort_refs(data2.fractions[fk].references);
                     });
 
                     let rendered = !!rendered_form_cache[research_pk];
@@ -1534,8 +1559,8 @@
                     let num = 0;
                     $.each(data2.fractions, function (fk, fv) {
                         num++;
-                        if (fv.type != -1) {
-                            if (num == 1) autoIsF = true;
+                        if (fv.type !== -1) {
+                            if (num === 1) autoIsF = true;
                             let ft = $.map(fraction_types[fv.type + ""], function (item) {
                                 return {value: item};
                             });
@@ -1552,13 +1577,13 @@
                                 sync(typeVals.get(fraction_types[fv.type + ""]));
                             }
 
-                            $d = $(`[data-pk='${fv.pk}']`);
-                            $val = $d.val();
+                            const $d = $(`[data-pk='${fv.pk}']`);
+                            const $val = $d.val();
                             $d.typeahead({
                                 minLength: 0,
                                 limit: 40,
                                 highlight: true,
-                                hint: $val == ""
+                                hint: $val === ""
                             }, {
                                 name: 'typeval',
                                 display: 'value',
@@ -1566,7 +1591,7 @@
                                 limit: 40
                             });
                             $d.typeahead('val', $val);
-                            $(`[data-pk='${fv.pk}']`).val($val);
+                            $d.val($val);
                         }
                     });
                     //f = $('.result-enter:not(.tt-hint)').eq(0);
@@ -1581,9 +1606,19 @@
                                 $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`);
                             }
                         });
+                        let resync_refs = false;
+                        $.each(data.refs, function (k, v) {
+                            if ($.isEmptyObject(v))
+                                return;
+                            resync_refs = true;
+                            $(`.fraction-row[data-fraction-pk='${k}']`).attr("data-ref", _.escape(JSON.stringify(v)));
+                        });
+                        if (resync_refs) {
+                            sync_refs();
+                        }
                         $(".lab_comment").text(data.comment);
                         try {
-                            if (jQuery.type(dready) != "undefined" && $.isFunction(dready)) {
+                            if (jQuery.type(dready) !== "undefined" && $.isFunction(dready)) {
                                 dready();
                             }
                         } catch (e) {
@@ -1599,24 +1634,29 @@
                         }
                     });
 
+                    sync_refs();
+
                     resize();
                     loaded_research = id;
                     datatype = -1;
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").attr("disabled", 1);
+                        $("#ref-settings-btn").prop("disabled", true);
                         $("#confirm-andsave-btn").attr("disabled", 1);
                         datatype = 2;
                     }
                     else if (data2.saved) {
                         $("#confirm-btn").removeAttr("disabled");
                         $("#save-btn").removeAttr("disabled");
+                        $("#ref-settings-btn").prop("disabled", false);
                         $("#confirm-andsave-btn").removeAttr("disabled");
                         datatype = 1;
                     }
                     else {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").removeAttr("disabled");
+                        $("#ref-settings-btn").prop("disabled", false);
                         $("#confirm-andsave-btn").removeAttr("disabled");
                     }
                     hl();
@@ -1630,7 +1670,7 @@
                     cache: false,
                     data: {
                         id: id,
-                        cached: !!researches_cache[research_pk]
+                        cached: research_pk in researches_cache
                     }
                 }).done(callback2);
 
@@ -1648,6 +1688,177 @@
                 callback1(cached_templates[templateid]);
             }
 
+        }
+        function make_refs(r, bordered) {
+            let out = "";
+            bordered = bordered || false;
+            for (let prop in r) {
+                if (((prop !== "Все" && r[prop] !== "") || (prop === "Все" && r[prop] !== "")) && r.hasOwnProperty(prop)) {
+                    out += `<tr>
+<td>${prop}</td>
+<td class="col-md-6">${r[prop]}</td>
+</tr>`;
+                }
+            }
+            return `<table class="${bordered ? "table table-bordered table-condensed" : ""}">` + out + "</table>";
+        }
+
+        function sync_refs() {
+            $(".fraction-row").each(function (k) {
+                let research_pk = parseInt($(this).attr("data-research-pk"));
+                let fraction_pk = parseInt($(this).attr("data-fraction-pk"));
+                let ref = $(this).attr("data-ref");
+                let fraction = false;
+                for(let fk in researches_cache[research_pk].fractions){
+                    let f = researches_cache[research_pk].fractions[fk];
+                    if(f.pk === fraction_pk){
+                        fraction = f;
+                        break;
+                    }
+                }
+                if(!fraction)
+                    return;
+                if (ref === "") {
+                    if (fraction.references.default === -1) {
+                        ref = {title: "Default", about: "", m: fraction.references.m, f: fraction.references.f};
+                    } else {
+                        ref = fraction.references.available[fraction.references.default];
+                    }
+                    $(this).attr("data-ref", _.escape(JSON.stringify(ref)));
+                } else {
+                    ref = JSON.parse(_.unescape(ref));
+                }
+
+                ref = sort_refs(ref);
+
+                $(".ref_m", this).html(make_refs(ref.m));
+                $(".ref_f", this).html(make_refs(ref.f));
+            });
+        }
+
+        function refsettings() {
+            let research_pk = parseInt($("#research_pk").val());
+            let fractions = researches_cache[research_pk].fractions;
+            $("#refsettings-modal .modal-body").html("");
+            for (let prop in fractions) {
+                if (fractions.hasOwnProperty(prop)) {
+                    let options = "";
+                    let selected_ref = $(`.fraction-row[data-fraction-pk='${fractions[prop].pk}']`).attr("data-ref");
+                    let n = 0;
+                    let inav_refs = false;
+                    for (let rk in fractions[prop].references.available) {
+                        if (!fractions[prop].references.available.hasOwnProperty(rk))
+                            continue;
+                        let r = fractions[prop].references.available[rk];
+                        let jref = JSON.stringify(r);
+                        if (jref !== selected_ref) {
+                            options += `<option value='${_.escape(jref)}'>${r.title}</option>`;
+                        }
+                        else {
+                            options += `<option selected value='${_.escape(jref)}'>${r.title}</option>`;
+                            inav_refs = true;
+                        }
+
+                        n++;
+                    }
+                    if (!inav_refs) {
+                        options += `<option selected class='custom' value='${selected_ref !== "" && selected_ref !== "{}" ? selected_ref : `{"":""}`}'>Другое...</option>`;
+                    }
+                    else {
+                        options += `<option class='custom' value='${_.escape('{"":""}')}'>Другое...</option>`;
+                    }
+                    $("#refsettings-modal .modal-body").append(`<div class="row settings" style="border-bottom: 1px solid lightgray;margin-bottom:5px;padding-bottom:5px" data-fraction-pk="${fractions[prop].pk}">
+    <div class="col-xs-2">${fractions[prop].title}</div>
+    <div class="col-xs-2"><select data-width="100%" class="select-b" onchange="settings_sync_ref(${fractions[prop].pk});">${options}</select></div>
+    <div class="col-xs-8"><div class="row preview"></div></div>
+</div>`);
+                    settings_sync_ref(fractions[prop].pk);
+                    update_select(`.settings[data-fraction-pk='${fractions[prop].pk}']`);
+                }
+            }
+            $("#refsettings-modal").modal("show");
+            return false;
+        }
+
+        function ref_form(refs, pk) {
+            let ht = "";
+            for (let prop in refs) {
+                if (!refs.hasOwnProperty(prop))
+                    continue;
+                ht += `<div class='row ref-row'>
+<div class='col-xs-6'><input type='text' class='form-control prop-input' value='${prop}' placeholder='Условие' /></div>
+<div class='col-xs-6'><input type='text' class='form-control ref-input' value='${refs[prop]}' placeholder='Референс' /></div>
+</div>`;
+            }
+            return ht;
+        }
+
+        function settings_sync_ref(pk) {
+            let $row = $(`.settings[data-fraction-pk='${pk}']`);
+            let selectval = _.unescape($("select", $row).val());
+
+            if(selectval === ""){
+                selectval = `{}`;
+            }
+            let val = sort_refs(JSON.parse(selectval));
+            if ($.isEmptyObject(val)) {
+                val = {"": ""};
+            }
+            if ($(`.settings[data-fraction-pk='${pk}'] option:selected`).is(".custom")) {
+                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${ref_form(val.m, pk)}</div><div class="col-xs-6 table-responsive ref_f">Ж${ref_form(val.f, pk)}</div>
+                <div class="col-xs-12">
+                <div class="row">
+                    <div class="col-xs-4"></div>
+                    <div class="col-xs-4"><button class="btn btn-default btn-primary-nb btn-sm mt5" onclick="add_subref(${pk})">+</button></div>
+                    <div class="col-xs-4"></div>
+                </div></div>`);
+            } else {
+                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${make_refs(val.m, true)}</div><div class="col-xs-6 table-responsive ref_f">Ж${make_refs(val.f, true)}</div>`);
+            }
+        }
+
+        function add_subref(pk) {
+            backsync(pk);
+            let $row = $(`.settings[data-fraction-pk='${pk}']`);
+            let selectval = _.unescape($("select", $row).val());
+            let val = sort_refs(JSON.parse(selectval));
+
+            if (!("" in val.m)) {
+                val.m[""] = "";
+            }
+            if (!("" in val.f)) {
+                val.f[""] = "";
+            }
+            $("select option:selected", $row).attr("value", _.escape(JSON.stringify(val)));
+            settings_sync_ref(pk);
+        }
+
+        function backsync(pk) {
+            let $row = $(`.settings[data-fraction-pk='${pk}']`);
+            let selectval = _.unescape($("select", $row).val());
+            if(selectval === ""){
+                selectval = `{}`;
+            }
+            let val = sort_refs(JSON.parse(selectval));
+            if ($("select option:selected", $row).is(".custom")) {
+                val.m = {};
+                $(".ref_m .ref-row", $row).each(function () {
+                    val.m[$(".prop-input", this).val()] = $(".ref-input", this).val()
+                });
+                val.f = {};
+                $(".ref_f .ref-row", $row).each(function () {
+                    val.f[$(".prop-input", this).val()] = $(".ref-input", this).val()
+                });
+            }
+            $("select option:selected", $row).attr("value", _.escape(JSON.stringify(sort_refs(val))));
+        }
+
+        function apply_refs() {
+            $('.settings').each(function () {
+                backsync($(this).attr("data-fraction-pk"));
+                $(`.fraction-row[data-fraction-pk=${$(this).attr("data-fraction-pk")}]`).attr("data-ref", $("select", this).val());
+            });
+            sync_refs()
         }
 
         function fast_search(num) {
@@ -1766,11 +1977,14 @@
             $(this).disabled = true;
             let result = {issledovaniye: -1, fractions: {}};
             result.issledovaniye = $("#issledovaniye_id").val();
+            result.fractions_ref = {};
             $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
                 result.fractions[$(v).data("pk")] = $(v).val();
+                result.fractions_ref[$(v).data("pk")] = JSON.parse(_.unescape($(`.fraction-row[data-fraction-pk="${$(v).data("pk")}"]`).attr("data-ref")));
             });
             result.comment = $(".lab_comment").val() || "";
             result.fractions = JSON.stringify(result.fractions);
+            result.fractions_ref = JSON.stringify(result.fractions_ref);
             $(this).disabled = false;
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
                 if (!noreload)
@@ -1830,6 +2044,7 @@
             $("#confirm_result-btn").attr("disabled", 1);
             $("#save-btn").attr("disabled", 1);
             $("#confirm_result-andsave-btn").attr("disabled", 1);
+            $("#ref-settings-btn").prop("disabled", true);
             $.ajax({
                 "url": "/results/confirm",
                 method: "POST",
@@ -1851,14 +2066,14 @@
         }
 
         function print_results() {
-            data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
+            const data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
             window.open('/results/pdf' + data, '_blank');
             // list_reload = true;
             //$('[direction="' + dir_data.napr_pk + '"]').remove();
         }
 
         function createjournal() {
-            date = $("[name=date-confirm]").val();
+            const date = $("[name=date-confirm]").val();
             v = $("#ist_f").val();
             if (!v) {
                 $.amaran({
@@ -1874,11 +2089,11 @@
                 });
                 return;
             }
-            arr = JSON.parse('[' + v + ']');
+            const arr = JSON.parse('[' + v + ']');
             window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val(), '_blank');
         }
         function createjournalcodes() {
-            date = $("[name=date-confirm]").val();
+            const date = $("[name=date-confirm]").val();
             v = $("#ist_f").val();
             if (!v) {
                 $.amaran({
@@ -1894,11 +2109,11 @@
                 });
                 return;
             }
-            arr = JSON.parse('[' + v + ']');
+            const arr = JSON.parse('[' + v + ']');
             window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&codes=1", '_blank');
         }
         function createjournaltable() {
-            date = $("[name=date-confirm]").val();
+            const date = $("[name=date-confirm]").val();
             v = $("#ist_f").val();
             if (!v) {
                 $.amaran({
@@ -1914,7 +2129,7 @@
                 });
                 return;
             }
-            arr = JSON.parse('[' + v + ']');
+            const arr = JSON.parse('[' + v + ']');
             window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr), '_blank');
         }
         function open_fill_form() {
@@ -2034,7 +2249,7 @@
             $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
                 researches.push(parseInt($(v).val()));
             });
-            if (researches.length == 0) {
+            if (researches.length === 0) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -2060,12 +2275,12 @@
             }).done(function (data) {
                 lockdeff = false;
                 if (Object.keys(data.directions).length > 0) {
-                    strs = [];
+                    let strs = [];
                     for (let l = 0; l < Object.keys(data.directions).length; l++) {
                         strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
                     }
 
-                    st = "?pk=[" + strs.join(",") + "]";
+                    const st = "?pk=[" + strs.join(",") + "]";
                     window.open('/results/pdf' + st, '_blank');
                     $("#results-day-modal").modal('hide');
                 }
@@ -2086,12 +2301,13 @@
             });
         }
         function createlist(type) {
+            let datestart, dateend;
             datestart = dateend = "";
-            researches = [];
+            let researches = [];
             $.each($("#table-researches .research-sel:checked"), function (k, v) {
                 researches.push(parseInt($(v).val()));
             });
-            if (researches.length == 0) {
+            if (researches.length === 0) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -2116,8 +2332,8 @@
             window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
         }
         function load_researches(cont) {
-            $o = $("#table-researches");
-            if (cont != undefined)
+            let $o = $("#table-researches");
+            if (cont !== undefined)
                 $o = $(cont);
             $o.html("");
             $o.append(lang.table_researches_header);
@@ -2125,7 +2341,7 @@
                 url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
-                if (data.length == 0) {
+                if (data.length === 0) {
                     $o.append(lang.table_researches_not_found);
                     return;
                 }

@@ -1,6 +1,6 @@
-var k = -1;
-var group = -1;
-var groups = {0: "Oαβ (I)", 1: "A₁ (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB (IV)", 5: "A₂B₀ (IV)"};
+let k = -1;
+let group = -1;
+const groups = {0: "Oαβ (I)", 1: "A₁ (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB (IV)", 5: "A₂B₀ (IV)"};
 function genresult(th){
     k = pk = $(th).attr("pk");
     $("#res-modal h4").text($(th).attr("ftitle"));

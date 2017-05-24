@@ -208,15 +208,17 @@
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
-        var loadt = false;
+        let loadt = false;
+        let first_resize = true;
+
         $(document).ready(function () {
             loadfrom();
             resize();
             $(window).resize(function () {
                 resize();
             });
-            var today = new Date();
-            var daybefore = new Date();
+
+            let daybefore = new Date();
             daybefore.setDate(daybefore.getDate() - 1);
 
             $("[name='date-start']").val(getFormattedDate(daybefore)).attr("pre-val", getFormattedDate(daybefore));
@@ -229,17 +231,17 @@
                 todayHighlight: true
             });
             $("[name='date-end'],[name='date-start']").change(function(){
-                var v = $(this).val();
-                var b = $(this).attr("pre-val");
+                let v = $(this).val();
+                let b = $(this).attr("pre-val");
 
-                if(loadt || v == b) return;
+                if(loadt || v === b) return;
                 loadt = true;
                 load_tubes();
                 $(this).attr("pre-val", v);
             });
         });
         function highlight(th) {
-            $tr = $("tr[pk={0}]".f($(th).val()));
+            const $tr = $("tr[pk={0}]".f($(th).val()));
             if ($(th).prop("checked")) {
                 $tr.addClass("highlight");
             }
@@ -253,22 +255,22 @@
             $.ajax({url: "/tubes/get?subgroup={0}&from={1}&datestart={2}&dateend={3}".f($("#subgroup option:selected").attr("num"), $("#from option:selected").attr("num"), $("[name='date-start']").val(), $("[name='date-end']").val())}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
-                    var x = a.tube.id,
+                    let x = a.tube.id,
                             y = b.tube.id;
                     return x < y ? -1 : x > y ? 1 : 0;
                 });
-                var i = 0;
+                let i = 0;
                 $.each(data, function (k, v) {
                     i++;
-                    tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
-                    if (!v.tube.status && (v.tube.notice == undefined || v.tube.notice == ""))
-                        $("#tubes").append(("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{5}]' target='_blank'>{5}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><div class='btn-group fh'><input id='notice_{2}' type='text' class='form-control fh'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction))
-                    else if (v.tube.notice == undefined || v.tube.notice == "")
-                        $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
+                    let tube = "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.tube.color, v.tube.type);
+                    if (!v.tube.status && (v.tube.notice === undefined || v.tube.notice === ""))
+                        $("#tubes").append(("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{5}]' target='_blank'>{5}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><div class='btn-group fh'><input id='notice_{2}' type='text' class='form-control fh'/><span onclick='clear_field({2});' class=\"searchclear glyphicon glyphicon-remove\" data-toggle=\"tooltip\" data-placement=\"left\" title=\"Очистить\"></span></div></td></tr>").f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.direction));
+                    else if (v.tube.notice === undefined || v.tube.notice === "")
+                        $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td class='c in'><label><input value='{2}' name='confirm' checked disabled class='confirm' type='checkbox' onchange='highlight(this);' /></label></td><td><input id='notice_{2}' disabled type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction));
                     else
                         $("#tubes").append("<tr pk='{2}'><td class='c'>{0}</td><td>{3}</td><td class='c'><a href='/directions/pdf?napr_id=[{6}]' target='_blank'>{6}</a></td>" + tube + "<td class='c'>{2}</td><td><label class='c in'><input value='{2}' disabled class='confirm' type='checkbox' /></label></td><td><input onchange='highlight(this);' id='notice_{2}' disabled value='{5}' type='text' class='form-control'/></td></tr>".f(k + 1, v.tube.type, v.tube.id, v.researches, v.tube.color, v.tube.notice, v.direction))
                 });
-                if (i == 0) {
+                if (i === 0) {
                     $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
                 }
                 $('[data-toggle="tooltip"]').tooltip();
@@ -283,7 +285,7 @@
         }
 
         function save() {
-            tubes = [];
+            let tubes = [];
             $(".confirm").each(function (k, v) {
                 tubes.push({
                     "id": $(v).val(),
@@ -313,8 +315,6 @@
                 });
             });
         }
-
-        var first_resize = true;
         function resize() {
             $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 65);
             if (first_resize) {
@@ -326,7 +326,7 @@
         }
 
         function loadfrom() {
-            var from = $("#from");
+            let from = $("#from");
             $(from).html("");
             $.ajax({
                 url: "/dashboard/from",
@@ -342,21 +342,21 @@
             });
         }
 
-        var timeoutID = -2;
+        let timeoutID = -2;
         $(document).ready(function () {
-            var pressed = false;
-            var chars = [];
+            let pressed = false;
+            let chars = [];
             $(window).keypress(function (e) {
                 if (e.which >= 48 && e.which <= 57) {
                     chars.push(String.fromCharCode(e.which));
                 }
-                if (pressed == false) {
+                if (pressed === false) {
                     clearTimeout(timeoutID);
-                    ttimeoutID = setTimeout(function () {
-                        var barcode = chars.join("");
+                    timeoutID = setTimeout(function () {
+                        let barcode = chars.join("");
                         chars = [];
                         pressed = false;
-                        $ch = $("[value={0}]".f(barcode));
+                        let $ch = $("[value={0}]".f(barcode));
                         if ($ch.length) {
                             if (!$ch.prop("checked"))
                                 $ch.click();

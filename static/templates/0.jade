@@ -1,15 +1,17 @@
 .row(style="margin-bottom: 6px")
-    .col-md-2
-    .col-md-10
+    .col-md-12
         .btn-group.btn-group-justified
             .btn-group
-                button(onclick="restore_values();save();", type="button")#save-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить
+                button(onclick="refsettings();", type="button")#ref-settings-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Настройка референсов
             .btn-group
-                button(onclick="confirm_result();", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb Подтвердить
+                button(onclick="restore_values();save();", type="button")#save-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Сохранить
             .btn-group
-                button(onclick="restore_values();save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить и подтвердить
+                button(onclick="confirm_result();", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Подтвердить
+            .btn-group
+                button(onclick="restore_values();save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Сохранить и подтвердить
 h4(style="margin-top: 2px") #{title}
 input(type="hidden", value=res_id)#issledovaniye_id
+input(type="hidden", value=research_pk)#research_pk
 #result-jade-form
     table.table.table-bordered.table-sm-pd.floatThead
         thead
@@ -21,7 +23,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
             each fraction in fractions
                 if !fraction.hide
                     if fraction.render_type == 0
-                        tr(data-fraction-pk=fraction.pk)
+                        tr.fraction-row(data-research-pk=research_pk, data-fraction-pk=fraction.pk, data-ref="")
                             td
                                 label(for='fraction_' + fraction.pk).labtitle= fraction.title
                             td.val
@@ -39,7 +41,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
                                                 i.fa.fa-circle
                                     .center= fraction.unit
                             td.ref.ref_m
-                                table.table.table-responsive
+                                //table
                                     each norm, index in fraction.references.m
                                         if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                             tr
@@ -47,7 +49,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
                                                 td.col-md-6
                                                     | !{norm}
                             td.ref.ref_f
-                                table
+                                //table
                                     each norm, index in fraction.references.f
                                         if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                             tr
@@ -55,7 +57,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
                                                 td.col-md-6
                                                     | !{norm}
                     else if fraction.render_type == 1
-                        tr(style="border-top: 3px solid #ddd")
+                        tr(style="border-top: 3px solid #ddd", data-research-pk=research_pk, data-fraction-pk=fraction.pk, data-ref="").fraction-row
                             td(style="width: 20%")
                                 label= fraction.title
                                 input(type="hidden", data-pk=fraction.pk).result-enter.json-result
@@ -92,7 +94,7 @@ script.
 
         groups = {};
         $.each($(".row-container"), function (k, v) {
-            fpk = $(v).attr("container-pk");
+            let fpk = $(v).attr("container-pk");
             if (IsJsonString($(`.json-result[data-pk=${fpk}]`).val())) {
                 groups[fpk] = JSON.parse($(`.json-result[data-pk=${fpk}]`).val());
             }
@@ -149,7 +151,7 @@ script.
     }
 
     function add_row(btn) {
-        fpk = parseInt($(btn).attr("fraction-pk"));
+        let fpk = parseInt($(btn).attr("fraction-pk"));
 
         if (!nums[fpk]) nums[fpk] = 0;
 
@@ -168,15 +170,15 @@ script.
         $('.result-enter').typeahead('destroy');
 
         $.each(groups, function (k, v) {
-            tps = fraction_types[loaded_fractions[k].type + ""];
+            let tps = fraction_types[loaded_fractions[k].type + ""];
             t = Math.max(Math.floor(12 / (tps.length + 1)), 1);
-            tmp_radios = `<div class='col-md-${t} rd-cont'><input type="radio" value="null" class="subval defval" checked /><label>нич.</label></div>`;
+            let tmp_radios = `<div class='col-md-${t} rd-cont'><input type="radio" value="null" class="subval defval" checked /><label>нич.</label></div>`;
             $.each(tps, function (k, v) {
                 tmp_radios += `<div class='col-md-${t} rd-cont'><input type="radio" class="subval" value="${v}" /><label>${v}</label></div>`;
             });
             tmp_radios = `<div class="row rd-row">${tmp_radios}</div>`;
 
-            cont = $(`[container-pk='${k}'] tbody`);
+            let cont = $(`[container-pk='${k}'] tbody`);
             var ft = $.map(fraction_types[loaded_fractions[k].unit], function (item) {
                 return {value: item};
             });
@@ -199,7 +201,7 @@ script.
             }
 
             cont.html("");
-            vvi = 0;
+            let vvi = 0;
             $.each(v.rows, function (kk, vv) {
                 cont.append(`<tr class="group-tr" data-group-key="${kk}"><td><input class="form-control typeahead result-enter group-title" value="${vv.title}" type="text" maxlength="63"/><br/><button style="margin: 3px;float: right;padding: 2px" class="btn btn-sm btn-blue-nb hide-vals-btn" onclick="hide_vals(${kk}, this); return false;">Свернуть значения</button><button style="margin: 3px;padding: 2px" class="btn btn-sm btn-primary-rm" onclick="remove_row(${kk}); return false;">Удалить</button></td><td><table class="group-rows table table-responsive"></table></td></tr>`);
 
@@ -211,9 +213,9 @@ script.
                     $(`[data-group-key="${kk}"] .group-rows`, cont).append(`<tr class="subgroup-tr" data-subgroup-key="${kkk}"><td class="col-md-5"><input class="form-control subgroup-title" type="text" value="${vvv.title}" maxlength="63"/><input class="form-control subgroup-value" value="${vvv.value}" type="hidden" maxlength="63"/></td><td class="col-md-7 radio-cont">${tmp_radios}</td></tr>`);
 
                     $(`[data-group-key="${kk}"] [data-subgroup-key="${kkk}"] .radio-cont input[type=radio]`, cont).attr("name", `val-${k}-${kk}-${kkk}-${vvi}`);
-                    vi = 0;
+                    let vi = 0;
                     $.each($(`[data-group-key="${kk}"] [data-subgroup-key="${kkk}"] .radio-cont .rd-cont`), function (ku, vu) {
-                        nid = `val-${k}-${kk}-${kkk}-${vvi}_${vi}`;
+                        const nid = `val-${k}-${kk}-${kkk}-${vvi}_${vi}`;
                         $("input[type=radio]", vu).attr("id", nid);
                         $("label", vu).attr("for", nid);
                         vi++;
@@ -225,8 +227,8 @@ script.
 
                 });
                 $(`[data-group-key="${kk}"] .group-rows`, cont).append(`<tr class="reset-subgroup-tr"><td colspan="2" style="text-align: right"><button class="btn btn-default btn-blue2-nb" onclick="reset_v(${kk}); return false;">Сброс</button></td></tr>`);
-                $d = $(`[data-group-key="${kk}"] .group-title`);
-                $val = $d.val();
+                const $d = $(`[data-group-key="${kk}"] .group-title`);
+                const $val = $d.val();
                 $d.typeahead({
                     minLength: 0,
                     highlight: true,
@@ -259,12 +261,12 @@ script.
     function restore_values() {
         groups = {};
         $.each($(".row-container"), function (k, v) {
-            fpk = parseInt($(v).attr("container-pk"));
+            let fpk = parseInt($(v).attr("container-pk"));
             $.each($('.group-tr', v), function (kk, vv) {
-                gpk = parseInt($(vv).attr("data-group-key"));
+                let gpk = parseInt($(vv).attr("data-group-key"));
                 add_group_k(fpk, gpk, $(".group-title:not(.tt-hint)", vv).val());
                 $.each($(".subgroup-tr", vv), function (kkk, vvv) {
-                    spk = parseInt($(vvv).attr("data-subgroup-key"));
+                    let spk = parseInt($(vvv).attr("data-subgroup-key"));
                     add_subgroup_k(fpk, gpk, spk, $(".subgroup-title:not(.tt-hint)", vvv).val(), $(".subval:checked", vvv).val());
                 });
             });
@@ -273,7 +275,7 @@ script.
     }
 
     function hide_vals(gpk, th) {
-        $s = $(`[data-group-key='${gpk}'] .group-rows`);
+        const $s = $(`[data-group-key='${gpk}'] .group-rows`);
         $s.toggle();
         if (!$s.is(":visible")) {
             $(th).text("Показать значения");
@@ -296,7 +298,7 @@ script.
     }
 
     function exec_formula(th) {
-        formula = {fraction: parseInt($(th).attr("pk"))};
+        let formula = {fraction: parseInt($(th).attr("pk"))};
         formula.body = $(`input[data-pk=${formula.fraction}]`).attr("data-formula");
         formula.necessary = formula.body.match(/\{(\d{1,})\}/g);
         formula.necessary_complex = formula.body.match(/\{\d{1,}\|\d{1,}\}/g);
@@ -306,7 +308,7 @@ script.
         if (formula.necessary != null) {
             for (i = 0; i < formula.necessary.length; i++) {
                 formula.necessary[i] = formula.necessary[i].replace(/\{|\}/g, "");
-                fval = 0;
+                let fval = 0;
                 try {
                     fval = parseFloat($(`[data-pk="${formula.necessary[i]}"]`).val().trim().replace(",", "."));
                 }
@@ -327,14 +329,14 @@ script.
             formula.necessary_complex[k][1] = parseInt(formula.necessary_complex[k][1].replace(/\{|\}/g, ""));
 
             fval = 0;
-            iss_obj = $.grep(dir_data.issledovaniya, function (e) {
+            let iss_obj = $.grep(dir_data.issledovaniya, function (e) {
                 return e.research_pk == formula.necessary_complex[k][0];
             })[0];
             if (iss_obj) {
                 formula.str = formula.str.replace(`{${formula.necessary_complex[k][0]}|${formula.necessary_complex[k][1]}}`, iss_obj.title);
                 fraction = formula.necessary_complex[k][1];
                 $.ajax({url: "/results/get", data: {iss_id: iss_obj.pk}}).done(function (data) {
-                    fval = "0";
+                    let fval = "0";
                     if (fraction in data.results) {
                         g = data.results[fraction] + "";
                         fval = g.replace(",", ".").trim();

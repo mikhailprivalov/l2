@@ -14,7 +14,7 @@
 (function ($) {
     "use strict";
 
-    var EditableForm = function (div, options) {
+    const EditableForm = function (div, options) {
         this.options = $.extend({}, $.fn.editableform.defaults, options);
         this.$div = $(div); //div, containing form. Not form tag. Not editable-element.
         if (!this.options.scope) {
@@ -40,7 +40,7 @@
             this.$form = $($.fn.editableform.template);
         },
         initButtons: function () {
-            var $btn = this.$form.find('.editable-buttons');
+            const $btn = this.$form.find('.editable-buttons');
             $btn.append($.fn.editableform.buttons);
             if (this.options.showbuttons === 'bottom') {
                 $btn.addClass('editable-buttons-bottom');
@@ -110,7 +110,7 @@
                         this.error(false);
                         this.input.$input.removeAttr('disabled');
                         this.$form.find('.editable-submit').removeAttr('disabled');
-                        var value = (this.value === null || this.value === undefined || this.value === '') ? this.options.defaultValue : this.value;
+                        const value = (this.value === null || this.value === undefined || this.value === '') ? this.options.defaultValue : this.value;
                         this.input.value2input(value);
                         //attach submit handler
                         this.$form.submit($.proxy(this.submit, this));
@@ -140,7 +140,7 @@
             this.$div.triggerHandler('cancel');
         },
         showLoading: function () {
-            var w, h;
+            let w, h;
             if (this.$form) {
                 //set loading size equal to form
                 w = this.$form.outerWidth();
@@ -177,9 +177,9 @@
         },
 
         error: function (msg) {
-            var $group = this.$form.find('.control-group'),
-                $block = this.$form.find('.editable-error-block'),
-                lines;
+            const $group = this.$form.find('.control-group'),
+                $block = this.$form.find('.editable-error-block');
+            let lines;
 
             if (msg === false) {
                 $group.removeClass($.fn.editableform.errorGroupClass);
@@ -188,7 +188,7 @@
                 //convert newline to <br> for more pretty error display
                 if (msg) {
                     lines = ('' + msg).split('\n');
-                    for (var i = 0; i < lines.length; i++) {
+                    for (let i = 0; i < lines.length; i++) {
                         lines[i] = $('<div>').text(lines[i]).html();
                     }
                     msg = lines.join('<br>');
@@ -203,11 +203,11 @@
             e.preventDefault();
 
             //get new value from input
-            var newValue = this.input.input2value();
+            let newValue = this.input.input2value();
 
             //validation: if validate returns string or truthy value - means error
             //if returns object like {newValue: '...'} => submitted value is reassigned to it
-            var error = this.validate(newValue);
+            const error = this.validate(newValue);
             if ($.type(error) === 'object' && error.newValue !== undefined) {
                 newValue = error.newValue;
                 this.input.value2input(newValue);
@@ -236,7 +236,7 @@
             }
 
             //convert value for submitting to server
-            var submitValue = this.input.value2submit(newValue);
+            const submitValue = this.input.value2submit(newValue);
 
             this.isSaving = true;
 
@@ -246,7 +246,7 @@
                     this.isSaving = false;
 
                     //run success callback
-                    var res = typeof this.options.success === 'function' ? this.options.success.call(this.options.scope, response, newValue) : null;
+                    let res = typeof this.options.success === 'function' ? this.options.success.call(this.options.scope, response, newValue) : null;
 
                     //if success callback returns false --> keep form open and do not activate input
                     if (res === false) {
@@ -294,7 +294,7 @@
                 .fail($.proxy(function (xhr) {
                     this.isSaving = false;
 
-                    var msg;
+                    let msg;
                     if (typeof this.options.error === 'function') {
                         msg = this.options.error.call(this.options.scope, xhr, newValue);
                     } else {
@@ -310,14 +310,14 @@
             //try parse composite pk defined as json string in data-pk 
             this.options.pk = $.fn.editableutils.tryParseJson(this.options.pk, true);
 
-            var pk = (typeof this.options.pk === 'function') ? this.options.pk.call(this.options.scope) : this.options.pk,
-            /*
-             send on server in following cases:
-             1. url is function
-             2. url is string AND (pk defined OR send option = always) 
-             */
-                send = !!(typeof this.options.url === 'function' || (this.options.url && ((this.options.send === 'always') || (this.options.send === 'auto' && pk !== null && pk !== undefined)))),
-                params;
+            const pk = (typeof this.options.pk === 'function') ? this.options.pk.call(this.options.scope) : this.options.pk,
+                /*
+                 send on server in following cases:
+                 1. url is function
+                 2. url is string AND (pk defined OR send option = always)
+                 */
+                send = !!(typeof this.options.url === 'function' || (this.options.url && ((this.options.send === 'always') || (this.options.send === 'auto' && pk !== null && pk !== undefined))));
+            let params;
 
             if (send) { //send to server
                 this.showLoading();
@@ -403,11 +403,11 @@
      $form.editableform('render');     
      */
     $.fn.editableform = function (option) {
-        var args = arguments;
+        const args = arguments;
         return this.each(function () {
-            var $this = $(this),
-                data = $this.data('editableform'),
-                options = typeof option === 'object' && option;
+            const $this = $(this);
+            let data = $this.data('editableform');
+            const options = typeof option === 'object' && option;
             if (!data) {
                 $this.data('editableform', (data = new EditableForm(this, options)));
             }
@@ -656,7 +656,7 @@
          * classic JS inheritance function
          */
         inherit: function (Child, Parent) {
-            var F = function () {
+            const F = function () {
             };
             F.prototype = Parent.prototype;
             Child.prototype = new F();
@@ -672,7 +672,7 @@
             if (elem.setSelectionRange) {
                 elem.setSelectionRange(pos, pos);
             } else if (elem.createTextRange) {
-                var range = elem.createTextRange();
+                const range = elem.createTextRange();
                 range.collapse(true);
                 range.moveEnd('character', pos);
                 range.moveStart('character', pos);
@@ -710,13 +710,14 @@
          * slice object by specified keys
          */
         sliceObj: function (obj, keys, caseSensitive /* default: false */) {
-            var key, keyLower, newObj = {};
+            let key, keyLower;
+            const newObj = {};
 
             if (!$.isArray(keys) || !keys.length) {
                 return newObj;
             }
 
-            for (var i = 0; i < keys.length; i++) {
+            for (let i = 0; i < keys.length; i++) {
                 key = keys[i];
                 if (obj.hasOwnProperty(key)) {
                     newObj[key] = obj[key];
@@ -742,7 +743,7 @@
          exclude complex objects from $.data() before pass to config
          */
         getConfigData: function ($element) {
-            var data = {};
+            const data = {};
             $.each($element.data(), function (k, v) {
                 if (typeof v !== 'object' || (v && typeof v === 'object' && (v.constructor === Object || v.constructor === Array))) {
                     data[k] = v;
@@ -761,7 +762,8 @@
                 if (o !== Object(o)) {
                     throw new TypeError('Object.keys called on a non-object');
                 }
-                var k = [], p;
+                const k = [];
+                let p;
                 for (p in o) {
                     if (Object.prototype.hasOwnProperty.call(o, p)) {
                         k.push(p);
@@ -788,15 +790,15 @@
             }
 
             if (typeof(valueProp) !== "function") {
-                var idKey = valueProp || 'value';
+                const idKey = valueProp || 'value';
                 valueProp = function (e) {
                     return e[idKey];
                 };
             }
 
-            var isValArray = $.isArray(value),
-                result = [],
-                that = this;
+            const isValArray = $.isArray(value);
+            let result = [];
+            const that = this;
 
             $.each(sourceData, function (i, o) {
                 if (o.children) {
@@ -810,7 +812,7 @@
                             result.push(o);
                         }
                     } else {
-                        var itemValue = (o && (typeof o === 'object')) ? valueProp(o) : o;
+                        const itemValue = (o && (typeof o === 'object')) ? valueProp(o) : o;
                         if (value == itemValue) {
                             result.push(o);
                         }
@@ -826,7 +828,7 @@
          Returns input by options: type, mode. 
          */
         createInput: function (options) {
-            var TypeConstructor, typeOptions, input,
+            let TypeConstructor, typeOptions, input,
                 type = options.type;
 
             //`date` is some kind of virtual type that is transformed to one of exact types
@@ -878,10 +880,10 @@
 
         //see http://stackoverflow.com/questions/7264899/detect-css-transitions-using-javascript-and-without-modernizr
         supportsTransitions: function () {
-            var b = document.body || document.documentElement,
-                s = b.style,
-                p = 'transition',
-                v = ['Moz', 'Webkit', 'Khtml', 'O', 'ms'];
+            const b = document.body || document.documentElement,
+                s = b.style;
+            let p = 'transition';
+            const v = ['Moz', 'Webkit', 'Khtml', 'O', 'ms'];
 
             if (typeof s[p] === 'string') {
                 return true;
@@ -889,7 +891,7 @@
 
             // Tests for vendor specific prop
             p = p.charAt(0).toUpperCase() + p.substr(1);
-            for (var i = 0; i < v.length; i++) {
+            for (let i = 0; i < v.length; i++) {
                 if (typeof s[v[i] + p] === 'string') {
                     return true;
                 }
@@ -912,11 +914,11 @@
 (function ($) {
     "use strict";
 
-    var Popup = function (element, options) {
+    const Popup = function (element, options) {
         this.init(element, options);
     };
 
-    var Inline = function (element, options) {
+    const Inline = function (element, options) {
         this.init(element, options);
     };
 
@@ -960,14 +962,15 @@
                 //close containers when click outside 
                 //(mousedown could be better than click, it closes everything also on drag drop)
                 $(document).on('click.editable', function (e) {
-                    var $target = $(e.target), i,
-                        exclude_classes = ['.editable-container',
-                            '.ui-datepicker-header',
-                            '.datepicker', //in inline mode datepicker is rendered into body
-                            '.modal-backdrop',
-                            '.bootstrap-wysihtml5-insert-image-modal',
-                            '.bootstrap-wysihtml5-insert-link-modal'
-                        ];
+                    const $target = $(e.target);
+                    let i;
+                    const exclude_classes = ['.editable-container',
+                        '.ui-datepicker-header',
+                        '.datepicker', //in inline mode datepicker is rendered into body
+                        '.modal-backdrop',
+                        '.bootstrap-wysihtml5-insert-image-modal',
+                        '.bootstrap-wysihtml5-insert-link-modal'
+                    ];
 
                     //check if element is detached. It occurs when clicking in bootstrap datepicker
                     if (!$.contains(document.documentElement, e.target)) {
@@ -1006,7 +1009,7 @@
             }
 
             //keys defined in container defaults go to container, others go to form
-            for (var k in this.options) {
+            for (let k in this.options) {
                 if (k in this.defaults) {
                     this.containerOptions[k] = this.options[k];
                 } else {
@@ -1025,7 +1028,7 @@
 
         /* returns container object */
         container: function () {
-            var container;
+            let container;
             //first, try get it by `containerDataName`
             if (this.containerDataName) {
                 if (container = this.$element.data(this.containerDataName)) {
@@ -1284,8 +1287,8 @@
                 }
 
                 //otherwise cancel or submit all open containers 
-                var $el = $(el),
-                    ec = $el.data('editableContainer');
+                const $el = $(el);
+                let ec = $el.data('editableContainer');
 
                 if (!ec) {
                     return;
@@ -1326,12 +1329,12 @@
     });
      **/
     $.fn.editableContainer = function (option) {
-        var args = arguments;
+        const args = arguments;
         return this.each(function () {
-            var $this = $(this),
-                dataKey = 'editableContainer',
-                data = $this.data(dataKey),
-                options = typeof option === 'object' && option,
+            const $this = $(this),
+                dataKey = 'editableContainer';
+            let data = $this.data(dataKey);
+            const options = typeof option === 'object' && option,
                 Constructor = (options.mode === 'inline') ? Inline : Popup;
 
             if (!data) {
@@ -1483,9 +1486,9 @@
 (function ($) {
     "use strict";
 
-    var Editable = function (element, options) {
+    const Editable = function (element, options) {
         this.$element = $(element);
-        //data-* has more priority over js options: because dynamically created elements may change data-* 
+        //data-* has more priority over js options: because dynamically created elements may change data-*
         this.options = $.extend({}, $.fn.editable.defaults, options, $.fn.editableutils.getConfigData(this.$element));
         if (this.options.selector) {
             this.initLive();
@@ -1502,7 +1505,7 @@
     Editable.prototype = {
         constructor: Editable,
         init: function () {
-            var isValueByText = false,
+            let isValueByText = false,
                 doAutotext, finalize;
 
             //name
@@ -1559,7 +1562,7 @@
                         this.show();
                     } else {
                         //when toggle='click' we should not close all other containers as they will be closed automatically in document click listener
-                        var closeAll = (this.options.toggle !== 'click');
+                        const closeAll = (this.options.toggle !== 'click');
                         this.toggle(closeAll);
                     }
                 }, this));
@@ -1616,13 +1619,13 @@
          */
         initLive: function () {
             //store selector 
-            var selector = this.options.selector;
+            const selector = this.options.selector;
             //modify options for child elements
             this.options.selector = false;
             this.options.autotext = 'never';
             //listen toggle events
             this.$element.on(this.options.toggle + '.editable', selector, $.proxy(function (e) {
-                var $target = $(e.target);
+                const $target = $(e.target);
                 if (!$target.data('editable')) {
                     //if delegated element initially empty, we need to clear it's text (that was manually set to `empty` by user)
                     //see https://github.com/vitalets/x-editable/issues/137 
@@ -1802,7 +1805,7 @@
 
             //init editableContainer: popover, tooltip, inline, etc..
             if (!this.container) {
-                var containerOptions = $.extend({}, this.options, {
+                const containerOptions = $.extend({}, this.options, {
                     value: this.value,
                     input: this.input //pass input to form (as it is already created)
                 });
@@ -1854,7 +1857,7 @@
                  - params.response === undefined, that means data was not sent
                  - value changed 
                  */
-                var sent = false;
+                let sent = false;
                 sent = sent || typeof this.options.url === 'function';
                 sent = sent || this.options.display === false;
                 sent = sent || params.response !== undefined;
@@ -1869,8 +1872,8 @@
 
             //highlight when saving
             if (this.options.highlight) {
-                var $e = this.$element,
-                    bgColor = $e.css('background-color');
+                const $e = this.$element;
+                let bgColor = $e.css('background-color');
 
                 $e.css('background-color', this.options.highlight);
                 setTimeout(function () {
@@ -1983,7 +1986,8 @@
      **/
     $.fn.editable = function (option) {
         //special API methods returning non-jquery object
-        var result = {}, args = arguments, datakey = 'editable';
+        let result = {};
+        const args = arguments, datakey = 'editable';
         switch (option) {
         /**
          Runs client-side validation for all matched editables
@@ -2000,7 +2004,8 @@
          **/
             case 'validate':
                 this.each(function () {
-                    var $this = $(this), data = $this.data(datakey), error;
+                    const $this = $(this), data = $this.data(datakey);
+                    let error;
                     if (data && (error = data.validate())) {
                         result[data.options.name] = error;
                     }
@@ -2032,7 +2037,7 @@
                     result = this.eq(0).data(datakey).value;
                 } else {
                     this.each(function () {
-                        var $this = $(this), data = $this.data(datakey);
+                        const $this = $(this), data = $this.data(datakey);
                         if (data && data.value !== undefined && data.value !== null) {
                             result[data.options.name] = data.input.value2submit(data.value);
                         }
@@ -2057,19 +2062,19 @@
          @returns {Object} jQuery object
          **/
             case 'submit':  //collects value, validate and submit to server for creating new record
-                var config = arguments[1] || {},
+                const config = arguments[1] || {},
                     $elems = this,
                     errors = this.editable('validate');
 
                 // validation ok
                 if ($.isEmptyObject(errors)) {
-                    var ajaxOptions = {};
+                    let ajaxOptions = {};
 
                     // for single element use url, success etc from options
                     if ($elems.length === 1) {
-                        var editable = $elems.data('editable');
+                        const editable = $elems.data('editable');
                         //standard params
-                        var params = {
+                        let params = {
                             name: editable.options.name || '',
                             value: editable.input.value2submit(editable.value),
                             pk: (typeof editable.options.pk === 'function') ?
@@ -2098,7 +2103,7 @@
 
                         // multiple elements
                     } else {
-                        var values = this.editable('getValue');
+                        const values = this.editable('getValue');
 
                         ajaxOptions = {
                             url: config.url,
@@ -2139,9 +2144,9 @@
 
         //return jquery object
         return this.each(function () {
-            var $this = $(this),
-                data = $this.data(datakey),
-                options = typeof option === 'object' && option;
+            const $this = $(this);
+            let data = $this.data(datakey);
+            const options = typeof option === 'object' && option;
 
             //for delegated targets do not store `editable` object for element
             //it's allows several different selectors.
@@ -2346,7 +2351,7 @@
     //types
     $.fn.editabletypes = {};
 
-    var AbstractInput = function () {
+    const AbstractInput = function () {
     };
 
     AbstractInput.prototype = {
@@ -2564,7 +2569,7 @@
 (function ($) {
     "use strict";
 
-    var List = function (options) {
+    const List = function (options) {
 
     };
 
@@ -2572,7 +2577,7 @@
 
     $.extend(List.prototype, {
         render: function () {
-            var deferred = $.Deferred();
+            const deferred = $.Deferred();
 
             this.error = null;
             this.onSourceReady(function () {
@@ -2591,7 +2596,7 @@
         },
 
         value2html: function (value, element, display, response) {
-            var deferred = $.Deferred(),
+            const deferred = $.Deferred(),
                 success = function () {
                     if (typeof display === 'function') {
                         //custom display method
@@ -2618,7 +2623,7 @@
 
         onSourceReady: function (success, error) {
             //run source if it function
-            var source;
+            let source;
             if ($.isFunction(this.options.source)) {
                 source = this.options.source.call(this.options.scope);
                 this.sourceData = null;
@@ -2645,8 +2650,8 @@
             if (typeof source === 'string') {
                 //try to get sourceData from cache
                 if (this.options.sourceCache) {
-                    var cacheID = source,
-                        cache;
+                    const cacheID = source;
+                    let cache;
 
                     if (!$(document).data(cacheID)) {
                         $(document).data(cacheID, {});
@@ -2677,7 +2682,7 @@
                 }
 
                 //ajaxOptions for source. Can be overwritten bt options.sourceOptions
-                var ajaxOptions = $.extend({
+                const ajaxOptions = $.extend({
                     url: source,
                     type: 'get',
                     cache: false,
@@ -2780,7 +2785,9 @@
          * convert data to array suitable for sourceData, e.g. [{value: 1, text: 'abc'}, {...}]
          */
         makeArray: function (data) {
-            var count, obj, result = [], item, iterateItem;
+            let count, obj;
+            const result = [];
+            let item, iterateItem;
             if (!data || typeof data === 'string') {
                 return null;
             }
@@ -2797,7 +2804,7 @@
                     }
                 };
 
-                for (var i = 0; i < data.length; i++) {
+                for (let i = 0; i < data.length; i++) {
                     item = data[i];
                     if (typeof item === 'object') {
                         count = 0; //count of keys inside item
@@ -2919,7 +2926,7 @@
 (function ($) {
     "use strict";
 
-    var Text = function (options) {
+    const Text = function (options) {
         this.init('text', options, Text.defaults);
     };
 
@@ -2955,7 +2962,7 @@
                         }
 
                         clearTimeout(this.t);
-                        var that = this;
+                        const that = this;
                         this.t = setTimeout(function () {
                             that.toggleClear(e);
                         }, 100);
@@ -2987,7 +2994,7 @@
                 return;
             }
 
-            var len = this.$input.val().length,
+            let len = this.$input.val().length,
                 visible = this.$clear.is(':visible');
 
             if (len && !visible) {
@@ -3055,7 +3062,7 @@
 (function ($) {
     "use strict";
 
-    var Textarea = function (options) {
+    const Textarea = function (options) {
         this.init('textarea', options, Textarea.defaults);
     };
 
@@ -3170,7 +3177,7 @@
 (function ($) {
     "use strict";
 
-    var Select = function (options) {
+    const Select = function (options) {
         this.init('select', options, Select.defaults);
     };
 
@@ -3180,10 +3187,10 @@
         renderList: function () {
             this.$input.empty();
 
-            var fillItems = function ($el, data) {
-                var attr;
+            const fillItems = function ($el, data) {
+                let attr;
                 if ($.isArray(data)) {
-                    for (var i = 0; i < data.length; i++) {
+                    for (let i = 0; i < data.length; i++) {
                         attr = {};
                         if (data[i].children) {
                             attr.label = data[i].text;
@@ -3213,8 +3220,8 @@
         },
 
         value2htmlFinal: function (value, element) {
-            var text = '',
-                items = $.fn.editableutils.itemsByValue(value, this.sourceData);
+            let text = '';
+            const items = $.fn.editableutils.itemsByValue(value, this.sourceData);
 
             if (items.length) {
                 text = items[0].text;
@@ -3268,7 +3275,7 @@
 (function ($) {
     "use strict";
 
-    var Checklist = function (options) {
+    const Checklist = function (options) {
         this.init('checklist', options, Checklist.defaults);
     };
 
@@ -3276,7 +3283,7 @@
 
     $.extend(Checklist.prototype, {
         renderList: function () {
-            var $label, $div;
+            let $label, $div;
 
             this.$tpl.empty();
 
@@ -3284,7 +3291,7 @@
                 return;
             }
 
-            for (var i = 0; i < this.sourceData.length; i++) {
+            for (let i = 0; i < this.sourceData.length; i++) {
                 $label = $('<label>').append($('<input>', {
                     type: 'checkbox',
                     value: this.sourceData[i].value
@@ -3304,7 +3311,7 @@
 
         //parse separated string
         str2value: function (str) {
-            var reg, value = null;
+            let reg, value = null;
             if (typeof str === 'string' && str.length) {
                 reg = new RegExp('\\s*' + $.trim(this.options.separator) + '\\s*');
                 value = str.split(reg);
@@ -3321,7 +3328,7 @@
             this.$input.prop('checked', false);
             if ($.isArray(value) && value.length) {
                 this.$input.each(function (i, el) {
-                    var $el = $(el);
+                    const $el = $(el);
                     // cannot use $.inArray as it performs strict comparison
                     $.each(value, function (j, val) {
                         /*jslint eqeq: true*/
@@ -3335,7 +3342,7 @@
         },
 
         input2value: function () {
-            var checked = [];
+            const checked = [];
             this.$input.filter(':checked').each(function (i, el) {
                 checked.push($(el).val());
             });
@@ -3344,13 +3351,13 @@
 
         //collect text of checked boxes
         value2htmlFinal: function (value, element) {
-            var html = [],
+            const html = [],
                 checked = $.fn.editableutils.itemsByValue(value, this.sourceData),
                 escape = this.options.escape;
 
             if (checked.length) {
                 $.each(checked, function (i, v) {
-                    var text = escape ? $.fn.editableutils.escape(v.text) : v.text;
+                    const text = escape ? $.fn.editableutils.escape(v.text) : v.text;
                     html.push(text);
                 });
                 $(element).html(html.join('<br>'));
@@ -3444,7 +3451,7 @@
 (function ($) {
     "use strict";
 
-    var Password = function (options) {
+    const Password = function (options) {
         this.init('password', options, Password.defaults);
     };
     $.fn.editableutils.inherit(Password, $.fn.editabletypes.text);
@@ -3475,7 +3482,7 @@
 (function ($) {
     "use strict";
 
-    var Email = function (options) {
+    const Email = function (options) {
         this.init('email', options, Email.defaults);
     };
     $.fn.editableutils.inherit(Email, $.fn.editabletypes.text);
@@ -3492,7 +3499,7 @@
 (function ($) {
     "use strict";
 
-    var Url = function (options) {
+    const Url = function (options) {
         this.init('url', options, Url.defaults);
     };
     $.fn.editableutils.inherit(Url, $.fn.editabletypes.text);
@@ -3509,7 +3516,7 @@
 (function ($) {
     "use strict";
 
-    var Tel = function (options) {
+    const Tel = function (options) {
         this.init('tel', options, Tel.defaults);
     };
     $.fn.editableutils.inherit(Tel, $.fn.editabletypes.text);
@@ -3526,7 +3533,7 @@
 (function ($) {
     "use strict";
 
-    var NumberInput = function (options) {
+    const NumberInput = function (options) {
         this.init('number', options, NumberInput.defaults);
     };
     $.fn.editableutils.inherit(NumberInput, $.fn.editabletypes.text);
@@ -3569,7 +3576,7 @@
 (function ($) {
     "use strict";
 
-    var Range = function (options) {
+    const Range = function (options) {
         this.init('range', options, Range.defaults);
     };
     $.fn.editableutils.inherit(Range, $.fn.editabletypes.number);
@@ -3603,7 +3610,7 @@
 (function ($) {
     "use strict";
 
-    var Time = function (options) {
+    const Time = function (options) {
         this.init('time', options, Time.defaults);
     };
     //inherit from abstract, as inheritance from text gives selection error.
@@ -3703,7 +3710,7 @@
 (function ($) {
     "use strict";
 
-    var Constructor = function (options) {
+    const Constructor = function (options) {
         this.init('select2', options, Constructor.defaults);
 
         options.select2 = options.select2 || {};
@@ -3717,7 +3724,7 @@
 
         //if not `tags` mode, use source
         if (!options.select2.tags && options.source) {
-            var source = options.source;
+            let source = options.source;
             //if source is function, call it (once!)
             if ($.isFunction(options.source)) {
                 source = options.source.call(options.scope);
@@ -3755,7 +3762,7 @@
         //should be here as used inautotext for local source
         this.idFunc = this.options.select2.id;
         if (typeof(this.idFunc) !== "function") {
-            var idKey = this.idFunc || 'id';
+            const idKey = this.idFunc || 'id';
             this.idFunc = function (e) {
                 return e[idKey];
             };
@@ -3798,8 +3805,8 @@
         },
 
         value2html: function (value, element) {
-            var text = '', data,
-                that = this;
+            let text = '', data;
+            const that = this;
 
             if (this.options.select2.tags) { //in tags mode just assign value
                 data = value;
@@ -3857,13 +3864,13 @@
                 // customId and customText are methods to extract `id` and `text` from data object
                 // we can use this workaround only if user did not define these methods
                 // otherwise we cant construct data object
-                var customId = this.options.select2.id,
+                let customId = this.options.select2.id,
                     customText = this.options.select2.formatSelection;
 
                 if (!customId && !customText) {
-                    var $el = $(this.options.scope);
+                    const $el = $(this.options.scope);
                     if (!$el.data('editable').isEmpty) {
-                        var data = {id: value, text: $el.text()};
+                        const data = {id: value, text: $el.text()};
                         this.$input.select2('data', data);
                     }
                 }
@@ -3881,7 +3888,7 @@
 
             separator = separator || this.getSeparator();
 
-            var val, i, l;
+            let val, i, l;
 
             if (str === null || str.length < 1) {
                 return null;
@@ -3912,7 +3919,7 @@
          */
         convertSource: function (source) {
             if ($.isArray(source) && source.length && source[0].value !== undefined) {
-                for (var i = 0; i < source.length; i++) {
+                for (let i = 0; i < source.length; i++) {
                     if (source[i].value !== undefined) {
                         source[i].id = source[i].value;
                         delete source[i].value;
@@ -3999,7 +4006,7 @@
  **/
 (function ($) {
 
-    var Combodate = function (element, options) {
+    const Combodate = function (element, options) {
         this.$element = $(element);
         if (!this.$element.is('input')) {
             $.error('Combodate should be applied to INPUT element');
@@ -4051,12 +4058,12 @@
          Replace tokens in template with <select> elements 
          */
         getTemplate: function () {
-            var tpl = this.options.template;
+            let tpl = this.options.template;
 
             //first pass
             $.each(this.map, function (k, v) {
                 v = v[0];
-                var r = new RegExp(v + '+'),
+                const r = new RegExp(v + '+'),
                     token = v.length > 1 ? v.substring(1, 2) : v;
 
                 tpl = tpl.replace(r, '{' + token + '}');
@@ -4068,7 +4075,7 @@
             //second pass
             $.each(this.map, function (k, v) {
                 v = v[0];
-                var token = v.length > 1 ? v.substring(1, 2) : v;
+                const token = v.length > 1 ? v.substring(1, 2) : v;
 
                 tpl = tpl.replace('{' + token + '}', '<select class="' + k + '"></select>');
             });
@@ -4080,8 +4087,8 @@
          Initialize combos that presents in template 
          */
         initCombos: function () {
-            for (var k in this.map) {
-                var $c = this.$widget.find('.' + k);
+            for (let k in this.map) {
+                const $c = this.$widget.find('.' + k);
                 // set properties like this.$day, this.$month etc.
                 this['$' + k] = $c.length ? $c : null;
                 // fill with items
@@ -4093,18 +4100,18 @@
          Fill combo with items 
          */
         fillCombo: function (k) {
-            var $combo = this['$' + k];
+            let $combo = this['$' + k];
             if (!$combo) {
                 return;
             }
 
             // define method name to fill items, e.g `fillDays`
-            var f = 'fill' + k.charAt(0).toUpperCase() + k.slice(1);
-            var items = this[f]();
-            var value = $combo.val();
+            const f = 'fill' + k.charAt(0).toUpperCase() + k.slice(1);
+            const items = this[f]();
+            const value = $combo.val();
 
             $combo.empty();
-            for (var i = 0; i < items.length; i++) {
+            for (let i = 0; i < items.length; i++) {
                 $combo.append('<option value="' + items[i][0] + '">' + items[i][1] + '</option>');
             }
 
@@ -4115,13 +4122,13 @@
          Initialize items of combos. Handles `firstItem` option 
          */
         fillCommon: function (key) {
-            var values = [],
-                relTime;
+            const values = [];
+            let relTime;
 
             if (this.options.firstItem === 'name') {
                 //need both to support moment ver < 2 and  >= 2
                 relTime = moment.relativeTime || moment.langData()._relativeTime;
-                var header = typeof relTime[key] === 'function' ? relTime[key](1, true, key, false) : relTime[key];
+                let header = typeof relTime[key] === 'function' ? relTime[key](1, true, key, false) : relTime[key];
                 //take last entry (see momentjs lang files structure) 
                 header = header.split(' ').reverse()[0];
                 values.push(['', header]);
@@ -4136,15 +4143,16 @@
          fill day
          */
         fillDay: function () {
-            var items = this.fillCommon('d'), name, i,
-                twoDigit = this.options.template.indexOf('DD') !== -1,
-                daysCount = 31;
+            const items = this.fillCommon('d');
+            let name, i;
+            const twoDigit = this.options.template.indexOf('DD') !== -1;
+            let daysCount = 31;
 
             // detect days count (depends on month and year)
             // originally https://github.com/vitalets/combodate/pull/7
             if (this.options.smartDays && this.$month && this.$year) {
-                var month = parseInt(this.$month.val(), 10);
-                var year = parseInt(this.$year.val(), 10);
+                const month = parseInt(this.$month.val(), 10);
+                const year = parseInt(this.$year.val(), 10);
 
                 if (!isNaN(month) && !isNaN(year)) {
                     daysCount = moment([year, month]).daysInMonth();
@@ -4162,8 +4170,9 @@
          fill month
          */
         fillMonth: function () {
-            var items = this.fillCommon('M'), name, i,
-                longNames = this.options.template.indexOf('MMMM') !== -1,
+            const items = this.fillCommon('M');
+            let name, i;
+            const longNames = this.options.template.indexOf('MMMM') !== -1,
                 shortNames = this.options.template.indexOf('MMM') !== -1,
                 twoDigit = this.options.template.indexOf('MM') !== -1;
 
@@ -4187,8 +4196,8 @@
          fill year
          */
         fillYear: function () {
-            var items = [], name, i,
-                longNames = this.options.template.indexOf('YYYY') !== -1;
+            let items = [], name, i;
+            const longNames = this.options.template.indexOf('YYYY') !== -1;
 
             for (i = this.options.maxYear; i >= this.options.minYear; i--) {
                 name = longNames ? i : (i + '').substring(2);
@@ -4204,8 +4213,9 @@
          fill hour
          */
         fillHour: function () {
-            var items = this.fillCommon('h'), name, i,
-                h12 = this.options.template.indexOf('h') !== -1,
+            const items = this.fillCommon('h');
+            let name, i;
+            const h12 = this.options.template.indexOf('h') !== -1,
                 h24 = this.options.template.indexOf('H') !== -1,
                 twoDigit = this.options.template.toLowerCase().indexOf('hh') !== -1,
                 min = h12 ? 1 : 0,
@@ -4222,8 +4232,9 @@
          fill minute
          */
         fillMinute: function () {
-            var items = this.fillCommon('m'), name, i,
-                twoDigit = this.options.template.indexOf('mm') !== -1;
+            const items = this.fillCommon('m');
+            let name, i;
+            const twoDigit = this.options.template.indexOf('mm') !== -1;
 
             for (i = 0; i <= 59; i += this.options.minuteStep) {
                 name = twoDigit ? this.leadZero(i) : i;
@@ -4236,8 +4247,9 @@
          fill second
          */
         fillSecond: function () {
-            var items = this.fillCommon('s'), name, i,
-                twoDigit = this.options.template.indexOf('ss') !== -1;
+            const items = this.fillCommon('s');
+            let name, i;
+            const twoDigit = this.options.template.indexOf('ss') !== -1;
 
             for (i = 0; i <= 59; i += this.options.secondStep) {
                 name = twoDigit ? this.leadZero(i) : i;
@@ -4250,7 +4262,7 @@
          fill ampm
          */
         fillAmpm: function () {
-            var ampmL = this.options.template.indexOf('a') !== -1,
+            const ampmL = this.options.template.indexOf('a') !== -1,
                 ampmU = this.options.template.indexOf('A') !== -1,
                 items = [
                     ['am', ampmL ? 'am' : 'AM'],
@@ -4265,16 +4277,17 @@
          If format = `null` - Moment object returned.
          */
         getValue: function (format) {
-            var dt, values = {},
-                that = this,
-                notSelected = false;
+            let dt;
+            const values = {},
+                that = this;
+            let notSelected = false;
 
             //getting selected values    
             $.each(this.map, function (k, v) {
                 if (k === 'ampm') {
                     return;
                 }
-                var def = k === 'day' ? 1 : 0;
+                const def = k === 'day' ? 1 : 0;
 
                 values[k] = that['$' + k] ? parseInt(that['$' + k].val(), 10) : def;
 
@@ -4317,16 +4330,16 @@
                 return;
             }
 
-            var dt = typeof value === 'string' ? moment(value, this.options.format) : moment(value),
+            const dt = typeof value === 'string' ? moment(value, this.options.format) : moment(value),
                 that = this,
                 values = {};
 
             //function to find nearest value in select options
             function getNearest($select, value) {
-                var delta = {};
+                let delta = {};
                 $select.children('option').each(function (i, opt) {
-                    var optValue = $(opt).attr('value'),
-                        distance;
+                    const optValue = $(opt).attr('value');
+                    let distance;
 
                     if (optValue === '') return;
                     distance = Math.abs(optValue - value);
@@ -4422,7 +4435,8 @@
     };
 
     $.fn.combodate = function (option) {
-        var d, args = Array.apply(null, arguments);
+        let d;
+        const args = Array.apply(null, arguments);
         args.shift();
 
         //getValue returns date as string / object (not jQuery object)
@@ -4431,9 +4445,9 @@
         }
 
         return this.each(function () {
-            var $this = $(this),
-                data = $this.data('combodate'),
-                options = typeof option == 'object' && option;
+            const $this = $(this);
+            let data = $this.data('combodate');
+            const options = typeof option == 'object' && option;
             if (!data) {
                 $this.data('combodate', (data = new Combodate(this, options)));
             }
@@ -4505,7 +4519,7 @@
 (function ($) {
     "use strict";
 
-    var Constructor = function (options) {
+    const Constructor = function (options) {
         this.init('combodate', options, Constructor.defaults);
 
         //by default viewformat equals to format
@@ -4551,7 +4565,7 @@
         },
 
         value2html: function (value, element) {
-            var text = value ? value.format(this.options.viewformat) : '';
+            const text = value ? value.format(this.options.viewformat) : '';
             //$(element).text(text);
             Constructor.superclass.value2html.call(this, text, element);
         },
@@ -4667,7 +4681,7 @@
     "use strict";
 
     //store parent methods
-    var pInitInput = $.fn.editableform.Constructor.prototype.initInput;
+    const pInitInput = $.fn.editableform.Constructor.prototype.initInput;
 
     $.extend($.fn.editableform.Constructor.prototype, {
         initTemplate: function () {
@@ -4679,11 +4693,11 @@
             pInitInput.apply(this);
 
             //for bs3 set default class `input-sm` to standard inputs
-            var emptyInputClass = this.input.options.inputclass === null || this.input.options.inputclass === false;
-            var defaultClass = 'input-sm';
+            const emptyInputClass = this.input.options.inputclass === null || this.input.options.inputclass === false;
+            const defaultClass = 'input-sm';
 
             //bs3 add `form-control` class to standard inputs
-            var stdtypes = 'text,select,textarea,password,email,url,tel,number,range,time,typeaheadjs'.split(',');
+            const stdtypes = 'text,select,textarea,password,email,url,tel,number,range,time,typeaheadjs'.split(',');
             if (~$.inArray(this.input.type, stdtypes)) {
                 this.input.$input.addClass('form-control');
                 if (emptyInputClass) {
@@ -4693,9 +4707,9 @@
             }
 
             //apply bs3 size class also to buttons (to fit size of control)
-            var $btn = this.$form.find('.editable-buttons');
-            var classes = emptyInputClass ? [defaultClass] : this.input.options.inputclass.split(' ');
-            for (var i = 0; i < classes.length; i++) {
+            const $btn = this.$form.find('.editable-buttons');
+            const classes = emptyInputClass ? [defaultClass] : this.input.options.inputclass.split(' ');
+            for (let i = 0; i < classes.length; i++) {
                 // `btn-sm` is default now
                 /*
                  if(classes[i].toLowerCase() === 'input-sm') { 
@@ -4748,7 +4762,7 @@
             });
 
             //as template property is used in inputs, hide it from popover
-            var t;
+            let t;
             if (this.$element.data('template')) {
                 t = this.$element.data('template');
                 this.$element.removeData('template');
@@ -4901,31 +4915,31 @@
                  */
 
 
-                var $tip = this.tip();
+                const $tip = this.tip();
 
-                var placement = typeof this.options.placement == 'function' ?
+                let placement = typeof this.options.placement == 'function' ?
                     this.options.placement.call(this, $tip[0], this.$element[0]) :
                     this.options.placement;
 
-                var autoToken = /\s?auto?\s?/i;
-                var autoPlace = autoToken.test(placement);
+                const autoToken = /\s?auto?\s?/i;
+                const autoPlace = autoToken.test(placement);
                 if (autoPlace) {
                     placement = placement.replace(autoToken, '') || 'top';
                 }
 
 
-                var pos = this.getPosition();
-                var actualWidth = $tip[0].offsetWidth;
-                var actualHeight = $tip[0].offsetHeight;
+                const pos = this.getPosition();
+                const actualWidth = $tip[0].offsetWidth;
+                const actualHeight = $tip[0].offsetHeight;
 
                 if (autoPlace) {
-                    var $parent = this.$element.parent();
+                    const $parent = this.$element.parent();
 
-                    var orgPlacement = placement;
-                    var docScroll = document.documentElement.scrollTop || document.body.scrollTop;
-                    var parentWidth = this.options.container == 'body' ? window.innerWidth : $parent.outerWidth();
-                    var parentHeight = this.options.container == 'body' ? window.innerHeight : $parent.outerHeight();
-                    var parentLeft = this.options.container == 'body' ? 0 : $parent.offset().left;
+                    const orgPlacement = placement;
+                    const docScroll = document.documentElement.scrollTop || document.body.scrollTop;
+                    const parentWidth = this.options.container == 'body' ? window.innerWidth : $parent.outerWidth();
+                    const parentHeight = this.options.container == 'body' ? window.innerHeight : $parent.outerHeight();
+                    const parentLeft = this.options.container == 'body' ? 0 : $parent.offset().left;
 
                     placement = placement == 'bottom' && pos.top + pos.height + actualHeight - docScroll > parentHeight ? 'top' :
                         placement == 'top' && pos.top - docScroll - actualHeight < 0 ? 'bottom' :
@@ -4939,7 +4953,7 @@
                 }
 
 
-                var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight);
+                const calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight);
 
                 this.applyPlacement(calculatedOffset, placement);
 
@@ -4978,14 +4992,14 @@
     }
 
     function UTCToday() {
-        var today = new Date();
+        const today = new Date();
         return UTCDate(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
     }
 
     // Picker object
 
-    var Datepicker = function (element, options) {
-        var that = this;
+    const Datepicker = function (element, options) {
+        const that = this;
 
         this._process_options(options);
 
@@ -5048,11 +5062,11 @@
             // Store raw options for reference
             this._o = $.extend({}, this._o, opts);
             // Processed options
-            var o = this.o = $.extend({}, this._o);
+            const o = this.o = $.extend({}, this._o);
 
             // Check if "de-DE" style date is available, if not language should
             // fallback to 2 letter code eg "de"
-            var lang = o.language;
+            let lang = o.language;
             if (!dates[lang]) {
                 lang = lang.split('-')[0];
                 if (!dates[lang])
@@ -5091,7 +5105,7 @@
             o.weekStart %= 7;
             o.weekEnd = ((o.weekStart + 6) % 7);
 
-            var format = DPGlobal.parseFormat(o.format)
+            const format = DPGlobal.parseFormat(o.format);
             if (o.startDate !== -Infinity) {
                 o.startDate = DPGlobal.parseDate(o.startDate, format, o.language);
             }
@@ -5109,14 +5123,16 @@
         _events: [],
         _secondaryEvents: [],
         _applyEvents: function (evs) {
-            for (var i = 0, el, ev; i < evs.length; i++) {
+            let i = 0, el, ev;
+            for (; i < evs.length; i++) {
                 el = evs[i][0];
                 ev = evs[i][1];
                 el.on(ev);
             }
         },
         _unapplyEvents: function (evs) {
-            for (var i = 0, el, ev; i < evs.length; i++) {
+            let i = 0, el, ev;
+            for (; i < evs.length; i++) {
                 el = evs[i][0];
                 ev = evs[i][1];
                 el.off(ev);
@@ -5193,14 +5209,14 @@
             this._unapplyEvents(this._secondaryEvents);
         },
         _trigger: function (event, altdate) {
-            var date = altdate || this.date,
+            const date = altdate || this.date,
                 local_date = new Date(date.getTime() + (date.getTimezoneOffset() * 60000));
 
             this.element.trigger({
                 type: event,
                 date: local_date,
                 format: $.proxy(function (altformat) {
-                    var format = altformat || this.o.format;
+                    const format = altformat || this.o.format;
                     return DPGlobal.formatDate(date, format, this.o.language);
                 }, this)
             });
@@ -5250,7 +5266,7 @@
         },
 
         getDate: function () {
-            var d = this.getUTCDate();
+            const d = this.getUTCDate();
             return new Date(d.getTime() + (d.getTimezoneOffset() * 60000));
         },
 
@@ -5268,7 +5284,7 @@
         },
 
         setValue: function () {
-            var formatted = this.getFormattedDate();
+            const formatted = this.getFormattedDate();
             if (!this.isInput) {
                 if (this.component) {
                     this.element.find('input').val(formatted);
@@ -5304,11 +5320,11 @@
 
         place: function () {
             if (this.isInline) return;
-            var zIndex = parseInt(this.element.parents().filter(function () {
+            const zIndex = parseInt(this.element.parents().filter(function () {
                     return $(this).css('z-index') != 'auto';
                 }).first().css('z-index')) + 10;
-            var offset = this.component ? this.component.parent().offset() : this.element.offset();
-            var height = this.component ? this.component.outerHeight(true) : this.element.outerHeight(true);
+            const offset = this.component ? this.component.parent().offset() : this.element.offset();
+            const height = this.component ? this.component.outerHeight(true) : this.element.outerHeight(true);
             this.picker.css({
                 top: offset.top + height,
                 left: offset.left,
@@ -5320,7 +5336,7 @@
         update: function () {
             if (!this._allow_update) return;
 
-            var date, fromArgs = false;
+            let date, fromArgs = false;
             if (arguments && arguments.length && (typeof arguments[0] === 'string' || arguments[0] instanceof Date)) {
                 date = arguments[0];
                 fromArgs = true;
@@ -5344,10 +5360,10 @@
         },
 
         fillDow: function () {
-            var dowCnt = this.o.weekStart,
+            let dowCnt = this.o.weekStart,
                 html = '<tr>';
             if (this.o.calendarWeeks) {
-                var cell = '<th class="cw">&nbsp;</th>';
+                const cell = '<th class="cw">&nbsp;</th>';
                 html += cell;
                 this.picker.find('.datepicker-days thead tr:first-child').prepend(cell);
             }
@@ -5359,7 +5375,7 @@
         },
 
         fillMonths: function () {
-            var html = '',
+            let html = '',
                 i = 0;
             while (i < 12) {
                 html += '<span class="month">' + dates[this.o.language].monthsShort[i++] + '</span>';
@@ -5378,7 +5394,7 @@
         },
 
         getClassNames: function (date) {
-            var cls = [],
+            const cls = [],
                 year = this.viewDate.getUTCFullYear(),
                 month = this.viewDate.getUTCMonth(),
                 currentDate = this.date.valueOf(),
@@ -5414,15 +5430,15 @@
         },
 
         fill: function () {
-            var d = new Date(this.viewDate),
-                year = d.getUTCFullYear(),
-                month = d.getUTCMonth(),
+            const d = new Date(this.viewDate);
+            let year = d.getUTCFullYear();
+            const month = d.getUTCMonth(),
                 startYear = this.o.startDate !== -Infinity ? this.o.startDate.getUTCFullYear() : -Infinity,
                 startMonth = this.o.startDate !== -Infinity ? this.o.startDate.getUTCMonth() : -Infinity,
                 endYear = this.o.endDate !== Infinity ? this.o.endDate.getUTCFullYear() : Infinity,
                 endMonth = this.o.endDate !== Infinity ? this.o.endDate.getUTCMonth() : Infinity,
-                currentDate = this.date && this.date.valueOf(),
-                tooltip;
+                currentDate = this.date && this.date.valueOf();
+            let tooltip;
             this.picker.find('.datepicker-days thead th.datepicker-switch')
                 .text(dates[this.o.language].months[month] + ' ' + year);
             this.picker.find('tfoot th.today')
@@ -5433,30 +5449,25 @@
                 .toggle(this.o.clearBtn !== false);
             this.updateNavArrows();
             this.fillMonths();
-            var prevMonth = UTCDate(year, month - 1, 28, 0, 0, 0, 0),
+            const prevMonth = UTCDate(year, month - 1, 28, 0, 0, 0, 0),
                 day = DPGlobal.getDaysInMonth(prevMonth.getUTCFullYear(), prevMonth.getUTCMonth());
             prevMonth.setUTCDate(day);
             prevMonth.setUTCDate(day - (prevMonth.getUTCDay() - this.o.weekStart + 7) % 7);
-            var nextMonth = new Date(prevMonth);
+            let nextMonth = new Date(prevMonth);
             nextMonth.setUTCDate(nextMonth.getUTCDate() + 42);
             nextMonth = nextMonth.valueOf();
-            var html = [];
-            var clsName;
+            let html = [];
+            let clsName;
             while (prevMonth.valueOf() < nextMonth) {
                 if (prevMonth.getUTCDay() == this.o.weekStart) {
                     html.push('<tr>');
                     if (this.o.calendarWeeks) {
                         // ISO 8601: First week contains first thursday.
                         // ISO also states week starts on Monday, but we can be more abstract here.
-                        var
-                        // Start of current week: based on weekstart/current date
-                            ws = new Date(+prevMonth + (this.o.weekStart - prevMonth.getUTCDay() - 7) % 7 * 864e5),
-                        // Thursday of this week
-                            th = new Date(+ws + (7 + 4 - ws.getUTCDay()) % 7 * 864e5),
-                        // First Thursday of year, year from thursday
-                            yth = new Date(+(yth = UTCDate(th.getUTCFullYear(), 0, 1)) + (7 + 4 - yth.getUTCDay()) % 7 * 864e5),
-                        // Calendar week: ms between thursdays, div ms per day, div 7 days
-                            calWeek = (th - yth) / 864e5 / 7 + 1;
+                        let ws = new Date(+prevMonth + (this.o.weekStart - prevMonth.getUTCDay() - 7) % 7 * 864e5);
+                        const th = new Date(+ws + (7 + 4 - ws.getUTCDay()) % 7 * 864e5);
+                        let yth = new Date(+(yth = UTCDate(th.getUTCFullYear(), 0, 1)) + (7 + 4 - yth.getUTCDay()) % 7 * 864e5);
+                        const calWeek = (th - yth) / 864e5 / 7 + 1;
                         html.push('<td class="cw">' + calWeek + '</td>');
 
                     }
@@ -5464,7 +5475,7 @@
                 clsName = this.getClassNames(prevMonth);
                 clsName.push('day');
 
-                var before = this.o.beforeShowDay(prevMonth);
+                let before = this.o.beforeShowDay(prevMonth);
                 if (before === undefined)
                     before = {};
                 else if (typeof(before) === 'boolean')
@@ -5486,9 +5497,9 @@
                 prevMonth.setUTCDate(prevMonth.getUTCDate() + 1);
             }
             this.picker.find('.datepicker-days tbody').empty().append(html.join(''));
-            var currentYear = this.date && this.date.getUTCFullYear();
+            const currentYear = this.date && this.date.getUTCFullYear();
 
-            var months = this.picker.find('.datepicker-months')
+            const months = this.picker.find('.datepicker-months')
                 .find('th:eq(1)')
                 .text(year)
                 .end()
@@ -5508,13 +5519,13 @@
 
             html = '';
             year = parseInt(year / 10, 10) * 10;
-            var yearCont = this.picker.find('.datepicker-years')
+            const yearCont = this.picker.find('.datepicker-years')
                 .find('th:eq(1)')
                 .text(year + '-' + (year + 9))
                 .end()
                 .find('td');
             year -= 1;
-            for (var i = -1; i < 11; i++) {
+            for (let i = -1; i < 11; i++) {
                 html += '<span class="year' + (i == -1 ? ' old' : i == 10 ? ' new' : '') + (currentYear == year ? ' active' : '') + (year < startYear || year > endYear ? ' disabled' : '') + '">' + year + '</span>';
                 year += 1;
             }
@@ -5524,7 +5535,7 @@
         updateNavArrows: function () {
             if (!this._allow_update) return;
 
-            var d = new Date(this.viewDate),
+            const d = new Date(this.viewDate),
                 year = d.getUTCFullYear(),
                 month = d.getUTCMonth();
             switch (this.viewMode) {
@@ -5558,7 +5569,7 @@
 
         click: function (e) {
             e.preventDefault();
-            var target = $(e.target).closest('span, td, th');
+            const target = $(e.target).closest('span, td, th');
             if (target.length == 1) {
                 switch (target[0].nodeName.toLowerCase()) {
                     case 'th':
@@ -5568,7 +5579,7 @@
                                 break;
                             case 'prev':
                             case 'next':
-                                var dir = DPGlobal.modes[this.viewMode].navStep * (target[0].className == 'prev' ? -1 : 1);
+                                const dir = DPGlobal.modes[this.viewMode].navStep * (target[0].className == 'prev' ? -1 : 1);
                                 switch (this.viewMode) {
                                     case 0:
                                         this.viewDate = this.moveMonth(this.viewDate, dir);
@@ -5581,15 +5592,15 @@
                                 this.fill();
                                 break;
                             case 'today':
-                                var date = new Date();
+                                let date = new Date();
                                 date = UTCDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
 
                                 this.showMode(-2);
-                                var which = this.o.todayBtn == 'linked' ? null : 'view';
+                                const which = this.o.todayBtn == 'linked' ? null : 'view';
                                 this._setDate(date, which);
                                 break;
                             case 'clear':
-                                var element;
+                                let element;
                                 if (this.isInput)
                                     element = this.element;
                                 else if (this.component)
@@ -5664,7 +5675,7 @@
             this.fill();
             this.setValue();
             this._trigger('changeDate');
-            var element;
+            let element;
             if (this.isInput) {
                 element = this.element;
             } else if (this.component) {
@@ -5680,11 +5691,11 @@
 
         moveMonth: function (date, dir) {
             if (!dir) return date;
-            var new_date = new Date(date.valueOf()),
-                day = new_date.getUTCDate(),
-                month = new_date.getUTCMonth(),
-                mag = Math.abs(dir),
-                new_month, test;
+            let new_date = new Date(date.valueOf()),
+                day = new_date.getUTCDate();
+            const month = new_date.getUTCMonth(),
+                mag = Math.abs(dir);
+            let new_month, test;
             dir = dir > 0 ? 1 : -1;
             if (mag == 1) {
                 test = dir == -1
@@ -5705,7 +5716,7 @@
                     new_month = (new_month + 12) % 12;
             } else {
                 // For magnitudes >1, move one month at a time...
-                for (var i = 0; i < mag; i++)
+                for (let i = 0; i < mag; i++)
                     // ...which might decrease the day (eg, Jan 31 to Feb 28, etc)...
                     new_date = this.moveMonth(new_date, dir);
                 // ...then reset the day, keeping it in the new month
@@ -5738,7 +5749,7 @@
                     this.show();
                 return;
             }
-            var dateChanged = false,
+            let dateChanged = false,
                 dir, day, month,
                 newDate, newViewDate;
             switch (e.keyCode) {
@@ -5806,7 +5817,7 @@
             }
             if (dateChanged) {
                 this._trigger('changeDate');
-                var element;
+                let element;
                 if (this.isInput) {
                     element = this.element;
                 } else if (this.component) {
@@ -5837,7 +5848,7 @@
         }
     };
 
-    var DateRangePicker = function (element, options) {
+    const DateRangePicker = function (element, options) {
         this.element = $(element);
         this.inputs = $.map(options.inputs, function (i) {
             return i.jquery ? i[0] : i;
@@ -5861,7 +5872,7 @@
             this.updateRanges();
         },
         updateRanges: function () {
-            var range = $.map(this.dates, function (d) {
+            const range = $.map(this.dates, function (d) {
                 return d.valueOf();
             });
             $.each(this.pickers, function (i, p) {
@@ -5869,10 +5880,10 @@
             });
         },
         dateUpdated: function (e) {
-            var dp = $(e.target).data('datepicker'),
-                new_date = dp.getUTCDate(),
-                i = $.inArray(e.target, this.inputs),
-                l = this.inputs.length;
+            const dp = $(e.target).data('datepicker'),
+                new_date = dp.getUTCDate();
+            let i = $.inArray(e.target, this.inputs);
+            const l = this.inputs.length;
             if (i == -1) return;
 
             if (new_date < this.dates[i]) {
@@ -5903,7 +5914,7 @@
             out = {}, inkey,
             replace = new RegExp('^' + prefix.toLowerCase() + '([A-Z])'),
             prefix = new RegExp('^' + prefix.toLowerCase());
-        for (var key in data)
+        for (let key in data)
             if (prefix.test(key)) {
                 inkey = key.replace(replace, function (_, a) {
                     return a.toLowerCase();
@@ -5915,7 +5926,7 @@
 
     function opts_from_locale(lang) {
         // Derive options from locale plugins
-        var out = {};
+        const out = {};
         // Check if "de-DE" style date is available, if not language should
         // fallback to 2 letter code eg "de"
         if (!dates[lang]) {
@@ -5923,7 +5934,7 @@
             if (!dates[lang])
                 return;
         }
-        var d = dates[lang];
+        const d = dates[lang];
         $.each(locale_opts, function (i, k) {
             if (k in d)
                 out[k] = d[k];
@@ -5931,25 +5942,23 @@
         return out;
     }
 
-    var old = $.fn.datepicker;
-    var datepicker = $.fn.datepicker = function (option) {
-        var args = Array.apply(null, arguments);
+    const old = $.fn.datepicker;
+    const datepicker = $.fn.datepicker = function (option) {
+        const args = Array.apply(null, arguments);
         args.shift();
-        var internal_return,
+        let internal_return,
             this_return;
         this.each(function () {
-            var $this = $(this),
-                data = $this.data('datepicker'),
-                options = typeof option == 'object' && option;
+            const $this = $(this);
+            let data = $this.data('datepicker');
+            const options = typeof option == 'object' && option;
             if (!data) {
-                var elopts = opts_from_el(this, 'date'),
-                // Preliminary otions
+                const elopts = opts_from_el(this, 'date'),                // Preliminary otions
                     xopts = $.extend({}, defaults, elopts, options),
-                    locopts = opts_from_locale(xopts.language),
-                // Options priority: js args, data-attrs, locales, defaults
+                    locopts = opts_from_locale(xopts.language),                // Options priority: js args, data-attrs, locales, defaults
                     opts = $.extend({}, defaults, locopts, elopts, options);
                 if ($this.is('.input-daterange') || opts.inputs) {
-                    var ropts = {
+                    const ropts = {
                         inputs: opts.inputs || $this.find('input').toArray()
                     };
                     $this.data('datepicker', (data = new DateRangePicker(this, $.extend(opts, ropts))));
@@ -6035,7 +6044,7 @@
         parseFormat: function (format) {
             // IE treats \0 as a string end in inputs (truncating the value),
             // so it's a bad format delimiter, anyway
-            var separators = format.replace(this.validParts, '\0').split('\0'),
+            let separators = format.replace(this.validParts, '\0').split('\0'),
                 parts = format.match(this.validParts);
             if (!separators || !separators.length || !parts || parts.length === 0) {
                 throw new Error("Invalid date format.");
@@ -6099,7 +6108,7 @@
             setters_map['M'] = setters_map['MM'] = setters_map['mm'] = setters_map['m'];
             setters_map['dd'] = setters_map['d'];
             date = UTCDate(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
-            var fparts = format.parts.slice();
+            let fparts = format.parts.slice();
             // Remove noop parts
             if (parts.length != fparts.length) {
                 fparts = $(fparts).filter(function (i, p) {
@@ -6115,7 +6124,7 @@
                         switch (part) {
                             case 'MM':
                                 filtered = $(dates[language].months).filter(function () {
-                                    var m = this.slice(0, parts[i].length),
+                                    const m = this.slice(0, parts[i].length),
                                         p = parts[i].slice(0, m.length);
                                     return m == p;
                                 });
@@ -6123,7 +6132,7 @@
                                 break;
                             case 'M':
                                 filtered = $(dates[language].monthsShort).filter(function () {
-                                    var m = this.slice(0, parts[i].length),
+                                    const m = this.slice(0, parts[i].length),
                                         p = parts[i].slice(0, m.length);
                                     return m == p;
                                 });
@@ -6144,7 +6153,7 @@
         formatDate: function (date, format, language) {
             if (typeof format === 'string')
                 format = DPGlobal.parseFormat(format);
-            var val = {
+            const val = {
                 d: date.getUTCDate(),
                 D: dates[language].daysShort[date.getUTCDay()],
                 DD: dates[language].days[date.getUTCDay()],
@@ -6158,7 +6167,9 @@
             val.mm = (val.m < 10 ? '0' : '') + val.m;
             var date = [],
                 seps = $.extend([], format.separators);
-            for (var i = 0, cnt = format.parts.length; i <= cnt; i++) {
+            let i = 0;
+            const cnt = format.parts.length;
+            for (; i <= cnt; i++) {
                 if (seps.length)
                     date.push(seps.shift());
                 date.push(val[format.parts[i]]);
@@ -6218,7 +6229,7 @@
         'focus.datepicker.data-api click.datepicker.data-api',
         '[data-provide="datepicker"]',
         function (e) {
-            var $this = $(this);
+            const $this = $(this);
             if ($this.data('datepicker')) return;
             e.preventDefault();
             // component click requires us to explicitly show it
@@ -6267,7 +6278,7 @@
         $.fn.datepicker = $.fn.bdatepicker;
     }
 
-    var Date = function (options) {
+    const Date = function (options) {
         this.init('date', options, Date.defaults);
         this.initPicker(options, Date.defaults);
     };
@@ -6319,7 +6330,7 @@
         },
 
         value2html: function (value, element) {
-            var text = value ? this.dpg.formatDate(value, this.parsedViewFormat, this.options.datepicker.language) : '';
+            const text = value ? this.dpg.formatDate(value, this.parsedViewFormat, this.options.datepicker.language) : '';
             Date.superclass.value2html.call(this, text, element);
         },
 
@@ -6363,7 +6374,7 @@
                 if ($(e.currentTarget).is('.old') || $(e.currentTarget).is('.new')) {
                     return;
                 }
-                var $form = $(this).closest('form');
+                const $form = $(this).closest('form');
                 setTimeout(function () {
                     $form.submit();
                 }, 200);
@@ -6385,7 +6396,7 @@
          This function returns null for incorrect date.  
          */
         parseDate: function (str, format) {
-            var date = null, formattedBack;
+            let date = null, formattedBack;
             if (str) {
                 date = this.dpg.parseDate(str, format, this.options.datepicker.language);
                 if (typeof str === 'string') {
@@ -6476,7 +6487,7 @@
 (function ($) {
     "use strict";
 
-    var DateField = function (options) {
+    const DateField = function (options) {
         this.init('datefield', options, DateField.defaults);
         this.initPicker(options, DateField.defaults);
     };
@@ -6577,7 +6588,7 @@
 (function ($) {
     "use strict";
 
-    var DateTime = function (options) {
+    const DateTime = function (options) {
         this.init('datetime', options, DateTime.defaults);
         this.initPicker(options, DateTime.defaults);
     };
@@ -6619,7 +6630,7 @@
             //adjust container position when viewMode changes
             //see https://github.com/smalot/bootstrap-datetimepicker/pull/80
             this.$input.on('changeMode', function (e) {
-                var f = $(this).closest('form').parent();
+                const f = $(this).closest('form').parent();
                 //timeout here, otherwise container changes position before form has new size
                 setTimeout(function () {
                     f.triggerHandler('resize');
@@ -6640,7 +6651,7 @@
 
         value2html: function (value, element) {
             //formatDate works with UTCDate!
-            var text = value ? this.dpg.formatDate(this.toUTC(value), this.parsedViewFormat, this.options.datetimepicker.language, this.options.formatType) : '';
+            const text = value ? this.dpg.formatDate(this.toUTC(value), this.parsedViewFormat, this.options.datetimepicker.language, this.options.formatType) : '';
             if (element) {
                 DateTime.superclass.value2html.call(this, text, element);
             } else {
@@ -6650,7 +6661,7 @@
 
         html2value: function (html) {
             //parseDate return utc date!
-            var value = this.parseDate(html, this.parsedViewFormat);
+            const value = this.parseDate(html, this.parsedViewFormat);
             return value ? this.fromUTC(value) : null;
         },
 
@@ -6661,7 +6672,7 @@
 
         str2value: function (str) {
             //parseDate return utc date!
-            var value = this.parseDate(str, this.parsedFormat);
+            const value = this.parseDate(str, this.parsedFormat);
             return value ? this.fromUTC(value) : null;
         },
 
@@ -6677,7 +6688,7 @@
 
         input2value: function () {
             //date may be cleared, in that case getDate() triggers error
-            var dt = this.$input.data('datetimepicker');
+            const dt = this.$input.data('datetimepicker');
             return dt.date ? dt.getDate() : null;
         },
 
@@ -6694,7 +6705,7 @@
 
         autosubmit: function () {
             this.$input.on('mouseup', '.minute', function (e) {
-                var $form = $(this).closest('form');
+                const $form = $(this).closest('form');
                 setTimeout(function () {
                     $form.submit();
                 }, 200);
@@ -6717,7 +6728,7 @@
          This function returns null for incorrect date.  
          */
         parseDate: function (str, format) {
-            var date = null, formattedBack;
+            let date = null, formattedBack;
             if (str) {
                 date = this.dpg.parseDate(str, format, this.options.datetimepicker.language, this.options.formatType);
                 if (typeof str === 'string') {
@@ -6800,7 +6811,7 @@
 (function ($) {
     "use strict";
 
-    var DateTimeField = function (options) {
+    const DateTimeField = function (options) {
         this.init('datetimefield', options, DateTimeField.defaults);
         this.initPicker(options, DateTimeField.defaults);
     };

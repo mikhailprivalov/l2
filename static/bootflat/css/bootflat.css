@@ -571,9 +571,7 @@ blockquote {
 .breadcrumb-arrow li a:before {
     right: -10px;
     z-index: 3;
-    border-left-color: #3bafda;
-    border-left-style: solid;
-    border-left-width: 11px;
+    border-left: 11px solid #3bafda;
 }
 
 .breadcrumb-arrow li a:after {
@@ -682,9 +680,7 @@ blockquote {
 }
 
 .input-group-btn .btn + .btn {
-    border-color: #96a0ad;
-    border-style: solid;
-    border-width: 1px;
+    border: 1px solid #96a0ad;
 }
 
 .input-group-btn .btn + .btn.btn-default {
@@ -1396,8 +1392,7 @@ blockquote {
     margin-top: 6px;
     font-size: 0;
     content: "";
-    border-style: solid;
-    border-width: 7px;
+    border: 7px solid;
 }
 
 .calendar .years .prev em:before {
@@ -2820,8 +2815,7 @@ a.list-group-item-danger.active, a.list-group-item-danger:hover, a.list-group-it
     width: 0;
     height: 0;
     content: '';
-    border-style: solid;
-    border-width: 6px;
+    border: 6px solid;
 }
 
 .timeline dl dd .events .events-object {
@@ -2998,9 +2992,8 @@ a.list-group-item-danger.active, a.list-group-item-danger:hover, a.list-group-it
     margin-top: 5px;
     margin-right: -10px;
     content: " ";
-    border-color: transparent;
-    border-style: solid;
-    border-width: 5px 0 5px 5px;
+    border: 5px solid transparent;
+    border-right-width: 0;
     border-left-color: white;
 }
 

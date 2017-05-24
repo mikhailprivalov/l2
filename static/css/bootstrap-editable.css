@@ -252,10 +252,9 @@ a.editable-click.editable-disabled:hover {
 .datepicker-dropdown:before {
     content: '';
     display: inline-block;
-    border-left: 7px solid transparent;
     border-right: 7px solid transparent;
-    border-bottom: 7px solid #ccc;
-    border-bottom-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 7px solid rgba(0, 0, 0, 0.2);
+    border-left: 7px solid transparent;
     position: absolute;
     top: -7px;
     left: 6px;

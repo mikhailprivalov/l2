@@ -187,6 +187,7 @@ def results_save(request):
     result = {"ok": False}
     if request.method == "POST":
         fractions = json.loads(request.POST["fractions"])  # Загрузка фракций из запроса
+        fractions_ref = json.loads(request.POST.get("fractions_ref", "{}"))  # Загрузка фракций из запроса
         issledovaniye = Issledovaniya.objects.get(
             pk=int(request.POST["issledovaniye"]))  # Загрузка исследования из запроса и выборка из базы данных
         if issledovaniye:  # Если исследование найдено
@@ -203,6 +204,12 @@ def results_save(request):
                                                  pk=key))  # Создание нового результата
                 fraction_result.value = fractions[key]  # Установка значения
                 fraction_result.iteration = 1  # Установка итерации
+                if key in fractions_ref:
+                    r = fractions_ref[key]
+                    fraction_result.ref_title = r["title"]
+                    fraction_result.ref_about = r["about"]
+                    fraction_result.ref_m = r["m"]
+                    fraction_result.ref_f = r["f"]
                 fraction_result.save()  # Сохранение
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
             from django.utils import timezone
@@ -346,8 +353,9 @@ def get_full_result(request):
                                 "title"] = res.fraction.title  # Название фракции
                             result["results"][kint]["fractions"][pk][
                                 "units"] = res.fraction.units  # Еденицы измерения
-                            ref_m = res.fraction.ref_m
-                            ref_f = res.fraction.ref_f
+                            refs = res.get_ref(full=True)
+                            ref_m = refs["m"]
+                            ref_f = refs["f"]
                             if not isinstance(ref_m, str):
                                 ref_m = json.dumps(ref_m)
                             if not isinstance(ref_f, str):
@@ -419,8 +427,8 @@ def get_full_result(request):
                             "title"] = fr.title  # Название фракции
                         result["results"][kint]["fractions"][pk][
                             "units"] = fr.units  # Еденицы измерения
-                        ref_m = fr.ref_m
-                        ref_f = fr.ref_f
+                        ref_m = {"":""} #fr.ref_m
+                        ref_f = {"":""} #fr.ref_f
                         if not isinstance(ref_m, str):
                             ref_m = json.dumps(ref_m)
                         if not isinstance(ref_f, str):
@@ -936,8 +944,10 @@ def result_print(request):
                                              styleSheet["BodyText"]))
                         result = "не завершено"
                         norm = "none"
+                        ref = {"": ""}
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
+                            ref = r.get_ref()
                             if show_norm:
                                 norm = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
@@ -967,14 +977,10 @@ def result_print(request):
                             else:
                                 tmp.append(Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
 
-                            if dir.client.sex.lower() == "м":
-                                tmp.append(
-                                    Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_m) + "</font>",
-                                              stl))
-                            else:
-                                tmp.append(
-                                    Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_f) + "</font>",
-                                              stl))
+                            tmp.append(
+                                Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                          stl))
+
                             tmp.append(
                                 Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
 
@@ -1080,11 +1086,13 @@ def result_print(request):
                                                      styleSheet["BodyText"]))
                                 result = "не завершено"
                                 norm = "none"
+                                ref = {"": ""}
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     r = Result.objects.get(issledovaniye=iss, fraction=f)
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
+                                    ref = r.get_ref()
                                 if not iss.doc_confirmation and iss.deferred:
                                     result = "отложен"
                                 # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
@@ -1098,12 +1106,9 @@ def result_print(request):
                                     tmp.append(
                                         Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
 
-                                if dir.client.sex.lower() == "м":
-                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_m) + "</font>",
-                                                         stl))
-                                else:
-                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_f) + "</font>",
-                                                         stl))
+                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                                     stl))
+
                                 tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", stl))
                                 tmp.append("")
                                 tmp.append("")
@@ -1513,8 +1518,11 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                                      "" if not iss.comment else "<br/>" + iss.comment) + "</font>",
                                  styleSheet["BodyText"]))
             result = "не завершено"
+            ref = {"":""}
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
-                result = Result.objects.get(issledovaniye=iss, fraction=fractions[0]).value
+                r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
+                ref = r.get_ref()
+                result = r.value
 
             if not iss.doc_confirmation and iss.deferred:
                 result = "отложен"
@@ -1524,12 +1532,9 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
             tmp.append(
                 Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + fractions[0].units + "</font>",
                           styleSheet["BodyText"]))
-            if napr.client.sex.lower() == "м":
-                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_m) + "</font>",
-                                     styleSheet["BodyText"]))
-            else:
-                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(fractions[0].ref_f) + "</font>",
-                                     styleSheet["BodyText"]))
+
+            tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                 styleSheet["BodyText"]))
             data.append(tmp)
             t = Table(data, colWidths=cw)
             t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -1567,8 +1572,11 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="7">' + f.title + "</font>",
                                      styleSheet["BodyText"]))
                 result = "не завершено"
+                ref = {"": ""}
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                    result = Result.objects.get(issledovaniye=iss, fraction=f).value
+                    r = Result.objects.get(issledovaniye=iss, fraction=f)
+                    ref = r.get_ref()
+                    result = r.value
                 if not iss.doc_confirmation and iss.deferred:
                     result = "отложен"
                 elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
@@ -1576,12 +1584,8 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + f.units + "</font>",
                                      styleSheet["BodyText"]))
-                if napr.client.sex.lower() == "м":
-                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_m) + "</font>",
-                                         styleSheet["BodyText"]))
-                else:
-                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(f.ref_f) + "</font>",
-                                         styleSheet["BodyText"]))
+                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                     styleSheet["BodyText"]))
 
                 data.append(tmp)
 
@@ -2103,13 +2107,14 @@ def get_r(ref) -> str:
 @login_required
 def result_get(request):
     """ Получение результатов для исследования """
-    result = {"results": {}, "norms": {}, "comment": ""}
+    result = {"results": {}, "norms": {}, "refs": {}, "comment": ""}
     if request.method == "GET":
         issledovaniye = Issledovaniya.objects.get(pk=int(request.GET["iss_id"]))
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
             result["results"][str(v.fraction.pk)] = v.value
             result["norms"][str(v.fraction.pk)] = v.get_is_norm(recalc=True)
+            result["refs"][str(v.fraction.pk)] = v.get_ref(full=True)
         if issledovaniye.lab_comment:
             result["comment"] = issledovaniye.lab_comment.strip()
     return HttpResponse(json.dumps(result), content_type="application/json")

@@ -27,6 +27,7 @@ class RelationFractionASTM(models.Model):
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле")
     fraction = models.ForeignKey(directory_models.Fractions, help_text="Фракция")
     multiplier = models.IntegerField(choices=MULTIPLIERS, default=0, help_text="Множитель результата")
+    default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API", default=None, blank=True, null=True)
 
     def __str__(self):
         return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(self.get_multiplier_display())

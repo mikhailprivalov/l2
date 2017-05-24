@@ -222,12 +222,12 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
+        const users_av = {{ users|safe }};
+        const current_user_pk = "{{ request.user.doctorprofile.pk }}";
+        let first_resize = true;
+
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            var today = new Date();
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
 
             $('#datepicker').datepicker({
@@ -251,18 +251,15 @@
             sync_otd_doc();
         });
 
-        var users_av = {{ users|safe }};
-        var current_user_pk = "{{ request.user.doctorprofile.pk }}";
-
         function update_av_docs(oc, dc) {
             oc = oc || "#select-otd";
             dc = dc || "#select-doc";
 
             $(dc).html("");
-            kv = parseInt($(oc).val());
-            for (var i = 0; i < users_av.length; i++) {
+            let kv = parseInt($(oc).val());
+            for (let i = 0; i < users_av.length; i++) {
                 if (kv == users_av[i].pk) {
-                    for (var j = 0; j < users_av[i].docs.length; j++)
+                    for (let j = 0; j < users_av[i].docs.length; j++)
                         $(dc).append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
                     break;
                 }
@@ -278,9 +275,9 @@
 
             $("#select-doc,#select-otd,#use-doc,#custom-doc-fio,#custom_doc_fio").prop("disabled", true);
             $("#select-doc,#select-otd,#use-doc,#custom-doc-fio").closest("label").addClass("disabled");
-            var otd = $("#use-otd").is(":checked");
-            var doc = otd && $("#use-doc").is(":checked");
-            var doc_custom = $("#custom-doc-fio").is(":checked");
+            const otd = $("#use-otd").is(":checked");
+            const doc = otd && $("#use-doc").is(":checked");
+            const doc_custom = $("#custom-doc-fio").is(":checked");
             if (otd) {
                 $("#select-otd").prop("disabled", false).closest("label").removeClass("disabled");
                 $("#use-doc").prop("disabled", false).closest("label").removeClass("disabled");
@@ -295,11 +292,9 @@
                 $("#select-doc").selectpicker('show');
             }
             $(oc).add(dc).selectpicker('refresh');
-            var selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
+            const selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
             if (!!selection) selection.empty ? selection.empty() : selection.removeAllRanges();
         }
-
-        var first_resize = true;
 
         function resize() {
             $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
@@ -316,8 +311,7 @@
                 {% endif %}
                 $('#dirs-list, #directions_list').perfectScrollbar('update');
             }
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            $(".floatThead").floatThead('reflow').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
                     return $table.closest("div");
@@ -350,14 +344,14 @@
                 return Math.round($("[name='file']")[0].files[0].size / 1024 * 100) / 100;
             }
             String.prototype.capitalize = function () {
-                if (this.length == 0)
+                if (this.length === 0)
                     return "";
-                if (this.length == 1)
+                if (this.length === 1)
                     return this.toUpperCase();
                 return this.charAt(0).toUpperCase() + this.slice(1);
             };
             function getSelText() {
-                var txt = '';
+                let txt = '';
                 if (window.getSelection) {
                     txt = window.getSelection();
                 }
@@ -432,16 +426,16 @@
                 cache: false,
                 type: 'GET'
             }).done(function (data) {
-                if (data.rows.length == 0) {
+                if (data.rows.length === 0) {
                     $("#dirs-list tbody").html("<tr><td class='text-center' colspan='4'>Не найдено</td></tr>");
                     return;
                 }
                 $("#dirs-list tbody").html("");
                 for (let row of data.rows) {
                     let d = [];
-                    if (row.client.birthday != "")
+                    if (row.client.birthday !== "")
                         d.push(row.client.birthday);
-                    if (row.client.sex != "")
+                    if (row.client.sex !== "")
                         d.push(row.client.sex);
 
                     $("#dirs-list tbody").append(`<tr>
@@ -457,7 +451,7 @@
 </tr>`);
                 }
             }).always(function (jqXHR, textStatus) {
-                if (textStatus != "success") {
+                if (textStatus !== "success") {
                     errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
                 }
                 hl();

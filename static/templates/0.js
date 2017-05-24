@@ -1,5 +1,5 @@
-var nums = {};
-var groups = {};
+const nums = {};
+let groups = {};
 
 /**
  * @return {boolean}
@@ -85,7 +85,7 @@ function remove_row(gpk) {
     restore_values();
 }
 
-var hidden_gpk = [];
+const hidden_gpk = [];
 function gui_sync() {
     if (Object.keys(groups).length == 0) return;
     $('.result-enter').typeahead('destroy');
@@ -100,10 +100,10 @@ function gui_sync() {
         tmp_radios = `<div class="row rd-row">${tmp_radios}</div>`;
 
         cont = $(`[container-pk='${k}'] tbody`);
-        var ft = $.map(fraction_types[loaded_fractions[k].unit], function (item) {
+        const ft = $.map(fraction_types[loaded_fractions[k].unit], function (item) {
             return {value: item};
         });
-        var typeVals = new Bloodhound({
+        const typeVals = new Bloodhound({
             datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             identify: function (obj) {
@@ -163,7 +163,7 @@ function gui_sync() {
             $d.typeahead('val', $val);
             //$(`[data-group-key="${kk}"] .group-rows`, cont).append(`<tr><td colspan="2"><button class="btn btn-default btn-blue2-nb" onclick="add_subgroup(${k}, ${kk}); return false;">Добавить</button></td></tr>`)
 
-            var lci = hidden_gpk.indexOf(parseInt(kk));
+            const lci = hidden_gpk.indexOf(parseInt(kk));
             if (lci >= 0) {
                 $(`[data-group-key="${kk}"] .hide-vals-btn`).click();
             }
@@ -210,7 +210,7 @@ function hide_vals(gpk, th) {
 }
 
 function remove_fa(arr, item) {
-    for (var i = arr.length; i--;) {
+    for (let i = arr.length; i--;) {
         if (arr[i] === item) {
             arr.splice(i, 1);
         }

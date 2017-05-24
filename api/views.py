@@ -221,6 +221,13 @@ def results(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
+
+                                    ref = fractionRel.default_ref
+                                    if ref:
+                                        fraction_result.ref_title = ref.title
+                                        fraction_result.ref_about = ref.about
+                                        fraction_result.ref_m = ref.m
+                                        fraction_result.ref_f = ref.f
                                     fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re

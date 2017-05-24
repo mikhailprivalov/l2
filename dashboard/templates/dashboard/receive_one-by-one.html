@@ -156,7 +156,7 @@
         <source src="/static/sound/warn.ogg" type="audio/ogg">
     </audio>
 <script>
-var before_num = 0;
+let before_num = 0;
 $(document).ready(function(){
     $("#receive-field").bind('keydown', 'return', function () {
         do_receive($('#receive-field').val());
@@ -167,7 +167,6 @@ $(document).ready(function(){
     $(window).resize(function () {
         resize();
     });
-    var today = new Date();
 
     $("[name='dateday']").val(getFormattedDate(today));
     $('[name=dateday]').datepicker({
@@ -197,15 +196,15 @@ $(document).ready(function(){
 });
 function sync_checks(){
     $(".btn").removeClass("active-b");
-    var elements = document.querySelectorAll("input[name='sel']:checked");
+    let elements = document.querySelectorAll("input[name='sel']:checked");
     Array.prototype.forEach.call(elements, function (el, i) {
         $(el).parent().addClass("active-b");
     });
 }
-var block = false;
+let block = false;
 function do_receive(pk){
     pk = pk.trim();
-    if(pk == ""){
+    if(pk === ""){
         clr();
         set_msg("Не найдено! Введен пустой запрос");
         return;
@@ -217,7 +216,7 @@ function do_receive(pk){
     $("#receive-field").prop("disabled", true);
     $("#receive-field").blur();
 
-    v = parseInt($("#next_num").val());
+    let v = parseInt($("#next_num").val());
     if(v <= before_num) {
         v = before_num + 1;
         $("#next_num").val(v);
@@ -229,17 +228,17 @@ function do_receive(pk){
         $('#receive-field').val("").focus();
         upd_next_num();
         hl();
-        if(data.r == 2){
+        if(data.r === 2){
             set_msg("Ошибка! Емкость предназначена для<br/> <b>{0}</b>".f(data.lab));
             play_warn();
             return;
         }
-        else if(data.r == 3){
+        else if(data.r === 3){
             set_msg("Ошибка! Емкость № {0} <b>не найдена</b>".f(pk));
             play_warn();
             return;
         }
-        else if(data.r == 4){
+        else if(data.r === 4){
             set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
             play_warn();
             return;
@@ -259,7 +258,7 @@ function set_msg(ht){
     $("#rec-message").html(ht);
 }
 function set_researches(res){
-    $r_cont = $("#researches-container");
+    let $r_cont = $("#researches-container");
     $r_cont.html("");
     $.each(res, function(k, v){
         $r_cont.append("<div class='research-row'>{0}</div>".f(v));
@@ -275,14 +274,14 @@ function clr(){
     set_n("--");
     set_researches(["--"]);
 }
-var block2 = false;
+let block2 = false;
 function load_history(highlight){
     if(block2) return;
     block2 = true;
     $.ajax({method: "GET", url: "/dashboard/receive/history"}).done(function(data){
         block2 = false;
         $("#history-data").html("");
-        if(data.rows.length == 0){
+        if(data.rows.length === 0){
             $("#history-data").html("<tr><td colspan='4' style='text-align: center;'>Нет данных</td></tr>");
             return;
         }
@@ -301,7 +300,7 @@ function load_history(highlight){
     });
 }
 
-var first_resize = true;
+let first_resize = true;
 function resize() {
     $('#history-container').height($(window).height() - $('#history-container').position().top - 70);
 
@@ -323,7 +322,7 @@ function resize() {
 function load_researches(cont)
 {
     $o = $("#table-researches");
-    if(cont != undefined)
+    if(cont !== undefined)
         $o = $(cont);
     $o.html("");
     $o.append(lang.table_researches_header);
@@ -331,7 +330,7 @@ function load_researches(cont)
         url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
         dataType: 'json'
     }).done(function (data) {
-        if (data.length == 0) {
+        if (data.length === 0) {
             $o.append(lang.table_researches_not_found);
             return;
         }
@@ -357,11 +356,11 @@ function upd_next_num(){
 }
 function createlist() {
     date = "";
-    researches = [];
+    let researches = [];
     $.each($("#table-researches .research-sel:checked"), function (k, v) {
         researches.push(parseInt($(v).val()));
     });
-    if (researches.length == 0) {
+    if (researches.length === 0) {
         $.amaran({
             'theme': 'awesome wrn',
             'content': {
@@ -376,7 +375,7 @@ function createlist() {
         return;
     }
 
-    date = $("[name=dateday]").val();
+    let date = $("[name=dateday]").val();
     window.open('/dashboard/receive/execlist?date=' + date + "&researches=" + JSON.stringify(researches), '_blank');
 }
 

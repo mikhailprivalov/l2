@@ -50,12 +50,8 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            var today = new Date();
             $("[name='dateday-otd']").val(getFormattedDate(today)).datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -72,7 +68,7 @@
         });
 
         function chunk(arr, len) {
-            var chunks = [],
+            let chunks = [],
                     i = 0,
                     n = arr.length;
 
@@ -82,7 +78,7 @@
 
             return chunks;
         }
-        var first_resize = true;
+        let first_resize = true;
 
         function resize() {
             if (first_resize) {
@@ -100,7 +96,7 @@
                 method: "GET"
             }).done(function (data) {
                 hl();
-                if (data.length == 0) {
+                if (data.length === 0) {
                     $.amaran({
                         'theme': 'awesome wrn',
                         'content': {
@@ -114,10 +110,10 @@
                     });
                 } else {
                     c = chunk(data, 200);
-                    for (var k = 0; k < c.length; k++) {
+                    for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
-                                st = "?pk=[" + c[e].join(",") + "]";
+                                const st = "?pk=[" + c[e].join(",") + "]";
                                 window.open('/results/pdf' + st, '_blank');
                             }, 1000 * e);
                         })(k);

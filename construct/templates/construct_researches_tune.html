@@ -159,8 +159,8 @@
     </style>
     <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
     <script>
-        var pk = {{ pk }};
-        var $comments;
+        const pk = {{ pk }};
+        let $comments;
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
             $comments = $("#select-comments");
@@ -182,7 +182,7 @@
                 $comments.val(data.comment_template);
                 $comments.selectpicker('refresh');
                 $("#table-fractions tbody").html("");
-                var radios = "<td>";
+                let radios = "<td>";
                 $.each([{pk: 0, title: "Базовый тип"}, {pk: 1, title: "Динамическое число полей"}], function (k, v) {
                     radios += "<label class='radio-l'>{0} <input type='radio' value='{1}'".f(v.title, v.pk) + " name='fraction-type-{0}' /></label> ";
                 });
@@ -232,9 +232,9 @@
 
         function save_fractions() {
             sl();
-            var res = [];
+            let res = [];
             $.each($("#table-fractions tbody tr"), function (k, v) {
-                var tpk = parseInt($(v).attr("pk"));
+                const tpk = parseInt($(v).attr("pk"));
                 res.push({
                     pk: tpk,
                     hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
@@ -355,7 +355,7 @@
                     </div>
                     <div class="col-xs-6 ref_f">
                         Ж
-                        ${ref_form(ref_data.refs[i].ref_f,)}
+                        ${ref_form(ref_data.refs[i].ref_f)}
                     </div>
                 </div>
                 <div class="row">

@@ -48,7 +48,7 @@
             <input type="submit" class="form-control btn btn-success" value="Сохранить"
                    style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
         </div>
-        <div class="panel panel-default" style="margin: 0 auto; max-width: 400px;margin-top: 30px">
+        <div class="panel panel-default" style="max-width: 400px;margin: 30px auto 0;">
             <div class="panel-heading">Генератор паролей</div>
             <div class="panel-body">
                 Сгенерированый пароль:
@@ -86,11 +86,11 @@
             });
         });
         function str_rand() { // Функция генерации пароля
-            var result = '';
-            var words = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
-            var max_position = words.length - 1;
-            for (i = 0; i < 8; ++i) {
-                position = Math.floor(Math.random() * max_position);
+            let result = '';
+            const words = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
+            const max_position = words.length - 1;
+            for (let i = 0; i < 8; ++i) {
+                let position = Math.floor(Math.random() * max_position);
                 result = result + words.substring(position, position + 1);
             }
             return result;
@@ -100,8 +100,8 @@
             $('#passwordGen').attr('value', str_rand());
         }
         function toggleShow() { // Переключение видимости пароля
-            var inputPsw = $('#passwordGen');
-            if (inputPsw.attr('type') == 'password') {
+            let inputPsw = $('#passwordGen');
+            if (inputPsw.attr('type') === 'password') {
                 document.getElementById('passwordGen').setAttribute('type', 'text');
             } else {
                 document.getElementById('passwordGen').setAttribute('type', 'password');

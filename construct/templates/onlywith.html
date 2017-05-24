@@ -92,7 +92,7 @@
                 resize();
             });
         });
-        var res = [];
+        let res = [];
         function loadreslist() {
             sl();
             $.ajax({
@@ -115,11 +115,11 @@
             $.ajax({url: "/directory/research?id=" + pk, method: "GET"}).done(function (data) {
                 $(".active").removeClass("active");
                 $("[pk='{0}']".f(pk)).addClass("active");
-                div1 = $("<div></div>").appendTo("#research-form");
+                const div1 = $("<div></div>").appendTo("#research-form");
                 $(div1).append("<h5>{0}</h5>".f(data.title));
-                div2 = $("<label for='select-res'>Исследование может быть назначено только с:</label><br/><select class=\"select-b\" id=\"select-res\" data-live-search='true' data-width=\"100%\"></select>");
+                const div2 = $("<label for='select-res'>Исследование может быть назначено только с:</label><br/><select class=\"select-b\" id=\"select-res\" data-live-search='true' data-width=\"100%\"></select>");
                 $(div2).appendTo(div1);
-                for (var i = 0; i < res.length; i++) {
+                for (let i = 0; i < res.length; i++) {
                     $('#select-res').append(`<option value='${res[i].id}'>${res[i].title}</option>`);
                 }
                 $(`#select-res`).val(data.onlywith).selectpicker();
@@ -131,8 +131,8 @@
             $('#researches-container').height($(window).height() - $('#researches-container').position().top - 145);
             $('#researches-container').perfectScrollbar();
         }
-        var allres = 0;
-        var cres = 0;
+        let allres = 0;
+        let cres = 0;
         function save(pk) {
             sl();
             $.ajax({

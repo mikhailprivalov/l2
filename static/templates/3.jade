@@ -9,6 +9,7 @@ div.col-md-4
 h4(style="margin-top: 0") #{title}
 form(onsubmit="return false;")
     input(type="hidden", value=res_id)#issledovaniye_id
+    input(type="hidden", value=research_pk)#research_pk
     #result-jade-form
         table.table.table-bordered.table-sm-pd
             thead
@@ -18,7 +19,7 @@ form(onsubmit="return false;")
                 th(style="width: 23%") Нормы Ж
             each fraction in fractions
                 if !fraction.hide
-                    tr
+                    tr.fraction-row(data-research-pk=research_pk, data-fraction-pk=fraction.pk, data-ref="")
                         td
                             label= fraction.title
                         td
@@ -27,14 +28,14 @@ form(onsubmit="return false;")
                                 span.input-group-btn
                                     a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
                                         i.fa.fa-circle
-                        td.ref
+                        td.ref.ref_m
                             table.table.table-bordered.table-responsive
                                 each norm, index in fraction.references.m
                                     tr
                                         td= index
                                         td.col-md-5
                                             !{norm}
-                        td.ref
+                        td.ref.ref_f
                             table.table.table-bordered.table-responsive
                                 each norm, index in fraction.references.f
                                     tr
@@ -46,7 +47,8 @@ script.
     var group = -1;
     var groups = {0: "Oαβ (I)", 1: "A₁ (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB (IV)", 5: "A₂B₀ (IV)"};
     function genresult(th) {
-        k = pk = $(th).attr("pk");
+        let k = $(th).attr("pk");
+        let pk = k;
         $("#res-modal h4").text($(th).attr("ftitle"));
         $("#res-modal #res-modal-dir").text($("#dir_num a").text());
         $("#hiddenresmodal-1, #hiddenresmodal-2").hide();
@@ -58,7 +60,7 @@ script.
     }
 
     function updateresmodal(th) {
-        val = $(th).val();
+        let val = $(th).val();
         if ($(th).attr("name") == "groupb") {
             $("#hiddenresmodal-1, #hiddenresmodal-2").hide();
             $("[name='subgroup1']:checked").prop("checked", false);
