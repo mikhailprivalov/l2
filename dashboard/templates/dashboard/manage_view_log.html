@@ -61,13 +61,15 @@
   <span></span>\
 </div></td></tr>';
         let searchdata = {"user": -1, "type": -1, "pk": "-1"};
+        let endF = false;
+        let in_load = false;
         $(document).ready(function () {
             resize();
             $(window).resize(function () {
                 resize();
             });
             $("#table_cont").scroll(function () {
-                if ($("#table_cont").scrollTop() + $("#table_cont").height() >= $("#log_table").height() + 20 && !endF && !inload) {
+                if ($("#table_cont").scrollTop() + $("#table_cont").height() >= $("#log_table").height() + 20 && !endF && !in_load) {
                     loadlog(loaded + 1);
                 }
             });
@@ -77,11 +79,9 @@
                 setInterval(check_new_rows, 500);
             }, 1500);
         });
-        let endF = false;
-        let inload = false;
         function check_new_rows() {
-            if(inload) return;
-            inload = true;
+            if(in_load) return;
+            in_load = true;
             searchdata = {
                 "user": parseInt($("#user").val()),
                 "type": parseInt($("#type").val()),
@@ -123,12 +123,12 @@
                             "</tr>");
                     n++;
                 });
-                inload = false;
+                in_load = false;
              });
         }
         function loadlog(offset, replace) {
-            if(inload) return;
-            inload = true;
+            if(in_load) return;
+            in_load = true;
             if (replace) {
                 $("#log_table tbody").html("");
             }
@@ -183,7 +183,7 @@
                 }
                 resize();
                 $("tr.loading").remove();
-                inload = false;
+                in_load = false;
             });
         }
 
