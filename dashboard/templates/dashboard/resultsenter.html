@@ -1142,6 +1142,7 @@
 
         let fill_researches = {};
         let queue_fill = [];
+        let request = "";
 
         $(document).ready(function () {
             {% if request.user.is_superuser %}su = true;{% endif %}
@@ -1257,7 +1258,6 @@
         function tgfreeze(th) {
             $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
         }
-        request = "";
         function load_d_fast() {
             type = $('label.btn.active input').val();
             load_data($('#search-field').val(), type);
@@ -1345,7 +1345,7 @@
                 catch (e) {
 
                 }
-                const request = id;
+                request = id;
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
                 $(".not-loaded").hide();
