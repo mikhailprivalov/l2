@@ -99,7 +99,7 @@ def send(request):
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
                         if directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                   research=fraction.research).exists():
+                                                                   research=fraction.research, doc_confirmation__isnull=True).exists():
                             issled = directions.Issledovaniya.objects.get(napravleniye=direction,
                                                                           research=fraction.research)
                             fraction_result = None
