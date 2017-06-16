@@ -1,199 +1,172 @@
 /* perfect-scrollbar v0.6.12 */
-(function e(t, n, r) {
-    function s(o, u) {
-        if (!n[o]) {
-            if (!t[o]) {
-                var a = typeof require == "function" && require;
-                if (!u && a)return a(o, !0);
-                if (i)return i(o, !0);
-                var f = new Error("Cannot find module '" + o + "'");
-                throw f.code = "MODULE_NOT_FOUND", f
-            }
-            var l = n[o] = {exports: {}};
-            t[o][0].call(l.exports, function (e) {
-                var n = t[o][1][e];
-                return s(n ? n : e)
-            }, l, l.exports, e, t, n, r)
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){const a = typeof require == "function" && require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);const f = new Error("Cannot find module '" + o + "'");throw f.code="MODULE_NOT_FOUND",f}const l = n[o] = {exports: {}};t[o][0].call(l.exports,function(e){const n = t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0; o<r.length; o++)s(r[o]);return s})({1:[function(require, module, exports){
+'use strict';
+
+const ps = require('../main');
+const psInstances = require('../plugin/instances');
+
+function mountJQuery(jQuery) {
+  jQuery.fn.perfectScrollbar = function (settingOrCommand) {
+    return this.each(function () {
+      if (typeof settingOrCommand === 'object' ||
+          typeof settingOrCommand === 'undefined') {
+        // If it's an object or none, initialize.
+          if (!psInstances.get(this)) {
+          ps.initialize(this, settingOrCommand);
         }
-        return n[o].exports
+      } else {
+        // Unless, it may be a command.
+        const command = settingOrCommand;
+
+        if (command === 'update') {
+          ps.update(this);
+        } else if (command === 'destroy') {
+          ps.destroy(this);
+        }
+      }
+    });
+  };
+}
+
+if (typeof define === 'function' && define.amd) {
+  // AMD. Register as an anonymous module.
+  define(['jquery'], mountJQuery);
+} else {
+  let jq = window.jQuery ? window.jQuery : window.$;
+  if (typeof jq !== 'undefined') {
+    mountJQuery(jq);
+  }
+}
+
+module.exports = mountJQuery;
+
+},{"../main":7,"../plugin/instances":18}],2:[function(require,module,exports){
+'use strict';
+
+function oldAdd(element, className) {
+  const classes = element.className.split(' ');
+  if (classes.indexOf(className) < 0) {
+    classes.push(className);
+  }
+  element.className = classes.join(' ');
+}
+
+function oldRemove(element, className) {
+  const classes = element.className.split(' ');
+  const idx = classes.indexOf(className);
+  if (idx >= 0) {
+    classes.splice(idx, 1);
+  }
+  element.className = classes.join(' ');
+}
+
+exports.add = function (element, className) {
+  if (element.classList) {
+    element.classList.add(className);
+  } else {
+    oldAdd(element, className);
+  }
+};
+
+exports.remove = function (element, className) {
+  if (element.classList) {
+    element.classList.remove(className);
+  } else {
+    oldRemove(element, className);
+  }
+};
+
+exports.list = function (element) {
+  if (element.classList) {
+    return Array.prototype.slice.apply(element.classList);
+  } else {
+    return element.className.split(' ');
+  }
+};
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+const DOM = {};
+
+DOM.e = function (tagName, className) {
+  const element = document.createElement(tagName);
+  element.className = className;
+  return element;
+};
+
+DOM.appendTo = function (child, parent) {
+  parent.appendChild(child);
+  return child;
+};
+
+function cssGet(element, styleName) {
+  return window.getComputedStyle(element)[styleName];
+}
+
+function cssSet(element, styleName, styleValue) {
+  if (typeof styleValue === 'number') {
+    styleValue = styleValue.toString() + 'px';
+  }
+  element.style[styleName] = styleValue;
+  return element;
+}
+
+function cssMultiSet(element, obj) {
+  for (let key in obj) {
+    let val = obj[key];
+    if (typeof val === 'number') {
+      val = val.toString() + 'px';
     }
+    element.style[key] = val;
+  }
+  return element;
+}
 
-    var i = typeof require == "function" && require;
-    for (var o = 0; o < r.length; o++)s(r[o]);
-    return s
-})({
-    1: [function (require, module, exports) {
-        'use strict';
+DOM.css = function (element, styleNameOrObject, styleValue) {
+  if (typeof styleNameOrObject === 'object') {
+    // multiple set with object
+    return cssMultiSet(element, styleNameOrObject);
+  } else {
+    if (typeof styleValue === 'undefined') {
+      return cssGet(element, styleNameOrObject);
+    } else {
+      return cssSet(element, styleNameOrObject, styleValue);
+    }
+  }
+};
 
-        var ps = require('../main');
-        var psInstances = require('../plugin/instances');
+DOM.matches = function (element, query) {
+  if (typeof element.matches !== 'undefined') {
+    return element.matches(query);
+  } else {
+    if (typeof element.matchesSelector !== 'undefined') {
+      return element.matchesSelector(query);
+    } else if (typeof element.webkitMatchesSelector !== 'undefined') {
+      return element.webkitMatchesSelector(query);
+    } else if (typeof element.mozMatchesSelector !== 'undefined') {
+      return element.mozMatchesSelector(query);
+    } else if (typeof element.msMatchesSelector !== 'undefined') {
+      return element.msMatchesSelector(query);
+    }
+  }
+};
 
-        function mountJQuery(jQuery) {
-            jQuery.fn.perfectScrollbar = function (settingOrCommand) {
-                return this.each(function () {
-                    if (typeof settingOrCommand === 'object' ||
-                        typeof settingOrCommand === 'undefined') {
-                        // If it's an object or none, initialize.
-                        var settings = settingOrCommand;
+DOM.remove = function (element) {
+  if (typeof element.remove !== 'undefined') {
+    element.remove();
+  } else {
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+  }
+};
 
-                        if (!psInstances.get(this)) {
-                            ps.initialize(this, settings);
-                        }
-                    } else {
-                        // Unless, it may be a command.
-                        var command = settingOrCommand;
-
-                        if (command === 'update') {
-                            ps.update(this);
-                        } else if (command === 'destroy') {
-                            ps.destroy(this);
-                        }
-                    }
-                });
-            };
-        }
-
-        if (typeof define === 'function' && define.amd) {
-            // AMD. Register as an anonymous module.
-            define(['jquery'], mountJQuery);
-        } else {
-            var jq = window.jQuery ? window.jQuery : window.$;
-            if (typeof jq !== 'undefined') {
-                mountJQuery(jq);
-            }
-        }
-
-        module.exports = mountJQuery;
-
-    }, {"../main": 7, "../plugin/instances": 18}],
-    2: [function (require, module, exports) {
-        'use strict';
-
-        function oldAdd(element, className) {
-            var classes = element.className.split(' ');
-            if (classes.indexOf(className) < 0) {
-                classes.push(className);
-            }
-            element.className = classes.join(' ');
-        }
-
-        function oldRemove(element, className) {
-            var classes = element.className.split(' ');
-            var idx = classes.indexOf(className);
-            if (idx >= 0) {
-                classes.splice(idx, 1);
-            }
-            element.className = classes.join(' ');
-        }
-
-        exports.add = function (element, className) {
-            if (element.classList) {
-                element.classList.add(className);
-            } else {
-                oldAdd(element, className);
-            }
-        };
-
-        exports.remove = function (element, className) {
-            if (element.classList) {
-                element.classList.remove(className);
-            } else {
-                oldRemove(element, className);
-            }
-        };
-
-        exports.list = function (element) {
-            if (element.classList) {
-                return Array.prototype.slice.apply(element.classList);
-            } else {
-                return element.className.split(' ');
-            }
-        };
-
-    }, {}],
-    3: [function (require, module, exports) {
-        'use strict';
-
-        var DOM = {};
-
-        DOM.e = function (tagName, className) {
-            var element = document.createElement(tagName);
-            element.className = className;
-            return element;
-        };
-
-        DOM.appendTo = function (child, parent) {
-            parent.appendChild(child);
-            return child;
-        };
-
-        function cssGet(element, styleName) {
-            return window.getComputedStyle(element)[styleName];
-        }
-
-        function cssSet(element, styleName, styleValue) {
-            if (typeof styleValue === 'number') {
-                styleValue = styleValue.toString() + 'px';
-            }
-            element.style[styleName] = styleValue;
-            return element;
-        }
-
-        function cssMultiSet(element, obj) {
-            for (var key in obj) {
-                var val = obj[key];
-                if (typeof val === 'number') {
-                    val = val.toString() + 'px';
-                }
-                element.style[key] = val;
-            }
-            return element;
-        }
-
-        DOM.css = function (element, styleNameOrObject, styleValue) {
-            if (typeof styleNameOrObject === 'object') {
-                // multiple set with object
-                return cssMultiSet(element, styleNameOrObject);
-            } else {
-                if (typeof styleValue === 'undefined') {
-                    return cssGet(element, styleNameOrObject);
-                } else {
-                    return cssSet(element, styleNameOrObject, styleValue);
-                }
-            }
-        };
-
-        DOM.matches = function (element, query) {
-            if (typeof element.matches !== 'undefined') {
-                return element.matches(query);
-            } else {
-                if (typeof element.matchesSelector !== 'undefined') {
-                    return element.matchesSelector(query);
-                } else if (typeof element.webkitMatchesSelector !== 'undefined') {
-                    return element.webkitMatchesSelector(query);
-                } else if (typeof element.mozMatchesSelector !== 'undefined') {
-                    return element.mozMatchesSelector(query);
-                } else if (typeof element.msMatchesSelector !== 'undefined') {
-                    return element.msMatchesSelector(query);
-                }
-            }
-        };
-
-        DOM.remove = function (element) {
-            if (typeof element.remove !== 'undefined') {
-                element.remove();
-            } else {
-                if (element.parentNode) {
-                    element.parentNode.removeChild(element);
-                }
-            }
-        };
-
-        DOM.queryChildren = function (element, selector) {
-            return Array.prototype.filter.call(element.childNodes, function (child) {
-                return DOM.matches(child, selector);
-            });
-        };
+DOM.queryChildren = function (element, selector) {
+  return Array.prototype.filter.call(element.childNodes, function (child) {
+    return DOM.matches(child, selector);
+  });
+};
 
         module.exports = DOM;
 
@@ -201,7 +174,7 @@
     4: [function (require, module, exports) {
         'use strict';
 
-        var EventElement = function (element) {
+        const EventElement = function (element) {
             this.element = element;
             this.events = {};
         };
@@ -215,7 +188,7 @@
         };
 
         EventElement.prototype.unbind = function (eventName, handler) {
-            var isHandlerProvided = (typeof handler !== 'undefined');
+            const isHandlerProvided = (typeof handler !== 'undefined');
             this.events[eventName] = this.events[eventName].filter(function (hdlr) {
                 if (isHandlerProvided && hdlr !== handler) {
                     return true;
@@ -226,17 +199,17 @@
         };
 
         EventElement.prototype.unbindAll = function () {
-            for (var name in this.events) {
+            for (let name in this.events) {
                 this.unbind(name);
             }
         };
 
-        var EventManager = function () {
+        const EventManager = function () {
             this.eventElements = [];
         };
 
         EventManager.prototype.eventElement = function (element) {
-            var ee = this.eventElements.filter(function (eventElement) {
+            let ee = this.eventElements.filter(function (eventElement) {
                 return eventElement.element === element;
             })[0];
             if (typeof ee === 'undefined') {
@@ -255,14 +228,14 @@
         };
 
         EventManager.prototype.unbindAll = function () {
-            for (var i = 0; i < this.eventElements.length; i++) {
+            for (let i = 0; i < this.eventElements.length; i++) {
                 this.eventElements[i].unbindAll();
             }
         };
 
         EventManager.prototype.once = function (element, eventName, handler) {
-            var ee = this.eventElement(element);
-            var onceHandler = function (e) {
+            const ee = this.eventElement(element);
+            const onceHandler = function (e) {
                 ee.unbind(eventName, onceHandler);
                 handler(e);
             };
@@ -292,21 +265,21 @@
     6: [function (require, module, exports) {
         'use strict';
 
-        var cls = require('./class');
-        var dom = require('./dom');
+        const cls = require('./class');
+        const dom = require('./dom');
 
-        var toInt = exports.toInt = function (x) {
+        const toInt = exports.toInt = function (x) {
             return parseInt(x, 10) || 0;
         };
 
-        var clone = exports.clone = function (obj) {
+        const clone = exports.clone = function (obj) {
             if (obj === null) {
                 return null;
             } else if (obj.constructor === Array) {
                 return obj.map(clone);
             } else if (typeof obj === 'object') {
-                var result = {};
-                for (var key in obj) {
+                const result = {};
+                for (let key in obj) {
                     result[key] = clone(obj[key]);
                 }
                 return result;
@@ -316,8 +289,8 @@
         };
 
         exports.extend = function (original, source) {
-            var result = clone(original);
-            for (var key in source) {
+            const result = clone(original);
+            for (let key in source) {
                 result[key] = clone(source[key]);
             }
             return result;
@@ -331,9 +304,9 @@
         };
 
         exports.removePsClasses = function (element) {
-            var clsList = cls.list(element);
-            for (var i = 0; i < clsList.length; i++) {
-                var className = clsList[i];
+            const clsList = cls.list(element);
+            for (let i = 0; i < clsList.length; i++) {
+                const className = clsList[i];
                 if (className.indexOf('ps-') === 0) {
                     cls.remove(element, className);
                 }
@@ -378,9 +351,9 @@
     7: [function (require, module, exports) {
         'use strict';
 
-        var destroy = require('./plugin/destroy');
-        var initialize = require('./plugin/initialize');
-        var update = require('./plugin/update');
+        const destroy = require('./plugin/destroy');
+        const initialize = require('./plugin/initialize');
+        const update = require('./plugin/update');
 
         module.exports = {
             initialize: initialize,
@@ -412,12 +385,12 @@
     9: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../lib/helper');
-        var dom = require('../lib/dom');
-        var instances = require('./instances');
+        const _ = require('../lib/helper');
+        const dom = require('../lib/dom');
+        const instances = require('./instances');
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            let i = instances.get(element);
 
             if (!i) {
                 return;
@@ -437,17 +410,17 @@
     10: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../../lib/helper');
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const _ = require('../../lib/helper');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindClickRailHandler(element, i) {
             function pageOffset(el) {
                 return el.getBoundingClientRect();
             }
 
-            var stopPropagation = function (e) {
+            const stopPropagation = function (e) {
                 e.stopPropagation();
             };
 
@@ -455,10 +428,10 @@
                 i.event.bind(i.scrollbarY, 'click', stopPropagation);
             }
             i.event.bind(i.scrollbarYRail, 'click', function (e) {
-                var halfOfScrollbarLength = _.toInt(i.scrollbarYHeight / 2);
-                var positionTop = i.railYRatio * (e.pageY - window.pageYOffset - pageOffset(i.scrollbarYRail).top - halfOfScrollbarLength);
-                var maxPositionTop = i.railYRatio * (i.railYHeight - i.scrollbarYHeight);
-                var positionRatio = positionTop / maxPositionTop;
+                const halfOfScrollbarLength = _.toInt(i.scrollbarYHeight / 2);
+                const positionTop = i.railYRatio * (e.pageY - window.pageYOffset - pageOffset(i.scrollbarYRail).top - halfOfScrollbarLength);
+                const maxPositionTop = i.railYRatio * (i.railYHeight - i.scrollbarYHeight);
+                let positionRatio = positionTop / maxPositionTop;
 
                 if (positionRatio < 0) {
                     positionRatio = 0;
@@ -476,10 +449,10 @@
                 i.event.bind(i.scrollbarX, 'click', stopPropagation);
             }
             i.event.bind(i.scrollbarXRail, 'click', function (e) {
-                var halfOfScrollbarLength = _.toInt(i.scrollbarXWidth / 2);
-                var positionLeft = i.railXRatio * (e.pageX - window.pageXOffset - pageOffset(i.scrollbarXRail).left - halfOfScrollbarLength);
-                var maxPositionLeft = i.railXRatio * (i.railXWidth - i.scrollbarXWidth);
-                var positionRatio = positionLeft / maxPositionLeft;
+                const halfOfScrollbarLength = _.toInt(i.scrollbarXWidth / 2);
+                const positionLeft = i.railXRatio * (e.pageX - window.pageXOffset - pageOffset(i.scrollbarXRail).left - halfOfScrollbarLength);
+                const maxPositionLeft = i.railXRatio * (i.railXWidth - i.scrollbarXWidth);
+                let positionRatio = positionLeft / maxPositionLeft;
 
                 if (positionRatio < 0) {
                     positionRatio = 0;
@@ -495,7 +468,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindClickRailHandler(element, i);
         };
 
@@ -503,19 +476,19 @@
     11: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../../lib/helper');
-        var dom = require('../../lib/dom');
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const _ = require('../../lib/helper');
+        const dom = require('../../lib/dom');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindMouseScrollXHandler(element, i) {
-            var currentLeft = null;
-            var currentPageX = null;
+            let currentLeft = null;
+            let currentPageX = null;
 
             function updateScrollLeft(deltaX) {
-                var newLeft = currentLeft + (deltaX * i.railXRatio);
-                var maxLeft = Math.max(0, i.scrollbarXRail.getBoundingClientRect().left) + (i.railXRatio * (i.railXWidth - i.scrollbarXWidth));
+                const newLeft = currentLeft + (deltaX * i.railXRatio);
+                const maxLeft = Math.max(0, i.scrollbarXRail.getBoundingClientRect().left) + (i.railXRatio * (i.railXWidth - i.scrollbarXWidth));
 
                 if (newLeft < 0) {
                     i.scrollbarXLeft = 0;
@@ -525,18 +498,18 @@
                     i.scrollbarXLeft = newLeft;
                 }
 
-                var scrollLeft = _.toInt(i.scrollbarXLeft * (i.contentWidth - i.containerWidth) / (i.containerWidth - (i.railXRatio * i.scrollbarXWidth))) - i.negativeScrollAdjustment;
+                const scrollLeft = _.toInt(i.scrollbarXLeft * (i.contentWidth - i.containerWidth) / (i.containerWidth - (i.railXRatio * i.scrollbarXWidth))) - i.negativeScrollAdjustment;
                 updateScroll(element, 'left', scrollLeft);
             }
 
-            var mouseMoveHandler = function (e) {
+            const mouseMoveHandler = function (e) {
                 updateScrollLeft(e.pageX - currentPageX);
                 updateGeometry(element);
                 e.stopPropagation();
                 e.preventDefault();
             };
 
-            var mouseUpHandler = function () {
+            const mouseUpHandler = function () {
                 _.stopScrolling(element, 'x');
                 i.event.unbind(i.ownerDocument, 'mousemove', mouseMoveHandler);
             };
@@ -555,12 +528,12 @@
         }
 
         function bindMouseScrollYHandler(element, i) {
-            var currentTop = null;
-            var currentPageY = null;
+            let currentTop = null;
+            let currentPageY = null;
 
             function updateScrollTop(deltaY) {
-                var newTop = currentTop + (deltaY * i.railYRatio);
-                var maxTop = Math.max(0, i.scrollbarYRail.getBoundingClientRect().top) + (i.railYRatio * (i.railYHeight - i.scrollbarYHeight));
+                const newTop = currentTop + (deltaY * i.railYRatio);
+                const maxTop = Math.max(0, i.scrollbarYRail.getBoundingClientRect().top) + (i.railYRatio * (i.railYHeight - i.scrollbarYHeight));
 
                 if (newTop < 0) {
                     i.scrollbarYTop = 0;
@@ -570,18 +543,18 @@
                     i.scrollbarYTop = newTop;
                 }
 
-                var scrollTop = _.toInt(i.scrollbarYTop * (i.contentHeight - i.containerHeight) / (i.containerHeight - (i.railYRatio * i.scrollbarYHeight)));
+                const scrollTop = _.toInt(i.scrollbarYTop * (i.contentHeight - i.containerHeight) / (i.containerHeight - (i.railYRatio * i.scrollbarYHeight)));
                 updateScroll(element, 'top', scrollTop);
             }
 
-            var mouseMoveHandler = function (e) {
+            const mouseMoveHandler = function (e) {
                 updateScrollTop(e.pageY - currentPageY);
                 updateGeometry(element);
                 e.stopPropagation();
                 e.preventDefault();
             };
 
-            var mouseUpHandler = function () {
+            const mouseUpHandler = function () {
                 _.stopScrolling(element, 'y');
                 i.event.unbind(i.ownerDocument, 'mousemove', mouseMoveHandler);
             };
@@ -600,7 +573,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindMouseScrollXHandler(element, i);
             bindMouseScrollYHandler(element, i);
         };
@@ -615,14 +588,14 @@
     12: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../../lib/helper');
-        var dom = require('../../lib/dom');
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const _ = require('../../lib/helper');
+        const dom = require('../../lib/dom');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindKeyboardHandler(element, i) {
-            var hovered = false;
+            let hovered = false;
             i.event.bind(element, 'mouseenter', function () {
                 hovered = true;
             });
@@ -630,10 +603,10 @@
                 hovered = false;
             });
 
-            var shouldPrevent = false;
+            let shouldPrevent = false;
 
             function shouldPreventDefault(deltaX, deltaY) {
-                var scrollTop = element.scrollTop;
+                const scrollTop = element.scrollTop;
                 if (deltaX === 0) {
                     if (!i.scrollbarYActive) {
                         return false;
@@ -643,7 +616,7 @@
                     }
                 }
 
-                var scrollLeft = element.scrollLeft;
+                const scrollLeft = element.scrollLeft;
                 if (deltaY === 0) {
                     if (!i.scrollbarXActive) {
                         return false;
@@ -660,14 +633,14 @@
                     return;
                 }
 
-                var focused = dom.matches(i.scrollbarX, ':focus') ||
+                let focused = dom.matches(i.scrollbarX, ':focus') ||
                     dom.matches(i.scrollbarY, ':focus');
 
                 if (!hovered && !focused) {
                     return;
                 }
 
-                var activeElement = document.activeElement ? document.activeElement : i.ownerDocument.activeElement;
+                let activeElement = document.activeElement ? document.activeElement : i.ownerDocument.activeElement;
                 if (activeElement) {
                     if (activeElement.tagName === 'IFRAME') {
                         activeElement = activeElement.contentDocument.activeElement;
@@ -682,8 +655,8 @@
                     }
                 }
 
-                var deltaX = 0;
-                var deltaY = 0;
+                let deltaX = 0;
+                let deltaY = 0;
 
                 switch (e.which) {
                     case 37: // left
@@ -741,7 +714,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindKeyboardHandler(element, i);
         };
 
@@ -755,15 +728,15 @@
     13: [function (require, module, exports) {
         'use strict';
 
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindMouseWheelHandler(element, i) {
-            var shouldPrevent = false;
+            let shouldPrevent = false;
 
             function shouldPreventDefault(deltaX, deltaY) {
-                var scrollTop = element.scrollTop;
+                const scrollTop = element.scrollTop;
                 if (deltaX === 0) {
                     if (!i.scrollbarYActive) {
                         return false;
@@ -773,7 +746,7 @@
                     }
                 }
 
-                var scrollLeft = element.scrollLeft;
+                const scrollLeft = element.scrollLeft;
                 if (deltaY === 0) {
                     if (!i.scrollbarXActive) {
                         return false;
@@ -786,8 +759,8 @@
             }
 
             function getDeltaFromEvent(e) {
-                var deltaX = e.deltaX;
-                var deltaY = -1 * e.deltaY;
+                let deltaX = e.deltaX;
+                let deltaY = -1 * e.deltaY;
 
                 if (typeof deltaX === "undefined" || typeof deltaY === "undefined") {
                     // OS X Safari
@@ -811,19 +784,19 @@
             }
 
             function shouldBeConsumedByChild(deltaX, deltaY) {
-                var child = element.querySelector('textarea:hover, select[multiple]:hover, .ps-child:hover');
+                const child = element.querySelector('textarea:hover, select[multiple]:hover, .ps-child:hover');
                 if (child) {
                     if (child.tagName !== 'TEXTAREA' && !window.getComputedStyle(child).overflow.match(/(scroll|auto)/)) {
                         return false;
                     }
 
-                    var maxScrollTop = child.scrollHeight - child.clientHeight;
+                    const maxScrollTop = child.scrollHeight - child.clientHeight;
                     if (maxScrollTop > 0) {
                         if (!(child.scrollTop === 0 && deltaY > 0) && !(child.scrollTop === maxScrollTop && deltaY < 0)) {
                             return true;
                         }
                     }
-                    var maxScrollLeft = child.scrollLeft - child.clientWidth;
+                    const maxScrollLeft = child.scrollLeft - child.clientWidth;
                     if (maxScrollLeft > 0) {
                         if (!(child.scrollLeft === 0 && deltaX < 0) && !(child.scrollLeft === maxScrollLeft && deltaX > 0)) {
                             return true;
@@ -834,10 +807,10 @@
             }
 
             function mousewheelHandler(e) {
-                var delta = getDeltaFromEvent(e);
+                const delta = getDeltaFromEvent(e);
 
-                var deltaX = delta[0];
-                var deltaY = delta[1];
+                const deltaX = delta[0];
+                const deltaY = delta[1];
 
                 if (shouldBeConsumedByChild(deltaX, deltaY)) {
                     return;
@@ -886,7 +859,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindMouseWheelHandler(element, i);
         };
 
@@ -894,8 +867,8 @@
     14: [function (require, module, exports) {
         'use strict';
 
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
 
         function bindNativeScrollHandler(element, i) {
             i.event.bind(element, 'scroll', function () {
@@ -904,7 +877,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindNativeScrollHandler(element, i);
         };
 
@@ -912,14 +885,14 @@
     15: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../../lib/helper');
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const _ = require('../../lib/helper');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindSelectionHandler(element, i) {
             function getRangeNode() {
-                var selection = window.getSelection ? window.getSelection() :
+                const selection = window.getSelection ? window.getSelection() :
                     document.getSelection ? document.getSelection() : '';
                 if (selection.toString().length === 0) {
                     return null;
@@ -928,8 +901,8 @@
                 }
             }
 
-            var scrollingLoop = null;
-            var scrollDiff = {top: 0, left: 0};
+            let scrollingLoop = null;
+            const scrollDiff = {top: 0, left: 0};
 
             function startScrolling() {
                 if (!scrollingLoop) {
@@ -954,7 +927,7 @@
                 _.stopScrolling(element);
             }
 
-            var isSelected = false;
+            let isSelected = false;
             i.event.bind(i.ownerDocument, 'selectionchange', function () {
                 if (element.contains(getRangeNode())) {
                     isSelected = true;
@@ -972,8 +945,8 @@
 
             i.event.bind(window, 'mousemove', function (e) {
                 if (isSelected) {
-                    var mousePosition = {x: e.pageX, y: e.pageY};
-                    var containerGeometry = {
+                    const mousePosition = {x: e.pageX, y: e.pageY};
+                    const containerGeometry = {
                         left: element.offsetLeft,
                         right: element.offsetLeft + element.offsetWidth,
                         top: element.offsetTop,
@@ -1018,7 +991,7 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindSelectionHandler(element, i);
         };
 
@@ -1026,17 +999,17 @@
     16: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../../lib/helper');
-        var instances = require('../instances');
-        var updateGeometry = require('../update-geometry');
-        var updateScroll = require('../update-scroll');
+        const _ = require('../../lib/helper');
+        const instances = require('../instances');
+        const updateGeometry = require('../update-geometry');
+        const updateScroll = require('../update-scroll');
 
         function bindTouchHandler(element, i, supportsTouch, supportsIePointer) {
             function shouldPreventDefault(deltaX, deltaY) {
-                var scrollTop = element.scrollTop;
-                var scrollLeft = element.scrollLeft;
-                var magnitudeX = Math.abs(deltaX);
-                var magnitudeY = Math.abs(deltaY);
+                const scrollTop = element.scrollTop;
+                const scrollLeft = element.scrollLeft;
+                const magnitudeX = Math.abs(deltaX);
+                const magnitudeY = Math.abs(deltaY);
 
                 if (magnitudeY > magnitudeX) {
                     // user is perhaps trying to swipe up/down the page
@@ -1064,12 +1037,12 @@
                 updateGeometry(element);
             }
 
-            var startOffset = {};
-            var startTime = 0;
-            var speed = {};
-            var easingLoop = null;
-            var inGlobalTouch = false;
-            var inLocalTouch = false;
+            let startOffset = {};
+            let startTime = 0;
+            const speed = {};
+            let easingLoop = null;
+            let inGlobalTouch = false;
+            let inLocalTouch = false;
 
             function globalTouchStart() {
                 inGlobalTouch = true;
@@ -1102,7 +1075,7 @@
                 if (shouldHandle(e)) {
                     inLocalTouch = true;
 
-                    var touch = getTouch(e);
+                    const touch = getTouch(e);
 
                     startOffset.pageX = touch.pageX;
                     startOffset.pageY = touch.pageY;
@@ -1122,19 +1095,19 @@
                     touchStart(e);
                 }
                 if (!inGlobalTouch && inLocalTouch && shouldHandle(e)) {
-                    var touch = getTouch(e);
+                    const touch = getTouch(e);
 
-                    var currentOffset = {pageX: touch.pageX, pageY: touch.pageY};
+                    const currentOffset = {pageX: touch.pageX, pageY: touch.pageY};
 
-                    var differenceX = currentOffset.pageX - startOffset.pageX;
-                    var differenceY = currentOffset.pageY - startOffset.pageY;
+                    const differenceX = currentOffset.pageX - startOffset.pageX;
+                    const differenceY = currentOffset.pageY - startOffset.pageY;
 
                     applyTouchMove(differenceX, differenceY);
                     startOffset = currentOffset;
 
-                    var currentTime = (new Date()).getTime();
+                    const currentTime = (new Date()).getTime();
 
-                    var timeGap = currentTime - startTime;
+                    const timeGap = currentTime - startTime;
                     if (timeGap > 0) {
                         speed.x = differenceX / timeGap;
                         speed.y = differenceY / timeGap;
@@ -1202,7 +1175,7 @@
                 return;
             }
 
-            var i = instances.get(element);
+            const i = instances.get(element);
             bindTouchHandler(element, i, _.env.supportsTouch, _.env.supportsIePointer);
         };
 
@@ -1210,13 +1183,13 @@
     17: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../lib/helper');
-        var cls = require('../lib/class');
-        var instances = require('./instances');
-        var updateGeometry = require('./update-geometry');
+        const _ = require('../lib/helper');
+        const cls = require('../lib/class');
+        const instances = require('./instances');
+        const updateGeometry = require('./update-geometry');
 
 // Handlers
-        var handlers = {
+        const handlers = {
             'click-rail': require('./handler/click-rail'),
             'drag-scrollbar': require('./handler/drag-scrollbar'),
             'keyboard': require('./handler/keyboard'),
@@ -1224,7 +1197,7 @@
             'touch': require('./handler/touch'),
             'selection': require('./handler/selection')
         };
-        var nativeScrollHandler = require('./handler/native-scroll');
+        const nativeScrollHandler = require('./handler/native-scroll');
 
         module.exports = function (element, userSettings) {
             userSettings = typeof userSettings === 'object' ? userSettings : {};
@@ -1232,7 +1205,7 @@
             cls.add(element, 'ps-container');
 
             // Create a plugin instance.
-            var i = instances.add(element);
+            const i = instances.add(element);
 
             i.settings = _.extend(i.settings, userSettings);
             cls.add(element, 'ps-theme-' + i.settings.theme);
@@ -1262,17 +1235,17 @@
     18: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../lib/helper');
-        var cls = require('../lib/class');
-        var defaultSettings = require('./default-setting');
-        var dom = require('../lib/dom');
-        var EventManager = require('../lib/event-manager');
-        var guid = require('../lib/guid');
+        const _ = require('../lib/helper');
+        const cls = require('../lib/class');
+        const defaultSettings = require('./default-setting');
+        const dom = require('../lib/dom');
+        const EventManager = require('../lib/event-manager');
+        const guid = require('../lib/guid');
 
-        var instances = {};
+        const instances = {};
 
         function Instance(element) {
-            var i = this;
+            const i = this;
 
             i.settings = _.clone(defaultSettings);
             i.containerWidth = null;
@@ -1282,8 +1255,8 @@
 
             i.isRtl = dom.css(element, 'direction') === "rtl";
             i.isNegativeScroll = (function () {
-                var originalScrollLeft = element.scrollLeft;
-                var result = null;
+                const originalScrollLeft = element.scrollLeft;
+                let result = null;
                 element.scrollLeft = -1;
                 result = element.scrollLeft < 0;
                 element.scrollLeft = originalScrollLeft;
@@ -1353,7 +1326,7 @@
         }
 
         exports.add = function (element) {
-            var newId = guid();
+            const newId = guid();
             setId(element, newId);
             instances[newId] = new Instance(element);
             return instances[newId];
@@ -1379,11 +1352,11 @@
     19: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../lib/helper');
-        var cls = require('../lib/class');
-        var dom = require('../lib/dom');
-        var instances = require('./instances');
-        var updateScroll = require('./update-scroll');
+        const _ = require('../lib/helper');
+        const cls = require('../lib/class');
+        const dom = require('../lib/dom');
+        const instances = require('./instances');
+        const updateScroll = require('./update-scroll');
 
         function getThumbSize(i, thumbSize) {
             if (i.settings.minScrollbarLength) {
@@ -1396,7 +1369,7 @@
         }
 
         function updateCss(element, i) {
-            var xRailOffset = {width: i.railXWidth};
+            const xRailOffset = {width: i.railXWidth};
             if (i.isRtl) {
                 xRailOffset.left = i.negativeScrollAdjustment + element.scrollLeft + i.containerWidth - i.contentWidth;
             } else {
@@ -1409,7 +1382,7 @@
             }
             dom.css(i.scrollbarXRail, xRailOffset);
 
-            var yRailOffset = {top: element.scrollTop, height: i.railYHeight};
+            const yRailOffset = {top: element.scrollTop, height: i.railYHeight};
             if (i.isScrollbarYUsingRight) {
                 if (i.isRtl) {
                     yRailOffset.right = i.contentWidth - (i.negativeScrollAdjustment + element.scrollLeft) - i.scrollbarYRight - i.scrollbarYOuterWidth;
@@ -1430,14 +1403,14 @@
         }
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            const i = instances.get(element);
 
             i.containerWidth = element.clientWidth;
             i.containerHeight = element.clientHeight;
             i.contentWidth = element.scrollWidth;
             i.contentHeight = element.scrollHeight;
 
-            var existingRails;
+            let existingRails;
             if (!element.contains(i.scrollbarXRail)) {
                 existingRails = dom.queryChildren(element, '.ps-scrollbar-x-rail');
                 if (existingRails.length > 0) {
@@ -1508,20 +1481,20 @@
     20: [function (require, module, exports) {
         'use strict';
 
-        var instances = require('./instances');
+        const instances = require('./instances');
 
-        var upEvent = document.createEvent('Event');
-        var downEvent = document.createEvent('Event');
-        var leftEvent = document.createEvent('Event');
-        var rightEvent = document.createEvent('Event');
-        var yEvent = document.createEvent('Event');
-        var xEvent = document.createEvent('Event');
-        var xStartEvent = document.createEvent('Event');
-        var xEndEvent = document.createEvent('Event');
-        var yStartEvent = document.createEvent('Event');
-        var yEndEvent = document.createEvent('Event');
-        var lastTop;
-        var lastLeft;
+        const upEvent = document.createEvent('Event');
+        const downEvent = document.createEvent('Event');
+        const leftEvent = document.createEvent('Event');
+        const rightEvent = document.createEvent('Event');
+        const yEvent = document.createEvent('Event');
+        const xEvent = document.createEvent('Event');
+        const xStartEvent = document.createEvent('Event');
+        const xEndEvent = document.createEvent('Event');
+        const yStartEvent = document.createEvent('Event');
+        const yEndEvent = document.createEvent('Event');
+        let lastTop;
+        let lastLeft;
 
         upEvent.initEvent('ps-scroll-up', true, true);
         downEvent.initEvent('ps-scroll-down', true, true);
@@ -1557,7 +1530,7 @@
                 element.dispatchEvent(xStartEvent);
             }
 
-            var i = instances.get(element);
+            const i = instances.get(element);
 
             if (axis === 'top' && value >= i.contentHeight - i.containerHeight) {
                 // don't allow scroll past container
@@ -1623,14 +1596,14 @@
     21: [function (require, module, exports) {
         'use strict';
 
-        var _ = require('../lib/helper');
-        var dom = require('../lib/dom');
-        var instances = require('./instances');
-        var updateGeometry = require('./update-geometry');
-        var updateScroll = require('./update-scroll');
+        const _ = require('../lib/helper');
+        const dom = require('../lib/dom');
+        const instances = require('./instances');
+        const updateGeometry = require('./update-geometry');
+        const updateScroll = require('./update-scroll');
 
         module.exports = function (element) {
-            var i = instances.get(element);
+            let i = instances.get(element);
 
             if (!i) {
                 return;

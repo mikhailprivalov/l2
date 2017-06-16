@@ -1,5 +1,7 @@
-import sys, logging
+import logging
 import os
+import sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
@@ -34,6 +36,7 @@ INSTALLED_APPS = (
     'directory',
     'statistic',
     'api',
+    'discharge',
     'debug_toolbar',
     'debug_panel',
 )
@@ -131,6 +134,8 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/laboratory/static/'
 # STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
 '''
 if not DEBUG:
@@ -218,4 +223,4 @@ CACHALOT_ENABLED = True
 import warnings
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
 
-DEBUG = False
+DEBUG = True

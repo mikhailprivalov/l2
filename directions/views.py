@@ -48,6 +48,7 @@ def dir_save(request):
         ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
         history_num = request.POST['history_num']  # Номер истории болезни
         ptype = request.POST['type']
+        #is_hospital = request.POST.get('is_hospital', 'false') == "true"
         result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id,
                                                                 ptype, request.user.doctorprofile,
                                                                 researches, comments)
@@ -278,7 +279,7 @@ def gen_pdf_execlist(request):
     return response
 
 
-@cache_page(60 * 15)
+#@cache_page(60 * 15)
 @login_required
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
@@ -373,11 +374,12 @@ def printDirection(c, n, dir):
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
                       "Возраст: " + dir.client.age_s())
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "Номер карты: " + str(dir.client.num))
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "Номер карты: " + dir.client.type_str(short=True, num=True))
 
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "Пол: " + dir.client.sex)
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз: " + dir.diagnos)
+    if dir.diagnos.strip() != "":
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз: " + dir.diagnos)
 
     d = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стом."}
 
@@ -1082,7 +1084,7 @@ def get_issledovaniya(request):
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.family + " " + napr.client.name + " " + napr.client.twoname
                 res["client_sex"] = napr.client.sex
-                res["client_cardnum"] = napr.client.num
+                res["client_cardnum"] = napr.client.type_str(True, True)
                 res["client_hisnum"] = napr.history_num
                 res["client_vozrast"] = napr.client.age_s()
                 res["directioner"] = napr.doc.fio

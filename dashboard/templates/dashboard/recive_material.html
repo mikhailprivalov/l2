@@ -210,8 +210,7 @@
         vertical-align: top;
     }
     .label-c input{
-        margin: 0;
-        margin-right: 5px;
+        margin: 0 5px 0 0;
     }
     .cnc{
         line-height: 1!important;
@@ -220,21 +219,19 @@
 {% endblock %}
 {% block scripts %}
     <script>
-        var dnum = -1;
-        var tubes = {
+        let dnum = -1;
+        const tubes = {
         {% for tube in tubes %}{{ tube.pk }}:
         {
             color: "{{ tube.color }}",
-                    title
-        :
-            "{{ tube.title }}"
+            title : "{{ tube.title }}"
         }
         ,{% endfor %}
-        }
-        ;
-        var clear_timer_start = false, input_buffer_scan = "";
-        var SFinFocus = false;
-        var checkboxed = [];
+        };
+
+        let clear_timer_start = false, input_buffer_scan = "";
+        let SFinFocus = false;
+        let checkboxed = [];
         $(document).ready(function () {
             resize();
             $("#print-bc-save, #print-bc, #success-b, #can-dir").prop("disabled", true);
@@ -252,10 +249,8 @@
             update_history();
             $(document).on("keypress", function (e) {
                 if (SFinFocus) return;
-                sym = String.fromCharCode(e.which);
+                const sym = String.fromCharCode(e.which);
                 if (isNaN(sym)) return;
-{#                console.log("Key: " + sym);#}
-{#                console.log("Code: " + e.which);#}
                 input_buffer_scan += sym;
                 input_buffer_scan = input_buffer_scan.replace("\n", "").trim();
                 bar_scanner(input_buffer_scan);
@@ -294,7 +289,7 @@
             });
         }
         function cancel_direction_pk(pk){
-            var tubes = [];
+            let tubes = [];
             $.each($(`#work-modal tr[pk=${pk}] .tube-pk`), function(k,v){
                 tubes.push("№" + $(v).text());
             });
@@ -338,7 +333,7 @@
         }
         function getconfirm(){
             $("#getconfirmbtn").prop("disabled", true);
-            var checked = [];
+            let checked = [];
             $.each($("#work-modal .custom_print:checked"),function(k, v){
                 checked.push(parseInt($(v).val()));
             });
@@ -360,7 +355,7 @@
         }
 
         function bar_scanner(v) {
-            tdnum = parseInt(v.substr(0, 12)) - 460000000000;
+            const tdnum = parseInt(v.substr(0, 12)) - 460000000000;
             if (v.substr(0, 3) == "460" && v.length == 13) {
                 if (dnum != tdnum) {
                     dnum = tdnum;
@@ -368,7 +363,7 @@
                 }
             }
         }
-        var com = false, cancel_d = false;
+        let com = false, cancel_d = false;
         function search(q, reload) {
             com = true;
             input_buffer_scan = "";
@@ -386,7 +381,7 @@
                         com = false;
                         if (data && data.direction && data.direction.pk) {
 
-                            dnum = data.direction.pk
+                            dnum = data.direction.pk;
                             $("#success-b").show();
                             $(".btn#success-b").removeAttr("disabled");
                             $("#dir-num").html(data.direction.pk + (data.direction.cancel? " отменено" : ""));
@@ -401,12 +396,12 @@
                             if(!reload)
                                 $(".last").removeClass("last");
                             $("#researches-tb").html("<tr><th>Исследования</th><th class='col-xs-4'>Тип пробирки</th><th class='col-xs-2'>Номер пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint3'  checked /></label></th></tr>");
-                            n = 0;
-                            fn = 0;
-                            complete = true;
-                            probirki = {}
-                            c = "";
-                            d = "";
+                            let n = 0;
+
+                            let complete = true;
+                            let probirki = {};
+                            let c = "";
+                            let d = "";
                             $.each(data.tubes, function (k, v) {
                                 c = "checked";
                                 if (v.status === true) {
@@ -417,15 +412,15 @@
                                     complete = false;
                                 }
                                 if (!probirki[v.title])
-                                    probirki[v.title] = 1
+                                    probirki[v.title] = 1;
                                 else
                                     probirki[v.title]++;
                                 $("#researches-tb").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label onclick='toggle_check(this);'><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                             });
 
-                            tmpstr = "";
-                            f = true;
-                            all_cnt = 0;
+                            let tmpstr = "";
+                            let f = true;
+                            let all_cnt = 0;
                             $.each(probirki, function (k, v) {
                                 if (f) {
                                     tmpstr = k + " &mdash; " + v + " шт";
@@ -469,7 +464,7 @@
         function save_research() {
             //$(".btn#success-b").attr("disabled", "true");
             if (com) return;
-            data = {
+            let data = {
                 dir_id: dnum,
                 statuses: {},
                 barcodes: {}
@@ -520,16 +515,16 @@
                 method: "GET"
             }).done(function (d) {
                 $("#history-tb").html("");
-                var array = d.rows;
+                const array = d.rows;
                 $.each(array, function (k, v) {
-                    f = true;
-                    tmpstr = ""
-                    num = {};
-                    time = ""
-                    dir_id = -1;
+                    let f = true;
+                    let tmpstr = "";
+                    let num = {};
+                    let time = "";
+                    let dir_id = -1;
                     $.each(v, function (key, val) {
                         if (!num[val.title])
-                            num[val.title] = 1
+                            num[val.title] = 1;
                         else
                             num[val.title]++;
                         time = val.time;
@@ -561,7 +556,7 @@
             });
         }
 
-        var first_resize = true;
+        let first_resize = true;
         function resize() {
             $('#scroll-tb').height($(window).height() - 90);
             $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 65);
@@ -576,11 +571,11 @@
             }
         }
         function sync_checkboxes(th){
-            $table = $(th).parents(".table").first();
+            const $table = $(th).parents(".table").first();
             $(".custom_print", $table).prop("checked", $(".allprint", $table).is(':checked'));
             checkboxes_to_array();
         }
-        var nochecked = false;
+        let nochecked = false;
         function checkboxes_to_array(){
             checkboxed = [];
             nochecked = false;

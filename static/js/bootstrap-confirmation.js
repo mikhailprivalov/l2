@@ -27,10 +27,10 @@
      * =============================== */
 
     //var for check event at body can have only one.
-    var event_body = false;
+    let event_body = false;
 
-    var Confirmation = function (element, options) {
-        var that = this;
+    const Confirmation = function (element, options) {
+        const that = this;
 
         // remove href attribute of button
         $(element).removeAttr('href')
@@ -38,16 +38,16 @@
         this.init('confirmation', element, options)
 
         $(element).on('show', function (e) {
-            var options = that.options;
-            var all = options.all_selector;
+            const options = that.options;
+            const all = options.all_selector;
             if (options.singleton) {
                 $(all).not(that.$element).confirmation('hide');
             }
         });
 
         $(element).on('shown', function (e) {
-            var options = that.options;
-            var all = options.all_selector;
+            const options = that.options;
+            const all = options.all_selector;
             $(this).next('.popover').one('click.dismiss.confirmation', '[data-dismiss="confirmation"]', $.proxy(that.hide, that))
             if (that.isPopout()) {
                 if (!event_body) {
@@ -65,7 +65,7 @@
                 }
             }
         });
-    }
+    };
 
 
     /* NOTE: CONFIRMATION EXTENDS BOOTSTRAP-TOOLTIP.js
@@ -76,18 +76,10 @@
         constructor: Confirmation
 
         , setContent: function () {
-            var $tip = this.tip()
-                , $btnOk = this.btnOk()
-                , $btnCancel = this.btnCancel()
-                , title = this.getTitle()
-                , href = this.getHref()
-                , target = this.getTarget()
-                , $e = this.$element
-                , btnOkClass = this.getBtnOkClass()
-                , btnCancelClass = this.getBtnCancelClass()
-                , btnOkLabel = this.getBtnOkLabel()
-                , btnCancelLabel = this.getBtnCancelLabel()
-                , o = this.options
+            const $tip = this.tip(), $btnOk = this.btnOk(), $btnCancel = this.btnCancel(), title = this.getTitle(),
+                href = this.getHref(), target = this.getTarget(), $e = this.$element, btnOkClass = this.getBtnOkClass(),
+                btnCancelClass = this.getBtnCancelClass(), btnOkLabel = this.getBtnOkLabel(),
+                btnCancelLabel = this.getBtnCancelLabel(), o = this.options;
 
             $tip.find('.popover-title').text(title)
 
@@ -102,9 +94,8 @@
         }
 
         , isPopout: function () {
-            var popout
-                , $e = this.$element
-                , o = this.options
+            let popout;
+            const $e = this.$element, o = this.options;
 
             popout = $e.attr('data-popout') || (typeof o.popout == 'function' ? o.popout.call($e[0]) : o.popout)
 
@@ -115,9 +106,8 @@
 
 
         , getHref: function () {
-            var href
-                , $e = this.$element
-                , o = this.options
+            let href;
+            const $e = this.$element, o = this.options;
 
             href = $e.attr('data-href') || (typeof o.href == 'function' ? o.href.call($e[0]) : o.href)
 
@@ -125,9 +115,8 @@
         }
 
         , getTarget: function () {
-            var target
-                , $e = this.$element
-                , o = this.options
+            let target;
+            const $e = this.$element, o = this.options;
 
             target = $e.attr('data-target') || (typeof o.target == 'function' ? o.target.call($e[0]) : o.target)
 
@@ -135,9 +124,8 @@
         }
 
         , getBtnOkClass: function () {
-            var btnOkClass
-                , $e = this.$element
-                , o = this.options
+            let btnOkClass;
+            const $e = this.$element, o = this.options;
 
             btnOkClass = $e.attr('data-btnOkClass') || (typeof o.btnOkClass == 'function' ? o.btnOkClass.call($e[0]) : o.btnOkClass)
 
@@ -145,9 +133,8 @@
         }
 
         , getBtnCancelClass: function () {
-            var btnCancelClass
-                , $e = this.$element
-                , o = this.options
+            let btnCancelClass;
+            const $e = this.$element, o = this.options;
 
             btnCancelClass = $e.attr('data-btnCancelClass') || (typeof o.btnCancelClass == 'function' ? o.btnCancelClass.call($e[0]) : o.btnCancelClass)
 
@@ -155,9 +142,8 @@
         }
 
         , getBtnOkLabel: function () {
-            var btnOkLabel
-                , $e = this.$element
-                , o = this.options
+            let btnOkLabel;
+            const $e = this.$element, o = this.options;
 
             btnOkLabel = $e.attr('data-btnOkLabel') || (typeof o.btnOkLabel == 'function' ? o.btnOkLabel.call($e[0]) : o.btnOkLabel)
 
@@ -165,9 +151,8 @@
         }
 
         , getBtnCancelLabel: function () {
-            var btnCancelLabel
-                , $e = this.$element
-                , o = this.options
+            let btnCancelLabel;
+            const $e = this.$element, o = this.options;
 
             btnCancelLabel = $e.attr('data-btnCancelLabel') || (typeof o.btnCancelLabel == 'function' ? o.btnCancelLabel.call($e[0]) : o.btnCancelLabel)
 
@@ -180,18 +165,17 @@
         }
 
         , btnOk: function () {
-            var $tip = this.tip()
+            const $tip = this.tip();
             return $tip.find('.popover-content > div > a:not([data-dismiss="confirmation"])')
         }
 
         , btnCancel: function () {
-            var $tip = this.tip()
+            const $tip = this.tip();
             return $tip.find('.popover-content > div > a[data-dismiss="confirmation"]')
         }
 
         , hide: function () {
-            var $btnOk = this.btnOk()
-                , $btnCancel = this.btnCancel()
+            const $btnOk = this.btnOk(), $btnCancel = this.btnCancel();
 
             $.fn.tooltip.Constructor.prototype.hide.call(this)
 
@@ -211,14 +195,13 @@
     /* CONFIRMATION PLUGIN DEFINITION
      * ======================= */
 
-    var old = $.fn.confirmation
+    const old = $.fn.confirmation;
 
     $.fn.confirmation = function (option) {
-        var that = this
+        const that = this;
         return this.each(function () {
-            var $this = $(this)
-                , data = $this.data('confirmation')
-                , options = typeof option == 'object' && option
+            const $this = $(this);
+            let data = $this.data('confirmation'), options = typeof option == 'object' && option;
             options = options || {}
             options.all_selector = that.selector
             if (!data) $this.data('confirmation', (data = new Confirmation(this, options)))

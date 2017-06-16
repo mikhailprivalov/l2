@@ -70,7 +70,7 @@
                 $(this).colpickSetColor(this.value);
             });
         }
-        var lasttube = ""
+        let lasttube = "";
         function edittube(tubediv) {
             $(".edit-tube").removeClass("edit-tube");
             $(".last-tube").removeClass("last-tube");
@@ -78,7 +78,7 @@
                 $(tubediv).parent(".tube").addClass("edit-tube");
                 $(".edit-tool-window").remove();
                 //language=HTML
-                ht = "<div class=\"row edit-tool-window\" style=\"padding: 5px\">\n    <div class=\"col-md-5\">\n        <div class=\"input-group\">\n            <span class=\"input-group-addon\">Название</span>\n            <input class=\'form-control tubetitle\' value=\"{1}\" required />\n        </div>\n    </div>\n    <div class=\"col-md-3\">\n        <div class=\"input-group\" style=\"box-shadow: 0 0 5px #000;border-radius:5px \">\n            <span class=\"input-group-addon\">Цвет #</span>\n            <input class=\'form-control tubecolor\' required value=\"{0}\"/>\n        </div>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"$(\'.edit-tool-window\').remove();$(\'.last-tube\').removeClass(\'last-tube\');$(\'.edit-tube\').removeClass(\'edit-tube\');return false;\" class=\"btn btn-primary-nb btn-blue-nb\">Отмена</button>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"save_tube(\'{2}\')\" class=\"btn btn-primary-nb\">Сохранить</button>\n    </div>\n</div>"
+                let ht = "<div class=\"row edit-tool-window\" style=\"padding: 5px\">\n    <div class=\"col-md-5\">\n        <div class=\"input-group\">\n            <span class=\"input-group-addon\">Название</span>\n            <input class=\'form-control tubetitle\' value=\"{1}\" required />\n        </div>\n    </div>\n    <div class=\"col-md-3\">\n        <div class=\"input-group\" style=\"box-shadow: 0 0 5px #000;border-radius:5px \">\n            <span class=\"input-group-addon\">Цвет #</span>\n            <input class=\'form-control tubecolor\' required value=\"{0}\"/>\n        </div>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"$(\'.edit-tool-window\').remove();$(\'.last-tube\').removeClass(\'last-tube\');$(\'.edit-tube\').removeClass(\'edit-tube\');return false;\" class=\"btn btn-primary-nb btn-blue-nb\">Отмена</button>\n    </div>\n    <div class=\"col-md-2\">\n        <button onclick=\"save_tube(\'{2}\')\" class=\"btn btn-primary-nb\">Сохранить</button>\n    </div>\n</div>"
                         .f($('.label', $(tubediv).parent(".tube")).text(), $('.tube-title', $(tubediv).parent(".tube")).text(), $(tubediv).parent(".tube").attr("id").split("-")[1]);
                 $(tubediv).parent(".tube").append(ht);
                 $('.tubecolor', $(tubediv).parent(".tube")).css('border-color', '#' + $('.label', $(tubediv).parent(".tube")).text());
@@ -102,10 +102,10 @@
             }
         }
         function addnewtube() {
-            title = $("#tubetitle").val();
-            color = $("#tubecolor").val();
+            const title = $("#tubetitle").val();
+            const color = $("#tubecolor").val();
 
-            if (title == undefined || color == undefined || title == "" || color == "") {
+            if (title === undefined || color === undefined || title === "" || color === "") {
                 loadtubes();
                 return false;
             }
@@ -114,9 +114,9 @@
             });
         }
         function save_tube(id) {
-            title = $("#tube-{0} .tubetitle".f(id)).val();
-            color = $("#tube-{0} .tubecolor".f(id)).val();
-            if (title == undefined || color == undefined || title == "" || color == "") {
+            const title = $("#tube-{0} .tubetitle".f(id)).val();
+            const color = $("#tube-{0} .tubecolor".f(id)).val();
+            if (title === undefined || color === undefined || title === "" || color === "") {
                 loadtubes();
                 return false;
             }

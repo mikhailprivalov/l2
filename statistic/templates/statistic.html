@@ -24,7 +24,7 @@
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по лабораториям</h3>
+                    <h3 class="panel-title">Статистика по лабораториям - выполнено исследований</h3>
                 </div>
                 <ul class="list-group">
                     {% if request.user.is_superuser %}
@@ -36,74 +36,53 @@
                         {% else %}
                             {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
                                 <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% else %}
-
                             {% endif %}
 
                         {% endif %}
                     {% endfor %}
                 </ul>
             </div>
-{#            <br/>#}
-{#            <div class="panel panel-default panel-flt">#}
-{#                <div class="panel-heading">#}
-{#                    <h3 class="panel-title">Статистика по отделениям#}
-{#                        <small>в разработке</small>#}
-{#                    </h3>#}
-{#                </div>#}
-{#                <ul class="list-group">#}
-{#                    {% for pod in podrs %}#}
-{#                        {% if request.user.is_superuser %}#}
-{#                            <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>#}
-{#                        {% else %}#}
-{#                            {% if pod.pk == request.user.doctorprofile.podrazileniye.pk or request.user|has_group:"Просмотр статистики" %}#}
-{#                                <li class="list-group-item" onclick="gen_stat('otd', {{ pod.pk }})">{{ pod.title }}</li>#}
-{#                            {% else %}#}
-{##}
-{#                            {% endif %}#}
-{##}
-{#                        {% endif %}#}
-{#                    {% endfor %}#}
-{#                </ul>#}
-{#            </div>#}
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по лабораториям - исполнители</h3>
+                </div>
+                <ul class="list-group">
+                    {% for lab in labs %}
+                        {% if request.user.is_superuser %}
+                            <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
+                        {% else %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
+                                <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
+                            {% endif %}
+
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
         <div class="col-xs-6">
-{#            <div class="panel panel-default panel-flt">#}
-{#                <div class="panel-heading">#}
-{#                    <h3 class="panel-title">Статистика по емкостям#}
-{#                        <small>в разработке</small>#}
-{#                    </h3>#}
-{#                </div>#}
-{#                <ul class="list-group">#}
-{#                    <li class="list-group-item" onclick="gen_stat('tubes-using', 0)">Использование пробирок</li>#}
-{#                    {% comment %} {% for tube in tubes %}#}
-{#                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>#}
-{#                    {% endfor %} {% endcomment %}#}
-{#                </ul>#}
-{#            </div>#}
-{#            <br/>#}
-            {#            <div class="panel panel-default panel-flt">#}
-            {#                <div class="panel-heading">#}
-            {#                    <h3 class="panel-title">Статистика по пользователям</h3>#}
-            {#                </div>#}
-            {#                <ul class="list-group">#}
-            {#                    <li class="list-group-item" onclick="gen_stat('uets', 0)">Подсчет УЕТов</li>#}
-            {#                   {% comment %} {% for tube in tubes %}#}
-            {#                        <li class="list-group-item" onclick="gen_stat('tube', {{ tube.pk }})"><div class="sq"><div class="color-sq" style="background-color: {{ tube.color }}">&nbsp;</div></div> {{ tube.title }}</li>#}
-            {#                    {% endfor %} {% endcomment %}#}
-            {#                </ul>#}
-            {#            </div>#}
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по лабораториям - принято емкостей</h3>
+                </div>
+                <ul class="list-group">
+                    {% for lab in labs %}
+                        {% if request.user.is_superuser %}
+                            <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
+                        {% else %}
+                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
+                                <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            var today = new Date();
-
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
             $('#datepicker').datepicker({
                 format: "dd.mm.yyyy",
@@ -112,8 +91,6 @@
                 autoclose: true,
                 todayHighlight: true
             });
-
-            $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
         });
         function gen_stat(stype, pk) {
             window.open('/statistic/xls?type=' + stype + "&pk=" + pk + "&date-start=" + $("[name='date-start']").val() + "&date-end=" + $("[name='date-end']").val(), '_blank');

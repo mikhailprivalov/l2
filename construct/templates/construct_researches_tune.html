@@ -35,113 +35,142 @@
                 </select>
             </div>
             <div class="col-xs-3">
-                <button class="btn btn-default btn-blue-nb" style="width:100%;" onclick="save_template();return false;">Сохранить</button>
+                <button class="btn btn-default btn-blue-nb" style="width:100%;" onclick="save_template();return false;">
+                    Сохранить
+                </button>
             </div>
         </div>
         <h5>Настройка фракций</h5>
         <table id="table-fractions" class="table table-bordered table-responsive">
             <thead>
-                <tr>
-                    <th class="col-xs-2">Фракция (id)</th>
-                    <th class="col-xs-2">Формула</th>
-                    <th class="col-xs-1">Скрытие</th>
-                    <th>Тип поля</th>
-                    <th class="col-xs-3">Варианты</th>
-                </tr>
+            <tr>
+                <th class="col-xs-2">Фракция (id)</th>
+                <th class="col-xs-2">Формула</th>
+                <th class="col-xs-1">Скрытие</th>
+                <th>Тип поля</th>
+                <th class="col-xs-3">Варианты</th>
+            </tr>
             </thead>
             <tbody>
 
             </tbody>
         </table>
-        <button class="btn btn-default btn-blue2-nb" style="width:100%;" onclick="save_fractions();return false;">Сохранить настройки фракций</button>
+        <button class="btn btn-default btn-blue2-nb" style="width:100%;" onclick="save_fractions();return false;">
+            Сохранить настройки фракций
+        </button>
         <br/>
         <br/>
+    </div>
+    <div id="ref_modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Modal title</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="refs"></div>
+                    <button class="btn btn-default btn-primary-nb" onclick="add_ref();">Добавить</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="save_ref();">Сохранить</button>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 {% block scripts %}
     <style>
-    html,body {
-        height:100%;
-    }
+        html, body {
+            height: 100%;
+        }
 
-    td label:not(.radio-l) {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        cursor: pointer;
-        vertical-align: middle;
-        display: inline-block;
+        td label:not(.radio-l) {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
 
-    }
+        }
 
-    td {
-        padding: 0 !important;
-    }
+        td {
+            padding: 0 !important;
+        }
 
-    td label input {
-        vertical-align: middle;
-        margin-top: 5px;
-    }
+        td label input {
+            vertical-align: middle;
+            margin-top: 5px;
+        }
 
-    td label:hover {
-        background-color: #efefef;
-    }
+        td label:hover {
+            background-color: #efefef;
+        }
 
-    .c {
-        text-align: center;
-        padding: 0 !important;
-    }
-    .radio-l{
-        padding-right: 5px;
-        padding-left: 5px;
-        cursor: pointer;
-        display: inline-block;
-        vertical-align: middle;
-        height: 25px;
-        margin: 0;
-    }
-    .w100{
-        width: 100%!important;
-    }
-    .tdi{
-        padding: 0;
-    }
-    .tdi input, .tdi .bootstrap-tagsinput{
-        border: none;
-        border-radius: 0;
-        margin: 0;
-        padding: 2px;
-        height: 25px;
-        box-shadow: none;
-        outline: none;
-    }
-    .bootstrap-tagsinput{
-        height: auto!important;
-        max-width: inherit;
-        display: block;
-    }
-    .tdi .tag{
-        vertical-align: super
-    }
+        .c {
+            text-align: center;
+            padding: 0 !important;
+        }
 
-    .w100 {
-        width: 100%;
-    }
+        .radio-l {
+            padding-right: 5px;
+            padding-left: 5px;
+            cursor: pointer;
+            display: inline-block;
+            vertical-align: middle;
+            height: 25px;
+            margin: 0;
+        }
+
+        .w100 {
+            width: 100% !important;
+        }
+
+        .tdi {
+            padding: 0;
+        }
+
+        .tdi input, .tdi .bootstrap-tagsinput {
+            border: none;
+            border-radius: 0;
+            margin: 0;
+            padding: 2px;
+            height: 25px;
+            box-shadow: none;
+            outline: none;
+        }
+
+        .bootstrap-tagsinput {
+            height: auto !important;
+            max-width: inherit;
+            display: block;
+        }
+
+        .tdi .tag {
+            vertical-align: super
+        }
+
+        .w100 {
+            width: 100%;
+        }
     </style>
     <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
     <script>
-        var pk = {{ pk }};
-        var $comments;
+        const pk = {{ pk }};
+        let $comments;
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
             $comments = $("#select-comments");
-            $.each(material_types, function (k,v) {
+            $.each(material_types, function (k, v) {
                 $comments.append(`<option value="${k}">${v.join("/")}</option>`);
             });
             update_data();
         });
 
-        function update_data(){
+        function update_data() {
             sl();
             $.ajax({url: "/construct/researches/get_details", method: "GET", data: {pk: pk}}).done(function (data) {
                 $("#research_title").html(data.title + " (id " + pk + ")");
@@ -153,19 +182,19 @@
                 $comments.val(data.comment_template);
                 $comments.selectpicker('refresh');
                 $("#table-fractions tbody").html("");
-                var radios = "<td>";
-                $.each([{pk: 0, title: "Базовый тип"}, {pk: 1, title: "Динамическое число полей"}], function(k,v){
+                let radios = "<td>";
+                $.each([{pk: 0, title: "Базовый тип"}, {pk: 1, title: "Динамическое число полей"}], function (k, v) {
                     radios += "<label class='radio-l'>{0} <input type='radio' value='{1}'".f(v.title, v.pk) + " name='fraction-type-{0}' /></label> ";
                 });
                 radios += "</td>";
-                $.each(data.fractions, function(k,v){
-                    $("#table-fractions tbody").append("<tr pk='{0}'>".f(v.pk) +
-                            "<td>&nbsp;{0} ({1})</td>".f(v.title, v.pk) +
-                            "<td><textarea class='form-control w100' rows='1' id='formula-{1}'>{0}</textarea></td>".f(v.formula, v.pk) +
-                            "<td><label class='c'><input type='checkbox' name='hide-{0}' /></label></td>".f(v.pk) +
-                            radios.f(v.pk) +
-                            `<td class='tdi'><input type='text' class='form-control w100' data-role='tagsinput' value='${v.options}' /></td>` +
-                            "</tr>");
+                $.each(data.fractions, function (k, v) {
+                    $("#table-fractions tbody").append(`<tr pk='${v.pk}'>
+                            <td>&nbsp;${v.title} (${v.pk})<br/>&nbsp;<small><a href='#' onclick='return ref_settings(${v.pk}, "${v.title}");'>Референсы</a></small></td>
+                            <td><textarea class='form-control w100' rows='1' id='formula-${v.pk}'>${v.formula}</textarea></td>
+                            <td><label class='c'><input type='checkbox' name='hide-${v.pk}' /></label></td>
+                            ${radios.f(v.pk)}
+                            <td class='tdi'><input type='text' class='form-control w100' data-role='tagsinput' value='${v.options}' /></td>
+                            </tr>`);
                     $("[name=hide-{0}]".f(v.pk)).prop("checked", v.hide);
                     $("[name=fraction-type-{0}][value={1}]".f(v.pk, v.render_type)).prop("checked", true);
                 });
@@ -177,9 +206,13 @@
 
         }
 
-        function save_template(){
+        function save_template() {
             sl();
-            $.ajax({url: "/directory/researches/update_template", method: "POST", data: {pk: pk, template: $("#select-template").val(), comment_template: $comments.val()}}).done(function(){
+            $.ajax({
+                url: "/directory/researches/update_template",
+                method: "POST",
+                data: {pk: pk, template: $("#select-template").val(), comment_template: $comments.val()}
+            }).done(function () {
                 update_data();
             });
         }
@@ -197,27 +230,212 @@
             });
         }
 
-    function save_fractions(){
-        sl();
-        var res = [];
-        $.each($("#table-fractions tbody tr"), function(k,v){
-            var tpk = parseInt($(v).attr("pk"));
-            res.push({
-                pk: tpk,
-                hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
-                render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()),
-                options: $("[data-role='tagsinput']", v).val(),
-                formula: $("#formula-" + tpk).val()
+        function save_fractions() {
+            sl();
+            let res = [];
+            $.each($("#table-fractions tbody tr"), function (k, v) {
+                const tpk = parseInt($(v).attr("pk"));
+                res.push({
+                    pk: tpk,
+                    hide: $("[name=hide-{0}]".f(tpk)).prop("checked"),
+                    render_type: parseInt($("[name=fraction-type-{0}]:checked".f(tpk)).val()),
+                    options: $("[data-role='tagsinput']", v).val(),
+                    formula: $("#formula-" + tpk).val()
+                });
             });
-        });
-        $.ajax({
+            $.ajax({
                 url: "/construct/researches/get_details",
                 method: "POST",
                 data: {data: JSON.stringify(res)}
-        }).done(function(data){
-            update_data();
-        });
-    }
+            }).done(function (data) {
+                update_data();
+            });
+        }
+
+        let ref_data = {pk: -1, refs: []};
+        function ref_settings(pk, title) {
+            sl();
+            $.ajax({
+                url: "/construct/refs",
+                method: "GET",
+                data: {pk: pk}
+            }).done(function (data) {
+                ref_data = {pk: pk, refs: data};
+                sync();
+                $("#ref_modal").modal('show').find(".modal-title").text(`Референсы (${title})`);
+                hl();
+            });
+            return false;
+        }
+
+        function add_ref() {
+            backsync();
+            ref_data.refs.push({pk: -1,
+                title: `Название ${ref_data.refs.length + 1}`,
+                ref_f: {},
+                ref_m: {},
+                about: "",
+                del: false,
+                hide: false,
+                isdefault: false
+            });
+            sync();
+            backsync();
+            sync();
+        }
+
+        function ref_form(refs) {
+            if ($.isEmptyObject(refs)) {
+                refs = {"": ""};
+            }
+            let ht = "";
+            for (let prop in refs) {
+                if (!refs.hasOwnProperty(prop))
+                    continue;
+                ht += `<div class='row'>
+<div class='col-xs-6'><input type='text' class='form-control prop' value='${prop}' placeholder='Условие' /></div>
+<div class='col-xs-6'><input type='text' class='form-control ref' value='${refs[prop]}' placeholder='Референс' /></div>
+</div>`;
+            }
+            return ht;
+        }
+
+        function delete_ref(i, d) {
+            backsync();
+            if(ref_data.refs[i].isdefault) {
+                ref_data.refs[i].isdefault = false;
+                sync();
+                backsync();
+            }
+            ref_data.refs[i].del = ref_data.refs[i].hide = d;
+            sync();
+        }
+
+        function hide_ref(i, h) {
+            backsync();
+            ref_data.refs[i].hide = h;
+            sync();
+        }
+
+        function add_subref(i) {
+            backsync();
+            if(!("" in ref_data.refs[i].ref_m)){
+                ref_data.refs[i].ref_m[""] = "";
+            }
+            if(!("" in ref_data.refs[i].ref_f)){
+                ref_data.refs[i].ref_f[""] = "";
+            }
+            sync();
+        }
+
+        function sync() {
+            let nhtml = "";
+            if (ref_data.refs.length === 0) {
+                nhtml = "Нет вариантов референсов<br><br>";
+            }
+            else {
+                for (let i = 0; i < ref_data.refs.length; i++) {
+                    nhtml += `
+<div class='panel panel-default panel-flt ref ${ref_data.refs[i].del ? "delete": ""}' data-i="${i}">
+    <div class='panel-heading'><h3 class='panel-title'><small class='fr'>${ref_data.refs[i].hide ? `<a href="#" onclick="hide_ref(${i}, false);return false;">развернуть</a>`: `<a href="#" onclick="hide_ref(${i}, true);return false;">свернуть</a>`}</small><span>Референс &#8470; ${i+1}</span> <small>${ref_data.refs[i].del ? `<a href="#" onclick="delete_ref(${i}, false);return false;">отменить удаление</a>` : `<a href="#" onclick="delete_ref(${i}, true);return false;">удалить</a>`}</small></h3></div>
+    <div class='panel-body ${ref_data.refs[i].hide ? "hide": ""}'>
+        <div class='row'>
+            <div class="col-xs-6">
+                <div class="input-group">
+                    <span class="input-group-addon"><input type="radio" name="default" ${!!ref_data.refs[i].isdefault ? "checked": ""} value="${ref_data.refs[i].pk}" /></span>
+                    <input type="text" class="form-control title" placeholder="Название" value="${ref_data.refs[i].title}">
+                </div>
+                <textarea class="form-control about" placeholder="Описание">${ref_data.refs[i].about}</textarea>
+            </div>
+            <div class="col-xs-6">
+                <div class="row">
+                    <div class="col-xs-6 ref_m">
+                        М
+                        ${ref_form(ref_data.refs[i].ref_m)}
+                    </div>
+                    <div class="col-xs-6 ref_f">
+                        Ж
+                        ${ref_form(ref_data.refs[i].ref_f)}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-4"></div>
+                    <div class="col-xs-4"><button class="btn btn-default btn-primary-nb btn-sm mt5" onclick="add_subref(${i})">Добавить</button></div>
+                    <div class="col-xs-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+                }
+
+            }
+            $("#refs").html(nhtml);
+        }
+
+
+        function backsync() {
+            let has_default = false;
+            $(".panel.ref").each(function (k) {
+                let i = parseInt($(this).attr("data-i"));
+                ref_data.refs[i].title = $(".title", this).val();
+                ref_data.refs[i].about = $(".about", this).val();
+                ref_data.refs[i].ref_m = {};
+                ref_data.refs[i].ref_f = {};
+                ref_data.refs[i].isdefault = $("[name=default]", this).prop("checked");
+                if(ref_data.refs[i].isdefault)
+                    has_default = true;
+                $(".ref_m .row", this).each(function (kk) {
+                    ref_data.refs[i].ref_m[$(".prop", this).val().trim()] = $(".ref", this).val().trim();
+                });
+                $(".ref_f .row", this).each(function (kk) {
+                    ref_data.refs[i].ref_f[$(".prop", this).val().trim()] = $(".ref", this).val().trim();
+                });
+            });
+            if(!has_default && ref_data.refs.length > 0){
+                ref_data.refs[0].isdefault = true;
+            }
+        }
+
+        function save_ref() {
+            sl();
+            backsync();
+            $.ajax({
+                url: "/construct/refs",
+                method: "POST",
+                data: {pk: ref_data.pk, refs: JSON.stringify(ref_data.refs), "default": $("[name=default]:checked").length > 0 ? parseInt($("[name=default]:checked").val()): -1}
+            }).done(function (data) {
+                $("#ref_modal").modal('hide');
+                okmessage("Референсы сохранены");
+                hl();
+            });
+        }
 
     </script>
+    <style>
+    .ref_m .col-xs-6, .ref_f .col-xs-6{
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+    .fr{
+        float: right;
+        font-size: 14px;
+    }
+    .panel-body.hide{
+        display: none;
+    }
+    .panel-flt.delete:not(:hover){
+        opacity: .6;
+    }
+    .panel-flt.delete h3 span{
+        text-decoration: line-through;
+    }
+    .mt5{
+        margin-top: 5px;
+    }
+    body{
+        overflow-x: hidden;
+    }
+    </style>
 {% endblock %}

@@ -5,8 +5,8 @@
 
 (function($) {
 
-    var queues = {};
-    var activeReqs = {};
+    const queues = {};
+    const activeReqs = {};
 
     // Register an $.ajaxq function, which follows the $.ajax interface, but allows a queue name which will force only one request per queue to fire.
     $.ajaxq = function(qname, opts) {
@@ -16,7 +16,7 @@
         }
 
         // Will return a Deferred promise object extended with success/error/callback, so that this function matches the interface of $.ajax
-        var deferred = $.Deferred(),
+        const deferred = $.Deferred(),
             promise = deferred.promise();
 
         promise.success = promise.done;
@@ -24,10 +24,10 @@
         promise.complete = promise.always;
 
         // Create a deep copy of the arguments, and enqueue this request.
-        var clonedOptions = $.extend(true, {}, opts);
+        const clonedOptions = $.extend(true, {}, opts);
         enqueue(function() {
             // Send off the ajax request now that the item has been removed from the queue
-            var jqXHR = $.ajax.apply(window, [clonedOptions]);
+            const jqXHR = $.ajax.apply(window, [clonedOptions]);
 
             // Notify the returned deferred object with the correct context when the jqXHR is done or fails
             // Note that 'always' will automatically be fired once one of these are called: http://api.jquery.com/category/deferred-object/.
@@ -50,8 +50,7 @@
         function enqueue(cb) {
             if (!queues[qname]) {
                 queues[qname] = [];
-                var xhr = cb();
-                activeReqs[qname] = xhr;
+                activeReqs[qname] = cb();
             }
             else {
                 queues[qname].push(cb);
@@ -64,10 +63,9 @@
             if (!queues[qname]) {
                 return;
             }
-            var nextCallback = queues[qname].shift();
+            const nextCallback = queues[qname].shift();
             if (nextCallback) {
-                var xhr = nextCallback();
-                activeReqs[qname] = xhr;
+                activeReqs[qname] = nextCallback();
             }
             else {
                 delete queues[qname];
@@ -97,12 +95,12 @@
         };
     });
 
-    var isQueueRunning = function(qname) {
+    const isQueueRunning = function (qname) {
         return queues.hasOwnProperty(qname);
     };
 
-    var isAnyQueueRunning = function() {
-        for (var i in queues) {
+    const isAnyQueueRunning = function () {
+        for (let i in queues) {
             if (isQueueRunning(i)) return true;
         }
         return false;
@@ -122,7 +120,7 @@
     $.ajaxq.abort = function(qname) {
         if (!qname) throw ("AjaxQ: queue name is required");
         
-        var current = $.ajaxq.getActiveRequest(qname);
+        const current = $.ajaxq.getActiveRequest(qname);
         delete queues[qname];
         delete activeReqs[qname];
         if (current) current.abort();
@@ -130,7 +128,7 @@
 
     $.ajaxq.clear = function(qname) {
         if (!qname) {
-            for (var i in queues) {
+            for (let i in queues) {
                 if (queues.hasOwnProperty(i)) {
                     queues[i] = [];
                 }

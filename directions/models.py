@@ -142,7 +142,7 @@ class Napravleniya(models.Model):
         return "%d для пациента %s (врач %s, выписал %s)" % (self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=[]):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=None):
         """
         Генерация направления
         :param client_id: id пациента
@@ -154,6 +154,8 @@ class Napravleniya(models.Model):
         :param issledovaniya: исследования (reserved)
         :return: созданое направление
         """
+        if issledovaniya is None:
+            issledovaniya = []
         dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
                             doc=doc,
                             istochnik_f=istochnik_f,
@@ -188,11 +190,11 @@ class Napravleniya(models.Model):
         i = 0
         result = {"r": False, "list_id": []}
         checklist = []
+        ofname = None
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
             result["message"] = "Недостаточно прав для создания направлений"
             return result
         if client_id and researches:  # если client_id получен и исследования получены
-            ofname = None
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
 
@@ -274,13 +276,13 @@ class Napravleniya(models.Model):
                                                       # Установка направления для группы этого исследования
                                                       research=research,
                                                       deferred=False)  # Создание направления на исследование
-                        issledovaniye.comment = comments.get(str(research.pk), "")
+                        issledovaniye.comment = comments.get(str(research.pk), "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
 
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
-                         body=json.dumps(researches)).save()
+                         body=json.dumps({"researches": [x for x in researches if x is not None], "client_num": Importedclients.objects.get(pk=client_id).num, "client_id": client_id, "diagnos": diagnos, "finsource": finsource.tilie + " " + finsource.istype, "history_num": history_num, "ofname": str(ofname), "ptype": ptype, "comments": comments})).save()
 
             else:
                 result["r"] = False
@@ -343,7 +345,6 @@ class Issledovaniya(models.Model):
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
-import math
 
 class Result(models.Model):
     """
@@ -354,6 +355,49 @@ class Result(models.Model):
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
+    ref_m = JSONField(default=None, blank=True, null=True, help_text="Референсы М")
+    ref_f = JSONField(default=None, blank=True, null=True, help_text="Референсы Ж")
+    ref_title = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Референсы Название")
+    ref_about = models.TextField(default=None, blank=True, null=True, help_text="Референсы Описание")
+
+    def __str__(self):
+        return "%s | %s | %s" % (self.pk, self.fraction, self.ref is not None)
+
+    def get_ref(self, as_str=False, full=False, fromsave=False):
+        if not fromsave:
+            if not self.ref_m:
+                self.ref_m = self.fraction.ref_m if self.fraction.default_ref is None else self.fraction.default_ref.ref_m
+                self.save()
+
+            if not self.ref_f:
+                self.ref_f = self.fraction.ref_f if self.fraction.default_ref is None else self.fraction.default_ref.ref_f
+                self.save()
+
+            if not self.ref_title:
+                self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
+                self.save()
+
+            if not self.ref_about:
+                self.ref_about = "" if self.fraction.default_ref is None else self.fraction.default_ref.about
+                self.save()
+
+        if full:
+            return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
+
+        ref = self.ref_f
+        sex = self.issledovaniye.napravleniye.client.sex.lower()
+        if sex == "м":
+            ref = self.ref_m
+
+        if isinstance(ref, str):
+            ref = json.loads(ref)
+        if not ref:
+            ref = {}
+
+        if not as_str:
+            return ref
+        else:
+            return json.dumps(ref)
 
     def get_is_norm(self, recalc=False):
         if self.is_normal == "" or recalc:
@@ -365,10 +409,10 @@ class Result(models.Model):
         return norm
 
     def save(self, *args, **kw):
-        self.is_normal = self.calc_normal()
+        self.is_normal = self.calc_normal(True)
         super(Result, self).save(*args, **kw)
 
-    def calc_normal(self):
+    def calc_normal(self, fromsave=False):
         import operator
         from functools import reduce
         trues = {True: ["полож.", "положительно", "да", "положительный"], False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный"]}
@@ -380,20 +424,7 @@ class Result(models.Model):
         sex = self.issledovaniye.napravleniye.client.sex.lower()
         age = self.issledovaniye.napravleniye.client.age()
 
-        ref_m = self.fraction.ref_m
-        ref_f = self.fraction.ref_f
-        if isinstance(ref_m, str):
-            ref_m = json.loads(ref_m)
-        if isinstance(ref_f, str):
-            ref_f = json.loads(ref_f)
-        if not ref_m:
-            ref_m = {}
-        if not ref_f:
-            ref_f = {}
-
-        ref = ref_f
-        if sex == "м":
-            ref = ref_m
+        ref = self.get_ref(fromsave=fromsave)
 
         def isnum(r):
             return r.replace(".", "", 1).isdigit()
@@ -518,22 +549,25 @@ class Result(models.Model):
         def clc(r, val):
             result = "normal"
             if val.strip() != "":
-                for k in r.keys():
-                    tmp_result = "normal"
-                    rigth = rigths(k.strip().lower())
+                if val.lower().strip() == "гемолиз":
+                    result = "not_normal"
+                else:
+                    for k in r.keys():
+                        tmp_result = "normal"
+                        rigth = rigths(k.strip().lower())
 
-                    if not rigth:
-                        tmp_result = "maybe"
-                    elif rigth[0] <= age <= rigth[1]:
-                        rigth_v = rigths_v(r[k].strip().lower())
-                        if rigth_v == "":
+                        if not rigth:
                             tmp_result = "maybe"
-                        else:
-                            test_v = test_value(rigth_v, val)
-                            if not test_v:
-                                tmp_result = "not_normal"
-                    if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
-                        result = tmp_result
+                        elif rigth[0] <= age <= rigth[1]:
+                            rigth_v = rigths_v(r[k].strip().lower())
+                            if rigth_v == "":
+                                tmp_result = "maybe"
+                            else:
+                                test_v = test_value(rigth_v, val)
+                                if not test_v:
+                                    tmp_result = "not_normal"
+                        if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
+                            result = tmp_result
             return result
 
         calc = clc(ref, value)

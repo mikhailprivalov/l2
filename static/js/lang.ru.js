@@ -24,11 +24,11 @@ lang = {
     loading: "Загрузка - "
 
 };
-var ref_types = {'a': {'show': false, 's': "Все"}, 'pmp': {'show': true, 's': "любой ключ"}}
+var ref_types = {'a': {'show': false, 's': "Все"}, 'pmp': {'show': true, 's': "любой ключ"}};
 var loading_tpl = '<span class="isloading-wrapper %wrapper%">%text% <i class="%class% glyphicon glyphicon-refresh"></i></span>';
 
-var normal_keys = {"a": "Все", "pmp": "Постменопауза"}
-var g = {"м": "m", "ж": "f"}
+var normal_keys = {"a": "Все", "pmp": "Постменопауза"};
+var g = {"м": "m", "ж": "f"};
 function age_range(str) {
     this.downer = str.split("-")[0];
     this.upper = str.split("-")[1];
@@ -38,31 +38,31 @@ function age_range(str) {
 }
 
 var getN = function (key) {
-    console.log(key)
+    console.log(key);
     if (normal_keys[key]) {
         return normal_keys[key];
     }
     return key + " лет";
-}
+};
 
 var getNorms = function (sex, age, ref, units) {
-    html_ret = "<table class='table table-bordered'>";
-    age_ref = {};
+    let html_ret = "<table class='table table-bordered'>";
+    let age_ref = {};
     $.each(ref[g[sex.toLowerCase()]], function (k, v) {
         if (normal_keys[k]) {
             age_ref[normal_keys[k]] = ref[g[sex.toLowerCase()]][k];
         }
     });
-    max = new age_range("0-0");
+    let max = new age_range("0-0");
     if ($.assocArraySize(age_ref) > 0) {
         $.each(age_ref, function (k, v) {
             html_ret += "<tr><td class='col-md-7'>{0}</td><td>{1}</td></tr>".f(k, v);
         });
     }
     if (ref[g[sex.toLowerCase()]].length > $.assocArraySize(age_ref) || $.assocArraySize(age_ref) == 0) {
-        maxage = "";
+        let maxage = "";
         $.each(ref[g[sex.toLowerCase()]], function (k, v) {
-            range = new age_range(k);
+            let range = new age_range(k);
             if (age >= range.downer && age <= range.upper) {
                 maxage = "<tr><td class='col-md-7'>{0}</td><td>{1}</td></tr>".f(getN(k), v);
             }
@@ -129,5 +129,6 @@ var material_types = {
     "10": ["Кон/глаз"],
     "11": ["Рот"],
     "12": ["Лев/ухо", "Прав/ухо"],
-    "13": ["Лев/глаз", "Прав/глаз"]
+    "13": ["Лев/глаз", "Прав/глаз"],
+    "14": ["Нечипоренко"],
 };

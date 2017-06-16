@@ -4,7 +4,7 @@
 
   $.fn.autocompleteselect = function(options) {
     return this.each(function() {
-      var id = this.id,
+      const id = this.id,
           $this = $(this),
           $text = $('#' + id + '_text'),
           $deck = $('#' + id + '_on_deck');
@@ -23,7 +23,7 @@
       }
 
       function addKiller(repr, pk) {
-        var killId = 'kill_' + pk + id,
+        const killId = 'kill_' + pk + id,
             killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         if (repr) {
           $deck.empty();
@@ -65,13 +65,13 @@
 
   $.fn.autocompleteselectmultiple = function(options) {
     return this.each(function() {
-      var id = this.id,
+      const id = this.id,
           $this = $(this),
           $text = $('#' + id + '_text'),
           $deck = $('#' + id + '_on_deck');
 
       function receiveResult(event, ui) {
-        var pk = ui.item.pk,
+        const pk = ui.item.pk,
             prev = $this.val();
 
         if (prev.indexOf('|' + pk + '|') === -1) {
@@ -85,7 +85,7 @@
       }
 
       function addKiller(repr, pk) {
-        var killId = 'kill_' + pk + id,
+        const killId = 'kill_' + pk + id,
             killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         $deck.append('<div id="' + id + '_on_deck_' + pk + '">' + killButton + repr + ' </div>');
 
@@ -105,7 +105,7 @@
 
       function reset() {
         $deck.empty();
-        var query = '|';
+        let query = '|';
         if (options.initial) {
           $.each(options.initial, function(i, its) {
             addKiller(its[0], its[1]);
@@ -125,11 +125,11 @@
   };
 
   function addAutoComplete (inp, callback) {
-    var $inp = $(inp),
-        html_id = inp.id,
-        prefix_id = html_id,
-        opts = JSON.parse($inp.attr('data-plugin-options')),
-        prefix = 0;
+    const $inp = $(inp);
+      let html_id = inp.id;
+      const prefix_id = html_id,
+          opts = JSON.parse($inp.attr('data-plugin-options'));
+      let prefix = 0;
 
     /* detects inline forms and converts the html_id if needed */
     if (html_id.indexOf('__prefix__') !== -1) {
@@ -150,11 +150,11 @@
 
   // allow html in the results menu
   // https://github.com/scottgonzalez/jquery-ui-extensions
-  var proto = $.ui.autocomplete.prototype,
+  const proto = $.ui.autocomplete.prototype,
       initSource = proto._initSource;
 
   function filter(array, term) {
-    var matcher = new RegExp($.ui.autocomplete.escapeRegex(term), 'i');
+    const matcher = new RegExp($.ui.autocomplete.escapeRegex(term), 'i');
     return $.grep(array, function(value) {
       return matcher.test($('<div>').html(value.label || value.value || value).text());
     });
@@ -171,7 +171,7 @@
       }
     },
     _renderItem: function(ul, item) {
-      var body = this.options.html ? item.match: item.label;
+      const body = this.options.html ? item.match : item.label;
       return $('<li></li>')
         .data('item.autocomplete', item)
         .append($('<a></a>')[this.options.html ? 'html' : 'text' ](body))
@@ -183,7 +183,7 @@
     requires RelatedObjects.js which is part of the django admin js
     so if using outside of the admin then you would need to include that manually */
   window.didAddPopup = function (win, newId, newRepr) {
-    var name = window.windowname_to_id(win.name);
+    const name = window.windowname_to_id(win.name);
     $('#' + name).trigger('didAddPopup', [window.html_unescape(newId), window.html_unescape(newRepr)]);
     win.close();
   };

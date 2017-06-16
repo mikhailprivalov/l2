@@ -181,9 +181,7 @@
 
         .list-header {
             font-weight: 500;
-            font-size: 12pt;
-            margin: 3px;
-            margin-top: 0;
+            margin: 0 3px 3px;
             font-size: 16px;
         }
 
@@ -193,9 +191,8 @@
 
         .bw {
             background: #fff;
-            padding: 3px;
             margin: 0;
-            padding-top: 0;
+            padding: 0 3px 3px;
         }
 
         .right {
@@ -245,7 +242,8 @@
     <script src="/static/js/jquery.multi-select.js"></script>
     <script>
         // Буфер выбраных исследований
-        var selected = {"researches": {}};
+        let selected = {"researches": {}};
+        let cache = [];
 
         $(document).ready(function () {
             $("#mes").show();
@@ -294,8 +292,8 @@
             }).done(function (data) {
                 $("#researches-container").html("");
                 $.each(data.directions, function (k, v) {
-                    div = $("<div class='row direction' group='{0}' onclick='addgroup({0});'></div>".f(k)).appendTo("#researches-container");
-                    bw = $("<div class='bw'></div>").appendTo(div);
+                    const div = $("<div class='row direction' group='{0}' onclick='addgroup({0});'></div>".f(k)).appendTo("#researches-container");
+                    let bw = $("<div class='bw'></div>").appendTo(div);
                     $(bw).append("<div>Группа {0}</div>".f(k));
                     $(bw).append("<hr/>");
                     bw = $("<ul class='bw'></ul>").appendTo(div);
@@ -309,7 +307,6 @@
                 resize();
             });
         }
-        var cache = [];
 
         /**
          * Загрузка (или при group_id = -1 создание новой) группы

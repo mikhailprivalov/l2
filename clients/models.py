@@ -26,11 +26,13 @@ class Importedclients(models.Model):
         managed = TESTING
         db_table = 'ImportedClients'
 
-    def type_str(self, short=False):
+    def type_str(self, short=False, num=False):
         types = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стоматология"}
         this_type = types.get(self.type, self.type)
         if short:
             this_type = "".join([x[0] for x in this_type.split("-")])
+        if num:
+            this_type = str(self.num) + " " + this_type
         return this_type
 
     def fio(self) -> str:

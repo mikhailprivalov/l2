@@ -99,7 +99,7 @@ def send(request):
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
                         if directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                   research=fraction.research).exists():
+                                                                   research=fraction.research, doc_confirmation__isnull=True).exists():
                             issled = directions.Issledovaniya.objects.get(napravleniye=direction,
                                                                           research=fraction.research)
                             fraction_result = None
@@ -112,6 +112,8 @@ def send(request):
                                                                     fraction=fraction)  # Создание нового результата
                             fraction_result.value = resdict["result"][key].strip()  # Установка значения
                             if fractionRel.get_multiplier_display() > 1:
+                                if fraction_result.value.isdigit():
+                                    fraction_result.value = "%s.0" % fraction_result.value
                                 import re
                                 find = re.findall("\d+.\d+", fraction_result.value)
                                 if len(find) > 0:
@@ -219,6 +221,13 @@ def results(request):
                                     else:
                                         fraction_result = directions.Result(issledovaniye=issled,
                                                                             fraction=fraction)  # Создание нового результата
+
+                                    ref = fractionRel.default_ref
+                                    if ref:
+                                        fraction_result.ref_title = ref.title
+                                        fraction_result.ref_about = ref.about
+                                        fraction_result.ref_m = ref.m
+                                        fraction_result.ref_f = ref.f
                                     fraction_result.value = rest["VALUE"].strip()  # Установка значения
                                     if fractionRel.get_multiplier_display() > 1:
                                         import re

@@ -40,17 +40,12 @@ ul.easytree-container ul
 
 ul.easytree-container li
 {
-	list-style-image: none;
-	list-style-position: outside;
-	list-style-type: none;
-	-moz-background-clip:border;
+    list-style: none outside none;
+    -moz-background-clip:border;
 	-moz-background-inline-policy: continuous;
 	-moz-background-origin: padding;
-	background-attachment: scroll;
-	background-color: transparent;
-	background-position: 0 0;
-	background-repeat: repeat-y;
-	background-image: none;  /* no v-lines */
+	/* no v-lines */
+	background: transparent none repeat-y scroll 0 0;
 
 	margin:0;
 	padding:1px 0 0 0;
@@ -92,10 +87,7 @@ span.easytree-drag-helper-img,
 	height: 16px;
 	display: inline-block; /* Required to make a span sizable */
 	vertical-align: top;
-	background-repeat: no-repeat;
-	background-position: left;
-	background-image: url("icons.gif");
-	background-position: 0 0;
+	background: url("icons.gif") no-repeat 0 0;
 }
 /** Used by iconclass option */
 span.easytree-custom-icon {
@@ -133,7 +125,7 @@ span.easytree-custom-icon {
 
 span.easytree-expander
 {
-	background-position: 0px -80px;
+	background-position: 0 -80px;
 	cursor: pointer;
 }
 span.easytree-expander:hover { 	background-position: -16px -80px; }
@@ -166,8 +158,7 @@ span.easytree-expander:hover { 	background-position: -16px -80px; }
 }
 .easytree-loading span.easytree-expander  /* 'Loading' status overrides all others */
 {
-	background-position: 0 0;
-	background-image: url("loading.gif");
+	background: url("loading.gif") 0 0;
 }
 
 .easytree-exp-n span.easytree-expander, /* Connector instead of expander, if node has no children */
@@ -183,7 +174,7 @@ span.easytree-expander:hover { 	background-position: -16px -80px; }
  */
 span.easytree-checkbox {
 	margin-left: 3px;
-	background-position: 0px -32px;
+	background-position: 0 -32px;
 }
 span.easytree-checkbox:hover { background-position: -16px -32px; }
 .easytree-partsel span.easytree-checkbox { background-position: -64px -32px; }
@@ -196,7 +187,7 @@ span.easytree-checkbox:hover { background-position: -16px -32px; }
  */
 .easytree-radio span.easytree-checkbox {
 	margin-left: 3px;
-	background-position: 0px -48px;
+	background-position: 0 -48px;
 }
 .easytree-radio span.easytree-checkbox:hover { background-position: -16px -48px; }
 .easytree-radio .easytree-partsel span.easytree-checkbox { background-position: -64px -48px; }
@@ -216,12 +207,12 @@ span.easytree-checkbox:hover { background-position: -16px -32px; }
 span.easytree-icon /* Default icon */
 {
 	margin-left: 3px;
-	background-position: 0px 0px;
+	background-position: 0 0;
 }
-.easytree-ico-cf span.easytree-icon { background-position: 0px -16px; } /* Collapsed Folder */
+.easytree-ico-cf span.easytree-icon { background-position: 0 -16px; } /* Collapsed Folder */
 .easytree-ico-ef span.easytree-icon { background-position: -64px -16px; } /* Expanded Folder */
 .easytree-statusnode-wait span.easytree-icon { background-image: url("loading.gif"); } /* Status node icons */
-.easytree-statusnode-error span.easytree-icon { background-position: 0px -112px; }
+.easytree-statusnode-error span.easytree-icon { background-position: 0 -112px; }
 
 /*******************************************************************************
  * Node titles
@@ -232,9 +223,8 @@ span.easytree-icon /* Default icon */
 	padding-right: 3px; /* Otherwise italic font will be outside bounds */
 	color: black; /* inherit doesn't work on IE */
 	vertical-align: top;
-	margin: 0px;
-	margin-left: 3px;
-/*    border: 1px solid white; /* reserve some space for status borders (Note: 'transparent' would not work in IE6) */
+	margin: 0px 0px 0px 3px;
+	/*    border: 1px solid white; /* reserve some space for status borders (Note: 'transparent' would not work in IE6) */
 	border: 1px solid transparent; /* reserve some space for status borders */
 	border-radius: 0;
 	text-decoration: none;
@@ -306,17 +296,12 @@ table.easytree-ext-columnview td >ul
 }
 table.easytree-ext-columnview td >ul li
 {
-	list-style-image: none;
-	list-style-position: outside;
-	list-style-type: none;
+	list-style: none outside none;
 	-moz-background-clip:border;
 	-moz-background-inline-policy: continuous;
 	-moz-background-origin: padding;
-	background-attachment: scroll;
-	background-color: transparent;
-	background-position: 0 0;
-	background-repeat: repeat-y;
-	background-image: none;  /* no v-lines */
+	/* no v-lines */
+	background: transparent none repeat-y scroll 0 0;
 
 	margin: 0;
 	padding: 1px 0 0 0;
@@ -347,7 +332,7 @@ table.easytree-ext-columnview span.easytree-node.easytree-active {
 	background-color: royalblue;
 }
 table.easytree-ext-columnview span.easytree-cv-right {
-	background-position: 0px -80px;
+	background-position: 0 -80px;
 	position: absolute;
 	right: 3px;
 }

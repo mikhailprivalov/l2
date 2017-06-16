@@ -161,7 +161,7 @@
                                         class="glyphicon glyphicon-check"></i>
                             </button>
                         </div>
-                        <div class="col-xs-5" style="padding: 0 2px; padding-right: 15px">
+                        <div class="col-xs-5" style="padding: 0 15px 0 2px;">
                             <button class="btn btn-small btn-primary-nb" onclick="print_selected();return false;"><i
                                     class="glyphicon glyphicon-print"></i> Печать выбранных
                             </button>
@@ -210,8 +210,7 @@
 
         #no-printed h5 {
             color: #fff;
-            margin: 2px;
-            margin-bottom: 15px;
+            margin: 2px 2px 15px;
         }
 
         #no-printed .isloading-wrapper {
@@ -351,9 +350,13 @@
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
 
-        var checked_list = [];
-        var s_d = {0: "Не обработан", 1: "Не подтвержден", 2: "Распечатан", 3: "Не распечатан"}
-        var active_lab = -1;
+        let checked_list = [];
+        const s_d = {0: "Не обработан", 1: "Не подтвержден", 2: "Распечатан", 3: "Не распечатан"};
+        let active_lab = -1;
+        let first_resize = true;
+        let ts = false;
+        let last_dir = "";
+
         $(document).ready(function () {
             load_no_printed();
             setInterval(load_no_printed, 5000);
@@ -364,7 +367,6 @@
             $("#dir-id").bind('keydown', 'return', function () {
                 load_data();
             });
-            var today = new Date();
 
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
             $('#datepicker').datepicker({
@@ -387,26 +389,26 @@
                 checked_list.push(parseInt($(this).attr("pk")));
             });
         }
-
-        var first_resize = true;
         function resize() {
-            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 70);
-            $('#no-printed-list').height($(window).height() - $('#no-printed-list').position().top - 60);
-            $('#fractions-list').height($(window).height() - $('#fractions-list').position().top - 90);
+            let $scroll_tb = $('#scroll-tb');
+            let $no_printed_list = $('#no-printed-list');
+            let $fractions_lis = $('#fractions-list');
+            $scroll_tb.height($(window).height() - $scroll_tb.position().top - 70);
+            $no_printed_list.height($(window).height() - $no_printed_list.position().top - 60);
+            $fractions_lis.height($(window).height() - $fractions_lis.position().top - 90);
             if (first_resize) {
-                $('#fractions-list').perfectScrollbar();
-                $('#no-printed-list').perfectScrollbar();
-                $('#scroll-tb').perfectScrollbar();
+                $fractions_lis.perfectScrollbar();
+                $no_printed_list.perfectScrollbar();
+                $scroll_tb.perfectScrollbar();
                 first_resize = false;
             }
             else {
-                $('#fractions-list').perfectScrollbar('update');
-                $('#no-printed-list').perfectScrollbar('update');
-                $('#scroll-tb').perfectScrollbar('update');
+                $fractions_lis.perfectScrollbar('update');
+                $no_printed_list.perfectScrollbar('update');
+                $scroll_tb.perfectScrollbar('update');
             }
 
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            $(".floatThead").floatThead('reflow').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
                     return $table.closest("div");
@@ -422,18 +424,18 @@
                 url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
-                $("#sel-researches").append('<option value="-1">Все анализы</option>');
+                let ht = '<option value="-1">Все анализы</option>';
                 $.each(data, function (k, v) {
-                    $("#sel-researches").append("<option value='{0}'>{1}</option>".f(v.pk, v.fields.ref_title));
+                    ht += `<option value='${v.pk}'>${v.fields.ref_title}</option>`;
                 });
-                $('#sel-researches').selectpicker('refresh').selectpicker('render');
+                $('#sel-researches').html(ht).selectpicker('refresh').selectpicker('render');
             });
         }
 
         function freeze() {
             $("#dir-id").val($("#dir-id").val().trim());
-            val = $("#dir-id").val();
-            if (val == "") {
+            let val = $("#dir-id").val();
+            if (val === "") {
                 $.each($("#sel-researches, #select-lab, #status, #date-start, #date-end, .input-daterange input"), function (k, v) {
                     $(v).removeAttr("disabled");
                 });
@@ -445,13 +447,12 @@
             }
             $('#sel-researches, #select-lab, #status').selectpicker('refresh');
         }
-        var ts = false;
-        var last_dir = "";
+
         function load_data() {
             sl();
             $(".confirm-btn").attr("disabled", 1);
             $("#researches-list").html("");
-            var req_data = {};
+            let req_data = {};
             req_data.research = $("#sel-researches").val();
             req_data.status = $("#status").val();
             req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
@@ -461,12 +462,6 @@
                     $.each(data.list, function (k, v) {
                         $("#researches-list").append("<tr class='clickable' pk='{5}' dir='{1}' onclick='load_research({5},{1});'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td></tr>".f(v.title, v.direction, v.tubes, s_d[v.status], v.date, v.pk));
                     });
-                    /* if(!ts) {
-                     $(".tablesorter").tablesorter({ widthFixed: true});
-                     ts = true;
-                     }
-                     else
-                     $(".tablesorter").tablesorter("update");*/
 
                     $("#researches-list td").eq(0).click();
                 }
@@ -477,7 +472,6 @@
                 $("#dir-id").val("");
                 freeze();
             });
-            console.log(req_data);
         }
         function load_research(id, dir) {
             sl();
@@ -508,13 +502,13 @@
                     $("#research-title").html(data2.title);
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data3) {
                         $.each(data3.results, function (k, v) {
-                            $field = $(`[data-pk='${k}']`);
+                            const $field = $(`[data-pk='${k}']`);
                             if(parseInt($field.attr("render-type")) == 1){
-                                $tr = $field.parent(".field-row");
-                                parsed = JSON.parse(v).rows;
-                                draw_data = [];
+                                const $tr = $field.parent(".field-row");
+                                const parsed = JSON.parse(v).rows;
+                                let draw_data = [];
                                 $.each(parsed, function(kk, vv){
-                                    tmp_data = {title: vv.title, rows: []};
+                                    let tmp_data = {title: vv.title, rows: []};
                                     $.each(vv.rows, function(kkk, vvv){
                                         if(vvv.value != "null"){
                                             tmp_data.rows.push(vvv);
@@ -523,10 +517,10 @@
                                     draw_data.push(tmp_data);
                                 });
                                 $.each(draw_data, function(kk,vv){
-                                    $pt = $(`<tr class='b-top-bord'><td colspan='3'>${$(".field-title", $tr).text()}: ${vv.title}</td></tr>`);
+                                    let $pt = $(`<tr class='b-top-bord'><td colspan='3'>${$(".field-title", $tr).text()}: ${vv.title}</td></tr>`);
                                     $pt.insertAfter($tr);
                                     $.each(vv.rows, function(kkk,vvv){
-                                        $tmp = $(`<tr><td>${vvv.title}</td><td colspan='2'>${vvv.value}</td></tr>`);
+                                        let $tmp = $(`<tr><td>${vvv.title}</td><td colspan='2'>${vvv.value}</td></tr>`);
                                         $tmp.insertAfter($pt);
                                         $pt = $tmp;
                                     });
@@ -567,7 +561,7 @@
                 'tpl': loading_tpl,
             });
 
-            var req_data = {status: 3};
+            let req_data = {status: 3};
 
             req_data.research = $("#sel-researches").val();
             req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
@@ -610,12 +604,12 @@
 
         function print_selected() {
             sync_checked();
-            data = "?pk=" + JSON.stringify(checked_list);
+            const data = "?pk=" + JSON.stringify(checked_list);
             window.open('/results/pdf' + data, '_blank');
         }
 
         function print_loaded() {
-            data = "?pk=" + JSON.stringify([parseInt($("#dir_num").text()),]);
+            const data = "?pk=" + JSON.stringify([parseInt($("#dir_num").text()),]);
             window.open('/results/pdf' + data, '_blank');
         }
 

@@ -3,7 +3,7 @@
 {% block container %}container-fluid{% endblock %}
 
 {% block content %}
-    <div class="row">
+    <div class="row" style="margin-right: 0;">
         <div class="col-xs-4">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
@@ -387,12 +387,23 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
+        const users_av = {{ users|safe }};
+        const current_user_pk = "{{ request.user.doctorprofile.pk }}";
+        const card_types = {"poli": "поликлиника", "stat": "стационар", "poli_stom": "поликлиника-стом"};
+        let page = 1;
+        let request = {};
+        let tmp_data = {};
+        let tmp_rows = [];
+        let show_norms = 0;
+        const norm = {
+            "none": "Не обработано",
+            "normal": "Норма",
+            "maybe": "Некорректный результат или норма",
+            "not_normal": "Результат вне нормы"
+        };
+
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />');
-            var today = new Date();
             $("[name='dateday-otd'],[name='dateday-type']").val(getFormattedDate(today)).datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -418,15 +429,12 @@
         });
 
 
-        var users_av = {{ users|safe }};
-        var current_user_pk = "{{ request.user.doctorprofile.pk }}";
-
         function update_av_docs() {
             $("#select-doc").html("");
-            kv = parseInt($("#select-otd").val());
-            for (var i = 0; i < users_av.length; i++) {
-                if (kv == users_av[i].pk) {
-                    for (var j = 0; j < users_av[i].docs.length; j++)
+            let kv = parseInt($("#select-otd").val());
+            for (let i = 0; i < users_av.length; i++) {
+                if (kv === users_av[i].pk) {
+                    for (let j = 0; j < users_av[i].docs.length; j++)
                         $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
                     break;
                 }
@@ -437,8 +445,8 @@
         function sync_otd_doc() {
             $("#select-doc,#select-otd,#use-doc").prop("disabled", true);
             $("#select-doc,#select-otd,#use-doc").closest("label").addClass("disabled");
-            var otd = $("#use-otd").is(":checked");
-            var doc = otd && $("#use-doc").is(":checked");
+            const otd = $("#use-otd").is(":checked");
+            const doc = otd && $("#use-doc").is(":checked");
             if (otd) {
                 $("#select-otd").prop("disabled", false).closest("label").removeClass("disabled");
                 $("#use-doc").prop("disabled", false).closest("label").removeClass("disabled");
@@ -447,23 +455,16 @@
                 $("#select-doc").prop("disabled", false).closest("label").removeClass("disabled");
             }
             $("#select-doc,#select-otd").selectpicker('refresh');
-            var selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
+            const selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
             if (!!selection) selection.empty ? selection.empty() : selection.removeAllRanges();
         }
 
-
-        var card_types = {"poli": "поликлиника", "stat": "стационар", "poli_stom": "поликлиника-стом"};
-        var page = 1;
-        var request = {};
-        var tmp_data = {};
-        var tmp_rows = [];
-        var show_norms = 0;
         function search(query, gpage) {
             sl();
             $('#dirs-list').scrollTop(0);
             query = query.capitalizeAll();
             $("#select_all_rows,#select_all_rows_r").prop("checked", false);
-            if (typeof gpage == 'undefined') {
+            if (typeof gpage === 'undefined') {
                 page = 1;
                 $("#dirs-list tbody").html("");
                 try {
@@ -472,7 +473,7 @@
                 catch (e) {
 
                 }
-                var period = {type: $("#search-type").val()};
+                let period = {type: $("#search-type").val()};
                 switch (period.type) {
                     case "d":
                         period.date = $("#dateday-type").val();
@@ -517,8 +518,8 @@
                 if (i > 0) {
                     $(`#${data.grouping}-view`).show();
                     if (data.grouping == "patient") {
-                        for (var key in data.rows) {
-                            row = data.rows[key];
+                        for (let key in data.rows) {
+                            const row = data.rows[key];
 
                             $("#dirs-list tbody").append(`<tr class='ttip isnormal-${tmp_data[key].is_normal}' pk='${key}'>
 <td onclick="open_print_form('${key}', ${i});">${row.fio}</td>
@@ -536,7 +537,7 @@
                                 "Число направлений": row.directions.length,
                                 "Дата": row.date,
                             });
-                            researches_str = $.map(tmp_data[key].directions, function (vv, kk) {
+                            const researches_str = $.map(tmp_data[key].directions, function (vv, kk) {
                                 return $.map(vv.researches, function (vvv, kkk) {
                                     return vvv.title
                                 }).join("<br/>");
@@ -552,12 +553,12 @@
                             });
                             i--;
                         }
-                    } else if (data.grouping == "researches") {
-                        for (var key in data.rows) {
-                            row = data.rows[key];
+                    } else if (data.grouping === "researches") {
+                        for (let key in data.rows) {
+                            const row = data.rows[key];
 
-                            for (var direction of tmp_data[key].directions) {
-                                for (var research of direction.researches) {
+                            for (let direction of tmp_data[key].directions) {
+                                for (let research of direction.researches) {
                                     $("#dirs-list tbody").append(`<tr class='isnormal-${research.is_normal}'>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
@@ -578,22 +579,9 @@
                                 }
                             }
                         }
-                    } else if (data.grouping == "directions") {
+                    } else if (data.grouping === "directions") {
 
                     }
-                    /*if (Object.keys(data).length >= 40) {
-                     $.amaran({
-                     'theme': 'awesome wrn',
-                     'content': {
-                     title: "Неточный запрос",
-                     message: "Отображены последние 40 результатов",
-                     info: '',
-                     icon: 'fa fa-exclamation'
-                     },
-                     'position': 'bottom right',
-                     delay: 10000
-                     });
-                     }*/
                 }
                 else {
                     $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
@@ -614,28 +602,22 @@
                 resize();
             });
         }
-        var norm = {
-            "none": "Не обработано",
-            "normal": "Норма",
-            "maybe": "Некорректный результат или норма",
-            "not_normal": "Результат вне нормы"
-        };
         function open_print_form(key, n) {
-            row = tmp_data[key];
+            let row = tmp_data[key];
             $('#directions-label').html(`${row.date}`);
             $('#dir-fio').html(row.fio);
             $('#dir-card').html(`${row.cardnum}, ${card_types[row.type]}`);
-            dirs = [];
+            let dirs = [];
             $("#directions_list").html("");
-            for (var i = 0; i < row.directions.length; i++) {
-                dir = row.directions[i];
+            for (let i = 0; i < row.directions.length; i++) {
+                let dir = row.directions[i];
                 $("#directions_list").append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
 <a style='float: right' href='/results/pdf?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
 <ul class='direction-researches'></ul>
 </div>`);
 
-                for (var row2 of dir.researches) {
-                    data = row2.title;
+                for (let row2 of dir.researches) {
+                    let data = row2.title;
                     if (row2.is_normal != "none") {
                         data += " - " + norm[row2.is_normal];
                         if (row2.is_normal != "normal") {
@@ -646,7 +628,7 @@
                 }
                 dirs.push(dir.pk);
             }
-            data = "?pk=" + JSON.stringify(dirs) + "&show_norms=" + show_norms;
+            let data = "?pk=" + JSON.stringify(dirs) + "&show_norms=" + show_norms;
             $("#printall").attr("href", '/results/pdf' + data);
             resize();
             $('#directions-modal').modal({show: true});
@@ -654,12 +636,12 @@
 
         function checkType(tr) {
             if (tr) {
-                tmp = $('input[name=type]:checked').val();
+                let tmp = $('input[name=type]:checked').val();
                 if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
                     search($('#search-field').val());
                 }
             }
-            type = $('input[name=type]:checked').val();
+            let type = $('input[name=type]:checked').val();
             if (type == "stat") {
                 $("#history-num-tr").show();
             }
@@ -675,9 +657,9 @@
         }
 
         function chunk(arr, len) {
-            var chunks = [],
-                    i = 0,
-                    n = arr.length;
+            let chunks = [],
+                i = 0,
+                n = arr.length;
 
             while (i < n) {
                 chunks.push(arr.slice(i, i += len));
@@ -685,7 +667,7 @@
 
             return chunks;
         }
-        var first_resize = true;
+        let first_resize = true;
 
         function resize() {
             $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
@@ -713,7 +695,7 @@
                 method: "GET"
             }).done(function (data) {
                 hl();
-                if (data.length == 0) {
+                if (data.length === 0) {
                     $.amaran({
                         'theme': 'awesome wrn',
                         'content': {
@@ -727,10 +709,10 @@
                     });
                 } else {
                     c = chunk(data, 200);
-                    for (var k = 0; k < c.length; k++) {
+                    for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
-                                st = "?pk=[" + c[e].join(",") + "]&show_norms=" + show_norms;
+                                const st = "?pk=[" + c[e].join(",") + "]&show_norms=" + show_norms;
                                 window.open('/results/pdf' + st, '_blank');
                             }, 1000 * e);
                         })(k);
@@ -742,16 +724,16 @@
             $(".batch-print").prop("checked", $("[name=select_all_rows]:visible").is(':checked'));
         }
         function print_selected() {
-            var print_array = [];
+            let print_array = [];
             $.each($(".batch-print:checked"), function (k, v) {
-                var pk = $(v).attr("pk") || $(v).attr("direction");
+                let pk = $(v).attr("pk") || $(v).attr("direction");
                 if ($(v).is("[pk]")) {
                     print_array = print_array.concat($.map(tmp_data[$(v).attr("pk")].directions, function (vv, kk) {
                         return vv.pk;
                     }));
                 }
                 else {
-                    if (print_array.indexOf(parseInt(pk)) == -1)
+                    if (print_array.indexOf(parseInt(pk)) === -1)
                         print_array.push(parseInt(pk));
                 }
             });

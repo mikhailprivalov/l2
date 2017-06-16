@@ -1,0 +1,554 @@
+{% extends "dbase.html" %}
+{% load has_group %}
+{% block title %}Выписки{% endblock %}
+{% block container %}container-fluid{% endblock %}
+{% block content %}
+    <div class="row" style="margin-left: 0;margin-right: 0;">
+        <div class="col-xs-4">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Поиск</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="input-daterange input-group" id="datepicker">
+                                <input type="text" class="input-sm form-control no-context" name="date-start"
+                                       style="height: 34px"/>
+                                <span class="input-group-addon"
+                                      style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
+                                <input type="text" class="input-sm form-control no-context" name="date-end"
+                                       style="height: 34px"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-12">
+                            <input class="form-control" type="text" id="search-field"
+                                   placeholder="Поисковый запрос"/>
+                            <div class="input-group">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-6" style="padding-right: 3px;">
+                            <select class="select-b" id="select-otd" data-width="100%" onchange="update_av_docs();">
+                                {% for v in notlabs %}
+                                    {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                        <option selected value="{{ v.pk }}">{{ v.title }}</option>
+                                    {% else %}
+                                        <option value="{{ v.pk }}">{{ v.title }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="use-otd">
+                                <input type="checkbox" name="use-otd" onchange="sync_otd_doc();" id="use-otd"/>
+                                учитывать
+                            </label>
+                        </div>
+                        <div class="col-xs-6">
+                            <select class="select-b" id="select-doc" data-width="100%">
+                                {% for v in docs %}
+                                    {% if request.user.doctorprofile.pk == v.pk %}
+                                        <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                    {% else %}
+                                        <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <input type="text" class="form-control" id="custom_doc_fio"
+                                   placeholder="Поиск по ФИО врача (напр. Иванов)">
+                            <div class="row" style="margin: 0;padding: 0">
+                                <div class="col-xs-5 btn-ell" style="margin: 0;padding: 0">
+                                    <label for="use-doc">
+                                        <input type="checkbox" name="use-doc" onchange="sync_otd_doc();" id="use-doc"/>
+                                        учитывать
+                                    </label>
+                                </div>
+                                <div class="col-xs-7 text-right btn-ell" style="margin: 0;padding: 0">
+                                    <label for="custom-doc-fio">
+                                        <input type="checkbox" name="custom-doc-fio" onchange="sync_otd_doc();"
+                                               id="custom-doc-fio"/>
+                                        поиск по врачу
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 17px">
+                        <div class="col-xs-6">
+                        </div>
+                        <div class="col-xs-6">
+                            <button class="btn btn-blue-nb" style="width: 100%"
+                                    onclick="search($('#search-field').val());" type="button">Поиск
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if user|has_group:"Лечащий врач" or user|has_group:"Загрузка выписок" %}
+                <div class="panel panel-default panel-flt" style="margin-top: 30px">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Добавить выписку</h3>
+                    </div>
+                    <div class="panel-body" id="add_discharge" style="overflow-y: auto">
+                        <label>Пациент:</label>
+                        <div class="row">
+                            <div class="col-xs-4" style="padding-right: 10px;">
+                                <input onkeypress="check_fio()" onblur="check_fio()" class="form-control" maxlength="60"
+                                       name="client_surname" placeholder="Фамилия*">
+                            </div>
+                            <div class="col-xs-4" style="padding-right: 10px;padding-left: 10px">
+                                <input onkeypress="check_fio()" onblur="check_fio()" class="form-control" maxlength="60"
+                                       name="client_name" placeholder="Имя*">
+                            </div>
+                            <div class="col-xs-4" style="padding-left: 10px">
+                                <input onkeypress="check_fio()" onblur="check_fio()" class="form-control" maxlength="60"
+                                       name="client_patronymic" placeholder="Отчество*">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 20px">
+                            <div class="col-xs-4" style="padding-right: 10px;">
+                                <input class="form-control" maxlength="11" name="client_birthday"
+                                       placeholder="Дата рождения">
+                            </div>
+                            <div class="col-xs-4" style="padding-right: 10px;padding-left: 10px">
+                                <input class="form-control" maxlength="20" name="client_cardnum"
+                                       placeholder="Номер карты">
+                            </div>
+                            <div class="col-xs-4" style="padding-left: 10px">
+                                <input class="form-control" maxlength="20" name="client_historynum"
+                                       placeholder="Номер истории">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 10px">
+                            <div class="col-xs-12">
+                                <div class="btn-group btn-group-justified" data-toggle="buttons">
+                                    <label class="btn btn-blue-nb btn-ell active" title="не выбрано">
+                                        <input type="radio" checked name="client_sex" value=""
+                                               autocomplete="off">
+                                        не выбран пол
+                                    </label>
+                                    <label class="btn btn-blue-nb btn-ell" title="М">
+                                        <input type="radio" name="client_sex" value="М"
+                                               autocomplete="off"> М
+                                    </label>
+                                    <label class="btn btn-blue-nb btn-ell" title="Ж">
+                                        <input type="radio" name="client_sex" value="Ж"
+                                               autocomplete="off"> Ж
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr/>
+                        <label>Лечащий врач*:</label>
+                        <div class="row">
+                            <div class="col-xs-6" style="padding-right: 3px;">
+                                <select class="select-b" data-container="body" id="create-select-otd" data-width="100%"
+                                        onchange='update_av_docs("#create-select-otd", "#create-select-doc");'
+                                        name="otd">
+                                    {% for v in notlabs %}
+                                        {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                            <option selected value="{{ v.pk }}">{{ v.title }}</option>
+                                        {% else %}
+                                            <option value="{{ v.pk }}">{{ v.title }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xs-6">
+                                <select class="select-b" data-container="body" id="create-select-doc" data-width="100%"
+                                        name="doc_fio">
+                                    {% for v in docs %}
+                                        {% if request.user.doctorprofile.pk == v.pk %}
+                                            <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                        {% else %}
+                                            <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row" style="margin-top: 17px">
+                            <div class="col-xs-6" style="padding-right: 10px;">
+                                <label class="btn btn-blue-nb btn-ell" style="width: 100%" for="discharge-file">
+                                    <input id="discharge-file" type="file" name="file" style="display:none;"
+                                           onchange="change_file(this);">
+                                    Добавить выписку (до 5120 КБ)
+                                </label>
+                            </div>
+                            <div class="col-xs-6" id="discharge-file-info"
+                                 style="padding-left: 10px;word-wrap: break-word;">
+                                ничего не выбрано*
+                            </div>
+                        </div>
+                        <hr/>
+
+                        <button class="btn btn-primary-nb" style="width: 100%"
+                                onclick="save();" type="button">Сохранить
+                        </button>
+                        <hr/>
+                        <small>* - обязатльно для заполнения</small>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-xs-8">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Результаты поиска</h3>
+                </div>
+                <div class="panel-body">
+                    <div id="dirs-list">
+                        <table class="table table-hover table-bordered floatThead table-condensed">
+                            <thead>
+                            <tr>
+                                <th style="width: 70px;">Дата</th>
+                                <th style="width: 30%;">Пациент</th>
+                                <th style="width: 30%;">Лечащий врач</th>
+                                <th>Выписка</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const users_av = {{ users|safe }};
+        const current_user_pk = "{{ request.user.doctorprofile.pk }}";
+        let first_resize = true;
+
+        $(document).ready(function () {
+            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
+
+            $('#datepicker').datepicker({
+                format: "dd.mm.yyyy",
+                todayBtn: "linked",
+                language: "ru",
+                autoclose: true,
+                todayHighlight: true
+            });
+
+            change_type();
+            $("#search-field").bind('keydown', 'return', function () {
+                search($('#search-field').val());
+            });
+            $(window).resize(function () {
+                resize();
+            });
+            resize();
+            update_av_docs();
+            update_av_docs("#create-select-otd", "#create-select-doc");
+            sync_otd_doc();
+        });
+
+        function update_av_docs(oc, dc) {
+            oc = oc || "#select-otd";
+            dc = dc || "#select-doc";
+
+            $(dc).html("");
+            let kv = parseInt($(oc).val());
+            for (let i = 0; i < users_av.length; i++) {
+                if (kv == users_av[i].pk) {
+                    for (let j = 0; j < users_av[i].docs.length; j++)
+                        $(dc).append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+                    break;
+                }
+            }
+            $(dc).val(current_user_pk);
+            sync_otd_doc(oc, dc);
+        }
+        function sync_otd_doc(oc, dc) {
+            oc = oc || "#select-otd";
+            dc = dc || "#select-doc";
+            $("#custom_doc_fio").hide();
+            $("#select-doc").selectpicker('hide');
+
+            $("#select-doc,#select-otd,#use-doc,#custom-doc-fio,#custom_doc_fio").prop("disabled", true);
+            $("#select-doc,#select-otd,#use-doc,#custom-doc-fio").closest("label").addClass("disabled");
+            const otd = $("#use-otd").is(":checked");
+            const doc = otd && $("#use-doc").is(":checked");
+            const doc_custom = $("#custom-doc-fio").is(":checked");
+            if (otd) {
+                $("#select-otd").prop("disabled", false).closest("label").removeClass("disabled");
+                $("#use-doc").prop("disabled", false).closest("label").removeClass("disabled");
+            }
+            if (doc) {
+                $("#select-doc,#custom-doc-fio,#custom_doc_fio").prop("disabled", false).closest("label").removeClass("disabled");
+            }
+            if (doc_custom) {
+                $("#custom_doc_fio").show();
+            }
+            else {
+                $("#select-doc").selectpicker('show');
+            }
+            $(oc).add(dc).selectpicker('refresh');
+            const selection = window.getSelection ? window.getSelection() : document.selection ? document.selection : null;
+            if (!!selection) selection.empty ? selection.empty() : selection.removeAllRanges();
+        }
+
+        function resize() {
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
+            if (first_resize) {
+                {% if user|has_group:"Лечащий врач" or user|has_group:"Загрузка выписок" %}
+                    $('#add_discharge').height($(window).height() - $('#add_discharge').position().top - 80);
+                {% endif %}
+                $('#dirs-list, #directions_list').perfectScrollbar();
+                first_resize = false;
+            }
+            else {
+                {% if user|has_group:"Лечащий врач" or user|has_group:"Загрузка выписок" %}
+                    $('#add_discharge').height($(window).height() - $('#add_discharge').position().top - 114);
+                {% endif %}
+                $('#dirs-list, #directions_list').perfectScrollbar('update');
+            }
+            $(".floatThead").floatThead('reflow').floatThead({
+                useAbsolutePositioning: false,
+                scrollContainer: function ($table) {
+                    return $table.closest("div");
+                }
+            });
+        }
+
+        function change_type() {
+            $(".hide-panel").hide();
+            v = $("#search-type").val();
+            $(`#${v}-controls`).show();
+        }
+
+        {% if user|has_group:"Лечащий врач" or user|has_group:"Загрузка выписок" %}
+            function change_file(th) {
+                if (fs() > 5 * 1024) {
+                    mess_pos = "bottom left";
+                    errmessage(`Файл слишком большой (${fs()} КБ)`);
+                    mess_pos = false;
+                    clear_file();
+                    return false;
+                }
+                $('#discharge-file-info').html(th.files[0].name + '<br/>' + fs() + ' КБ');
+            }
+            function clear_file() {
+                $("[name='file']").val("");
+                $("#discharge-file-info").html("ничего не выбрано*");
+            }
+            function fs() {
+                return Math.round($("[name='file']")[0].files[0].size / 1024 * 100) / 100;
+            }
+            String.prototype.capitalize = function () {
+                if (this.length === 0)
+                    return "";
+                if (this.length === 1)
+                    return this.toUpperCase();
+                return this.charAt(0).toUpperCase() + this.slice(1);
+            };
+            function getSelText() {
+                let txt = '';
+                if (window.getSelection) {
+                    txt = window.getSelection();
+                }
+                else if (document.getSelection) {
+                    txt = document.getSelection();
+                }
+                else if (document.selection) {
+                    txt = document.selection.createRange().text;
+                }
+                return txt != "";
+            }
+            function check_fio() {
+                if(getSelText()) return;
+                $("[name='client_surname']").val($("[name='client_surname']").val().trim().capitalize());
+                $("[name='client_name']").val($("[name='client_name']").val().trim().capitalize());
+                $("[name='client_patronymic']").val($("[name='client_patronymic']").val().trim().capitalize());
+            }
+            function save() {
+                check_fio();
+                mess_pos = "bottom left";
+                sl();
+                let data = new FormData();
+                data.append("client_surname", $("[name='client_surname']").val().trim());
+                data.append("client_name", $("[name='client_name']").val().trim());
+                data.append("client_patronymic", $("[name='client_patronymic']").val().trim());
+                data.append("client_birthday", $("[name='client_birthday']").val().trim());
+                data.append("client_sex", $("[name='client_sex']:checked").val().trim());
+                data.append("client_cardnum", $("[name='client_cardnum']").val().trim());
+                data.append("client_historynum", $("[name='client_historynum']").val().trim());
+                data.append("otd", $("[name='otd']").val().trim());
+                data.append("doc_fio", $("[name='doc_fio'] option:selected").text().trim());
+                data.append("file", $("[name='file']")[0].files[0]);
+                if (data.get("client_surname") == "" || data.get("client_name") == "" || data.get("client_patronymic") == "" || $("[name='file']") == "") {
+                    errmessage("Не заполнены обязательные поля");
+                    hl();
+                    return;
+                }
+                if (fs() > 5 * 1024) {
+                    errmessage(`Файл слишком большой (${fs()} КБ)`);
+                    hl();
+                    return;
+                }
+                $.ajax({
+                    url: '/dashboard/discharge/send',
+                    data: data,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    type: 'POST',
+                    success: function (data) {
+                        okmessage("Выписка добавлена");
+                        $("[name='client_surname'],[name='client_name'],[name='client_patronymic'],[name='client_birthday'],[name='client_cardnum'],[name='client_historynum']").val("");
+                        clear_file();
+                    }
+                }).always(function () {
+                    hl();
+                    mess_pos = false;
+                });
+            }
+        {% endif %}
+        function search(q) {
+            sl();
+            $.ajax({
+                url: '/dashboard/discharge/search',
+                data: {
+                    date_start: $("[name='date-start']").val(),
+                    date_end: $("[name='date-end']").val(),
+                    q: q,
+                    otd: $("[name='use-otd']").prop("checked") ? $("#select-otd").val() : "-1",
+                    doc_fio: $("[name='use-doc']").prop("checked") ? ($("[name='custom-doc-fio']").prop("checked") ? $("#custom_doc_fio").val() : $("#select-doc option:selected").text()) : "",
+                },
+                cache: false,
+                type: 'GET'
+            }).done(function (data) {
+                if (data.rows.length === 0) {
+                    $("#dirs-list tbody").html("<tr><td class='text-center' colspan='4'>Не найдено</td></tr>");
+                    return;
+                }
+                $("#dirs-list tbody").html("");
+                for (let row of data.rows) {
+                    let d = [];
+                    if (row.client.birthday !== "")
+                        d.push(row.client.birthday);
+                    if (row.client.sex !== "")
+                        d.push(row.client.sex);
+
+                    $("#dirs-list tbody").append(`<tr>
+    <td>${row.date}</td>
+    <td>${row.client.surname} ${row.client.name} ${row.client.patronymic}${d.length > 0 ? "<br/>" : ""}${d.join(", ")}
+    </td>
+    <td>
+        ${row.otd}<br/>${row.doc_fio}
+    </td>
+    <td>
+        <a target="_blank" href="${row.fileurl}">${row.filename}</a>
+    </td>
+</tr>`);
+                }
+            }).always(function (jqXHR, textStatus) {
+                if (textStatus !== "success") {
+                    errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
+                }
+                hl();
+                resize();
+            });
+        }
+
+    </script>
+    <style>
+        .floatThead th {
+            background: #fff;
+        }
+
+        .active {
+            background-color: #656D78 !important;
+            color: #fff !important;
+        }
+
+        .local_nav {
+            margin: 0;
+            cursor: default;
+        }
+
+        #directions_list {
+            position: relative;
+            padding-right: 25px;
+            height: 400px;
+        }
+
+        .direction {
+            width: 100%;
+            margin: 5px;
+            border-radius: 5px;
+            background-color: #ECF0F1;
+            padding: 10px;
+        }
+
+        #dirs-list {
+            position: relative;
+            padding-right: 13px;
+
+        }
+
+        #dirs-list tbody tr {
+            background: #fff;
+        }
+
+        #dirs-list {
+            background: #fff;
+        }
+
+        .local_nav a {
+            margin: 3px;
+            padding: 5px;
+        }
+
+        .panel-flt {
+            margin-bottom: 5px;
+        }
+
+        .datepicker {
+            z-index: 1005 !important;
+        }
+
+        td > label, th > label {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
+            vertical-align: middle;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .isnormal-not_normal a, .isnormal-maybe a, .isnormal-normal a {
+            color: #fff;
+        }
+
+        .isnormal-not_normal {
+            background: #E68364 !important;
+        }
+
+        .isnormal-maybe {
+            background: #F5D76E !important;
+        }
+
+        .isnormal-normal {
+            background: #87D37C !important;
+        }
+
+        .sq {
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        label.disabled {
+            color: rgba(0, 0, 0, .33);
+        }
+    </style>
+{% endblock %}

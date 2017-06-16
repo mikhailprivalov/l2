@@ -46,36 +46,36 @@
                     <table class="col-xs-12 table table-bordered table-condensed table-responsive"
                            style="table-layout: fixed;margin: 0; padding: 0">
                         <tr>
-                            <td class="table-header-row">Тип:&nbsp;</td>
-                            <td id="card-type" class="table-content-row"></td>
-                            <td class="table-header-row">Номер карты:&nbsp;</td>
-                            <td id="card-num" class="table-content-row"></td>
-                        </tr>
-                        <tr>
                             <td class="table-header-row">ФИО:&nbsp;</td>
                             <td id="card-fio" class="table-content-row" colspan="2"></td>
-                            <td class="table-content-row">
-{#                                {% if not operator %}#}
-                                    <a href="#" onclick='open_search_results();return false;'
-                                       id="search-results-link">поиск результатов</a>
-{#                                {% endif %}#}
-                            </td>
+                            <td class="table-header-row">Номер карты:&nbsp;</td>
+                            <td id="card-num" class="table-content-row"></td>
                         </tr>
                         <tr>
                             <td class="table-header-row">Дата рождения:&nbsp;</td>
                             <td id="card-bth" class="table-content-row"></td>
                             <td class="table-header-row">Пол:&nbsp;</td>
                             <td id="card-sx" class="table-content-row"></td>
+                            <td class="table-content-row">
+                                {#                                {% if not operator %}#}
+                                <a href="#" onclick='open_search_results();return false;'
+                                   id="search-results-link">поиск результатов</a>
+                                {#                                {% endif %}#}
+                            </td>
                         </tr>
                         <tr id="history-num-tr">
-                            <td class="table-header-row">Номер истории:&nbsp;</td>
-                            <td class="table-content-row" colspan="3"><input type="text" class="form-control"
-                                                                             maxlength="11"/></td>
-                        </tr>
-                        <tr id="ballast">
-                            <td class="table-header-row">&nbsp;</td>
-                            <td class="table-content-row" colspan="3">
-                                <div style="height: 34px">&nbsp;</div>
+                            <td class="table-header-row">
+                                <span class="hospital">Номер истории:&nbsp;</span><span
+                                    class="poli">Настройка:&nbsp;</span>
+                            </td>
+                            <td class="table-content-row" colspan="4">
+                                <div style="height: 34px">
+                                    <span class="hospital"><input type="text" class="form-control"
+                                                                  maxlength="11"/></span>
+                                    <label class="poli text-left" style="padding-left: 5px"><input
+                                            style="vertical-align: text-top;" type="checkbox" name="is_hospital"
+                                            onchange="sync_fin_sources();"/> стационар</label>
+                                </div>
                             </td>
                         </tr>
                     </table>
@@ -85,7 +85,8 @@
                         <b>Выписать от имени:</b>
                     </div>
                     <div class="col-xs-5" style="padding-right: 0">
-                        <select class="select-b" data-width="100%" id="select-otd" onchange="update_av_docs();">
+                        <select class="select-b" data-width="100%" data-width="100%" data-container="body"
+                                id="select-otd" onchange="update_av_docs();">
                             {% for v in notlabs %}
                                 {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
                                     <option selected value="{{ v.pk }}">{{ v.title }}</option>
@@ -96,9 +97,13 @@
                         </select>
                     </div>
                     <div class="col-xs-5" style="padding-right: 0">
-                        <select class="select-b" data-width="100%" id="select-doc">
+                        <select class="select-b" data-width="100%" data-container="body" id="select-doc">
                             {% for v in docs %}
-                                <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% if request.user.doctorprofile.pk == v.pk %}
+                                    <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% else %}
+                                    <option value="{{ v.pk }}">{{ v.get_fio }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
@@ -126,6 +131,7 @@
                             <option value="6">Шаблон: Лип.</option>
                             <option value="7">Шаблон: Бак. стандарт</option>
                             <option value="8">Шаблон: Геп.</option>
+                            <option value="9">Шаблон: Проктолог</option>
                         </select>
                     </div>
                     <div class="col-xs-3">
@@ -141,13 +147,15 @@
             <div id="e" class="split content">
                 <div class="row" style="background: #fff;margin-top: 2px">
                     <div class="col-xs-3" style="padding-right: 0">
-                        <h6>Дата назначения:</h6>
+                        <h6>Дата назначения (поиск):</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                            <input type="text" class="input-sm form-control no-context" name="date-start" style="height: 34px"/>
+                            <input type="text" class="input-sm form-control no-context" name="date-start"
+                                   style="height: 34px"/>
                             <span class="input-group-addon"
                                   style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-                            <input type="text" class="input-sm form-control no-context" name="date-end" style="height: 34px"/>
+                            <input type="text" class="input-sm form-control no-context" name="date-end"
+                                   style="height: 34px"/>
                         </div>
                     </div>
                     <div class="col-xs-4" style="padding-right: 0">
@@ -212,7 +220,8 @@
                                        placeholder="Диагноз"
                                        onkeyup="sync(true);" style="margin-bottom: 5px"/>
                             </div>
-                            <div class="col-xs-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
+                            <div class="col-xs-8" id="sources"
+                                 style="text-align: center; padding-right: 0; padding-left: 0">
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_poli %}
@@ -340,7 +349,7 @@
                         <tr>
                             <td style="text-align: left" id="res-dir-num">№ <span></span></td>
                             <td style="text-align: center"></td>
-                            <td style="text-align: right">Дата: <span id="res-date"></span></td>
+                            <td style="text-align: right"></td>
                         </tr>
                         <tr>
                             <td style="text-align: left" colspan="2">ФИО: <span id="res-fio"></span></td>
@@ -353,25 +362,35 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table ct" id="results-tb" style="width: 600px">
-                        <thead>
-                        <tr>
-                            <th style="padding: 2px">Исследование</th>
-                            <th style="padding: 2px;width: 190px">Значение</th>
-                            <th style="padding: 2px;width: 110px">Единицы измерения</th>
-                            <th style="padding: 2px;width: 35%">Референсы</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                    <div>Врач (лаборант): <span id="res-doc"></span></div>
+                    <div id="results-copy">
+                        <table class="table ct" id="results-tb" style="width: 600px; margin-bottom: 5px">
+                            <thead>
+                            <tr>
+                                <th style="padding: 2px">Исследование</th>
+                                <th style="padding: 2px;width: 190px">Значение</th>
+                                <th style="padding: 2px;width: 110px">Единицы измерения</th>
+                                <th style="padding: 2px;width: 35%">Референсы</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                        <div style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'>
+                            Дата выполенения исследования: <span
+                                style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'
+                                id="res-date"></span></div>
+                        <div style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'>
+                            Дата забора материала: <span
+                                style='line-height: 1.15; font-size: 12pt; font-family: "Times New Roman", "Liberation Serifs", Times, serif;'
+                                id="res-date-material"></span></div>
+                    </div>
+                    <div style="margin-top: 10px">Врач (лаборант): <span id="res-doc"></span></div>
                 </div>
                 <div class="modal-footer">
                     <div class='row'>
                         <div class="col-xs-4">
                             <a href="#"
-                               onclick="selectText('results-tb');document.execCommand('copy');clearselection();okblink('#results-tb');okmessage('Результаты скопированы', 'Ок');return false;"
+                               onclick="selectText('results-copy');document.execCommand('copy');clearselection();okblink('#results-copy');okmessage('Результаты скопированы', 'Ок');return false;"
                                class="btn btn-primary-nb btn-blue-nb">Копировать результаты</a><br/><br/><a href="#"
                                                                                                             onclick="selectText('results-tb');return false;"
                                                                                                             class="btn btn-primary-nb btn-blue-nb">Выделить
@@ -428,8 +447,7 @@
 {% endblock %}
 
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
-    <link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css" />
+    <link rel="stylesheet" href="/static/tree/skin-lion/ui.easytree.css" type="text/css"/>
     <style>
         #results-modal .modal-body {
             color: #000
@@ -577,12 +595,11 @@
         .bclear {
             bottom: 0;
             height: 14px;
-            margin: auto;
             font-size: 14px;
             cursor: pointer;
             opacity: .6;
             color: #881c2f;
-            margin-right: 5px;
+            margin: auto 5px auto auto;
         }
 
         .bclear:hover {
@@ -677,61 +694,99 @@
     <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script src="/static/tree/jquery.easytree.min.js"></script>
     <script src="/static/js/split.js"></script>
+    <script src="/static/js/ajaxq.js"></script>
     <script>
-        var users_av = {{ users|safe }};
+        const users_av = {{ users|safe }};
+
+        let researches_cache = {};
+
+        let client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
+
+        const types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
+        let res = [];  // Кэш поиска
+        let active_lab = -1;
+        let easyTree;
+
+        const labs = {
+        {% for v in labs %}{{ v.pk }} :
+        "{{ v.title }}",
+        {% endfor %}
+        };
+
+        let tmp_direction = {};
+        let res_stack = [];
+        let checked = [];
+        let dict = [];
+        let callback;
+        let comments = {};
+
+        let checkedall = [];
+        let nn = 0;
+        let firstrun = true;
+
+        // TODO: DYNAMIC IT
+        const templates = {
+            1: {lab: 34, iss: [77, 78, 79, 80, 81, 161]},
+            2: {lab: 34, iss: [156, 157, 158, 159]},
+            3: {lab: 34, iss: [78, 81, 80, 77]},
+            4: {lab: 33, iss: [110, 111]},
+            5: {
+                lab: 34,
+                iss: [84, 82, 104, 83, 74, 76, 75, 86, 73, 78, 92, 93, 89, 81, 80, 161, 87, 79, 157, 77, 85]
+            },
+            6: {lab: 34, iss: [74, 76, 75, 73, 78, 81, 80, 161, 87, 77]},
+            7: {lab: 35, iss: [190, 177, 178]},
+            8: {lab: 33, iss: [131, 130, 137]},
+            9: {
+                multilabs: true,
+                iss: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, ["52", "154"], ["131", "130", "145", "110", "111", "137"], ["84", "82", "83", "159", "74", "76", "75", "158", "73", "92", "89", "87", "156", "157"]]
+            }
+        };
+
+        let lock_show_results = false;
+
+        const statuses = {0: "0", 1: "1", 2: "2", "-1": "-1"};
+        const statuses_titles = {
+            0: "Направление выписано",
+            1: "Материал получен лабораторией",
+            2: "Результаты подтверждены",
+            "-1": "Направление отменено"
+        };
+        let load_client_dirs_lock = false;
+
         function update_av_docs() {
-            $("#select-doc").html("");
-            kv = parseInt($("#select-otd").val());
-            for (var i = 0; i < users_av.length; i++) {
-                if (kv == users_av[i].pk) {
-                    for (var j = 0; j < users_av[i].docs.length; j++)
-                        $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+            let ht = "";
+            const kv = parseInt($("#select-otd").val());
+            for (let i = 0; i < users_av.length; i++) {
+                if (kv === users_av[i].pk) {
+                    for (let j = 0; j < users_av[i].docs.length; j++)
+                        ht += `<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`;
                     break;
                 }
             }
-            $("#select-doc").selectpicker('refresh');
+            $("#select-doc").html(ht).selectpicker('refresh');
         }
 
         function selectText(element) {
-            var doc = document;
-            var text = doc.getElementById(element);
+            let doc = document;
+            let text = doc.getElementById(element);
 
             if (doc.body.createTextRange) { // ms
-                var range = doc.body.createTextRange();
+                let range = doc.body.createTextRange();
                 range.moveToElementText(text);
                 range.select();
             } else if (window.getSelection) { // moz, opera, webkit
-                var selection = window.getSelection();
-                var range = doc.createRange();
+                let selection = window.getSelection();
+                let range = doc.createRange();
                 range.selectNodeContents(text);
                 selection.removeAllRanges();
                 selection.addRange(range);
             }
         }
 
-        var researches_cache = {}
-
-        var client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
-        var types = {"poli": "Поликлинника", "stat": "Стационар", "all": "Все категории"}; // Типы баз
-        var res = [];  // Кэш поиска
-        var active_lab = -1;
-        var easyTree;
-        var labs = {
-        {% for v in labs %}{{ v.pk }} :
-        "{{ v.title }}",
-        {% endfor %}
-        }
-
-        var tmp_direction = {};
-        var res_stack = [];
-        var checked = [];
-        var dict = [];
-        var callback;
-        var comments = {};
-
         function get_research_from_cache(pk) {
-            for (var lab in researches_cache) {
-                var result = $.grep(researches_cache[lab], function (e) {
+            for (let lab in researches_cache) {
+                let result = $.grep(researches_cache[lab], function (e) {
                     return e.pk == pk;
                 });
                 if (result.length > 0) {
@@ -753,19 +808,18 @@
             comments[pk] = material_types[res.comment_template][parseInt($("#comments-select").val())];
             sync(true);
         }
-        checkedall = [];
         function sync_checks() {
             checked[active_lab] = [];
-            tmp = [];
+            let tmp = [];
             $(".btn").removeClass("active-b");
-            var elements = document.querySelectorAll("input[name='sel']:checked");
+            let elements = document.querySelectorAll("input[name='sel']:checked");
             Array.prototype.forEach.call(elements, function (el, i) {
                 if (!(el.value in comments)) {
                     res = get_research_from_cache(el.value);
-                    if (res.comment_template >= 0 && material_types[res.comment_template].length == 1) {
+                    if (res.comment_template >= 0 && material_types[res.comment_template].length === 1) {
                         comments[el.value] = material_types[res.comment_template][0];
                     }
-                    else if (material_types[res.comment_template].length > 1 && checkedall.indexOf(parseInt(el.value)) == -1) {
+                    else if (material_types[res.comment_template].length > 1 && checkedall.indexOf(parseInt(el.value)) === -1) {
                         open_add_comment_window(el.value);
                     }
                 }
@@ -779,12 +833,26 @@
         }
 
         function check_ow(top) {
-            ow = parseInt($(`input[value=${top}]`).attr("data-with"));
-            if (ow > -1 && checked[active_lab].indexOf("" + ow) == -1) {
+            let ow = parseInt($(`input[value=${top}]`).attr("data-with"));
+            if (ow > -1 && checked[active_lab].indexOf("" + ow) === -1) {
                 checked[active_lab].push("" + ow);
                 $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
                 check_ow(ow);
             }
+        }
+        function dechl() {
+            nn--;
+            if (nn <= 0) {
+                hl();
+                if (firstrun) {
+                    firstrun = false;
+                    $("#search-field").focus();
+                }
+            }
+        }
+        function decsl() {
+            nn++;
+            sl();
         }
 
         $(document).ready(function () {
@@ -819,52 +887,57 @@
 
             $("#fin_stat").hide();
             $("#search-results-link").hide();
-            //$("#fin_poli input:first").parent('.btn').addClass('active');
             $("#search-field").bind('keyup', 'return', function () {
                 search($('#search-field').val()); // Выполнение поиска, если нажата клавиша Enter
             });
             $("#select-lab").change(function () {
                 active_lab = document.querySelector("#select-lab").value;
-                if (checked[active_lab] == undefined)
+                if (checked[active_lab] === undefined)
                     checked[active_lab] = [];
                 load_researches();
             });
 
-            for (var base_key in clients_bases) {
+            for (let base_key in clients_bases) {
                 $("#clients-base").append(`<option value="${base_key}">${clients_bases[base_key]}</option>`);
             }
-            $("#clients-base").val(Object.keys(clients_bases)[0]);
-            $("#clients-base").selectpicker('refresh');
-
-            // TODO: DYNAMIC IT
-            var templates = {
-                1: {lab: 34, iss: [77, 78, 79, 80, 81, 161]},
-                2: {lab: 34, iss: [156, 157, 158, 159]},
-                3: {lab: 34, iss: [78, 81, 80, 77]},
-                4: {lab: 33, iss: [110, 111]},
-                5: {
-                    lab: 34,
-                    iss: [84, 82, 104, 83, 74, 76, 75, 86, 73, 78, 92, 93, 89, 81, 80, 161, 87, 79, 157, 77, 85]
-                },
-                6: {lab: 34, iss: [74, 76, 75, 73, 78, 81, 80, 161, 87, 77]},
-                7: {lab: 35, iss: [190, 177, 178]},
-                8: {lab: 33, iss: [131, 130, 137]}
-            };
+            $("#clients-base").val(Object.keys(clients_bases)[0]).selectpicker('refresh');
+            $("#table-researches").css({opacity: 0});
+            sl();
+            for (let i = 32; i <= 35; i++) {
+                nn++;
+                (function (i) {
+                    $.ajaxq('precache', {
+                        url: "/directory/researches/list?lab_id=" + i,
+                        dataType: 'json'
+                    }).done(function (data) {
+                        researches_cache[i] = data;
+                        show_researches(i);
+                        dechl();
+                        if (nn <= 0) {
+                            $("#table-researches").css({opacity: 1}).html("");
+                        }
+                    });
+                })(i);
+            }
 
             $("#select-template-btn").click(function () {
-                active_template = document.querySelector("#select-template").value;
-                callback = function () {
-                    Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
-                        $("[value={0}]".f(el)).prop("checked", true);
-                    });
-                    sync_checks();
-                };
-                $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
+                const active_template = document.querySelector("#select-template").value;
+                if (!templates[active_template].multilabs) {
+                    callback = function () {
+                        Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
+                            $("[value={0}]".f(el)).prop("checked", true);
+                        });
+                        sync_checks();
+                    };
+                    $("#select-lab").val(templates[active_template].lab).change().selectpicker('refresh');
+                } else {
+                    checked = JSON.parse(JSON.stringify(templates[active_template].iss));
+                    sync();
+                    $("#select-lab").val(Object.keys(templates[active_template].iss).slice(-1)[0]).change().selectpicker('refresh');
+                }
             });
             $("body").on("change", "#table-researches .btn input", sync_checks);
             sync(true);
-
-            var today = new Date();
 
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
             $('#datepicker').datepicker({
@@ -876,29 +949,29 @@
             });
 
             $("#selectAllDirs").click(function () {
-                var checkedStatus = this.checked;
+                let checkedStatus = this.checked;
                 $('.batch-print').each(function () {
                     $(this).prop('checked', checkedStatus);
                 });
             });
+            const $contentComment = $("#contentComment");
             $.contextMenu2({
                 elementSelector: ".h-d",
                 menuSelector: "#contextMenuResearches",
                 onopen: function (invokedOn, menu) {
-                    $comment = parseInt($(invokedOn).attr("ctemplate"));
-                    $d = $("#contentComment");
-                    $d.typeahead('destroy');
+                    const $comment = parseInt($(invokedOn).attr("ctemplate"));
+                    $contentComment.typeahead('destroy');
 
                     $("#conextTitle").text($(invokedOn).text());
-                    $("#contentComment").val("");
+                    $contentComment.val("");
                     if ($(invokedOn).is("[comment]"))
-                        $("#contentComment").val($(invokedOn).attr("comment"));
+                        $contentComment.val($(invokedOn).attr("comment"));
 
                     if ($comment >= 0) {
-                        var ft = $.map(material_types[$comment], function (item) {
+                        let ft = $.map(material_types[$comment], function (item) {
                             return {value: item};
                         });
-                        var typeVals = new Bloodhound({
+                        let typeVals = new Bloodhound({
                             datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                             queryTokenizer: Bloodhound.tokenizers.whitespace,
                             identify: function (obj) {
@@ -911,8 +984,8 @@
                             sync(typeVals.get(material_types[$comment]));
                         }
 
-                        $val = $d.val();
-                        $d.typeahead({
+                        const $val = $contentComment.val();
+                        $contentComment.typeahead({
                             minLength: 0,
                             highlight: true,
                             limit: 40
@@ -921,18 +994,17 @@
                             display: 'value',
                             limit: 40,
                             source: typeValsDefaults
-                        });
-                        $d.typeahead('val', $val);
+                        }).typeahead('val', $val);
                     }
-                    $d.focus();
+                    $contentComment.focus();
                 },
                 menuSelected: function (invokedOn, selectedMenu) {
                     switch (selectedMenu.attr("action")) {
                         case "savecomment":
-                            $(invokedOn).attr("comment", $("#contentComment").val().trim());
-                            if ($(invokedOn).attr("comment") == "")
+                            $(invokedOn).attr("comment", $contentComment.val().trim());
+                            if ($(invokedOn).attr("comment") === "")
                                 $(invokedOn).removeAttr("comment");
-                            $("#contentComment").val("");
+                            $contentComment.val("");
 
                             comments = {};
                             $.each($(".h-d[comment]"), function (k, v) {
@@ -946,102 +1018,118 @@
             checkType();
             $("#e").resize(resize);
             setTimeout(resize, 100);
-            //console.log(uHash());
         });
 
         function checkType(tr) {
+            const $search_field = $('#search-field');
+            const $clients_base = $('#clients-base');
+            const $history_num_tr = $('#history-num-tr');
+            const $history_num_tr__hospital = $history_num_tr.find(".hospital");
             if (tr) {
-                tmp = $('#clients-base').val();
-                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
-                    search($('#search-field').val());
+                const tmp = $clients_base.val();
+                if (type !== tmp && $search_field.val() && $search_field.val().length > 0) {
+                    search($search_field.val());
                 }
             }
-            type = $('#clients-base').val();
-            $("#history-num-tr").hide();
-            $("#ballast").hide();
-            if (type == "stat") {
-                $("#history-num-tr").show();
+            type = $clients_base.val();
+            $history_num_tr__hospital.hide();
+            $history_num_tr.find(".poli").hide();
+            if (type === "stat") {
+                $history_num_tr__hospital.show();
             }
             else {
-                $("#ballast").show();
+                //$("#history-num-tr .poli").show();
             }
         }
-        var lock_show_results = false;
+
         function show_results(rpk) {
             if (lock_show_results) return;
+            const $results_modal = $("#results-modal");
+            const $results_modal__res_dir_num = $("#res-dir-num").find("span");
+            const $results_modal__res_date = $("#res-date");
+            const $results_modal__res_fio = $("#res-fio");
+            const $results_modal__res_cardnum = $("#res-cardnum");
+            const $results_modal__res_sex = $("#res-sex");
+            const $results_modal__res_dr = $("#res-dr");
+            const $results_modal__res_age = $("#res-age");
+            const $results_modal__res_doc = $("#res-doc");
+            const $results_modal__res_date_material = $("#res-date-material");
+            const $results_modal__ct = $results_modal.find(".ct");
+            const $results_modal__ct_tbody = $results_modal__ct.find("tbody");
+
             lock_show_results = true;
             sl();
-            $("#results-modal #res-dir-num span").text("");
-            $("#results-modal #res-date").text("");
-            $("#results-modal #res-fio").text("");
-            $("#results-modal #res-cardnum").text("");
-            $("#results-modal #res-sex").text("");
-            $("#results-modal #res-dr").text("");
-            $("#results-modal #res-age").text("");
-            $("#results-modal #res-doc").text("");
-            $("#results-modal .ct tbody").html("");
+            $results_modal__res_dir_num.text("");
+            $results_modal__res_date.text("");
+            $results_modal__res_fio.text("");
+            $results_modal__res_cardnum.text("");
+            $results_modal__res_sex.text("");
+            $results_modal__res_dr.text("");
+            $results_modal__res_age.text("");
+            $results_modal__res_doc.text("");
+            $results_modal__res_date_material.html("");
+            $results_modal__ct_tbody.html("");
             $.ajax({url: "/results/get/full", method: "GET", data: {pk: rpk}}).done(function (data) {
-                $("#results-modal #res-dir-num span").text(data.direction.pk);
-                $("#results-modal #res-date").text(data.direction.date);
-                $("#results-modal #res-doc").text(data.direction.doc);
-
-                $("#results-modal #res-dr").text(data.client.dr);
-                $("#results-modal #res-fio").text(data.client.fio);
-                $("#results-modal #res-sex").text(data.client.sex);
-                $("#results-modal #res-age").text(data.client.age);
-                $("#results-modal #res-age").text(data.client.age);
-                $("#results-modal #res-cardnum").text(data.client.cardnum);
+                $results_modal__res_dir_num.text(data.direction.pk);
+                $results_modal__res_date.text(data.direction.date);
+                $results_modal__res_fio.text(data.client.fio);
+                $results_modal__res_cardnum.text(data.client.cardnum);
+                $results_modal__res_sex.text(data.client.sex);
+                $results_modal__res_dr.text(data.client.dr);
+                $results_modal__res_age.text(data.client.age);
+                $results_modal__res_doc.text(data.direction.doc);
 
                 $.each(data.results, function (k, v) {
-                    if (Object.keys(v.fractions).length == 1) {
-                        key_v = Object.keys(v.fractions)[0];
-                        ref = JSON.parse(v.fractions[key_v].ref_f);
-                        if (data.client.sex.toLowerCase().trim() == "м")
+                    if (Object.keys(v.fractions).length === 1) {
+                        const key_v = Object.keys(v.fractions)[0];
+                        let ref = JSON.parse(v.fractions[key_v].ref_f);
+                        if (data.client.sex.toLowerCase().trim() === "м")
                             ref = JSON.parse(v.fractions[key_v].ref_m);
-                        ref_array = []
+                        let ref_array = [];
                         $.each(ref, function (key, value) {
-                            if (value != "") {
-                                if (key.toLowerCase() != "все")
+                            if (value !== "") {
+                                if (key.toLowerCase() !== "все")
                                     ref_array.push("{0} : {1}".f(key, value));
                                 else
                                     ref_array.push("{0}".f(value));
                             }
                         });
-                        ref_str = ref_array.join("<br/>");
-                        $("#results-modal .ct tbody").append("<tr><td><b>{0}</b></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v.title, v.fractions[key_v].result, v.fractions[key_v].units, ref_str));
+                        const ref_str = ref_array.join("<br/>");
+                        $results_modal__ct_tbody.append("<tr><td><b>{0}</b></td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v.title, v.fractions[key_v].result, v.fractions[key_v].units, ref_str));
                     }
                     else if (Object.keys(v.fractions).length > 1) {
+                        let td_str, td2_str, td3_str, td4_str;
                         td_str = td2_str = td3_str = td4_str = "<br/>";
-                        $("#results-modal .ct tbody").append("<tr><td colspan='4'><b>{0}</b></td></tr>".f(v.title));
+                        $results_modal__ct_tbody.append("<tr><td colspan='4'><b>{0}</b></td></tr>".f(v.title));
                         $.each(v.fractions, function (kk, vv) {
-                            ref = JSON.parse(vv.ref_f);
-                            if (data.client.sex.toLowerCase().trim() == "м")
+                            let ref = JSON.parse(vv.ref_f);
+                            if (data.client.sex.toLowerCase().trim() === "м")
                                 ref = JSON.parse(vv.ref_m);
-                            ref_array = [];
+                            let ref_array = [];
                             $.each(ref, function (key, value) {
-                                if (value != "") {
-                                    if (key.toLowerCase() != "все")
+                                if (value !== "") {
+                                    if (key.toLowerCase() !== "все")
                                         ref_array.push("{0} : {1}".f(key, value));
                                     else
                                         ref_array.push("{0}".f(value));
                                 }
                             });
-                            ref_str = ref_array.join("<br/>");
+                            const ref_str = ref_array.join("<br/>");
 
-                            v1 = "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title;
-                            v2 = vv.result;
-                            v3 = vv.units;
-                            v4 = ref_str;
-                            $("#results-modal .ct tbody").append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v1, v2, v3, v4));
+                            const v1 = "&nbsp;&nbsp;&nbsp;&nbsp;" + vv.title;
+                            const v2 = vv.result;
+                            const v3 = vv.units;
+                            $results_modal__ct_tbody.append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".f(v1, v2, v3, ref_str));
                         });
                     }
+                    $results_modal__res_date_material.html(v.tube_time_get);
                 });
-                $("#results-modal .ct td, #results-modal .ct th").css({
+                $results_modal__ct.find("td,th").css({
                     border: "1px solid #000",
                     padding: 2,
                     fontSize: 14
                 });
-                $('#results-modal .ct').find('*').css({
+                $results_modal__ct.find('*').css({
                     "lineHeight": 1.15,
                     "fontSize": "12pt",
                     "fontFamily": "'Times New Roman', 'Liberation Serifs', Times, serif",
@@ -1049,8 +1137,8 @@
                     paddingTop: 2,
                     paddingBottom: 2
                 });
-                $("#results-modal .print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
-                $("#results-modal").modal();
+                $results_modal.find(".print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
+                $results_modal.modal();
                 if (!data.full) {
                     alert("Результаты подтверждены не полностью. Данные могут быть изменены");
                 }
@@ -1072,36 +1160,42 @@
         }
 
         function sync(notfull) {
-            $("#table-researches-preview").html("");
-            $("#table-researches-preview").append(lang.table_researches_preview_header);
-            $("#f .ctrl").attr('disabled', 1);
-            var cnt = 0;
-            $.each(checked, function (k, v) {
-                if (v == undefined || v.length == 0) return;
-                if (!$("#selected-" + k).length) {
-                    $("#table-researches-preview").append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='text-center'><a href='#' onclick='remove_researches({2});return false;'>очистить</a></td></tr>".f(labs[k], k, k));
-                }
-                $("#selected-" + k).html("");
+            const $table_researches_preview = $("#table-researches-preview");
+            const $f_ctrl = $("#f").find(".ctrl");
+            let cnt = 0;
 
-                var keys = Object.keys(v);
-                var last = keys[keys.length - 1];
+            $f_ctrl.attr('disabled', 1);
+            $table_researches_preview.html("").append(lang.table_researches_preview_header);
+            $.each(checked, function (k, v) {
+                if (v === undefined || v.length === 0) return;
+                const $selected_k = $(`#selected-${k}`);
+                if (!$selected_k.length) {
+                    $table_researches_preview.append("<tr><td>{0}</td><td id='selected-{1}'></td><td class='text-center'><a href='#' onclick='remove_researches({2});return false;'>очистить</a></td></tr>".f(labs[k], k, k));
+                    $selected_k.refresh();
+                }
+                $selected_k.html("");
+
+                let keys = Object.keys(v);
+                let last = keys[keys.length - 1];
                 $.each(v, function (key, val) {
-                    $("#selected-" + k).append(`<span class='h-d' pk='${val}' onclick=\"rem(` + k + "," + key + `);\" ctemplate='${get_research_from_cache(val).comment_template}'>` + dict[val] + "</span>");
-                    if (comments[val] && comments[val] != "") {
+                    $selected_k.append(`<span class='h-d' pk='${val}' onclick=\"rem(` + k + "," + key + `);\" ctemplate='${get_research_from_cache(val).comment_template}'>` + dict[val] + "</span>");
+                    if (comments[val] && comments[val] !== "") {
                         $(`.h-d[pk='${val}']`).attr("comment", comments[val])
                     }
                     if (key != last)
                         $("#selected-" + k).append("&nbsp;|&nbsp;");
                 });
 
-                $("#f .ctrl").removeAttr('disabled');
+                $f_ctrl.removeAttr('disabled');
                 cnt++;
             });
-            if(cnt == 0){
-                $("#table-researches-preview").append("<tr><td colspan='3' class='text-center'>Ничего не выбрано</td></tr>");
+            if (cnt === 0) {
+                $table_researches_preview.append("<tr><td colspan='3' class='text-center'>Ничего не выбрано</td></tr>");
             }
-            if ($('#sources .active-s .btn.active input[name=source]').length)
-                fs = parseInt($('#sources .active-s .btn.active input[name=source]').val());
+            let fs;
+            const $src = $('#sources .active-s .btn.active input[name=source]');
+            if ($src.length)
+                fs = parseInt($src.val());
             else
                 fs = -1;
             tmp_direction = {
@@ -1116,52 +1210,42 @@
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
             });
 
-            if (notfull == undefined)
+            if (notfull === undefined)
                 load_researches();
-            //console.log(JSON.stringify(tmp_direction.researches))
         }
+
         function fast_ld_dirs() {
             load_client_dirs(client_id);
         }
-        var statuses = {0: "0", 1: "1", 2: "2", "-1": "-1"};
-        var statuses_titles = {
-            0: "Направление выписано",
-            1: "Материал получен лабораторией",
-            2: "Результаты подтверждены",
-            "-1": "Направление отменено"
-        };
-        var load_client_dirs_lock = false;
+
         function load_client_dirs(id) {
             if (load_client_dirs_lock) return;
             sl();
+            const $story_table = $("#story-table");
             load_client_dirs_lock = true;
             $('#story-list').scrollTop(0);
-            $("#story-table").html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
-            var data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
+            $story_table.html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
+            let data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
             data.status = $("#status").val();
-            //_paq.push(['trackSiteSearch', JSON.stringify(data), "load_client_dirs"]);
             $.ajax({url: "/directions/list/client", data: data}).done(function (data) {
                 $("#selectAllDirs").prop("checked", false);
-                $("#story-table").html("");
+                $story_table.html("");
                 if (data.ok) {
                     $.each(data.directions, function (k, v) {
-                        var sliced = v.researches;//.slice(0, 55);
-                        /*if (sliced.length < v.researches.length) {
-                            sliced += '...';
-                        }*/
-                        $("#story-table").append("<tr pk='{0}'>".f(v.pk) +
-                                "<td>{0}</td>".f(v.date) +
-                                "<td style='text-align: center'>{0}</td>".f(v.pk) +
-                                "<td>{0}</td>".f(v.lab) +
-                                "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
-                                "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
-                                "<td style='text-align: right;'>" +
-                                (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
-                                (v.status == 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
-                                "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
-                                "</td>" +
-                                "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
-                                "</tr>");
+                        let sliced = v.researches;
+                        $story_table.append("<tr pk='{0}'>".f(v.pk) +
+                            "<td>{0}</td>".f(v.date) +
+                            "<td style='text-align: center'>{0}</td>".f(v.pk) +
+                            "<td>{0}</td>".f(v.lab) +
+                            "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
+                            "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
+                            "<td style='text-align: right;'>" +
+                            (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
+                            (v.status === 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
+                            "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
+                            "</td>" +
+                            "<td><label><input type='checkbox' pk='{0}' class='batch-print' /></label></td>".f(v.pk) +
+                            "</tr>");
                         if (v.cancel === true) {
                             $("#story-table tr[pk={0}]".f(v.pk)).addClass("tr-cancel");
                             $("#story-table tr[pk={0}] .status".f(v.pk)).attr("rstatus", $("#story-table tr[pk={0}] .status".f(v.pk)).text());
@@ -1169,15 +1253,15 @@
                             $("#story-table tr[pk={0}] .status".f(v.pk)).text(statuses["-1"]);
                         }
                     });
-                    if(data.directions.length == 0){
-                        $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
+                    if (data.directions.length === 0) {
+                        $story_table.html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
                     }
-                }else{
-                    $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
+                } else {
+                    $story_table.html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
                 }
                 load_client_dirs_lock = false;
             }).always(function (jqXHR, textStatus) {
-                if (textStatus != "success") {
+                if (textStatus !== "success") {
                     errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
                 }
                 hl();
@@ -1186,8 +1270,8 @@
         }
 
         function toggle_cancel(pk) {
-            tr = $("#story-table tr[pk={0}]".f(pk));
-            val = !tr.hasClass("tr-cancel");
+            const tr = $("#story-table tr[pk={0}]".f(pk));
+            const val = !tr.hasClass("tr-cancel");
 
             $.ajax({
                 url: "/direction/researches/cancel",
@@ -1211,10 +1295,10 @@
         }
 
         function rem(k, key) {
-            id = checked[k][key];
-            if ($("input[value='" + id + "']").length) {
-                $("input[value='" + id + "']").removeAttr("checked");
-                $("input[value='" + id + "']").change();
+            const id = checked[k][key];
+            const $inp = $(`input[value='${id}']`);
+            if ($inp.length) {
+                $inp.removeAttr("checked").change();
 
                 comments = {};
                 $.each($(".h-d[comment]"), function (k, v) {
@@ -1230,8 +1314,7 @@
             }
         }
         function search(query) { // Функция поиска
-            //$("#div2 input, #div2 button").prop("disabled", true);
-
+            const $sf = $('#search-field');
             checkType(); // Получение выбранного типа базы
             if (!type) {
                 $.amaran({
@@ -1248,11 +1331,12 @@
                 return;
             }
             sl();
+            $("[name=is_hospital]").prop("checked", false);
             query = query.toLowerCase().trim();
             $("#results-data").html(""); // Очищение результатов
             $("#sources .active").removeClass("active");
             try {
-                $('#search-field').tooltipster('destroy');
+                $sf.tooltipster('destroy');
             }
             catch (e) {
 
@@ -1262,19 +1346,19 @@
                 url: "/clients/ajax/search?query=" + query + "&type=" + type // Установка адреса и параметров запроса
             }).done(function (data) { // Выполняется по завершению запроса и получению ответа
                 res = data; // Запись результата в кэш
-                i = data.length; // Получение количества результатов
+                let i = data.length; // Получение количества результатов
 
                 if (i > 1) // Если результатов больше, чем 1
                 {
                     $.each(data, function (key, val) { // Перебор результатов
                         $("#results-data").append("<a href='#' onclick='$(\"#res-modal\").modal(\"hide\");return show_res("
-                                + key + "," + val.pk + ");'>" + clients_bases[val.fields.type] + " | Карта №" + val.fields.num + " | "
-                                + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
-                                + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
+                            + key + "," + val.pk + ");'>" + clients_bases[val.fields.type] + " | Карта №" + val.fields.num + " | "
+                            + val.fields.family + " " + val.fields.name + " " + val.fields.twoname + " "
+                            + val.fields.birthday.split(" ")[0] + "</a><br/>"); // Формирование таблицы результатов в модальном окне
                     });
                     $("#res-modal").modal(); // Открытие модального окна
                 }
-                else if (i == 1) { // Если результат 1
+                else if (i === 1) { // Если результат 1
                     show_card(data[0].fields, data[0].pk); // Вызов функции формирования карты пациента
 
                 }
@@ -1283,32 +1367,24 @@
                     client_id = -1;
                     clear();
                     // Если результатов нет
-                    //$('#search-field').attr('data-content', lang.client_not_found); // Установка сообщения об ошибке
-                    $('#search-field').focus(); // Перевод фокуса ввода на поле поиска
-                    //$('#search-field').popover('show'); // Показ сообщения об ошибке
-                    $("#search-field").parent().addClass("has-error"); // Подсвечивание поля поиска красным для сигнализации об ошибке
-                    $('#search-field').tooltipster({
+                    $sf.focus().tooltipster({
                         content: lang.client_not_found,
-                        //position: "bottom",
                         theme: "tooltipster-shadow"
-                    });
-                    $('#search-field').tooltipster('show');
+                    }).tooltipster('show').parent().addClass("has-error");
                     $("#table-researches input").prop("checked", false);
                     clear_fast();
                     clear_direction();
                 }
                 $("#diagnos-field").val("");
             }).always(function (jqXHR, textStatus) {
-                if (textStatus != "success") {
+                if (textStatus !== "success") {
                     errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
                 }
                 hl();
             });
         }
         function clear() { // Функция очистки результатов
-            $('#search-field').attr('data-content', '');
-            $("#search-field").parent().removeClass("has-error");
-            $("#card-type").html("");
+            $('#search-field').attr('data-content', '').parent().removeClass("has-error");
             $("#card-num").html("");
             $("#card-fio").html("");
             $("#card-bth").html("");
@@ -1316,7 +1392,7 @@
             $("#table-researches").html("");
             $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
             $("#search-results-link").hide();
-            $("#history-num-tr input").prop("disabled", true);
+            $("#history-num-tr").find("input").prop("disabled", true);
             $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не загружено</td></tr>");
 
         }
@@ -1327,8 +1403,22 @@
         function getqueue() {
             $(".dir-queue .list").html("");
         }
+        function sync_fin_sources() {
+            $("#fin_poli input, #fin_stat input").parent('.btn').removeClass('active');
+            if (type === "stat" || $("[name=is_hospital]").prop('checked')) {
+                $("#fin_poli").hide();
+                $("#fin_stat").show();
+                $("#fin_poli").removeClass("active-s");
+                $("#fin_stat").addClass("active-s");
+            }
+            else {
+                $("#fin_poli").show();
+                $("#fin_stat").hide();
+                $("#fin_poli").addClass("active-s");
+                $("#fin_stat").removeClass("active-s");
+            }
+        }
         function show_card(fields, pk) { // Функция формирования карты пациента
-            //$("#div2 input, #div2 button").prop("disabled", false);
             load_client_dirs(pk);
             clear(); // Вызов функции очистки
             $("#search-results-link").show();
@@ -1340,47 +1430,33 @@
             num = fields.num;
             // Установка полей таблицы карты пациента
 
-            $("#card-type").text(clients_bases[type]);
             $("#card-num").text(num);
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);
             $("#card-sx").text(sx);
-            $("#fin_poli input").parent('.btn').removeClass('active');
-            $("#fin_stat input").parent('.btn').removeClass('active');
-            if (type == "stat") {
-                $("#fin_poli").hide();
-                $("#fin_stat").show();
-                //$("#fin_stat input:first").parent('.btn').addClass('active');
-
-                $("#fin_poli").removeClass("active-s");
-                $("#fin_stat").addClass("active-s");
-
-                $("#history-num-tr input").prop("disabled", false);
+            if (type === "stat") {
+                $("#history-num-tr").find(".hospital input").prop("disabled", false);
             }
             else {
-                $("#fin_poli").show();
-                $("#fin_stat").hide();
-                //$("#fin_poli input:first").parent('.btn').addClass('active');
-
-                $("#fin_poli").addClass("active-s");
-                $("#fin_stat").removeClass("active-s");
+                $("#history-num-tr").find(".poli input").prop("disabled", false);
             }
+            sync_fin_sources();
             $("#select-lab, #select-template, #select-template-btn").removeProp('disabled');
             $("#select-lab, #select-template").selectpicker('refresh');
             tmp_direction = {
                 client_id: client_id,
                 researches: checked,
                 diagnos: $("#diagnos-field").val().trim(),
-                fin_source: parseInt($('#sources .active-s .btn.active input[name=source]').val())
+                fin_source: parseInt($('#sources').find('.active-s .btn.active input[name=source]').val())
             };
             clear_fast();
-            $("#history-num-tr input").val("");
-            if (type == "stat")
-                $("#history-num-tr input[type=text]").focus();
+            $("#history-num-tr").find("input").val("");
+            if (type === "stat")
+                $("#history-num-tr").find("input[type=text]").focus();
             load_researches();
         }
         function load_researches() {
-            if (client_id == -1 || active_lab == -1) return;
+            if (client_id === -1 || active_lab === -1) return;
             $("#table-researches").html("");
             if (active_lab in researches_cache) {
                 show_researches(active_lab);
@@ -1391,55 +1467,54 @@
                 url: "/directory/researches/list?lab_id=" + active_lab,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
-                if (data.length == 0) {
+                if (data.length === 0) {
                     $("#table-researches").append(lang.table_researches_not_found);
                     return;
                 }
                 researches_cache[active_lab] = data;
                 show_researches(active_lab);
             }).always(function (jqXHR, textStatus) {
-                if (textStatus != "success") {
+                if (textStatus !== "success") {
                     errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
                 }
                 hl();
             });
         }
         function show_researches(lab) {
-            data = [];
+            let data = [];
+            const $tb = $("#table-researches");
             if (lab in researches_cache) {
                 data = researches_cache[lab];
             }
-            if (data.length == 0) {
-                $("#table-researches").append(lang.table_researches_not_found);
+            if (data.length === 0) {
+                $tb.append(lang.table_researches_not_found);
                 return;
             }
-            $("#table-researches").html("");
-            $(".btn").removeClass("active-b");
+            $tb.html("");
+            $tb.find(".btn.active-b").removeClass("active-b");
             $.each(data, function (k, v) {
-                ind = false;
-                for (var prop in checked[v.fields.id_lab_fk]) {
-                    if (checked[v.fields.id_lab_fk].hasOwnProperty(prop)) {
+                let ind = false;
+                for (let prop in checked[v.fields.id_lab_fk]) {
+                    if (prop in checked[v.fields.id_lab_fk]) {
                         if (checked[v.fields.id_lab_fk][prop] == v.pk) {
                             ind = true;
                         }
                     }
                 }
                 if (!ind)
-                    $("#table-researches").append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
+                    $tb.append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 else
-                    $("#table-researches").append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
+                    $tb.append("<label class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3 active-b\" title='{1}' ><input type=\"checkbox\" name=\"sel\" value=\"{0}\" checked autocomplete=\"off\" data-with='{2}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith));
                 dict[v.pk] = v.fields.ref_title;
             });
-            if (typeof callback == typeof load_researches) {
+            if (typeof callback === typeof load_researches) {
                 callback();
                 callback = null;
             }
         }
 
         function remove_researches(index) {
-            //bootbox.confirm(lang.table_researches_preview_realy_delete.f(labs[index]), function (result) {
-            //if (!result) return;
-            delete checked[index];
+            checked[index] = [];
             sync();
             sync_checks();
 
@@ -1454,10 +1529,9 @@
                 'position': 'bottom right',
                 delay: 6000
             });
-            //});
         }
         function clear_fast() {
-            if (tmp_direction.researches == undefined || tmp_direction.researches.length == 0) {
+            if (tmp_direction.researches === undefined || tmp_direction.researches.length === 0) {
                 return;
             }
             checked = [];
@@ -1466,11 +1540,9 @@
             sync();
         }
         function clear_direction() {
-            if (tmp_direction.researches == undefined || tmp_direction.researches.length == 0) {
+            if (tmp_direction.researches === undefined || tmp_direction.researches.length === 0) {
                 return;
             }
-            // bootbox.confirm(lang.clear_direction, function (result) {
-            //     if (!result) return;
             checked = [];
             checkedall = [];
             sync();
@@ -1486,7 +1558,6 @@
                 'position': 'bottom right',
                 delay: 6000
             });
-            // });
         }
         function save_direction(tr, bc) {
             try {
@@ -1517,10 +1588,10 @@
                 return;
             }
             sync();
-            ofname = -1;
+            let ofname = -1;
             {% if operator %}
                 ofname = $("#select-doc").val();
-                if (ofname == null) {
+                if (ofname === null) {
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
@@ -1535,7 +1606,7 @@
                     return;
                 }
             {% endif %}
-            $("#f .ctrl").attr('disabled', 1);
+            $("#f").find(".ctrl").attr('disabled', 1);
             comments = {};
             $.each($(".h-d[comment]"), function (k, v) {
                 comments[parseInt($(v).attr("pk"))] = $(v).attr("comment");
@@ -1546,9 +1617,10 @@
                 data: {
                     dict: JSON.stringify(tmp_direction),
                     ofname: ofname,
-                    history_num: $("#history-num-tr input").val(),
+                    history_num: $("#history-num-tr").find("input").val(),
                     type: type,
-                    comments: JSON.stringify(comments)
+                    comments: JSON.stringify(comments),
+                    is_hospital: type === "stat" || $("[name=is_hospital]").prop("checked")
                 },
                 statusCode: {
                     500: function () {
@@ -1566,7 +1638,6 @@
                     }
                 }
             }).done(function (data) {
-                //console.log(JSON.stringify(data));
                 if (data[0].r && data[0].list_id) {
                     _paq.push(['trackEvent', "Направления", "Создание направлений"]);
                     if (!tr) {
@@ -1587,7 +1658,7 @@
                             window.open('/barcodes/tubes?napr_id=' + data[0].list_id, '_blank');
                         }
                     }
-                    $("#sources .active").removeClass("active");
+                    $("#sources").find(".active").removeClass("active");
                     load_client_dirs(client_id);
                     setTimeout(clear_fast, 200);
                 }
@@ -1609,13 +1680,9 @@
         }
 
         function resize() {
-            //$('#directions-search-list').height($("#e").height() - 72);
-            //$('#directions-search-list').perfectScrollbar();
-            //$('.dir-queue').height($(window).height() - $('.dir-queue').position().top - 460);
-            $('.fp-cont').height($(window).height() - $('.fp-cont').position().top - 5);
-            //$('.dir-queue').perfectScrollbar();
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            const $fp = $('.fp-cont');
+            $fp.height($(window).height() - $fp.position().top - 5);
+            $(".floatThead").floatThead('reflow').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
                     return $table.closest("div");
@@ -1624,7 +1691,8 @@
         }
 
         function batch_print() {
-            if ($(".batch-print:checked").length < 1) {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -1638,15 +1706,16 @@
                 });
                 return;
             }
-            var print_array = [];
-            $.each($(".batch-print:checked"), function (k, v) {
+            let print_array = [];
+            $.each($bp, function (k, v) {
                 print_array.push(parseInt($(v).attr("pk")));
             });
             window.open('/directions/pdf?napr_id=' + JSON.stringify(print_array), '_blank');
         }
 
         function batch_print_results() {
-            if ($(".batch-print:checked").length < 1) {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -1660,14 +1729,15 @@
                 });
                 return;
             }
-            var print_array = [];
-            $.each($(".batch-print:checked"), function (k, v) {
+            let print_array = [];
+            $.each($bp, function (k, v) {
                 print_array.push(parseInt($(v).attr("pk")));
             });
             window.open('/results/pdf?pk=' + JSON.stringify(print_array), '_blank');
         }
         function batch_print_bc() {
-            if ($(".batch-print:checked").length < 1) {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -1681,14 +1751,15 @@
                 });
                 return;
             }
-            var print_array = [];
-            $.each($(".batch-print:checked"), function (k, v) {
+            let print_array = [];
+            $.each($bp, function (k, v) {
                 print_array.push(parseInt($(v).attr("pk")));
             });
             window.open('/barcodes/tubes?napr_id=' + JSON.stringify(print_array), '_blank');
         }
         function batch_table_print() {
-            if ($(".batch-print:checked").length < 1) {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
@@ -1702,17 +1773,18 @@
                 });
                 return;
             }
-            var ex_array = [];
-            $.each($(".batch-print:checked"), function (k, v) {
+            let ex_array = [];
+            $.each($bp, function (k, v) {
                 ex_array.push(parseInt($(v).attr("pk")));
             });
             window.open('/directions/xls?napr_id=' + JSON.stringify(ex_array), '_blank');
         }
         function open_search_results() {
-            $("#results_container").html("<b>Ничего не выбрано</b>");
-            $("#tree-modal ul").html("");
+            const $results_container = $("#results_container");
+            $results_container.html("<b>Ничего не выбрано</b>");
+            $("#tree-modal").find("ul").html("");
             $.each(labs, function (k, v) {
-                $("#tree-modal ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
+                $("#tree-modal").find("ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
             });
             function openLazyNode(event, nodes, node, hasChildren) {
                 if (hasChildren) {
@@ -1723,43 +1795,41 @@
 
             function Toggling(e, nodes, node) {
                 if (node.isFolder || !node.isActive) return;
-                $("#results_container").html("<h5>Поиск результатов для исследования {0}</h5><br/>Пациент: {1}<br/><br/>".f(node.text, $("#card-fio").text()));
-                $("#results_container").append("<div id='results_m_list'><div>загрузка...</div></div>");
+                $results_container.html("<h5>Поиск результатов для исследования {0}</h5><br/>Пациент: {1}<br/><br/>".f(node.text, $("#card-fio").text()));
+                $results_container.append("<div id='results_m_list'><div>загрузка...</div></div>");
                 $.ajax({
                     url: "/results/search",
                     method: "POST",
                     data: {client_id: client_id, research_id: parseInt(node.pk)},
                     type: "json"
                 }).done(function (d) {
-                    if (d.directions.length == 0 && d.other_dirs.length == 0) {
+                    if (d.directions.length === 0 && d.other_dirs.length === 0) {
                         $("#results_m_list").html("Ничего не найдено");
                     } else {
-                        var types = {
+                        const types = {
                             0: "Не выполнен забор материала",
                             1: "Забор материала выполнен",
                             2: "Материал принят лабораторией",
                             3: "Исследования отложены"
                         };
-                        $("#results_m_list").html("");
+                        const $resm = $("#results_m_list").html("");
                         if (d.directions.length > 0) {
-                            $("#results_m_list").append("Результаты найдены в следующих направлениях:<br/>");
+                            $resm.append("Результаты найдены в следующих направлениях:<br/>");
                             d.directions.reverse();
                             $.each(d.directions, function (k, v) {
-                                $("#results_m_list").append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
+                                $resm.append("<a href='#' onclick='show_results({0});return false;'>№<b>{0}</b>&nbsp;&nbsp;от&nbsp;&nbsp;{1}</a><br/>".f(v.pk, v.date));
                             });
                         }
                         if (d.other_dirs.length > 0) {
                             d.other_dirs.reverse();
-                            $("#results_m_list").append("Найдены незавершенные направления:<br/>");
+                            $resm.append("Найдены незавершенные направления:<br/>");
                             $.each(d.other_dirs, function (k, v) {
-                                $("#results_m_list").append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, types[v.type], v.date));
+                                $resm.append("<span>№{0} - {1}, назначено: {2}</span><br/>".f(v.pk, types[v.type], v.date));
                             });
                         }
 
                     }
-                    //console.log(d);
                 });
-                //console.log(node.pk, node.text);
             }
 
             $("#results-search-modal").modal();

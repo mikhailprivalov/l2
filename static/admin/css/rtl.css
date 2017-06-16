@@ -105,7 +105,7 @@ thead th.sorted .text {
 
 .change-list .filtered table {
     border-left: none;
-    border-right: 0px none;
+    border-right: 0 none;
 }
 
 #changelist-filter {

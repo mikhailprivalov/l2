@@ -78,6 +78,7 @@
         body {
             padding-bottom: 5px !important;
         }
+
         #researches-container > div {
             border: 1px solid;
             border-color: #e5e6e9 #dfe0e4 #d0d1d5;
@@ -204,8 +205,7 @@
 
         .list-header {
             font-weight: 500;
-            margin: 3px;
-            margin-top: 0;
+            margin: 0 3px 3px;
             font-size: 16px;
         }
 
@@ -215,15 +215,15 @@
 
         .bw {
             background: #fff;
-            padding: 3px;
             margin: 0;
-            padding-top: 0;
+            padding: 0 3px 3px;
         }
 
         .right {
             padding-right: 1px !important;
             text-align: right;
         }
+
         .left {
             padding-right: 1px !important;
             text-align: left;
@@ -239,9 +239,8 @@
         }
 
         .drophere {
-            border-width: 3px;
             padding: 4px 2px;
-            border-style: dashed;
+            border: 3px dashed;
             display: none;
         }
 
@@ -289,10 +288,11 @@
             background-color: #FFF;
         }
 
-        .wellfractions{
+        .wellfractions {
             margin: 10px;
 
         }
+
         .wellfractions .add {
             margin: 0;
         }
@@ -353,14 +353,20 @@
         .col-nopd {
             padding: 0;
         }
-    .fup, .fdown{
-        font-size: 8pt;
-        padding: 6px;
-        padding-bottom: 5px;
-    }
+
+        .fup, .fdown {
+            font-size: 8pt;
+            padding: 6px 6px 5px;
+        }
     </style>
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
+
+        let fractiontubes = {}, resid = -1;
+        let rdl = false;
+        let refshow = false;
+        let scrollto = "";
+
         $(document).ready(function () {
             loadreslist();
             resize();
@@ -372,12 +378,12 @@
                 $.ajax({url: "/directory/tubes/all", method: "GET"}).done(function (data) {
                     $("#modaltubes").html("");
                     $.each(data, function (k, v) {
-                        tube = $("<div></div>").appendTo("#modaltubes");
+                        const tube = $("<div></div>").appendTo("#modaltubes");
                         $(tube).attr("tubeid", v.id);
                         $(tube).addClass("well");
                         $(tube).addClass("tube");
-                        sq = $("<div></div>").addClass("sq").appendTo($(tube));
-                        colorsq = $("<div></div>").appendTo($(sq));
+                        const sq = $("<div></div>").addClass("sq").appendTo($(tube));
+                        const colorsq = $("<div></div>").appendTo($(sq));
                         $(colorsq).html("&nbsp;");
                         $(colorsq).css({"background-color": "#" + v.color});
                         $(colorsq).addClass("color-sq");
@@ -413,7 +419,6 @@
             $(".context-st").show();
             //loadform(-1);
         });
-        var fractiontubes = {}, resid = -1;
         /**
          * Редактирование исследования
          * @param id - идентификатор исследования
@@ -421,7 +426,6 @@
         function edit_research(id) {
             loadform(id);
         }
-        var rdl = false;
         /**
          * Загрузка формы редактирования или создания исследования
          * @param id - идентификатор исследоавания (при -1 загрузка пустой формы для создания нового исследования)
@@ -430,13 +434,13 @@
         function loadform(id, tube) {
             resid = id;
             fractiontubes = {};
-            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
+            let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
             $("#research-form").html("");
-            form = $("<form></form>").appendTo($("#research-form"));
+            const form = $("<form></form>").appendTo($("#research-form"));
             $("<h4></h4>").text("Редактор анализа").appendTo($(form));
-            row = $("<div class='row'></div>").appendTo($(form))
-            cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
-            group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
+            const row = $("<div class='row'></div>").appendTo($(form));
+            const cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
+            let group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
             $('<span class="input-group-addon" style="min-width: 122px">Название</span>').appendTo($(group));
             $("<input class='form-control' id='research_title' />").appendTo($(group));
 
@@ -444,7 +448,7 @@
             $('<span class="input-group-addon">Квота по ОМС</span>').appendTo($(group));
             $("<input class='form-control' value='-1' id='quota' />").appendTo($(group));
 
-            cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
+            const cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
             group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
             $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
             $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
@@ -452,13 +456,13 @@
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
-            p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
+            const p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             $(form).append('<span style="float: right"><div onclick="save();" class="btn btn-default save-btn">Сохранить</div></span>');
 
-            div2 = $("<div id='select-div'></div>");
+            const div2 = $("<div id='select-div'></div>");
             $(form).append(div2);
             $(div2).append("<span>Присвоить пробирку к анализу:&nbsp;&nbsp;</span>");
-            span = $("<span class='tubeselect'></span>").appendTo($(div2));
+            const span = $("<span class='tubeselect'></span>").appendTo($(div2));
             $("<button class='btn btn-default' onclick='selectfromdirectory(); return false;' id='directory-select'></button>").text("Выбрать из справочника").appendTo($(span));
             $("<div class='btn btn-default drophere'></div>").text("Перетащите пробирку сюда").appendTo($(span));
             $(".drophere").droppable({
@@ -503,9 +507,9 @@
         /** Событие перетаскивания пробирки */
         function droptube(event, ui) {
             $(this).text("Перетащите пробирку сюда");
-            id = $(ui.draggable).attr("id");
+            const id = $(ui.draggable).attr("id");
             //console.log(id)
-            ok = true;
+            let ok = true;
             $.each(fractiontubes, function (k, v) {
                 if (!$(".tubes-list #" + v.sel).parent().is($(ui.draggable).parent())) ok = false;
             });
@@ -551,8 +555,6 @@
             }
         }
 
-        var refshow = false;
-
         /**
          * Генерация списка пробирок, фракций для исследования
          * @param auto - bool, автоматический вызов функции?
@@ -561,9 +563,10 @@
             s = "#tubes";
             $(s).html("");
             $(".tube.active").removeClass("active");
-            fullrefhead = "<table class='table table-bordered reftable'><thead><tr><th>Условие</th><th>Значения</th></tr></thead><tbody>";
-            smallrefhead = "<table class='table table-bordered reftable'><tbody>";
+            const fullrefhead = "<table class='table table-bordered reftable'><thead><tr><th>Условие</th><th>Значения</th></tr></thead><tbody>";
+            const smallrefhead = "<table class='table table-bordered reftable'><tbody>";
             $.each(fractiontubes, function (k, v) {
+                let fractions = "";
                 if (refshow)
                     fractions = "<table class='table table-bordered tablefractions table-condensed table-striped table-responsive'><thead>";
                 else
@@ -583,36 +586,37 @@
 
                 fractions += "</tr>";
                 fractions += "</thead><tbody>";
-                first = true;
+                let first = true;
                 $.each(v.fractions, function (key, value) {
-                    if(resid > -1){
+                    let pk;
+                    if (resid > -1) {
                         pk = -1;
                         if (value.pk)
                             pk = value.pk;
-                    }else{
-                        pk = key+1;
+                    } else {
+                        pk = key + 1;
                     }
-                    fractions += `<tr k='${k}' key='${key}' sel='${v.sel}' pk='${pk}' num='${key+1}' class='fraction-tr'>`;
+                    fractions += `<tr k='${k}' key='${key}' sel='${v.sel}' pk='${pk}' num='${key + 1}' class='fraction-tr'>`;
                     fractions += "<td class='col-md-2'>" +
-                                "<div>" +
-                                "<div class='input-group'>" +
-                                "<div class='input-group-btn'>"+
-                                    '<button class="btn btn-default fup" onclick="fswap(this, \'up\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></button>'.f(pk)+
-                                    '<button class="btn btn-default fdown" onclick="fswap(this, \'down\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></button>'.f(pk);
+                        "<div>" +
+                        "<div class='input-group'>" +
+                        "<div class='input-group-btn'>" +
+                        '<button class="btn btn-default fup" onclick="fswap(this, \'up\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></button>'.f(pk) +
+                        '<button class="btn btn-default fdown" onclick="fswap(this, \'down\');return false;" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></button>'.f(pk);
                     if (first) {
                         fractions += "<button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
-                                    // "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
-                                "</div><input class='form-control fractiontitle' value='" + value.title + "' /></div></div></td>";
+                            // "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
+                            "</div><input class='form-control fractiontitle' value='" + value.title + "' /></div></div></td>";
                         fractions += "<td><div><input class='form-control refunits' value='" + value.units + "' /></div></td>";
                     }
                     else {
                         fractions +=
-                                "<button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
-                                    //  "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
-                                "</div>" +
-                                "<input class='form-control fractiontitle' value='" + value.title + "' />" +
-                                "</div>" +
-                                "</div></td>";
+                            "<button class=\"btn btn-danger remove\" onclick=\"return removefraction('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-remove\"></i></button>" +
+                            //  "<button class=\"btn btn-primary add showreferenses\" onclick=\"return showreferenses('" + k + "','" + key + "');\"><i class=\"glyphicon glyphicon-sort\"></i></button>" +
+                            "</div>" +
+                            "<input class='form-control fractiontitle' value='" + value.title + "' />" +
+                            "</div>" +
+                            "</div></td>";
                         fractions += "<td><div><input class='form-control refunits' value='" + value.units + "' /></div></td>";
                     }
 
@@ -624,7 +628,7 @@
                             fractions += "<option value='{0}'>{1}</option>".f(fk, fv.join("/"));
                     });
                     fractions += "</select></div></td>";
-
+                    let ref_m, ref_f;
                     if (first)
                         ref_m = fullrefhead;
                     else ref_m = smallrefhead;
@@ -650,13 +654,13 @@
                     first = false;
                 });
                 fractions += "</tbody></table>";
-                tube = $(".tubes-list #" + v.sel);
+                let tube = $(".tubes-list #" + v.sel);
                 if (!$(tube).length) {
                     tube = $("<div></div>");
                     $(tube).addClass("well");
                     $(tube).addClass("tube");
                     $(tube).attr("id", v.sel);
-                    div = $("<div></div>").appendTo(tube);
+                    const div = $("<div></div>").appendTo(tube);
                     $(div).append("<div class='sq'><div class='color-sq' style='background-color: {0}'>&nbsp;</div></div>".f(v.color));
                     $(div).append(v.title);
                 }
@@ -768,7 +772,6 @@
             $('#tubes').scrollTo($('#tubes #addfractionbutton-' + tube), 0, {offset: 10, margin: true});
             return false;
         }
-        var scrollto = "";
         /**
          * Добавление фракции к пробирке
          * @param tube - идентификатор пробирки
@@ -778,7 +781,14 @@
 
             if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
             syncFractions();
-            fractiontubes[tube].fractions.push({title: "", units: "", type: -1, num: fractiontubes[tube].fractions.slice(-1)[0].num+1, ref_m: {"": ""}, ref_f: {"": ""}});
+            fractiontubes[tube].fractions.push({
+                title: "",
+                units: "",
+                type: -1,
+                num: fractiontubes[tube].fractions.slice(-1)[0].num + 1,
+                ref_m: {"": ""},
+                ref_f: {"": ""}
+            });
             showtubes(true);
             // $('#tubes').scrollTo($("#tubes #addfractionbutton-" + tube), 0, {offset: 10, margin: true});
             return false;
@@ -787,11 +797,11 @@
         /** Синхронизация буфера фракций с GUI */
         function syncFractions() {
             fractiontubes = {};
-            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
+            let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
             $(".fraction-tr").each(function (i) {
                 k = $(this).attr("k");
-                key = $(this).attr("key");
-                sel = $(this).attr("sel");
+                const key = $(this).attr("key");
+                const sel = $(this).attr("sel");
                 if (fractiontubes[k] === undefined) {
                     fractiontubes[k] = {
                         sel: sel,
@@ -802,7 +812,7 @@
                 }
                 if (fractiontubes[k].fractions[key] === undefined) {
                     fractiontubes[k].fractions[key] = {
-                        pk: (resid > -1) ? parseInt($(this).attr("pk")) : key+1,
+                        pk: (resid > -1) ? parseInt($(this).attr("pk")) : key + 1,
                         title: $(".fractiontitle", $(this)).val(),
                         units: $(".refunits", $(this)).val(),
                         type: parseInt($(".fraction-type", $(this)).val()),
@@ -811,15 +821,15 @@
                         ref_f: {}
                     };
                 }
-
+                let rkey;
                 $("[type='f']", $(this)).each(function (index) {
                     rkey = $(".refkey", $(this)).val().trim();
-                    if(rkey == "") return;
+                    if (rkey === "") return;
                     fractiontubes[k].fractions[key].ref_f[rkey] = $(".refcondition", $(this)).val();
                 });
                 $("[type='m']", $(this)).each(function (index) {
                     rkey = $(".refkey", $(this)).val().trim();
-                    if(rkey == "") return;
+                    if (rkey === "") return;
                     fractiontubes[k].fractions[key].ref_m[rkey] = $(".refcondition", $(this)).val();
                 });
             });
@@ -849,7 +859,7 @@
         }
         /** Очистка формы */
         function clear_form() {
-            $("#research-form").html("<div class='well'>Ничего не выбрано</div>")
+            $("#research-form").html("<div class='well'>Ничего не выбрано</div>");
             $(".tube.active").removeClass("active");
             $("#refshowed, #refhidden").hide();
         }
@@ -882,35 +892,34 @@
                 hl();
                 clear_form();
                 $("#researches-container").html("");
-                console.log(data);
                 data.researches.sort(SortByTubes);
                 $.each(data.researches, function (k, v) {
-                    row = $("<div class='row res-row'></div>");
+                    const row = $("<div class='row res-row'></div>");
                     if (v.readonly) $(row).addClass("readonly");
-                    researches = $("<div class='bw'></div>").appendTo(row);
+                    const researches = $("<div class='bw'></div>").appendTo(row);
                     $(researches).append('<div class="list-header">Анализы</div>');
-                    researches_list = $('<div class="researches-list"></div>').appendTo(researches);
+                    let researches_list = $('<div class="researches-list"></div>').appendTo(researches);
 
-                    tubes = $("<div class='bw'></div>").appendTo(row);
+                    const tubes = $("<div class='bw'></div>").appendTo(row);
                     $(tubes).append('<div class="list-header">Пробирки</div>');
-                    tubes_list = $('<div class="tubes-list"></div>').appendTo(tubes);
+                    const tubes_list = $('<div class="tubes-list"></div>').appendTo(tubes);
                     $(row).appendTo("#researches-container");
-                    var g;
+                    let g;
                     if (v.tubes_c > 1) {
                         $.each(v.tubes, function (key, val) {
-                            obj = $('<div class="well tube" id="tube-{0}"></div>'.f(val.id)).appendTo(tubes_list);
+                            let obj = $('<div class="well tube" id="tube-{0}"></div>'.f(val.id)).appendTo(tubes_list);
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: val.color});
                             $(obj).append(val.title);
                         });
                     }
-                    else if (v.tubes_c == 1) {
+                    else if (v.tubes_c === 1) {
                         $(row).addClass("one-tube");
 
                         if (!$(".one-tube #tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id)).length) {
                             $(row).addClass("has-tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id));
-                            obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
+                            let obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: v.tubes[Object.keys(v.tubes)[0]].color});
@@ -927,7 +936,7 @@
                     }
                     g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
                     $(g).attr("pk", v.pk);
-                    add_txt = "";
+                    let add_txt = "";
                     if (v.readonly) add_txt = "rdly ";
                     add_txt += "<span class='hidden-d' id='hd-{0}'>скрыт</span>".f(v.pk);
                     $(g).append('<div class="btn btn-default col-md-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk));
@@ -959,7 +968,7 @@
                         $(".drophere").css({display: "inline-block"});
                     },
                     drag: function (event, ui) {
-                        var draggable = $(this).data("ui-draggable")
+                        let draggable = $(this).data("ui-draggable");
                         $.each(draggable.snapElements, function (index, element) {
                             if (element.snapping) {
                                 draggable._trigger("snapped", event, $.extend({}, ui, {
@@ -995,15 +1004,15 @@
         /** Сохранение исследования */
         function save() {
             syncFractions();
-            var lfractions = fractiontubes;
-            if(resid <= -1) {
-                for (var k in lfractions) {
-                    for (var kk in lfractions[k].fractions) {
+            let lfractions = fractiontubes;
+            if (resid <= -1) {
+                for (let k in lfractions) {
+                    for (let kk in lfractions[k].fractions) {
                         lfractions[k].fractions[kk].pk = -1;
                     }
                 }
             }
-            research = {
+            let research = {
                 id: resid,
                 lab_group: $("#select-lab option:selected").val(),
                 title: $("#research_title").val(),
@@ -1046,14 +1055,14 @@
          * @constructor
          */
         function SortByTubes(a, b) {
-            var aName = a.sort_weight;
-            var bName = b.sort_weight;
+            let aName = a.sort_weight;
+            let bName = b.sort_weight;
             return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
         }
 
         function tune_research(id) {
             $('#tune-modal').modal('show');
-            $("#tune-modal .modal-body").html('<iframe width="100%" height="100%" style="height: 100%; width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
+            $("#tune-modal .modal-body").html('<iframe width="100%" style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px" frameborder="0" scrolling="yes" allowtransparency="true" src="/construct/researches/tune?pk={0}"></iframe>'.f(id));
             console.log("ID: {0}".f(id));
         }
 
@@ -1061,7 +1070,7 @@
             $(".up, .down").removeClass("disabled");
 
             $.each($(".researches-list"), function (kk, vv) {
-                var i = 0;
+                let i = 0;
                 $.each($(".up", $(vv)), function (k, v) {
                     i++;
                     $(".btn-group[pk='{0}']".f($(v).attr("pk"))).attr("pos", i);
@@ -1076,10 +1085,10 @@
                 $(".down", $(v)).last().addClass("disabled").removeAttr("onclick");
             });
         }
-        function syncUpDownFractions(){
+        function syncUpDownFractions() {
             $(".fup, .fdown").prop("disabled", false);
-            var i = 0;
-            $.each($(".wellfractions"), function(kk, vv){
+            let i = 0;
+            $.each($(".wellfractions"), function (kk, vv) {
                 $.each($(".fup", $(vv)), function (k, v) {
                     i++;
                     $(".fraction-tr[pk='{0}']".f($(v).attr("pk"))).attr("num", i);
@@ -1093,31 +1102,31 @@
             });
         }
         function swap(element, direction) {
-            var selector = $(".btn-group[pk='{0}']".f($(element).attr("pk")));
-            var n = $(selector).attr("pos");
+            const selector = $(".btn-group[pk='{0}']".f($(element).attr("pk")));
+            let n = selector.attr("pos");
             switch (direction) {
                 case "up":
                     n--;
-                    jswap($(selector), $(selector).parent().children("[pos={0}]".f(n)));
+                    jswap(selector, selector.parent().children("[pos={0}]".f(n)));
                     break;
                 case "down":
                     n++;
-                    jswap($(selector).parent().children("[pos={0}]".f(n)), $(selector));
+                    jswap(selector.parent().children("[pos={0}]".f(n)), selector);
                     break;
             }
             syncUpDown();
         }
         function fswap(element, direction) {
-            var selector = $(".fraction-tr[pk='{0}']".f($(element).attr("pk")));
-            var n = $(selector).attr("num");
+            const selector = $(".fraction-tr[pk='{0}']".f($(element).attr("pk")));
+            let n = selector.attr("num");
             switch (direction) {
                 case "up":
                     n--;
-                    jswap($(selector), $(selector).parent().children("[num={0}]".f(n)));
+                    jswap(selector, selector.parent().children("[num={0}]".f(n)));
                     break;
                 case "down":
                     n++;
-                    jswap($(selector).parent().children("[num={0}]".f(n)), $(selector));
+                    jswap(selector.parent().children("[num={0}]".f(n)), selector);
                     break;
             }
             syncUpDownFractions();
@@ -1126,28 +1135,28 @@
             $(f).after($(t));
         }
 
-        function save_sort(btn){
+        function save_sort(btn) {
             $(btn).prop("disabled", true);
-            var tmp = {};
-            $.each($(btn).parent().parent(".researches-list").children(".research-obj"), function(k, v){
+            let tmp = {};
+            $.each($(btn).parent().parent(".researches-list").children(".research-obj"), function (k, v) {
                 tmp[$(v).attr("pk")] = parseInt($(v).attr("pos"));
             });
             $.ajax({
                 url: "/directory/researches/sort",
                 method: "POST",
                 data: {sort: JSON.stringify(tmp)}
-            }).done(function(data){
-                 $.amaran({
-                        'theme': 'awesome ok',
-                        'content': {
-                            title: 'Порядок сохранен',
-                            message: "",
-                            info: '',
-                            icon: 'glyphicon glyphicon-ok'
-                        },
-                        'position': 'bottom right',
-                        delay: 10000
-                    });
+            }).done(function (data) {
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: 'Порядок сохранен',
+                        message: "",
+                        info: '',
+                        icon: 'glyphicon glyphicon-ok'
+                    },
+                    'position': 'bottom right',
+                    delay: 10000
+                });
                 $(btn).prop("disabled", false);
             });
         }

@@ -304,12 +304,12 @@
     vertical-align: top;
     height: 24px;
     background: none;
+    color: #000;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
     padding: 0 0 0 4px;
-    margin: 0;
-    margin-left: 10px;
+    margin: 0 0 0 10px;
 }
 
 #changelist .actions select:focus {

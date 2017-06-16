@@ -10,8 +10,9 @@
                 button(onclick="save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb Сохранить и подтвердить
 h4(style="margin-top: 2px") #{title}
 input(type="hidden", value=res_id)#issledovaniye_id
+input(type="hidden", value=research_pk)#research_pk
 #result-jade-form
-    table.table.table-bordered.table-sm-pd
+    table.table.table-bordered.table-sm-pd.floatThead
         thead
             th(style="width: 29%") Фракция
             th Значение
@@ -19,7 +20,7 @@ input(type="hidden", value=res_id)#issledovaniye_id
             th(style="width: 23%") Нормы Ж
         each fraction in fractions
             if !fraction.hide
-                tr
+                tr.fraction-row(data-research-pk=research_pk, data-fraction-pk=fraction.pk, data-ref="")
                     td
                         label.labtitle= fraction.title
                     td
@@ -28,16 +29,16 @@ input(type="hidden", value=res_id)#issledovaniye_id
                             span.input-group-btn
                                 a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb.btn30
                                     i.fa.fa-circle
-                    td.ref
-                        table
+                    td.ref.ref_m
+                       //table
                             each norm, index in fraction.references.m
                                 if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                     tr
                                         td= index
                                         td.col-md-6
                                             | !{norm}
-                    td.ref
-                        table
+                    td.ref.ref_f
+                        //table
                             each norm, index in fraction.references.f
                                 if (index != "Все" && norm != "") || (index == "Все" && norm != "")
                                     tr
@@ -47,7 +48,8 @@ input(type="hidden", value=res_id)#issledovaniye_id
 script.
     var k = -1;
     function genresult(th) {
-        k = pk = $(th).attr("pk");
+        let k = $(th).attr("pk");
+        let pk = k;
         $("#res-modal h4").text($(th).attr("ftitle"));
         $("#res-modal #res-modal-dir").text($("#dir_num a").text());
         $("#hiddenresmodal").hide();
@@ -58,7 +60,7 @@ script.
     }
 
     function updateresmodal(th) {
-        val = $(th).val();
+        const val = $(th).val();
         $("#hiddenresmodal").hide();
         if (val == "1") {
             $("#hiddenresmodal").show();
@@ -66,8 +68,8 @@ script.
     }
     var types_directory = {"0": "Отриц.", "1": "Пол.", "2": "Сомнит."};
     function saveresmodal() {
-        checked = $("[name='result-v']:checked");
-        result = types_directory[checked.val()];
+        const checked = $("[name='result-v']:checked");
+        let result = types_directory[checked.val()];
         if (checked.val() == "1") {
             result += " (КП core {0}; КП NS {1})".f($("[name=kpol]").val(), $("[name=kkor]").val());
         }

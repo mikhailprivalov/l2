@@ -95,7 +95,7 @@
     <script src="/static/js/runtime.js"></script>
     <script src="/static/js/jade.min.js"></script>
     <script>
-        var type = 0;
+        let type = 0;
         $(document).ready(function () {
             load_tubes_and_dirs();
             resize();
@@ -130,7 +130,7 @@
         function load_d_fast() {
             load_data($('#search-field').val(), type);
         }
-        var dir_data = {};
+        let dir_data = {};
         function load_data(id, type) {
             $("#issledovaniya").isLoading({
                 text: "Загрузка списка исследований",
@@ -157,18 +157,18 @@
                 $("#client_sex").html(data.client_sex);
                 $.each(data.issledovaniya, function (k, v) {
                     $("#issledovaniya").append("<li num='{1}' onclick='load_form({1})'>{0}<br/><small>Пробирка: {2}</small></li>".f(v.title, v.pk, v.tube.pk));
-                    if (type == 0) {
-                        tubessplit = v.tube.pk.split(', ');
+                    if (type === 0) {
+                        const tubessplit = v.tube.pk.split(', ');
                         $.each(tubessplit, function (k, v) {
                             $(".select-tube[tube='{0}']".f(v)).addClass("active");
                         });
                     }
                 });
-                if (type == 0) {
+                if (type === 0) {
                     $(".select-dir[direction='{0}']".f(data.napr_pk)).addClass("active");
                     $('#dirs-list').scrollTo($('.select-dir[direction=\'{0}\']'.f(data.napr_pk)), 150);
                 }
-                if (type == 1) {
+                if (type === 1) {
                     $("[direction='{0}']".f(data.napr_pk)).addClass("active");
                     $('#tubes-list').scrollTo($('.select-tube[direction=\'{0}\']'.f(data.napr_pk)), 150);
                 }
@@ -206,7 +206,7 @@
         function fast_search(num) {
             $("#search-field").val(num);
         }
-        var loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><td><i class="%class% glyphicon glyphicon-refresh"></i></td></tr>';
+        let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td><td><i class="%class% glyphicon glyphicon-refresh"></i></td></tr>';
         function load_tubes_and_dirs() {
             $("#tubes-list tbody").isLoading({
                 text: "Загрузка пробирок",
@@ -244,13 +244,12 @@
         }
         function save() {
             $(this).disabled = true;
-            var result = {issledovaniye: -1, fractions: {}}
+            let result = {issledovaniye: -1, fractions: {}};
             result.issledovaniye = $("#issledovaniye_id").val();
             $.each($(".result-enter"), function (k, v) {
                 result.fractions[$(v).data("pk")] = $(v).val();
             });
             $(this).disabled = false;
-            console.log(result);
         }
 
 

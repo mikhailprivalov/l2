@@ -3225,8 +3225,7 @@ output {
     font-size: 14px;
     line-height: 1.42857143;
     color: #555;
-    background-color: #fff;
-    background-image: none;
+    background: #fff none;
     border: 1px solid #ccc;
     border-radius: 4px;
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
@@ -4309,8 +4308,7 @@ tbody.collapse.in {
 .dropdown-menu > .disabled > a:focus {
     text-decoration: none;
     cursor: not-allowed;
-    background-color: transparent;
-    background-image: none;
+    background: transparent none;
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
@@ -5160,8 +5158,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
     margin-top: 8px;
     margin-right: 15px;
     margin-bottom: 8px;
-    background-color: transparent;
-    background-image: none;
+    background: transparent none;
     border: 1px solid transparent;
     border-radius: 4px;
 }
@@ -5242,10 +5239,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 
 .navbar-form {
     padding: 10px 15px;
-    margin-top: 8px;
-    margin-right: -15px;
-    margin-bottom: 8px;
-    margin-left: -15px;
+    margin: 8px -15px;
     border-top: 1px solid transparent;
     border-bottom: 1px solid transparent;
     -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 1px 0 rgba(255, 255, 255, .1);
@@ -5344,10 +5338,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 
 .navbar-fixed-bottom .navbar-nav > li > .dropdown-menu {
     margin-bottom: 0;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 4px 4px 0 0;
 }
 
 .navbar-btn {
@@ -7181,8 +7172,7 @@ button.close {
     position: absolute;
     width: 0;
     height: 0;
-    border-color: transparent;
-    border-style: solid;
+    border: solid transparent;
 }
 
 .tooltip.top .tooltip-arrow {
@@ -7308,8 +7298,7 @@ button.close {
     display: block;
     width: 0;
     height: 0;
-    border-color: transparent;
-    border-style: solid;
+    border: solid transparent;
 }
 
 .popover > .arrow {

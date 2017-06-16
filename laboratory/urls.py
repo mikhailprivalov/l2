@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -23,6 +24,7 @@ import api.urls as api_urls
 import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
+
 
 urlpatterns = [
                   url(r'^$', home, name='home'),
@@ -91,7 +93,7 @@ urlpatterns = [
                   url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^logout/$', logout, {'next_page': '/'})
-              ] + staticfiles_urlpatterns()
+              ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar

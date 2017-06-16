@@ -33,28 +33,27 @@
     <link href="/static/css/animate.min.css" rel="stylesheet">
     <link href="/static/css/tooltipster.css" rel="stylesheet">
     <link href="/static/css/themes/tooltipster-shadow.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
 
     <script src="/static/js/jquery.min.js?2"></script>
     <script>
-
         function getFormattedDate(date) {
-            var year = date.getFullYear();
-            var month = (1 + date.getMonth()).toString();
+            const year = date.getFullYear();
+            let month = (1 + date.getMonth()).toString();
             month = month.length > 1 ? month : '0' + month;
-            var day = date.getDate().toString();
+            let day = date.getDate().toString();
             day = day.length > 1 ? day : '0' + day;
             return day + '.' + month + '.' + year;
         }
-    </script>
-    <script type="text/javascript">
+
         var _paq = _paq || [];
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function () {
-            var u = "//home/piwik/";
+            let u = "//home/piwik/";
             _paq.push(['setTrackerUrl', u + 'piwik.php']);
             _paq.push(['setSiteId', 2]);
-            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+            let d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
             g.type = 'text/javascript';
             g.async = true;
             g.defer = true;
@@ -134,7 +133,6 @@
             margin-top: 2px;
             padding: 5px 0;
             background-color: #fff;
-            border: 1px solid #ccc;
             border: 1px solid rgba(0, 0, 0, .2);
             *border-right-width: 2px;
             *border-bottom-width: 2px;
@@ -408,9 +406,7 @@
         .breadcrumb-arrow li a:before {
             right: -10px;
             z-index: 3;
-            border-left-color: #656D78;
-            border-left-style: solid;
-            border-left-width: 11px;
+            border-left: 11px solid #656D78;
         }
 
         .breadcrumb-arrow li a:hover {
@@ -475,9 +471,7 @@
         }
 
         .dash-buttons .panel-body:hover {
-            background-color: #FC6E51;
             background-color: #049372;
-            border: 1px solid #FC6E51;
             border: 1px solid #049372;
             color: #fff;
             cursor: pointer;
@@ -526,8 +520,6 @@
         .navbar-inverse {
             border-radius: 0 0 5px 5px;
             background-color: #656D78;
-            border: 1px solid #656D78;
-            border-top: 0;
             border: 0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
             /*overflow: hidden;*/
@@ -542,8 +534,6 @@
         }
 
         .navbar-inverse a:hover {
-            /*color: #6C7A89!important;*/
-            background-color: #FC6E51 !important;
             background-color: #049372 !important;
         }
 
@@ -557,14 +547,14 @@
         }
 
         .navbar-xs .navbar-brand {
-            padding: 0px 12px;
+            padding: 0 12px;
             font-size: 16px;
             line-height: 28px;
         }
 
         .navbar-xs .navbar-nav > li > a {
-            padding-top: 0px;
-            padding-bottom: 0px;
+            padding-top: 0;
+            padding-bottom: 0;
             line-height: 28px;
         }
 
@@ -574,14 +564,14 @@
         }
 
         .navbar-sm .navbar-brand {
-            padding: 0px 12px;
+            padding: 0 12px;
             font-size: 16px;
             line-height: 40px;
         }
 
         .navbar-sm > li > a {
-            padding-top: 0px;
-            padding-bottom: 0px;
+            padding-top: 0;
+            padding-bottom: 0;
             line-height: 40px;
         }
 
@@ -758,18 +748,12 @@
 
         .input-group.input-group-sm .twitter-typeahead:first-child .tt-input,
         .input-group.input-group-sm .twitter-typeahead:first-child .tt-hint {
-            border-bottom-left-radius: 3px;
-            border-top-left-radius: 3px;
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
+            border-radius: 3px 0 0 3px;
         }
 
         .input-group.input-group-sm .twitter-typeahead:last-child .tt-input,
         .input-group.input-group-sm .twitter-typeahead:last-child .tt-hint {
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            border-bottom-right-radius: 3px;
-            border-top-right-radius: 3px;
+            border-radius: 0 3px 3px 0;
         }
 
         .input-group.input-group-lg .twitter-typeahead .tt-input,
@@ -801,18 +785,12 @@
 
         .input-group.input-group-lg .twitter-typeahead:first-child .tt-input,
         .input-group.input-group-lg .twitter-typeahead:first-child .tt-hint {
-            border-bottom-left-radius: 6px;
-            border-top-left-radius: 6px;
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
+            border-radius: 6px 0 0 6px;
         }
 
         .input-group.input-group-lg .twitter-typeahead:last-child .tt-input,
         .input-group.input-group-lg .twitter-typeahead:last-child .tt-hint {
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            border-bottom-right-radius: 6px;
-            border-top-right-radius: 6px;
+            border-radius: 0 6px 6px 0;
         }
 
         .twitter-typeahead {
@@ -852,7 +830,6 @@
             list-style: none;
             font-size: 14px;
             background-color: #ffffff;
-            border: 1px solid #cccccc;
             border: 1px solid rgba(0, 0, 0, 0.15);
             border-radius: 4px;
             -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
@@ -1287,12 +1264,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .container-fluid > .navbar{
+
+        .container-fluid > .navbar {
             border-radius: 0;
             margin-left: -5px;
             margin-right: -5px;
         }
-        body > .container-fluid{
+
+        body > .container-fluid {
             padding-left: 5px;
             padding-right: 5px;
         }
@@ -1423,7 +1402,7 @@
 <script src="/static/js/typeahead.bundle.min.js"></script>
 <script src="/static/js/bootstrap-select.js"></script>
 <script src="/static/js/bootbox.min.js"></script>
-<script src="/static/js/lang.ru.js?n=10"></script>
+<script src="/static/js/lang.ru.js?n=11"></script>
 <script src="/static/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
 <script src="/static/js/jquery-ui.min.js"></script>
 <script src="/static/js/jquery.isloading.min.js"></script>
@@ -1435,10 +1414,14 @@
 <script src="/static/js/jquery.tooltipster.min.js"></script>
 <script src="/static/js/jquery.floatThead.min.js?3"></script>
 <script src="/static/js/context.jq.bs.js"></script>
+<script src="/static/js/bootstrap-datepicker.min.js"></script>
+<script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
+<script src="/static/js/underscore-min.js"></script>
 <script>
-    var ajax_cache_token = (new Date()) + "";
-    $body = $("body");
-    var $loader = {};
+    let ajax_cache_token = (new Date()) + "";
+    let $body = $("body");
+    let $loader = {};
+    const today = new Date();
 
     $loader.Particle = function (opt) {
         this.radius = 7;
@@ -1477,7 +1460,7 @@
         $loader.ctx.arc(this.x, this.y, Math.max(0.001, this.life * this.radius), 0, $loader.TWO_PI);
         $loader.ctx.fill();
 
-        var size = Math.random() * 1.25;
+        let size = Math.random() * 1.25;
         $loader.ctx.fillRect(~~( this.x + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), ~~( this.y + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), size, size);
     };
 
@@ -1521,7 +1504,7 @@
         $loader.ctx.globalCompositeOperation = 'lighter';
         $loader.loop();
     };
-    var exitLoop = false;
+    let exitLoop = false;
     $loader.loop = function () {
         if (exitLoop) {
             exitLoop = false;
@@ -1533,24 +1516,24 @@
         $loader.tick++;
     };
     String.prototype.replaceAll = function (search, replacement) {
-        var target = this;
+        let target = this;
         return target.split(search).join(replacement);
     };
     String.prototype.capitalize = function () {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
     String.prototype.capitalizeAll = function () {
-        var r;
+        let r;
         r = this;
-        for (var s of this.split(" ")) {
+        for (let s of this.split(" ")) {
             r = r.replace(s, s.capitalize());
         }
         return r;
     };
 
     String.prototype.format = String.prototype.f = function () {
-        var s = this,
-                i = arguments.length;
+        let s = this,
+            i = arguments.length;
 
         while (i--) {
             s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
@@ -1558,8 +1541,8 @@
         return s;
     };
     Array.prototype.reversedCopy = function () {
-        var arr = [];
-        for (var i = this.length; i--;) {
+        let arr = [];
+        for (let i = this.length; i--;) {
             arr.push(this[i]);
         }
         return arr;
@@ -1571,15 +1554,13 @@
     }
 
     function startTime() {
-        var today = new Date();
-        var h = today.getHours();
-        var m = today.getMinutes();
-        var s = today.getSeconds();
+        let h = today.getHours();
+        let m = today.getMinutes();
+        let s = today.getSeconds();
         if (h < 10) h = " " + h;
         m = checkTime(m);
         s = checkTime(s);
-        //document.getElementById('clock').innerHTML = h + ":" + m + ":" + s;
-        var t = setTimeout(function () {
+        let t = setTimeout(function () {
             startTime()
         }, 500);
     }
@@ -1591,7 +1572,7 @@
         return i;
     }
     function uHash() {
-        indx = document.URL.indexOf('#');
+        let indx = document.URL.indexOf('#');
         if (indx == -1)
             return "";
         return document.URL.substr(indx + 1);
@@ -1612,10 +1593,10 @@
     function sTitle(title) {
         document.title = title;
     }
-    var stopped = true;
-    var inload = false;
+    let stopped = true;
+    let inload = false;
     function sl(no_sloader) {
-        if(!inload){
+        if (!inload) {
             document.title = lang.loading + document.title;
         }
         inload = true;
@@ -1640,12 +1621,18 @@
         stopped = true;
         $("#page-preloader").stop(true, true);
     }
-    $(document).ready(function () {
-        $('.select-b').selectpicker({
+
+    function update_select(base) {
+        base = base || "";
+        $(`${base} .select-b`).selectpicker({
             deselectAllText: "Снять выбор",
             selectAllText: "Выбрать всё",
             noneSelectedText: "Ничего не выбрано"
         });
+    }
+
+    $(document).ready(function () {
+        update_select();
         //startTime();
         $("#page-preloader").hide();
         $body.addClass("showloader");
@@ -1655,6 +1642,7 @@
             elementSelector: "input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)",
             menuSelector: "#contextMenu",
             menuSelected: function (invokedOn, selectedMenu) {
+                let val;
                 switch (selectedMenu.attr("action")) {
                     case "clear":
                         invokedOn.val("").typeahead('val', "");
@@ -1667,7 +1655,7 @@
                         $("#contextSt").val(1);
                         break;
                     case "addrecalc":
-                        r = $("#recalcValue").val();
+                        let r = $("#recalcValue").val();
                         if (r != "") {
                             r = " " + r;
                         }
@@ -1687,7 +1675,7 @@
             }
         });
     });
-    var willbe_error = false;
+    let willbe_error = false;
     function alive() {
         $.ajax({
             method: "GET", url: "/dashboard/", cache: false, statusCode: {
@@ -1758,9 +1746,15 @@
             return $(el).val() === "";
         }
     });
+    $.fn.refresh = function () {
+        let elems = $(this.selector);
+        this.splice(0, this.length);
+        this.push.apply(this, elems);
+        return this;
+    };
 
     function convertArrayOfObjectsToCSV(args) {
-        var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+        let result, ctr, keys, columnDelimiter, lineDelimiter, data;
 
         data = args.data || null;
         if (data == null || !data.length) {
@@ -1791,9 +1785,9 @@
     }
 
     function downloadCSV(args) {
-        var data, filename, link;
+        let data, filename, link;
 
-        var csv = convertArrayOfObjectsToCSV({
+        let csv = convertArrayOfObjectsToCSV({
             data: args.data || {}
         });
         if (csv == null) return;
@@ -1810,7 +1804,7 @@
         link.setAttribute('download', filename);
         link.click();
     }
-
+    let mess_pos = false;
     function okmessage(title, body, delay) {
         $.amaran({
             'theme': 'awesome ok',
@@ -1820,7 +1814,7 @@
                 info: '',
                 icon: 'fa fa-exclamation'
             },
-            'position': 'bottom right',
+            'position': mess_pos || 'bottom right',
             delay: delay || 5000
         });
     }
@@ -1834,11 +1828,11 @@
                 info: '',
                 icon: 'fa fa-exclamation'
             },
-            'position': 'bottom right',
+            'position': mess_pos || 'bottom right',
             delay: delay || 5000
         });
     }
-    var blink_animated = {};
+    let blink_animated = {};
     function okblink(selector, effect) {
         if (blink_animated[selector]) return;
         e = effect || 'fadeIn';
