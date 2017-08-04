@@ -327,14 +327,24 @@ def receive_journal(request):
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-    tubes = TubesRegistration.objects.filter(
-        issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
-        time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd, doc_recive__isnull=False).order_by(
-        'issledovaniya__napravleniye__client__pk')
+    tubes = []
+
+    if return_type == "directions":
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
+            doc_recive__isnull=False).order_by(
+            'time_recive', 'daynum')
+    else:
+        tubes = TubesRegistration.objects.filter(
+            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
+            doc_recive__isnull=False).order_by(
+            'issledovaniya__napravleniye__client__pk')
 
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
-    directions = set()
+    directions = []
     vids = set()
 
     perpage = 47
@@ -370,8 +380,6 @@ def receive_journal(request):
         if n < start:
             n += 1
             continue'''
-
-        directions.add(iss[0].napravleniye.pk)
         if return_type == "pdf":
             n_dict[k] += 1
             if n_dict[k] >= start:
@@ -398,8 +406,9 @@ def receive_journal(request):
                          "n": n_dict[k],
                          "fio": iss[
                              0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+        elif iss[0].napravleniye.pk not in directions:
+            directions += [iss[0].napravleniye.pk]
         n += 1
-    directions = list(directions)
     if return_type == "directions":
         return HttpResponse(json.dumps(directions), content_type="application/json")
 

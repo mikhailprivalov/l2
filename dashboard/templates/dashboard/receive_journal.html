@@ -111,12 +111,8 @@
                 url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=[${otd}]`
             }).done(function (data) {
                 hl();
-                data.sort(sortNumber);
                 window.open('/directions/pdf?napr_id=' + JSON.stringify(data), '_blank');
             });
-        }
-        function sortNumber(a, b) {
-            return a - b;
         }
     </script>
     <style>
