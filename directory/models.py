@@ -78,6 +78,14 @@ class References(models.Model):
         return str(self.fraction) + " | " + str(self.fraction) + " | " + self.title
 
 
+class ResultVariants(models.Model):
+    values = models.TextField(
+        help_text='Варианты подсказок результатов, перечисленные через вертикальную черту без пробела "|"')
+
+    def get_variants(self):
+        return self.values.split('|')
+
+
 class Fractions(models.Model):
     """
     Фракции для исследований
@@ -92,7 +100,9 @@ class Fractions(models.Model):
     uet_doc = models.FloatField(default=0, help_text='УЕТы для врача')
     uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта')
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций')
-    type = models.IntegerField(default=-1, blank=True, null=True, help_text='Варианты подсказок результатов')
+    type = models.IntegerField(default=-1, blank=True, null=True,
+                               help_text='Варианты подсказок результатов (deprecated)')
+    variants = models.ForeignKey(ResultVariants, help_text='Варианты подсказок результатов')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
     render_type = models.IntegerField(default=0, blank=True,
