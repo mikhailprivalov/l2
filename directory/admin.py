@@ -14,6 +14,7 @@ class RefAdmin(admin.ModelAdmin):
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.References, RefAdmin)
+admin.site.register(models.ResultVariants)
 admin.site.register(models.Fractions)
 admin.site.register(models.Absorption)
 admin.site.register(models.AssignmentTemplate)
