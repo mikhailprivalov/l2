@@ -82,11 +82,11 @@ class ResultVariants(models.Model):
     values = models.TextField(
         help_text='Варианты подсказок результатов, перечисленные через вертикальную черту без пробела "|"')
 
-    def __str__(self):
-        return self.values
-
     def get_variants(self):
         return self.values.split('|')
+
+    def __str__(self):
+        return str(self.get_variants())
 
 
 class Fractions(models.Model):
