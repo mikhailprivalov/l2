@@ -102,7 +102,7 @@ class Fractions(models.Model):
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций')
     type = models.IntegerField(default=-1, blank=True, null=True,
                                help_text='Варианты подсказок результатов (deprecated)')
-    variants = models.ForeignKey(ResultVariants, help_text='Варианты подсказок результатов')
+    variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
     render_type = models.IntegerField(default=0, blank=True,
