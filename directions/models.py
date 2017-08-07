@@ -361,7 +361,7 @@ class Result(models.Model):
     ref_about = models.TextField(default=None, blank=True, null=True, help_text="Референсы Описание")
 
     def __str__(self):
-        return "%s | %s | %s" % (self.pk, self.fraction, self.ref is not None)
+        return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
     def get_ref(self, as_str=False, full=False, fromsave=False):
         if not fromsave:
