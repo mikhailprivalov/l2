@@ -697,7 +697,7 @@
     <script src="/static/js/ajaxq.js"></script>
     <script src="/static/js/dragula.js"></script>
     <script>
-        let d = dragula();
+        let d;
         const users_av = {{ users|safe }};
 
         let researches_cache = {};
@@ -1026,6 +1026,7 @@
             checkType();
             $("#e").resize(resize);
             setTimeout(resize, 100);
+            d = dragula([$("#table-researches")[0]], {mirrorContainer: $("#table-researches")[0]});
         });
 
         function checkType(tr) {
