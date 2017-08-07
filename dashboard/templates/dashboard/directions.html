@@ -139,8 +139,13 @@
                                 id="select-template-btn">Загрузить
                         </button>
                     </div>
+                    <div style="margin-top: 5px" class="col-xs-12" id="table-researches"></div>
                 </div>
-                <div style="margin-top: 5px" id="table-researches"></div>
+                <div id="sortcontrol" class="row" style="margin-top: 5px">
+                    <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-sm-offset-6 col-md-offset-8 col-lg-offset-9 text-right">
+                        <a class="btn btn-default btn-blue-nb3 btn-sm btn-ell" href="#">сброс сортировки</a>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="b" class="split split-horizontal">
@@ -252,7 +257,7 @@
                                     Сохр. и распечатать направления
                                 </button>
                                 <br/>
-                                <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn" disabled
+                                <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn-bc" disabled
                                         onclick="save_direction(true, true);" title="Сохр. и распечатать штрих-коды">
                                     Сохр. и распечатать штрих-коды
                                 </button>
@@ -396,7 +401,7 @@
                                                                                                             class="btn btn-primary-nb btn-blue-nb">Выделить
                             результаты</a>
                         </div>
-                        <div class="col-xs-4"><a href="/results/pdf?pk=[614]" target="_blank"
+                        <div class="col-xs-4"><a href="#" target="_blank"
                                                  class="btn btn-primary-nb print-b">Печать результатов</a></div>
                         <div class="col-xs-4">
                             <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть
@@ -415,7 +420,7 @@
                             aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title">Выберите комментарий для материала</h4>
                 </div>
-                <div class="modal-body" id="results-body" style="width: auto">
+                <div class="modal-body" id="comment-body" style="width: auto">
                     <label>
                         Комментарий (материал):
                         <select id="comments-select"></select>
@@ -1289,13 +1294,11 @@
                 data: {status: val, pk: pk}
             }).done(function () {
                 if (tr.hasClass("tr-cancel")) {
-                    _paq.push(['trackEvent', "Направления", "Сброс отмены направления"]);
                     tr.removeClass("tr-cancel");
                     $(".status", tr).text($(".status", tr).attr("rstatus"));
                     $(".status", tr).attr("title", statuses_titles[$(".status", tr).text()]);
                 }
                 else {
-                    _paq.push(['trackEvent', "Направления", "Отмена направления"]);
                     tr.addClass("tr-cancel");
                     $(".status", tr).attr("rstatus", $(".status", tr).text());
                     $(".status", tr).attr("title", statuses_titles["-1"]);
@@ -1352,7 +1355,6 @@
             catch (e) {
 
             }
-            _paq.push(['trackSiteSearch', "query=" + query + "&type=" + type, "Поиск пациента"]);
             $.ajax({ // AJAX запрос
                 url: "/clients/ajax/search?query=" + query + "&type=" + type // Установка адреса и параметров запроса
             }).done(function (data) { // Выполняется по завершению запроса и получению ответа
@@ -1403,6 +1405,7 @@
             $("#card-sx").html("");
             $("#table-researches").html("");
             $("#select-template-btn, #select-template, #select-lab, #select-lab-btn").prop("disabled", true);
+            $("#sortcontrol").css({visibility: "hidden"});
             $("#search-results-link").hide();
             $("#history-num-tr").find("input").prop("disabled", true);
             $("#story-table").html("<tr><td colspan='8' style='text-align: center'>Не загружено</td></tr>");
@@ -1477,6 +1480,7 @@
             $("#table-researches").html("");
             if (active_lab in researches_cache) {
                 show_researches(active_lab);
+                $("#sortcontrol").css({visibility: "visible"});
                 return;
             }
             sl();
@@ -1490,6 +1494,7 @@
                 }
                 researches_cache[active_lab] = data;
                 show_researches(active_lab);
+                $("#sortcontrol").css({visibility: "visible"});
             }).always(function (jqXHR, textStatus) {
                 if (textStatus !== "success") {
                     errmessage("Ошибка", jqXHR.status + " " + jqXHR.statusText);
@@ -1531,7 +1536,7 @@
             }
         }
 
-        function sync_order(){
+        function sync_order() {
 
         }
 
@@ -1664,7 +1669,6 @@
                 }
             }).done(function (data) {
                 if (data[0].r && data[0].list_id) {
-                    _paq.push(['trackEvent', "Направления", "Создание направлений"]);
                     if (!tr) {
                         window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
                     } else {
