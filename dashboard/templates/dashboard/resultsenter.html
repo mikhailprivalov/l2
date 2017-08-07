@@ -1750,22 +1750,24 @@
                         if (!fractions[prop].references.available.hasOwnProperty(rk))
                             continue;
                         let r = fractions[prop].references.available[rk];
-                        let jref = JSON.stringify(r);
-                        if (jref !== selected_ref) {
-                            options += `<option value='${_.escape(jref)}'>${r.title}</option>`;
+                        let jref = JSON.parse(JSON.stringify(r));
+                        let jj = JSON.parse($('<div>').html(selected_ref).text());
+                        jj["title"] = jref["title"];
+                        jj["about"] = jref["about"];
+                        if (!Object.compare(jj, jref)) {
+                            options += `<option value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`;
                         }
                         else {
-                            options += `<option selected value='${_.escape(jref)}'>${r.title}</option>`;
+                            options += `<option selected value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`;
                             inav_refs = true;
                         }
-
                         n++;
                     }
                     if (!inav_refs) {
                         options += `<option selected class='custom' value='${selected_ref !== "" && selected_ref !== "{}" ? selected_ref : `{"":""}`}'>Другое...</option>`;
                     }
                     else {
-                        options += `<option class='custom' value='${_.escape('{"":""}')}'>Другое...</option>`;
+                        options += `<option class='custom' value='${_.escape('{"Вс":""}')}'>Другое...</option>`;
                     }
                     $("#refsettings-modal .modal-body").append(`<div class="row settings" style="border-bottom: 1px solid lightgray;margin-bottom:5px;padding-bottom:5px" data-fraction-pk="${fractions[prop].pk}">
     <div class="col-xs-2">${fractions[prop].title}</div>
@@ -1797,7 +1799,7 @@
             let $row = $(`.settings[data-fraction-pk='${pk}']`);
             let selectval = _.unescape($("select", $row).val());
 
-            if(selectval === ""){
+            if(selectval == ""){
                 selectval = `{}`;
             }
             let val = sort_refs(JSON.parse(selectval));

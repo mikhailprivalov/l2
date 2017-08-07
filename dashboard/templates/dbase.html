@@ -1571,6 +1571,7 @@
         }
         return i;
     }
+
     function uHash() {
         let indx = document.URL.indexOf('#');
         if (indx === -1)
@@ -1593,8 +1594,10 @@
     function sTitle(title) {
         document.title = title;
     }
+
     let stopped = true;
     let inload = false;
+
     function sl(no_sloader) {
         if (!inload) {
             document.title = lang.loading + document.title;
@@ -1612,6 +1615,7 @@
         $("#page-preloader").show();
         //$loader.init();
     }
+
     function hl() {
         document.title = document.title.replace(lang.loading, "");
         inload = false;
@@ -1630,6 +1634,28 @@
             noneSelectedText: "Ничего не выбрано"
         });
     }
+
+    Object.compare = function (obj1, obj2) {
+        for (var p in obj1) {
+            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
+
+            switch (typeof (obj1[p])) {
+                case 'object':
+                    if (!Object.compare(obj1[p], obj2[p])) return false;
+                    break;
+                case 'function':
+                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false;
+                    break;
+                default:
+                    if (obj1[p] != obj2[p]) return false;
+            }
+        }
+
+        for (var p in obj2) {
+            if (typeof (obj1[p]) == 'undefined') return false;
+        }
+        return true;
+    };
 
     $(document).ready(function () {
         update_select();
@@ -1676,6 +1702,7 @@
         });
     });
     let willbe_error = false;
+
     function alive() {
         $.ajax({
             method: "GET", url: "/dashboard/", cache: false, statusCode: {
@@ -1733,7 +1760,9 @@
             setTimeout(alive, 13000);
         });
     }
+
     $(document).ajaxComplete(checkSession);
+
     function checkSession(event, xhr, ajaxOptions) {
         if (xhr.readyState === 4) {
             if (xhr.getResponseHeader("Login-Screen") !== null && xhr.getResponseHeader("Login-Screen").length) {
@@ -1741,6 +1770,7 @@
             }
         }
     }
+
     $.extend($.expr[':'], {
         textboxEmpty: function (el) {
             return $(el).val() === "";
@@ -1804,7 +1834,9 @@
         link.setAttribute('download', filename);
         link.click();
     }
+
     let mess_pos = false;
+
     function okmessage(title, body, delay) {
         $.amaran({
             'theme': 'awesome ok',
@@ -1832,7 +1864,9 @@
             delay: delay || 5000
         });
     }
+
     let blink_animated = {};
+
     function okblink(selector, effect) {
         if (blink_animated[selector]) return;
         e = effect || 'fadeIn';

@@ -211,6 +211,11 @@ def results_save(request):
                     fraction_result.ref_about = r["about"]
                     fraction_result.ref_m = r["m"]
                     fraction_result.ref_f = r["f"]
+                else:
+                    fraction_result.ref_title = "Default"
+                    fraction_result.ref_about = ""
+                    fraction_result.ref_m = "{}"
+                    fraction_result.ref_f = "{}"
                 fraction_result.save()  # Сохранение
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
             from django.utils import timezone
@@ -239,7 +244,7 @@ def result_confirm(request):
             from statistic.models import Uet
             from directions.models import Result
             for r in Result.objects.filter(issledovaniye=issledovaniye):
-                r.get_ref(re_save=True)
+                r.get_ref()
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
             slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
@@ -260,7 +265,7 @@ def result_confirm_list(request):
             if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
                 from directions.models import Result
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
-                    r.get_ref(re_save=True)
+                    r.get_ref()
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
                 from django.utils import timezone
                 issledovaniye.time_confirmation = timezone.now()  # Время подтверждения

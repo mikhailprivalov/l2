@@ -364,17 +364,15 @@ class Result(models.Model):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False):
-        if not fromsave or re_save:
+        if (not self.ref_title and not fromsave) or re_save:
+            self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
+            self.save()
             if not self.ref_m or re_save:
                 self.ref_m = self.fraction.ref_m if self.fraction.default_ref is None else self.fraction.default_ref.ref_m
                 self.save()
 
             if not self.ref_f or re_save:
                 self.ref_f = self.fraction.ref_f if self.fraction.default_ref is None else self.fraction.default_ref.ref_f
-                self.save()
-
-            if not self.ref_title or re_save:
-                self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
                 self.save()
 
             if not self.ref_about or re_save:
