@@ -103,8 +103,8 @@ class Fractions(models.Model):
     uet_doc = models.FloatField(default=0, help_text='УЕТы для врача')
     uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта')
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций')
-    type = models.IntegerField(default=-1, blank=True, null=True,
-                               help_text='Варианты подсказок результатов (deprecated)')
+    #type = models.IntegerField(default=-1, blank=True, null=True,
+    #                           help_text='Варианты подсказок результатов (deprecated)')
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')

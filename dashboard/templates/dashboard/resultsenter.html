@@ -1198,7 +1198,7 @@
                 }
             }).always(dechl);
 
-            $(document).on("click", ".select-tube", function (e) {
+            $(document).on("click", ".select-tube", function () {
                 fast_search($(this, ".num").attr("tube"));
                 $("#option1").attr("checked", "checked");
                 $("#option2").removeAttr("checked");
@@ -1208,7 +1208,7 @@
                 load_d_fast();
             });
 
-            $(document).on("click", ".select-dir", function (e) {
+            $(document).on("click", ".select-dir", function () {
                 fast_search($(this).attr("direction"));
                 $("#option1").removeAttr("checked");
                 $("#option2").attr("checked", "checked");
@@ -1251,7 +1251,7 @@
         function sync_checks() {
             $(".btn").removeClass("active-b");
             let elements = document.querySelectorAll("input[name='sel']:checked");
-            Array.prototype.forEach.call(elements, function (el, i) {
+            Array.prototype.forEach.call(elements, function (el) {
                 $(el).parent().addClass("active-b");
             });
         }
@@ -1290,7 +1290,7 @@
             }
             for (let tube of tubes_active) {
                 $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group);
-                if (type_active == 0) {
+                if (type_active === 0) {
                     $(`.select-tube[tube='${tube.pk}']`).addClass("active");
                 }
             }
@@ -1559,9 +1559,9 @@
                     let num = 0;
                     $.each(data2.fractions, function (fk, fv) {
                         num++;
-                        if (fv.type !== -1) {
+                        if (fv.type !== -1 && fv.type.length > 0 && fv.type[0] !== "Без вариантов") {
                             if (num === 1) autoIsF = true;
-                            let ft = $.map(fraction_types[fv.type + ""], function (item) {
+                            let ft = $.map(fv.type, function (item) {
                                 return {value: item};
                             });
                             let typeVals = new Bloodhound({
@@ -1574,7 +1574,7 @@
                             });
 
                             function typeValsDefaults(q, sync) {
-                                sync(typeVals.get(fraction_types[fv.type + ""]));
+                                sync(typeVals.get(fv.type));
                             }
 
                             const $d = $(`[data-pk='${fv.pk}']`);
@@ -1704,7 +1704,7 @@
         }
 
         function sync_refs() {
-            $(".fraction-row").each(function (k) {
+            $(".fraction-row").each(function () {
                 let research_pk = parseInt($(this).attr("data-research-pk"));
                 let fraction_pk = parseInt($(this).attr("data-fraction-pk"));
                 let ref = $(this).attr("data-ref");
@@ -1780,7 +1780,7 @@
             return false;
         }
 
-        function ref_form(refs, pk) {
+        function ref_form(refs) {
             let ht = "";
             for (let prop in refs) {
                 if (!refs.hasOwnProperty(prop))
@@ -1805,7 +1805,7 @@
                 val = {"": ""};
             }
             if ($(`.settings[data-fraction-pk='${pk}'] option:selected`).is(".custom")) {
-                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${ref_form(val.m, pk)}</div><div class="col-xs-6 table-responsive ref_f">Ж${ref_form(val.f, pk)}</div>
+                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${ref_form(val.m)}</div><div class="col-xs-6 table-responsive ref_f">Ж${ref_form(val.f)}</div>
                 <div class="col-xs-12">
                 <div class="row">
                     <div class="col-xs-4"></div>
@@ -1973,7 +1973,7 @@
             $("#confirm-btn").attr("disabled", 1);
             $("#save-btn").attr("disabled", 1);
             $("#confirm-andsave-btn").attr("disabled", 1);
-            if (datatype == 2) return;
+            if (datatype === 2) return;
             $(this).disabled = true;
             let result = {issledovaniye: -1, fractions: {}};
             result.issledovaniye = $("#issledovaniye_id").val();
@@ -1986,7 +1986,7 @@
             result.fractions = JSON.stringify(result.fractions);
             result.fractions_ref = JSON.stringify(result.fractions_ref);
             $(this).disabled = false;
-            $.ajax({url: "/results/save", method: "POST", data: result}).done(function (data) {
+            $.ajax({url: "/results/save", method: "POST", data: result}).done(function () {
                 if (!noreload)
                     reload_fast();
                 else {
@@ -2139,7 +2139,7 @@
             for (let iss of dir_data.issledovaniya) {
                 for (let tube of iss.tube.pk.split(",")) {
                     tubes.add(parseInt(tube));
-                    if (fill_researches[tube] == undefined)
+                    if (fill_researches[tube] === undefined)
                         fill_researches[tube] = new Set();
                     fill_researches[tube].add({pk: iss.pk, research_pk: iss.research_pk});
                 }
@@ -2157,7 +2157,7 @@
         function do_fill() {
             sl();
             let tube = parseInt($("#fillform-tubes").val());
-            let all = $("[name=fillform-type]:checked").val() == "all";
+            let all = $("[name=fillform-type]:checked").val() === "all";
             let researches = fill_researches[tube];
             let text_to_fill = $("#fillform-text").val();
             for (let res of researches) {
@@ -2184,9 +2184,9 @@
                             for (let fk of Object.keys(fractions_data)) {
                                 let fv = fractions_data[fk];
                                 fv.pk = fv.pk + "";
-                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] == "") && fv.render_type == 0) {
+                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] === "") && fv.render_type === 0) {
                                     result.fractions[fv.pk] = text_to_fill;
-                                } else if ((fv.render_type == 1 || !all) && fv.pk in results_data) {
+                                } else if ((fv.render_type === 1 || !all) && fv.pk in results_data) {
                                     result.fractions[fv.pk] = results_data[fv.pk];
                                 }
                             }
@@ -2237,7 +2237,7 @@
         function deff(status, pk) {
             if (lockdeff) return;
             lockdeff = true;
-            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function (data) {
+            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function () {
                 lockdeff = false;
                 reload_fast();
             });

@@ -375,7 +375,7 @@
         /** Сохранение изменений в загруженой группе */
         function save() {
             dgroup = selected.dgroup;
-            $.each(selected.researches, function (k, v) {
+            $.each(selected.researches, function (k) {
                 if (!$.inArray(k, cache)) delete selected.researches[k];
             });
             $.ajax({

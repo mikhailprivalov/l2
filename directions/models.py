@@ -450,7 +450,7 @@ class Result(models.Model):
                 mode = 2
 
             import re
-            tmp = re.findall("\d+\,\d+", v)
+            tmp = re.findall("\d+,\d+", v)
             for t in tmp:
                 v = v.replace(t, t.replace(",", "."))
             tmp = re.findall("\d+\.\d+", v)

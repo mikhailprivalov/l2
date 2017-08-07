@@ -254,12 +254,12 @@
                 input_buffer_scan += sym;
                 input_buffer_scan = input_buffer_scan.replace("\n", "").trim();
                 bar_scanner(input_buffer_scan);
-                if (input_buffer_scan.length == 13 && input_buffer_scan.substr(0, 3) == "460") {
+                if (input_buffer_scan.length === 13 && input_buffer_scan.substr(0, 3) === "460") {
                     //console.log("ok");
                     bar_scanner(input_buffer_scan);
                     input_buffer_scan = "";
                 }
-                else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) != "460") {
+                else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) !== "460") {
                     //console.log("clear buffer " + input_buffer_scan);
                     input_buffer_scan = "";
                 }
@@ -356,8 +356,8 @@
 
         function bar_scanner(v) {
             const tdnum = parseInt(v.substr(0, 12)) - 460000000000;
-            if (v.substr(0, 3) == "460" && v.length == 13) {
-                if (dnum != tdnum) {
+            if (v.substr(0, 3) === "460" && v.length === 13) {
+                if (dnum !== tdnum) {
                     dnum = tdnum;
                     search(dnum);
                 }
@@ -367,7 +367,7 @@
         function search(q, reload) {
             com = true;
             input_buffer_scan = "";
-            if (!q || q == "") return;
+            if (!q || q === "") return;
             sl();
             $("#search-field").val("");
             $(".has-error").removeClass("has-error");

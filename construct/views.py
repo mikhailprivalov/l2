@@ -20,7 +20,7 @@ def menu(request):
 def researches(request):
     """ Конструктор исследований """
     lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
-    return render(request, 'construct_researches.html', {"lab_subgroups": lab_subgroups})
+    return render(request, 'construct_researches.html', {"lab_subgroups": lab_subgroups, "variants": directory.ResultVariants.objects.all()})
 
 
 @login_required

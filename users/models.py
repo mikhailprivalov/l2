@@ -43,7 +43,7 @@ class DoctorProfile(models.Model):
     def is_member(self, groups: list) -> bool:
         """
         Проверка вхождения пользователя в группу
-        :param group: название группы
+        :param groups: названия групп
         :return: bool, входит ли в указаную группу
         """
         return self.user.groups.filter(name__in=groups).exists()

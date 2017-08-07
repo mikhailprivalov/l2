@@ -507,9 +507,7 @@ def discharge_search(request):
 @staff_member_required
 def users_count(request):
     """ Получение количества пользователей """
-    result = {"all": 0, "ldap": 0}
-    result["all"] = User.objects.all().count()
-    result["ldap"] = DoctorProfile.objects.filter(isLDAP_user=True).count()
+    result = {"all": User.objects.all().count(), "ldap": DoctorProfile.objects.filter(isLDAP_user=True).count()}
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 

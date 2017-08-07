@@ -517,7 +517,7 @@
                 tmp_rows = [];
                 if (i > 0) {
                     $(`#${data.grouping}-view`).show();
-                    if (data.grouping == "patient") {
+                    if (data.grouping === "patient") {
                         for (let key in data.rows) {
                             const row = data.rows[key];
 
@@ -618,9 +618,9 @@
 
                 for (let row2 of dir.researches) {
                     let data = row2.title;
-                    if (row2.is_normal != "none") {
+                    if (row2.is_normal !== "none") {
                         data += " - " + norm[row2.is_normal];
-                        if (row2.is_normal != "normal") {
+                        if (row2.is_normal !== "normal") {
                             data = `<b>${data}</b>`;
                         }
                     }
@@ -637,12 +637,12 @@
         function checkType(tr) {
             if (tr) {
                 let tmp = $('input[name=type]:checked').val();
-                if (type != tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
+                if (type !== tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
                     search($('#search-field').val());
                 }
             }
             let type = $('input[name=type]:checked').val();
-            if (type == "stat") {
+            if (type === "stat") {
                 $("#history-num-tr").show();
             }
             else {

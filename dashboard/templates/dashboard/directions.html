@@ -813,7 +813,7 @@
             let tmp = [];
             $(".btn").removeClass("active-b");
             let elements = document.querySelectorAll("input[name='sel']:checked");
-            Array.prototype.forEach.call(elements, function (el, i) {
+            Array.prototype.forEach.call(elements, function (el) {
                 if (!(el.value in comments)) {
                     res = get_research_from_cache(el.value);
                     if (res.comment_template >= 0 && material_types[res.comment_template].length === 1) {
@@ -924,7 +924,7 @@
                 const active_template = document.querySelector("#select-template").value;
                 if (!templates[active_template].multilabs) {
                     callback = function () {
-                        Array.prototype.forEach.call(templates[active_template].iss, function (el, i) {
+                        Array.prototype.forEach.call(templates[active_template].iss, function (el) {
                             $("[value={0}]".f(el)).prop("checked", true);
                         });
                         sync_checks();
@@ -958,7 +958,7 @@
             $.contextMenu2({
                 elementSelector: ".h-d",
                 menuSelector: "#contextMenuResearches",
-                onopen: function (invokedOn, menu) {
+                onopen: function (invokedOn) {
                     const $comment = parseInt($(invokedOn).attr("ctemplate"));
                     $contentComment.typeahead('destroy');
 
@@ -980,7 +980,7 @@
                             local: ft
                         });
 
-                        function typeValsDefaults(q, sync) {
+                        function typeValsDefaults(sync) {
                             sync(typeVals.get(material_types[$comment]));
                         }
 
@@ -1277,7 +1277,7 @@
                 url: "/direction/researches/cancel",
                 method: "POST",
                 data: {status: val, pk: pk}
-            }).done(function (data) {
+            }).done(function () {
                 if (tr.hasClass("tr-cancel")) {
                     _paq.push(['trackEvent', "Направления", "Сброс отмены направления"]);
                     tr.removeClass("tr-cancel");
@@ -1306,7 +1306,7 @@
                 });
             }
             else {
-                if (checked[k].length == 1) delete checked[k];
+                if (checked[k].length === 1) delete checked[k];
                 else {
                     checked[k].splice(checked[k].indexOf(checked[k][key]), 1);
                 }
@@ -1496,7 +1496,7 @@
                 let ind = false;
                 for (let prop in checked[v.fields.id_lab_fk]) {
                     if (prop in checked[v.fields.id_lab_fk]) {
-                        if (checked[v.fields.id_lab_fk][prop] == v.pk) {
+                        if (checked[v.fields.id_lab_fk][prop] === v.pk) {
                             ind = true;
                         }
                     }

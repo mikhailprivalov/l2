@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
 import directions.models as directions
+import directory.models as direct
 import slog.models as slog
 
 
@@ -51,7 +52,7 @@ def directory_researches(request):
                         fraction_obj = Fractions(title=fraction["title"], research=research_obj,
                                                  units=fraction["units"],
                                                  relation=tube_relation, ref_m=json.dumps(fraction["ref_m"]),
-                                                 ref_f=json.dumps(fraction["ref_f"]))
+                                                 ref_f=json.dumps(fraction["ref_f"]), variants=direct.ResultVariants.objects.get(pk=fraction["type"]))
                         fraction_obj.save()
                         return_result["F"].append((tube_relation.pk, fraction_obj.pk, key, int(key.split("-")[1])))
                     else:
@@ -61,7 +62,7 @@ def directory_researches(request):
                         fraction_obj.units = fraction["units"]
                         fraction_obj.ref_m = fraction["ref_m"]
                         fraction_obj.ref_f = fraction["ref_f"]
-                        fraction_obj.type = fraction["type"]
+                        fraction_obj.variants = None if not direct.ResultVariants.objects.filter(pk=fraction["type"]).exists() else direct.ResultVariants.objects.get(pk=fraction["type"])
                         fractions_pk.append(fraction["pk"])
                     fraction_obj.sort_weight = fraction["num"]
                     fraction_obj.save()
@@ -246,7 +247,7 @@ def directory_research(request):
                 ref_f = json.loads(ref_f)
             return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk, "type": fraction.type, "num": fraction.sort_weight})
+                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants.pk, "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
         for key in return_result["fractiontubes"].keys():
             return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"],
                                                                       key=lambda k: k['num'])

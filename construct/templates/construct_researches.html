@@ -362,6 +362,14 @@
     <script src="/static/js/jquery.clearsearch.js"></script>
     <script>
 
+        let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
+
+        let fraction_types = {
+        {% for v in variants %}
+            {{ v.pk }}: {{ v.get_variants|safe }},
+        {% endfor %}
+        };
+
         let fractiontubes = {}, resid = -1;
         let rdl = false;
         let refshow = false;
@@ -434,7 +442,7 @@
         function loadform(id, tube) {
             resid = id;
             fractiontubes = {};
-            let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
+            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
             $("#research-form").html("");
             const form = $("<form></form>").appendTo($("#research-form"));
             $("<h4></h4>").text("Редактор анализа").appendTo($(form));
@@ -534,7 +542,7 @@
          * @param title - название
          */
         function addtube(id, color, title) {
-            if (fractiontubes[id] == undefined) {
+            if (fractiontubes[id] === undefined) {
                 fractiontubes[id] = {
                     sel: id,
                     color: color,
@@ -623,9 +631,9 @@
                     fractions += "<td class='col-md-2'><div><select onchange='syncFractions();' class='fraction-type'>";
                     $.each(fraction_types, function (fk, fv) {
                         if (value.type == fk)
-                            fractions += "<option value='{0}' selected>{1}</option>".f(fk, fv.join("/"));
+                            fractions += `<option value='${fk}' selected>${fv.join("/")}</option>`;
                         else
-                            fractions += "<option value='{0}'>{1}</option>".f(fk, fv.join("/"));
+                            fractions += `<option value='${fk}'>${fv.join("/")}</option>`;
                     });
                     fractions += "</select></div></td>";
                     let ref_m, ref_f;
@@ -676,7 +684,7 @@
                 }
                 //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", false);
             });
-            if (Object.keys(fractiontubes).length == 0) {
+            if (Object.keys(fractiontubes).length === 0) {
                 $(s).append("<div class='well'>Пробирки не привязаны</div>");
                 $("#select-div").show();
                 if ($(".ui-draggable").length)
@@ -758,12 +766,12 @@
         function removefraction(tube, fraction) {
             syncFractions();
             fractiontubes[tube].fractions.splice(fraction, 1);
-            if (fractiontubes[tube].fractions.length == 0)
+            if (fractiontubes[tube].fractions.length === 0)
                 fractiontubes[tube].fractions = [
                     {
                         title: "",
                         units: "",
-                        type: -1,
+                        type: 1,
                         ref_m: {"": ""},
                         ref_f: {"": ""}
                     }
@@ -779,12 +787,12 @@
          */
         function addfraction(tube) {
 
-            if ($("[sel='" + tube + "'] .fractiontitle:last").val() == "") return false;
+            if ($("[sel='" + tube + "'] .fractiontitle:last").val() === "") return false;
             syncFractions();
             fractiontubes[tube].fractions.push({
                 title: "",
                 units: "",
-                type: -1,
+                type: 1,
                 num: fractiontubes[tube].fractions.slice(-1)[0].num + 1,
                 ref_m: {"": ""},
                 ref_f: {"": ""}
@@ -797,12 +805,12 @@
         /** Синхронизация буфера фракций с GUI */
         function syncFractions() {
             fractiontubes = {};
-            let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
+            tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
             $(".fraction-tr").each(function (i) {
                 k = $(this).attr("k");
                 const key = $(this).attr("key");
                 const sel = $(this).attr("sel");
-                if (fractiontubes[k] === undefined) {
+                if (fractiontubes[k] == undefined) {
                     fractiontubes[k] = {
                         sel: sel,
                         color: rgb2hex($("#" + sel + " div .sq .color-sq").css("background-color")),
@@ -810,7 +818,7 @@
                         fractions: []
                     };
                 }
-                if (fractiontubes[k].fractions[key] === undefined) {
+                if (fractiontubes[k].fractions[key] == undefined) {
                     fractiontubes[k].fractions[key] = {
                         pk: (resid > -1) ? parseInt($(this).attr("pk")) : key + 1,
                         title: $(".fractiontitle", $(this)).val(),
@@ -824,12 +832,12 @@
                 let rkey;
                 $("[type='f']", $(this)).each(function (index) {
                     rkey = $(".refkey", $(this)).val().trim();
-                    if (rkey === "") return;
+                    if (rkey == "") return;
                     fractiontubes[k].fractions[key].ref_f[rkey] = $(".refcondition", $(this)).val();
                 });
                 $("[type='m']", $(this)).each(function (index) {
                     rkey = $(".refkey", $(this)).val().trim();
-                    if (rkey === "") return;
+                    if (rkey == "") return;
                     fractiontubes[k].fractions[key].ref_m[rkey] = $(".refcondition", $(this)).val();
                 });
             });
@@ -1020,6 +1028,7 @@
                 preparation: $("#preparation").val(),
                 fraction: lfractions
             };
+            console.log(research);
             sl();
             $.ajax({
                 url: "/directory/researches",

@@ -57,6 +57,7 @@ class Log(models.Model):
     user = models.ForeignKey(DoctorProfile)
     time = models.DateTimeField(auto_now=True)
 
+    @staticmethod
     def get_client_ip(request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:

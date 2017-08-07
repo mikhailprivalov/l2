@@ -52,7 +52,7 @@
                 $.each(data, function (k, v) {
                     $("#tubes-list").append("<div id='tube-{2}' class='well tube'><div onclick='edittube(this);'><span class=\"label label-default\">{3}</span><div class='sq'><div class='color-sq' style='background-color: {1}'>&nbsp;</div></div><span class='tube-title'>{0}</span></div></div>".f(v.title, v.color, v.id, v.color.replace("#", "")))
                 });
-                if (lasttube != "")
+                if (lasttube !== "")
                     $("#tube-{0}".f(lasttube)).addClass("last-tube");
                 lasttube = ""
             });
@@ -109,7 +109,7 @@
                 loadtubes();
                 return false;
             }
-            $.ajax({url: "/directory/tubes", method: "PUT", data: {title: title, color: color}}).done(function (data) {
+            $.ajax({url: "/directory/tubes", method: "PUT", data: {title: title, color: color}}).done(function () {
                 loadtubes();
             });
         }
@@ -124,7 +124,7 @@
                 url: "/directory/tubes",
                 method: "POST",
                 data: {id: id, title: title, color: color}
-            }).done(function (data) {
+            }).done(function () {
                 lasttube = id;
                 loadtubes();
             });

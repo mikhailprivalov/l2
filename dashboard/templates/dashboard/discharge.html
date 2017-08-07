@@ -258,7 +258,7 @@
             $(dc).html("");
             let kv = parseInt($(oc).val());
             for (let i = 0; i < users_av.length; i++) {
-                if (kv == users_av[i].pk) {
+                if (kv === users_av[i].pk) {
                     for (let j = 0; j < users_av[i].docs.length; j++)
                         $(dc).append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
                     break;
@@ -361,7 +361,7 @@
                 else if (document.selection) {
                     txt = document.selection.createRange().text;
                 }
-                return txt != "";
+                return txt !== "";
             }
             function check_fio() {
                 if(getSelText()) return;
@@ -384,7 +384,7 @@
                 data.append("otd", $("[name='otd']").val().trim());
                 data.append("doc_fio", $("[name='doc_fio'] option:selected").text().trim());
                 data.append("file", $("[name='file']")[0].files[0]);
-                if (data.get("client_surname") == "" || data.get("client_name") == "" || data.get("client_patronymic") == "" || $("[name='file']") == "") {
+                if (data.get("client_surname") === "" || data.get("client_name") === "" || data.get("client_patronymic") === "" || $("[name='file']") === "") {
                     errmessage("Не заполнены обязательные поля");
                     hl();
                     return;

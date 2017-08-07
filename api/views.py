@@ -1,13 +1,14 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
-import api.models as models
 import simplejson as json
-import directions.models as directions
-import directory.models as directory
-import users.models as users
 import yaml
-from slog import models as slog
+from django.http import HttpResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+import api.models as models
+import directions.models as directions
+import users.models as users
+from slog import models as slog
+
 
 def translit(locallangstring):
     """
@@ -239,7 +240,6 @@ def results(request):
                                     fraction_result.save()  # Сохранение
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
-                                    from datetime import datetime
                                     fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                                     fraction_result.issledovaniye.save()
         result["ok"] = True
@@ -295,7 +295,6 @@ def results_normal(request):
                                     fraction_result.save()  # Сохранение
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
-                                    from datetime import datetime
                                     fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                                     fraction_result.issledovaniye.save()
         result["ok"] = True

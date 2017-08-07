@@ -1,21 +1,22 @@
 # coding=utf8
+from datetime import datetime, date
+
+import simplejson as json
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import dateformat
-
-from laboratory import settings
-from podrazdeleniya.models import Podrazdeleniya, Subgroups
-from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
-from django.http import HttpResponse
-import users.models as users
-import simplejson as json
-from datetime import datetime, date
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from laboratory.decorators import group_required
-import slog.models as slog
+
 import directory.models as directory
+import slog.models as slog
+import users.models as users
 from appconf.manager import SettingManager
+from directions.models import Issledovaniya, TubesRegistration
+from laboratory import settings
+from laboratory.decorators import group_required
+from podrazdeleniya.models import Podrazdeleniya, Subgroups
 
 
 @csrf_exempt
@@ -23,7 +24,6 @@ from appconf.manager import SettingManager
 @group_required("Получатель биоматериала")
 def receive(request):
     """Представление для приемщика материала в лаборатории"""
-    from django.utils import timezone
 
     if request.method == "GET":
         groups = Subgroups.objects.filter(
@@ -78,7 +78,7 @@ def receive_obo(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_history(request):
-    from django.utils import timezone, datetime_safe
+    from django.utils import datetime_safe
     result = {"rows": []}
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
@@ -112,9 +112,7 @@ def last_received(request):
 def receive_execlist(request):
     import datetime
     import directory.models as directory
-    from reportlab.graphics import renderPDF
     from reportlab.lib.pagesizes import A4
-    from reportlab.pdfbase import pdfdoc
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import landscape
     from reportlab.pdfbase import pdfdoc
@@ -124,7 +122,6 @@ def receive_execlist(request):
     from reportlab.lib.units import mm
     import os.path
     from io import BytesIO
-    from django.utils import timezone, datetime_safe
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
@@ -197,10 +194,10 @@ def receive_execlist(request):
                 tw = pw
 
                 data = []
-                tmp = []
-                tmp.append(Paragraph('<font face="OpenSansB" size="8">№</font>', styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSansB" size="8">ФИО, № истории<br/>отделение</font>', styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"]))
+                tmp = [Paragraph('<font face="OpenSansB" size="8">№</font>', styleSheet["BodyText"]),
+                       Paragraph('<font face="OpenSansB" size="8">ФИО, № истории<br/>отделение</font>',
+                                 styleSheet["BodyText"]),
+                       Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"])]
                 for fraction in fractions:
                     fraction = fraction[:int(100 / len(fractions))]
                     tmp.append(
@@ -211,14 +208,12 @@ def receive_execlist(request):
                 for tube_pk in pg.object_list:
                     tube = TubesRegistration.objects.get(pk=tube_pk)
                     napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk).first().napravleniye
-                    tmp = []
-                    tmp.append(
-                        Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum), styleSheet["BodyText"]))
-                    tmp.append(Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.fio() + (
-                    "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
-                                         styleSheet["BodyText"]))
-                    tmp.append(
-                        Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube_pk), styleSheet["BodyText"]))
+                    tmp = [
+                        Paragraph('<font face="OpenSans" size="8">%d</font>' % tube.daynum, styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.fio() + (
+                            "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
+                                  styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
                     for _ in fractions:
                         tmp.append(Paragraph('<font face="OpenSans" size="8"></font>', styleSheet["BodyText"]))
                     data.append(tmp)

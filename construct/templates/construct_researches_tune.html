@@ -218,7 +218,7 @@
         }
 
         function update_mode() {
-            if ($("[type='radio']:checked").val() == 0) {
+            if ($("[type='radio']:checked").val() === 0) {
 
             } else {
 
@@ -247,7 +247,7 @@
                 url: "/construct/researches/get_details",
                 method: "POST",
                 data: {data: JSON.stringify(res)}
-            }).done(function (data) {
+            }).done(function () {
                 update_data();
             });
         }
@@ -377,7 +377,7 @@
 
         function backsync() {
             let has_default = false;
-            $(".panel.ref").each(function (k) {
+            $(".panel.ref").each(function () {
                 let i = parseInt($(this).attr("data-i"));
                 ref_data.refs[i].title = $(".title", this).val();
                 ref_data.refs[i].about = $(".about", this).val();
@@ -386,10 +386,10 @@
                 ref_data.refs[i].isdefault = $("[name=default]", this).prop("checked");
                 if(ref_data.refs[i].isdefault)
                     has_default = true;
-                $(".ref_m .row", this).each(function (kk) {
+                $(".ref_m .row", this).each(function () {
                     ref_data.refs[i].ref_m[$(".prop", this).val().trim()] = $(".ref", this).val().trim();
                 });
-                $(".ref_f .row", this).each(function (kk) {
+                $(".ref_f .row", this).each(function () {
                     ref_data.refs[i].ref_f[$(".prop", this).val().trim()] = $(".ref", this).val().trim();
                 });
             });
@@ -405,7 +405,7 @@
                 url: "/construct/refs",
                 method: "POST",
                 data: {pk: ref_data.pk, refs: JSON.stringify(ref_data.refs), "default": $("[name=default]:checked").length > 0 ? parseInt($("[name=default]:checked").val()): -1}
-            }).done(function (data) {
+            }).done(function () {
                 $("#ref_modal").modal('hide');
                 okmessage("Референсы сохранены");
                 hl();

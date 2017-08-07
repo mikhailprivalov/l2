@@ -503,14 +503,14 @@
                     $.ajax({url: "/results/get", data: {iss_id: id}}).done(function (data3) {
                         $.each(data3.results, function (k, v) {
                             const $field = $(`[data-pk='${k}']`);
-                            if(parseInt($field.attr("render-type")) == 1){
+                            if(parseInt($field.attr("render-type")) === 1){
                                 const $tr = $field.parent(".field-row");
                                 const parsed = JSON.parse(v).rows;
                                 let draw_data = [];
                                 $.each(parsed, function(kk, vv){
                                     let tmp_data = {title: vv.title, rows: []};
                                     $.each(vv.rows, function(kkk, vvv){
-                                        if(vvv.value != "null"){
+                                        if(vvv.value !== "null"){
                                             tmp_data.rows.push(vvv);
                                         }
                                     });
@@ -577,7 +577,7 @@
                         else
                             $("#no-printed-list #dir" + v.direction + " .researches").append("<br/>{0}".f(v.title));
                         //    console.log(jQuery.inArray(v.direction, checked_list));
-                        if (jQuery.inArray(parseInt(v.direction), checked_list) != -1) {
+                        if (jQuery.inArray(parseInt(v.direction), checked_list) !== -1) {
                             $("input[pk='{0}']".f(v.direction)).prop("checked", true);
                             //  console.log(v.direction);
                             //  console.log(checked_list);
@@ -619,7 +619,7 @@
                 method: "POST",
                 data: {pk: $("#issledovaniye_id").val()}
             }).done(function () {
-                if (last_dir != "") {
+                if (last_dir !== "") {
                     $("#dir-id").val(last_dir);
                 }
                 sync_checked();

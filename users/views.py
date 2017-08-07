@@ -1,12 +1,13 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login
-from django.http import HttpResponseRedirect, HttpResponse
-from ldap3 import Server, Connection, SIMPLE, SYNC, ALL_ATTRIBUTES, SUBTREE, ALL
-from django.contrib.auth.models import User, Group
-from users.models import DoctorProfile
-import slog.models as slog
-import laboratory.settings as settings
 import simplejson as json
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render
+from ldap3 import Server, Connection, SIMPLE, SYNC, ALL_ATTRIBUTES, SUBTREE, ALL
+
+import laboratory.settings as settings
+import slog.models as slog
+from users.models import DoctorProfile
 
 
 def home(request):
