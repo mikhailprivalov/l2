@@ -8,6 +8,31 @@ import simplejson as json
 import users.models as umodels
 import slog.models as slog
 
+
+class FrequencyOfUseResearches(models.Model):
+    research = models.ForeignKey(directory.Researches)
+    user = models.ForeignKey(DoctorProfile)
+    cnt = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.user} - {self.research}, {self.cnt}"
+
+    @staticmethod
+    def inc(research, user):
+        if not FrequencyOfUseResearches.objects.filter(research=research, user=user).exists():
+            FrequencyOfUseResearches(research=research, user=user, cnt=0).save()
+
+        f = FrequencyOfUseResearches.objects.get(research=research, user=user)
+        f.cnt += 1
+        f.save()
+
+    @staticmethod
+    def reset(user):
+        for f in FrequencyOfUseResearches.objects.filter(user=user):
+            f.cnt = 0
+            f.save()
+
+
 class TubesRegistration(models.Model):
     """
     Таблица с пробирками для исследований
@@ -24,7 +49,8 @@ class TubesRegistration(models.Model):
 
     notice = models.CharField(max_length=512, default="", help_text='Замечания')
 
-    daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия пробирки среди дня в лаборатории')
+    daynum = models.IntegerField(default=0, blank=True, null=True,
+                                 help_text='Номер принятия пробирки среди дня в лаборатории')
 
     def __str__(self):
         return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
@@ -80,7 +106,7 @@ class TubesRegistration(models.Model):
         self.doc_recive = doc_r
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=11,
-                     body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
+                 body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
     def set_notice(self, doc_r, notice):
         """
@@ -92,7 +118,7 @@ class TubesRegistration(models.Model):
         self.notice = notice
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=12,
-                     body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
+                 body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
     def rstatus(self):
         """
@@ -130,16 +156,20 @@ class Napravleniya(models.Model):
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
     client = models.ForeignKey(Importedclients, db_index=True, help_text='Пациент')
     doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач')
-    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования')
+    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True,
+                                    help_text='Источник финансирования')
     is_printed = models.BooleanField(default=False, blank=True, help_text='Флаг - напечатано ли направление')
     time_print = models.DateTimeField(default=None, blank=True, null=True, help_text='Время печати')
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
-    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print", help_text='Профиль, который был использован при печати')
-    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления')
+    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print",
+                                  help_text='Профиль, который был использован при печати')
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
+                                       related_name="doc_who_create", help_text='Создатель направления')
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
 
     def __str__(self):
-        return "%d для пациента %s (врач %s, выписал %s)" % (self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
+        return "%d для пациента %s (врач %s, выписал %s)" % (
+            self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
 
     @staticmethod
     def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=None):
@@ -157,9 +187,9 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             issledovaniya = []
         dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
-                            doc=doc,
-                            istochnik_f=istochnik_f,
-                            diagnos=diagnos, cancel=False)
+                           doc=doc,
+                           istochnik_f=istochnik_f,
+                           diagnos=diagnos, cancel=False)
 
         if patient_type == "stat":
             dir.history_num = historynum
@@ -184,7 +214,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, doc_current,
-                                      researches, comments):
+                                          researches, comments):
         res = {}  # Словарь с направлениями, сгруппированными по лабораториям
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
@@ -205,7 +235,7 @@ class Napravleniya(models.Model):
                 if v and v not in checklist:
                     # checklist.append(v)
                     researches_grouped_by_lab.append(
-                            {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
+                        {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
                     # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
 
                     for vv in v:
@@ -255,10 +285,10 @@ class Napravleniya(models.Model):
                                                      ofname_id, ofname)
 
                             result["list_id"].append(
-                                    directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
+                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
                         if dir_group < 0:  # если исследование не должно группироваться
                             dir_group = "id" + str(
-                                    research.pk)  # формирование ключа (группы) для негруппируемого исследования
+                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
 
                             # Создание направления для исследования
                             directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
@@ -271,18 +301,23 @@ class Napravleniya(models.Model):
                                                      ofname_id, ofname)
 
                             result["list_id"].append(
-                                    directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
+                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
                         issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                       # Установка направления для группы этого исследования
                                                       research=research,
                                                       deferred=False)  # Создание направления на исследование
                         issledovaniye.comment = comments.get(str(research.pk), "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
-
+                        FrequencyOfUseResearches.inc(research, doc_current)
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
-                         body=json.dumps({"researches": [x for x in researches if x is not None], "client_num": Importedclients.objects.get(pk=client_id).num, "client_id": client_id, "diagnos": diagnos, "finsource": finsource.tilie + " " + finsource.istype, "history_num": history_num, "ofname": str(ofname), "ptype": ptype, "comments": comments})).save()
+                         body=json.dumps({"researches": [x for x in researches if x is not None],
+                                          "client_num": Importedclients.objects.get(pk=client_id).num,
+                                          "client_id": client_id, "diagnos": diagnos,
+                                          "finsource": finsource.tilie + " " + finsource.istype,
+                                          "history_num": history_num, "ofname": str(ofname), "ptype": ptype,
+                                          "comments": comments})).save()
 
             else:
                 result["r"] = False
@@ -311,20 +346,24 @@ class Napravleniya(models.Model):
         return not self.is_all_confirm() and any([x.deferred for x in Issledovaniya.objects.filter(napravleniye=self)])
 
 
-
 class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
-    research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника')
+    research = models.ForeignKey(directory.Researches, null=True, blank=True,
+                                 help_text='Вид исследования из справочника')
     tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования')
-    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True, help_text='Профиль пользователя, сохранившего результат')
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True,
+                                 help_text='Профиль пользователя, сохранившего результат')
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат')
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation",
+                                         db_index=True, help_text='Профиль пользователя, подтвердившего результат')
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
+                                             help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование')
-    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
+    comment = models.CharField(max_length=10, default="", blank=True,
+                               help_text='Комментарий (отображается на пробирке)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
 
     def __str__(self):
@@ -345,12 +384,12 @@ class Issledovaniya(models.Model):
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
-
 class Result(models.Model):
     """
     Результат исследований
     """
-    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат')
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
+                                      help_text='Направление на исследование, для которого сохранен результат')
     fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования')
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
@@ -413,7 +452,8 @@ class Result(models.Model):
     def calc_normal(self, fromsave=False):
         import operator
         from functools import reduce
-        trues = {True: ["полож.", "положительно", "да", "положительный"], False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный"]}
+        trues = {True: ["полож.", "положительно", "да", "положительный"],
+                 False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный"]}
         signs = {">": [">", "более", "старше"], "<": ["<", "до", "младше", "менее"]}
 
         calc = "maybe"
@@ -431,9 +471,9 @@ class Result(models.Model):
             v = str(v).replace(" ", "")
             for j in range(1, 9):
                 for i in range(0, 12):
-                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j*(10**i)))
+                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10 ** i)))
             for i in range(0, 12):
-                v = v.replace("10<sup>%s</sup>" % str(i), str(10**i))
+                v = v.replace("10<sup>%s</sup>" % str(i), str(10 ** i))
             return v
 
         def val_normalize(v):
@@ -494,7 +534,7 @@ class Result(models.Model):
                 x = spl[0]
                 y = spl[1]
                 if isnum(x) and isnum(y):
-                    return float(x)-0.05, float(y)+0.05
+                    return float(x) - 0.05, float(y) + 0.05
             signs_vars = [x for x in signs.values()]
             signs_vars = reduce(operator.add, signs_vars)
             if any([x in r for x in signs_vars]):
@@ -534,7 +574,7 @@ class Result(models.Model):
                         m = re.search(r"(\d)\'(\d{1,2})\"", value.replace(" ", ""))
                         min = int(m.group(1))
                         sec = int(m.group(2))
-                        value = "{0:.2f}".format(min+sec/60)
+                        value = "{0:.2f}".format(min + sec / 60)
                     else:
                         value = val_normalize(value)
                     if not isinstance(right, bool):
@@ -570,4 +610,3 @@ class Result(models.Model):
 
         calc = clc(ref, value)
         return calc
-
