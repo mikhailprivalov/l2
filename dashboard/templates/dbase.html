@@ -1635,6 +1635,22 @@
         });
     }
 
+    Object.getKeys = function (obj, add) {
+        if (obj === undefined || obj === null) {
+            return undefined;
+        }
+        var keys = [];
+        if (add !== undefined) {
+            keys = jQuery.merge(keys, add);
+        }
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    };
+
     Object.compare = function (obj1, obj2) {
         for (var p in obj1) {
             if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;

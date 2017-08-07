@@ -33,6 +33,12 @@ class FrequencyOfUseResearches(models.Model):
             f.save()
 
 
+class CustomResearchOrdering(models.Model):
+    research = models.ForeignKey(directory.Researches)
+    user = models.ForeignKey(DoctorProfile)
+    weight = models.IntegerField(default=0)
+
+
 class TubesRegistration(models.Model):
     """
     Таблица с пробирками для исследований

@@ -687,6 +687,7 @@
             vertical-align: middle;
         }
     </style>
+    <link href="/static/css/dragula.min.css" type="text/css" rel="stylesheet">
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
@@ -911,7 +912,7 @@
             $("#clients-base").val(Object.keys(clients_bases)[0]).selectpicker('refresh');
             $("#table-researches").css({opacity: 0});
             sl();
-            for (let i = 32; i <= 35; i++) {
+            for (let pk in labs) {
                 nn++;
                 (function (i) {
                     $.ajaxq('precache', {
@@ -925,7 +926,7 @@
                             $("#table-researches").css({opacity: 1}).html("");
                         }
                     });
-                })(i);
+                })(parseInt(pk));
             }
 
             $("#select-template-btn").click(function () {
@@ -1528,6 +1529,10 @@
                 callback();
                 callback = null;
             }
+        }
+
+        function sync_order(){
+
         }
 
         function remove_researches(index) {
