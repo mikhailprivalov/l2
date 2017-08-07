@@ -237,6 +237,9 @@ def result_confirm(request):
             issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
             from django.utils import timezone
             from statistic.models import Uet
+            from directions.models import Result
+            for r in Result.objects.filter(issledovaniye=issledovaniye):
+                r.get_ref(re_save=True)
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
             slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
@@ -255,9 +258,11 @@ def result_confirm_list(request):
         for pk in iss_pks:
             issledovaniye = Issledovaniya.objects.get(pk=int(pk))
             if issledovaniye.doc_save and not issledovaniye.doc_confirmation:  # Если исследование сохранено
+                from directions.models import Result
+                for r in Result.objects.filter(issledovaniye=issledovaniye):
+                    r.get_ref(re_save=True)
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
                 from django.utils import timezone
-
                 issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
                 issledovaniye.save()
         result["ok"] = True

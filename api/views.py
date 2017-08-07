@@ -121,7 +121,14 @@ def send(request):
                                     val = int(float(find[0]) * fractionRel.get_multiplier_display())
                                     fraction_result.value = fraction_result.value.replace(find[0], str(val))
                             fraction_result.iteration = 1  # Установка итерации
+                            ref = fractionRel.default_ref
+                            if ref:
+                                fraction_result.ref_title = ref.title
+                                fraction_result.ref_about = ref.about
+                                fraction_result.ref_m = ref.m
+                                fraction_result.ref_f = ref.f
                             fraction_result.save()  # Сохранение
+                            fraction_result.get_ref(re_save=True)
                             fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
                             from datetime import datetime
                             fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
@@ -238,6 +245,7 @@ def results(request):
                                             fraction_result.value = fraction_result.value.replace(find[0], str(val))
                                     fraction_result.iteration = 1  # Установка итерации
                                     fraction_result.save()  # Сохранение
+                                    fraction_result.get_ref(re_save=True)
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
                                     fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
@@ -292,7 +300,14 @@ def results_normal(request):
                                             val = int(float(find[0]) * fractionRel.get_multiplier_display())
                                             fraction_result.value = fraction_result.value.replace(find[0], str(val))
                                     fraction_result.iteration = 1  # Установка итерации
+                                    ref = fractionRel.default_ref
+                                    if ref:
+                                        fraction_result.ref_title = ref.title
+                                        fraction_result.ref_about = ref.about
+                                        fraction_result.ref_m = ref.m
+                                        fraction_result.ref_f = ref.f
                                     fraction_result.save()  # Сохранение
+                                    fraction_result.get_ref(re_save=True)
                                     fraction_result.issledovaniye.doc_save = users.DoctorProfile.objects.filter(
                                             user__pk=866).first()  # Кто сохранил
                                     fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
