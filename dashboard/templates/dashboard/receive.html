@@ -20,7 +20,8 @@
                             Дата забора материала:
                             <div class="input-daterange input-group" id="datepickermain" style="margin-top: 2px">
                                 <input type="text" class="input-sm form-control no-context" name="date-start"/>
-                                <span class="input-group-addon" style="background-color: #fff;color: #000">&mdash;</span>
+                                <span class="input-group-addon"
+                                      style="background-color: #fff;color: #000">&mdash;</span>
                                 <input type="text" class="input-sm form-control no-context" name="date-end"/>
                             </div>
                         </div>
@@ -32,7 +33,7 @@
                 <td style="width: 320px"><h6>Подразделение в лаборатории:&nbsp;&nbsp;</h6>
                 </td>
                 <td>
-                    <select class="selectpicker" data-width="100%" id="subgroup" onchange="load_tubes();">
+                    <select class="selectpicker" data-width="100%" id="subgroup" onchange="loadfrom();">
                         {% for v in groups %}
                             <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
                 </td>
@@ -40,7 +41,7 @@
             <tr>
                 <td style="width: 320px"><h6>Отделение (от кого):&nbsp;&nbsp;</h6></td>
                 <td>
-                    <select class="selectpicker" data-width="100%" id="from" onchange="load_tubes();">
+                    <select class="selectpicker" data-width="100%" id="from" onchange="loadfrom();">
                         {% for v in podrazdeleniya %}
                             <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
                 </td>
@@ -83,7 +84,7 @@
 {% endblock %}
 
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
+    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
     <style>
         .borderless td {
             border: 0 !important;
@@ -212,11 +213,6 @@
         let first_resize = true;
 
         $(document).ready(function () {
-            loadfrom();
-            resize();
-            $(window).resize(function () {
-                resize();
-            });
 
             let daybefore = new Date();
             daybefore.setDate(daybefore.getDate() - 1);
@@ -230,16 +226,22 @@
                 autoclose: true,
                 todayHighlight: true
             });
-            $("[name='date-end'],[name='date-start']").change(function(){
+            $("[name='date-end'],[name='date-start']").change(function () {
                 let v = $(this).val();
                 let b = $(this).attr("pre-val");
 
-                if(loadt || v === b) return;
+                if (loadt || v === b) return;
                 loadt = true;
-                load_tubes();
+                loadfrom();
                 $(this).attr("pre-val", v);
             });
+            loadfrom();
+            resize();
+            $(window).resize(function () {
+                resize();
+            });
         });
+
         function highlight(th) {
             const $tr = $("tr[pk={0}]".f($(th).val()));
             if ($(th).prop("checked")) {
@@ -249,6 +251,7 @@
                 $tr.removeClass("highlight");
             }
         }
+
         function load_tubes() {
             sl();
             $("#tubes").html("");
@@ -256,7 +259,7 @@
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     let x = a.tube.id,
-                            y = b.tube.id;
+                        y = b.tube.id;
                     return x < y ? -1 : x > y ? 1 : 0;
                 });
                 let i = 0;
@@ -300,8 +303,7 @@
                 data: {data: JSON.stringify(tubes)},
                 type: "json"
             }).done(function (data) {
-                console.log(data);
-                load_tubes();
+                loadfrom();
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
@@ -315,6 +317,7 @@
                 });
             });
         }
+
         function resize() {
             $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 65);
             if (first_resize) {
@@ -326,19 +329,27 @@
         }
 
         function loadfrom() {
+            let selected = $("#from option:selected").attr("num");
             let from = $("#from");
             $(from).html("");
+            sl();
             $.ajax({
                 url: "/dashboard/from",
                 method: "GET",
-                type: "json"
+                type: "json",
+                data: {datestart: $("[name='date-start']").val(), dateend: $("[name='date-end']").val()}
             }).done(function (data) {
                 $.each(data, function (k, v) {
-                    console.log(v.pk, v.title, v.tubes);
-                    $(from).append("<option num='{0}'>{1}</option>".f(v.pk, v.title));
+                    if (v.pk == selected) {
+                        $(from).append(`<option selected num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
+                    }
+                    else {
+                        $(from).append(`<option num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
+                    }
                 });
                 $(from).selectpicker("refresh");
                 load_tubes();
+                hl();
             });
         }
 

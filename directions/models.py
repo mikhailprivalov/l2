@@ -38,6 +38,9 @@ class CustomResearchOrdering(models.Model):
     user = models.ForeignKey(DoctorProfile)
     weight = models.IntegerField(default=0)
 
+    def __str__(self):
+        return f"{self.user} - {self.research}, {self.weight}"
+
 
 class TubesRegistration(models.Model):
     """
@@ -126,12 +129,12 @@ class TubesRegistration(models.Model):
         slog.Log(key=str(self.pk), user=doc_r, type=12,
                  body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
-    def rstatus(self):
+    def rstatus(self, check_not=False):
         """
         Получение статуса принятия материала лабораторией
         :return: статус принятия
         """
-        if self.doc_recive:
+        if self.doc_recive and (not check_not or self.notice == ""):
             return True
         return False
 

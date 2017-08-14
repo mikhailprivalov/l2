@@ -1162,3 +1162,17 @@ def get_client_directions(request):
             res["ok"] = True
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
+@csrf_exempt
+@login_required
+def order_researches(request):
+    from directions.models import CustomResearchOrdering
+    if request.method == "POST":
+        order = json.loads(request.POST.get("order", "[]"))
+        lab = request.POST.get("lab")
+        CustomResearchOrdering.objects.filter(research__subgroup__podrazdeleniye_id=lab).delete()
+        for i in range(len(order)):
+            w = len(order) - i
+            CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]), user=request.user.doctorprofile, weight=w).save()
+
+    return HttpResponse(1, content_type="application/json")
+

@@ -51,7 +51,7 @@ def tubes(request):
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
     doctitle = "Штрих-коды (%s)" % (("направления " + ", ".join(str(v) for v in direction_id)) if not istubes else (
-    "пробирки " + ", ".join(str(v) for v in tubes_id)))
+        "пробирки " + ", ".join(str(v) for v in tubes_id)))
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'
@@ -127,8 +127,9 @@ def tubes(request):
                     st = otd[0][:3] + "/" + otd[1][:1]
             elif len(otd) == 1:
                 st = otd[0][:3]
-            st = (st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[
-                          :3]).lower()
+            st = (
+            st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[
+                        :3]).lower()
             types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая",
                      "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]
             tb_t = tubes_buffer[tube_k]["title"].lower()
@@ -162,8 +163,8 @@ def tubes(request):
                     m = 0.0212
                 if tube >= 1000000:
                     m = 0.016
-                barcode = code128.Code128(str(tube), barHeight=13 * mm, barWidth=inch * m)
-                barcode.drawOn(c, -2 * mm, barcode.height - 9 * mm)
+                barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
+                barcode.drawOn(c, -2 * mm, 4 * mm)
             else:
                 data = [
                     [nm, st],

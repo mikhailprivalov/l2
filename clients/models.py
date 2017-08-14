@@ -7,6 +7,7 @@ import sys
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
+
 class Importedclients(models.Model):
     """Пациенты из DBF"""
     num = models.IntegerField(unique=True, primary_key=False, blank=True, null=True, help_text='Номер карты')
@@ -18,12 +19,11 @@ class Importedclients(models.Model):
     type = models.CharField(max_length=64, blank=True, null=True, help_text='Тип (Поликлиника или стационар)')
     sex = models.CharField(max_length=16, blank=True, null=True, help_text='Пол')
     initials = models.CharField(max_length=16, blank=True, null=True, help_text='Инициалы')
-
+    polis = models.CharField(max_length=40, blank=True, null=True, help_text='Полис ОМС')
 
     class Meta:
         verbose_name = 'Пациент'
         verbose_name_plural = 'Пациенты'
-        managed = TESTING
         db_table = 'ImportedClients'
 
     def type_str(self, short=False, num=False):
@@ -96,3 +96,6 @@ class Importedclients(models.Model):
         else:
             _let = morph.parse("лет ")[0]
         return "{0} {1}".format(age, _let.make_agree_with_number(age).word)
+
+    def __str__(self):
+        return f"{self.fio()} {self.bd()} ({self.age_s()}) {self.type_str(num=True)}"

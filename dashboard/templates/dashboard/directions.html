@@ -1033,6 +1033,14 @@
             $("#e").resize(resize);
             setTimeout(resize, 100);
             d = dragula([$("#table-researches")[0]], {mirrorContainer: $("#table-researches")[0]});
+            d.on("drop", function(){
+               let order = [];
+               $("#table-researches label").each(function(){
+                   order.push(parseInt($("input", this).val()));
+               });
+               $.ajax({type: "POST", url: "/directions/order_researches", data: {order: JSON.stringify(order), lab: active_lab}});
+               console.log(order);
+            });
         });
 
         function checkType(tr) {
@@ -1519,7 +1527,7 @@
                 let ind = false;
                 for (let prop in checked[v.fields.id_lab_fk]) {
                     if (prop in checked[v.fields.id_lab_fk]) {
-                        if (checked[v.fields.id_lab_fk][prop] === v.pk) {
+                        if (checked[v.fields.id_lab_fk][prop] == v.pk) {
                             ind = true;
                         }
                     }

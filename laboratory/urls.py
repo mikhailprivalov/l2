@@ -8,7 +8,8 @@ from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
     print_history, \
-    get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get
+    get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get, \
+    order_researches
 from receivematerial.views import receive, tubes_get, receive_obo, receive_history, receive_execlist, last_received, \
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
@@ -38,6 +39,7 @@ urlpatterns = [
                   url(r'^directions/get/issledovaniya', get_issledovaniya),
                   url(r'^directions/list/client$', get_client_directions),
                   url(r'^directions/worklist$', get_worklist),
+                  url(r'^directions/order_researches$', order_researches),
                   url(r'^directions/group_confirm_get$', group_confirm_get),
                   url(r'^direction/researches/update$', update_direction),
                   url(r'^direction/researches/cancel$', cancel_direction),
