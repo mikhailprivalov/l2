@@ -13,17 +13,6 @@
                             <select data-width="100%" id="clients-base" onchange="checkType(true)"
                                     class="select-b"></select>
                         </div>
-                        {#                        <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-bottom: 13px">#}
-                        {#                            <label class="btn btn-blue-nb btn-ell" title="Поликлиника">#}
-                        {#                                <input type="radio" name="type" id="option1" value="poli" onchange="checkType(true)"#}
-                        {#                                       autocomplete="off">#}
-                        {#                                Поликлиника#}
-                        {#                            </label>#}
-                        {#                            <label class="btn btn-blue-nb btn-ell" title="Стационар">#}
-                        {#                                <input type="radio" name="type" id="option2" value="stat" onchange="checkType(true)"#}
-                        {#                                       autocomplete="off"> Стационар#}
-                        {#                            </label>#}
-                        {#                        </div>#}
                     </div>
                     <div class="col-xs-8">
                         <h5 style="margin-bottom: 0;margin-top: 4px">&nbsp;</h5>
@@ -64,6 +53,24 @@
                             </td>
                         </tr>
                         <tr id="history-num-tr">
+                            <td class="table-header-row">Полис ОМС:&nbsp;</td>
+                            <td id="card-polis" class="table-content-row" colspan="2"></td>
+                            <td class="table-header-row">
+                                <span class="hospital">Номер истории:&nbsp;</span>
+                                <span class="poli">Настройка:&nbsp;</span>
+                                &nbsp;
+                            </td>
+                            <td class="table-content-row">
+                                <div style="height: 34px">
+                                    <span class="hospital"><input type="text" class="form-control"
+                                                                  maxlength="11"/></span>
+                                    <label class="poli text-left" style="padding-left: 5px"><input
+                                            style="vertical-align: text-top;" type="checkbox" name="is_hospital"
+                                            onchange="sync_fin_sources();"/> стационар</label>
+                                </div>
+                            </td>
+                        </tr>
+                        {% comment %}<tr id="history-num-tr">
                             <td class="table-header-row">
                                 <span class="hospital">Номер истории:&nbsp;</span><span
                                     class="poli">Настройка:&nbsp;</span>
@@ -77,7 +84,7 @@
                                             onchange="sync_fin_sources();"/> стационар</label>
                                 </div>
                             </td>
-                        </tr>
+                        </tr>{% endcomment %}
                     </table>
                 </div>
                 {% if operator %}
@@ -1033,13 +1040,17 @@
             $("#e").resize(resize);
             setTimeout(resize, 100);
             d = dragula([$("#table-researches")[0]], {mirrorContainer: $("#table-researches")[0]});
-            d.on("drop", function(){
-               let order = [];
-               $("#table-researches label").each(function(){
-                   order.push(parseInt($("input", this).val()));
-               });
-               $.ajax({type: "POST", url: "/directions/order_researches", data: {order: JSON.stringify(order), lab: active_lab}});
-               console.log(order);
+            d.on("drop", function () {
+                let order = [];
+                $("#table-researches label").each(function () {
+                    order.push(parseInt($("input", this).val()));
+                });
+                $.ajax({
+                    type: "POST",
+                    url: "/directions/order_researches",
+                    data: {order: JSON.stringify(order), lab: active_lab}
+                });
+                console.log(order);
             });
         });
 
@@ -1409,6 +1420,7 @@
             $('#search-field').attr('data-content', '').parent().removeClass("has-error");
             $("#card-num").html("");
             $("#card-fio").html("");
+            $("#card-polis").html("");
             $("#card-bth").html("");
             $("#card-sx").html("");
             $("#table-researches").html("");
@@ -1461,6 +1473,7 @@
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);
             $("#card-sx").text(sx);
+            $("#card-polis").text((fields.polis !== null)? fields.polis : "");
             if (type === "stat") {
                 $("#history-num-tr").find(".hospital input").prop("disabled", false);
             }
