@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'statistic',
     'api',
     'discharge',
+    'rmis_integration',
     'debug_toolbar',
     'debug_panel',
 )
