@@ -51,26 +51,7 @@
                                    id="search-results-link">поиск результатов</a>
                                 {#                                {% endif %}#}
                             </td>
-                        </tr>
-                        <tr id="history-num-tr">
-                            <td class="table-header-row">Полис ОМС:&nbsp;</td>
-                            <td id="card-polis" class="table-content-row" colspan="2"></td>
-                            <td class="table-header-row">
-                                <span class="hospital">Номер истории:&nbsp;</span>
-                                <span class="poli">Настройка:&nbsp;</span>
-                                &nbsp;
-                            </td>
-                            <td class="table-content-row">
-                                <div style="height: 34px">
-                                    <span class="hospital"><input type="text" class="form-control"
-                                                                  maxlength="11"/></span>
-                                    <label class="poli text-left" style="padding-left: 5px"><input
-                                            style="vertical-align: text-top;" type="checkbox" name="is_hospital"
-                                            onchange="sync_fin_sources();"/> стационар</label>
-                                </div>
-                            </td>
-                        </tr>
-                        {% comment %}<tr id="history-num-tr">
+                        </tr><tr id="history-num-tr">
                             <td class="table-header-row">
                                 <span class="hospital">Номер истории:&nbsp;</span><span
                                     class="poli">Настройка:&nbsp;</span>
@@ -84,7 +65,7 @@
                                             onchange="sync_fin_sources();"/> стационар</label>
                                 </div>
                             </td>
-                        </tr>{% endcomment %}
+                        </tr>
                     </table>
                 </div>
                 {% if operator %}
@@ -237,7 +218,7 @@
                                 <div class="btn-group btn-group-justified" id="fin_poli" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_poli %}
-                                        <label class="btn btn-blue-nb btn-ell"><input type="radio" name="source"
+                                        <label class="btn btn-blue-nb3 btn-ell"><input type="radio" name="source"
                                                                                       value="{{ v.pk }}"
                                                                                       autocomplete="off"> {{ v.tilie }}
                                         </label>
@@ -246,7 +227,7 @@
                                 <div class="btn-group btn-group-justified" id="fin_stat" data-toggle="buttons"
                                      style="display: inline-block;">
                                     {% for v in fin_stat %}
-                                        <label class="btn btn-blue-nb btn-ell"><input type="radio" name="source"
+                                        <label class="btn btn-blue-nb3 btn-ell"><input type="radio" name="source"
                                                                                       value="{{ v.pk }}"
                                                                                       autocomplete="off"> {{ v.tilie }}
                                         </label>
@@ -1420,7 +1401,7 @@
             $('#search-field').attr('data-content', '').parent().removeClass("has-error");
             $("#card-num").html("");
             $("#card-fio").html("");
-            $("#card-polis").html("");
+{#            $("#card-polis").html("");#}
             $("#card-bth").html("");
             $("#card-sx").html("");
             $("#table-researches").html("");
@@ -1473,7 +1454,7 @@
             $("#card-fio").text(fio);
             $("#card-bth").text(dbth);
             $("#card-sx").text(sx);
-            $("#card-polis").text((fields.polis !== null)? fields.polis : "");
+{#            $("#card-polis").text((fields.polis !== null)? fields.polis : "");#}
             if (type === "stat") {
                 $("#history-num-tr").find(".hospital input").prop("disabled", false);
             }

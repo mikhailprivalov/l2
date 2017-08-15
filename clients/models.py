@@ -19,7 +19,8 @@ class Importedclients(models.Model):
     type = models.CharField(max_length=64, blank=True, null=True, help_text='Тип (Поликлиника или стационар)')
     sex = models.CharField(max_length=16, blank=True, null=True, help_text='Пол')
     initials = models.CharField(max_length=16, blank=True, null=True, help_text='Инициалы')
-    polis = models.CharField(max_length=40, blank=True, null=True, help_text='Полис ОМС')
+    polis_serial = models.CharField(max_length=40, blank=True, null=True, help_text='Серия полиса ОМС')
+    polis_number = models.CharField(max_length=40, blank=True, null=True, help_text='Номер полиса ОМС')
 
     class Meta:
         verbose_name = 'Пациент'

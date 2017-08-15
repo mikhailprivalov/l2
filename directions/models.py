@@ -175,6 +175,7 @@ class Napravleniya(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
                                        related_name="doc_who_create", help_text='Создатель направления')
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
+    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, help_text='ID направления в РМИС')
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s)" % (
