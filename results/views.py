@@ -1370,7 +1370,9 @@ def result_print(request):
         # c = canvas.Canvas(buffer, pagesize=A4)
         # w, h = A4
 
-        doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm, rightMargin=5 * mm, topMargin=5 * mm,
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                                leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
+                                rightMargin=5 * mm, topMargin=5 * mm,
                                 bottomMargin=5 * mm, allowSplitting=1 if split else 0)
 
         naprs = []
@@ -1400,7 +1402,13 @@ def result_print(request):
         from reportlab.lib.enums import TA_CENTER
         stl.alignment = TA_CENTER
 
-        i = Image(PROJECT_ROOT + '/../static/img/cliches.jpg')
+        import base64
+
+        if request.GET.get("update_logo", "0") == "1":
+            with open(PROJECT_ROOT + '/../static/img/logo.png', "wb") as fh:
+                fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
+
+        i = Image(PROJECT_ROOT + '/../static/img/logo.png')
         nw = 158
         i.drawHeight = i.drawHeight * (nw / i.drawWidth)
         i.drawWidth = nw
@@ -1466,6 +1474,7 @@ def result_print(request):
                             data.append(tmp)
                             j += 1
             return j
+
         client_prev = -1
         for dpk in pk:
             direction = Napravleniya.objects.filter(pk=dpk)
@@ -1498,7 +1507,7 @@ def result_print(request):
                 ["Дата забора:", date_t],
                 [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                 ["№ карты:", str(direction.client.num)],
-                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(),direction.doc.podrazileniye.title)]
+                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazileniye.title)]
             ]
 
             data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for
@@ -1553,7 +1562,7 @@ def result_print(request):
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Дата</font>', styleSheet["BodyText"]))
             data.append(tmp)
             cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
-            cw = cw + [tw-sum(cw)]
+            cw = cw + [tw - sum(cw)]
             t = Table(data, colWidths=cw)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1826,7 +1835,7 @@ def result_print(request):
                         data.append(tmp)
 
                         cw = [int(tw * 0.34), int(tw * 0.24), int(tw * 0.2)]
-                        cw = cw + [tw-sum(cw)]
+                        cw = cw + [tw - sum(cw)]
                         t = Table(data, colWidths=cw)
                         style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1987,7 +1996,7 @@ def result_print(request):
                     t.setStyle(style)
                     fwb.append(t)
             if client_prev == direction.client.pk and not split:
-                naprs.append(HRFlowable(width=pw, spaceAfter=2.5*mm, spaceBefore=1.5*mm, color=colors.lightgrey))
+                naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
             elif client_prev > -1:
                 naprs.append(PageBreak())
             naprs.append(PTOContainer(fwb))

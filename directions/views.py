@@ -95,7 +95,6 @@ def get_xls_dir(request):
     i = 1
     lastfio = ""
     nn = 0
-    import directory.models as dirmodels
 
     for dir in Napravleniya.objects.filter(pk__in=direction_id).order_by("client__family"):
         fresearches = set()
@@ -103,7 +102,7 @@ def get_xls_dir(request):
         flowers = set()
         for iss in Issledovaniya.objects.filter(napravleniye=dir):
             for fr in iss.research.fractions_set.all():
-                absor = dirmodels.Absorption.objects.filter(fupper=fr)
+                absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
                     fuppers.add(fr.pk)
                     fresearches.add(fr.research.pk)
@@ -130,10 +129,10 @@ def get_xls_dir(request):
         hasoak = False
         relpk = -1
         for isobj in iss:
-            for fraction in dirmodels.Fractions.objects.filter(research=isobj.research).order_by("sort_weight"):
+            for fraction in directory.Fractions.objects.filter(research=isobj.research).order_by("sort_weight"):
                 rpk = fraction.relation.pk
                 if fraction.research.pk in fresearches and fraction.pk in flowers:
-                    absor = dirmodels.Absorption.objects.filter(flower__pk=fraction.pk).first()
+                    absor = directory.Absorption.objects.filter(flower__pk=fraction.pk).first()
                     if absor.fupper.pk in fuppers:
                         rpk = absor.fupper.relation.pk
                         if rpk not in fractiontubes.keys():
