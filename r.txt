@@ -31,3 +31,4 @@ docutils
 django-project-version
 django-settings
 astm
+zeep

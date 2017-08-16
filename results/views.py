@@ -2935,7 +2935,7 @@ def results_search_directions(request):
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": ("-client__family", "-client__name", "-client__twoname",)}
-    for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
+    for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",)))[:]:
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
         datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(

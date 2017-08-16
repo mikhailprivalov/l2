@@ -509,6 +509,13 @@
             else {
                 request.data.page = gpage;
             }
+
+            if(request.data.query.length < 3 && (isNaN(request.data.query) || request.data.query === "") && request.data.otd === -1 && request.data.doc === -1){
+                errmessage("Запрос слишком короткий (минимум 3 символа)");
+                hl();
+                return;
+            }
+
             $.ajax(request).done(function (data) {
                 tmp_data = data.rows;
                 i = Object.keys(data.rows).length;
