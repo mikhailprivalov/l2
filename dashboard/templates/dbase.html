@@ -516,7 +516,7 @@
         }
 
         .navbar-inverse {
-            border-radius: 0 0 5px 5px;
+            border-radius: 0;
             background-color: #656D78;
             border: 0;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -657,9 +657,9 @@
             background: #049372 !important;
         }
 
-        #right-navbar li:last-child a:hover {
-            border-bottom-right-radius: 5px;
-        }
+        {#        #right-navbar li:last-child a:hover {#}
+        {#            border-bottom-right-radius: 5px;#}
+        {#        }#}
 
         .has-warning .twitter-typeahead .tt-input,
         .has-warning .twitter-typeahead .tt-hint {
@@ -1274,9 +1274,14 @@
             padding-right: 5px;
         }
 
-        .dropdown-menu .text-muted{
+        .dropdown-menu .text-muted {
             color: #f2f2f2;
             margin-left: 5px;
+        }
+
+        .navbar-brand > img {
+            height: 100%;
+            width: auto;
         }
     </style>
     {% block head_cn %}{% endblock %}
@@ -1286,6 +1291,9 @@
     {% block nav %}
         <nav class="navbar navbar-inverse">
             <div class="nav-cont">
+                <a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                   title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                                                                                src="/static/img/l2logo2.png"></a>
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                             aria-expanded="false" aria-controls="navbar">
@@ -1331,6 +1339,10 @@
                 </div>
             </div>
             <div class="nav-loader center">
+                <a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                   title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                                                                                src="/static/img/l2logo2.png"></a>
+
                 <div class="navbar-header">
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
                 </div>
