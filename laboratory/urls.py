@@ -3,6 +3,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import RedirectView
+
 from users.views import home
 from clients.views import ajax_search
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
@@ -26,8 +28,8 @@ import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
 
-
 urlpatterns = [
+                  url(r'^favicon\.ico$', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
                   url(r'^directions/ajax/save$', dir_save),
