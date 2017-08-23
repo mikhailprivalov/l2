@@ -218,7 +218,7 @@ def confirm_reset(request):
                 slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
             else:
                 result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (
-                str(SettingManager.get("lab_reset_confirm_time_min")))
+                    str(SettingManager.get("lab_reset_confirm_time_min")))
     return HttpResponse(json.dumps(result), content_type="application/json")
 
 
@@ -443,9 +443,9 @@ def discharge_search(request):
         doc_fio = request.GET.get("doc_fio", "")
 
         slog.Log(key=query, type=1001, body=json.dumps({"date_start": request.GET["date_start"],
-                                                         "date_end": request.GET["date_end"],
-                                                         "otd_pk": otd_pk,
-                                                         "doc_fio": doc_fio}),
+                                                        "date_end": request.GET["date_end"],
+                                                        "otd_pk": otd_pk,
+                                                        "doc_fio": doc_fio}),
                  user=request.user.doctorprofile).save()
 
         filter_type = "any"
@@ -520,6 +520,7 @@ def results_history_search(request):
 
     day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
     day2 = day1 + datetime.timedelta(days=1)
+
     import directions.models as d
     if type == "otd":
         collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
@@ -554,7 +555,13 @@ def dashboard_from(request):
     i = 0
     for podr in podrazdeleniya:
         i += 1
-        result[i] = {"tubes": TubesRegistration.objects.filter(doc_get__podrazileniye=podr, doc_recive__isnull=True, time_get__range=(date_start, date_end), issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye, notice="", issledovaniya__doc_save__isnull=True).distinct().count(), "title": podr.title, "pk": podr.pk}
+        result[i] = {"tubes": TubesRegistration.objects.filter(doc_get__podrazileniye=podr,
+                                                               notice="",
+                                                               doc_recive__isnull=True,
+                                                               time_get__range=(date_start, date_end),
+                                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye
+                                                               ).distinct().count(),
+                     "title": podr.title, "pk": podr.pk}
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 

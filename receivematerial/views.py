@@ -262,10 +262,13 @@ def tubes_get(request):
                                    int(date_start.split(".")[0]))
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
-        for tube in TubesRegistration.objects.filter(doc_get__podrazileniye=podrazledeniye, notice="",
-                                                     doc_recive__isnull=True, time_get__range=(date_start, date_end),
+        for tube in TubesRegistration.objects.filter(doc_get__podrazileniye=podrazledeniye,
+                                                     notice="",
+                                                     doc_recive__isnull=True,
+                                                     time_get__range=(date_start, date_end),
                                                      issledovaniya__research__subgroup=subgroup_lab):
-            if tube.getbc() in k or tube.rstatus(): continue
+            if tube.getbc() in k or tube.rstatus():
+                continue
             issledovaniya_tmp = []
             for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__subgroup=subgroup_lab,
                                                     tubes__time_get__range=(date_start, date_end)):
