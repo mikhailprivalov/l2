@@ -225,8 +225,9 @@ class Command(BaseCommand):
                 if ssd is None:
                     continue
                 sid = clientMedservices.service.sendServiceRend(referralId=direction_id, serviceId=ssd,
-                                                                isRendered="false",
+                                                                isRendered="true",
                                                                 patientUid=patinet_id, orgId=ORGID,
-                                                                dateTo=x.issledovaniye.time_confirmation.strftime(
-                                                                    "%Y-%m-%d"))
+                                                                dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d")
+                                                                )
                 self.stdout.write(f'SERVICE ADD {sid}')
