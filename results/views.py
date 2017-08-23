@@ -211,12 +211,14 @@ def results_save(request):
                     fraction_result.ref_about = r["about"]
                     fraction_result.ref_m = r["m"]
                     fraction_result.ref_f = r["f"]
+                    fraction_result.save()
                 else:
                     fraction_result.ref_title = "Default"
                     fraction_result.ref_about = ""
-                    fraction_result.ref_m = "{}"
-                    fraction_result.ref_f = "{}"
-                fraction_result.save()  # Сохранение
+                    fraction_result.ref_m = None
+                    fraction_result.ref_f = None
+                    fraction_result.save()
+                    fraction_result.get_ref(re_save=True)
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
             from django.utils import timezone
 
