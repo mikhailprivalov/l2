@@ -40,7 +40,6 @@ class CustomResearchOrdering(models.Model):
 
     def __str__(self):
         return str(self.user) + " - " + str(self.research) + ", " + str(self.weight)
-        "
 
 
 class TubesRegistration(models.Model):
