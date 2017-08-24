@@ -15,7 +15,7 @@ class FrequencyOfUseResearches(models.Model):
     cnt = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.user} - {self.research}, {self.cnt}"
+        return str(self.user) + " - " + str(self.research) + ", " + str(self.cnt)
 
     @staticmethod
     def inc(research, user):
@@ -39,7 +39,8 @@ class CustomResearchOrdering(models.Model):
     weight = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.user} - {self.research}, {self.weight}"
+        return str(self.user) + " - " + str(self.research) + ", " + str(self.weight)
+        "
 
 
 class TubesRegistration(models.Model):
@@ -175,7 +176,8 @@ class Napravleniya(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
                                        related_name="doc_who_create", help_text='Создатель направления')
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
-    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, help_text='ID направления в РМИС')
+    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True,
+                                   help_text='ID направления в РМИС')
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s)" % (

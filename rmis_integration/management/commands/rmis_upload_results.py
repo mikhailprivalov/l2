@@ -55,7 +55,7 @@ class Command(BaseCommand):
         session.auth = HTTPBasicAuth(login, passw)
 
         def gclient(addr):
-            return Client(f"{rmis_address}{addr}", transport=Transport(session=session))
+            return Client(rmis_address+addr, transport=Transport(session=session))
 
         clientDirectory = gclient(directory)
 
@@ -157,7 +157,7 @@ class Command(BaseCommand):
 
         for d in Napravleniya.objects.filter(issledovaniya__time_confirmation__gte=date).filter(
                         Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct():
-            polis_pk = f"{d.client.polis_serial}-{d.client.polis_number}"
+            polis_pk = d.client.polis_serial + "-" + d.client.polis_number
             if polis_pk not in polis_cache:
                 patinet_id = ""
 
@@ -179,7 +179,7 @@ class Command(BaseCommand):
                 if patinet_id == "":
                     d.rmis_number = "NONERMIS"
                     d.save()
-                self.stdout.write(f"{polis_pk} {'noneRMIS' if polis_cache[polis_pk] == '' else polis_cache[polis_pk]}")
+                self.stdout.write(polis_pk + ('noneRMIS' if polis_cache[polis_pk] == '' else polis_cache[polis_pk]))
             if polis_cache[polis_pk] == "":
                 continue
             data = d.data_sozdaniya.strftime("%Y-%m-%d")
@@ -196,7 +196,7 @@ class Command(BaseCommand):
             def get_service_id(s):
                 if s in services_dict:
                     return services_dict[s]
-                stt.stdout.write(f"NONE {s}")
+                stt.stdout.write("NONE "+s)
                 return None
 
             services_ids = [y for y in [get_service_id(x) for x in services_tmp] if y is not None]
@@ -215,7 +215,7 @@ class Command(BaseCommand):
                                                                  goalId=cel_id)
             d.rmis_number = direction_id
             d.save()
-            stt.stdout.write(f"NEW DIRECTION {direction_id}")
+            stt.stdout.write("NEW DIRECTION " + direction_id)
 
             r = c.get("/directions/pdf", {"napr_id": json.dumps([d.pk])})
             self.stdout.write("STATUS GET NAPR PDF " + str(r.status_code))
@@ -225,7 +225,7 @@ class Command(BaseCommand):
 
             )
             resip = requests.request("PUT",
-                                     f"{rmis_address}referral-attachments-ws/rs/referralAttachments/{direction_id}/Направление/direction.pdf",
+                                     rmis_address + "referral-attachments-ws/rs/referralAttachments/" + direction_id + "/Направление/direction.pdf",
                                      data=multipart_data,
                                      headers={'Content-Type': "multipart/form-data"}, auth=HTTPBasicAuth(login, passw))
 
@@ -239,7 +239,7 @@ class Command(BaseCommand):
 
             )
             resip = requests.request("PUT",
-                                     f"{rmis_address}referral-attachments-ws/rs/referralAttachments/{direction_id}/Результат/result.pdf",
+                                     rmis_address + "referral-attachments-ws/rs/referralAttachments/" + direction_id + "/Результат/result.pdf",
                                      data=multipart_data,
                                      headers={'Content-Type': "multipart/form-data"}, auth=HTTPBasicAuth(login, passw))
 
@@ -257,4 +257,4 @@ class Command(BaseCommand):
                                                                 dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                                                 dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d")
                                                                 )
-                self.stdout.write(f'SERVICE ADD {sid}')
+                self.stdout.write('SERVICE ADD ' + sid)

@@ -99,4 +99,4 @@ class Importedclients(models.Model):
         return "{0} {1}".format(age, _let.make_agree_with_number(age).word)
 
     def __str__(self):
-        return f"{self.fio()} {self.bd()} ({self.age_s()}) {self.type_str(num=True)}"
+        return self.fio() + " " + str(self.bd()) + " (" + self.age_s() + ") " + self.type_str(num=True)
