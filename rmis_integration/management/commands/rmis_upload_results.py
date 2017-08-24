@@ -49,6 +49,8 @@ class Command(BaseCommand):
         passw = SettingManager.get("rmis_password")
         rmis_address = SettingManager.get("rmis_address")
         upload_after = SettingManager.get("rmis_upload_results_after")
+        fin_funding_source_type = "fin_funding_source_type"
+        fin_funding_code = ""
         session = Session()
         session.auth = HTTPBasicAuth(login, passw)
 
@@ -79,6 +81,8 @@ class Command(BaseCommand):
                 celi_code = code
             if table == service_table:
                 service_code = code
+            if table == fin_funding_source_type:
+                fin_funding_code = code
 
         self.stdout.write(orgs_table + " " + orgs_code)
         self.stdout.write(docs_table + " " + docs_code)
@@ -129,6 +133,28 @@ class Command(BaseCommand):
         c = TC(enforce_csrf_checks=False)
         cstatus = c.login(username="rmis", password="clientDirections.service.sendReferral")
         self.stdout.write("AUTH " + str(cstatus))
+
+        fin_src = {}
+
+        rp = clientDirectory.service.getRefbook(refbookCode=fin_funding_code, version="CURRENT")
+        for r in rp:
+            rr = r['column']
+            id = ''
+            val = ''
+            for rrr in rr:
+                if rrr["name"] == "NAME":
+                    id = rrr["data"]
+                if rrr["name"] == "ID":
+                    val = rrr["data"]
+            fin_src[id] = val
+
+        def getfinid(typetxt):
+            if typetxt == "платно":
+                typetxt = 'Средства граждан'
+            if typetxt == "бюджет":
+                typetxt = 'Бюджет муниципальный'
+            return fin_src.get(typetxt, fin_src['Безвозмездно'])
+
         for d in Napravleniya.objects.filter(issledovaniya__time_confirmation__gte=date).filter(
                         Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct():
             polis_pk = f"{d.client.polis_serial}-{d.client.polis_number}"
@@ -185,6 +211,7 @@ class Command(BaseCommand):
                                                                  receivingOrganizationId=ORGID,
                                                                  receivingDepartmentId=lab_id,
                                                                  refServiceId=services_ids,
+                                                                 fundingSourceTypeId=getfinid(d.istochnik_f.tilie),
                                                                  goalId=cel_id)
             d.rmis_number = direction_id
             d.save()
@@ -198,7 +225,7 @@ class Command(BaseCommand):
 
             )
             resip = requests.request("PUT",
-                                     f"https://38.is-mis.ru/referral-attachments-ws/rs/referralAttachments/{direction_id}/Направление/direction.pdf",
+                                     f"{rmis_address}referral-attachments-ws/rs/referralAttachments/{direction_id}/Направление/direction.pdf",
                                      data=multipart_data,
                                      headers={'Content-Type': "multipart/form-data"}, auth=HTTPBasicAuth(login, passw))
 
@@ -212,7 +239,7 @@ class Command(BaseCommand):
 
             )
             resip = requests.request("PUT",
-                                     f"https://38.is-mis.ru/referral-attachments-ws/rs/referralAttachments/{direction_id}/Результат/result.pdf",
+                                     f"{rmis_address}referral-attachments-ws/rs/referralAttachments/{direction_id}/Результат/result.pdf",
                                      data=multipart_data,
                                      headers={'Content-Type': "multipart/form-data"}, auth=HTTPBasicAuth(login, passw))
 
