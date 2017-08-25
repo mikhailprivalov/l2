@@ -212,6 +212,7 @@ class Command(BaseCommand):
                                                                  receivingDepartmentId=lab_id,
                                                                  refServiceId=services_ids,
                                                                  fundingSourceTypeId=getfinid(d.istochnik_f.tilie),
+                                                                 note='Автоматический вывод из Лабораторной Информационной Системы L2',
                                                                  goalId=cel_id)
             d.rmis_number = direction_id
             d.save()
@@ -255,6 +256,7 @@ class Command(BaseCommand):
                                                                 isRendered="true",
                                                                 patientUid=patinet_id, orgId=ORGID,
                                                                 dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                                                dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d")
+                                                                dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                note='Автоматический вывод из Лабораторной Информационной Системы L2. Результат в направлении',
                                                                 )
                 self.stdout.write('SERVICE ADD ' + sid)
