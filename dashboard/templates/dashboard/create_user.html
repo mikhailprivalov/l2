@@ -12,19 +12,19 @@
             Пользователь добавлен
         </div>
     {% endif %}
+    <h3>Форма добавления пользователя</h3>
+    <small>
+        <a href="#" onclick="$('#inputEmail').val(autogen());return false;">Автогенерация имени
+            пользователя</a><br/>
+        <a href="#" onclick="$('#inputPassword').val(omgopass({syllables: 2, titlecase: false}));return false;">Генерация
+            пароля</a>
+    </small><br/><br/>
     <form method="POST">
         <input style="display:none" type="text" name="fakeusernameremembered"/>
         <input style="display:none" type="password" name="fakepasswordremembered"/>
         {% csrf_token %}
-        <h3>Форма добавления пользователя</h3>
-        <small>
-            <a href="#" onclick="$('#inputEmail').val(autogen());return false;">Автогенерация имени
-                пользователя</a><br/>
-            <a href="#" onclick="$('#inputPassword').val(omgopass({syllables: 2, titlecase: false}));return false;">Генерация
-                пароля</a>
-        </small>
 
-        <div class="input-group" style="margin: 0 auto">
+        <div class="input-group" style="margin: 0 auto;width: 100%;">
             <input type="text" id="inputFio" class="form-control" onblur="fix();" name='fio' placeholder="ФИО"
                    value="{{ fio }}"
                    style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;"
