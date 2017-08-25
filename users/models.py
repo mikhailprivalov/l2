@@ -33,6 +33,9 @@ class DoctorProfile(models.Model):
         if len(fio_split) == 1:
             return fio
 
+        if len(fio_split) > 3:
+            fio_split = [fio_split[0], " ".join(fio_split[1:-2]), fio_split[-1]]
+
         if dots:
             return fio_split[0] + " " + fio_split[1][0] + "." + ("" if len(fio_split) == 2 else fio_split[2][0] + ".")
         return fio_split[0] + " " + fio_split[1][0] + ("" if len(fio_split) == 2 else fio_split[2][0])
