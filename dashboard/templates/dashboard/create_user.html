@@ -16,14 +16,22 @@
         <input style="display:none" type="text" name="fakeusernameremembered"/>
         <input style="display:none" type="password" name="fakepasswordremembered"/>
         {% csrf_token %}
+        <h3>Форма добавления пользователя</h3>
+        <small>
+            <a href="#" onclick="$('#inputEmail').val(autogen());return false;">Автогенерация имени
+                пользователя</a><br/>
+            <a href="#" onclick="$('#inputPassword').val(omgopass({syllables: 2, titlecase: false}));return false;">Генерация
+                пароля</a>
+        </small>
+
         <div class="input-group" style="margin: 0 auto">
-            <h3>Форма добавления пользователя</h3>
-            <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
-                   value="{{ uname }}" required
-                   style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;">
-            <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
+            <input type="text" id="inputFio" class="form-control" onblur="fix();" name='fio' placeholder="ФИО"
+                   value="{{ fio }}"
+                   style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;"
                    required>
-            <input type="text" id="inputFio" class="form-control" name='fio' placeholder="ФИО" value="{{ fio }}"
+            <input type="text" id="inputEmail" class="form-control" name='username' placeholder="Логин"
+                   value="{{ uname }}" required>
+            <input type="text" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
                    required>
 
             <div class="input-group" style="width: 100%">
@@ -48,20 +56,30 @@
             <input type="submit" class="form-control btn btn-success" value="Сохранить"
                    style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
         </div>
-        <div class="panel panel-default" style="max-width: 400px;margin: 30px auto 0;">
-            <div class="panel-heading">Генератор паролей</div>
-            <div class="panel-body">
-                Сгенерированый пароль:
-                <input type="password" class="form-control" name="passwordGen" id="passwordGen"/>
-                <a href="#" class="showPassword">Скрыть/Показать (Alt+s)</a>
-                <a href="#" class="generatePassword">Сегенерировать (Alt+g)</a>
-                <a href="#" class="pastePassword">Вставить в форму (Alt+v)</a>
-            </div>
-        </div>
     </form>
 {% endblock %}
 {% block scripts %}
+
+    <script src="/static/js/omgopass.js"></script>
     <script>
+        let toTranslit = function (text) {
+            return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
+                function (all, ch, space, words, i) {
+                    if (space || words) {
+                        return space ? '-' : '';
+                    }
+                    let code = ch.charCodeAt(0),
+                        index = code == 1025 || code == 1105 ? 0 :
+                            code > 1071 ? code - 1071 : code - 1039,
+                        t = ['yo', 'a', 'b', 'v', 'g', 'd', 'e', 'zh',
+                            'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p',
+                            'r', 's', 't', 'u', 'f', 'h', 'c', 'ch', 'sh',
+                            'shch', '', 'y', '', 'e', 'yu', 'ya'
+                        ];
+                    return t[index];
+                });
+        };
+        let generated = "";
         // Настройка горячих клавиш
         $(document).on('keydown', null, 'alt+s', function () {
             toggleShow();
@@ -85,6 +103,7 @@
                 pastePass();
             });
         });
+
         function str_rand() { // Функция генерации пароля
             let result = '';
             const words = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
@@ -95,10 +114,32 @@
             }
             return result;
         }
+
+        function fix() {
+            $('#inputFio').val($('#inputFio').val().trim().replace(/\s\s\s/g, " ").replace(/\s\s/g, " ").replace(/\s\s\s/g, " ").replace(/\s\s/g, " "));
+        }
+
         function generate() {
             document.getElementById('passwordGen').setAttribute('type', 'text');
             $('#passwordGen').attr('value', str_rand());
         }
+
+
+        function autogen() {
+            fix();
+            let v = $("#inputFio").val();
+            let ls = v.split(" ");
+            if (ls.length > 3) {
+                ls = [ls[0], ls.slice(1, ls.length - 2).join(" "), ls[ls.length - 1]];
+            }
+            while (ls.length <= 2) {
+                ls.push(" ");
+            }
+            v = ls[0] + ls[1][0] + ls[2][0];
+            return toTranslit(v.replace(/\s/g, ""));
+        }
+
+
         function toggleShow() { // Переключение видимости пароля
             let inputPsw = $('#passwordGen');
             if (inputPsw.attr('type') === 'password') {
@@ -107,6 +148,7 @@
                 document.getElementById('passwordGen').setAttribute('type', 'password');
             }
         }
+
         function pastePass() {
             $("#inputPassword").val($('#passwordGen').val());
         }
