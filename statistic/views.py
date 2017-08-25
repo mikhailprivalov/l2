@@ -265,7 +265,7 @@ def statistic_xls(request):
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(
-            directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title'))
+            directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
         pods = list(Podrazdeleniya.objects.filter(hide=False, isLab=False).order_by("title"))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
@@ -281,30 +281,11 @@ def statistic_xls(request):
         iss = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False,
                                            time_confirmation__range=(date_start, date_end))
 
-        ws = wb.add_sheet("Статистика по исполнителям")
-
         font_style_wrap = xlwt.XFStyle()
         font_style_wrap.alignment.wrap = 1
         font_style_wrap.borders = borders
         font_style_vertical = xlwt.easyxf('align: rotation 90')
         font_style_vertical.borders = borders
-
-        row_num = 0
-        row = [
-            ("Исполнитель", 5500),
-            ("Отделение", 5000)
-        ]
-
-        from django.utils.text import Truncator
-
-        for research in researches:
-            row.append((Truncator(research.title).chars(30), 1300,))
-
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_wrap if col_num < 2 else font_style_vertical)
-            ws.col(col_num).width = row[col_num][1]
-
-        row_num += 1
 
         def val(v):
             return "" if v == 0 else v
@@ -312,9 +293,28 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        cnt_itogo = {}
         for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(labtype=0).exclude(
                 labtype=None).order_by("fio"):
+
+            cnt_itogo = {}
+            ws = wb.add_sheet(executor.fio)
+
+            row_num = 0
+            row = [
+                ("Исполнитель", 5500),
+                ("Отделение", 5000)
+            ]
+
+            from django.utils.text import Truncator
+
+            for research in researches:
+                row.append((Truncator(research.title).chars(30), 1300,))
+
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num][0], font_style_wrap if col_num < 2 else font_style_vertical)
+                ws.col(col_num).width = row[col_num][1]
+
+            row_num += 1
             data = {"otds": {}, "all": defaultdict(lambda: 0)}
             itogo_row = [executor.get_fio(dots=True), nl("Итого")]
             empty_row = ["", ""]
@@ -368,27 +368,6 @@ def statistic_xls(request):
             for col_num in range(len(itogo_row)):
                 ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
             row_num += 1
-            for col_num in range(len(empty_row)):
-                ws.write(row_num, col_num, empty_row[col_num], font_style_wrap)
-            row_num += 1
-        itogo_row = [lab.title, nl("Итого")] + [val(cnt_itogo[research.title]) for research in researches]
-        for col_num in range(len(itogo_row)):
-            ws.write(row_num, col_num, itogo_row[col_num], font_style_wrap)
-        row_num += 1
-
-        row = [
-            "",
-            ""
-        ]
-
-        for research in researches:
-            row.append(Truncator(research.title).chars(30))
-
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style_vertical)
-
-        row_num += 1
-
     elif tp == "otd":
         otd = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
@@ -512,11 +491,11 @@ def statistic_xls(request):
             ]
             for pod in pods:
                 gets = d.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
-                                                                   type__tube=tube,
-                                                                   time_recive__range=(date_start, date_end),
-                                                                   doc_get__podrazileniye=pod).filter(
-                                                                   Q(notice="") |
-                                                                   Q(notice__isnull=True)).distinct()
+                                                          type__tube=tube,
+                                                          time_recive__range=(date_start, date_end),
+                                                          doc_get__podrazileniye=pod).filter(
+                    Q(notice="") |
+                    Q(notice__isnull=True)).distinct()
                 row.append("" if not gets.exists() else str(gets.count()))
 
             for col_num in range(len(row)):
