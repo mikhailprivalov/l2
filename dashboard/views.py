@@ -226,7 +226,7 @@ def confirm_reset(request):
 @staff_member_required
 def create_user(request):  # Страница создания пользователя
     registered = False
-    podr = Podrazdeleniya.objects.filter(hide=False)  # Получение всех подразделений
+    podr = Podrazdeleniya.objects.filter(hide=False).order_by("title")  # Получение всех подразделений
     podrpost = 0
     groups = Group.objects.all()  # Получение всех групп
     if request.method == 'POST':
