@@ -136,7 +136,12 @@
                 ls.push(" ");
             }
             v = ls[0] + ls[1][0] + ls[2][0];
-            return toTranslit(v.replace(/\s/g, ""));
+            v = toTranslit(v.replace(/\s/g, ""));
+            if(v === "" || (v === $("#inputFio").val() && v.indexOf("user-") !== -1 && v.length > )){
+                v = "user-" + omgopass({syllables: 1, titlecase: false});
+                $("#inputFio").val(v);
+            }
+            return v;
         }
 
 
