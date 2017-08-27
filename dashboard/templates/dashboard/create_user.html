@@ -137,7 +137,7 @@
             }
             v = ls[0] + ls[1][0] + ls[2][0];
             v = toTranslit(v.replace(/\s/g, ""));
-            if(v === "" || (v === $("#inputFio").val() && v.indexOf("user-") !== -1 && v.length > )){
+            if(v === "" || (v === $("#inputFio").val() && v.indexOf("user-") !== -1 && v.length >= 8 && v.length <= 9)){
                 v = "user-" + omgopass({syllables: 1, titlecase: false});
                 $("#inputFio").val(v);
             }
