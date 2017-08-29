@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        orgname = "Клиники ФГБОУ ВО ИГМУ Минздрава России"
+        orgname = SettingManager.get("rmis_orgname")
         directory = SettingManager.get("rmis_path_directory")
         patients = SettingManager.get("rmis_path_patients")
         directions = SettingManager.get("rmis_path_directions")
