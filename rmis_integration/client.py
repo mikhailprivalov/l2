@@ -61,6 +61,8 @@ class Client(object):
                                       "fin_funding_source_type"])
         self.patients = Patients(self)
         self.services = Services(self)
+        self.directions = Directions(self)
+        self.rendered_services = RenderedServices(self)
 
     def get_client(self, address_key: str) -> zeepClient:
         address = Settings.get(address_key)
@@ -221,11 +223,11 @@ class Services(BaseRequester):
         return None
 
 
-class RenderedServices(BaseRequester):
-    def __init__(self, client: Client):
-        super().__init__(client, "rmis_path_medservices")
-
-
 class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "rmis_path_directions")
+
+
+class RenderedServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "rmis_path_medservices")
