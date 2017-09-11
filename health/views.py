@@ -40,7 +40,7 @@ def db(request):
 @staff_member_required
 def rmis_check(request):
     c = Client()
-    return HttpResponse(c.search_organization_id(check=True), content_type="application/json")
+    return HttpResponse(c.search_organization_id(check=True) + " " + c.search_dep_id(check=True), content_type="application/json")
 
 
 @login_required

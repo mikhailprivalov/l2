@@ -9,6 +9,8 @@ from zeep.transports import Transport
 import clients.models as clients_models
 from django.core.cache import cache
 
+from directions.models import Napravleniya, Result
+
 
 class Utils:
     @staticmethod
@@ -35,8 +37,8 @@ class Utils:
 
 class Settings:
     @staticmethod
-    def get(key):
-        return SettingManager.get("rmis_" + key)
+    def get(key, default=None, default_type='s'):
+        return SettingManager.get("rmis_" + key, default=default, default_type=default_type)
 
 
 def get_md5(s):
@@ -90,6 +92,32 @@ class Client(object):
             id = self.get_directory("pim_organization").get_first("ID", "FULL_NAME", query)
             cache.set(key, id, 24 * 60 * 60)
         return id
+
+    def search_dep_id(self, q=None, check=False):
+        query = q or Settings.get("depname")
+        key = 'rmis_dep_id_' + get_md5(query)
+        id = cache.get(key)
+        if check and id is not None:
+            cache.delete(key)
+        if id is None:
+            id = self.get_directory("pim_department").get_first("ID", "NAME", query)
+            cache.set(key, id, 24 * 60 * 60)
+        return id
+
+    def get_fin_dict(self):
+        rp = self.get_directory("fin_funding_source_type").get_all_values()
+        fin_src = {}
+        for r in rp:
+            rr = r['column']
+            id = ''
+            val = ''
+            for rrr in rr:
+                if rrr["name"] == "NAME":
+                    id = rrr["data"]
+                if rrr["name"] == "ID":
+                    val = rrr["data"]
+            fin_src[id] = val
+        return fin_src
 
 
 class BaseRequester(object):
@@ -185,8 +213,8 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
-                    "patrName"] is not None) and individual_row["birthDate"] is not None):
+                        (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
+                            "patrName"] is not None) and individual_row["birthDate"] is not None):
                 individual = clients_models.Individual(family=individual_row["surname"].title() or "",
                                                        name=individual_row["name"].title() or "",
                                                        patronymic=individual_row["patrName"].title() or "",
@@ -211,7 +239,7 @@ class Patients(BaseRequester):
 
 class Services(BaseRequester):
     def __init__(self, client: Client):
-        super().__init__(client, "rmis_path_services")
+        super().__init__(client, "path_services")
         self.services = {}
         srv = self.client.getServices(clinic=client.search_organization_id())
         for r in srv:
@@ -222,12 +250,40 @@ class Services(BaseRequester):
             return self.services[s]
         return None
 
+    def get_service_ids(self, direction: Napravleniya):
+        services_tmp = [x.fraction.code.replace("А", "A").replace("В", "B") for x in
+                        Result.objects.filter(issledovaniye__napravleniye=direction) if x.fraction.code != ""]
+        return [y for y in [self.get_service_id(x) for x in services_tmp] if y is not None]
+
+
+
+def ndate(d: datetime.datetime):
+    return d.strftime("%Y-%m-%d")
+
 
 class Directions(BaseRequester):
     def __init__(self, client: Client):
-        super().__init__(client, "rmis_path_directions")
+        super().__init__(client, "path_directions")
+        self.baseclient = client
+
+    def check_send(self, direction: Napravleniya, org_id_from: str, otd_from_id: str, org_id_to: str, otd_to_id: str):
+        if not direction.rmis_number or direction.rmis_number == "":
+            direction.rmis_number = self.client.sendReferral(patientUid=direction.client.individual.check_rmis(),
+                                                    number=str(direction.pk),
+                                                    typeId=self.baseclient.get_directory("md_referral_type").get_first(search_data=Settings.get("direction_type_title", default="Направление в лабораторию")),
+                                                    referralDate=ndate(direction.data_sozdaniya),
+                                                    referralOrganizationId=org_id_from,
+                                                    referringDepartmentId=otd_from_id,
+                                                    receivingOrganizationId=org_id_to,
+                                                    receivingDepartmentId=otd_to_id,
+                                                    refServiceId=self.baseclient.services.get_service_ids(direction),
+                                                    fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.baseclient.get_fin_dict()),
+                                                    note='Автоматический вывод из Лабораторной Информационной Системы L2',
+                                                    goalId=self.baseclient.get_directory("md_referral_goal").get_first(search_data=Settings.get("cel_title", default="Для коррекции лечения")))
+            direction.save()
+        return direction.rmis_number
 
 
 class RenderedServices(BaseRequester):
     def __init__(self, client: Client):
-        super().__init__(client, "rmis_path_medservices")
+        super().__init__(client, "path_medservices")
