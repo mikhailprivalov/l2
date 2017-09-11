@@ -60,6 +60,7 @@ class Client(object):
                                       "fer_se_service_type",
                                       "fin_funding_source_type"])
         self.patients = Patients(self)
+        self.services = Services(self)
 
     def get_client(self, address_key: str) -> zeepClient:
         address = Settings.get(address_key)
@@ -209,6 +210,15 @@ class Patients(BaseRequester):
 class Services(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "rmis_path_services")
+        self.services = {}
+        srv = self.client.getServices(clinic=client.search_organization_id())
+        for r in srv:
+            self.services[r["code"]] = r["id"]
+
+    def get_service_id(self, s):
+        if s in self.services:
+            return self.services[s]
+        return None
 
 
 class RenderedServices(BaseRequester):
