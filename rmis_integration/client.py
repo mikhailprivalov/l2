@@ -15,9 +15,12 @@ from directions.models import Napravleniya, Result
 class Utils:
     @staticmethod
     def get_column_value(row, column):
-        for col in row["column"]:
-            if col["name"] == column:
-                return col["data"]
+        try:
+            for col in row["column"]:
+                if col["name"] == column:
+                    return col["data"]
+        except Exception:
+            return ""
 
     @staticmethod
     def make_dict(rows, key_column="NAME", value_column="ID"):
