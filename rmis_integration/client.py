@@ -181,8 +181,9 @@ class Patients(BaseRequester):
             individual_row = None
             if q != "":
                 individual_row = self.client.getIndividual(q)
-            if individual_row and ((individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
-                "patrName"] is not None) and individual_row["birthDate"] is not None):
+            if individual_row and (
+                (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
+                    "patrName"] is not None) and individual_row["birthDate"] is not None):
                 individual = clients_models.Individual(family=individual_row["surname"].title() or "",
                                                        name=individual_row["name"].title() or "",
                                                        patronymic=individual_row["patrName"].title() or "",
@@ -204,3 +205,17 @@ class Patients(BaseRequester):
                 return_rows.append(individual)
         return return_rows
 
+
+class Services(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "rmis_path_services")
+
+
+class RenderedServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "rmis_path_medservices")
+
+
+class Directions(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "rmis_path_directions")
