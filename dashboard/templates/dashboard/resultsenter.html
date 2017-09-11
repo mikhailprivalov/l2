@@ -2,11 +2,11 @@
 {% block title %}Ввод результатов{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
-    <div class="col-xs-3" style="padding-right: 0">
-        <div class="fastlinks"><a href="#" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;<a
-                href="#" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;<a href="#"
-                                                                                       onclick="dayprint();return false">Печать
-            результатов за день</a></div>
+    <div class="col-md-4 col-lg-3" style="padding-right: 0">
+        <div class="fastlinks">
+            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;
+            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;
+            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="dayprint();return false">Печать результатов за день</a></div>
         <div class="panel panel-flt m5" style="margin-bottom: 10px">
             <div class="panel-body" style="padding:10px;">
                 <div class="input-group" style="margin-bottom: 5px">
@@ -83,8 +83,8 @@
             </div>
         </div>
     </div>
-    <div class="col-xs-3" style="margin-top: -10px">
-        <div class="btn-group btn-group-justified" style="margin-bottom: 6px">
+    <div class="col-md-4 col-lg-3" style="margin-top: -10px;padding-right: 0;">
+        <div class="btn-group btn-group-justified" style="margin-bottom: 6px;">
             <div class="btn-group">
                 <button onclick="print_results(); return false;" id="result-print" disabled
                         class="btn btn-sm btn-primary-nb btn-ell">Печать результатов
@@ -96,7 +96,7 @@
                 </button>
             </div>
         </div>
-        <table class="table table-bordered table-condensed" id="dir_info">
+        <table class="table table-bordered table-condensed table-responsive" id="dir_info">
             <tr>
                 <th style="width: 34%">Направление</th>
                 <td style="width: 16%"><span class="dir-datafield" id="dir_num"></span></td>
@@ -119,8 +119,8 @@
                 <th style="width: 34%">История</th>
                 <td style="width: 16%"><span class="dir-datafield" id="client_hisnum"></span></td>
             </tr>
-            <tr>
-                <th style="width: 34%">Лечащий врач</th>
+            <tr title="Лечащий врач">
+                <th style="width: 34%">Леч. врач</th>
                 <td style="width: 66%" colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
             <tr>
@@ -129,13 +129,9 @@
             </tr>
         </table>
         <div class="fastlinks" id="loaded-buttons" style="min-height: 20px">
-            <div class="row">
-                <div class="col-xs-6">
-                    <a href="#" onclick="open_fill_form();return false;">Заполнить поля</a>
-                </div>
-                <div class="col-xs-6" style="text-align: right">
-                    <a href="#" onclick="reload_fast(true);return false;">Перезагрузить данные</a>
-                </div>
+            <div style="display: flex;justify-content: space-between;flex-direction: row-reverse">
+                <a href="#" onclick="reload_fast(true);return false;">Перезагрузить данные</a>
+                <a href="#" onclick="open_fill_form();return false;">Заполнить поля</a>
             </div>
         </div>
         <div id="issledovaniya-scroll">
@@ -143,7 +139,7 @@
             <ul id="issledovaniya"></ul>
         </div>
     </div>
-    <div class="col-xs-6" id="form-scroll" style="margin-top: -10px;">
+    <div class="col-md-4 col-lg-6" id="form-scroll" style="margin-top: -10px">
         <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
         <div id="result-form"></div>
     </div>
@@ -624,8 +620,10 @@
             color: #000
         }
 
-        #dir_info td {
+        #dir_info td, #dir_info th {
             padding: 5px;
+            font-size: 14px;
+            word-wrap: break-word
         }
 
         .center {
@@ -1279,18 +1277,18 @@
         function sync_active(resync) {
             let rs = !!resync;
             $(".select-dir.active, .select-tube.active").removeClass("active");
-            if (dir_active !== -1 && $(`[direction='${dir_active}']`).length) {
-                if (type_active === 0 || rs) {
+            if (dir_active != -1 && $(`[direction='${dir_active}']`).length) {
+                if (type_active == 0 || rs) {
                     $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active === 0 ? "active" : ""), 0, {offset: -35});
                 }
-                if (type_active === 1 || rs) {
-                    $(`[direction='${dir_active}']`).addClass(type_active === 1 ? "active" : "");
+                if (type_active == 1 || rs) {
+                    $(`[direction='${dir_active}']`).addClass(type_active == 1 ? "active" : "");
                     $('#tubes-list').scrollTo($(`.select-tube[direction='${dir_active}']`), 0, {offset: -35});
                 }
             }
             for (let tube of tubes_active) {
                 $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group);
-                if (type_active === 0) {
+                if (type_active == 0) {
                     $(`.select-tube[tube='${tube.pk}']`).addClass("active");
                 }
             }
@@ -1944,8 +1942,8 @@
         }
 
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 90);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 90);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 110);
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 110);
             $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50);
             if (first_resize) {
                 $('#tubes-list').perfectScrollbar();

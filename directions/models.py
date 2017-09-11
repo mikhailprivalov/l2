@@ -1,5 +1,5 @@
 from django.db import models
-from clients.models import Importedclients
+import clients.models as Clients
 from users.models import DoctorProfile
 from jsonfield import JSONField
 from researches.models import Researches, Tubes
@@ -154,7 +154,8 @@ class IstochnikiFinansirovaniya(models.Model):
     """
     tilie = models.CharField(max_length=511, help_text='Название')
     active_status = models.BooleanField(default=True, help_text='Статус активности')
-    istype = models.CharField(max_length=4, default="poli", help_text='К поликлинике или стационару относится источник')
+    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования')
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
 
 
 class Napravleniya(models.Model):
@@ -163,7 +164,7 @@ class Napravleniya(models.Model):
     """
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления')
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
-    client = models.ForeignKey(Importedclients, db_index=True, help_text='Пациент')
+    client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент')
     doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач')
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True,
                                     help_text='Источник финансирования')
@@ -180,10 +181,10 @@ class Napravleniya(models.Model):
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s)" % (
-            self.pk, self.client.fio(), self.doc.get_fio(), self.doc_who_create)
+            self.pk, self.client.individual.fio(), self.doc.get_fio(), self.doc_who_create)
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, patient_type, historynum, issledovaniya=None):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, issledovaniya=None):
         """
         Генерация направления
         :param client_id: id пациента
@@ -191,18 +192,17 @@ class Napravleniya(models.Model):
         :param istochnik_f: источник финансирования
         :param diagnos: диагноз
         :param patient_type: тип пациента (напр; поликлиника/стационар)
-        :param historynum: номер истории в стационаре
         :param issledovaniya: исследования (reserved)
         :return: созданое направление
         """
         if issledovaniya is None:
             issledovaniya = []
-        dir = Napravleniya(client=Importedclients.objects.get(pk=client_id),
+        dir = Napravleniya(client=Clients.Card.objects.get(pk=client_id),
                            doc=doc,
                            istochnik_f=istochnik_f,
                            diagnos=diagnos, cancel=False)
 
-        if patient_type == "stat":
+        if historynum != "":
             dir.history_num = historynum
         dir.save()
         return dir
@@ -224,7 +224,7 @@ class Napravleniya(models.Model):
             dir.save()
 
     @staticmethod
-    def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, ptype, doc_current,
+    def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments):
         res = {}  # Словарь с направлениями, сгруппированными по лабораториям
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -290,7 +290,6 @@ class Napravleniya(models.Model):
                                                                                                  doc_current,
                                                                                                  finsource,
                                                                                                  diagnos,
-                                                                                                 ptype,
                                                                                                  history_num)
                             Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
                                                      ofname_id, ofname)
@@ -306,7 +305,6 @@ class Napravleniya(models.Model):
                                                                                                  doc_current,
                                                                                                  finsource,
                                                                                                  diagnos,
-                                                                                                 ptype,
                                                                                                  history_num)
                             Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
                                                      ofname_id, ofname)
@@ -324,10 +322,10 @@ class Napravleniya(models.Model):
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
                          body=json.dumps({"researches": [x for x in researches if x is not None],
-                                          "client_num": Importedclients.objects.get(pk=client_id).num,
+                                          "client_num": Clients.Card.objects.get(pk=client_id).number,
                                           "client_id": client_id, "diagnos": diagnos,
-                                          "finsource": finsource.tilie + " " + finsource.istype,
-                                          "history_num": history_num, "ofname": str(ofname), "ptype": ptype,
+                                          "finsource": finsource.tilie + " " + finsource.base.title,
+                                          "history_num": history_num, "ofname": str(ofname),
                                           "comments": comments})).save()
 
             else:
@@ -433,7 +431,7 @@ class Result(models.Model):
             return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
 
         ref = self.ref_f
-        sex = self.issledovaniye.napravleniye.client.sex.lower()
+        sex = self.issledovaniye.napravleniye.client.individual.sex.lower()
         if sex == "м":
             ref = self.ref_m
 
@@ -470,8 +468,8 @@ class Result(models.Model):
         calc = "maybe"
 
         value = self.value
-        sex = self.issledovaniye.napravleniye.client.sex.lower()
-        age = self.issledovaniye.napravleniye.client.age()
+        sex = self.issledovaniye.napravleniye.client.individual.sex.lower()
+        age = self.issledovaniye.napravleniye.client.individual.age()
 
         ref = self.get_ref(fromsave=fromsave)
 

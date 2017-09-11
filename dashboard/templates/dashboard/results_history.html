@@ -62,22 +62,11 @@
                         </div>
                     </div>
                     <div class="row" style="margin-top: 17px">
-                        <div class="col-xs-12">
-                            <div class="btn-group btn-group-justified" data-toggle="buttons">
-                                <label class="btn btn-blue-nb btn-ell" title="Поликлиника">
-                                    <input type="radio" name="type" id="option1" value="poli"
-                                           autocomplete="off">
-                                    Поликлиника
-                                </label>
-                                <label class="btn btn-blue-nb btn-ell" title="Стационар">
-                                    <input type="radio" name="type" id="option2" value="stat"
-                                           autocomplete="off"> Стационар
-                                </label>
-                                <label class="btn btn-blue-nb btn-ell active" title="Не учитывать категорию">
-                                    <input type="radio" checked name="type" id="option3" value="%"
-                                           autocomplete="off"> Не учитывать категорию
-                                </label>
-                            </div>
+                        <div class="col-xs-6" style="padding-right: 3px;">
+                            <select class="selectpicker" data-width="100%" id="type"></select>
+                        </div>
+                        <div class="col-xs-6">
+                            <label>Поиск по архиву <input type="checkbox" name="archive" id="archive-search" /></label>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 17px">
@@ -390,7 +379,6 @@
     <script>
         const users_av = {{ users|safe }};
         const current_user_pk = "{{ request.user.doctorprofile.pk }}";
-        const card_types = {"poli": "поликлиника", "stat": "стационар", "poli_stom": "поликлиника-стом"};
         let page = 1;
         let request = {};
         let tmp_data = {};
@@ -416,6 +404,11 @@
             $(".year").val((today.getFullYear()));
             $("#m-type").val(today.getMonth());
             $("#patient-view,#researches-view,#directions-view").hide();
+            $("#type").append(`<option value="-1">Все категории</option>`);
+            for (let base of card_bases) {
+                $("#type").append(`<option value="${base.pk}">${base.title}</option>`);
+            }
+            $("#type").val("-1").selectpicker('refresh');
             change_type();
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
@@ -490,7 +483,8 @@
                 request = {
                     method: "GET", url: "/results/search/directions",
                     data: {
-                        query: query, type_patient: $('[name="type"]:checked').val(),
+                        query: query,
+                        type_patient: $('#type').val(),
                         page: page,
                         period: JSON.stringify(period),
                         perform_norms: $("#perform_norms").is(":checked"),
@@ -531,7 +525,7 @@
                             $("#dirs-list tbody").append(`<tr class='ttip isnormal-${tmp_data[key].is_normal}' pk='${key}'>
 <td onclick="open_print_form('${key}', ${i});">${row.fio}</td>
 <td onclick="open_print_form('${key}', ${i});">${row.birthdate}</td>
-<td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${card_types[row.type]}</td>
+<td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${row.type}</td>
 <td onclick="open_print_form('${key}', ${i});">${row.directions.length}</td>
 <td onclick="open_print_form('${key}', ${i});">${row.date}</td>
 <td><label><input type='checkbox' class='batch-print' pk='${key}' /></label></td>
@@ -540,7 +534,7 @@
                                 //"№": i,
                                 "ФИО": row.fio,
                                 "Возраст": row.birthdate,
-                                "Номер карты": `${card_types[row.type]} - ${row.cardnum}`,
+                                "Номер карты": `${row.type} - ${row.cardnum}`,
                                 "Число направлений": row.directions.length,
                                 "Дата": row.date,
                             });
@@ -569,7 +563,7 @@
                                     $("#dirs-list tbody").append(`<tr class='isnormal-${research.is_normal}'>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${card_types[row.type]}</td>
+<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${row.type}</td>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.date}</td>
 <td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${research.title}</td>
 <td><label><input type='checkbox' class='batch-print' direction='${direction.pk}' /></label></td>
@@ -577,7 +571,7 @@
                                     tmp_rows.push({
                                         "ФИО": row.fio,
                                         "Возраст": row.birthdate,
-                                        "Номер карты": `${card_types[row.type]} - ${row.cardnum}`,
+                                        "Номер карты": `${row.type} - ${row.cardnum}`,
                                         "Исследование": research.title,
                                         "Норма": norm[research.is_normal],
                                         "Отделение": direction.otd,
@@ -613,7 +607,7 @@
             let row = tmp_data[key];
             $('#directions-label').html(`${row.date}`);
             $('#dir-fio').html(row.fio);
-            $('#dir-card').html(`${row.cardnum}, ${card_types[row.type]}`);
+            $('#dir-card').html(`${row.cardnum}, ${row.type}`);
             let dirs = [];
             $("#directions_list").html("");
             for (let i = 0; i < row.directions.length; i++) {

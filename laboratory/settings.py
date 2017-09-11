@@ -10,7 +10,7 @@ ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+X_FRAME_OPTIONS = 'ALLOWALL'
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -20,8 +20,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
     'cachalot',
-    'django_jenkins',
     'ajax_select',
+    'health',
     'appconf',
     'clients',
     'users',
@@ -69,7 +69,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'djversion.context_processors.version'
+                'djversion.context_processors.version',
+                'context_processors.utils.card_bases',
             ]
         },
     },
@@ -178,12 +179,12 @@ DEBUG_TOOLBAR_PANELS = (
     'cachalot.panels.CachalotPanel',
 )
 LDAP = {
-    "enable": True,
+    "enable": False,
     "server": {
         "host": "192.168.0.254",
         "port": 389,
         "user": "cn=Admin,dc=fc-ismu,dc=local",
-        "password": "cnfkbybd"
+        "password": ""
     },
     "user_object": "(objectClass=*)",
     "base": "dc=fc-ismu,dc=local"
@@ -223,5 +224,6 @@ CACHALOT_ENABLED = True
 
 import warnings
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
+MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
-DEBUG = True
+DEBUG = False

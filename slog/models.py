@@ -50,6 +50,9 @@ class Log(models.Model):
 
         (1000, 'Выписки: загрузка выписки'),
         (1001, 'Выписки: поиск'),
+
+        (2000, 'Импорт пациентов: добавление Individual в базу'),
+        (2000, 'Импорт пациентов: добавление карты пациента в базу'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)

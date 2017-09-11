@@ -6,7 +6,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 
 from users.views import home
-from clients.views import ajax_search
+from clients.views import ajax_search, receive_db, get_db
 from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
     print_history, \
@@ -32,6 +32,8 @@ urlpatterns = [
                   url(r'^favicon\.ico$', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
                   url(r'^$', home, name='home'),
                   url(r'^clients/ajax/search$', ajax_search),
+                  url(r'^clients/import$', receive_db),
+                  url(r'^clients/get_db$', get_db),
                   url(r'^directions/ajax/save$', dir_save),
                   url(r'^directions/pdf$', gen_pdf_dir),
                   url(r'^directions/execlist', gen_pdf_execlist),
@@ -96,6 +98,7 @@ urlpatterns = [
                   url(r'^construct/', include(urls.urlpatterns)),
                   url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
+                  url(r'^health/', include('health.urls')),
                   url(r'^logout/$', logout, {'next_page': '/'})
               ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

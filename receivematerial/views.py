@@ -403,7 +403,7 @@ def receive_journal(request):
                          "history_num": iss[0].napravleniye.history_num,
                          "n": n_dict[k],
                          "fio": iss[
-                             0].napravleniye.client.shortfio()})  # Добавление в список исследований и пробирок по ключу k в словарь labs
+                             0].napravleniye.client.individual.fio(short=True, dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
         elif iss[0].napravleniye.pk not in directions:
             directions += [iss[0].napravleniye.pk]
         n += 1

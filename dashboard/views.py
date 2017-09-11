@@ -11,6 +11,7 @@ from django.contrib.auth.models import User, Group
 from django.utils import dateformat
 
 from appconf.manager import SettingManager
+from clients.models import CardBase
 from laboratory import settings
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
@@ -42,7 +43,7 @@ def dashboard(request):  # Представление панели управл�
                  "nt": False})
         if "Заборщик биоматериала" in groups:
             menu.append(
-                {"url": "/dashboard/researches/control", "title": "Взятие материала", "keys": "Shift+g", "nt": False})
+                {"url": "/dashboard/biomaterial/get", "title": "Забор биоматериала", "keys": "Shift+g", "nt": False})
         if "Получатель биоматериала" in groups:
             menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
             menu.append(
@@ -52,9 +53,9 @@ def dashboard(request):  # Представление панели управл�
                 {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
         if "Врач-лаборант" in groups or "Лаборант" in groups:
             menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
-            menu.append(
-                {"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
-                 "nt": False})
+            #menu.append(
+            #    {"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
+            #     "nt": False})
         if "Оператор" in groups:
             menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
         if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
@@ -81,8 +82,11 @@ def dashboard(request):  # Представление панели управл�
                 menu.append(
                     {"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
             menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
+            menu.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False})
 
-        menu.append({"url": "http://home", "title": "Домашняя страница", "keys": "Shift+h", "nt": True})
+        if SettingManager.get("home_page", default="http://home") != "":
+            menu.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
+                        "keys": "Shift+h", "nt": True})
 
         menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
         return render(request, 'dashboard.html', {"menu": menu_st})
@@ -179,7 +183,7 @@ def load_logs(request):
 @group_required("Заборщик биоматериала")
 def researches_control(request):
     tubes = Tubes.objects.all()
-    return render(request, 'dashboard/recive_material.html', {"tubes": tubes})
+    return render(request, 'dashboard/get_biomaterial.html', {"tubes": tubes})
 
 
 @login_required
@@ -305,6 +309,15 @@ def ldap_sync(request):
     return render(request, 'dashboard/ldap_sync.html')
 
 
+def get_fin():
+    fin = []
+    for b in CardBase.objects.filter(hide=False):
+        o = {"pk": b.pk, "sources": []}
+        for f in IstochnikiFinansirovaniya.objects.filter(base=b, hide=False):
+            o["sources"].append({"pk": f.pk, "title": f.tilie})
+        fin.append(o)
+    return fin
+
 # @cache_page(60 * 15)
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
@@ -327,12 +340,13 @@ def directions(request):
                                               user__groups__name="Лечащий врач").order_by("fio"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
+    rmis_base = CardBase.objects.filter(is_rmis=True, hide=False)
+    rid = -1 if not rmis_base.exists() else rmis_base[0].pk
     return render(request, 'dashboard/directions.html', {'labs': podr,
-                                                         'fin_poli': IstochnikiFinansirovaniya.objects.filter(
-                                                             istype="poli"),
-                                                         'fin_stat': IstochnikiFinansirovaniya.objects.filter(
-                                                             istype="stat"),
+                                                         'fin': get_fin(),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
+                                                         "rmis_uid": request.GET.get("rmis_uid", ""),
+                                                         "rmis_base_id": rid,
                                                          "users": json.dumps(users)})
 
 
@@ -349,10 +363,7 @@ def results_history(request):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
     return render(request, 'dashboard/results_history.html', {'labs': podr,
-                                                              'fin_poli': IstochnikiFinansirovaniya.objects.filter(
-                                                                  istype="poli"),
-                                                              'fin_stat': IstochnikiFinansirovaniya.objects.filter(
-                                                                  istype="stat"),
+                                                                'fin': get_fin(),
                                                               "notlabs": podrazdeleniya,
                                                               "users": json.dumps(users)})
 
@@ -379,13 +390,13 @@ def discharge(request):
                                                         "users": json.dumps(users)})
 
 
+import podrazdeleniya.models as pod
 @csrf_exempt
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок")
 def discharge_add(request):
     r = {"ok": True}
     if request.method == "POST":
-        import podrazdeleniya.models as pod
         import discharge.models as discharge
         client_surname = request.POST.get("client_surname", "").strip()
         client_name = request.POST.get("client_name", "").strip()

@@ -118,7 +118,7 @@ def tubes(request):
                 continue
             # c.setFont('OpenSans', 8)
             otd = list(tmp2.doc.podrazileniye.title.split(" "))
-            fam = tmp2.client.shortfio(True)
+            fam = tmp2.client.individual.fio(short=True, dots=False)
             st = ""
             if len(otd) > 1:
                 if "отделение" in otd[0].lower():
@@ -143,7 +143,7 @@ def tubes(request):
                 pr += r.group(1) + r.group(2)
             pr += " " + Issledovaniya.objects.filter(tubes__pk=tube).first().comment[:9]
 
-            nm = "№" + str(d) + "," + tmp2.client.type_str(short=True)
+            nm = "№" + str(d) + "," + tmp2.client.base.short_title
 
             if barcode_type == "std":
                 c.setFont('clacon', 12)

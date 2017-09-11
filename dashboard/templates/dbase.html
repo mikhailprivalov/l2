@@ -1326,14 +1326,14 @@
                             <li><a href="/dashboard/directions">Направления</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Заборщик биоматериала" %}
-                            <li><a href="/dashboard/researches/control">Взятие материала</a></li>
+                            <li><a href="/dashboard/biomaterial/get">Забор биоматериала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Получатель биоматериала" %}
                             <li><a href="/dashboard/receive">Прием материала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
                             <li><a href="/results/enter">Ввод результатов</a></li>
-                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>
+{#                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>#}
                         {% endif %}
                     </ul>
                 </div>
@@ -1437,6 +1437,8 @@
     let $body = $("body");
     let $loader = {};
     const today = new Date();
+
+    var card_bases = {{ card_bases|safe }};
 
     $loader.Particle = function (opt) {
         this.radius = 7;

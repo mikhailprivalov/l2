@@ -78,8 +78,6 @@ var getNorms = function (sex, age, ref, units) {
     return html_ret;
 };
 
-var clients_bases = {poli: "Поликлиника", stat: "Стационар", poli_stom: "Поликлиника-стоматология"};
-
 
 /*var fraction_types = {
     "-1": ["Без вариантов"],

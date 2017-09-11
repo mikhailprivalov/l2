@@ -7,11 +7,12 @@ class Setting(models.Model):
     value = models.TextField()
     value_type = models.CharField(max_length=1, choices=(('s', 'string'), ('i', 'integer'),
                                                          ('f', 'float'), ('b', 'boolean')))
+    hide_value_in_list = models.BooleanField(default=False)
 
     def __str__(self):
-        return "%s = %s (%s)" % (self.name, truncatechars(self.value, 150), self.get_value_type_display())
+        return "%s = %s (%s)" % (self.name, "**скрыто**" if self.hide_value_in_list else truncatechars(self.value, 150), self.get_value_type_display())
 
-    def nval(self):
+    def get_value(self):
         val = self.value
         types = {
             's': str,
@@ -20,9 +21,3 @@ class Setting(models.Model):
             'f': float
         }
         return types[self.value_type](val)
-
-    def save(self, *args, **kwargs):
-        super(Setting, self).save(*args, **kwargs)
-        #from django.core.cache import cache
-        #cache.delete(self.name)
-        #cache.set(self.name, self.nval(), 60 * 60 * 8)

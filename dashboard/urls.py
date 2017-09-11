@@ -6,7 +6,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.dashboard),
     url(r'^directions/multiprint$', views.dir_multiprint),
-    url(r'^researches/control$', views.researches_control),
+    url(r'^biomaterial/get$', views.researches_control),
     url(r'^create_user$', views.create_user),
     url(r'^from$', views.dashboard_from),
     url(r'^create_podr$', views.create_pod),
@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^users/ldap/dosync$', views.users_dosync),
     url(r'^results_history$', views.results_history), #TemplateView.as_view(template_name="dashboard/results_history.html")),
     url(r'^results_fastprint$', TemplateView.as_view(template_name="dashboard/results_fastprint.html", )),
+    url(r'^utils$', TemplateView.as_view(template_name="dashboard/utils.html", )),
     url(r'^results_history/search$', views.results_history_search),
     url(r'^change_password$', views.change_password),
     url(r'^update_pass$', views.update_pass),

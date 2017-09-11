@@ -1,0 +1,99 @@
+{% extends "dbase.html" %}
+{% block title %}Инструменты{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-xs-3">
+        </div>
+        <div class="col-xs-6">
+            <div class="list-group">
+                <button type="button" onclick="cleanup_logs()" class="list-group-item" id="clear_logs">Очистить записи в логах</button>
+                <button type="button" onclick="cleanup_cards();" class="list-group-item" id="clear_cards">Очистить архивные карты без направлений</button>
+                <button type="button" onclick="cleanup_patients();" class="list-group-item" id="clear_patients">Очистить пациентов без карт</button>
+                <button type="button" onclick="check_rmis()" class="list-group-item" id="check_rmis">Проверить РМИС</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+            load_log();
+            load_cards();
+            load_patients();
+        });
+        function load_log(){
+            $.ajax({url: "/health/log"}).done(function(d){
+                $("#clear_logs").html(`<span class="badge">устар. ${d.to_delete} из ${d.cnt}</span>Очистить записи в логах, которые старше ${d.store_days} д.`);
+            });
+        }
+        function load_cards(){
+            $.ajax({url: "/health/archive_cards"}).done(function(d){
+                $("#clear_cards .badge").remove();
+                $("#clear_cards").prepend(`<span class="badge">${d}</span>`);
+            });
+        }
+        function load_patients(){
+            $.ajax({url: "/health/patients"}).done(function(d){
+                $("#clear_patients .badge").remove();
+                $("#clear_patients").prepend(`<span class="badge">${d}</span>`);
+            });
+        }
+        function cleanup_logs() {
+            sl();
+            let r = confirm("Очистить логи?");
+            if(r){
+                $.ajax({url: "/health/log/cleanup"}).done(function(d){
+                    hl();
+                    load_log();
+                    okmessage(`Удалено записей лога: ${d}`);
+                });
+            }
+            else{
+                hl();
+            }
+        }
+        function cleanup_cards() {
+            sl();
+            let r = confirm("Очистить архивные карты без направлений?");
+            if(r){
+                $.ajax({url: "/health/archive_cards", data: {remove: "1"}}).done(function(d){
+                    hl();
+                    load_cards();
+                    okmessage(`Удалено архивных карт: ${d}`);
+                });
+            }
+            else{
+                hl();
+            }
+        }
+        function cleanup_patients() {
+            sl();
+            let r = confirm("Очистить пациентов без карт?");
+            if(r){
+                $.ajax({url: "/health/patients", data: {remove: "1"}}).done(function(d){
+                    hl();
+                    load_patients();
+                    okmessage(`Удалено пациентов: ${d}`);
+                });
+            }
+            else{
+                hl();
+            }
+        }
+        function check_rmis(){
+            sl();
+            $.ajax({url: "/health/rmis/check"}).done(function(d){
+                hl();
+                if(d !== "0") {
+                    okmessage("Проверка РМИС получением ID организации", `ID = ${d}`);
+                } else{
+                    errmessage("Ошбка проверки РМИС получением ID организации", `ID = ${d}`);
+                }
+            });
+        }
+    </script>
+    <style>
+    </style>
+{% endblock %}

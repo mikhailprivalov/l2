@@ -70,8 +70,7 @@ def enter(request):
     from podrazdeleniya.models import Podrazdeleniya
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
-                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by(
-                                                               "istype", "pk"),
+                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk"),
                                                            "groups": directory.ResearchGroup.objects.filter(
                                                                lab=request.user.doctorprofile.podrazileniye)})
 
@@ -318,11 +317,11 @@ def get_full_result(request):
             result["direction"]["date"] = maxdate  # Дата подтверждения
 
             result["client"] = {}  # Пациент
-            result["client"]["sex"] = napr.client.sex  # Пол
-            result["client"]["fio"] = napr.client.fio()  # ФИО
-            result["client"]["age"] = napr.client.age_s()  # Возраст
-            result["client"]["cardnum"] = napr.client.num  # Номер карты
-            result["client"]["dr"] = str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT))  # Дата рождения
+            result["client"]["sex"] = napr.client.individual.sex  # Пол
+            result["client"]["fio"] = napr.client.individual.fio()  # ФИО
+            result["client"]["age"] = napr.client.individual.age_s()  # Возраст
+            result["client"]["cardnum"] = napr.client.number_with_type()  # Номер карты
+            result["client"]["dr"] = napr.client.individual.bd()  # Дата рождения
 
             result["results"] = collections.OrderedDict()  # Результаты
             isses = []
@@ -563,7 +562,7 @@ def result_html(request):
         iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__direction_id", "research__pk",
                                                                            "research__sort_weight")
         result = {"pk": dpk, "date": maxdate,
-                  "patient": {"cardnum": dir.client.num, "fio": dir.client.fio(), "sex": dir.client.sex,
+                  "patient": {"cardnum": dir.client.number, "fio": dir.client.fio(), "sex": dir.client.sex,
                               "age": dir.client.age_s()}, "results": collections.OrderedDict()}
 
         kint = 0
@@ -780,7 +779,7 @@ def result_print(request):
             c.drawString(px(), py(12), lj('Возраст:') + direction.client.age_s())
             c.drawString(px(), py(16), lj('Дата забора:') + date_t)
 
-            c.drawString(px(), py(24), lj('№ карты:') + str(direction.client.num))
+            c.drawString(px(), py(24), lj('Карта:') + str(direction.client.number_with_type()))
             c.drawString(px(), py(28), lj('Врач:') + direction.doc.get_fio())
             c.drawString(px(), py(32), lj(' ') + direction.doc.podrazileniye.title)
 
@@ -1503,12 +1502,12 @@ def result_print(request):
             fwb = []
             data = [
                 ["Номер:", str(dpk)],
-                ["Пациент:", Paragraph(direction.client.fio(), styleTableMonoBold)],
-                ["Пол:", direction.client.sex.upper()],
-                ["Возраст:", direction.client.age_s()],
+                ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
+                ["Пол:", direction.client.individual.sex],
+                ["Возраст:", direction.client.individual.age_s()],
                 ["Дата забора:", date_t],
                 [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-                ["№ карты:", str(direction.client.num)],
+                ["№ карты:", str(direction.client.number)],
                 ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazileniye.title)]
             ]
 
@@ -1548,7 +1547,7 @@ def result_print(request):
                        '<font face="OpenSansBold" size="8">Результат</font><br/><font face="OpenSans" size="8">(# - не норма)</font>',
                        styleSheet["BodyText"])]
 
-            if direction.client.sex.lower() == "м":
+            if direction.client.individual.sex.lower() == "м":
                 tmp.append(
                     Paragraph('<font face="OpenSansBold" size="8">Референсные значения (М)</font>',
                               styleSheet["BodyText"]))
@@ -2066,7 +2065,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                       "Дата: " + maxdate)
 
     c.drawString(s + paddingx, h - 54, "ФИО пациента: " + napr.client.fio())
-    c.drawString(s + paddingx, h - 64, "Номер карты: " + str(napr.client.num))
+    c.drawString(s + paddingx, h - 64, "Карта: " + napr.client.number_with_type())
     c.drawCentredString(w / 4 + s, h - 64, "Пол: " + napr.client.sex)
 
     # c.drawRightString(s + w/2 - paddingx, h-97, "Дата рождения: " + str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + " (" + str(napr.client.age()) + " лет)")
@@ -2236,7 +2235,7 @@ def result_journal_table_print(request):
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
     patients = {}
     researches_pks = set()
-    for iss in iss_list.order_by("napravleniye__client__family").order_by("research__direction_id",
+    for iss in iss_list.order_by("napravleniye__client__individual__family").order_by("research__direction_id",
                                                                           "research__pk",
                                                                           "tubes__id",
                                                                           "research__sort_weight"):
@@ -2246,9 +2245,9 @@ def result_journal_table_print(request):
         if k not in patients:
             patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.tilie, "patients": {}}
         if d.client.pk not in patients[k]["patients"]:
-            patients[k]["patients"][d.client.pk] = {"fio": d.client.shortfio(supershort=True),
+            patients[k]["patients"][d.client.pk] = {"fio": d.client.individual.fio(short=True, dots=True),
                                                     "card": "%d %s" % (
-                                                        d.client.num, d.client.type_str(short=True)),
+                                                        d.client.number, d.client.type_str(short=True)),
                                                     "history": d.history_num,
                                                     "researches": {}}
         if iss.research.pk not in patients[k]["patients"][d.client.pk]["researches"]:
@@ -2558,12 +2557,12 @@ def result_journal_print(request):
 
     otds = defaultdict(dict)
     clientresults = {}
-    for iss in iss_list.order_by("napravleniye__client__family"):
-        key = iss.napravleniye.client.family + "-" + str(iss.napravleniye.client.pk)
+    for iss in iss_list.order_by("napravleniye__client__individual__family"):
+        key = iss.napravleniye.client.individual.family + "-" + str(iss.napravleniye.client.pk)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
                                   "ist_f": iss.napravleniye.istochnik_f.tilie,
-                                  "fio": iss.napravleniye.client.shortfio() + "<br/>Карта: " + iss.napravleniye.client.type_str(
+                                  "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.type_str(
                                       short=True, num=True) +
                                          ((
                                               "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
@@ -2856,7 +2855,7 @@ def results_search_directions(request):
 
     period = json.loads(data.get("period", "{}"))
     type = period.get("type", "d")
-    type_patient = data.get("type_patient", "%").replace("%", "")
+    type_patient = int(data.get("type_patient", "-1"))
     query = data.get("query", "").strip()
     perform_norms = data.get("perform_norms", "false").lower() == "true"
     grouping = data.get("grouping", "patient")
@@ -2916,12 +2915,13 @@ def results_search_directions(request):
     if doc_search != -1:
         collection = collection.filter(doc__pk=doc_search)
 
-    collection = collection.filter(client__type__contains=type_patient)
+    if type_patient != -1:
+        collection = collection.filter(client__base__pk=type_patient)
     if filter_type == "fio":
-        collection = collection.filter(client__family__contains=family,
-                                       client__name__contains=name,
-                                       client__twoname__contains=twoname,
-                                       client__birthday__contains=bdate)
+        collection = collection.filter(client__individual__family__contains=family,
+                                       client__individual__name__contains=name,
+                                       client__individual__patronymic__contains=twoname,
+                                       client__individual__birthday__contains=bdate)
 
     if filter_type == "card_number":
         collection = collection.filter(client__num=int(query))
@@ -2933,25 +2933,25 @@ def results_search_directions(request):
     sort_types = {}
     if sorting_direction == "up":
         sort_types = {"confirm-date": ("issledovaniya__time_confirmation",),
-                      "patient": ("client__family", "client__name", "client__twoname",)}
+                      "patient": ("client__individual__family", "client__individual__name", "client__individual__patronymic",)}
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
-                      "patient": ("-client__family", "-client__name", "-client__twoname",)}
+                      "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",)))[:]:
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
         datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
-        key = "%s_%s@%s" % (datec, direction.client.num, direction.client.type,)
+        key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
             n += 1
             # if n > 40:
             #    break
-            rows[key] = {"fio": direction.client.fio(),
-                         "birthdate": direction.client.age_s(),
-                         "sex": direction.client.sex.upper(),
-                         "cardnum": direction.client.num,
-                         "type": direction.client.type,
+            rows[key] = {"fio": direction.client.individual.fio(),
+                         "birthdate": direction.client.individual.age_s(),
+                         "sex": direction.client.individual.sex,
+                         "cardnum": direction.client.number,
+                         "type": direction.client.base.title,
                          "date": datec,
                          "directions_cnt": 0,
                          "directions": [],
