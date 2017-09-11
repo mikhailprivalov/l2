@@ -318,6 +318,10 @@ class Napravleniya(models.Model):
                         issledovaniye.comment = comments.get(str(research.pk), "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
                         FrequencyOfUseResearches.inc(research, doc_current)
+                from rmis_integration.client import Client
+                c = Client()
+                for dk in directions_for_researches:
+                    c.directions.check_send(directions_for_researches[dk])
                 result["r"] = True  # Флаг успешной вставки в True
                 result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,

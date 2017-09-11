@@ -51,6 +51,7 @@ def dir_save(request):
         result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id,
                                                                 request.user.doctorprofile,
                                                                 researches, comments)
+
     return HttpResponse(json.dumps((result,)), content_type="application/json")
 
 

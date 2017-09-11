@@ -9,7 +9,8 @@ from zeep.transports import Transport
 import clients.models as clients_models
 from django.core.cache import cache
 
-from directions.models import Napravleniya, Result
+from directions.models import Napravleniya, Result, Issledovaniya
+from directory.models import Fractions
 
 
 class Utils:
@@ -249,15 +250,18 @@ class Services(BaseRequester):
             self.services[r["code"]] = r["id"]
 
     def get_service_id(self, s):
+        s = s.replace("А", "A").replace("В", "B")
         if s in self.services:
             return self.services[s]
         return None
 
     def get_service_ids(self, direction: Napravleniya):
-        services_tmp = [x.fraction.code.replace("А", "A").replace("В", "B") for x in
-                        Result.objects.filter(issledovaniye__napravleniye=direction) if x.fraction.code != ""]
-        return [y for y in [self.get_service_id(x) for x in services_tmp] if y is not None]
-
+        services_tmp = []
+        for iss in Issledovaniya.objects.filter(napravleniye=direction):
+            services_tmp.append(iss.research.code)
+            for f in Fractions.objects.filter(research=iss.research):
+                services_tmp.append(f.code)
+        return [y for y in [self.get_service_id(x) for x in list(set(services_tmp))] if y is not None]
 
 
 def ndate(d: datetime.datetime):
@@ -269,20 +273,29 @@ class Directions(BaseRequester):
         super().__init__(client, "path_directions")
         self.baseclient = client
 
-    def check_send(self, direction: Napravleniya, org_id_from: str, otd_from_id: str, org_id_to: str, otd_to_id: str):
+    def check_send(self, direction: Napravleniya):
         if not direction.rmis_number or direction.rmis_number == "":
             direction.rmis_number = self.client.sendReferral(patientUid=direction.client.individual.check_rmis(),
-                                                    number=str(direction.pk),
-                                                    typeId=self.baseclient.get_directory("md_referral_type").get_first(search_data=Settings.get("direction_type_title", default="Направление в лабораторию")),
-                                                    referralDate=ndate(direction.data_sozdaniya),
-                                                    referralOrganizationId=org_id_from,
-                                                    referringDepartmentId=otd_from_id,
-                                                    receivingOrganizationId=org_id_to,
-                                                    receivingDepartmentId=otd_to_id,
-                                                    refServiceId=self.baseclient.services.get_service_ids(direction),
-                                                    fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.baseclient.get_fin_dict()),
-                                                    note='Автоматический вывод из Лабораторной Информационной Системы L2',
-                                                    goalId=self.baseclient.get_directory("md_referral_goal").get_first(search_data=Settings.get("cel_title", default="Для коррекции лечения")))
+                                                             number=str(direction.pk),
+                                                             typeId=self.baseclient.get_directory(
+                                                                 "md_referral_type").get_first("ID",
+                                                                 search_data=Settings.get("direction_type_title",
+                                                                                          default="Направление в лабораторию")),
+                                                             referralDate=ndate(direction.data_sozdaniya),
+                                                             referralOrganizationId=self.baseclient.search_organization_id(),
+                                                             referringDepartmentId=self.baseclient.search_dep_id(),
+                                                             receivingOrganizationId=self.baseclient.search_organization_id(),
+                                                             receivingDepartmentId=self.baseclient.search_dep_id(),
+                                                             refServiceId=self.baseclient.services.get_service_ids(
+                                                                 direction),
+                                                             fundingSourceTypeId=Utils.get_fin_src_id(
+                                                                 direction.istochnik_f.tilie,
+                                                                 self.baseclient.get_fin_dict()),
+                                                             note='Автоматический вывод из Лабораторной Информационной Системы L2',
+                                                             goalId=self.baseclient.get_directory(
+                                                                 "md_referral_goal").get_first("ID",
+                                                                 search_data=Settings.get("cel_title",
+                                                                                          default="Для коррекции лечения")))
             direction.save()
         return direction.rmis_number
 
