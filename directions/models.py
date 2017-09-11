@@ -178,6 +178,7 @@ class Napravleniya(models.Model):
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
     rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True,
                                    help_text='ID направления в РМИС')
+    result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s)" % (

@@ -1,6 +1,11 @@
 import datetime
 import hashlib
 import urllib.parse
+
+import requests
+from django.db.models import Q
+from requests_toolbelt import MultipartEncoder
+
 from appconf.manager import SettingManager
 from requests import Session
 from requests.auth import HTTPBasicAuth
@@ -50,7 +55,7 @@ def get_md5(s):
     m.update(s.encode())
     return m.hexdigest()
 
-
+from django.test import Client as TC
 class Client(object):
     def __init__(self):
         self.base_address = Settings.get("address")
@@ -69,11 +74,18 @@ class Client(object):
         self.services = Services(self)
         self.directions = Directions(self)
         self.rendered_services = RenderedServices(self)
+        self.localclient = TC(enforce_csrf_checks=False)
+        cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"), password=Settings.get("local_password", default="clientDirections.service.sendReferral"))
+        if not cstatus:
+            raise Exception("Не могу войти в ЛИС")
+
+    def get_addr(self, address):
+        return urllib.parse.urljoin(self.base_address, address)
 
     def get_client(self, address_key: str) -> zeepClient:
         address = Settings.get(address_key)
         if address not in self.clients:
-            self.clients[address] = zeepClient(urllib.parse.urljoin(self.base_address, address),
+            self.clients[address] = zeepClient(self.get_addr(address),
                                                transport=Transport(session=self.session))
         return self.clients[address]
 
@@ -122,6 +134,20 @@ class Client(object):
                     val = rrr["data"]
             fin_src[id] = val
         return fin_src
+
+    def put_content(self, filename, content, path, filetype='application/pdf'):
+        multipart_data = MultipartEncoder(
+            fields={'file': (filename, content, filetype)},
+        )
+        resip = requests.request("PUT", path,
+                                     data=multipart_data,
+                                     headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+        return str(resip.status_code) == "200"
+
+    def local_get(self, addr: str, params: dict):
+        return self.localclient.get(addr, params).content
+
+
 
 
 class BaseRequester(object):
@@ -267,6 +293,7 @@ class Services(BaseRequester):
 def ndate(d: datetime.datetime):
     return d.strftime("%Y-%m-%d")
 
+import simplejson as json
 
 class Directions(BaseRequester):
     def __init__(self, client: Client):
@@ -297,7 +324,20 @@ class Directions(BaseRequester):
                                                                  search_data=Settings.get("cel_title",
                                                                                           default="Для коррекции лечения")))
             direction.save()
+            self.baseclient.put_content("Napravleniye.pdf",
+                                        self.baseclient.local_get("/directions/pdf", {"napr_id": json.dumps([direction.pk])}),
+                                        self.baseclient.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
         return direction.rmis_number
+
+    def check_and_send_all(self):
+        upload_after = Settings.get("upload_results_after", default="11.09.2017")
+        date = datetime.date(int(upload_after.split(".")[2]), int(upload_after.split(".")[1]),
+                             int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
+        uploaded = []
+        for d in Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
+                        Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct():
+            uploaded.append(self.check_send(d))
+        return [x for x in uploaded if x != ""]
 
 
 class RenderedServices(BaseRequester):
