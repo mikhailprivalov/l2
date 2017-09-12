@@ -3,6 +3,7 @@ import hashlib
 import urllib.parse
 
 import requests
+from django.core.management.base import OutputWrapper
 from django.db.models import Q
 from requests_toolbelt import MultipartEncoder
 
@@ -43,6 +44,28 @@ class Utils:
             typetxt = 'Бюджет муниципальный'
         return fin_src.get(typetxt, fin_src['Безвозмездно'])
 
+    @staticmethod
+    def escape(str):
+        str = str.replace("&", "&amp;")
+        str = str.replace("<", "&lt;")
+        str = str.replace(">", "&gt;")
+        str = str.replace("\"", "&quot;")
+        return Utils.fix_sub(str)
+
+    @staticmethod
+    def fix_sub(str):
+        str = str.replace("₀", "0")
+        str = str.replace("₁", "1")
+        str = str.replace("₂", "2")
+        str = str.replace("₃", "3")
+        str = str.replace("₄", "4")
+        str = str.replace("₅", "5")
+        str = str.replace("₆", "6")
+        str = str.replace("₇", "7")
+        str = str.replace("₈", "8")
+        str = str.replace("₉", "9")
+        return str
+
 
 class Settings:
     @staticmethod
@@ -55,7 +78,10 @@ def get_md5(s):
     m.update(s.encode())
     return m.hexdigest()
 
+
 from django.test import Client as TC
+
+
 class Client(object):
     def __init__(self):
         self.base_address = Settings.get("address")
@@ -75,7 +101,9 @@ class Client(object):
         self.directions = Directions(self)
         self.rendered_services = RenderedServices(self)
         self.localclient = TC(enforce_csrf_checks=False)
-        cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"), password=Settings.get("local_password", default="clientDirections.service.sendReferral"))
+        cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"),
+                                         password=Settings.get("local_password",
+                                                               default="clientDirections.service.sendReferral"))
         if not cstatus:
             raise Exception("Не могу войти в ЛИС")
 
@@ -135,19 +163,17 @@ class Client(object):
             fin_src[id] = val
         return fin_src
 
-    def put_content(self, filename, content, path, filetype='application/pdf'):
+    def put_content(self, filename, content, path, filetype='application/pdf', type="PUT"):
         multipart_data = MultipartEncoder(
             fields={'file': (filename, content, filetype)},
         )
-        resip = requests.request("PUT", path,
-                                     data=multipart_data,
-                                     headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+        resip = requests.request(type, path,
+                                 data=multipart_data,
+                                 headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
     def local_get(self, addr: str, params: dict):
         return self.localclient.get(addr, params).content
-
-
 
 
 class BaseRequester(object):
@@ -212,7 +238,7 @@ class Patients(BaseRequester):
             patients = self.patient_ids_by_poils(polis_serial, polis_number)
             if len(patients) == 1:
                 return patients[0]
-        return "NONB_RMIS"
+        return "NONERMIS"
 
     def create_rmis_card(self, individual: clients_models.Individual, get_id: str):
         base = clients_models.CardBase.objects.filter(is_rmis=True, hide=False).first()
@@ -223,7 +249,7 @@ class Patients(BaseRequester):
         return None
 
     def get_rmis_id_for_individual(self, individual: clients_models.Individual, update_rmis=False):
-        return_none = "NONB_RMIS"
+        return_none = "NONERMIS"
         for doc in clients_models.Document.objects.filter(individual=individual, document_type__title="Полис ОМС"):
             get_id = self.patient_first_id_by_poils(doc.serial, doc.number)
             if get_id != "":
@@ -293,7 +319,9 @@ class Services(BaseRequester):
 def ndate(d: datetime.datetime):
     return d.strftime("%Y-%m-%d")
 
+
 import simplejson as json
+
 
 class Directions(BaseRequester):
     def __init__(self, client: Client):
@@ -301,13 +329,15 @@ class Directions(BaseRequester):
         self.baseclient = client
 
     def check_send(self, direction: Napravleniya):
-        if not direction.rmis_number or direction.rmis_number == "":
-            direction.rmis_number = self.client.sendReferral(patientUid=direction.client.individual.check_rmis(),
+        client_rmis = direction.client.individual.check_rmis()
+        if client_rmis and client_rmis != "NONERMIS" and (not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS"):
+            direction.rmis_number = self.client.sendReferral(patientUid=client_rmis,
                                                              number=str(direction.pk),
                                                              typeId=self.baseclient.get_directory(
                                                                  "md_referral_type").get_first("ID",
-                                                                 search_data=Settings.get("direction_type_title",
-                                                                                          default="Направление в лабораторию")),
+                                                                                               search_data=Settings.get(
+                                                                                                   "direction_type_title",
+                                                                                                   default="Направление в лабораторию")),
                                                              referralDate=ndate(direction.data_sozdaniya),
                                                              referralOrganizationId=self.baseclient.search_organization_id(),
                                                              referringDepartmentId=self.baseclient.search_dep_id(),
@@ -321,15 +351,80 @@ class Directions(BaseRequester):
                                                              note='Автоматический вывод из Лабораторной Информационной Системы L2',
                                                              goalId=self.baseclient.get_directory(
                                                                  "md_referral_goal").get_first("ID",
-                                                                 search_data=Settings.get("cel_title",
-                                                                                          default="Для коррекции лечения")))
+                                                                                               search_data=Settings.get(
+                                                                                                   "cel_title",
+                                                                                                   default="Для коррекции лечения")))
             direction.save()
             self.baseclient.put_content("Napravleniye.pdf",
-                                        self.baseclient.local_get("/directions/pdf", {"napr_id": json.dumps([direction.pk])}),
-                                        self.baseclient.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
+                                        self.baseclient.local_get("/directions/pdf",
+                                                                  {"napr_id": json.dumps([direction.pk])}),
+                                        self.baseclient.get_addr(
+                                            "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
+        elif client_rmis == "NONERMIS":
+            direction.rmis_number = "NONERMIS"
+            direction.save()
         return direction.rmis_number
 
-    def check_and_send_all(self):
+    def check_send_results(self, direction: Napravleniya):
+        protocol_template = Settings.get("protocol_template")
+        if not direction.result_rmis_send and direction.rmis_number != "NONERMIS":
+            rid = self.check_send(direction)
+            if rid and rid != "":
+                rindiv = self.baseclient.patients.get_rmis_id_for_individual(direction.client.individual)
+                sended_researches = []
+                for x in Result.objects.filter(issledovaniye__napravleniye=direction):
+                    ssd = self.baseclient.services.get_service_id(x.fraction.research.code)
+                    ss = None
+
+                    if ssd is not None and x.fraction.research.pk not in sended_researches:
+                        sended_researches.append(x.fraction.research.pk)
+                        robj = ["{}: {} {}".format(y.fraction.title, y.value, y.fraction.units) for y in
+                                Result.objects.filter(issledovaniye__napravleniye=direction,
+                                                      fraction__research=x.fraction.research)][16:21]
+                        ss = self.baseclient.rendered_services.client.sendServiceRend(referralId=rid,
+                                                                                      serviceId=ssd,
+                                                                                      isRendered="true",
+                                                                                      patientUid=rindiv,
+                                                                                      orgId=self.baseclient.search_organization_id(),
+                                                                                      dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                                      dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                                      note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2')
+                        xresult = ""
+                        for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research):
+                            xresult += "<br/><b>{}</b>: {} {}".format(y.fraction.title, y.value, y.fraction.units).strip()
+                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                        xresult = Utils.escape("<br/>" + xresult + "<br/>")
+                        sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult), self.baseclient.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/"+ss), type="POST")
+                    if x.fraction.research.pk in sended_researches:
+                        continue
+                    ssd = self.baseclient.services.get_service_id(x.fraction.code)
+                    if ssd is not None:
+                        ss = self.baseclient.rendered_services.client.sendServiceRend(referralId=rid,
+                                                                                      serviceId=ssd,
+                                                                                      isRendered="true",
+                                                                                      patientUid=rindiv,
+                                                                                      orgId=self.baseclient.search_organization_id(),
+                                                                                      dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                                      dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
+                                                                                      note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2')
+                        xresult = "<br/><b>{}</b>: {} {}".format(x.fraction.title, x.value, x.fraction.units).strip()
+                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
+                        xresult = Utils.escape("<br/>" + xresult + "<br/>")
+                        sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
+                                                                                              x.issledovaniye.doc_confirmation.get_fio()).replace(
+                            "{{результат}}", xresult), self.baseclient.get_addr(
+                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), type="POST")
+                self.baseclient.put_content("Resultat.pdf",
+                                            self.baseclient.local_get("/results/pdf",
+                                                                      {"pk": json.dumps([direction.pk]),
+                                                                       "normis": '1'}),
+                                            self.baseclient.get_addr(
+                                                "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
+            direction.result_rmis_send = True
+            direction.save()
+        return direction.result_rmis_send
+
+    def check_and_send_all(self, stdout: OutputWrapper=None):
         upload_after = Settings.get("upload_results_after", default="11.09.2017")
         date = datetime.date(int(upload_after.split(".")[2]), int(upload_after.split(".")[1]),
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
@@ -337,7 +432,19 @@ class Directions(BaseRequester):
         for d in Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
                         Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct():
             uploaded.append(self.check_send(d))
-        return [x for x in uploaded if x != ""]
+            if stdout:
+                stdout.write("Upload direction for direction {}; RMIS number={}".format(d.pk, uploaded[-1]))
+
+        uploaded_results = []
+
+        for d in Napravleniya.objects.filter(data_sozdaniya__gte=date, issledovaniya__time_confirmation__isnull=False,
+                                             rmis_number__isnull=False, result_rmis_send=False).exclude(rmis_number="NONERMIS").exclude(rmis_number="").distinct():
+            if d.is_all_confirm():
+                uploaded_results.append(self.check_send_results(d))
+                if stdout:
+                    stdout.write("Upload result for direction {}; RMIS number={}".format(d.pk, uploaded_results[-1]))
+
+        return {"directions": [x for x in uploaded if x != ""], "results": [x for x in uploaded_results if x != ""]}
 
 
 class RenderedServices(BaseRequester):

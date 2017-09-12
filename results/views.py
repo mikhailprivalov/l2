@@ -665,6 +665,7 @@ def result_html(request):
     return render(request, "dashboard/results_html.html", {"results": results_rows})
 
 
+from rmis_integration.client import Client
 @login_required
 def result_print(request):
     """ Печать результатов """
@@ -1477,6 +1478,8 @@ def result_print(request):
             return j
 
         client_prev = -1
+        #cl = Client()
+        normis = request.GET.get("normis", "0") == "1"
         for dpk in pk:
             direction = Napravleniya.objects.filter(pk=dpk)
             if not direction.exists():
@@ -1484,6 +1487,8 @@ def result_print(request):
             direction = Napravleniya.objects.get(pk=dpk)
             if not direction.is_all_confirm():
                 continue
+            #if not normis:
+            #    cl.directions.check_send_results(direction)
             dates = {}
             date_t = ""
             for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
