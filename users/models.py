@@ -63,8 +63,7 @@ class AssignmentTemplates(models.Model):
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr')
 
     def __str__(self):
-        return self.title + " | Шаблон для " + (
-        "всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc)
+        return (self.title + " | Шаблон для ") + (("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc))
 
 
 class AssignmentResearches(models.Model):
