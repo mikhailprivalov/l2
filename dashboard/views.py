@@ -84,7 +84,7 @@ def dashboard(request):  # Представление панели управл�
             menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
             menu.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False})
 
-        if SettingManager.get("home_page", default="http://home") != "":
+        if SettingManager.get("home_page", default="http://home") != "false":
             menu.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
                         "keys": "Shift+h", "nt": True})
 
