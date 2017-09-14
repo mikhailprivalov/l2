@@ -1,15 +1,18 @@
 from django.contrib import admin
 import directory.models as models
 
+
 class ResAdmin(admin.ModelAdmin):
     list_filter = ('subgroup', 'groups', 'hide')
     list_display = ('title', 'subgroup',)
-    list_display_links = ('title', )
+    list_display_links = ('title',)
+
 
 class RefAdmin(admin.ModelAdmin):
     list_filter = ('fraction',)
     list_display = ('title', 'fraction', 'ref_m', 'ref_f', 'about')
-    list_display_links = ('title', )
+    list_display_links = ('title',)
+
 
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
