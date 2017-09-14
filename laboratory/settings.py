@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
 INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
-ALLOWED_HOSTS = ['192.168.0.105', 'k105', 'k105-2', 'lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost', 'k165', 'k165.fc-ismu.local', '192.168.0.165', 'testserver']
+ALLOWED_HOSTS = ['lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost', 'k165', 'k165.fc-ismu.local', '192.168.0.165', 'testserver']
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
@@ -53,10 +53,6 @@ MIDDLEWARE = [
     'debug_panel.middleware.DebugPanelMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
-'''
-MIDDLEWARE_CLASSES = (
-    'debug_panel.middleware.DebugPanelMiddleware'
-)'''
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
     {
@@ -84,28 +80,14 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'lis2',
+        'NAME': 'l2',
         'USER': 'postgres',
         'PASSWORD': '123456',
-        # 'HOST': '192.168.122.45',
-        #'HOST': '192.168.0.252',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
-# if DEBUG:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#             'NAME': 'lis2',  # TODO: lis
-#             'USER': 'postgres',
-#             'PASSWORD': '123456',
-#             # 'HOST': '192.168.122.45',
-#             'HOST': '192.168.0.105',
-#             # 'HOST': '127.0.0.1',
-#             'PORT': '5432',
-#         }
-#     }
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -121,8 +103,6 @@ CACHES = {
         }
     }
 }
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
 TIME_FORMAT = 'd.m.Y'
@@ -130,21 +110,11 @@ USE_TZ = True
 TIME_ZONE = 'Asia/Irkutsk'
 USE_I18N = True
 USE_L10N = True
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
 STATIC_URL = '/static/'
-# STATIC_ROOT = '/var/www/laboratory/static/'
-# STATIC_ROOT = '/webapps/lis/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
-'''
-if not DEBUG:
-    STATIC_ROOT = '/home/dev/PycharmProjects/laboratory/static/'''
-# TEMPLATE_DIRS = (
-#    os.path.join(BASE_DIR, 'templates'),
-# )
 AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 LOGGING = {
     'version': 1,
@@ -207,11 +177,6 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     TEMPLATE_DEBUG = False
     TESTS_IN_PROGRESS = True
     MIGRATION_MODULES = DisableMigrations()
-JENKINS_TASKS = ( #'django_jenkins.tasks.run_pylint',
-                 'django_jenkins.tasks.run_pep8',
-                 'django_jenkins.tasks.run_pyflakes'
-                 )
-# TEST_RUNNER = 'django_selenium.selenium_runner.SeleniumTestRunner'
 import time, datetime
 DJVERSION_VERSION = "1.0.0"
 __w = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
@@ -227,3 +192,8 @@ warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarn
 MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
 DEBUG = False
+
+try:
+    from laboratory.local_settings import *
+except ImportError:
+    pass
