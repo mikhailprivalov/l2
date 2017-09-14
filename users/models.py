@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from podrazdeleniya.models import Podrazdeleniya
-import directory.models as directory
 
 
 class DoctorProfile(models.Model):
@@ -64,4 +63,4 @@ class AssignmentTemplates(models.Model):
 
 class AssignmentResearches(models.Model):
     template = models.ForeignKey(AssignmentTemplates)
-    research = models.ForeignKey(directory.Researches)
+    research = models.ForeignKey('directory.Researches')
