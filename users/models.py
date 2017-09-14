@@ -58,6 +58,7 @@ class DoctorProfile(models.Model):
 
 
 class AssignmentTemplates(models.Model):
+    title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
     podrazdeleniye = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name='podr')
 
