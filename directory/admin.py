@@ -2,7 +2,7 @@ from django.contrib import admin
 import directory.models as models
 
 class ResAdmin(admin.ModelAdmin):
-    list_filter = ('subgroup', 'groups',)
+    list_filter = ('subgroup', 'groups', 'hide')
     list_display = ('title', 'subgroup',)
     list_display_links = ('title', )
 
