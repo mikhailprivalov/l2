@@ -59,7 +59,7 @@ class DoctorProfile(models.Model):
 
 class AssignmentTemplates(models.Model):
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
-    podrazdeleniye = models.ForeignKey(DoctorProfile, null=True, blank=True)
+    podrazdeleniye = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name='podr')
 
     def __str__(self):
         return "Шаблон для " + (
