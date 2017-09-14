@@ -709,7 +709,7 @@
 
         let tmp_direction = {};
         let res_stack = [];
-        let checked = [];
+        let checked = {};
         let dict = [];
         let callback;
         let comments = {};
@@ -804,7 +804,7 @@
                     }
                 }
                 tmp.push(parseInt(el.value));
-                checked[active_lab].push(el.value);
+                checked[active_lab].push(parseInt(el.value));
                 $(el).parent().addClass("active-b");
                 check_ow(parseInt(el.value));
             });
@@ -918,8 +918,17 @@
             }
 
             $("#select-template-btn").click(function () {
-                const active_template = document.querySelector("#select-template").value;
-                checked = templates[active_template].values;
+                const active_template = parseInt(document.querySelector("#select-template").value);
+
+                for(let t_pk in templates[active_template].values)
+                {
+                    if(templates[active_template].values.hasOwnProperty(t_pk)){
+                        if(!_.has(checked, t_pk)){
+                            checked[t_pk] = [];
+                        }
+                        checked[t_pk] = _.union(checked[t_pk], templates[active_template].values[t_pk]);
+                    }
+                }
                 sync();
                 $("#select-lab").val(Object.keys(templates[active_template].values).slice(-1)[0]).change().selectpicker('refresh');
 
@@ -1544,7 +1553,7 @@
             if (tmp_direction.researches === undefined || tmp_direction.researches.length === 0) {
                 return;
             }
-            checked = [];
+            checked = {};
             checkedall = [];
             $("#diagnos-field").val("");
             sync();
@@ -1554,7 +1563,7 @@
             if (tmp_direction.researches === undefined || tmp_direction.researches.length === 0) {
                 return;
             }
-            checked = [];
+            checked = {};
             checkedall = [];
             sync();
 
