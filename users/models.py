@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from podrazdeleniya.models import Podrazdeleniya
+import directory.models as directory
 
 
 class DoctorProfile(models.Model):
@@ -16,8 +17,10 @@ class DoctorProfile(models.Model):
     fio = models.CharField(max_length=255, help_text='ФИО')
     podrazileniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение')
     isLDAP_user = models.BooleanField(default=False,
-                                      blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
-    labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
+                                      blank=True,
+                                      help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
+    labtype = models.IntegerField(choices=labtypes, default=0, blank=True,
+                                  help_text='Категория профиля для лаборатории')
 
     def get_fio(self, dots=True):
         """
@@ -40,7 +43,6 @@ class DoctorProfile(models.Model):
             return fio_split[0] + " " + fio_split[1][0] + "." + ("" if len(fio_split) == 2 else fio_split[2][0] + ".")
         return fio_split[0] + " " + fio_split[1][0] + ("" if len(fio_split) == 2 else fio_split[2][0])
 
-
     def is_member(self, groups: list) -> bool:
         """
         Проверка вхождения пользователя в группу
@@ -54,3 +56,12 @@ class DoctorProfile(models.Model):
             return self.fio + ', ' + self.podrazileniye.title
         else:
             return self.fio
+
+
+class AssignmentTemplates(models.Model):
+    doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
+
+
+class AssignmentResearches(models.Model):
+    template = models.ForeignKey(AssignmentTemplates)
+    research = models.ForeignKey(directory.Researches)
