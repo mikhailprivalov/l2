@@ -350,7 +350,7 @@ def directions(request):
                                                         Q(podrazdeleniye=request.user.doctorprofile.podrazileniye)):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
-            tmp_template[r.research.subgroup.podrazdeleniye.pk] = r.research.pk
+            tmp_template[r.research.subgroup.podrazdeleniye.pk].append(r.research.pk)
         templates[t.pk] = {"values": tmp_template, "title": t.title}
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
