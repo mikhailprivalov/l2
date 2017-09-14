@@ -228,6 +228,7 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments):
         res = {}  # Словарь с направлениями, сгруппированными по лабораториям
+        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
         ofname = None
@@ -242,6 +243,9 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             for v in researches:  # нормализация исследований
+                researches_grouped_by_lab.append(
+                    {v: researches[v]})
+
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if research_tmp.no_attach and research_tmp.no_attach > 0:
@@ -254,7 +258,7 @@ class Napravleniya(models.Model):
                             conflict_list.append(research_tmp.title)
                 i += 1
 
-            for v in researches:  # цикл перевода листа в словарь
+            for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res[key] = v[key]
                     # {5:[0,2,5,7],6:[8]}
