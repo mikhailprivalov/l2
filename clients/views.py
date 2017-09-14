@@ -114,7 +114,7 @@ def ajax_search(request):
                 objects = list(objects)
                 objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10-len(objects))
 
-        elif re.search(p3, query) or card_type.is_rmis:  # Если это запрос номер карты
+        if (re.search(p3, query) or card_type.is_rmis) and len(list(objects)) == 0:  # Если это запрос номер карты
             try:
                 objects = Clients.Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
                                                             card__base=card_type)

@@ -2863,6 +2863,7 @@ def results_search_directions(request):
     type_patient = int(data.get("type_patient", "-1"))
     query = data.get("query", "").strip()
     perform_norms = data.get("perform_norms", "false").lower() == "true"
+    archive = data.get("archive", "false").lower() == "true"
     grouping = data.get("grouping", "patient")
     sorting = data.get("sorting", "confirm-date")
     sorting_direction = data.get("sorting_direction", "up")
@@ -2913,7 +2914,8 @@ def results_search_directions(request):
         day1 = datetime.date(year, 1, 1)
         day2 = datetime.date(year + 1, 1, 1)
     collection = Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
-                                             issledovaniya__time_confirmation__isnull=False)
+                                             issledovaniya__time_confirmation__isnull=False,
+                                             client__is_archive=archive)
     if otd_search != -1:
         collection = collection.filter(doc__podrazileniye__pk=otd_search)
 

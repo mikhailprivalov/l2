@@ -5,25 +5,25 @@ admin.site.register(models.Importedclients)
 
 
 @admin.register(models.Individual)
-class AuthorAdmin(admin.ModelAdmin):
+class IndividualAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(models.DocumentType)
-class AuthorAdmin(admin.ModelAdmin):
+class DocumentTypeAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(models.Document)
-class AuthorAdmin(admin.ModelAdmin):
+class DocumentAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(models.CardBase)
-class AuthorAdmin(admin.ModelAdmin):
+class CardBaseAdmin(admin.ModelAdmin):
     pass
 
 
 @admin.register(models.Card)
-class AuthorAdmin(admin.ModelAdmin):
-    pass
+class CardAdmin(admin.ModelAdmin):
+    exclude = ('individual',)
