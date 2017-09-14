@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 
 import os, sys
 
-sys.path.append('/var/www/laboratory')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir)))
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "laboratory.settings"
 
