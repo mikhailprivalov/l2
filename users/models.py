@@ -69,3 +69,6 @@ class AssignmentTemplates(models.Model):
 class AssignmentResearches(models.Model):
     template = models.ForeignKey(AssignmentTemplates)
     research = models.ForeignKey('directory.Researches')
+
+    def __str__(self):
+        return str(self.template) + "  | " + str(self.research)
