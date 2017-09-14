@@ -344,21 +344,21 @@ def directions(request):
         users.append(pd)
     rmis_base = CardBase.objects.filter(is_rmis=True, hide=False)
     rid = -1 if not rmis_base.exists() else rmis_base[0].pk
-    templates = []
+    templates = {}
     for t in AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
                                                         Q(doc=request.user.doctorprofile) |
                                                         Q(podrazdeleniye=request.user.doctorprofile.podrazileniye)):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
             tmp_template[r.research.subgroup.podrazdeleniye] = r.research.pk
-        templates.append({"values": tmp_template, "title": t.title, "pk": t.pk})
+        templates["pk": t.pk] = {"values": tmp_template, "title": t.title}
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
                                                          "rmis_uid": request.GET.get("rmis_uid", ""),
                                                          "rmis_base_id": rid,
                                                          "users": json.dumps(users),
-                                                         "templates": templates})
+                                                         "templates": json.dumps(templates)})
 
 
 @login_required

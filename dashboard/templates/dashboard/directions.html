@@ -116,15 +116,6 @@
                     <div class="col-xs-4" style="padding-right: 0">
                         <select class="select-b" id="select-template" data-width="100%"
                                 title='Шаблоны' disabled>
-                            <option value="1" selected>Шаблон: Липидограмма</option>
-                            <option value="2">Шаблон: Коагулограмма</option>
-                            <option value="3">Шаблон: Индекс атерогенности</option>
-                            <option value="4">Шаблон: Группа крови</option>
-                            <option value="5">Шаблон: Алк.</option>
-                            <option value="6">Шаблон: Лип.</option>
-                            <option value="7">Шаблон: Бак. стандарт</option>
-                            <option value="8">Шаблон: Геп.</option>
-                            <option value="9">Шаблон: Проктолог</option>
                         </select>
                     </div>
                     <div class="col-xs-3">
@@ -727,24 +718,7 @@
         let nn = 0;
         let firstrun = true;
 
-        // TODO: DYNAMIC IT
-        const templates = {
-            1: {lab: 34, iss: [77, 78, 79, 80, 81, 161]},
-            2: {lab: 34, iss: [156, 157, 158, 159]},
-            3: {lab: 34, iss: [78, 81, 80, 77]},
-            4: {lab: 33, iss: [110, 111]},
-            5: {
-                lab: 34,
-                iss: [84, 82, 104, 83, 74, 76, 75, 86, 73, 78, 92, 93, 89, 81, 80, 161, 87, 79, 157, 77, 85]
-            },
-            6: {lab: 34, iss: [74, 76, 75, 73, 78, 81, 80, 161, 87, 77]},
-            7: {lab: 35, iss: [190, 177, 178]},
-            8: {lab: 33, iss: [131, 130, 137]},
-            9: {
-                multilabs: true,
-                iss: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, ["52", "154"], ["131", "130", "145", "110", "111", "137"], ["84", "82", "83", "159", "74", "76", "75", "158", "73", "92", "89", "87", "156", "157"]]
-            }
-        };
+        const templates = {{ templates }};
 
         let lock_show_results = false;
 
@@ -917,6 +891,12 @@
             $("#clients-base").val(card_bases[0].pk).selectpicker('refresh');
             sync_fin_sources();
             $("#table-researches").css({opacity: 0});
+            for(let t_pk in templates){
+                if(templates.hasOwnProperty(t_pk)){
+                    $("#select-template").append(`<option value="${t_pk}">${templates[t_pk].title}</option>`);
+                }
+            }
+            $("#select-template").selectpicker('refresh');
             sl();
             for (let pk in labs) {
                 nn++;

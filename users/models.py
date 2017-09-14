@@ -60,7 +60,7 @@ class DoctorProfile(models.Model):
 class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
-    podrazdeleniye = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name='podr')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr')
 
     def __str__(self):
         return self.title + " | Шаблон для " + (
