@@ -4,6 +4,8 @@ from copy import deepcopy
 import datetime
 # from astm.tests.test_server import null_dispatcher
 import re
+
+from django.db.models import Func
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -25,6 +27,9 @@ from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
 
+
+class IsNull(Func):
+    template = '%(expressions)s IS NULL'
 
 # @cache_page(60 * 15)
 @login_required
@@ -351,7 +356,7 @@ def directions(request):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
             tmp_template[r.research.subgroup.podrazdeleniye.pk].append(r.research.pk)
-        templates[t.pk] = {"values": tmp_template, "title": t.title}
+        templates[t.pk] = {"values": tmp_template, "title": t.title, "for_doc": t.doc is not None, "for_podr": t.podrazdeleniye is not None}
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,

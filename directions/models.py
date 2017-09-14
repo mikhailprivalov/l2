@@ -228,10 +228,8 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments):
         res = {}  # Словарь с направлениями, сгруппированными по лабораториям
-        researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
-        checklist = []
         ofname = None
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
             result["message"] = "Недостаточно прав для создания направлений"
@@ -244,27 +242,19 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             for v in researches:  # нормализация исследований
-                if v and v not in checklist:
-                    # checklist.append(v)
-                    researches_grouped_by_lab.append(
-                        {i: v})  # добавление словаря в лист, ключом которого является идентификатор исследования
-                    # [{5:[0,2,5,7]},{6:[8]}] 5 - id лаборатории, [0,2,5,7] - id исследований из справочника
-
-                    for vv in v:
-                        if not vv or not vv.isnumeric():
-                            continue
-                        research_tmp = directory.Researches.objects.get(pk=int(vv))
-                        if research_tmp.no_attach and research_tmp.no_attach > 0:
-                            if research_tmp.no_attach not in conflict_keys:
-                                conflict_keys.append(research_tmp.no_attach)
-                                if not no_attach:
-                                    conflict_list = [research_tmp.title]
-                            else:
-                                no_attach = True
-                                conflict_list.append(research_tmp.title)
+                for vv in researches[v]:
+                    research_tmp = directory.Researches.objects.get(pk=vv)
+                    if research_tmp.no_attach and research_tmp.no_attach > 0:
+                        if research_tmp.no_attach not in conflict_keys:
+                            conflict_keys.append(research_tmp.no_attach)
+                            if not no_attach:
+                                conflict_list = [research_tmp.title]
+                        else:
+                            no_attach = True
+                            conflict_list.append(research_tmp.title)
                 i += 1
 
-            for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
+            for v in researches:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res[key] = v[key]
                     # {5:[0,2,5,7],6:[8]}

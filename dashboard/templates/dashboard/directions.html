@@ -892,11 +892,17 @@
             sync_fin_sources();
             $("#table-researches").css({opacity: 0});
             let f = true;
-            for(let t_pk in templates){
-                if(templates.hasOwnProperty(t_pk)){
-                    $("#select-template").append(`<option ${f? "selected ": ""}value="${t_pk}">Шаблон: ${templates[t_pk].title}</option>`);
-                    f = false;
+
+            let keys = [];
+            for(let t in templates){
+                if(templates.hasOwnProperty(t)){
+                    keys.push({pk: t, v: templates[t].for_doc || templates[t].for_podr ? (templates[t].for_podr ? 1 : 2) : 0})
                 }
+            }
+            for(let t of _.sortBy(keys, "v")){
+                let t_pk = t.pk;
+                $("#select-template").append(`<option ${f? "selected ": ""}value="${t_pk}">Шаблон: ${templates[t_pk].title}</option>`);
+                f = false;
             }
             $("#select-template").selectpicker('refresh');
             sl();
@@ -919,7 +925,6 @@
 
             $("#select-template-btn").click(function () {
                 const active_template = parseInt(document.querySelector("#select-template").value);
-
                 for(let t_pk in templates[active_template].values)
                 {
                     if(templates[active_template].values.hasOwnProperty(t_pk)){
