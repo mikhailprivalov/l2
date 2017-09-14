@@ -895,7 +895,7 @@
             for(let t_pk in templates){
                 if(templates.hasOwnProperty(t_pk)){
                     $("#select-template").append(`<option ${f? "selected ": ""}value="${t_pk}">${templates[t_pk].title}</option>`);
-                    f = true;
+                    f = false;
                 }
             }
             $("#select-template").selectpicker('refresh');
