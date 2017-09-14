@@ -8,4 +8,5 @@ class DocAdmin(admin.ModelAdmin):
 
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке
 admin.site.register(AssignmentTemplates)
+admin.site.register(AssignmentResearches)
 
