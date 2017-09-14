@@ -323,6 +323,8 @@ def get_fin():
 @group_required("Лечащий врач", "Оператор лечащего врача")
 def directions(request):
     """ Страница создания направлений """
+    from users.models import AssignmentTemplates, AssignmentResearches
+    from django.db.models import Q
     podr = Podrazdeleniya.objects.filter(isLab=True)
     oper = "Оператор лечащего врача" in request.user.groups.values_list('name', flat=True)
     docs = list()
@@ -342,12 +344,21 @@ def directions(request):
         users.append(pd)
     rmis_base = CardBase.objects.filter(is_rmis=True, hide=False)
     rid = -1 if not rmis_base.exists() else rmis_base[0].pk
+    templates = []
+    for t in AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                                                        Q(doc=request.user.doctorprofile) |
+                                                        Q(podrazdeleniye=request.user.doctorprofile.podrazileniye)):
+        tmp_template = defaultdict(list)
+        for r in AssignmentResearches.objects.filter(template=t):
+            tmp_template[r.research.subgroup.podrazdeleniye] = r.research.pk
+        templates.append({"values": tmp_template, "title": t.title, "pk": t.pk})
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
                                                          "rmis_uid": request.GET.get("rmis_uid", ""),
                                                          "rmis_base_id": rid,
-                                                         "users": json.dumps(users)})
+                                                         "users": json.dumps(users),
+                                                         "templates": templates})
 
 
 @login_required
