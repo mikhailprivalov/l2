@@ -59,6 +59,11 @@ class DoctorProfile(models.Model):
 
 class AssignmentTemplates(models.Model):
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
+    podrazdeleniye = models.ForeignKey(DoctorProfile, null=True, blank=True)
+
+    def __str__(self):
+        return "Шаблон для " + (
+        "всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc)
 
 
 class AssignmentResearches(models.Model):
