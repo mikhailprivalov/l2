@@ -17,9 +17,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 import directory.models as directory
+from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 
-pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:false}\);)>>'
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 pdfmetrics.registerFont(
@@ -35,6 +35,8 @@ def tubes(request):
     :param request:
     :return:
     """
+    if SettingManager.get("pdf_auto_print", "true", "b"):
+        pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
     direction_id = []
     tubes_id = set()
     istubes = False

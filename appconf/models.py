@@ -17,7 +17,7 @@ class Setting(models.Model):
         types = {
             's': str,
             'i': int,
-            'b': (lambda v: v.lower().startswith('t') or v.startswith('1')),
+            'b': (lambda v: v.lower() == "true"),
             'f': float
         }
         return types[self.value_type](val)

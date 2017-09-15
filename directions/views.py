@@ -22,7 +22,6 @@ import slog.models as slog
 from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from appconf.manager import SettingManager
 
-pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
 w, h = A4
 
@@ -284,6 +283,8 @@ def gen_pdf_execlist(request):
 @login_required
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
+    if SettingManager.get("pdf_auto_print", "true", "b"):
+        pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
     direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF

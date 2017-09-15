@@ -18,8 +18,6 @@ from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 
-pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-
 
 @login_required
 @group_required("Лечащий врач", "Зав. отделением")
@@ -669,6 +667,8 @@ from rmis_integration.client import Client
 @login_required
 def result_print(request):
     """ Печать результатов """
+    if SettingManager.get("pdf_auto_print", "true", "b"):
+        pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="results.pdf"'
     pk = json.loads(request.GET["pk"])
