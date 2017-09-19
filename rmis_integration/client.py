@@ -83,10 +83,10 @@ from django.test import Client as TC
 
 
 class Client(object):
-    def __init__(self):
+    def __init__(self, login=Settings.get("login"), password=Settings.get("password")):
         self.base_address = Settings.get("address")
         self.session = Session()
-        self.session.auth = HTTPBasicAuth(Settings.get("login"), Settings.get("password"))
+        self.session.auth = HTTPBasicAuth(login, password)
         self.clients = {}
         self.directories = {}
         self.load_directories(titles=["pim_organization",
@@ -100,12 +100,13 @@ class Client(object):
         self.services = Services(self)
         self.directions = Directions(self)
         self.rendered_services = RenderedServices(self)
+        self.dirservices = DirServices(self)
         self.localclient = TC(enforce_csrf_checks=False)
         cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"),
                                          password=Settings.get("local_password",
                                                                default="clientDirections.service.sendReferral"))
         if not cstatus:
-            raise Exception("Не могу войти в ЛИС")
+            raise Exception("Не могу войти в L2")
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -454,3 +455,33 @@ class Directions(BaseRequester):
 class RenderedServices(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_medservices")
+
+
+class DirServices(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_dirservices")
+
+    def get_service_id_by_code(self, code, orgid=None):
+        resp = self.client.getServices(clinic=orgid or self.main_client.search_organization_id(), code=code)
+        id = -1
+        if len(resp) > 0:
+            id = int(resp[0]["id"])
+        return id
+
+    def get_service_data(self, id, type_id=""):
+        resp = self.client.getService(id)
+        data = {
+            'type': resp["type"] if type_id in ["", "None"] else type_id,
+            'code': resp["code"],
+            'name': resp["name"],
+            'terms': resp["terms"],
+            'independent': True,
+            'multiplicity': resp["multiplicity"],
+            'finType': resp["finType"],
+        }
+        return data
+
+    def createService(self, data, orgid=None):
+        data["clinic"] = orgid or self.main_client.search_organization_id()
+        resp = self.client.createService(service=data)
+        return resp
