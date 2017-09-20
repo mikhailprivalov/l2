@@ -171,9 +171,11 @@ class Individual(models.Model):
     def __str__(self):
         return self.fio(full=True)
 
-    def check_rmis(self, update=True):
+    def check_rmis(self, update=True, client=None):
         from rmis_integration.client import Client
-        return Client().patients.get_rmis_id_for_individual(individual=self, update_rmis=update)
+        if client is None:
+            client = Client()
+        return client.patients.get_rmis_id_for_individual(individual=self, update_rmis=update)
 
     def get_rmis_uid(self):
         if not Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self).exists():

@@ -10,7 +10,7 @@ from requests_toolbelt import MultipartEncoder
 from appconf.manager import SettingManager
 from requests import Session
 from requests.auth import HTTPBasicAuth
-from zeep import Client as zeepClient
+from zeep import Client as zeepClient, helpers
 from zeep.transports import Transport
 import clients.models as clients_models
 from django.core.cache import cache
@@ -101,6 +101,7 @@ class Client(object):
         self.directions = Directions(self)
         self.rendered_services = RenderedServices(self)
         self.dirservices = DirServices(self)
+        self.hosp = Hosp(self)
         self.localclient = TC(enforce_csrf_checks=False)
         cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"),
                                          password=Settings.get("local_password",
@@ -490,9 +491,17 @@ class Hosp(BaseRequester):
         super().__init__(client, "path_hosp")
 
     def search_last_opened_hosp_record(self, patient_uid, orgid=None):
-        resp = self.client.searchHospitalRecord(medicalOrganizationId=orgid or self.main_client.search_organization_id(), patientUid=patient_uid)
-        return resp
+        resp = self.client.searchHspRecord(medicalOrganizationId=orgid or self.main_client.search_organization_id(), patientUid=patient_uid)
+        last_id = None
+        for row in reversed(resp):
+            d = self.get_hosp_details(row)
+            t = helpers.serialize_object(d).get("outcomeDate", None)
+            v = t is None or t >= datetime.datetime.now().date()
+            if v:
+                last_id = row
+                break
+        return last_id
 
     def get_hosp_details(self, id):
-        resp = self.client.getHospitalRecordById(id)
+        resp = self.client.getHspRecordById(id)
         return resp
