@@ -483,3 +483,8 @@ class DirServices(BaseRequester):
         data["clinic"] = orgid or self.main_client.search_organization_id()
         resp = self.client.createService(service=data)
         return resp
+
+
+class Hosp(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_hosp")
