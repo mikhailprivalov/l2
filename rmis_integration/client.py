@@ -488,3 +488,11 @@ class DirServices(BaseRequester):
 class Hosp(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_hosp")
+
+    def search_last_opened_hosp_record(self, patient_uid, orgid=None):
+        resp = self.client.searchHospitalRecord(medicalOrganizationId=orgid or self.main_client.search_organization_id(), patientUid=patient_uid)
+        return resp
+
+    def get_hosp_details(self, id):
+        resp = self.client.getHospitalRecordById(id)
+        return resp
