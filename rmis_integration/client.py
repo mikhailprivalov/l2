@@ -368,6 +368,7 @@ class Directions(BaseRequester):
 
     def check_send_results(self, direction: Napravleniya):
         protocol_template = Settings.get("protocol_template")
+        protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send and direction.rmis_number != "NONERMIS":
             rid = self.check_send(direction)
             if rid and rid != "":
@@ -392,14 +393,11 @@ class Directions(BaseRequester):
                                                                                       note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2')
                         xresult = ""
                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
-                            xresult += "<br/><b>{}</b>: {} {}".format(y.fraction.title, y.value, y.fraction.units).strip()
+                            xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.fraction.units)
                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                         if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
-                            xresult += "<br/><br/><b>Комментарий:</b> {}".format(x.issledovaniye.lab_comment)
-                        else:
-                            xresult += "<br/>"
-                        xresult = Utils.escape("<br/>" + xresult)
-                        sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult), self.baseclient.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/"+ss), type="POST")
+                            xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}", x.issledovaniye.lab_comment).replace("{{едизм}}", "")
+                        sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult), self.baseclient.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/"+ss), type="POST", filetype="text/xml")
                     if x.fraction.research.pk in sended_researches and False:
                         continue
                     ssd = self.baseclient.services.get_service_id(x.fraction.code)
