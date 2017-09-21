@@ -188,13 +188,13 @@ def receive_db(request):
                 document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
                 number=x["Polisnum"])
             if polis.exists():
-                polis = polis[0]
-                polis.individual.family = fix(x["Family"])
-                polis.individual.name = fix(x["Name"])
-                polis.individual.patronymic = fix(x["Twoname"]),
-                polis.individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date(),
-                polis.individual.sex = x["Sex"].lower().strip()
-                polis.individual.save()
+                ind = polis[0].individual
+                ind.family = fix(x["Family"])
+                ind.name = fix(x["Name"])
+                ind.patronymic = fix(x["Twoname"])
+                ind.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()
+                ind.sex = x["Sex"].lower().strip()
+                ind.save()
             else:
                 individual = Clients.Individual(family=fix(x["Family"]),
                                                 name=fix(x["Name"]),
