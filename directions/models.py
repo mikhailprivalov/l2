@@ -396,6 +396,9 @@ class RmisServices(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
     code = models.CharField(max_length=15, help_text='Код выгруженной услуги')
 
+    def __str__(self):
+        return "%s %s" % (self.napravleniye, self.code)
+
 
 class Result(models.Model):
     """
