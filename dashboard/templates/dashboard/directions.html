@@ -1390,7 +1390,7 @@
                     }).tooltipster('show').parent().addClass("has-error");
                     $("#table-researches input").prop("checked", false);
                     clear_fast();
-                    clear_direction();
+                    clear_direction(true);
                 }
                 $("#diagnos-field").val("");
             }).always(function (jqXHR, textStatus) {
@@ -1564,14 +1564,14 @@
             sync();
         }
 
-        function clear_direction() {
+        function clear_direction(no_show_msg) {
             if (tmp_direction.researches === undefined || tmp_direction.researches.length === 0) {
                 return;
             }
             checked = {};
             checkedall = [];
             sync();
-
+            if(!no_show_msg)
             $.amaran({
                 'theme': 'awesome wrn',
                 'content': {
