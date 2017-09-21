@@ -1405,12 +1405,12 @@ def result_print(request):
         stl.alignment = TA_CENTER
 
         import base64
-
-        if request.GET.get("update_logo", "0") == "1":
-            with open(PROJECT_ROOT + '/../static/img/logo.png', "wb") as fh:
+        logo_path = PROJECT_ROOT + '/../static/img/logo.png'
+        if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
+            with open(logo_path, "wb") as fh:
                 fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
 
-        i = Image(PROJECT_ROOT + '/../static/img/logo.png')
+        i = Image(logo_path)
         nw = 158
         i.drawHeight = i.drawHeight * (nw / i.drawWidth)
         i.drawWidth = nw
