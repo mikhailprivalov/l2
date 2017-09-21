@@ -392,6 +392,11 @@ class Issledovaniya(models.Model):
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
 
 
+class RmisServices(models.Model):
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
+    code = models.CharField(max_length=15, help_text='Код выгруженной услуги')
+
+
 class Result(models.Model):
     """
     Результат исследований

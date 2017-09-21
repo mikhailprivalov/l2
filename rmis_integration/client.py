@@ -367,6 +367,12 @@ class Directions(BaseRequester):
             direction.save()
         return direction.rmis_number
 
+    def check_service(self, direction: Napravleniya):
+        self.check_send(direction)
+        if direction.rmis_number != "NONERMIS":
+            pass
+
+
     def check_send_results(self, direction: Napravleniya):
         protocol_template = Settings.get("protocol_template")
         protocol_row = Settings.get("protocol_template_row")
