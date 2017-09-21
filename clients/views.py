@@ -107,7 +107,7 @@ def ajax_search(request):
             objects = Clients.Individual.objects.filter(family__istartswith=f, name__istartswith=n,
                                                         patronymic__istartswith=p, card__base=card_type)[:10]
             if len(split) > 3:
-                objects = objects.filter(birthday=btday)
+                objects = objects.filter(birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())
 
             if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
                 c = Client()
