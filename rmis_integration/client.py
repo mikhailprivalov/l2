@@ -375,8 +375,13 @@ class Directions(BaseRequester):
             if rid and rid != "":
                 rindiv = self.baseclient.patients.get_rmis_id_for_individual(direction.client.individual)
                 sended_researches = []
+                sended_codes = []
                 for x in Result.objects.filter(issledovaniye__napravleniye=direction):
-                    ssd = self.baseclient.services.get_service_id(x.fraction.research.code)
+                    code = x.fraction.research.code
+                    if code in sended_codes:
+                        continue
+                    sended_codes.append(code)
+                    ssd = self.baseclient.services.get_service_id(code)
                     ss = None
                     send_data = dict(referralId=rid, serviceId=ssd, isRendered="true", patientUid=rindiv, orgId=self.baseclient.search_organization_id(),
                                                                                       dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
@@ -399,6 +404,10 @@ class Directions(BaseRequester):
                         sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace("{{результат}}", xresult), self.baseclient.get_addr("/medservices-ws/service-rs/renderedServiceProtocols/"+ss), type="POST", filetype="text/xml")
                     if x.fraction.research.pk in sended_researches and False:
                         continue
+                    code = x.fraction.code
+                    if code in sended_codes:
+                        continue
+                    sended_codes.append(code)
                     ssd = self.baseclient.services.get_service_id(x.fraction.code)
                     if ssd is not None:
                         ss = self.baseclient.rendered_services.client.sendServiceRend(**send_data)
