@@ -182,7 +182,7 @@ def receive_db(request):
         individual = Clients.Individual.objects.filter(family=x["Family"], name=x["Name"],
                                                        patronymic=x["Twoname"],
                                                        birthday=datetime.datetime.strptime(x["Bday"],
-                                                                                           "%d.%m.%Y")).order_by("-pk")
+                                                                                           "%d.%m.%Y").date()).order_by("-pk")
         if not individual.exists():
             polis = Clients.Document.objects.filter(
                 document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
@@ -192,7 +192,7 @@ def receive_db(request):
                 polis.individual.family = fix(x["Family"])
                 polis.individual.name = fix(x["Name"])
                 polis.individual.patronymic = fix(x["Twoname"]),
-                polis.individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y"),
+                polis.individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date(),
                 polis.individual.sex = x["Sex"].lower().strip()
                 polis.individual.save()
             else:
@@ -200,7 +200,7 @@ def receive_db(request):
                                                 name=fix(x["Name"]),
                                                 patronymic=fix(x["Twoname"]),
                                                 birthday=datetime.datetime.strptime(x["Bday"],
-                                                                                    "%d.%m.%Y"),
+                                                                                    "%d.%m.%Y").date(),
                                                 sex=x["Sex"])
                 individual.save()
         else:
