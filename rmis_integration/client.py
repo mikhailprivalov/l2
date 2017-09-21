@@ -378,20 +378,18 @@ class Directions(BaseRequester):
                 for x in Result.objects.filter(issledovaniye__napravleniye=direction):
                     ssd = self.baseclient.services.get_service_id(x.fraction.research.code)
                     ss = None
-
-                    if ssd is not None and x.fraction.research.pk not in sended_researches:
-                        sended_researches.append(x.fraction.research.pk)
-                        robj = ["{}: {} {}".format(y.fraction.title, y.value, y.fraction.units) for y in
-                                Result.objects.filter(issledovaniye__napravleniye=direction,
-                                                      fraction__research=x.fraction.research)][16:21]
-                        ss = self.baseclient.rendered_services.client.sendServiceRend(referralId=rid,
-                                                                                      serviceId=ssd,
-                                                                                      isRendered="true",
-                                                                                      patientUid=rindiv,
-                                                                                      orgId=self.baseclient.search_organization_id(),
+                    send_data = dict(referralId=rid, serviceId=ssd, isRendered="true", patientUid=rindiv, orgId=self.baseclient.search_organization_id(),
                                                                                       dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                                                                       dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                                                                       note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2')
+                    case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(send_data["patientUid"])
+                    if case_id not in ["", None]:
+                        send_data["medicalCaseId"] = case_id
+                    if h_id not in ["", None]:
+                        send_data["stepId"] = h_id
+                    if ssd is not None and x.fraction.research.pk not in sended_researches:
+                        sended_researches.append(x.fraction.research.pk)
+                        ss = self.baseclient.rendered_services.client.sendServiceRend(**send_data)
                         xresult = ""
                         for y in Result.objects.filter(issledovaniye__napravleniye=direction, fraction__research=x.fraction.research).order_by("fraction__sort_weight"):
                             xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace("{{значение}}", y.value).replace("{{едизм}}", y.fraction.units)
@@ -403,17 +401,9 @@ class Directions(BaseRequester):
                         continue
                     ssd = self.baseclient.services.get_service_id(x.fraction.code)
                     if ssd is not None:
-                        ss = self.baseclient.rendered_services.client.sendServiceRend(referralId=rid,
-                                                                                      serviceId=ssd,
-                                                                                      isRendered="true",
-                                                                                      patientUid=rindiv,
-                                                                                      orgId=self.baseclient.search_organization_id(),
-                                                                                      dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                                                                      dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                                                                      note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2')
-                        xresult = "<br/><b>{}</b>: {} {}".format(x.fraction.title, x.value, x.fraction.units).strip()
+                        ss = self.baseclient.rendered_services.client.sendServiceRend(**send_data)
+                        xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}", x.value).replace("едизм", x.fraction.units)
                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
-                        xresult = Utils.escape("<br/>" + xresult + "<br/>")
                         sd = self.baseclient.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
                                                                                               x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.baseclient.get_addr(
@@ -493,14 +483,16 @@ class Hosp(BaseRequester):
     def search_last_opened_hosp_record(self, patient_uid, orgid=None):
         resp = self.client.searchHspRecord(medicalOrganizationId=orgid or self.main_client.search_organization_id(), patientUid=patient_uid)
         last_id = None
+        last_case_id = None
         for row in reversed(resp):
             d = self.get_hosp_details(row)
             t = helpers.serialize_object(d).get("outcomeDate", None)
             v = t is None or t >= datetime.datetime.now().date()
             if v:
                 last_id = row
+                last_case_id = helpers.serialize_object(d).get("caseId", None)
                 break
-        return last_id
+        return last_case_id, last_id
 
     def get_hosp_details(self, id):
         resp = self.client.getHspRecordById(id)
