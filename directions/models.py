@@ -171,6 +171,8 @@ class Napravleniya(models.Model):
     is_printed = models.BooleanField(default=False, blank=True, help_text='Флаг - напечатано ли направление')
     time_print = models.DateTimeField(default=None, blank=True, null=True, help_text='Время печати')
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
+    rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
+    rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print",
                                   help_text='Профиль, который был использован при печати')
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
@@ -181,8 +183,8 @@ class Napravleniya(models.Model):
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
 
     def __str__(self):
-        return "%d для пациента %s (врач %s, выписал %s)" % (
-            self.pk, self.client.individual.fio(), self.doc.get_fio(), self.doc_who_create)
+        return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
+            self.pk, self.client.individual.fio(), self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
 
     @staticmethod
     def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, issledovaniya=None):
@@ -394,7 +396,8 @@ class Issledovaniya(models.Model):
 
 class RmisServices(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
-    code = models.CharField(max_length=15, help_text='Код выгруженной услуги')
+    code = models.TextField(help_text='Код выгруженной услуги')
+    rmis_id = models.CharField(max_length=15, default="", blank=True, help_text='ID выгруженной услуги в РМИС')
 
     def __str__(self):
         return "%s %s" % (self.napravleniye, self.code)

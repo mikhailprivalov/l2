@@ -1440,6 +1440,12 @@
 
     var card_bases = {{ card_bases|safe }};
 
+    function get_base(title) {
+        return card_bases.filter(function(obj) {
+          return obj.title === title;
+        })[0];
+    }
+
     $loader.Particle = function (opt) {
         this.radius = 7;
         this.x = opt.x;

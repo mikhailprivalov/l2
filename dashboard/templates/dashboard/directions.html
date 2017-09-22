@@ -58,16 +58,12 @@
                             </td>
                         </tr><tr id="history-num-tr">
                             <td class="table-header-row">
-                                <span class="hospital">Номер истории:&nbsp;</span><span
-                                    class="poli">Настройка:&nbsp;</span>
+                                <span class="hospital">Номер истории:&nbsp;</span>
                             </td>
                             <td class="table-content-row" colspan="4">
                                 <div style="height: 34px">
                                     <span class="hospital"><input type="text" class="form-control"
                                                                   maxlength="11"/></span>
-                                    <label class="poli text-left" style="padding-left: 5px"><input
-                                            style="vertical-align: text-top;" type="checkbox" name="is_hospital"
-                                            onchange="sync_fin_sources();"/> стационар</label>
                                 </div>
                             </td>
                         </tr>
@@ -694,7 +690,7 @@
 
         let researches_cache = {};
 
-        let client_id = -1, fio = "", dbth = "", sx = "", type = "poli", num = -1; // Поля карты
+        let client_id = -1, fio = "", dbth = "", sx = "", type = card_bases[0].pk, num = -1; // Поля карты
 
         let res = [];  // Кэш поиска
         let active_lab = -1;
@@ -1048,7 +1044,6 @@
             }
             type = $clients_base.val();
             $history_num_tr__hospital.hide();
-            $history_num_tr.find(".poli").hide();
             sync_fin_sources();
             for(let base of card_bases){
                 if(base.pk === parseInt(type)){
@@ -1440,7 +1435,7 @@
             fio = fields.family + " " + fields.name + " " + fields.twoname; // Формирование ФИО
             dbth = fields.birthday.split(" ")[0]; // Формирование даты рождения
             sx = fields.sex;
-            type = fields.type;
+            type = fields.type_title;
             num = fields.num;
             // Установка полей таблицы карты пациента
 
@@ -1449,11 +1444,8 @@
             $("#card-bth").text(dbth);
             $("#card-sx").text(sx);
 {#            $("#card-polis").text((fields.polis !== null)? fields.polis : "");#}
-            if (type === "stat") {
+            if (get_base(type).history_number) {
                 $("#history-num-tr").find(".hospital input").prop("disabled", false);
-            }
-            else {
-                $("#history-num-tr").find(".poli input").prop("disabled", false);
             }
             sync_fin_sources();
             $("#select-lab, #select-template, #select-template-btn").removeProp('disabled');
@@ -1466,7 +1458,7 @@
             };
             clear_fast();
             $("#history-num-tr").find("input").val("");
-            if (type === "stat")
+            if (get_base(type).history_number)
                 $("#history-num-tr").find("input[type=text]").focus();
             load_researches();
         }
@@ -1646,7 +1638,7 @@
                     history_num: $("#history-num-tr").find("input").val(),
                     type: type,
                     comments: JSON.stringify(comments),
-                    is_hospital: type === "stat" || $("[name=is_hospital]").prop("checked")
+                    is_hospital: get_base(type).code === "C" || $("[name=is_hospital]").prop("checked")
                 },
                 statusCode: {
                     500: function () {
