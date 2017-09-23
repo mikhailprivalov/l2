@@ -10,7 +10,7 @@
                         <h5 style="margin-bottom: 4px;margin-top: 2px;    font-size: 16px;" class="btn-ell">
                             Категория:</h5>
                         <div>
-                            <select data-width="100%" id="clients-base" onchange="checkType(true)"
+                            <select data-width="100%" id="clients-base" data-container="body" onchange="checkType(true)"
                                     class="select-b"></select>
                         </div>
                     </div>
@@ -102,7 +102,7 @@
                 <div class="row">
                     <div class="col-xs-5" style="padding-right: 0">
                         <form onsubmit="return false;">
-                            <select class="select-b" id="select-lab" data-live-search="true" data-width="100%"
+                            <select class="select-b" id="select-lab" data-container="body" data-live-search="true" data-width="100%"
                                     title='Выберите лабораторию...' disabled>
                                 {% for v in labs %}
                                     <option value="{{ v.pk }}">{{ v.title }}</option>{% endfor %}
@@ -110,7 +110,7 @@
                         </form>
                     </div>
                     <div class="col-xs-4" style="padding-right: 0">
-                        <select class="select-b" id="select-template" data-width="100%"
+                        <select class="select-b" data-container="body" id="select-template" data-width="100%"
                                 title='Шаблоны' disabled>
                         </select>
                     </div>
@@ -135,17 +135,17 @@
                         <h6>Дата назначения (поиск):</h6>
 
                         <div class="input-daterange input-group" id="datepicker" style="margin-top: 2px">
-                            <input type="text" class="input-sm form-control no-context" name="date-start"
+                            <input type="text" onchange="fast_ld_dirs();return false;" class="input-sm form-control no-context" name="date-start"
                                    style="height: 34px"/>
                             <span class="input-group-addon"
                                   style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
-                            <input type="text" class="input-sm form-control no-context" name="date-end"
+                            <input type="text" onchange="fast_ld_dirs();return false;" class="input-sm form-control no-context" name="date-end"
                                    style="height: 34px"/>
                         </div>
                     </div>
                     <div class="col-xs-2 col-sm-2 col-md-2 col-lg-3" style="padding-right: 0">
                         <h6>Статус:</h6>
-                        <select class="select-b" data-live-search="false" onchange="fast_ld_dirs();return false;"
+                        <select class="select-b" data-container="body" data-live-search="false" onchange="fast_ld_dirs();return false;"
                                 data-width="100%" id="status">
                             <option value="3">Любой</option>
                             <option value="0">Выписаные</option>
@@ -155,23 +155,21 @@
                         </select>
                     </div>
                     <div class="col-xs-6 col-sm-6 col-md-5 col-lg-5">
-                        <h6><br/></h6>
-                        <div class="btn-group btn-group-justified">
-                            <div class="btn btn-blue-nb"
-                                 title="Обновить список"
-                                 onclick="fast_ld_dirs();"><i class="fa fa-refresh"></i></div>
-                            <div class="btn btn-blue-nb"
-                                 title="Печать выбраных направлений"
-                                 onclick="batch_print();"><i class="fa fa-print"></i></div>
-                            <div class="btn btn-blue-nb"
-                                 title="Печать штрих-кодов"
-                                 onclick="batch_print_bc();"><i class="fa fa-barcode"></i></div>
-                            <div class="btn btn-blue-nb"
-                                 title="Печать результатов"
-                                 onclick="batch_print_results();"><i class="fa fa-file-text-o"></i></div>
-                            <div class="btn btn-blue-nb"
-                                 title="Экспорт сводной таблицы по выбранным направлениям"
-                                 onclick="batch_table_print();"><i class="fa fa-table"></i></div>
+                        <h6>Действие с выделенными:</h6>
+                        <div class="row">
+                            <div class="col-xs-8">
+                                <select class="select-b" data-container="body" data-live-search="false" data-width="100%" id="action_selected">
+                                    <option value="directions_print">Печать направлений</option>
+                                    <option value="barcodes_print">Печать штрих-кодов</option>
+                                    <option value="results_print">Печать результатов</option>
+                                    <option value="table">Сводная таблица</option>
+                                    <option value="rmis_directions_resend">Повтор отправки направлений в РМИС</option>
+                                    <option value="rmis_results_resend">Повтор отправки результатов в РМИС</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-4" style="padding-left: 0">
+                                <button style="width:100%!important;" onclick="do_with_selected()" type="button" class="btn btn-ell btn-blue-nb">Выполнить</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1236,6 +1234,10 @@
             const $story_table = $("#story-table");
             load_client_dirs_lock = true;
             $('#story-list').scrollTop(0);
+            let prev_selected = [];
+            $.each($(".batch-print:checked"), function (k, v) {
+                prev_selected.push(parseInt($(v).attr("pk")));
+            });
             $story_table.html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
             let data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
             data.status = $("#status").val();
@@ -1267,6 +1269,11 @@
                     });
                     if (data.directions.length === 0) {
                         $story_table.html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
+                    }
+                    else{
+                        $.each(prev_selected, function (k, v) {
+                            $(`#story-table`).find(`tr[pk=${v}] .batch-print`).prop("checked", true);
+                        });
                     }
                 } else {
                     $story_table.html("<tr><td colspan='8' style='text-align: center'>Не найдено</td></tr>");
@@ -1705,6 +1712,26 @@
                     return $table.closest("div");
                 }
             });
+        }
+
+        function do_with_selected(){
+            let type = $("#action_selected").val();
+            switch(type){
+                case 'directions_print':
+                    batch_print();
+                    break;
+                case 'barcodes_print':
+                    batch_print_bc();
+                    break;
+                case 'results_print':
+                    batch_print_results();
+                    break;
+                case 'table':
+                    batch_table_print();
+                    break;
+                default:
+                    break;
+            }
         }
 
         function batch_print() {
