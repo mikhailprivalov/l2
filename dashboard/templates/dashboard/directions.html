@@ -227,19 +227,28 @@
                                 </button>
                                 <br/>
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-btn-bc" disabled
-                                        onclick="save_direction(true, true);" title="Сохр. и распечатать штрих-коды">
+                                        style="margin-bottom: 15px" onclick="save_direction(true, true);" title="Сохр. и распечатать штрих-коды">
                                     Сохр. и распечатать штрих-коды
                                 </button>
+                                <br/>
+                                <div class="input-group">
+                                    <input type="text" class="form-control ctrl" id="template-title-field" name="search-field"
+                                           data-container="body" disabled
+                                           data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                                           placeholder="Название шаблона"
+                                           title="Название шаблона">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-blue-nb ctrl" id="create-template-btn" disabled
+                                                onclick="create_template();" title="Создать шаблон">
+                                            Создать шаблон
+                                        </button>
+                                    </span>
+                                </div>
                             </div>
                             <div class="col-xs-3" style="padding-left: 0">
                                 <button class="btn btn-primary-nb ctrl btn-ell" id="save-just-btn" disabled
-                                        style="margin-bottom: 15px" onclick="save_direction(true);" title="Сохранить">
+                                        onclick="save_direction(true);" title="Сохранить">
                                     Сохранить
-                                </button>
-                                <br/>
-                                <button class="btn btn-primary-nb ctrl btn-ell" id="create-template-btn" disabled
-                                        onclick="create_template();" title="Создать шаблон">
-                                    Создать шаблон
                                 </button>
                             </div>
 
@@ -1587,6 +1596,16 @@
                 'position': 'bottom right',
                 delay: 6000
             });
+        }
+
+        function create_template(){
+            sync();
+            let data = {
+                researches: JSON.stringify(tmp_direction.researches),
+                title: $("#template-title-field").val()
+            };
+            console.log(data);
+            $("#template-title-field").val("");
         }
 
         function save_direction(tr, bc) {
