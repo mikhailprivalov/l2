@@ -487,13 +487,12 @@ class Directions(BaseRequester):
                             "{{результат}}", xresult), self.main_client.get_addr(
                             "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), type="POST",
                                                           filetype="text/xml")
-                    if x.fraction.code in sended_researches:
-                        continue
                     code = x.fraction.code
-                    service_rend_id = sended_ids.get(code, None)
                     if code in sended_codes:
-                        sended_codes.append(code)
-                    ssd = self.main_client.services.get_service_id(x.fraction.code)
+                        continue
+                    service_rend_id = sended_ids.get(code, None)
+                    sended_codes.append(code)
+                    ssd = self.main_client.services.get_service_id(code)
                     if ssd is not None:
                         if stdout:
                             stdout.write("SR2: " + str(service_rend_id))
@@ -524,7 +523,7 @@ class Directions(BaseRequester):
                         ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                         xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}",
                                                                                                 x.value).replace(
-                            "едизм", x.fraction.units)
+                            "{{едизм}}", x.fraction.units)
                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace(
                             "</font>", "")
                         sd = self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
