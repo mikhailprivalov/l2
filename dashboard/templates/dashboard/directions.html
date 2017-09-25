@@ -694,6 +694,14 @@
     <script src="/static/js/ajaxq.js"></script>
     <script src="/static/js/dragula.js"></script>
     <script>
+        let has_unconfirmed = false;
+
+        window.onbeforeunload = function() {
+          if (has_unconfirmed) {
+            return 'Имеются несохранённые действия. Продолжить?'
+          }
+        };
+
         let d;
         const users_av = {{ users|safe }};
         let rmis_uid = "{{ rmis_uid }}";
@@ -1234,6 +1242,7 @@
 
             if (notfull === undefined)
                 load_researches();
+            check_unconfirmed();
         }
 
         function fast_ld_dirs() {
@@ -1563,6 +1572,10 @@
                 'position': 'bottom right',
                 delay: 6000
             });
+        }
+
+        function check_unconfirmed(){
+            has_unconfirmed = !_.isEmpty(checked);
         }
 
         function clear_fast() {
