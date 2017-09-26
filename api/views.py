@@ -67,12 +67,13 @@ def send(request):
     try:
         if request.method == "POST":
             resdict = yaml.load(request.POST["result"])
-            appkey = request.POST["key"]
+            appkey = request.POST.get("key", "")
         else:
             resdict = yaml.load(request.GET["result"])
-            appkey = request.GET["key"]
+            appkey = request.GET.get("key", "")
 
-        astm_user = users.DoctorProfile.objects.filter(user__pk=866).first()
+        astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
+        resdict["pk"] = resdict.get("pk", False)
         if "LYMPH%" in resdict["result"]:
             resdict["orders"] = {}
 
@@ -88,10 +89,10 @@ def send(request):
                 resdict["pk"] = directions.TubesRegistration.objects.filter(
                     issledovaniya__napravleniye__pk=dpk).first().pk
             else:
-                resdict["pk"] = -1
+                resdict["pk"] = False
             resdict["bysapphire"] = True
 
-        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
             direction = tubei.issledovaniya_set.first().napravleniye
             for key in resdict["result"].keys():
@@ -128,6 +129,8 @@ def send(request):
                                 fraction_result.ref_m = ref.m
                                 fraction_result.ref_f = ref.f
                             fraction_result.save()  # Сохранение
+                            issled.api_app = models.Application.objects.get(key=appkey)
+                            issled.save()
                             fraction_result.get_ref(re_save=True)
                             fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
                             from datetime import datetime
