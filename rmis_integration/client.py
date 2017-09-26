@@ -478,6 +478,8 @@ class Directions(BaseRequester):
                                 "{{едизм}}", y.fraction.units)
                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace(
                             "</font>", "")
+                        if x.issledovaniye.get_analyzer() != "":
+                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
                         if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
                             xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace("{{значение}}",
                                                                                                   x.issledovaniye.lab_comment).replace(
@@ -526,6 +528,8 @@ class Directions(BaseRequester):
                             "{{едизм}}", x.fraction.units)
                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace(
                             "</font>", "")
+                        if x.issledovaniye.get_analyzer() != "":
+                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
                         sd = self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
                                                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.main_client.get_addr(
