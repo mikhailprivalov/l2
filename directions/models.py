@@ -1,5 +1,6 @@
 from django.db import models
 import clients.models as Clients
+from api.models import Application
 from users.models import DoctorProfile
 from jsonfield import JSONField
 from researches.models import Researches, Tubes
@@ -375,6 +376,7 @@ class Issledovaniya(models.Model):
     comment = models.CharField(max_length=10, default="", blank=True,
                                help_text='Комментарий (отображается на пробирке)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
+    api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены')
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)
@@ -392,6 +394,9 @@ class Issledovaniya(models.Model):
         :return: True, если весь материал принят
         """
         return self.is_get_material() and all([x.doc_recive is not None for x in self.tubes.filter()])
+
+    def get_analyzer(self):
+        return "" if not self.api_app else self.api_app.name
 
 
 class RmisServices(models.Model):
