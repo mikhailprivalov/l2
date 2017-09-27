@@ -9,7 +9,9 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Смена лаборатории <b class="caret"></b></a>
         <ul class="dropdown-menu" role="menu" style="z-index: 10000">
             {% for v in labs %}
+                {% if v.pk != lab.pk %}
                 <li><a href="/results/enter?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+                {% endif %}
             {% endfor %}
         </ul>
     </li>
