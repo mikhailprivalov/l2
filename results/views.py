@@ -2243,7 +2243,7 @@ def result_journal_table_print(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
 
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
-                                            research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                            research__subgroup__podrazdeleniye=lab,
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
     patients = {}
     researches_pks = set()
@@ -2258,8 +2258,7 @@ def result_journal_table_print(request):
             patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.tilie, "patients": {}}
         if d.client.pk not in patients[k]["patients"]:
             patients[k]["patients"][d.client.pk] = {"fio": d.client.individual.fio(short=True, dots=True),
-                                                    "card": "%d %s" % (
-                                                        d.client.number, d.client.type_str(short=True)),
+                                                    "card": d.client.number_with_type(),
                                                     "history": d.history_num,
                                                     "researches": {}}
         if iss.research.pk not in patients[k]["patients"][d.client.pk]["researches"]:
@@ -2465,7 +2464,7 @@ def result_journal_print(request):
     pw, ph = A4
     paddingx = 30
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="results.pdf"'
+    response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     import datetime
     dateo = request.GET["date"]
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
@@ -2575,8 +2574,7 @@ def result_journal_print(request):
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
                                   "ist_f": iss.napravleniye.istochnik_f.tilie,
-                                  "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.type_str(
-                                      short=True, num=True) +
+                                  "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                                          ((
                                               "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
