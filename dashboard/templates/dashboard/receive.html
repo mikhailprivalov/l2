@@ -70,13 +70,6 @@
                     <tbody id="tubes"></tbody>
                 </table>
             </div>
-
-            <div class="r">
-                <button class='btn btn-primary-nb' style="margin-top: 5px;width: auto!important;" onclick='save()'>
-                    Сохранить
-                </button>
-            </div>
-        </div>
     </div>
 {% endblock %}
 
@@ -224,8 +217,6 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script>
         let loadt = false;
         let first_resize = true;
@@ -294,6 +285,12 @@
                 if (i === 0) {
                     $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
                 }
+                else{
+                    $("#tubes").append("<tr><td colspan='5'></td><td>\n" +
+                        "                <button class='btn btn-primary-nb' onclick='save()'>\n" +
+                        "                    Сохранить\n" +
+                        "                </button></td><td></td></tr>");
+                }
                 $('[data-toggle="tooltip"]').tooltip();
                 $('#scroll-tb').scrollTop(0);
                 loadt = false;
@@ -337,7 +334,7 @@
         }
 
         function resize() {
-            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 65);
+            $('#scroll-tb').height($(window).height() - $('#scroll-tb').position().top - 17);
             if (first_resize) {
                 $('#scroll-tb').perfectScrollbar();
                 first_resize = false;
