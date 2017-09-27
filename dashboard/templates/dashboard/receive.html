@@ -7,14 +7,16 @@
             <a href="/dashboard/receive/one_by_one">Прием матриала по одному</a>
             <a href="/dashboard/receive/journal_form" target="_blank">Журнал приема</a>
         </div>
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="control-table">
             <col width="180">
             <col>
             <tr>
                 <th class="text-right">Лаборатория:</th>
                 <td>
                     <select class="selectpicker" data-width="100%" id="lab" onchange="loadfrom();">
-                        {% for v in labs %}<option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %} value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
+                        {% for v in labs %}
+                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %}
+                                                                                                value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
                     </select>
                 </td>
                 <td>
@@ -79,8 +81,11 @@
 {% endblock %}
 
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
     <style>
+        #control-table td, #control-table th {
+            vertical-align: middle;
+        }
+
         .borderless td {
             border: 0 !important;
         }
@@ -197,25 +202,24 @@
             margin-bottom: 5px;
         }
 
-        td.c.in{
+        td.c.in {
             height: 1px
         }
 
-
-        td.c.in label{
+        td.c.in label {
             display: flex;
             align-items: center;
             justify-content: center
         }
 
-        td.c.in input{
+        td.c.in input {
             margin: 0;
         }
 
         @-moz-document url-prefix() {
-           td.c.in {
+            td.c.in {
                 height: 100%;
-        }
+            }
         }
     </style>
 {% endblock %}
@@ -351,7 +355,11 @@
                 url: "/dashboard/from",
                 method: "GET",
                 type: "json",
-                data: {datestart: $("[name='date-start']").val(), dateend: $("[name='date-end']").val(), lab: $("#lab").val()}
+                data: {
+                    datestart: $("[name='date-start']").val(),
+                    dateend: $("[name='date-end']").val(),
+                    lab: $("#lab").val()
+                }
             }).done(function (data) {
                 $.each(data, function (k, v) {
                     if (v.pk == selected) {
