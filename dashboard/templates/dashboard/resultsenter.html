@@ -233,8 +233,7 @@
                                 Источник финансирования:
                                 <select class="select-b" data-width="100%" multiple data-actions-box="true" id="ist_f">
                                     {% for v in ist_f %}
-                                        <option value="{{ v.pk }}">{% if v.istype == "poli" %}Поликлиника{% else %}
-                                            Стационар{% endif %} - {{ v.tilie }}</option>
+                                        <option value="{{ v.pk }}">{{ v.base.title }} - {{ v.tilie }}</option>
                                     {% endfor %}
                                 </select>
                             </label>
@@ -1098,8 +1097,6 @@
 {% block scripts %}
     <script src="/static/js/runtime.js"></script>
     <script src="/static/js/jade.min.js"></script>
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
     <script src="/static/js/ajaxq.js"></script>
     <script>
         let firstrun = true;
@@ -2107,7 +2104,7 @@
                 return;
             }
             const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val(), '_blank');
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&lab_pk="+lab_pk, '_blank');
         }
         function createjournalcodes() {
             const date = $("[name=date-confirm]").val();
@@ -2127,7 +2124,7 @@
                 return;
             }
             const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&codes=1", '_blank');
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&codes=1&lab_pk="+lab_pk, '_blank');
         }
         function createjournaltable() {
             const date = $("[name=date-confirm]").val();
@@ -2147,7 +2144,7 @@
                 return;
             }
             const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr), '_blank');
+            window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&lab_pk="+lab_pk, '_blank');
         }
         function open_fill_form() {
             sl();

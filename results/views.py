@@ -72,7 +72,7 @@ def enter(request):
         lab = labs[0]
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
-                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk"),
+                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
                                                            "groups": directory.ResearchGroup.objects.filter(lab=lab),
                                                            "lab": lab,
                                                            "labs": labs})
@@ -2240,7 +2240,7 @@ def result_journal_table_print(request):
     onlyjson = False
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
-    lab = request.user.doctorprofile.podrazileniye
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
 
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
                                             research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
@@ -2469,6 +2469,7 @@ def result_journal_print(request):
     import datetime
     dateo = request.GET["date"]
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
     group = int(request.GET.get("group", "-2"))
@@ -2478,7 +2479,7 @@ def result_journal_print(request):
 
     end_date = date + datetime.timedelta(days=1)
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
-                                            research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                            research__subgroup__podrazdeleniye=lab,
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
     group_str = "Все исследования"
     if group != -2:
@@ -2767,14 +2768,12 @@ def get_day_results(request):
 
     if otd == -1:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
-                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
                                                issledovaniya__research_id__in=researches).order_by("client__pk"):
 
             if dir.pk not in directions[dir.doc.podrazileniye.title]:
                 directions[dir.doc.podrazileniye.title].append(dir.pk)
     else:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
-                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
                                                issledovaniya__research_id__in=researches,
                                                doc__podrazileniye__pk=otd).order_by("client__pk"):
             if dir.pk not in directions[dir.doc.podrazileniye.title]:
