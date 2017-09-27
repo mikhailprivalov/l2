@@ -68,6 +68,8 @@ def enter(request):
     from podrazdeleniya.models import Podrazdeleniya
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
     labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
+    if not lab.isLab:
+        lab = labs[0]
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
                                                            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk"),
