@@ -574,6 +574,7 @@ def dashboard_from(request):
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
+    lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
     import datetime
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                int(date_start.split(".")[0]))
@@ -586,7 +587,7 @@ def dashboard_from(request):
                                                                notice="",
                                                                doc_recive__isnull=True,
                                                                time_get__range=(date_start, date_end),
-                                                               issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye
+                                                               issledovaniya__research__subgroup__podrazdeleniye=lab
                                                                ).distinct().count(),
                      "title": podr.title, "pk": podr.pk}
 

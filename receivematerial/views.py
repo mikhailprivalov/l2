@@ -26,11 +26,9 @@ def receive(request):
     """Представление для приемщика материала в лаборатории"""
 
     if request.method == "GET":
-        groups = Subgroups.objects.filter(
-            podrazdeleniye=request.user.doctorprofile.podrazileniye)  # Список доступных групп для текущего пользователя
-        podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by(
-            "title")  # Список всех подразделений
-        return render(request, 'dashboard/receive.html', {"groups": groups, "podrazdeleniya": podrazdeleniya})
+        podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+        labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
+        return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])
         for tube_get in tubes:
@@ -253,7 +251,7 @@ def tubes_get(request):
     result = []
     k = set()
     if request.method == "GET":
-        subgroup_lab = Subgroups.objects.get(pk=request.GET["subgroup"])
+        lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
@@ -266,11 +264,11 @@ def tubes_get(request):
                                                      notice="",
                                                      doc_recive__isnull=True,
                                                      time_get__range=(date_start, date_end),
-                                                     issledovaniya__research__subgroup=subgroup_lab):
+                                                     issledovaniya__research__subgroup__podrazdeleniye=lab):
             if tube.getbc() in k or tube.rstatus():
                 continue
             issledovaniya_tmp = []
-            for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__subgroup=subgroup_lab,
+            for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__subgroup__podrazdeleniye=lab,
                                                     tubes__time_get__range=(date_start, date_end)):
                 issledovaniya_tmp.append(iss.research.title)
             if len(issledovaniya_tmp) > 0:

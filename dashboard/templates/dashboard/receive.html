@@ -8,12 +8,16 @@
             <a href="/dashboard/receive/journal_form" target="_blank">Журнал приема</a>
         </div>
         <table class="table table-bordered">
+            <col width="180">
+            <col>
             <tr>
-                <td style="width: 320px"><h6>Лаборатория:&nbsp;&nbsp;</h6></td>
+                <th class="text-right">Лаборатория:</th>
                 <td>
-                    <h6>{{ request.user.doctorprofile.podrazileniye.title }}</h6>
+                    <select class="selectpicker" data-width="100%" id="lab" onchange="loadfrom();">
+                        {% for v in labs %}<option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %} value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
+                    </select>
                 </td>
-                <td rowspan="2">
+                <td>
                     <div class="row" style="margin-bottom: 5px">
                         <div class="col-xs-1"></div>
                         <div class="col-xs-10">
@@ -30,16 +34,7 @@
                 </td>
             </tr>
             <tr>
-                <td style="width: 320px"><h6>Подразделение в лаборатории:&nbsp;&nbsp;</h6>
-                </td>
-                <td>
-                    <select class="selectpicker" data-width="100%" id="subgroup" onchange="loadfrom();">
-                        {% for v in groups %}
-                            <option num='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}</select>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 320px"><h6>Отделение (от кого):&nbsp;&nbsp;</h6></td>
+                <th class="text-right">Отделение (от кого):</th>
                 <td>
                     <select class="selectpicker" data-width="100%" id="from" onchange="loadfrom();">
                         {% for v in podrazdeleniya %}
@@ -139,8 +134,6 @@
             height: 100%;
             margin: 0;
             cursor: pointer;
-            vertical-align: middle;
-            display: inline-block;
         }
 
         #tubes label:hover {
@@ -203,6 +196,27 @@
             margin-top: -13px;
             margin-bottom: 5px;
         }
+
+        td.c.in{
+            height: 1px
+        }
+
+
+        td.c.in label{
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        td.c.in input{
+            margin: 0;
+        }
+
+        @-moz-document url-prefix() {
+           td.c.in {
+                height: 100%;
+        }
+        }
     </style>
 {% endblock %}
 {% block scripts %}
@@ -255,7 +269,7 @@
         function load_tubes() {
             sl();
             $("#tubes").html("");
-            $.ajax({url: "/tubes/get?subgroup={0}&from={1}&datestart={2}&dateend={3}".f($("#subgroup option:selected").attr("num"), $("#from option:selected").attr("num"), $("[name='date-start']").val(), $("[name='date-end']").val())}).done(function (data) {
+            $.ajax({url: "/tubes/get?from={0}&datestart={1}&dateend={2}&lab={3}".f($("#from option:selected").attr("num"), $("[name='date-start']").val(), $("[name='date-end']").val(), $("#lab").val())}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     let x = a.tube.id,
@@ -337,7 +351,7 @@
                 url: "/dashboard/from",
                 method: "GET",
                 type: "json",
-                data: {datestart: $("[name='date-start']").val(), dateend: $("[name='date-end']").val()}
+                data: {datestart: $("[name='date-start']").val(), dateend: $("[name='date-end']").val(), lab: $("#lab").val()}
             }).done(function (data) {
                 $.each(data, function (k, v) {
                     if (v.pk == selected) {
