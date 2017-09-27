@@ -1,6 +1,19 @@
 {% extends "dbase.html" %}
 {% block title %}Ввод результатов{% endblock %}
 {% block container %}container-fluid{% endblock %}
+{% block extended_header %}
+    <li>
+        <a>{{ lab.title }}</a>
+    </li>
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Смена лаборатории <b class="caret"></b></a>
+        <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+            {% for v in labs %}
+                <li><a href="/results/enter?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </li>
+{% endblock %}
 {% block content %}
     <div class="col-md-4 col-lg-3" style="padding-right: 0">
         <div class="fastlinks">
@@ -1110,6 +1123,7 @@
         let dir_data = {};
 
         let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td></tr>';
+        let lab_pk = {{ lab.pk }};
 
         let statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         let statuses_titles = {
@@ -1151,7 +1165,7 @@
             });
             decsl();
             $.ajax({ // AJAX запрос
-                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+                url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
                 let vv = [];
@@ -1900,7 +1914,8 @@
                 data: {
                     datestart: $("[name=datemain-start]").val(),
                     dateend: $("[name=datemain-end]").val(),
-                    def: $("[name=def]").prop("checked") ? 1 : 0
+                    def: $("[name=def]").prop("checked") ? 1 : 0,
+                    lab: lab_pk
                 },
                 type: "json",
                 method: "GET"
@@ -2338,7 +2353,7 @@
             $o.html("");
             $o.append(lang.table_researches_header);
             $.ajax({ // AJAX запрос
-                url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+                url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
                 if (data.length === 0) {

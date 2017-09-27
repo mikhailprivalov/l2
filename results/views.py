@@ -17,6 +17,7 @@ import users.models as users
 from appconf.manager import SettingManager
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
+from podrazdeleniya.models import Podrazdeleniya
 
 
 @login_required
@@ -64,13 +65,15 @@ def results_search(request):
 @group_required("Врач-лаборант", "Лаборант")
 def enter(request):
     """ Представление для страницы ввода результатов """
-
     from podrazdeleniya.models import Podrazdeleniya
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
                                                            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk"),
-                                                           "groups": directory.ResearchGroup.objects.filter(
-                                                               lab=request.user.doctorprofile.podrazileniye)})
+                                                           "groups": directory.ResearchGroup.objects.filter(lab=lab),
+                                                           "lab": lab,
+                                                           "labs": labs})
 
 
 @login_required
@@ -100,10 +103,12 @@ def loadready(request):
         date_start = request.POST["datestart"]
         date_end = request.POST["dateend"]
         deff = int(request.POST["def"])
+        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazileniye.pk))
     else:
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
         deff = int(request.GET["def"])
+        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazileniye.pk))
 
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                int(date_start.split(".")[0]))
@@ -134,13 +139,13 @@ def loadready(request):
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                                 issledovaniya__research__subgroup__podrazdeleniye=lab,
                                                  issledovaniya__isnull=False)
     else:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__isnull=False,
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+                                                 issledovaniya__research__subgroup__podrazdeleniye=lab,
                                                  issledovaniya__deferred=True, issledovaniya__isnull=False)
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории

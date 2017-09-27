@@ -1320,6 +1320,7 @@
                                 {% endif %}
                             </ul>
                         </li>
+                        {% block extended_header %}{% endblock %}
                     </ul>
                     <ul class="nav navbar-nav navbar-right" id="right-navbar">
                         {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
