@@ -64,7 +64,7 @@
                     <th style="width: 180px">№ направления</th>
                     <th style="width: 280px">Тип пробирки</th>
                     <th style="width: 180px">№ пробирки</th>
-                    <th style="width: 180px">Принято</th>
+                    <th style="width: 180px"><small style="float:right;font-weight: normal;"><a href="javascript:" onclick='save();return false;'>Сохранить</a></small>Принято</th>
                     <th style="width: 300px">Замечания</th>
                     </thead>
                     <tbody id="tubes"></tbody>
@@ -286,10 +286,7 @@
                     $("#tubes").append("<tr><td class='c' colspan='7'>Ничего не найдено</td></tr>");
                 }
                 else{
-                    $("#tubes").append("<tr><td colspan='5'></td><td>\n" +
-                        "                <button class='btn btn-primary-nb' onclick='save()'>\n" +
-                        "                    Сохранить\n" +
-                        "                </button></td><td></td></tr>");
+                    $("#tubes").append("<tr><td colspan='5'></td><td class='text-center'><small style='font-weight: normal;'><a href='javascript:' style='padding: 3px' onclick='save();return false;'>Сохранить</a></small></td><td></td></tr>");
                 }
                 $('[data-toggle="tooltip"]').tooltip();
                 $('#scroll-tb').scrollTop(0);
