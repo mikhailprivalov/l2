@@ -1782,19 +1782,33 @@
                 resend_array.push(parseInt($(v).attr("pk")));
             });
             sl();
-            $.ajax({url: '/directions/resend', data: {pks: JSON.stringify(resend_array)}}).done(function(){
+            $.ajax({url: '/directions/resend', data: {pks: JSON.stringify(resend_array)}}).done(function(data){
                 hl();
-                $.amaran({
-                    'theme': 'awesome ok',
-                    'content': {
-                        title: "Повторная отправка направлений запланирована",
-                        message: "",
-                        info: '',
-                        icon: 'fa fa-exclamation'
-                    },
-                    'position': 'bottom right',
-                    delay: 6000
-                });
+                if(JSON.parse(data)) {
+                    $.amaran({
+                        'theme': 'awesome ok',
+                        'content': {
+                            title: "Повторная отправка направлений запланирована",
+                            message: "",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                } else {
+                    $.amaran({
+                        'theme': 'awesome err',
+                        'content': {
+                            title: "Ошибка",
+                            message: "Направления, для которых результат уже был загружен в РМИС, нельзя отправить заново",
+                            info: '',
+                            icon: 'fa fa-exclamation'
+                        },
+                        'position': 'bottom right',
+                        delay: 6000
+                    });
+                }
             });
         }
 
