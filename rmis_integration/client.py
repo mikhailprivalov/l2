@@ -344,6 +344,8 @@ class Directions(BaseRequester):
         for row in RmisServices.objects.filter(napravleniye=direction):
             self.main_client.rendered_services.delete_service(row.rmis_id)
             row.delete()
+        direction.result_rmis_send = False
+        direction.save()
 
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
