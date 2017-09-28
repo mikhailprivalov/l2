@@ -1764,9 +1764,89 @@
                 case 'table':
                     batch_table_print();
                     break;
+                case 'rmis_directions_resend':
+                    rmis_directions_resend();
+                    break;
+                case 'rmis_results_resend':
+                    rmis_results_resend();
+                    break;
                 default:
                     break;
             }
+        }
+
+        function rmis_directions_resend() {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Ничего не выбрано",
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            let resend_array = [];
+            $.each($bp, function (k, v) {
+                resend_array.push(parseInt($(v).attr("pk")));
+            });
+            sl();
+            $.ajax({url: '/directions/resend', data: {pks: JSON.stringify(resend_array)}}).done(function(){
+                hl();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: "Повторная отправка направлений запланирована",
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
+        }
+
+        function rmis_results_resend() {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Ничего не выбрано",
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            let resend_array = [];
+            $.each($bp, function (k, v) {
+                resend_array.push(parseInt($(v).attr("pk")));
+            });
+            sl();
+            $.ajax({url: '/directions/resend', data: {pks: JSON.stringify(resend_array), type: "results"}}).done(function(){
+                hl();
+                $.amaran({
+                    'theme': 'awesome ok',
+                    'content': {
+                        title: "Повторная отправка результатов запланирована",
+                        message: "",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+            });
         }
 
         function batch_print() {

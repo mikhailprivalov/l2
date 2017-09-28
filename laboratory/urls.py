@@ -11,7 +11,7 @@ from researches.views import ajax_search_res, researches_get_one, get_all_tubes,
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
     print_history, \
     get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get, \
-    order_researches
+    order_researches, resend
 from receivematerial.views import receive, tubes_get, receive_obo, receive_history, receive_execlist, last_received, \
     receive_journal
 from results.views import enter, loadready, results_save, result_get, result_conformation, result_confirm, result_print, \
@@ -35,6 +35,7 @@ urlpatterns = [
                   url(r'^clients/import$', receive_db),
                   url(r'^clients/get_db$', get_db),
                   url(r'^directions/ajax/save$', dir_save),
+                  url(r'^directions/resend$', resend),
                   url(r'^directions/pdf$', gen_pdf_dir),
                   url(r'^directions/execlist', gen_pdf_execlist),
                   url(r'^directions/xls$', get_xls_dir),

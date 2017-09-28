@@ -1179,3 +1179,17 @@ def order_researches(request):
                                    user=request.user.doctorprofile, weight=w).save()
 
     return HttpResponse(1, content_type="application/json")
+
+
+@login_required
+def resend(request):
+    t = request.GET.get("type", "directions")
+    pks = json.loads(request.GET.get("pks", "[]"))
+    from rmis_integration.client import Client
+    c = Client()
+    for direction in Napravleniya.objects.filter(pk__in=pks):
+        if t in ["directions", "full"]:
+            c.directions.delete_direction(direction)
+        if t in ["results", "full"]:
+            c.directions.delete_services(direction)
+    return HttpResponse(1, content_type="application/json")
