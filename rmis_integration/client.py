@@ -618,6 +618,8 @@ class Directions(BaseRequester):
                                                                      "normis": '1'}),
                                          self.main_client.get_addr(
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
+            if stdout:
+                stdout.write("RESID %s" % res_id)
             direction.rmis_result_file_id = res_id
             direction.result_rmis_send = True
             direction.save()
