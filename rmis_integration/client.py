@@ -329,6 +329,7 @@ def ndate(d: datetime.datetime):
 
 
 import simplejson as json
+from django.utils import timezone
 
 
 class Directions(BaseRequester):
@@ -471,7 +472,7 @@ class Directions(BaseRequester):
                                      quantity="1",
                                      orgId=self.main_client.search_organization_id(),
                                      dateFrom=direction.data_sozdaniya.strftime("%Y-%m-%d"),
-                                     timeFrom=direction.data_sozdaniya.strftime("%X"),
+                                     timeFrom=timezone.localtime(direction.data_sozdaniya).strftime("%X"),
                                      dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                      note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
                                      patientUid=rindiv)
