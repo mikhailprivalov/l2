@@ -437,6 +437,12 @@ class Directions(BaseRequester):
         individual_rmis_id = self.main_client.patients.get_rmis_id_for_individual(direction.client.individual)
         for row in RmisServices.objects.filter(napravleniye=direction):
             sended_researches.append(row.code)
+        if individual_rmis_id != "NONERMIS" and direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["", None]:
+            case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(individual_rmis_id)
+            if stdout is not None:
+                stdout.write("Update case_id and hosp_id %s %s" % (case_id, h_id))
+            direction.rmis_case_id = case_id
+            direction.rmis_hosp_id = h_id
         for i in issledovanya:
             code = i.research.code
             if code not in sended_researches:
