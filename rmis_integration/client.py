@@ -360,6 +360,7 @@ class Directions(BaseRequester):
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
         direction.rmis_case_id = ""
+        direction.rmis_resend_services = True
         direction.save()
         return deleted
 
