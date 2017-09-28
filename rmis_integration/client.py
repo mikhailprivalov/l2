@@ -357,6 +357,10 @@ class Directions(BaseRequester):
         if direction.rmis_result_file_id not in ["", None]:
             self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + direction.rmis_result_file_id))
             direction.rmis_result_file_id = ""
+        res_id = direction.rmis_result_file_id
+        if res_id not in ["", None]:
+            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + res_id))
+        direction.rmis_result_file_id = ""
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
         direction.rmis_case_id = ""
