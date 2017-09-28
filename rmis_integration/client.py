@@ -403,6 +403,10 @@ class Directions(BaseRequester):
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
         elif client_rmis == "NONERMIS":
             direction.rmis_number = "NONERMIS"
+        if direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",None]:
+                case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
+                direction.rmis_case_id = case_id
+                direction.rmis_hosp_id = h_id
         direction.rmis_resend_services = False
         direction.save()
         self.check_service(direction, stdout)
