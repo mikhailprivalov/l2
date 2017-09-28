@@ -334,12 +334,13 @@ class Directions(BaseRequester):
     def delete_direction(self, direction: Napravleniya):
         d = ""
         self.delete_services(direction)
-        if direction.rmis_number not in [None, "", "NONERMIS"]:
-            d = str(self.client.deleteReferral(direction.rmis_number))
-        direction.rmis_number = ""
-        direction.rmis_hosp_id = ""
-        direction.rmis_case_id = ""
-        direction.save()
+        try:
+            if direction.rmis_number not in [None, "", "NONERMIS"]:
+                d = str(self.client.deleteReferral(direction.rmis_number))
+            direction.rmis_number = ""
+            direction.save()
+        except Fault:
+            pass
         return d
 
     def delete_services(self, direction: Napravleniya):
@@ -347,6 +348,8 @@ class Directions(BaseRequester):
             self.main_client.rendered_services.delete_service(row.rmis_id)
             row.delete()
         direction.result_rmis_send = False
+        direction.rmis_hosp_id = ""
+        direction.rmis_case_id = ""
         direction.save()
 
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
