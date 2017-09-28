@@ -175,6 +175,7 @@ class Napravleniya(models.Model):
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     rmis_result_file_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ID прикреплённого результата')
+    rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?')
     doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print",
                                   help_text='Профиль, который был использован при печати')
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
