@@ -331,10 +331,12 @@ class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_directions")
 
-    def delete_direction(self, direction: Napravleniya):
+    def delete_direction(self, direction: Napravleniya, stdout: OutputWrapper = None):
         self.delete_services(direction)
         if direction.rmis_number not in [None, "", "NONERMIS"]:
-            self.client.deleteReferral(direction.rmis_number)
+            d = self.client.deleteReferral(direction.rmis_number)
+            if stdout is not None:
+                stdout.write(str(d))
         direction.rmis_number = ""
         direction.rmis_hosp_id = ""
         direction.rmis_case_id = ""
