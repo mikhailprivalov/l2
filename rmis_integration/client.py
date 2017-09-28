@@ -176,6 +176,10 @@ class Client(object):
                                  headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
+    def req(self, path, type="DELETE"):
+        resip = requests.request(type, path, headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+        return str(resip.status_code) == "200"
+
     def local_get(self, addr: str, params: dict):
         return self.localclient.get(addr, params).content
 
@@ -345,13 +349,18 @@ class Directions(BaseRequester):
         return d
 
     def delete_services(self, direction: Napravleniya):
+        deleted = []
         for row in RmisServices.objects.filter(napravleniye=direction):
-            self.main_client.rendered_services.delete_service(row.rmis_id)
+            deleted.append(self.main_client.rendered_services.delete_service(row.rmis_id))
             row.delete()
+        if direction.rmis_result_file_id not in ["", None]:
+            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + direction.rmis_result_file_id))
+            direction.rmis_result_file_id = ""
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
         direction.rmis_case_id = ""
         direction.save()
+        return deleted
 
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
@@ -440,6 +449,7 @@ class Directions(BaseRequester):
         protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send and direction.rmis_number != "NONERMIS":
             rid = self.check_send(direction)
+            res_id = direction.rmis_result_file_id
             if rid and rid != "":
                 rindiv = self.main_client.patients.get_rmis_id_for_individual(direction.client.individual)
                 sended_ids = {}
@@ -585,12 +595,15 @@ class Directions(BaseRequester):
                                                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.main_client.get_addr(
                             "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), type="POST")
-                self.main_client.put_content("Resultat.pdf",
-                                             self.main_client.local_get("/results/pdf",
-                                                                        {"pk": json.dumps([direction.pk]),
-                                                                         "normis": '1'}),
-                                             self.main_client.get_addr(
-                                                 "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
+                if res_id not in ["", None]:
+                    self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + res_id))
+                res_id = self.main_client.put_content("Resultat.pdf",
+                                         self.main_client.local_get("/results/pdf",
+                                                                    {"pk": json.dumps([direction.pk]),
+                                                                     "normis": '1'}),
+                                         self.main_client.get_addr(
+                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
+            direction.rmis_result_file_id = res_id
             direction.result_rmis_send = True
             direction.save()
         return direction.result_rmis_send

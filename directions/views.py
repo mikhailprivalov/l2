@@ -1188,9 +1188,10 @@ def resend(request):
     from rmis_integration.client import Client
     c = Client()
     d = []
+    r = []
     for direction in Napravleniya.objects.filter(pk__in=pks):
         if t in ["directions", "full"]:
             d.append(c.directions.delete_direction(direction))
         if t in ["results", "full"]:
-            c.directions.delete_services(direction)
-    return HttpResponse(json.dumps(all(d)), content_type="application/json")
+            r.append(c.directions.delete_services(direction))
+    return HttpResponse(json.dumps(all(d) if t == "directions" else r), content_type="application/json")
