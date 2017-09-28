@@ -409,7 +409,6 @@ class Directions(BaseRequester):
                 stdout.write("Update case_id and hosp_id %s %s" % (case_id, h_id))
             direction.rmis_case_id = case_id
             direction.rmis_hosp_id = h_id
-        direction.rmis_resend_services = False
         direction.save()
         self.check_service(direction, stdout)
         return direction.rmis_number
@@ -451,6 +450,8 @@ class Directions(BaseRequester):
                                                          stdout)
         for k in sended_ids:
             RmisServices(napravleniye=direction, code=k, rmis_id=sended_ids[k]).save()
+        direction.rmis_resend_services = False
+        direction.save()
 
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
