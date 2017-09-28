@@ -395,7 +395,6 @@ class Directions(BaseRequester):
                 case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
                 direction.rmis_case_id = case_id
                 direction.rmis_hosp_id = h_id
-            direction.save()
             self.main_client.put_content("Napravleniye.pdf",
                                          self.main_client.local_get("/directions/pdf",
                                                                     {"napr_id": json.dumps([direction.pk])}),
@@ -403,7 +402,8 @@ class Directions(BaseRequester):
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
         elif client_rmis == "NONERMIS":
             direction.rmis_number = "NONERMIS"
-            direction.save()
+        direction.rmis_resend_services = False
+        direction.save()
         self.check_service(direction, stdout)
         return direction.rmis_number
 
@@ -619,6 +619,10 @@ class Directions(BaseRequester):
             uploaded.append(self.check_send(d, stdout))
             if stdout:
                 stdout.write("Upload direction for direction {}; RMIS number={}".format(d.pk, uploaded[-1]))
+        for d in Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct():
+            self.check_service(d, stdout)
+            if stdout:
+                stdout.write("Check services for direction {}; RMIS number={}".format(d.pk, d.rmis_number))
 
         uploaded_results = []
         if not without_results:
