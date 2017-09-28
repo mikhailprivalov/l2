@@ -1193,4 +1193,4 @@ def resend(request):
             d.append(c.directions.delete_direction(direction))
         if t in ["results", "full"]:
             c.directions.delete_services(direction)
-    return HttpResponse(json.dumps(d), content_type="application/json")
+    return HttpResponse(json.dumps(all(d)), content_type="application/json")

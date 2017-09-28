@@ -332,13 +332,14 @@ class Directions(BaseRequester):
         super().__init__(client, "path_directions")
 
     def delete_direction(self, direction: Napravleniya):
-        d = ""
+        d = False
         self.delete_services(direction)
         try:
             if direction.rmis_number not in [None, "", "NONERMIS"]:
-                d = str(self.client.deleteReferral(direction.rmis_number))
+                self.client.deleteReferral(direction.rmis_number)
             direction.rmis_number = ""
             direction.save()
+            d = True
         except Fault:
             pass
         return d
