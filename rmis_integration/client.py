@@ -359,9 +359,6 @@ class Directions(BaseRequester):
         for row in RmisServices.objects.filter(napravleniye=direction):
             deleted.append(self.main_client.rendered_services.delete_service(row.rmis_id))
             row.delete()
-        if direction.rmis_result_file_id not in ["", None]:
-            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + direction.rmis_result_file_id))
-            direction.rmis_result_file_id = ""
         res_id = direction.rmis_result_file_id
         if res_id not in ["", None]:
             attachment = max([int(x)for x in self.main_client.req(self.main_client.get_addr("/referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")])
