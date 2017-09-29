@@ -425,6 +425,7 @@ class Directions(BaseRequester):
         send_data = dict(referralId=refferal_id, serviceId=service_id, isRendered="false", patientUid=patient_uid,
                          orgId=self.main_client.search_organization_id(),
                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
+                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.main_client.get_fin_dict()),
                          quantity=1)
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
@@ -493,6 +494,7 @@ class Directions(BaseRequester):
                                      timeFrom=timezone.localtime(direction.data_sozdaniya).strftime("%X"),
                                      dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                      note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
+                                     fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.main_client.get_fin_dict()),
                                      patientUid=rindiv)
                     if stdout:
                         stdout.write("SR: " + str(service_rend_id))
@@ -511,6 +513,7 @@ class Directions(BaseRequester):
                             send_data["serviceId"] = service_old_data.get("serviceId", None) or send_data.get(
                                 "serviceId", None)
                             send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get("orgId", None)
+                            send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId", None) or send_data.get("fundingSourceTypeId", None)
                             send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get("dateFrom",
                                                                                                             None)
                             send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get("timeFrom",
@@ -581,6 +584,7 @@ class Directions(BaseRequester):
                                 send_data["serviceId"] = service_old_data.get("serviceId", None) or send_data.get(
                                     "serviceId", None)
                                 send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get("orgId", None)
+                                send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId", None) or send_data.get("fundingSourceTypeId", None)
                                 send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
                                     "dateFrom", None)
                                 send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
