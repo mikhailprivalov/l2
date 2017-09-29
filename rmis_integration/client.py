@@ -560,6 +560,7 @@ class Directions(BaseRequester):
                             "{{результат}}", xresult), self.main_client.get_addr(
                             "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST",
                                                           filetype="text/xml")
+                        RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                     code = x.fraction.code
                     if code in sended_codes:
                         continue
@@ -621,6 +622,7 @@ class Directions(BaseRequester):
                                                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.main_client.get_addr(
                             "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
+                        RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                 self.main_client.put_content("Resultat.pdf",
                                          self.main_client.local_get("/results/pdf",
                                                                     {"pk": json.dumps([direction.pk]),
