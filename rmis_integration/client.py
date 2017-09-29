@@ -167,17 +167,17 @@ class Client(object):
             fin_src[id] = val
         return fin_src
 
-    def put_content(self, filename, content, path, filetype='application/pdf', type="PUT"):
+    def put_content(self, filename, content, path, filetype='application/pdf', method="PUT"):
         multipart_data = MultipartEncoder(
             fields={'file': (filename, content, filetype)},
         )
-        resip = requests.request(type, path,
+        resip = requests.request(method, path,
                                  data=multipart_data,
                                  headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
-    def req(self, path, type="DELETE"):
-        resip = requests.request(type, path, auth=self.session.auth)
+    def req(self, path, method="DELETE"):
+        resip = requests.request(method, path, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
     def local_get(self, addr: str, params: dict):
@@ -552,7 +552,7 @@ class Directions(BaseRequester):
                         sd = self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
                                                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.main_client.get_addr(
-                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), type="POST",
+                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST",
                                                           filetype="text/xml")
                     code = x.fraction.code
                     if code in sended_codes:
@@ -613,7 +613,7 @@ class Directions(BaseRequester):
                         sd = self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}",
                                                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                             "{{результат}}", xresult), self.main_client.get_addr(
-                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), type="POST")
+                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
                 if res_id not in ["", None]:
                     self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + res_id))
                 res_id = self.main_client.put_content("Resultat.pdf",
