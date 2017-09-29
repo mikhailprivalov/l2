@@ -361,8 +361,10 @@ class Directions(BaseRequester):
             row.delete()
         res_id = direction.rmis_result_file_id
         if res_id not in ["", None]:
-            attachment = max([int(x)for x in self.main_client.req(self.main_client.get_addr("/referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")])
+            attachments = self.main_client.req(self.main_client.get_addr("/referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")
+            attachment = max([int(x)for x in attachments])
             self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + str(attachment)))
+            deleted.append(attachments)
         direction.rmis_result_file_id = ""
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
