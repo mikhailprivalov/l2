@@ -176,9 +176,14 @@ class Client(object):
                                  headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
-    def req(self, path, method="DELETE"):
+    def req(self, path, method="DELETE", ret="bool"):
         resip = requests.request(method, path, auth=self.session.auth)
-        return str(resip.status_code) == "200"
+        if ret == "bool":
+            return str(resip.status_code) == "200"
+        elif ret == "json":
+            return json.loads(resip.content)
+        else:
+            return resip.content
 
     def local_get(self, addr: str, params: dict):
         return self.localclient.get(addr, params).content
@@ -359,7 +364,8 @@ class Directions(BaseRequester):
             direction.rmis_result_file_id = ""
         res_id = direction.rmis_result_file_id
         if res_id not in ["", None]:
-            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + res_id))
+            attachment = max([int(x)for x in self.main_client.req(self.main_client.get_addr("/referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")])
+            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + attachment))
         direction.rmis_result_file_id = ""
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
