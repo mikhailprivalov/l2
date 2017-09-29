@@ -358,7 +358,7 @@ class Directions(BaseRequester):
         deleted = []
         for row in RmisServices.objects.filter(napravleniye=direction):
             deleted.append(self.main_client.rendered_services.delete_service(row.rmis_id))
-            row.delete()
+        RmisServices.objects.filter(napravleniye=direction).delete()
         attachments = self.main_client.req(self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")
         if len(attachments) > 1:
             attachments = [int(x) for x in attachments]
