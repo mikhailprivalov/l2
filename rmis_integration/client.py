@@ -355,7 +355,7 @@ class Directions(BaseRequester):
         return d
 
     def delete_services(self, direction: Napravleniya):
-        deleted = []
+        deleted = [RmisServices.objects.filter(napravleniye=direction).count()]
         for row in RmisServices.objects.filter(napravleniye=direction):
             deleted.append(self.main_client.rendered_services.delete_service(row.rmis_id))
         RmisServices.objects.filter(napravleniye=direction).delete()
