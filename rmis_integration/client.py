@@ -363,7 +363,7 @@ class Directions(BaseRequester):
         if len(attachments) > 1:
             attachments = [int(x) for x in attachments]
             attachment = max(attachments)
-            deleted.append(self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + str(attachment))))
+            deleted.append(self.main_client.req(self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + str(attachment))))
             deleted.append(attachments)
         direction.result_rmis_send = False
         direction.rmis_hosp_id = ""
