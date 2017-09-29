@@ -363,7 +363,7 @@ class Directions(BaseRequester):
         if res_id not in ["", None]:
             attachments = self.main_client.req(self.main_client.get_addr("/referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number), method="GET", ret="json")
             attachment = max([int(x)for x in attachments])
-            self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + str(attachment)))
+            deleted.append(self.main_client.req(self.main_client.get_addr("referrals-ws/referral-ws/" + str(attachment))))
             deleted.append(attachments)
         direction.rmis_result_file_id = ""
         direction.result_rmis_send = False
