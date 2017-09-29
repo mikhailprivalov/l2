@@ -177,7 +177,7 @@ class Client(object):
         return str(resip.status_code) == "200"
 
     def req(self, path, type="DELETE"):
-        resip = requests.request(type, path, headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+        resip = requests.request(type, path, auth=self.session.auth)
         return str(resip.status_code) == "200"
 
     def local_get(self, addr: str, params: dict):
