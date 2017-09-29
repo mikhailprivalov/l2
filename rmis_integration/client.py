@@ -676,8 +676,8 @@ class RenderedServices(BaseRequester):
     def delete_service(self, service_id):
         try:
             return self.client.deleteServiceRend(str(service_id))
-        except Fault:
-            return None
+        except Fault as e:
+            return str(e)
 
 
 class DirServices(BaseRequester):
