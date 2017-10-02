@@ -1046,8 +1046,7 @@ def get_issledovaniya(request):
                                                      "doc_save_fio": doc_save_fio,
                                                      "doc_save_id": doc_save_id,
                                                      "current_doc_save": current_doc_save,
-                                                     "allow_disable_confirm": ((
-                                                                                   ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser) and confirmed,
+                                                     "allow_disable_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]) and confirmed,
                                                      "ctp": ctp,
                                                      "ctime": ctime,
                                                      "ctime_ctp": ctime - ctp,
