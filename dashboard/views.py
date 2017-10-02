@@ -46,7 +46,7 @@ def dashboard(request):  # Представление панели управл�
             {"url": "/dashboard/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/dashboard/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/dashboard/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант"]},
+            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": ["Оператор"]},
             {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
             {"url": "/dashboard/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
@@ -77,7 +77,7 @@ def dashboard(request):  # Представление панели управл�
 
 
 @login_required
-@staff_member_required
+@group_required("Просмотр журнала")
 def view_log(request):
     import slog.models as slog
     types = []
@@ -88,7 +88,7 @@ def view_log(request):
 
 
 @login_required
-@staff_member_required
+@group_required("Создание и редактирование пользователей")
 def change_password(request):
     otds = {}
     for x in Podrazdeleniya.objects.all().order_by('title'):
@@ -99,7 +99,7 @@ def change_password(request):
 
 
 @login_required
-@staff_member_required
+@group_required("Создание и редактирование пользователей")
 def update_pass(request):
     userid = int(request.POST.get("pk", "-1"))
     password = request.POST.get("pass", "")
@@ -113,7 +113,7 @@ def update_pass(request):
 
 @csrf_exempt
 @login_required
-@staff_member_required
+@group_required("Просмотр журнала")
 def load_logs(request):
     import slog.models as slog
     result = {"data": []}
@@ -179,6 +179,7 @@ def receive_journal_form(request):
 
 @csrf_exempt
 @login_required
+@group_required("Сброс подтверждений результатов", "Врач-лаборант", "Лаборант")
 def confirm_reset(request):
     result = {"ok": False, "msg": "Ошибка"}
 
@@ -210,7 +211,7 @@ def confirm_reset(request):
 
 
 @login_required
-@staff_member_required
+@group_required("Создание и редактирование пользователей")
 def create_user(request):  # Страница создания пользователя
     registered = False
     podr = Podrazdeleniya.objects.filter(hide=False).order_by("title")  # Получение всех подразделений
@@ -257,7 +258,7 @@ def create_user(request):  # Страница создания пользова�
 
 
 @login_required
-@staff_member_required
+@group_required("Создание и редактирование пользователей")
 def create_pod(request):
     """ Создание подразделения """
     p = False
@@ -345,6 +346,7 @@ def directions(request):
 
 
 @login_required
+@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант")
 def results_history(request):
     podr = Podrazdeleniya.objects.filter(isLab=True)
 
@@ -509,7 +511,7 @@ def discharge_search(request):
 
 
 @login_required
-@staff_member_required
+@group_required("Создание и редактирование пользователей")
 def users_count(request):
     """ Получение количества пользователей """
     result = {"all": User.objects.all().count(), "ldap": DoctorProfile.objects.filter(isLDAP_user=True).count()}
@@ -518,6 +520,7 @@ def users_count(request):
 
 
 @login_required
+@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант")
 def results_history_search(request):
     result = []
     type = request.GET.get("type", "otd")
@@ -546,6 +549,7 @@ def results_history_search(request):
 
 
 @login_required
+@group_required("Получатель биоматериала")
 def dashboard_from(request):
     """ Получение отделений и кол-ва пробирок """
     result = {}
