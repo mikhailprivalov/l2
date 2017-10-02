@@ -144,7 +144,7 @@ def load_logs(request):
         for row in obj.order_by("-pk")[offset:size + offset]:
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
-                          "time": timezone.localtime(row.time).strftime("%X")}
+                          "time": timezone.localtime(row.time).strftime("%x %X")}
             result["data"].append(tmp_object)
     else:
         if request.method == "POST":
@@ -155,7 +155,7 @@ def load_logs(request):
         for row in obj.filter(pk__gt=pkgt).order_by("pk"):
             tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
-                          "time": timezone.localtime(row.time).strftime("%X")}
+                          "time": timezone.localtime(row.time).strftime("%x %X")}
             result["data"].append(tmp_object)
 
     result["s"] = states
