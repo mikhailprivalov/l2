@@ -61,17 +61,16 @@ def dashboard(request):  # Представление панели управл�
             {"url": "/admin", "title": "Админ-панель", "nt": False, "access": []},
         ]
 
-        if request.user.is_superuser:
-            if settings.LDAP and settings.LDAP["enable"]:
-                pages.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
-            pages.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
+        if settings.LDAP and settings.LDAP["enable"]:
+            pages.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
+        pages.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
 
         if SettingManager.get("home_page", default="http://home") != "false":
             pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
 
         groups_set = set(groups)
         for page in pages:
-            if "*" not in page["access"] and len(groups_set & set(page["access"])) == 0:
+            if not request.user.is_superuser and "*" not in page["access"] and len(groups_set & set(page["access"])) == 0:
                 continue
             menu.append(page)
 
