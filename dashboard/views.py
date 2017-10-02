@@ -39,59 +39,41 @@ def dashboard(request):  # Представление панели управл�
         dt = ""
         menu = []
         groups = [str(x) for x in request.user.groups.all()]
+        pages = [
+            {"url": "/dashboard/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/dashboard/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
+            {"url": "/dashboard/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/dashboard/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/dashboard/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант"]},
+            {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": ["Оператор"]},
+            {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
+            {"url": "/dashboard/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
+            {"url": "/dashboard/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"]},
+            {"url": "/dashboard/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/dashboard/change_password", "title": "Смена пароля", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/dashboard/create_podr", "title": "Добавить подразделение", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/dashboard/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
+            {"url": "", "title": "", "nt": False, "access": [""]},
+            {"url": "", "title": "", "nt": False, "access": [""]},
+            {"url": "", "title": "", "nt": False, "access": [""]},
+            {"url": "/admin", "title": "Админ-панель", "nt": False, "access": []},
+        ]
 
-        if "Лечащий врач" in groups or "Оператор лечащего врача" in groups:
-            menu.append(
-                {"url": "/dashboard/directions", "title": "Направления", "keys": "Shift+n", "nt": False})
-            menu.append(
-                {"url": "/dashboard/results_fastprint", "title": "Печать результатов", "keys": "Shift+p",
-                 "nt": False})
-        if "Заборщик биоматериала" in groups:
-            menu.append(
-                {"url": "/dashboard/biomaterial/get", "title": "Забор биоматериала", "keys": "Shift+g", "nt": False})
-        if "Получатель биоматериала" in groups:
-            menu.append({"url": "/dashboard/receive", "title": "Прием материала", "keys": "Shift+r", "nt": False})
-            menu.append(
-                {"url": "/dashboard/receive/one_by_one", "title": "Прием материала по одному", "keys": "Shift+o",
-                 "nt": False})
-            menu.append(
-                {"url": "/dashboard/receive/journal_form", "title": "Журнал приема", "keys": "Shift+j", "nt": False})
-        if "Врач-лаборант" in groups or "Лаборант" in groups:
-            menu.append({"url": "/results/enter", "title": "Ввод результатов", "keys": "Shift+v", "nt": False})
-            #menu.append(
-            #    {"url": "/results/conformation", "title": "Подтверждение и печать результатов", "keys": "Shift+d",
-            #     "nt": False})
-        if "Оператор" in groups:
-            menu.append({"url": "/construct/menu", "title": "Конструктор справочника", "keys": "Shift+c", "nt": False})
-        if "Просмотр статистики" in groups or "Врач-лаборант" in groups:
-            menu.append({"url": "/statistic", "title": "Статистика", "keys": "Shift+s", "nt": False})
-        # if "Лечащий врач" in groups or "Зав. отделением" in groups:
-        #    menu.append({"url": "/results/search", "title": "Поиск результатов", "keys": "Shift+a", "nt": False})
-
-        if "Лечащий врач" in groups or "Оператор лечащего врача" in groups or "Врач-лаборант" in groups or "Лаборант" in groups:
-            menu.append(
-                {"url": "/dashboard/results_history", "title": "Поиск", "keys": "Shift+i",
-                 "nt": False})
-        if "Загрузка выписок" in groups or "Поиск выписок" in groups or "Лечащий врач" in groups:
-            menu.append(
-                {"url": "/dashboard/discharge", "title": "Выписки", "keys": "Shift+v",
-                 "nt": False})
         if request.user.is_superuser:
-            menu.append({"url": "/admin", "title": "Админ-панель", "keys": "Alt+a", "nt": False})
-            menu.append(
-                {"url": "/dashboard/create_user", "title": "Создать пользователя", "keys": "Alt+n", "nt": False})
-            menu.append({"url": "/dashboard/change_password", "title": "Смена пароля", "keys": "", "nt": False})
-            menu.append(
-                {"url": "/dashboard/create_podr", "title": "Добавить подразделение", "keys": "Alt+p", "nt": False})
             if settings.LDAP and settings.LDAP["enable"]:
-                menu.append(
-                    {"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "keys": "Alt+s", "nt": False})
-            menu.append({"url": "/dashboard/view_log", "title": "Просмотр логов", "keys": "Alt+l", "nt": False})
-            menu.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False})
+                pages.append({"url": "/dashboard/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
+            pages.append({"url": "/dashboard/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
 
         if SettingManager.get("home_page", default="http://home") != "false":
-            menu.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
-                        "keys": "Shift+h", "nt": True})
+            pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
+
+        groups_set = set(groups)
+        for page in pages:
+            if "*" not in page["access"] and len(groups_set & set(page["access"])) == 0:
+                continue
+            menu.append(page)
 
         menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
         return render(request, 'dashboard.html', {"menu": menu_st})
