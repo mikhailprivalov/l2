@@ -5,19 +5,27 @@ from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    profile = serializers.HyperlinkedRelatedField(
+        many=False,
+        view_name='doctorprofiles'
+    )
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'is_staff', 'doctorprofile')
+        fields = ('username', 'is_staff', 'profile')
 
 
-class DoctorSerializer(serializers.HyperlinkedModelSerializer):
+class DoctorSerializer(serializers.ModelSerializer):
+    podrazileniye = serializers.HyperlinkedRelatedField(
+        many=False,
+        view_name='podrazdeleniyas'
+    )
     class Meta:
         model = DoctorProfile
-        fields = ('url', 'user', 'fio', 'podrazileniye', 'isLDAP_user', 'labtype')
+        fields = ('user', 'fio', 'podrazileniye', 'isLDAP_user', 'labtype')
 
 
-class PodrazdeleniyaSerializer(serializers.HyperlinkedModelSerializer):
+class PodrazdeleniyaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Podrazdeleniya
-        fields = ('url', 'title', 'gid_n', 'isLab', 'hide')
+        fields = ('title', 'gid_n', 'isLab', 'hide')
