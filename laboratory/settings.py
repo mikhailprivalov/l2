@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'debug_panel',
     'rest_framework',
+    'rest'
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
