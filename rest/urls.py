@@ -5,6 +5,8 @@ from rest.l2_view_sets import UserViewSet
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
+router.register(r'doctorprofiles', DoctorSerializer)
+router.register(r'podrazdeleniyas', PodrazdeleniyaSerializer)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
