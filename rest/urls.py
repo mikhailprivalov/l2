@@ -1,13 +1,13 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 
-from rest.l2_serializers import DoctorSerializer, PodrazdeleniyaSerializer
-from rest.l2_view_sets import UserViewSet
+# from rest.l2_serializers import DoctorSerializer, PodrazdeleniyaSerializer
+# from rest.l2_view_sets import UserViewSet
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'doctorprofiles', DoctorSerializer)
-router.register(r'podrazdeleniyas', PodrazdeleniyaSerializer)
+# router.register(r'users', UserViewSet)
+# router.register(r'doctorprofiles', DoctorSerializer)
+# router.register(r'podrazdeleniyas', PodrazdeleniyaSerializer)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

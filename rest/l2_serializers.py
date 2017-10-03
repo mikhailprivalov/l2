@@ -4,28 +4,21 @@ from rest_framework import serializers
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
-
-class UserSerializer(serializers.ModelSerializer):
-    profile = serializers.HyperlinkedRelatedField(
-        many=False,
-        view_name='doctorprofiles'
-    )
-    class Meta:
-        model = User
-        fields = ('username', 'is_staff', 'profile')
-
-
-class DoctorSerializer(serializers.ModelSerializer):
-    podrazileniye = serializers.HyperlinkedRelatedField(
-        many=False,
-        view_name='podrazdeleniyas'
-    )
-    class Meta:
-        model = DoctorProfile
-        fields = ('user', 'fio', 'podrazileniye', 'isLDAP_user', 'labtype')
-
-
-class PodrazdeleniyaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Podrazdeleniya
-        fields = ('title', 'gid_n', 'isLab', 'hide')
+#
+# class UserSerializer(serializers.HyperlinkedModelSerializer):
+#     profile =
+#     class Meta:
+#         model = User
+#         fields = ('url', 'username', 'email', 'is_staff', 'doctorprofile')
+#
+#
+# class DoctorSerializer(serializers.HyperlinkedModelSerializer):
+#     class Meta:
+#         model = DoctorProfile
+#         fields = ('url', 'user', 'fio', 'podrazileniye', 'isLDAP_user', 'labtype')
+#
+#
+# class PodrazdeleniyaSerializer(serializers.HyperlinkedModelSerializer):
+#     class Meta:
+#         model = Podrazdeleniya
+#         fields = ('url', 'title', 'gid_n', 'isLab', 'hide')
