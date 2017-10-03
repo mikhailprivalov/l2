@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'rmis_integration',
     'debug_toolbar',
     'debug_panel',
+    'rest_framework',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
