@@ -32,3 +32,6 @@ django-project-version
 django-settings
 astm
 zeep
+djangorestframework
+markdown
+django-filter
