@@ -19,7 +19,7 @@ from django.core.cache import cache
 
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices
 from directory.models import Fractions
-from podrazdeleniya.models import Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya, Subgroups
 
 
 class Utils:
@@ -757,4 +757,11 @@ class Department(BaseRequester):
                 pass
             else:
                 toadd += 1
+                p = Podrazdeleniya(title=dep["name"],
+                                   isLab=any([x in dep["name"] for x in ["лаборатория", "КДЛ", "Лаборатория"]]),
+                                   rmis_id=dep["id"])
+                p.save()
+                s = Subgroups(title=dep["name"],
+                              podrazdeleniye=p)
+                s.save()
         return toadd, toupdate
