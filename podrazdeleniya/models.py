@@ -6,6 +6,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     gid_n = models.IntegerField(default=None, null=True, blank=True)  # gidNumber в LDAP
     isLab = models.BooleanField(default=False, blank=True)  # True=Это лаборатория
     hide = models.BooleanField(default=False, blank=True)  # True=Скрывать подразделение
+    rmis_id = models.CharField(max_length=15, default=None, blank=True, null=True)
     def __str__(self):  # Функция перевода экземпляра класса Podrazdeleniya в строку
         return self.title  # Возврат поля Podrazdeleniya.title
 
