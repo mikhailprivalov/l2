@@ -69,6 +69,4 @@ def patients_without_cards(request):
 @staff_member_required
 def sync_departments(request):
     c = Client()
-
-    return HttpResponse(json.dumps(c.department.get_departments()), content_type="application/json")
-    return HttpResponse("Добавлено: %s. Обновлено: %s." % (c.department.get_departments(), 0), content_type="text/plain")
+    return HttpResponse("Добавлено: %s. Обновлено: %s." % c.department.sync_departments(), content_type="text/plain")

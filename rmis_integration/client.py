@@ -748,3 +748,7 @@ class Department(BaseRequester):
     def get_department(self, department_id):
         resp = self.client.getDepartment(department_id)
         return helpers.serialize_object(resp)
+
+    def sync_departments(self):
+        toadd = toupdate = 0
+        return toadd, toupdate
