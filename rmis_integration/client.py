@@ -19,6 +19,7 @@ from django.core.cache import cache
 
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices
 from directory.models import Fractions
+from podrazdeleniya.models import Podrazdeleniya
 
 
 class Utils:
@@ -743,7 +744,7 @@ class Department(BaseRequester):
 
     def get_departments(self, orgid=None):
         resp = self.client.getDepartments(orgid or self.main_client.search_organization_id())
-        return [self.get_department(x) for x in resp]
+        return [dict(self.get_department(x), id=x) for x in resp]
 
     def get_department(self, department_id):
         resp = self.client.getDepartment(department_id)
@@ -751,4 +752,9 @@ class Department(BaseRequester):
 
     def sync_departments(self):
         toadd = toupdate = 0
+        for dep in self.get_departments():
+            if Podrazdeleniya.objects.filter(rmis_id=dep["id"]).exists():
+                pass
+            else:
+                toadd += 1
         return toadd, toupdate
