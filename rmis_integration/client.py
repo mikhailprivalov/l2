@@ -104,6 +104,7 @@ class Client(object):
         self.rendered_services = RenderedServices(self)
         self.dirservices = DirServices(self)
         self.hosp = Hosp(self)
+        self.department = Department(self)
         self.localclient = TC(enforce_csrf_checks=False)
         cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"),
                                          password=Settings.get("local_password",
@@ -734,3 +735,11 @@ class Hosp(BaseRequester):
     def get_hosp_details(self, id):
         resp = self.client.getHspRecordById(id)
         return resp
+
+
+class Department(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_departments")
+
+    def get_departments(self):
+        pass
