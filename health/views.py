@@ -68,4 +68,6 @@ def patients_without_cards(request):
 @login_required
 @staff_member_required
 def sync_departments(request):
-    return HttpResponse("Добавлено: %s. Обновлено: %s." % (0, 0), content_type="text/plain")
+    c = Client()
+
+    return HttpResponse("Добавлено: %s. Обновлено: %s." % (c.department.get_departments(), 0), content_type="text/plain")
