@@ -96,7 +96,7 @@
         }
         function sync_departments(){
             sl();
-            $.ajax({url: "/health/sync.departments"}).done(function(d){
+            $.ajax({url: "/health/sync/departments"}).done(function(d){
                 hl();
                 okmessage("Синхронизировано", d);
             });
