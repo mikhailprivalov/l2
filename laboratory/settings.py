@@ -66,8 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'djversion.context_processors.version',
+                'django.contrib.messages.context_processors.messages'
                 'context_processors.utils.card_bases',
             ]
         },
@@ -179,14 +178,6 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     TEMPLATE_DEBUG = False
     TESTS_IN_PROGRESS = True
     MIGRATION_MODULES = DisableMigrations()
-import time, datetime
-DJVERSION_VERSION = "1.0.0"
-__w = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-if os.path.exists(__w):
-    (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(__w)
-    mtime = datetime.datetime.fromtimestamp(mtime)
-    DJVERSION_UPDATED = mtime
-DJVERSION_FORMAT_STRING = '{version}'
 CACHALOT_ENABLED = True
 
 import warnings
