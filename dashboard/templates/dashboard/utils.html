@@ -11,6 +11,7 @@
                 <button type="button" onclick="cleanup_cards();" class="list-group-item" id="clear_cards">Очистить архивные карты без направлений</button>
                 <button type="button" onclick="cleanup_patients();" class="list-group-item" id="clear_patients">Очистить пациентов без карт</button>
                 <button type="button" onclick="check_rmis()" class="list-group-item" id="check_rmis">Проверить РМИС</button>
+                <button type="button" onclick="sync_departments()" class="list-group-item" id="sync_departments">Синхронизация подразделений с РМИС</button>
             </div>
         </div>
     </div>
@@ -91,6 +92,13 @@
                 } else{
                     errmessage("Ошбка проверки РМИС получением ID организации и направляющего отделения", `ID = ${d}`);
                 }
+            });
+        }
+        function sync_departments(){
+            sl();
+            $.ajax({url: "/health/sync.departments"}).done(function(d){
+                hl();
+                okmessage("Синхронизировано", d);
             });
         }
     </script>

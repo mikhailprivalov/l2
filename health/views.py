@@ -64,3 +64,8 @@ def patients_without_cards(request):
         cnt = cnt.get("clients.Individual", 0)
     return HttpResponse(str(cnt), content_type="text/plain")
 
+
+@login_required
+@staff_member_required
+def sync_departments(request):
+    return HttpResponse("Добавлено: %s. Обновлено: %s" % (0, 0), content_type="text/plain")
