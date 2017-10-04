@@ -741,5 +741,6 @@ class Department(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_departments")
 
-    def get_departments(self):
-        pass
+    def get_departments(self, orgid=None):
+        resp = self.client.getDepartments(orgid or self.main_client.search_organization_id())
+        return helpers.serialize_object(resp)
