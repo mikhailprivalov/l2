@@ -743,4 +743,8 @@ class Department(BaseRequester):
 
     def get_departments(self, orgid=None):
         resp = self.client.getDepartments(orgid or self.main_client.search_organization_id())
+        return [self.get_department(x) for x in resp]
+
+    def get_department(self, department_id):
+        resp = self.client.getDepartment(department_id)
         return helpers.serialize_object(resp)
