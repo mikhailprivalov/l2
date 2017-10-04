@@ -86,7 +86,7 @@
                         </select>
                     </div>
                     <div class="col-xs-5" style="padding-right: 0">
-                        <select class="select-b" data-width="100%" data-container="body" id="select-doc">
+                        <select class="select-b" data-live-search="true" data-width="100%" data-container="body" id="select-doc">
                             {% for v in docs %}
                                 {% if request.user.doctorprofile.pk == v.pk %}
                                     <option selected value="{{ v.pk }}">{{ v.get_fio }}</option>
