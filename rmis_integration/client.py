@@ -754,14 +754,21 @@ class Department(BaseRequester):
         toadd = toupdate = 0
         for dep in self.get_departments():
             if Podrazdeleniya.objects.filter(rmis_id=dep["id"]).exists():
-                pass
+                p = Podrazdeleniya.objects.filter(rmis_id=dep["id"])[0]
+                if not Subgroups.objects.filter(podrazdeleniye=p).exists():
+                   Subgroups(title=dep["name"], podrazdeleniye=p).save()
+                s = Subgroups.objects.filter(podrazdeleniye=p)[0]
+                p.title = dep["name"]
+                p.isLab = any([x in dep["name"] for x in ["лаборатория", "КДЛ", "Лаборатория"]])
+                p.save()
+                s.title = dep["name"]
+                s.save()
+                toupdate += 1
             else:
-                toadd += 1
                 p = Podrazdeleniya(title=dep["name"],
                                    isLab=any([x in dep["name"] for x in ["лаборатория", "КДЛ", "Лаборатория"]]),
                                    rmis_id=dep["id"])
                 p.save()
-                s = Subgroups(title=dep["name"],
-                              podrazdeleniye=p)
-                s.save()
+                Subgroups(title=dep["name"], podrazdeleniye=p) .save()
+                toadd += 1
         return toadd, toupdate
