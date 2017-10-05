@@ -84,7 +84,7 @@ class Importedclients(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self) -> str:
+    def age_s(self, result: Result=None) -> str:
         """
         Формирование строки возраста: 10 лет, 101 год
         :return:
@@ -92,7 +92,7 @@ class Importedclients(models.Model):
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
-        age = self.age()
+        age = self.age(result)
         if age < 5:
             _let = morph.parse("год")[0]
         elif age <= 20:
