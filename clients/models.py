@@ -5,8 +5,6 @@ from datetime import date, datetime
 
 import sys
 
-from directions.models import Result, Issledovaniya, Napravleniya
-
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -66,7 +64,7 @@ class Importedclients(models.Model):
         """
         return datetime.strptime(self.birthday.split(" ")[0], "%d.%m.%Y").date()
 
-    def age(self, iss: Issledovaniya=None):
+    def age(self, iss=None):
         """
         Функция подсчета возраста
         """
@@ -84,11 +82,12 @@ class Importedclients(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self, iss: Issledovaniya=None, direction: Napravleniya=None) -> str:
+    def age_s(self, iss=None, direction=None) -> str:
         """
         Формирование строки возраста: 10 лет, 101 год
         :return:
         """
+        from directions.models import Issledovaniya
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
@@ -122,7 +121,7 @@ class Individual(models.Model):
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
 
-    def age(self, iss: Issledovaniya=None):
+    def age(self, iss=None):
         """
         Функция подсчета возраста
         """
@@ -140,7 +139,7 @@ class Individual(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self, iss: Issledovaniya=None, direction: Napravleniya=None) -> str:
+    def age_s(self, iss=None, direction=None) -> str:
         """
         Формирование строки возраста: 10 лет, 101 год
         :return:
@@ -149,6 +148,7 @@ class Individual(models.Model):
 
         morph = pymorphy2.MorphAnalyzer()
         if direction is not None:
+            from directions.models import Issledovaniya
             iss = None
             i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive__isnull")
             if i.exists():
