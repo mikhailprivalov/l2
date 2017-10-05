@@ -1191,7 +1191,7 @@ def resend(request):
     r = []
     for direction in Napravleniya.objects.filter(pk__in=pks):
         if t in ["directions", "full"]:
-            d.append(c.directions.delete_direction(direction))
+            d.append(c.directions.delete_direction(direction, user=request.user.doctorprofile))
         if t in ["results", "full"]:
-            r.append(c.directions.delete_services(direction))
+            r.append(c.directions.delete_services(direction, user=request.user.doctorprofile))
     return HttpResponse(json.dumps(all(d) if t == "directions" else [d, r]), content_type="application/json")

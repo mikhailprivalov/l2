@@ -15,6 +15,7 @@ from django.utils import dateformat
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from laboratory import settings
+from rmis_integration.client import Client
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya, Subgroups
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
@@ -203,6 +204,9 @@ def confirm_reset(request):
                 predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
+                if iss.napravleniye.result_rmis_send:
+                    c = Client()
+                    c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
                 result = {"ok": True}
                 slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
             else:

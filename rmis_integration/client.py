@@ -337,15 +337,16 @@ def ndate(d: datetime.datetime):
 
 import simplejson as json
 from django.utils import timezone
+import slog.models as slog
 
 
 class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_directions")
 
-    def delete_direction(self, direction: Napravleniya):
+    def delete_direction(self, user, direction: Napravleniya):
         d = False
-        self.delete_services(direction)
+        self.delete_services(direction, user=user)
         try:
             if direction.rmis_number not in [None, "", "NONERMIS"]:
                 self.client.deleteReferral(direction.rmis_number)
@@ -356,7 +357,7 @@ class Directions(BaseRequester):
             pass
         return d
 
-    def delete_services(self, direction: Napravleniya):
+    def delete_services(self, direction: Napravleniya, user):
         deleted = [RmisServices.objects.filter(napravleniye=direction).count()]
         for row in RmisServices.objects.filter(napravleniye=direction):
             deleted.append(self.main_client.rendered_services.delete_service(row.rmis_id))
@@ -372,6 +373,7 @@ class Directions(BaseRequester):
         direction.rmis_case_id = ""
         direction.rmis_resend_services = True
         direction.save()
+        slog.Log(key=direction.pk, type=3000, body=json.dumps({}), user=user).save()
         return deleted
 
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
