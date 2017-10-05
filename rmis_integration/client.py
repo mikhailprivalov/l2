@@ -631,7 +631,8 @@ class Directions(BaseRequester):
                                                                      "normis": '1'}),
                                          self.main_client.get_addr(
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
-            Napravleniya.objects.filter(pk=direction.pk).update(result_rmis_send=True)
+            direction.result_rmis_send = True
+            direction.save()
         return direction.result_rmis_send
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False):
@@ -659,7 +660,7 @@ class Directions(BaseRequester):
                     .exclude(rmis_number="") \
                     .distinct():
                 if d.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(d))
+                    uploaded_results.append(self.check_send_results(d, stdout))
                     if stdout:
                         stdout.write("Upload result for direction {}".format(d.pk))
 
