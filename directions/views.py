@@ -1052,8 +1052,7 @@ def get_issledovaniya(request):
                                                      "ctime_ctp": ctime - ctp,
                                                      "ctime_ctp_t": ctime - ctp < rt,
                                                      "period_sec": rt,
-                                                     "group": groups[tb],
-                                                     "in_rmis": issledovaniye.napravleniye.result_rmis_send
+                                                     "group": groups[tb]
                                                      })
                 import collections
                 result = collections.defaultdict(lambda: collections.defaultdict(list))
@@ -1098,6 +1097,7 @@ def get_issledovaniya(request):
                 res["otd"] = napr.doc.podrazileniye.title
                 res["fin_source"] = napr.istochnik_f.tilie
                 res["ok"] = True
+                res["in_rmis"] = napr.result_rmis_send
 
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
