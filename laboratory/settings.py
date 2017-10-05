@@ -19,7 +19,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
-    'cachalot',
     'ajax_select',
     'health',
     'appconf',
@@ -41,7 +40,7 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'debug_panel',
     'rest_framework',
-    'rest'
+    'cachalot',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',

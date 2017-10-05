@@ -100,8 +100,7 @@ urlpatterns = [
                   url(r'^api/', include(api_urls.urlpatterns)),
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^health/', include('health.urls')),
-                  url(r'^logout/$', logout, {'next_page': '/'}),
-                  url(r'^rest/', include('rest.urls'))
+                  url(r'^logout/$', logout, {'next_page': '/'})
               ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
