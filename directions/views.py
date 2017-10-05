@@ -1052,7 +1052,8 @@ def get_issledovaniya(request):
                                                      "ctime_ctp": ctime - ctp,
                                                      "ctime_ctp_t": ctime - ctp < rt,
                                                      "period_sec": rt,
-                                                     "group": groups[tb]
+                                                     "group": groups[tb],
+                                                     "in_rmis": issledovaniye.napravleniye.result_rmis_send
                                                      })
                 import collections
                 result = collections.defaultdict(lambda: collections.defaultdict(list))
