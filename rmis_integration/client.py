@@ -473,6 +473,8 @@ class Directions(BaseRequester):
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
         protocol_row = Settings.get("protocol_template_row")
+        direction.result_rmis_send = True
+        direction.save()
         if not direction.result_rmis_send and direction.rmis_number != "NONERMIS":
             rid = self.check_send(direction)
             if rid and rid != "":
@@ -631,8 +633,6 @@ class Directions(BaseRequester):
                                                                      "normis": '1'}),
                                          self.main_client.get_addr(
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
-            direction.result_rmis_send = True
-            direction.save()
         return direction.result_rmis_send
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False):
