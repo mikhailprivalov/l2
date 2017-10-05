@@ -201,7 +201,7 @@ def confirm_reset(request):
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
             if (ctime - ctp < SettingManager.get(
                     "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
-                predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk}
+                predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk, "direction": iss.napravleniye.pk}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
