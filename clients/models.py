@@ -150,7 +150,7 @@ class Individual(models.Model):
         if direction is not None:
             from directions.models import Issledovaniya
             iss = None
-            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive__isnull")
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive")
             if i.exists():
                 iss = i[0]
         age = self.age(iss=iss)
