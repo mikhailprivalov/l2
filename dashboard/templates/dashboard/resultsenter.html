@@ -2368,7 +2368,10 @@
         }
         function reset_confirm(id, rtitle, tube) {
             sl();
-            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, пробирка №${tube}?`;
+            if(dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis) {
+                alert("Результат уже был загружен в РМИС");
+            }
+            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, пробирка №${tube}?${dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis? 'Результат уже был загружен в РМИС' : ''}`;
             let doreset = confirm(msg);
             if (doreset === false || doreset === null) {
                 hl();
