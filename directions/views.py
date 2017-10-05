@@ -238,7 +238,7 @@ def gen_pdf_execlist(request):
                 for inobj in inpg_o.object_list:
                     data[-1].append(inobj.issledovaniya_set.first().napravleniye.client.individual.fio(short=True,
                                                                                                        dots=True) + ", " +
-                                    inobj.issledovaniya_set.first().napravleniye.client.individual.age() + "<br/>№ напр.: " + str(
+                                    inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(iss=inobj.issledovaniya_set.first()) + "<br/>№ напр.: " + str(
                         inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ пробирки.: " + str(
                         inobj.pk) + "<br/>" + Truncator(
                         inobj.issledovaniya_set.first().napravleniye.doc.podrazileniye.title).chars(19) + "<br/><br/>")
@@ -378,7 +378,7 @@ def printDirection(c, n, dir):
                       "Пол: " + dir.client.individual.sex)
 
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
-                      "Возраст: " + dir.client.individual.age_s())
+                      "Возраст: " + dir.client.individual.age_s(direction=dir))
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn,
                  "Номер карты: " + dir.client.number_with_type())
@@ -1092,7 +1092,7 @@ def get_issledovaniya(request):
                 res["client_sex"] = napr.client.individual.sex
                 res["client_cardnum"] = napr.client.number + " " + napr.client.base.title
                 res["client_hisnum"] = napr.history_num
-                res["client_vozrast"] = napr.client.individual.age_s()
+                res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["directioner"] = napr.doc.fio
                 res["otd"] = napr.doc.podrazileniye.title
                 res["fin_source"] = napr.istochnik_f.tilie

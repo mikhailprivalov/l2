@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 import sys
 
-from directions.models import Result
+from directions.models import Result, Issledovaniya, Napravleniya
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -66,14 +66,14 @@ class Importedclients(models.Model):
         """
         return datetime.strptime(self.birthday.split(" ")[0], "%d.%m.%Y").date()
 
-    def age(self, result: Result=None):
+    def age(self, iss: Issledovaniya=None):
         """
         Функция подсчета возраста
         """
-        if result is None:
+        if iss is None or not iss.tubes.exists():
             today = date.today()
         else:
-            today = Result.issledovaniye.time_confirmation
+            today = iss.tubes.all().order_by("-time_recive")[0].time_recive
         born = self.bd()
         try:
             birthday = born.replace(year=today.year)
@@ -84,7 +84,7 @@ class Importedclients(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self, result: Result=None) -> str:
+    def age_s(self, iss: Issledovaniya=None, direction: Napravleniya=None) -> str:
         """
         Формирование строки возраста: 10 лет, 101 год
         :return:
@@ -92,7 +92,12 @@ class Importedclients(models.Model):
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
-        age = self.age(result)
+        if direction is not None:
+            iss = None
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive__isnull")
+            if i.exists():
+                iss = i[0]
+        age = self.age(iss)
         if age < 5:
             _let = morph.parse("год")[0]
         elif age <= 20:
@@ -117,11 +122,14 @@ class Individual(models.Model):
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
 
-    def age(self):
+    def age(self, iss: Issledovaniya=None):
         """
         Функция подсчета возраста
         """
-        today = date.today()
+        if iss is None or not iss.tubes.exists():
+            today = date.today()
+        else:
+            today = iss.tubes.all().order_by("-time_recive")[0].time_recive
         born = self.birthday
         try:
             birthday = born.replace(year=today.year)
@@ -132,7 +140,7 @@ class Individual(models.Model):
         else:
             return today.year - born.year
 
-    def age_s(self) -> str:
+    def age_s(self, iss: Issledovaniya=None, direction: Napravleniya=None) -> str:
         """
         Формирование строки возраста: 10 лет, 101 год
         :return:
@@ -140,7 +148,12 @@ class Individual(models.Model):
         import pymorphy2
 
         morph = pymorphy2.MorphAnalyzer()
-        age = self.age()
+        if direction is not None:
+            iss = None
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive__isnull")
+            if i.exists():
+                iss = i[0]
+        age = self.age(iss=iss)
         if age == 0:
             _let = morph.parse("лет ")[0]
         elif age < 5:

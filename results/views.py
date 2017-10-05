@@ -324,7 +324,7 @@ def get_full_result(request):
             result["client"] = {}  # Пациент
             result["client"]["sex"] = napr.client.individual.sex  # Пол
             result["client"]["fio"] = napr.client.individual.fio()  # ФИО
-            result["client"]["age"] = napr.client.individual.age_s()  # Возраст
+            result["client"]["age"] = napr.client.individual.age_s(direction=napr)  # Возраст
             result["client"]["cardnum"] = napr.client.number_with_type()  # Номер карты
             result["client"]["dr"] = napr.client.individual.bd()  # Дата рождения
 
@@ -568,7 +568,7 @@ def result_html(request):
                                                                            "research__sort_weight")
         result = {"pk": dpk, "date": maxdate,
                   "patient": {"cardnum": dir.client.number, "fio": dir.client.fio(), "sex": dir.client.sex,
-                              "age": dir.client.age_s()}, "results": collections.OrderedDict()}
+                              "age": dir.client.age_s(direction=dir)}, "results": collections.OrderedDict()}
 
         kint = 0
         for issledovaniye in iss_list:  # Перебор списка исследований
@@ -784,7 +784,7 @@ def result_print(request):
             c.setFont('Consolas', 10)
 
             c.drawString(px(), py(8), lj('Пол:') + direction.client.sex)
-            c.drawString(px(), py(12), lj('Возраст:') + direction.client.age_s())
+            c.drawString(px(), py(12), lj('Возраст:') + direction.client.age_s(direction=direction))
             c.drawString(px(), py(16), lj('Дата забора:') + date_t)
 
             c.drawString(px(), py(24), lj('Карта:') + str(direction.client.number_with_type()))
@@ -1516,7 +1516,7 @@ def result_print(request):
                 ["Номер:", str(dpk)],
                 ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
                 ["Пол:", direction.client.individual.sex],
-                ["Возраст:", direction.client.individual.age_s()],
+                ["Возраст:", direction.client.individual.age_s(direction=direction)],
                 ["Дата забора:", date_t],
                 [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                 ["№ карты:", str(direction.client.number)],
@@ -2082,7 +2082,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
     # c.drawRightString(s + w/2 - paddingx, h-97, "Дата рождения: " + str(dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + " (" + str(napr.client.age()) + " лет)")
 
-    c.drawRightString(s + w / 2 - paddingx, h - 64, napr.client.age_s() + " " + "(д.р. " + str(
+    c.drawRightString(s + w / 2 - paddingx, h - 64, napr.client.age_s(direction=napr) + " " + "(д.р. " + str(
         dateformat.format(napr.client.bd(), settings.DATE_FORMAT)) + ")")
     if last_iss and last_iss.doc_confirmation:
         c.drawString(s + paddingx, 18, "Врач (лаборант): " + last_iss.doc_confirmation.fio.split(" ")[0] + " " +
@@ -2959,7 +2959,7 @@ def results_search_directions(request):
             # if n > 40:
             #    break
             rows[key] = {"fio": direction.client.individual.fio(),
-                         "birthdate": direction.client.individual.age_s(),
+                         "birthdate": direction.client.individual.age_s(direction=direction),
                          "sex": direction.client.individual.sex,
                          "cardnum": direction.client.number,
                          "type": direction.client.base.title,

@@ -485,7 +485,7 @@ class Result(models.Model):
 
         value = self.value
         sex = self.issledovaniye.napravleniye.client.individual.sex.lower()
-        age = self.issledovaniye.napravleniye.client.individual.age()
+        age = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye)
 
         ref = self.get_ref(fromsave=fromsave)
 
