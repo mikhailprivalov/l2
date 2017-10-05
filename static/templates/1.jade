@@ -48,7 +48,7 @@ input(type="hidden", value=research_pk)#research_pk
 script.
     var k = -1;
     function genresult(th) {
-        let k = $(th).attr("pk");
+        k = $(th).attr("pk");
         let pk = k;
         $("#res-modal h4").text($(th).attr("ftitle"));
         $("#res-modal #res-modal-dir").text($("#dir_num a").text());
