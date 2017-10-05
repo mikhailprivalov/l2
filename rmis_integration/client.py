@@ -353,6 +353,7 @@ class Directions(BaseRequester):
             direction.rmis_number = ""
             direction.save()
             d = True
+            slog.Log(key=direction.pk, type=3001, body=json.dumps({}), user=user).save()
         except Fault:
             pass
         return d
