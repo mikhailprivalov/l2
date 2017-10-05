@@ -128,7 +128,7 @@ class Individual(models.Model):
         if iss is None or not iss.tubes.exists():
             today = date.today()
         else:
-            today = iss.tubes.all().order_by("-time_recive")[0].time_recive
+            today = iss.tubes.all().order_by("-time_recive")[0].time_recive.date()
         born = self.birthday
         try:
             birthday = born.replace(year=today.year)
