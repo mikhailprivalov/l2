@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 import sys
 
+from directions.models import Result
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -64,11 +66,14 @@ class Importedclients(models.Model):
         """
         return datetime.strptime(self.birthday.split(" ")[0], "%d.%m.%Y").date()
 
-    def age(self):
+    def age(self, result: Result=None):
         """
         Функция подсчета возраста
         """
-        today = date.today()
+        if result is None:
+            today = date.today()
+        else:
+            today = Result.issledovaniye.time_confirmation
         born = self.bd()
         try:
             birthday = born.replace(year=today.year)
