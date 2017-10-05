@@ -57,7 +57,7 @@ class TubesRegistration(models.Model):
                                    related_name='docrecive', help_text='Кто получил материал')
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер пробирки')
 
-    notice = models.CharField(max_length=512, default="", help_text='Замечания')
+    notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания')
 
     daynum = models.IntegerField(default=0, blank=True, null=True,
                                  help_text='Номер принятия пробирки среди дня в лаборатории')
