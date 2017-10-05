@@ -24,3 +24,4 @@ zeep
 djangorestframework
 markdown
 django-filter
+django-redis
