@@ -661,7 +661,7 @@ class Directions(BaseRequester):
                     .exclude(rmis_number="") \
                     .distinct():
                 if d.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(d, stdout))
+                    uploaded_results.append(self.check_send_results(d))
                     if stdout:
                         stdout.write("Upload result for direction {}".format(d.pk))
 
