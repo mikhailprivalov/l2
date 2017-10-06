@@ -139,6 +139,7 @@ def ajax_search(request):
                          "twoname": row.individual.patronymic,
                          "birthday": row.individual.bd(),
                          "sex": row.individual.sex,
+                         "individual_pk": row.individual.pk,
                          "pk": row.pk})
     return HttpResponse(json.dumps(data), content_type="application/json")  # Создание JSON
 
