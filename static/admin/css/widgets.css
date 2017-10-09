@@ -533,7 +533,7 @@ ul.timelist, .timelist li {
     background: url(../img/inline-delete.svg) 0 0 no-repeat;
     width: 16px;
     height: 16px;
-    border: 0 none;
+    border: 0px none;
 }
 
 .inline-deletelink:focus, .inline-deletelink:hover {

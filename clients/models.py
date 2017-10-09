@@ -125,10 +125,10 @@ class Individual(models.Model):
         """
         Функция подсчета возраста
         """
-        if iss is None or not iss.tubes.exists():
+        if iss is None or not iss.tubes.filter(time_recive__isnull=False).exists():
             today = date.today()
         else:
-            today = iss.tubes.all().order_by("-time_recive")[0].time_recive.date()
+            today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
         born = self.birthday
         try:
             birthday = born.replace(year=today.year)

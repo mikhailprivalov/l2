@@ -73,7 +73,7 @@ def send(request):
             appkey = request.GET.get("key", "")
 
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
-        resdict["pk"] = resdict.get("pk", False)
+        resdict["pk"] = int(resdict.get("pk", -111))
         if "LYMPH%" in resdict["result"]:
             resdict["orders"] = {}
 
@@ -85,13 +85,13 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
 
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
-                resdict["pk"] = directions.TubesRegistration.objects.filter(
-                    issledovaniya__napravleniye__pk=dpk).first().pk
-            else:
-                resdict["pk"] = False
-            resdict["bysapphire"] = True
-
+                if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
+                    resdict["pk"] = directions.TubesRegistration.objects.filter(
+                        issledovaniya__napravleniye__pk=dpk).first().pk
+                else:
+                    resdict["pk"] = False
+                resdict["bysapphire"] = True
+        result["A"] = appkey
         if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
             direction = tubei.issledovaniya_set.first().napravleniye
@@ -142,6 +142,6 @@ def send(request):
             if dpk > -1:
                 resdict["pk"] = dpk
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=astm_user).save()
-    except Exception:
-        result = {"ok": False, "Exception": True}
+    except Exception as e:
+        result = {"ok": False, "Exception": True, "MSG": str(e)}
     return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON

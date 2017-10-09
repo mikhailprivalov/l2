@@ -1,10 +1,10 @@
-'use strict';
+(function() {
 
-(function($) {
+  var $ = window.jQuery;
 
   $.fn.autocompleteselect = function(options) {
     return this.each(function() {
-      const id = this.id,
+      var id = this.id,
           $this = $(this),
           $text = $('#' + id + '_text'),
           $deck = $('#' + id + '_on_deck');
@@ -23,7 +23,7 @@
       }
 
       function addKiller(repr, pk) {
-        const killId = 'kill_' + pk + id,
+        var killId = 'kill_' + pk + id,
             killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         if (repr) {
           $deck.empty();
@@ -54,7 +54,11 @@
         }
       }
 
-      reset();
+      if (!$this.attr('data-changed')) {
+        reset();
+        $this.attr('data-changed', true);
+      }
+
       $this.closest('form').on('reset', reset);
 
       $this.bind('didAddPopup', function(event, pk, repr) {
@@ -65,13 +69,13 @@
 
   $.fn.autocompleteselectmultiple = function(options) {
     return this.each(function() {
-      const id = this.id,
+      var id = this.id,
           $this = $(this),
           $text = $('#' + id + '_text'),
           $deck = $('#' + id + '_on_deck');
 
       function receiveResult(event, ui) {
-        const pk = ui.item.pk,
+        var pk = ui.item.pk,
             prev = $this.val();
 
         if (prev.indexOf('|' + pk + '|') === -1) {
@@ -85,7 +89,7 @@
       }
 
       function addKiller(repr, pk) {
-        const killId = 'kill_' + pk + id,
+        var killId = 'kill_' + pk + id,
             killButton = '<span class="ui-icon ui-icon-trash" id="' + killId + '">X</span> ';
         $deck.append('<div id="' + id + '_on_deck_' + pk + '">' + killButton + repr + ' </div>');
 
@@ -105,7 +109,7 @@
 
       function reset() {
         $deck.empty();
-        let query = '|';
+        var query = '|';
         if (options.initial) {
           $.each(options.initial, function(i, its) {
             addKiller(its[0], its[1]);
@@ -115,7 +119,11 @@
         $this.val(query);
       }
 
-      reset();
+      if (!$this.attr('data-changed')) {
+        reset();
+        $this.attr('data-changed', true);
+      }
+
       $this.closest('form').on('reset', reset);
 
       $this.bind('didAddPopup', function(event, pk, repr) {
@@ -125,36 +133,30 @@
   };
 
   function addAutoComplete (inp, callback) {
-    const $inp = $(inp);
-      let html_id = inp.id;
-      const prefix_id = html_id,
-          opts = JSON.parse($inp.attr('data-plugin-options'));
-      let prefix = 0;
-
-    /* detects inline forms and converts the html_id if needed */
-    if (html_id.indexOf('__prefix__') !== -1) {
-      // Some dirty loop to find the appropriate element to apply the callback to
-      while ($('#' + html_id).length) {
-        html_id = prefix_id.replace(/__prefix__/, prefix++);
-      }
-      html_id = prefix_id.replace(/__prefix__/, prefix - 2);
-      // Ignore the first call to this function, the one that is triggered when
-      // page is loaded just because the 'empty' form is there.
-      if ($('#' + html_id + ', #' + html_id + '_text').hasClass('ui-autocomplete-input')) {
-        return;
-      }
+    var $inp = $(inp),
+        opts = JSON.parse($inp.attr('data-plugin-options'));
+    // Do not activate empty-form inline rows.
+    // These are cloned into the form when adding another row and will be activated at that time.
+    if ($inp.attr('id').indexOf('__prefix__') !== -1) {
+      // console.log('skipping __prefix__ row', $inp);
+      return;
     }
-
+    if ($inp.data('_ajax_select_inited_')) {
+      // console.log('skipping already activated row', $inp);
+      return;
+    }
+    // console.log('activating', $inp);
     callback($inp, opts);
+    $inp.data('_ajax_select_inited_', true);
   }
 
   // allow html in the results menu
   // https://github.com/scottgonzalez/jquery-ui-extensions
-  const proto = $.ui.autocomplete.prototype,
+  var proto = $.ui.autocomplete.prototype,
       initSource = proto._initSource;
 
   function filter(array, term) {
-    const matcher = new RegExp($.ui.autocomplete.escapeRegex(term), 'i');
+    var matcher = new RegExp($.ui.autocomplete.escapeRegex(term), 'i');
     return $.grep(array, function(value) {
       return matcher.test($('<div>').html(value.label || value.value || value).text());
     });
@@ -171,7 +173,7 @@
       }
     },
     _renderItem: function(ul, item) {
-      const body = this.options.html ? item.match : item.label;
+      var body = this.options.html ? item.match: item.label;
       return $('<li></li>')
         .data('item.autocomplete', item)
         .append($('<a></a>')[this.options.html ? 'html' : 'text' ](body))
@@ -179,14 +181,30 @@
     }
   });
 
-  /*  the popup handler
-    requires RelatedObjects.js which is part of the django admin js
-    so if using outside of the admin then you would need to include that manually */
-  window.didAddPopup = function (win, newId, newRepr) {
-    const name = window.windowname_to_id(win.name);
-    $('#' + name).trigger('didAddPopup', [window.html_unescape(newId), window.html_unescape(newRepr)]);
-    win.close();
-  };
+  /* Called by the popup create object when it closes.
+   * For the popup this is opener.dismissAddRelatedObjectPopup
+   * Django implements this in RelatedObjectLookups.js
+   * In django >= 1.10 we can rely on input.trigger('change')
+   * and avoid this hijacking.
+   */
+  var djangoDismissAddRelatedObjectPopup = window.dismissAddRelatedObjectPopup || window.dismissAddAnotherPopup;
+  window.dismissAddRelatedObjectPopup = function(win, newId, newRepr) {
+    // Iff this is an ajax-select input then close the window and
+    // trigger didAddPopup
+    var name = window.windowname_to_id(win.name);
+    var input = $('#' + name);
+    if (input.data('ajax-select')) {
+      win.close();
+      // newRepr is django's repr of object
+      // not the Lookup's formatting of it.
+      input.trigger('didAddPopup', [newId, newRepr]);
+    } else {
+      // Call the normal django set and close function.
+      djangoDismissAddRelatedObjectPopup(win, newId, newRepr);
+    }
+  }
+  // Django renamed this function in 1.8
+  window.dismissAddAnotherPopup = window.dismissAddRelatedObjectPopup;
 
   // activate any on page
   $(window).bind('init-autocomplete', function() {
@@ -220,10 +238,11 @@
     // if dynamically injecting forms onto a page
     // you can trigger them to be ajax-selects-ified:
     $(window).trigger('init-autocomplete');
-    $('.inline-group ul.tools a.add, .inline-group div.add-row a, .inline-group .tabular tr.add-row td a')
-      .on('click', function() {
+    // When adding new rows in inline forms, reinitialize and activate newly added rows.
+    $(document)
+      .on('click', '.inline-group ul.tools a.add, .inline-group div.add-row a, .inline-group .tabular tr.add-row td a', function() {
         $(window).trigger('init-autocomplete');
       });
   });
 
-})(window.jQuery);
+})();

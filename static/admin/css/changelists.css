@@ -166,6 +166,8 @@
 #changelist-filter a {
     display: block;
     color: #999;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
 }
 
 #changelist-filter li.selected {
@@ -309,7 +311,8 @@
     border-radius: 4px;
     font-size: 14px;
     padding: 0 0 0 4px;
-    margin: 0 0 0 10px;
+    margin: 0;
+    margin-left: 10px;
 }
 
 #changelist .actions select:focus {

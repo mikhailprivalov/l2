@@ -187,9 +187,13 @@ p.mini {
     margin-top: -3px;
 }
 
-.help, p.help, form p.help {
+.help, p.help, form p.help, div.help, form div.help, div.help li {
     font-size: 11px;
     color: #999;
+}
+
+div.help ul {
+     margin-bottom: 0;
 }
 
 .help-tooltip {
@@ -362,7 +366,7 @@ table thead th.sorted .sortoptions a.sortremove {
 }
 
 table thead th.sorted .sortoptions a.sortremove:after {
-    content: '\005C';
+    content: '\\';
     position: absolute;
     top: -6px;
     left: 3px;
@@ -409,6 +413,9 @@ input, textarea, select, .form-row p, form .button {
     font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
     font-weight: normal;
     font-size: 13px;
+}
+.form-row div.help {
+    padding: 2px 3px;
 }
 
 textarea {
@@ -565,7 +572,8 @@ ul.messagelist li.error {
     color: #ba2121;
     border: 1px solid #ba2121;
     border-radius: 4px;
-    background: #fff 5px 12px;
+    background-color: #fff;
+    background-position: 5px 12px;
 }
 
 ul.errorlist {
@@ -729,7 +737,8 @@ a.deletelink:focus, a.deletelink:hover {
 }
 
 .object-tools a.viewsitelink, .object-tools a.golink,.object-tools a.addlink {
-    background: no-repeat 93% center;
+    background-repeat: no-repeat;
+    background-position: right 7px center;
     padding-right: 26px;
 }
 
