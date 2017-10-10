@@ -1,5 +1,5 @@
 {% extends "dbase.html" %}
-{% block title %}Добавить подразделение{% endblock %}
+{% block title %}Управление подразделениями{% endblock %}
 
 {% block content %}
     {% if error %}
@@ -30,7 +30,7 @@
                         {% for v in podr %}
                             <tr>
                                 <td>{{ v.pk }}</td>
-                                <td>{{ v }}</td>
+                                <td><input value="{{ v }}" data-pk="{{ v.pk }}" /></td>
                             </tr>
                         {% endfor %}
                     </table>
