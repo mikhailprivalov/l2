@@ -15,11 +15,10 @@
     <form method="POST">
         {% csrf_token %}
         <div class="input-group" style="margin: 0 auto">
-            <h3 style="margin: 0 auto">Форма добавления подразделения</h3>
             <input type="text" class="form-control" name='title' placeholder="Название"
                    value="{{ title }}" required autofocus
                    style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;margin-top: 10px">
-            <input type="submit" class="btn btn-primary form-control" value="Сохранить"
+            <input type="submit" class="btn btn-primary form-control" value="Добавить"
                    style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
             <br/>
 
