@@ -158,7 +158,7 @@ def tubes(request):
                 c.setFont('clacon', 12)
                 c.drawString(2 * mm, mm, pr)
                 c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
-                m = 0.022
+                m = 0.0212
                 if tube >= 10000:
                     m = 0.018
                 if tube >= 100000:
