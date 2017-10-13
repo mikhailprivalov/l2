@@ -159,6 +159,8 @@ def tubes(request):
                 c.drawString(2 * mm, mm, pr)
                 c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
                 m = 0.0245
+                if tube >= 1000:
+                    m = 0.02
                 if tube >= 10000:
                     m = 0.018
                 if tube >= 100000:
