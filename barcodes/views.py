@@ -166,7 +166,7 @@ def tubes(request):
                 if tube >= 1000000:
                     m = 0.016
                 barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
-                barcode.drawOn(c, -2 * mm, 4 * mm)
+                barcode.drawOn(c, -3 * mm, 4 * mm)
             else:
                 data = [
                     [nm, st],
