@@ -640,6 +640,17 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False):
+        def check_lock():
+            return False
+
+        if check_lock():
+            if stdout:
+                stdout.write("Lockfile exists. EXIT")
+            return
+
+        def update_lock():
+            pass
+
         upload_after = Settings.get("upload_results_after", default="11.09.2017")
         date = datetime.date(int(upload_after.split(".")[2]), int(upload_after.split(".")[1]),
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
@@ -651,6 +662,7 @@ class Directions(BaseRequester):
             stdout.write("Directions to upload: {}".format(cnt))
         i = 0
         for d in to_upload:
+            update_lock()
             uploaded.append(self.check_send(d, stdout))
             if stdout:
                 i += 1
@@ -658,6 +670,7 @@ class Directions(BaseRequester):
 
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct()
         for d in to_upload:
+            update_lock()
             self.check_service(d, stdout)
             if stdout:
                 stdout.write("Check services for direction {}; RMIS number={}".format(d.pk, d.rmis_number))
@@ -676,6 +689,7 @@ class Directions(BaseRequester):
             if stdout:
                 stdout.write("Results to upload: {}".format(cnt))
             for d in to_upload:
+                update_lock()
                 if d.is_all_confirm():
                     uploaded_results.append(self.check_send_results(d))
                     if stdout:
