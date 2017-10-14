@@ -728,16 +728,18 @@ class Hosp(BaseRequester):
         last_id = None
         last_case_id = None
         for row in reversed(resp):
-            raise Exception(row)
             if row is None:
                 continue
-            d = self.get_hosp_details(row)
-            t = helpers.serialize_object(d).get("outcomeDate", None)
-            v = t is None or t >= datetime.datetime.now().date()
-            if v:
-                last_id = row
-                last_case_id = helpers.serialize_object(d).get("caseId", None)
-                break
+            try:
+                d = self.get_hosp_details(row)
+                t = helpers.serialize_object(d).get("outcomeDate", None)
+                v = t is None or t >= datetime.datetime.now().date()
+                if v:
+                    last_id = row
+                    last_case_id = helpers.serialize_object(d).get("caseId", None)
+                    break
+            except Fault:
+                pass
         return last_case_id, last_id
 
     def get_hosp_details(self, id):
