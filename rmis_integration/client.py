@@ -644,29 +644,43 @@ class Directions(BaseRequester):
         date = datetime.date(int(upload_after.split(".")[2]), int(upload_after.split(".")[1]),
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
         uploaded = []
-        for d in Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
-                        Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct():
+        to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
+                        Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct()
+        cnt = to_upload.count()
+        if stdout:
+            stdout.write("Directions to upload: {}".format(cnt))
+        i = 0
+        for d in to_upload:
             uploaded.append(self.check_send(d, stdout))
             if stdout:
-                stdout.write("Upload direction for direction {}; RMIS number={}".format(d.pk, uploaded[-1]))
-        for d in Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct():
+                i += 1
+                stdout.write("Upload direction {} ({}/{}); RMIS number={}".format(d.pk,  i, cnt, uploaded[-1]))
+
+        to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct()
+        for d in to_upload:
             self.check_service(d, stdout)
             if stdout:
                 stdout.write("Check services for direction {}; RMIS number={}".format(d.pk, d.rmis_number))
 
         uploaded_results = []
         if not without_results:
-            for d in Napravleniya.objects.filter(data_sozdaniya__gte=date,
+            to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date,
                                                  issledovaniya__time_confirmation__isnull=False,
                                                  rmis_number__isnull=False,
                                                  result_rmis_send=False) \
-                    .exclude(rmis_number="NONERMIS") \
-                    .exclude(rmis_number="") \
-                    .distinct():
+                            .exclude(rmis_number="NONERMIS") \
+                            .exclude(rmis_number="") \
+                            .distinct()
+            cnt = to_upload.count()
+            i = 0
+            if stdout:
+                stdout.write("Results to upload: {}".format(cnt))
+            for d in to_upload:
                 if d.is_all_confirm():
                     uploaded_results.append(self.check_send_results(d))
                     if stdout:
-                        stdout.write("Upload result for direction {}".format(d.pk))
+                        i += 1
+                        stdout.write("Upload result for direction {} ({}/{})".format(d.pk, i, cnt))
 
         return {"directions": [x for x in uploaded if x != ""], "results": [x for x in uploaded_results if x != ""]}
 
