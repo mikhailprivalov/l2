@@ -641,7 +641,7 @@ class Directions(BaseRequester):
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False):
         def check_lock():
-            return False
+            return cache.get('upload_lock') is not None
 
         if check_lock():
             if stdout:
@@ -649,6 +649,7 @@ class Directions(BaseRequester):
             return
 
         def update_lock():
+            cache.set('upload_lock', '1', 180)
             pass
 
         upload_after = Settings.get("upload_results_after", default="11.09.2017")
