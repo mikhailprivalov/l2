@@ -728,6 +728,7 @@ class Hosp(BaseRequester):
         last_id = None
         last_case_id = None
         for row in reversed(resp):
+            raise Exception(row)
             if row is None:
                 continue
             d = self.get_hosp_details(row)
