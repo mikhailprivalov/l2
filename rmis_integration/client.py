@@ -728,6 +728,8 @@ class Hosp(BaseRequester):
         last_id = None
         last_case_id = None
         for row in reversed(resp):
+            if row is None:
+                continue
             d = self.get_hosp_details(row)
             t = helpers.serialize_object(d).get("outcomeDate", None)
             v = t is None or t >= datetime.datetime.now().date()
