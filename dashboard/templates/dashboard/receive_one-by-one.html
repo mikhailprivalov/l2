@@ -16,17 +16,35 @@
 {% block content %}
     <div class="row">
         <div class="col-xs-4">
-            <div class="input-group">
-                <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
-                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                       placeholder="Номер емкости" maxlength="13" autofocus>
-              <span class="input-group-btn">
-                    <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
-                    </button>
-              </span>
+            <ul class="nav nav-tabs">
+              <li class="active"><a data-toggle="tab" href="#barcode">Штрих-код</a></li>
+              <li><a data-toggle="tab" href="#direction">Номер направления</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="barcode" class="tab-pane active">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
+                               data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                               placeholder="Номер штрих-кода" maxlength="20" autofocus>
+                      <span class="input-group-btn">
+                            <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
+                            </button>
+                      </span>
+                    </div>
+                </div>
+                <div id="direction" class="tab-pane">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="receive-field-direction" name="search-field-direction" data-container="body"
+                               data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                               placeholder="Номер направления" maxlength="20" autofocus>
+                      <span class="input-group-btn">
+                            <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field-direction').val());" type="button">Принять</button>
+                      </span>
+                    </div>
+                </div>
             </div>
             <br/>
-            <span id="rec-message">Емкость №<b></b> принята</span>
+            <span id="rec-message"></span>
         </div>
         <div class="col-xs-4" style="text-align: center;padding-top: 5px; border-right: 1px solid lightgray; border-left: 1px solid lightgray; min-height: 160px">
             <div style="font-size: 60px; display: inline-block;vertical-align: middle">
