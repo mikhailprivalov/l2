@@ -147,28 +147,27 @@ def tubes(request):
 
             nm = "№" + str(d) + "," + tmp2.client.base.short_title
 
-            for tube in [10, 100, 150, 200, 300, 400, 500, 600, 700, 1000, 2000, 3000, 5000, 10000, 20000, 30000, 50000, 80000, 100000, 150000, 180000, 200000, 250000, 400000, 500000, 800000, 1000000, 1300000, 1600000, 2000000, 5000000, 10000000, 11223344, 92223344]:
-                c.setFont('clacon', 12)
-                c.drawString(2 * mm, ph * mm - 3 * mm, nm)
-                c.drawRightString(pw * mm - 2 * mm, ph * mm - 3 * mm, st)
-                c.setFont('clacon', 18)
-                if len(fam) > 14:
-                    c.setFont('clacon', 18 - len(fam) * 0.7 + 12 * 0.7)
-                c.drawRightString(pw * mm - 2 * mm, ph * mm - 7 * mm, fam)
-                c.setFont('clacon', 12)
-                c.drawString(2 * mm, mm, pr)
-                c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
+            c.setFont('clacon', 12)
+            c.drawString(2 * mm, ph * mm - 3 * mm, nm)
+            c.drawRightString(pw * mm - 2 * mm, ph * mm - 3 * mm, st)
+            c.setFont('clacon', 18)
+            if len(fam) > 14:
+                c.setFont('clacon', 18 - len(fam) * 0.7 + 12 * 0.7)
+            c.drawRightString(pw * mm - 2 * mm, ph * mm - 7 * mm, fam)
+            c.setFont('clacon', 12)
+            c.drawString(2 * mm, mm, pr)
+            c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
+            m = 0.0212
+            if tube >= 10000:
+                m = 0.018
+            if tube >= 100000:
                 m = 0.0212
-                if tube >= 10000:
-                    m = 0.018
-                if tube >= 100000:
-                    m = 0.0212
-                if tube >= 1000000:
-                    m = 0.016
-                barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
-                barcode.drawOn(c, -3 * mm, 4 * mm)
+            if tube >= 1000000:
+                m = 0.016
+            barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
+            barcode.drawOn(c, -3 * mm, 4 * mm)
 
-                c.showPage()
+            c.showPage()
     c.save()
     pdf = buffer.getvalue()
     buffer.close()
