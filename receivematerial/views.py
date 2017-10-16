@@ -47,7 +47,11 @@ def receive(request):
 @group_required("Получатель биоматериала")
 def receive_obo(request):
     if request.method == "GET":
-        return render(request, 'dashboard/receive_one-by-one.html', {"labs": Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")})
+        labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
+        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+        if not lab.isLab:
+            lab = labs[0]
+        return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
     if request.POST["pk"].isdigit():
         pk = int(request.POST["pk"])
         if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
