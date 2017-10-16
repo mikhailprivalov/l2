@@ -100,12 +100,13 @@ def last_received(request):
     from django.utils import datetime_safe
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
     last_num = 0
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile).exists():
+                                        doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile)])
+                                        doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab)])
     return HttpResponse(json.dumps({"last_n": last_num}), content_type="application/json")
 
 
