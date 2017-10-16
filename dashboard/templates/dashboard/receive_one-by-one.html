@@ -359,7 +359,7 @@ function do_receive_direction(pk){
                 msg.push("Ёмк. <b>{0} принята</b><br/><br/>".f(pk));
                 play_scan();
             } else {
-                msg.push("Ёмк. {0} была <b>принята ранее</b>. {1}<br/><br/>".f(pk, row.receivedate));
+                msg.push("Ёмк. {0} была <b>принята ранее</b>. {1}".f(pk, row.receivedate));
                 play_scan();
             }
         }

@@ -64,14 +64,14 @@ def receive_obo(request):
             tubes(request, direction_implict_id=pk)
             pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)]
         for p in pks:
-            if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
-                tube = TubesRegistration.objects.get(pk=pk)
+            if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
+                tube = TubesRegistration.objects.get(pk=p)
                 if tube.getstatus(one_by_one=True):
                     if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == lab:
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
                                   "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
-                                  "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+                                  "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)]}
                     else:
                         result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
                 else:
