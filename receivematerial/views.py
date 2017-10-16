@@ -58,6 +58,7 @@ def receive_obo(request):
         direction = request.POST.get("direction", "0") == "1"
         if not direction:
             pks = [pk]
+            ret = []
         else:
             pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)]
         for p in pks:
@@ -79,6 +80,8 @@ def receive_obo(request):
             else:
                 result = {"pk": p, "r": 3}
             ret.append(result)
+        if not direction:
+            ret = {"r": 3} if len(ret) == 0 else ret[0]
     return HttpResponse(json.dumps(ret), content_type="application/json")
 
 
