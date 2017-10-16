@@ -512,7 +512,7 @@ def receive_journal(request):
             t.drawOn(c, tx, h - ht - ty)
             if pg.has_next():
                 c.showPage()
-    c.setTitle("Журнал приема материала - " + lab.title)
+    c.setTitle("Журнал приёма материала - " + lab.title)
     c.save()
 
     pdf = buffer.getvalue()
