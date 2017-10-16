@@ -101,7 +101,7 @@ class TubesRegistration(models.Model):
         Получение статуса взятия
         :return:
         """
-        return self.time_get and self.doc_get
+        return (self.time_get and self.doc_get) or self.type.receive_in_lab
 
     def set_r(self, doc_r):
         """
