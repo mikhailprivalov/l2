@@ -96,12 +96,12 @@ class TubesRegistration(models.Model):
         self.save()
         slog.Log(key=str(self.pk), type=9, body="", user=doc_get).save()
 
-    def getstatus(self):
+    def getstatus(self, one_by_one=False):
         """
         Получение статуса взятия
         :return:
         """
-        return (self.time_get and self.doc_get) or self.type.receive_in_lab
+        return (self.time_get and self.doc_get) or (self.type.receive_in_lab and one_by_one)
 
     def set_r(self, doc_r):
         """
