@@ -18,7 +18,7 @@
         <div class="col-xs-4">
             <div class="panel">
                 <div class="tabbable clearfix">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-tabs" id="receive-types">
                       <li class="active"><a data-toggle="tab" href="#barcode">Штрих-код</a></li>
                       <li><a data-toggle="tab" href="#direction">Номер направления</a></li>
                     </ul>
@@ -27,7 +27,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
                                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                                       placeholder="Номер штрих-кода" maxlength="20" autofocus>
+                                       placeholder="Номер штрих-кода" maxlength="20">
                               <span class="input-group-btn">
                                     <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
                                     </button>
@@ -38,7 +38,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control" id="receive-field-direction" name="search-field-direction" data-container="body"
                                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                                       placeholder="Номер направления" maxlength="20" autofocus>
+                                       placeholder="Номер направления" maxlength="20">
                               <span class="input-group-btn">
                                     <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field-direction').val());" type="button">Принять</button>
                               </span>
@@ -220,15 +220,30 @@ $(document).ready(function(){
     });
     $(document).idle({
         onIdle: function(){
-            if(!$("#receive-field").is(":focus"))
-                $("#receive-field").focus();
+            focus_input();
         },
         idle: 4000
     });
     $("body").on("change", "#table-researches .btn input", sync_checks);
     $("#snd-scan").trigger('load');
     $("#snd-warn").trigger('load');
+    focus_input();
+    $("#receive-types").on('shown.bs.tab', focus_input)
 });
+function focus_input(){
+    let inp = $(".tab-pane.active input");
+    if(!inp.is(":focus")){
+        inp.focus();
+    }
+}
+function disable_input(){
+    $(".tab-pane input").prop("disabled", true).blur();
+}
+
+function enable_input(){
+    $(".tab-pane input").prop("disabled", false);
+    focus_input();
+}
 function sync_checks(){
     $(".btn").removeClass("active-b");
     let elements = document.querySelectorAll("input[name='sel']:checked");
@@ -248,8 +263,7 @@ function do_receive(pk){
     block = true;
     sl();
     clr();
-    $("#receive-field").prop("disabled", true);
-    $("#receive-field").blur();
+    disable_input();
 
     let v = parseInt($("#next_num").val());
     if(v <= before_num) {
@@ -260,7 +274,7 @@ function do_receive(pk){
     $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk}}).done(function(data){
         block = false;
         $("#receive-field").prop("disabled", false);
-        $('#receive-field').val("").focus();
+        enable_input();
         upd_next_num();
         hl();
         if(data.r === 2){
