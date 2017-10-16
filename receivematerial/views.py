@@ -46,9 +46,9 @@ def receive(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_obo(request):
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk) if request.method == "GET" else request.POST.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
     if request.method == "GET":
         labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
-        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
         if not lab.isLab:
             lab = labs[0]
         return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
@@ -57,7 +57,7 @@ def receive_obo(request):
         if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
             tube = TubesRegistration.objects.get(pk=pk)
             if tube.getstatus(one_by_one=True):
-                if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
+                if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == lab:
                     status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                     result = {"r": 1, "n": status["n"], "new": status["new"],
                               "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
