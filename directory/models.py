@@ -17,6 +17,7 @@ class ReleationsFT(models.Model):
     (многие-ко-многим) фракции к пробиркам
     """
     tube = models.ForeignKey(Tubes, help_text='Пробирка')
+    receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
 
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)
