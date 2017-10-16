@@ -52,28 +52,34 @@ def receive_obo(request):
         if not lab.isLab:
             lab = labs[0]
         return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
+    ret = []
     if request.POST["pk"].isdigit():
         pk = int(request.POST["pk"])
-        if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
-            tube = TubesRegistration.objects.get(pk=pk)
-            if tube.getstatus(one_by_one=True):
-                if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == lab:
-                    status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
-                    result = {"r": 1, "n": status["n"], "new": status["new"],
-                              "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
-                              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
-                else:
-                    result = {"r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
-            else:
-                otd = tube.issledovaniya_set.first().napravleniye.doc.podrazileniye
-                if tube.issledovaniya_set.first().napravleniye.doc_who_create:
-                    otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazileniye
-                result = {"r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
+        direction = request.POST.get("direction", "0") == "1"
+        if not direction:
+            pks = [pk]
         else:
-            result = {"r": 3}
-    else:
-        result = {"r": 3}
-    return HttpResponse(json.dumps(result), content_type="application/json")
+            pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)]
+        for p in pks:
+            if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
+                tube = TubesRegistration.objects.get(pk=pk)
+                if tube.getstatus(one_by_one=True):
+                    if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == lab:
+                        status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
+                        result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
+                                  "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
+                                  "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=pk)]}
+                    else:
+                        result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
+                else:
+                    otd = tube.issledovaniya_set.first().napravleniye.doc.podrazileniye
+                    if tube.issledovaniya_set.first().napravleniye.doc_who_create:
+                        otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazileniye
+                    result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
+            else:
+                result = {"pk": p, "r": 3}
+            ret.append(result)
+    return HttpResponse(json.dumps(ret), content_type="application/json")
 
 
 @csrf_exempt

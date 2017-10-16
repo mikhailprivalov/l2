@@ -40,7 +40,7 @@
                                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
                                        placeholder="Номер направления" maxlength="20">
                               <span class="input-group-btn">
-                                    <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field-direction').val());" type="button">Принять</button>
+                                    <button class="btn btn-blue-nb" onclick="do_receive_direction($('#receive-field-direction').val());" type="button">Принять</button>
                               </span>
                             </div>
                         </div>
@@ -284,6 +284,66 @@ function do_receive(pk){
         }
         else if(data.r === 3){
             set_msg("Ошибка! Емкость № {0} <b>не найдена</b>".f(pk));
+            play_warn();
+            return;
+        }
+        else if(data.r === 4){
+            set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
+            play_warn();
+            return;
+        } else if(data.new){
+            set_msg("Емкость № <b>{0} принята</b><br/><br/>".f(pk));
+        } else {
+            set_msg("Емкость № {0} была <b>принята ранее</b>. {1}<br/><br/>".f(pk, data.receivedate));
+        }
+        play_scan();
+        before_num = data.n;
+        set_n(data.n);
+        set_researches(data.researches);
+        load_history(pk);
+    });
+}
+function do_receive_direction(pk){
+    pk = pk.trim();
+
+    if(pk === ""){
+        clr();
+        set_msg("Не найдено! Введен пустой запрос");
+        return;
+    }
+    if(block) return;
+    let num;
+    if (pk.substr(0, 3) === "460" && pk.length === 13) {
+        num = parseInt(pk.substr(0, 12)) - 460000000000;
+    } else{
+        num = parseInt(pk);
+    }
+    pk = ""+num;
+
+    block = true;
+    sl();
+    clr();
+    disable_input();
+
+    let v = parseInt($("#next_num").val());
+    if(v <= before_num) {
+        v = before_num + 1;
+        $("#next_num").val(v);
+    }
+
+    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk, direction: 1}}).done(function(data){
+        block = false;
+        $("#receive-field").prop("disabled", false);
+        enable_input();
+        upd_next_num();
+        hl();
+        if(data.r === 2){
+            set_msg("Ошибка! Емкость предназначена для<br/> <b>{0}</b>".f(data.lab));
+            play_warn();
+            return;
+        }
+        else if(data.r === 3){
+            set_msg(`Ошибка! Емкости для направления ${pk} не найдены`);
             play_warn();
             return;
         }
