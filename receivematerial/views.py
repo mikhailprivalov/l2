@@ -13,6 +13,7 @@ import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
+from barcodes.views import tubes
 from directions.models import Issledovaniya, TubesRegistration
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -60,6 +61,7 @@ def receive_obo(request):
             pks = [pk]
             ret = []
         else:
+            tubes(request, direction_implict_id=pk)
             pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)]
         for p in pks:
             if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():

@@ -29,7 +29,7 @@ pdfmetrics.registerFont(
 
 
 @login_required
-def tubes(request):
+def tubes(request, direction_implict_id=None):
     """
     Barcodes view
     :param request:
@@ -40,11 +40,14 @@ def tubes(request):
     direction_id = []
     tubes_id = set()
     istubes = False
-    if "napr_id" in request.GET.keys():
-        direction_id = json.loads(request.GET["napr_id"])
-    elif "tubes_id" in request.GET.keys():
-        tubes_id = set(json.loads(request.GET["tubes_id"]))
-        istubes = True
+    if direction_implict_id is None:
+        if "napr_id" in request.GET.keys():
+            direction_id = json.loads(request.GET["napr_id"])
+        elif "tubes_id" in request.GET.keys():
+            tubes_id = set(json.loads(request.GET["tubes_id"]))
+            istubes = True
+    else:
+        direction_id = [direction_implict_id]
 
     barcode_size = [int(x) for x in request.GET.get("barcode_size", "43x25").strip().split("x")]
     barcode_type = request.GET.get("barcode_type", "std").strip()
