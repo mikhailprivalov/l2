@@ -66,6 +66,10 @@ class TubesRegistration(models.Model):
         return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
 
     def day_num(self, doc, num):
+        if not self.getstatus() and self.type.receive_in_lab:
+            iss = Issledovaniya.objects.filter(tubes=self)
+            if iss.count():
+                self.set_get(iss[0].napravleniye.doc)
         new_t = False
         if not self.rstatus():
             new_t = True
