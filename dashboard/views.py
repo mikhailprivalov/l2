@@ -178,7 +178,7 @@ def receive_journal_form(request):
     labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
     if not lab.isLab:
         lab = labs[0]
-    groups = directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)
+    groups = directory.ResearchGroup.objects.filter(lab=lab)
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
