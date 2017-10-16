@@ -1807,7 +1807,7 @@
             let $row = $(`.settings[data-fraction-pk='${pk}']`);
             let selectval = _.unescape($("select", $row).val());
 
-            if(selectval == "" || selectval == undefined|| selectval == "undefined"){
+            if(selectval === "" || selectval === undefined || selectval === "undefined"){
                 selectval = '{}';
             }
             console.log(selectval);
