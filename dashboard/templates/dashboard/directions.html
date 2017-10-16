@@ -669,7 +669,7 @@
             vertical-align: middle;
         }
     </style>
-    <link href="/static/css/dragula.min.css" type="text/css" rel="stylesheet">
+{#    <link href="/static/css/dragula.min.css" type="text/css" rel="stylesheet">#}
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/bootstrap-datepicker.min.js"></script>
@@ -678,7 +678,7 @@
     <script src="/static/tree/jquery.easytree.min.js"></script>
     <script src="/static/js/split.js"></script>
     <script src="/static/js/ajaxq.js"></script>
-    <script src="/static/js/dragula.js"></script>
+{#    <script src="/static/js/dragula.js"></script>#}
     <script>
         let has_unconfirmed = false;
 
@@ -1020,7 +1020,7 @@
             checkType();
             $("#e").resize(resize);
             setTimeout(resize, 100);
-            d = dragula([$("#table-researches")[0]], {mirrorContainer: $("#table-researches")[0]});
+            /*d = dragula([$("#table-researches")[0]], {mirrorContainer: $("#table-researches")[0]});
             d.on("drop", function () {
                 let order = [];
                 $("#table-researches label").each(function () {
@@ -1032,7 +1032,7 @@
                     data: {order: JSON.stringify(order), lab: active_lab}
                 });
                 console.log(order);
-            });
+            });*/
         });
 
         function checkType(tr) {
