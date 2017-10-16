@@ -441,7 +441,7 @@ def receive_journal(request):
             if len(pg) == 0:
                 continue
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], group=group, otd=key.split("@")[1], start=start)
+                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], lab=lab, group=group, otd=key.split("@")[1], start=start)
             data = []
             tmp = []
             for v in data_header:
@@ -531,7 +531,7 @@ def receive_journal(request):
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2, start=1):
+def drawTituls(c, user, pages, page, paddingx, obj, lab, otd="", group=-2, start=1):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
@@ -539,7 +539,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, otd="", group=-2, start=1):
 
     c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
-    c.drawCentredString(w / 2, h - 50, "Журнал приема материала")
+    c.drawCentredString(w / 2, h - 50, "Журнал приёма материала - " + lab.title)
     group_str = "Все исследования"
 
     if group >= 0:
