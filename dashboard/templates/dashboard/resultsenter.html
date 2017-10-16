@@ -1808,8 +1808,9 @@
             let selectval = _.unescape($("select", $row).val());
 
             if(selectval == ""){
-                selectval = `{}`;
+                selectval = '{}';
             }
+            console.log(selectval);
             let val = sort_refs(JSON.parse(selectval));
             if ($.isEmptyObject(val)) {
                 val = {"": ""};
