@@ -101,9 +101,7 @@ class TubesRegistration(models.Model):
         Получение статуса взятия
         :return:
         """
-        if self.time_get and self.doc_get:
-            return True
-        return False
+        return self.time_get and self.doc_get
 
     def set_r(self, doc_r):
         """
