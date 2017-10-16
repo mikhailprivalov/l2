@@ -1749,7 +1749,7 @@
             let fractions = researches_cache[research_pk].fractions;
             $("#refsettings-modal .modal-body").html("");
             for (let prop in fractions) {
-                if (fractions.hasOwnProperty(prop)) {
+                if (fractions.hasOwnProperty(prop) && $(`[data-fraction-pk=${fractions[prop].pk}]`).length !== -1) {
                     let options = "";
                     let selected_ref = $(`.fraction-row[data-fraction-pk='${fractions[prop].pk}']`).attr("data-ref");
                     let n = 0;
