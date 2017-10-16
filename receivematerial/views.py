@@ -210,10 +210,10 @@ def receive_execlist(request):
                 pg = pages.page(pg_num)
                 for tube_pk in pg.object_list:
                     tube = TubesRegistration.objects.get(pk=tube_pk)
-                    napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk).first().napravleniye
+                    napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk)[0].napravleniye
                     tmp = [
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube.daynum, styleSheet["BodyText"]),
-                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.fio() + (
+                        Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
                             "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
                                   styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
