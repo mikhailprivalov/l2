@@ -396,7 +396,7 @@ def receive_journal(request):
                 for value in iss_list:  # Перебор списка исследований
                     labs[k].append(
                         {"type": v.type.tube.title, "researches": iss_list[value],
-                         "client-type": iss[0].napravleniye.client.type,
+                         "client-type": iss[0].napravleniye.client.base.short_title,
                          "lab_title": iss[0].research.subgroup.title,
                          "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
                          "dir_id": iss[0].napravleniye.pk,
