@@ -52,7 +52,7 @@ def receive_obo(request):
         pk = int(request.POST["pk"])
         if TubesRegistration.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(tubes__id=pk).exists():
             tube = TubesRegistration.objects.get(pk=pk)
-            if tube.getstatus():
+            if tube.getstatus(one_by_one=True):
                 if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == request.user.doctorprofile.podrazileniye:
                     status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                     result = {"r": 1, "n": status["n"], "new": status["new"],
