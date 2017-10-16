@@ -294,6 +294,7 @@ w, h = A4
 @login_required
 def receive_journal(request):
     """Печать истории принятия материала за день"""
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
     user = request.user.doctorprofile  # Профиль текущего пользователя
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -332,13 +333,13 @@ def receive_journal(request):
 
     if return_type == "directions":
         tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            issledovaniya__research__subgroup__podrazdeleniye=lab,
             time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'time_recive', 'daynum')
     else:
         tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye,
+            issledovaniya__research__subgroup__podrazdeleniye=lab,
             time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'issledovaniya__napravleniye__client__pk')
