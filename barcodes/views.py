@@ -132,7 +132,7 @@ def tubes(request):
             st = (
             st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[
                         :3]).lower()
-            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая", "желтая",
+            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая", "желтая", "жёлтая",
                      "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]
             tb_t = tubes_buffer[tube_k]["title"].lower()
             pr = ""
