@@ -178,8 +178,7 @@ def receive_execlist(request):
     for pk in researches:
         if directory.Researches.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(research__pk=pk,
                                                                                                 tubes__time_recive__range=(
-                                                                                                date1, date2),
-                                                                                                research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye).exists():
+                                                                                                date1, date2)).exists():
             research = directory.Researches.objects.get(pk=pk)
             fractions = [x.title for x in directory.Fractions.objects.filter(research=research).order_by("sort_weight")]
             tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
