@@ -345,7 +345,7 @@ function do_receive_direction(pk){
         let msg = [];
         for(let row of data){
             if(row.r === 2){
-                msg.push("Ошибка! Емкость предназначена для<br/> <b>{0}</b>".f(data.lab));
+                msg.push("Ошибка! Емкость предназначена для<br/> <b>{0}</b>".f(row.lab));
                 play_warn();
             }
             else if(row.r === 3){
