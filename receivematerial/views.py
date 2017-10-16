@@ -84,8 +84,9 @@ def receive_history(request):
     result = {"rows": []}
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
     for row in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
-                                                doc_recive=request.user.doctorprofile).order_by("-daynum"):
+                                                doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).order_by("-daynum"):
         result["rows"].append(
             {"pk": row.pk, "n": row.daynum or 0, "type": str(row.type.tube), "color": row.type.tube.color,
              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)]})
