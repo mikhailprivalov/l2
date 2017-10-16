@@ -174,9 +174,13 @@ def researches_control(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
+    if not lab.isLab:
+        lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=request.user.doctorprofile.podrazileniye)
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
-    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya})
+    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
 
 @csrf_exempt
