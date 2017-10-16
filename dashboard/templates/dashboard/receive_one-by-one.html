@@ -168,6 +168,7 @@
         <source src="/static/sound/warn.ogg" type="audio/ogg">
     </audio>
 <script>
+let lab_pk = {{ lab.pk }};
 let before_num = 0;
 $(document).ready(function(){
     $("#receive-field").bind('keydown', 'return', function () {
@@ -234,7 +235,7 @@ function do_receive(pk){
         $("#next_num").val(v);
     }
 
-    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v}}).done(function(data){
+    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk}}).done(function(data){
         block = false;
         $("#receive-field").prop("disabled", false);
         $('#receive-field').val("").focus();
@@ -290,7 +291,7 @@ let block2 = false;
 function load_history(highlight){
     if(block2) return;
     block2 = true;
-    $.ajax({method: "GET", url: "/dashboard/receive/history"}).done(function(data){
+    $.ajax({method: "GET", url: "/dashboard/receive/history", data: {lab_pk: lab_pk}}).done(function(data){
         block2 = false;
         $("#history-data").html("");
         if(data.rows.length === 0){
@@ -339,7 +340,7 @@ function load_researches(cont)
     $o.html("");
     $o.append(lang.table_researches_header);
     $.ajax({ // AJAX запрос
-        url: "/directory/researches/list?lab_id={{ request.user.doctorprofile.podrazileniye.pk }}",// Установка адреса и параметров запроса
+        url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
         dataType: 'json'
     }).done(function (data) {
         if (data.length === 0) {
@@ -360,7 +361,8 @@ function openexeclist(){
 function upd_next_num(){
     $.ajax({ // AJAX запрос
         url: "/dashboard/receive/last_received",// Установка адреса и параметров запроса
-        dataType: 'json'
+        dataType: 'json',
+        data: {lab_pk: lab_pk}
     }).done(function (data) {
         before_num = data.last_n;
         $("#next_num").val(before_num+1);
