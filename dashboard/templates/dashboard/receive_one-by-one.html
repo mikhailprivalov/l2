@@ -16,30 +16,34 @@
 {% block content %}
     <div class="row">
         <div class="col-xs-4">
-            <ul class="nav nav-tabs">
-              <li class="active"><a data-toggle="tab" href="#barcode">Штрих-код</a></li>
-              <li><a data-toggle="tab" href="#direction">Номер направления</a></li>
-            </ul>
-            <div class="tab-content">
-                <div id="barcode" class="tab-pane active">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
-                               data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                               placeholder="Номер штрих-кода" maxlength="20" autofocus>
-                      <span class="input-group-btn">
-                            <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
-                            </button>
-                      </span>
-                    </div>
-                </div>
-                <div id="direction" class="tab-pane">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="receive-field-direction" name="search-field-direction" data-container="body"
-                               data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                               placeholder="Номер направления" maxlength="20" autofocus>
-                      <span class="input-group-btn">
-                            <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field-direction').val());" type="button">Принять</button>
-                      </span>
+            <div class="panel">
+                <div class="tabbable tabs-right clearfix">
+                    <ul class="nav nav-tabs">
+                      <li class="active"><a data-toggle="tab" href="#barcode">Штрих-код</a></li>
+                      <li><a data-toggle="tab" href="#direction">Номер направления</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="barcode" class="tab-pane fade active">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="receive-field" name="search-field" data-container="body"
+                                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                                       placeholder="Номер штрих-кода" maxlength="20" autofocus>
+                              <span class="input-group-btn">
+                                    <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field').val());" type="button">Принять
+                                    </button>
+                              </span>
+                            </div>
+                        </div>
+                        <div id="direction" class="tab-pane fade">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="receive-field-direction" name="search-field-direction" data-container="body"
+                                       data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
+                                       placeholder="Номер направления" maxlength="20" autofocus>
+                              <span class="input-group-btn">
+                                    <button class="btn btn-blue-nb" onclick="do_receive($('#receive-field-direction').val());" type="button">Принять</button>
+                              </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
