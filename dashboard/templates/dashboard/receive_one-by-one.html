@@ -262,6 +262,11 @@ function do_receive(pk){
         return;
     }
     if(block) return;
+    if (pk.substr(0, 3) === "460" && pk.length === 13) {
+        do_receive_direction(pk);
+        return;
+    }
+
     block = true;
     sl();
     clr();
