@@ -1216,7 +1216,7 @@
                 fs = -1;
             tmp_direction = {
                 client_id: client_id,
-                researches: _.mapObject(checked, (val, key) => _.uniq(val)),
+                researches: _.mapObject(checked, (val, key) => _.uniq(_.map(val, (n) => parseInt(n)))),
                 diagnos: $("#diagnos-field").val().trim(),
                 fin_source: fs
             };
