@@ -381,7 +381,7 @@
                 }
             }).done(function(data) {
                 for(let lab of _.keys(data)){
-                    $(`#lab`).find(`> select > option[value="${lab}"]`).attr("data-subtext", data[lab]+"");
+                    $('#lab').find(`select > option[value="${lab}"]`).data("subtext", data[lab]+"");
                 }
                 hl();
                 $("#lab").selectpicker("refresh");
