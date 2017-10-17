@@ -102,8 +102,8 @@ def send(request):
                         fraction = fractionRel.fraction
                         if directions.Issledovaniya.objects.filter(napravleniye=direction,
                                                                    research=fraction.research, doc_confirmation__isnull=True).exists():
-                            issled = directions.Issledovaniya.objects.get(napravleniye=direction,
-                                                                          research=fraction.research)
+                            issled = directions.Issledovaniya.objects.filter(napravleniye=direction,
+                                                                          research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
                             fraction_result = None
                             if directions.Result.objects.filter(issledovaniye=issled,
                                                                 fraction=fraction).exists():  # Если результат для фракции существует
