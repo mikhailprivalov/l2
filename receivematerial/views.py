@@ -62,7 +62,7 @@ def receive_obo(request):
             ret = []
         else:
             tubes(request, direction_implict_id=pk)
-            pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)]
+            pks = [x.pk for x in TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk).distinct()]
         for p in pks:
             if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
                 tube = TubesRegistration.objects.get(pk=p)
