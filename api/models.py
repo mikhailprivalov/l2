@@ -23,7 +23,7 @@ class RelationFractionASTM(models.Model):
     """
     Модель соответствия фракций из ASTM для LIS
     """
-    MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000), (4, 1.9), (5, 2.2), (6, 2.5),)
+    MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000), (4, 1.9), (5, 2.2), (6, 2.5), (7, 0.1), (8, 0.01),)
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле")
     fraction = models.ForeignKey(directory_models.Fractions, help_text="Фракция")
     multiplier = models.IntegerField(choices=MULTIPLIERS, default=0, help_text="Множитель результата")
