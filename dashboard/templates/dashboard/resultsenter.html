@@ -1411,7 +1411,9 @@
                         }
                         if (v.current_doc_save === 0) {
                             sv = `<br/><span class='save-other'>сохранил: ${v.doc_save_fio}</span>`;
-                            has_o = true;
+                            if(v.doc_save_fio.indexOf("Анализатор") === -1) {
+                                has_o = true;
+                            }
                         }
                         if (v.tube.pk === "") {
                             sv = `&nbsp;<span class='no-tube'>Пробирка ${v.not_received_tubes} не принята</span>`;
