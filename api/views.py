@@ -117,7 +117,7 @@ def send(request):
                                 if fraction_result.value.isdigit():
                                     fraction_result.value = "%s.0" % fraction_result.value
                                 import re
-                                find = re.findall("\d+.?,?\d+", fraction_result.value)
+                                find = re.findall("\d+.\d+", fraction_result.value)
                                 if len(find) > 0:
                                     val = int(float(find[0]) * fractionRel.get_multiplier_display())
                                     fraction_result.value = fraction_result.value.replace(find[0], str(val))
