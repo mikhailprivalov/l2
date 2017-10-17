@@ -15,7 +15,7 @@
                 <td>
                     <select class="selectpicker" data-width="100%" id="lab" onchange="loadfrom();">
                         {% for v in labs %}
-                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %}
+                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} data-subtext="0" selected{% endif %}
                                                                                                 value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
                     </select>
                 </td>
@@ -366,6 +366,23 @@
                 scrollContainer: function ($table) {
                     return $table.closest("#tubes");
                 }
+            });
+        }
+        function loadlab() {
+            sl();
+            $.ajax({
+                url: "/dashboard/from",
+                method: "GET",
+                type: "json",
+                data: {
+                    get_labs: true
+                }
+            }).done(function(data) {
+                for(let lab of _.keys(data)){
+                    $(`#lab option[value='${lab}']`).attr("data-subtext", data[lab]);
+                }
+                $("#lab").selectpicker("refresh");
+                hl();
             });
         }
 

@@ -561,16 +561,27 @@ def results_history_search(request):
 @group_required("Получатель биоматериала")
 def dashboard_from(request):
     """ Получение отделений и кол-ва пробирок """
-    result = {}
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
-    lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
     import datetime
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                int(date_start.split(".")[0]))
     date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                              int(date_end.split(".")[0])) + datetime.timedelta(1)
+    if request.GET.get("get_labs", "false") == "true":
+        result = {}
+        for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
+            tubes = TubesRegistration.objects.filter(doc_get__isnull=False,
+                                                               notice="",
+                                                               doc_recive__isnull=True,
+                                                               time_get__range=(date_start, date_end),
+                                                               issledovaniya__research__subgroup__podrazdeleniye=lab)\
+                    .distinct().count()
+            result[lab.pk] = tubes
+        return HttpResponse(json.dumps(result), content_type="application/json")
+    result = {}
+    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
     i = 0
     for podr in podrazdeleniya:
         i += 1
