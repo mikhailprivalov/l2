@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import requests
 from django.core.management.base import OutputWrapper
-from django.db.models import Q
+from django.db.models import Q, Model
 from requests_toolbelt import MultipartEncoder
 from zeep.exceptions import Fault
 
@@ -286,11 +286,18 @@ class Patients(BaseRequester):
             if individual_row and (
                         (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
                             "patrName"] is not None) and individual_row["birthDate"] is not None):
-                individual, created = clients_models.Individual.objects.get_or_create(family=individual_row["surname"].title() or "",
+                individual_set = clients_models.Individual.objects.filter(family=individual_row["surname"].title() or "",
                                                        name=individual_row["name"].title() or "",
                                                        patronymic=individual_row["patrName"].title() or "",
                                                        birthday=individual_row["birthDate"],
                                                        sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))
+                if not individual_set.exists():
+                    individual_set = [clients_models.Individual.objects.get_or_create(family=individual_row["surname"].title() or "",
+                                                       name=individual_row["name"].title() or "",
+                                                       patronymic=individual_row["patrName"].title() or "",
+                                                       birthday=individual_row["birthDate"],
+                                                       sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))]
+                individual = individual_set[0]
                 document_ids = self.client.getIndividualDocuments(q)
                 for document_id in document_ids:
                     document_object = self.client.getDocument(document_id)
