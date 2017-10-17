@@ -1214,9 +1214,10 @@
                 fs = parseInt($src.val());
             else
                 fs = -1;
+            checked = _.mapObject(checked, (val, key) => _.uniq(_.map(val, (n) => parseInt(n))));
             tmp_direction = {
                 client_id: client_id,
-                researches: _.mapObject(checked, (val, key) => _.uniq(_.map(val, (n) => parseInt(n)))),
+                researches: checked,
                 diagnos: $("#diagnos-field").val().trim(),
                 fin_source: fs
             };
