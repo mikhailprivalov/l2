@@ -263,11 +263,9 @@
                 if (loadt || v === b) return;
                 loadt = true;
                 loadfrom();
-                loadlab();
                 $(this).attr("pre-val", v);
             });
             loadfrom();
-            loadlab();
             resize();
             $(window).resize(function () {
                 resize();
@@ -414,6 +412,7 @@
                     }
                 });
                 $(from).selectpicker("refresh");
+                loadlab();
                 load_tubes();
                 hl();
             });
