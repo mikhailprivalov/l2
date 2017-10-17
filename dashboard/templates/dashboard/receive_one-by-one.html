@@ -195,6 +195,9 @@ $(document).ready(function(){
     $("#receive-field").bind('keydown', 'return', function () {
         do_receive($('#receive-field').val());
     });
+    $("#receive-field-direction").bind('keydown', 'return', function () {
+        do_receive_direction($('#receive-field-direction').val());
+    });
     clr();
     load_history(-1);
     resize();
