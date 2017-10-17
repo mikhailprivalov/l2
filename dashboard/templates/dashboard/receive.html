@@ -263,6 +263,7 @@
                 if (loadt || v === b) return;
                 loadt = true;
                 loadfrom();
+                loadlab();
                 $(this).attr("pre-val", v);
             });
             loadfrom();
