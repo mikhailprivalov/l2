@@ -15,7 +15,7 @@
                 <td>
                     <select class="selectpicker" data-width="100%" id="lab" onchange="loadfrom();">
                         {% for v in labs %}
-                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %} value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
+                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %} data-pk="{{ v.pk }}" value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
                     </select>
                 </td>
                 <td>
@@ -380,10 +380,10 @@
                 }
             }).done(function(data) {
                 for(let lab of _.keys(data)){
-                    $('#lab').find(`select > option[value="${lab}"]`).data("subtext", data[lab]+"");
+                    $('#lab').find(`[data-pk="${lab}"]`).data("subtext", data[lab]+"");
                 }
-                hl();
                 $("#lab").selectpicker("refresh");
+                hl();
             });
         }
 
