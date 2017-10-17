@@ -112,7 +112,7 @@ def send(request):
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled,
                                                                     fraction=fraction)  # Создание нового результата
-                            fraction_result.value = resdict["result"][key].strip()  # Установка значения
+                            fraction_result.value = str(resdict["result"][key]).strip()  # Установка значения
                             if fractionRel.get_multiplier_display() > 1:
                                 if fraction_result.value.isdigit():
                                     fraction_result.value = "%s.0" % fraction_result.value
