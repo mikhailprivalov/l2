@@ -113,14 +113,16 @@ def send(request):
                                 fraction_result = directions.Result(issledovaniye=issled,
                                                                     fraction=fraction)  # Создание нового результата
                             fraction_result.value = str(resdict["result"][key]).strip()  # Установка значения
-                            if fractionRel.get_multiplier_display() != 1:
-                                if fraction_result.value.isdigit():
-                                    fraction_result.value = "%s.0" % fraction_result.value
-                                import re
-                                find = re.findall("\d+.\d+", fraction_result.value)
-                                if len(find) > 0:
-                                    val = int(float(find[0]) * fractionRel.get_multiplier_display())
-                                    fraction_result.value = fraction_result.value.replace(find[0], str(val))
+                            if fraction_result.value.isdigit():
+                                fraction_result.value = "%s.0" % fraction_result.value
+                            import re
+                            find = re.findall("\d+.\d+", fraction_result.value)
+                            if len(find) > 0:
+                                val = float(find[0]) * fractionRel.get_multiplier_display()
+                                if fractionRel.full_round:
+                                    val = round(val)
+                                fraction_result.value = fraction_result.value.replace(find[0], str(val))
+
                             fraction_result.iteration = 1  # Установка итерации
                             ref = fractionRel.default_ref
                             if ref:
