@@ -376,6 +376,8 @@
                 method: "GET",
                 type: "json",
                 data: {
+                    datestart: $("[name='date-start']").val(),
+                    dateend: $("[name='date-end']").val(),
                     get_labs: true
                 }
             }).done(function(data) {
