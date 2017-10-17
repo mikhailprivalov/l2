@@ -928,10 +928,6 @@ def get_issledovaniya(request):
                     tube = TubesRegistration.objects.get(pk=id)
                     if tube.doc_recive:
                         iss = Issledovaniya.objects.filter(tubes__id=id)
-                        if not su:
-                            iss = iss.filter(
-                                research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk)
-                        iss = iss.all()
                         if iss:
                             napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
@@ -939,10 +935,6 @@ def get_issledovaniya(request):
                     for tube in tubes:
                         if tube.doc_recive:
                             lit = Issledovaniya.objects.filter(tubes__id=id)
-                            if not su:
-                                lit = lit.filter(
-                                    research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk)
-                            lit = lit.all()
                             if lit.count() != 0:
                                 iss = []
                             for i in lit:
@@ -953,10 +945,6 @@ def get_issledovaniya(request):
                 try:
                     napr = Napravleniya.objects.get(pk=id)
                     iss = Issledovaniya.objects.filter(napravleniye__pk=id)
-                    if not su:
-                        iss = iss.filter(
-                            research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk)
-                    iss = iss.all()
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
@@ -964,10 +952,6 @@ def get_issledovaniya(request):
                 try:
                     napr = Napravleniya.objects.get(pk=id)
                     iss = Issledovaniya.objects.filter(napravleniye__pk=id)
-                    if not su:
-                        iss = iss.filter(
-                            research__subgroup__podrazdeleniye__pk=request.user.doctorprofile.podrazileniye.pk)
-                    iss = iss.all()
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
