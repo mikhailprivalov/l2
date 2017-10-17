@@ -383,8 +383,8 @@
                 for(let lab of _.keys(data)){
                     $(`#lab option[value='${lab}']`).attr("data-subtext", data[lab]);
                 }
-                $("#lab").selectpicker("refresh");
                 hl();
+                $("#lab").selectpicker("refresh");
             });
         }
 
@@ -413,8 +413,8 @@
                 });
                 $(from).selectpicker("refresh");
                 loadlab();
-                load_tubes();
                 hl();
+                load_tubes();
             });
         }
 
