@@ -532,7 +532,7 @@ def result_normal(s):
     s = s.strip()
     if re.match(r'\d+\.\d{2,}$', s):
         try:
-            s = str(round(float(s), 1))
+            s = str(round(float(s), 2))
         except:
             pass
     # s = lr(s).replace(" ", "&nbsp;")
