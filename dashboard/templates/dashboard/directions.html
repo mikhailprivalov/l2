@@ -814,8 +814,8 @@
 
         function check_ow(top) {
             let ow = parseInt($(`input[value=${top}]`).attr("data-with"));
-            if (ow > -1 && checked[active_lab].indexOf("" + ow) === -1) {
-                checked[active_lab].push("" + ow);
+            if (ow > -1 && checked[active_lab].indexOf(parseInt(ow)) === -1) {
+                checked[active_lab].push(parseInt(ow));
                 $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
                 check_ow(ow);
             }
