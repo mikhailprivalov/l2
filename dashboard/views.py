@@ -273,7 +273,7 @@ def create_pod(request):
     p = False
     e = True
     mess = ''
-    podr = Podrazdeleniya.objects.all()  # Выбор подразделения
+    podr = Podrazdeleniya.objects.all().order_by("pk")  # Выбор подразделения
     if request.method == 'POST':  # Проверка типа запроса
         if request.POST.get("update_podr", "0") == "1":
             pd = Podrazdeleniya.objects.get(pk=request.POST.get("pk"))
