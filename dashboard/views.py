@@ -96,7 +96,7 @@ def change_password(request):
     for x in podr:
         otds[x.title] = []
         for y in DoctorProfile.objects.filter(podrazileniye=x).order_by('fio'):
-            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
+            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazileniye.pk})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr})
 
 
