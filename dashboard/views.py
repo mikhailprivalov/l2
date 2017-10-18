@@ -275,6 +275,16 @@ def create_pod(request):
     mess = ''
     podr = Podrazdeleniya.objects.all()  # Выбор подразделения
     if request.method == 'POST':  # Проверка типа запроса
+        if request.POST.get("update_podr", "0") == "1":
+            pd = Podrazdeleniya.objects.get(pk=request.POST.get("pk"))
+            if "title" in request.POST:
+                pd.title = request.POST["title"]
+            if "hide" in request.POST:
+                pd.hide = request.POST["hide"]
+            if "is_lab" in request.POST:
+                pd.isLab = request.POST["is_lab"]
+            pd.save()
+            return HttpResponse("{}", content_type="application/json")
         title = request.POST['title']  # Получение названия
         if title:  # Если название есть
             if not Podrazdeleniya.objects.filter(title=title).exists():  # Если название не существует
