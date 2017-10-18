@@ -48,6 +48,11 @@
                 let val = $(this).prop("checked");
                 replaceTimeout(200, key, () => console.log(key, val), val);
             });
+            $('.is_lab').change(function(e){
+                let key = "is_lab_" + $(this).attr("data-pk");
+                let val = $(this).prop("checked");
+                replaceTimeout(200, key, () => console.log(key, val), val);
+            });
         });
         function replaceTimeout(time, key, func, val) {
             if(_.has(timeouts, key)){
