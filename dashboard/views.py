@@ -94,7 +94,7 @@ def view_log(request):
 def change_password(request):
     if request.method == "POST":
         doc = DoctorProfile.objects.get(pk=request.POST["pk"])
-        doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["pk"])
+        doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
         doc.save()
         return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
     otds = {}
