@@ -281,6 +281,7 @@ def create_pod(request):
                 pd = Podrazdeleniya.objects.create()  # Создание подразделения
                 pd.title = title
                 pd.save()  # Сохранение подразделения
+                Subgroups(title=title, podrazdeleniye=pd).save()
                 p = True
                 e = False
                 slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17,
