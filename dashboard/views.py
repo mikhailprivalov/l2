@@ -265,7 +265,7 @@ def create_user(request):  # Страница создания пользова�
                   {'error': False, 'mess': '', 'uname': '', 'fio': '', 'status': registered, 'podr': podr,
                    'podrpost': podrpost, 'g': groups})  # Вывод
 
-
+@csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
 def create_pod(request):
