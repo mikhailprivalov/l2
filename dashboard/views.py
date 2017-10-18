@@ -571,7 +571,7 @@ def dashboard_from(request):
     if request.GET.get("get_labs", "false") == "true":
         result = {}
         for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-            tubes = TubesRegistration.objects.filter(notice="",
+            tubes = TubesRegistration.objects.filter(doc_get__podrazileniye__hide=False, doc_get__podrazileniye__isLab=False, notice="",
                                                        doc_recive__isnull=True,
                                                        time_get__range=(date_start, date_end),
                                                        issledovaniya__research__subgroup__podrazdeleniye=lab)\
