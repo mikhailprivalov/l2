@@ -308,6 +308,7 @@ function do_receive(pk){
         set_n(data.n);
         set_researches(data.researches);
         load_history(pk);
+        clear_q();
     });
 }
 function do_receive_direction(pk){
@@ -375,7 +376,11 @@ function do_receive_direction(pk){
         set_n(data.n);
         set_researches(data.researches);
         load_history(pk);
+        clear_q();
     });
+}
+function clear_q(){
+    $("#receive-field,#receive-field-direction").val("");
 }
 function set_msg(ht){
     $("#rec-message").html(ht);
