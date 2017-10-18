@@ -56,8 +56,6 @@
         });
         function replaceTimeout(time, key, func, val) {
             if(_.has(timeouts, key)){
-                if(timeouts[key].value === val)
-                    return;
                 clearTimeout(timeouts[key].timeout);
             }
             timeouts[key] = {timeout: setTimeout(func, time), value: val};
