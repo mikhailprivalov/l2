@@ -88,6 +88,7 @@ def view_log(request):
                   {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
 
 
+@csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
 def change_password(request):
