@@ -12,28 +12,24 @@
             Подразделение добавлено
         </div>
     {% endif %}
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <form method="POST">
-                {% csrf_token %}
-                <table class="table table-bordered table-responsive">
-                    <col width="40">
-                    <col>
-                    <col width="300">
-                    {% for v in podr %}
-                        <tr>
-                            <td>{{ v.pk }}</td>
-                            <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
-                            <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide" /> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab" /> Это лаборатория</label></td>
-                        </tr>
-                    {% endfor %}
-                    <tr>
-                        <td></td>
-                        <td><input type="text" class="form-control" name='title' placeholder="Название" value="{{ title }}" required autofocus></td>
-                        <td><input type="submit" class="btn btn-primary-nb form-control" value="Добавить"></td>
-                    </tr>
-                </table>
-            </form>
-        </div>
-    </div>
+    <form method="POST">
+        {% csrf_token %}
+        <table class="table table-bordered table-responsive">
+            <col width="40">
+            <col>
+            <col width="300">
+            {% for v in podr %}
+                <tr>
+                    <td>{{ v.pk }}</td>
+                    <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
+                    <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide" /> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab" /> Это лаборатория</label></td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td><input type="text" class="form-control" name='title' placeholder="Название" value="{{ title }}" required autofocus></td>
+                <td><input type="submit" class="btn btn-primary-nb form-control" value="Добавить"></td>
+            </tr>
+        </table>
+    </form>
 {% endblock %}
