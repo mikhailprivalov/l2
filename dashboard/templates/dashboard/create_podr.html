@@ -38,17 +38,19 @@
     <script>
         let timeouts = {};
         $(document).ready(function(){
-            $('.podr_title').bind('input change paste keyup mouseup',function(e){
+            $('.podr_title').bind('input change paste keyup',function(e){
                 let key = $(this).attr("data-pk");
                 let val = $(this).val();
-                replaceTimeout(200, "podr_" + key, () => console.log(key, val));
+                replaceTimeout(200, "podr_" + key, () => console.log(key, val), val);
             });
         });
-        function replaceTimeout(time, key, func) {
+        function replaceTimeout(time, key, func, val) {
             if(_.has(timeouts, key)){
-                clearTimeout(timeouts[key]);
+                if(timeouts[key].value === val)
+                    return;
+                clearTimeout(timeouts[key].timeout);
             }
-            timeouts[key] = setTimeout(func, time);
+            timeouts[key] = {timeout: setTimeout(func, time), value: val};
         }
         function timeout(key) {
             if(_.has(timeouts, key))
