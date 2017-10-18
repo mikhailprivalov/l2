@@ -41,7 +41,7 @@
             $('.podr_title').bind('input change paste keyup',function(e){
                 let key = "podr_" + $(this).attr("data-pk");
                 let val = $(this).val();
-                replaceTimeout(150, key, timeout(key, val, (k, v) => console.log(k, v)), val);
+                replaceTimeout(300, key, timeout(key, val, (k, v) => console.log(k, v)), val);
             });
             $('.podr_hide').change(function(e){
                 let key = "podr_hide_" + $(this).attr("data-pk");
