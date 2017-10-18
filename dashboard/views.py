@@ -105,6 +105,7 @@ def change_password(request):
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr})
 
 
+@csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
 def update_pass(request):
