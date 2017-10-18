@@ -39,9 +39,14 @@
         let timeouts = {};
         $(document).ready(function(){
             $('.podr_title').bind('input change paste keyup',function(e){
-                let key = $(this).attr("data-pk");
+                let key = "podr_" + $(this).attr("data-pk");
                 let val = $(this).val();
-                replaceTimeout(200, "podr_" + key, () => console.log(key, val), val);
+                replaceTimeout(200, key, () => console.log(key, val), val);
+            });
+            $('.podr_hide').change(function(e){
+                let key = "podr_hide_" + $(this).attr("data-pk");
+                let val = $(this).prop("checked");
+                replaceTimeout(200, key, () => console.log(key, val), val);
             });
         });
         function replaceTimeout(time, key, func, val) {
