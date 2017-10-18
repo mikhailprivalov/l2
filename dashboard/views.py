@@ -92,11 +92,12 @@ def view_log(request):
 @group_required("Создание и редактирование пользователей")
 def change_password(request):
     otds = {}
-    for x in Podrazdeleniya.objects.all().order_by('title'):
+    podr = Podrazdeleniya.objects.all().order_by("title")
+    for x in podr:
         otds[x.title] = []
         for y in DoctorProfile.objects.filter(podrazileniye=x).order_by('fio'):
             otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
-    return render(request, 'dashboard/change_password.html', {"otds": otds})
+    return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr})
 
 
 @login_required
