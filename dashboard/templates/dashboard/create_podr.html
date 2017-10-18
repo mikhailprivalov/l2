@@ -12,29 +12,31 @@
             Подразделение добавлено
         </div>
     {% endif %}
-    <form method="POST">
-        {% csrf_token %}
-        <div class="input-group" style="margin: 0 auto">
-            <input type="text" class="form-control" name='title' placeholder="Название"
-                   value="{{ title }}" required autofocus
-                   style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;margin-top: 10px">
-            <input type="submit" class="btn btn-primary form-control" value="Добавить"
-                   style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
-            <br/>
+    <div class="container">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="input-group" style="margin: 0 auto">
+                <input type="text" class="form-control" name='title' placeholder="Название"
+                       value="{{ title }}" required autofocus
+                       style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;margin-top: 10px">
+                <input type="submit" class="btn btn-primary form-control" value="Добавить"
+                       style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
+                <br/>
 
-            <div class="panel panel-default" style="margin-top: 80px">
-                <div class="panel-heading">Существующие подразделения</div>
-                <div class="panel-body">
-                    <table class="table">
-                        {% for v in podr %}
-                            <tr>
-                                <td>{{ v.pk }}</td>
-                                <td><input value="{{ v }}" data-pk="{{ v.pk }}" /></td>
-                            </tr>
-                        {% endfor %}
-                    </table>
+                <div class="panel panel-default" style="margin-top: 80px">
+                    <div class="panel-heading">Существующие подразделения</div>
+                    <div class="panel-body">
+                        <table class="table">
+                            {% for v in podr %}
+                                <tr>
+                                    <td>{{ v.pk }}</td>
+                                    <td><input value="{{ v }}" data-pk="{{ v.pk }}" /></td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 {% endblock %}
