@@ -65,8 +65,8 @@
         function timeout(key, val, func) {
             if(_.has(timeouts, key) && timeouts[key].value !== val) {
                 delete timeouts[key];
-                func(key, val);
             }
+            func(key, val);
         }
     </script>
 {% endblock %}
