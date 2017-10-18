@@ -41,17 +41,17 @@
             $('.podr_title').bind('change input', function(e){
                 let key = "podr_" + $(this).attr("data-pk");
                 let val = $(this).val();
-                replaceTimeout(300, key, timeout(key, val, (k, v) => console.log(k, v)), val);
+                replaceTimeout(300, key, timeout(key, val, (k, v) => $.ajax({method: "POST", url: '/dashboard/create_podr', data: {update_podr: 1, title: v, pk: $(this).attr("data-pk")}}).done(() => {})), val);
             });
             $('.podr_hide').change(function(e){
                 let key = "podr_hide_" + $(this).attr("data-pk");
                 let val = $(this).prop("checked");
-                replaceTimeout(150, key, timeout(key, val, (k, v) => console.log(k, v)), val);
+                replaceTimeout(150, key, timeout(key, val, (k, v) => $.ajax({method: "POST", url: '/dashboard/create_podr', data: {update_podr: 1, hide: v, pk: $(this).attr("data-pk")}}).done(() => {})), val);
             });
             $('.is_lab').change(function(e){
                 let key = "is_lab_" + $(this).attr("data-pk");
                 let val = $(this).prop("checked");
-                replaceTimeout(150, key, timeout(key, val, (k, v) => console.log(k, v)), val);
+                replaceTimeout(150, key, timeout(key, val, (k, v) => $.ajax({method: "POST", url: '/dashboard/create_podr', data: {update_podr: 1, is_lab: v, pk: $(this).attr("data-pk")}}).done(() => {})), val);
             });
         });
         function replaceTimeout(time, key, func, val) {
