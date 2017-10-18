@@ -91,6 +91,11 @@ def view_log(request):
 @login_required
 @group_required("Создание и редактирование пользователей")
 def change_password(request):
+    if request.method == "POST":
+        doc = DoctorProfile.objects.get(pk=request.POST["pk"])
+        doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["pk"])
+        doc.save()
+        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
