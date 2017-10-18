@@ -34,7 +34,7 @@
                     <tr>
                         <td>{{ v.pk }}</td>
                         <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
-                        <td></td>
+                        <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide" /> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab" /> Это лаборатория</label></td>
                     </tr>
                 {% endfor %}
             </table>
