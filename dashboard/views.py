@@ -280,9 +280,9 @@ def create_pod(request):
             if "title" in request.POST:
                 pd.title = request.POST["title"]
             if "hide" in request.POST:
-                pd.hide = request.POST["hide"]
+                pd.hide = request.POST["hide"] == "true"
             if "is_lab" in request.POST:
-                pd.isLab = request.POST["is_lab"]
+                pd.isLab = request.POST["is_lab"] == "true"
             pd.save()
             return HttpResponse("{}", content_type="application/json")
         title = request.POST['title']  # Получение названия
