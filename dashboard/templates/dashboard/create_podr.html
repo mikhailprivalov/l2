@@ -21,8 +21,8 @@
             {% for v in podr %}
                 <tr>
                     <td>{{ v.pk }}</td>
-                    <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
-                    <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide"{% if v.hide %} checked{% endif %}/> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab"{% if v.isLab %} checked{% endif %}/> Это лаборатория</label></td>
+                    <td><input class="form-control podr_title" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
+                    <td><label><input data-pk="{{ v.pk }}" type="checkbox" class="podr_hide"{% if v.hide %} checked{% endif %}/> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" class="is_lab"{% if v.isLab %} checked{% endif %}/> Это лаборатория</label></td>
                 </tr>
             {% endfor %}
             <tr>
@@ -32,4 +32,27 @@
             </tr>
         </table>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        let timeouts = {};
+        $(document).ready(function(){
+            $('.podr_title').bind('input change paste keyup mouseup',function(e){
+                let key = $(this).attr("data-pk");
+                let val = $(this).val();
+                replaceTimeout(200, "podr_" + key, () => console.log(key, val));
+            });
+        });
+        function replaceTimeout(time, key, func) {
+            if(_.has(timeouts, key)){
+                clearTimeout(timeouts[key]);
+            }
+            timeouts[key] = setTimeout(func, time);
+        }
+        function timeout(key) {
+            if(_.has(timeouts, key))
+                delete timeouts[key];
+        }
+    </script>
 {% endblock %}
