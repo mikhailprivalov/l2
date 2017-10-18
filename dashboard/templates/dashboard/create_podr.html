@@ -15,27 +15,25 @@
     <div class="panel panel-default" style="margin-top: 80px">
         <div class="panel-heading">Существующие подразделения</div>
         <div class="panel-body">
-            <table class="table">
-                <col width="40">
-                <col>
-                <col width="300">
-                {% for v in podr %}
-                    <tr>
-                        <td>{{ v.pk }}</td>
-                        <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
-                        <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide" /> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab" /> Это лаборатория</label></td>
-                    </tr>
-                {% endfor %}
-            </table>
             <form method="POST">
                 {% csrf_token %}
-                <div class="input-group" style="margin: 0 auto">
-                    <input type="text" class="form-control" name='title' placeholder="Название"
-                           value="{{ title }}" required autofocus
-                           style="border-bottom-left-radius: 0;border-top-left-radius: 5px;border-top-right-radius: 5px;margin-top: 10px">
-                    <input type="submit" class="btn btn-blue-nb form-control" value="Добавить"
-                           style="border-bottom-left-radius: 5px;border-bottom-right-radius: 5px;border-top-right-radius: 0;">
-                </div>
+                <table class="table">
+                    <col width="40">
+                    <col>
+                    <col width="300">
+                    {% for v in podr %}
+                        <tr>
+                            <td>{{ v.pk }}</td>
+                            <td><input class="form-control" value="{{ v }}" data-pk="{{ v.pk }}" /></td>
+                            <td><label><input data-pk="{{ v.pk }}" type="checkbox" name="podr_hide" /> Скрытие подразделения</label>&nbsp;<label><input data-pk="{{ v.pk }}" type="checkbox" name="is_lab" /> Это лаборатория</label></td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td><input type="text" class="form-control" name='title' placeholder="Название" value="{{ title }}" required autofocus></td>
+                        <td><input type="submit" class="btn btn-blue-nb form-control" value="Добавить"></td>
+                    </tr>
+                </table>
             </form>
         </div>
     </div>
