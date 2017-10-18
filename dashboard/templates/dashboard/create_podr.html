@@ -38,7 +38,7 @@
     <script>
         let timeouts = {};
         $(document).ready(function(){
-            $('.podr_title').bind('input change paste keyup',function(e){
+            $('.podr_title').bind('input change paste',function(e){
                 let key = "podr_" + $(this).attr("data-pk");
                 let val = $(this).val();
                 replaceTimeout(300, key, timeout(key, val, (k, v) => console.log(k, v)), val);
