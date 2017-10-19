@@ -118,6 +118,10 @@ def directory_researches_list(request):
         for l in labs:
             autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye__pk=l)]
 
+        addto = {}
+        for l in labs:
+            addto[l] = [x.a.pk for x in direct.AutoAdd.objects.filter(b=research, a__subgroup__podrazdeleniye__pk=l)]
+
         return_result.append(
             {"pk": research.pk,
              "id": research.pk,
@@ -126,7 +130,8 @@ def directory_researches_list(request):
              "isFolder": False,
              "text": research.title,
              "comment_template": "-1" if research.comment_variants is None else research.comment_variants.pk,
-             "autoadd": autoadd
+             "autoadd": autoadd,
+             "addto": addto
              })
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
