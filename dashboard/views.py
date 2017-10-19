@@ -95,7 +95,7 @@ def change_password(request):
     if request.method == "POST":
         doc = DoctorProfile.objects.get(pk=request.POST["pk"])
         if request.POST.get("apply_groups") == "1":
-            doc.user.groups.all().delete()
+            doc.user.groups.clear()
             for g in json.loads(request.POST.get("groups", "[]")):
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
