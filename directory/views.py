@@ -115,7 +115,7 @@ def directory_researches_list(request):
         return_result.append(
             {"pk": research.pk, "id": research.pk, "onlywith": -1 if not research.onlywith else research.onlywith.pk,
              "fields": {"id_lab_fk": lab_id, "ref_title": research.title},
-             "isFolder": False, "text": research.title, "comment_template": research.comment_variants.pk})
+             "isFolder": False, "text": research.title, "comment_template": "-1" if research.comment_variants is None else research.comment_variants.pk})
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
@@ -335,7 +335,7 @@ def researches_get_details(request):
         pk = request.GET["pk"]
         research_obj = Researches.objects.get(pk=pk)
         return_result["title"] = research_obj.title
-        return_result["comment_template"] = research_obj.comment_variants.pk
+        return_result["comment_template"] = "-1" if research_obj.comment_variants is None else research_obj.comment_variants.pk
         return_result["edit_mode"] = research_obj.edit_mode
         return_result["fractions"] = []
         return_result["template"] = research_obj.template
@@ -367,7 +367,7 @@ def researches_update_template(request):
         pk = request.POST["pk"]
         research_obj = Researches.objects.get(pk=pk)
         research_obj.template = int(request.POST["template"])
-        research_obj.comment_variants = direct.MaterialVariants.objects.get(pk=request.POST["comment_template"])
+        research_obj.comment_variants = None if request.POST["comment_template"] == "-1" else direct.MaterialVariants.objects.get(pk=request.POST["comment_template"])
         research_obj.save()
         return_result["ok"] = True
         return_result["comment_template_saved"] = research_obj.comment_template
