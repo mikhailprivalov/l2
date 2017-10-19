@@ -16,7 +16,7 @@ class ReleationsFT(models.Model):
     """
     (многие-ко-многим) фракции к пробиркам
     """
-    tube = models.ForeignKey(Tubes, help_text='Пробирка')
+    tube = models.ForeignKey(Tubes, help_text='Пробирка', db_index=True)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
 
     def __str__(self):
@@ -40,13 +40,13 @@ class Researches(models.Model):
     """
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления')
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
-    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории')
+    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории', db_index=True)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
     edit_mode = models.IntegerField(
         default=0,
         help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
     no_attach = models.IntegerField(default=0, null=True, blank=True,
                                     help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
@@ -64,6 +64,14 @@ class Researches(models.Model):
 
     def __str__(self):
         return "%s" % self.title
+
+
+class OnlyWith(models.Model):
+    """
+    Перечисление связей исследований, которые могут быть назначены только вместе
+    """
+    research = models.ForeignKey(Researches, help_text="Исследование, для которого устанавливается связь", db_index=True)
+    onlywith = models.ForeignKey(Researches, help_text="Исследование, которое должно быть назначено вместе")
 
 
 class References(models.Model):
