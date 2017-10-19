@@ -1923,6 +1923,8 @@
         let pk_param = "[]";
         if(Array.isArray(ids) && ids.length > 0){
             pk_param = JSON.stringify(ids);
+        } else if(ids != "" && ids){
+            pk_param = JSON.stringify([ids]);
         }
         window.open('/results/preview?pk=' + pk_param, '_blank');
     }
