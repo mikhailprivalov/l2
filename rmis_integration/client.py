@@ -294,9 +294,9 @@ class Patients(BaseRequester):
                                                        patronymic=individual_row["patrName"].title() or "",
                                                        birthday=individual_row["birthDate"],
                                                        sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))
-                individual_set = clients_models.Individual.objects.filter(qq)
+                individual_set = clients_models.Individual.objects.filter(**qq)
                 if not individual_set.exists():
-                    individual_set = [clients_models.Individual(qq)]
+                    individual_set = [clients_models.Individual(**qq)]
                     individual_set[0].save()
                 individual = individual_set[0]
                 document_ids = self.client.getIndividualDocuments(q)
