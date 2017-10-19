@@ -86,7 +86,7 @@ urlpatterns = [
                   url(r'^results/confirm$', result_confirm),
                   url(r'^results/confirm/list$', result_confirm_list),
                   url(r'^results/pdf$', result_print),
-                  url(r'^results/preview$', TemplateView.as_view(template_name='results_preview.html')),
+                  url(r'^results/preview$', TemplateView.as_view(template_name='dashboard/results_preview.html')),
                   url(r'^results/html$', result_html),
                   url(r'^results/journal$', result_journal_print),
                   url(r'^results/journal_table$', result_journal_table_print),
