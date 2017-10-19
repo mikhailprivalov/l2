@@ -20,7 +20,7 @@
             updatePreview();
         });
         function updatePreview(){
-            let u = '/results/preview?pk=' + JSON.stringify(pks);
+            let u = '/results/pdf?pk=' + JSON.stringify(pks);
             PDFObject.embed(u, "#previewContainer");
         }
     </script>
