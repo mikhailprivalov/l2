@@ -85,12 +85,11 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
 
-                if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
-                    resdict["pk"] = directions.TubesRegistration.objects.filter(
-                        issledovaniya__napravleniye__pk=dpk).first().pk
-                else:
-                    resdict["pk"] = False
-                resdict["bysapphire"] = True
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
+                resdict["pk"] = directions.TubesRegistration.objects.filter(
+                    issledovaniya__napravleniye__pk=dpk).first().pk
+            else:
+                resdict["pk"] = False
         result["A"] = appkey
         if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
