@@ -55,7 +55,7 @@
             localStorage.setItem("print_results_split", split + "");
             let margin = $("#margin").is(":checked");
             localStorage.setItem("print_results_margin", margin + "");
-            let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}`;
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}`;
         }
         function updatePreview(){
             PDFObject.embed(get_url(false), "#previewContainer");
