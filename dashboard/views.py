@@ -97,6 +97,10 @@ def change_password(request):
         doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
         doc.save()
         return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+    if request.is_ajax():
+        doc = DoctorProfile.objects.get(pk=request.GET["pk"])
+        groups = [{"pk": x.pk, "title": x.name} for x in doc.user.groups]
+        return HttpResponse(json.dumps({"groups": groups}), content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
