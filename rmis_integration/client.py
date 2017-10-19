@@ -248,8 +248,43 @@ class Patients(BaseRequester):
                 break
         return patients
 
-    def sync_data(self, card: clients_models.CardBase):
-        pass
+    def sync_data(self, card: clients_models.Card):
+        if not card.base.is_rmis:
+            return "NONERMIS"
+        q = card.number
+        from_rmis = self.client.getIndividual(q)
+        data = dict(family=from_rmis["surname"].title() or "",
+                   name=from_rmis["name"].title() or "",
+                   patronymic=from_rmis["patrName"].title() or "",
+                   birthday=from_rmis["birthDate"],
+                   sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"))
+        ind = card.individual
+        updated = []
+        if ind.family != data["family"]:
+            updated.append(["family", ind.family, data["family"]])
+            ind.family = data["family"]
+            ind.save()
+
+        if ind.name != data["name"]:
+            updated.append(["name", ind.name, data["name"]])
+            ind.name = data["name"]
+            ind.save()
+
+        if ind.patronymic != data["patronymic"]:
+            updated.append(["patronymic", ind.patronymic, data["patronymic"]])
+            ind.patronymic = data["patronymic"]
+            ind.save()
+
+        if ind.birthday != data["birthday"]:
+            updated.append(["birthday", ind.birthday, data["birthday"]])
+            ind.birthday = data["birthday"]
+            ind.save()
+
+        if ind.sex != data["sex"]:
+            updated.append(["sex", ind.sex, data["sex"]])
+            ind.sex = data["sex"]
+            ind.save()
+        return json.dumps(updated)
 
     def patient_first_id_by_poils(self, polis_serial, polis_number) -> str:
         if polis_number != "":
