@@ -53,7 +53,7 @@ class Researches(models.Model):
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
     comment_template = models.IntegerField(default=-1, null=True, blank=True,
                                            help_text='Варианты комментариев к материалу (deprecated)')
-    comment_variants = models.ForeignKey(MaterialVariants, default=None, null=True, blank=True, help_text='Варианты комментариев к материалу')
+    comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу')
     groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории')
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
