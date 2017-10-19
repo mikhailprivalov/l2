@@ -116,7 +116,7 @@ class Individual(models.Model):
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
-    sex = models.CharField(max_length=2, default="м", help_text="Пол")
+    sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
@@ -209,10 +209,10 @@ class DocumentType(models.Model):
 
 
 class Document(models.Model):
-    document_type = models.ForeignKey(DocumentType, help_text="Тип документа")
+    document_type = models.ForeignKey(DocumentType, help_text="Тип документа", db_index=True)
     serial = models.CharField(max_length=30, blank=True, help_text="Серия")
     number = models.CharField(max_length=30, blank=True, help_text="Номер")
-    individual = models.ForeignKey(Individual, help_text="Пациент")
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True)
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
@@ -224,7 +224,7 @@ class Document(models.Model):
 
 class CardBase(models.Model):
     title = models.CharField(max_length=50, help_text="Полное название базы")
-    short_title = models.CharField(max_length=4, help_text="Краткий код базы")
+    short_title = models.CharField(max_length=4, help_text="Краткий код базы", db_index=True)
     is_rmis = models.BooleanField(help_text="Это РМИС?", default=False)
     hide = models.BooleanField(help_text="Скрыть базу", default=False)
     history_number = models.BooleanField(help_text="Ввод номера истории", default=False)
@@ -234,10 +234,10 @@ class CardBase(models.Model):
 
 
 class Card(models.Model):
-    number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты")
-    base = models.ForeignKey(CardBase, help_text="База карты")
-    individual = models.ForeignKey(Individual, help_text="Пациент")
-    is_archive = models.BooleanField(default=False, blank=True)
+    number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
+    base = models.ForeignKey(CardBase, help_text="База карты", db_index=True)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True)
+    is_archive = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

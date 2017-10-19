@@ -49,15 +49,15 @@ class TubesRegistration(models.Model):
     """
     id = models.AutoField(primary_key=True)
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип пробирки')
-    time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала')
+    time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
                                 related_name='docget', help_text='Кто взял материал')
-    time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала')
+    time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
     doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
                                    related_name='docrecive', help_text='Кто получил материал')
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер пробирки')
 
-    notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания')
+    notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
 
     daynum = models.IntegerField(default=0, blank=True, null=True,
                                  help_text='Номер принятия пробирки среди дня в лаборатории')
@@ -165,7 +165,7 @@ class Napravleniya(models.Model):
     """
     Таблица направлений
     """
-    data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления')
+    data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент')
     doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач')
@@ -364,10 +364,10 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
-    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True)
     research = models.ForeignKey(directory.Researches, null=True, blank=True,
                                  help_text='Вид исследования из справочника')
-    tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования')
+    tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования', db_index=True)
     doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True,
                                  help_text='Профиль пользователя, сохранившего результат')
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
@@ -403,7 +403,7 @@ class Issledovaniya(models.Model):
 
 
 class RmisServices(models.Model):
-    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление')
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True)
     code = models.TextField(help_text='Код выгруженной услуги')
     rmis_id = models.CharField(max_length=15, default="", blank=True, help_text='ID выгруженной услуги в РМИС')
 
@@ -417,7 +417,7 @@ class Result(models.Model):
     """
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
                                       help_text='Направление на исследование, для которого сохранен результат')
-    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования')
+    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True)
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
