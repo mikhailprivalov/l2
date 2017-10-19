@@ -6,10 +6,15 @@
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
+
+    {% comment %}<object data="your_url_to_pdf" type="application/pdf">
+        <embed src="your_url_to_pdf" type="application/pdf" />
+    </object>{% endcomment %}
 {% endblock %}
 
 {% block scripts %}
     <script>
+        const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
 
         });
