@@ -27,6 +27,7 @@ class Command(BaseCommand):
         cds = Card.objects.filter(base__is_rmis=True, is_archive=False)
         count = cds.count()
         i = 0
+        self.stdout.write("Карт для проверки: {}".format(count))
         for card in cds:
             i += 1
             if card.individual.card_set.filter(base__is_rmis=False).exists():
