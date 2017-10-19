@@ -248,6 +248,9 @@ class Patients(BaseRequester):
                 break
         return patients
 
+    def sync_data(self, card: clients_models.CardBase):
+        pass
+
     def patient_first_id_by_poils(self, polis_serial, polis_number) -> str:
         if polis_number != "":
             patients = self.patient_ids_by_poils(polis_serial, polis_number)
@@ -286,17 +289,15 @@ class Patients(BaseRequester):
             if individual_row and (
                         (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
                             "patrName"] is not None) and individual_row["birthDate"] is not None):
-                individual_set = clients_models.Individual.objects.filter(family=individual_row["surname"].title() or "",
+                qq = dict(family=individual_row["surname"].title() or "",
                                                        name=individual_row["name"].title() or "",
                                                        patronymic=individual_row["patrName"].title() or "",
                                                        birthday=individual_row["birthDate"],
                                                        sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))
+                individual_set = clients_models.Individual.objects.filter(qq)
                 if not individual_set.exists():
-                    individual_set = [clients_models.Individual.objects.get_or_create(family=individual_row["surname"].title() or "",
-                                                       name=individual_row["name"].title() or "",
-                                                       patronymic=individual_row["patrName"].title() or "",
-                                                       birthday=individual_row["birthDate"],
-                                                       sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))]
+                    individual_set = [clients_models.Individual(qq)]
+                    individual_set[0].save()
                 individual = individual_set[0]
                 document_ids = self.client.getIndividualDocuments(q)
                 for document_id in document_ids:
