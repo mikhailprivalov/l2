@@ -970,7 +970,7 @@
                 $("#select-lab").val(Object.keys(templates[active_template].values).slice(-1)[0]).change().selectpicker('refresh');
 
             });
-            $("body").on("change", "#table-researches .btn input", () => {  rootCheck($(this).value()); sync_checks(); });
+            $("body").on("change", "#table-researches .btn input", () => {  if(!$(this).is(":checked")){ rootCheck($(this).val()); } sync_checks(); });
             sync(true);
 
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
