@@ -1152,7 +1152,7 @@
                     paddingTop: 2,
                     paddingBottom: 2
                 });
-                $results_modal.find(".print-b").attr("href", "/results/pdf?pk=[" + rpk + "]");
+                $results_modal.find(".print-b").attr("href", "/results/preview?pk=[" + rpk + "]");
                 $results_modal.modal();
                 if (!data.full) {
                     alert("Результаты подтверждены не полностью. Данные могут быть изменены");
@@ -1261,7 +1261,7 @@
                             "<td title='{1}'><div class='res-over'>{0}</div></td>".f(sliced, v.researches) +
                             "<td><div class='status status-{2}' title='{1}'>{0}</div></td>".f(statuses[v.status], statuses_titles[v.status], v.status) +
                             "<td style='text-align: right;'>" +
-                            (v.status >= 1 ? "<a href='/results/pdf?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
+                            (v.status >= 1 ? "<a href='/results/preview?pk=[{0}]' onclick='show_results({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Результаты</a>".f(v.pk) : "") +
                             (v.status === 0 ? "<a href='#' onclick='toggle_cancel({0});return false;' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Отмена напр.</a>".f(v.pk) : "") +
                             "<a href='/directions/pdf?napr_id=[{0}]' target='_blank' class='btn btn-sm btn-sm-m btn-blue-nb'>Направление</a>".f(v.pk) +
                             "</td>" +
@@ -1892,7 +1892,7 @@
             $.each($bp, function (k, v) {
                 print_array.push(parseInt($(v).attr("pk")));
             });
-            window.open('/results/pdf?pk=' + JSON.stringify(print_array), '_blank');
+            printResults(print_array);
         }
 
         function batch_print_bc() {

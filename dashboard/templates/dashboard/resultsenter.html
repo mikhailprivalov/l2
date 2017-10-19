@@ -2080,8 +2080,7 @@
         }
 
         function print_results() {
-            const data = "?pk=" + JSON.stringify([dir_data.napr_pk,]);
-            window.open('/results/pdf' + data, '_blank');
+            printResults(dir_data.napr_pk);
             // list_reload = true;
             //$('[direction="' + dir_data.napr_pk + '"]').remove();
         }
@@ -2293,9 +2292,7 @@
                     for (let l = 0; l < Object.keys(data.directions).length; l++) {
                         strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
                     }
-
-                    const st = "?pk=[" + strs.join(",") + "]";
-                    window.open('/results/pdf' + st, '_blank');
+                    printResults(strs);
                     $("#results-day-modal").modal('hide');
                 }
                 else {

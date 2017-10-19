@@ -604,13 +604,11 @@
 
         function print_selected() {
             sync_checked();
-            const data = "?pk=" + JSON.stringify(checked_list);
-            window.open('/results/pdf' + data, '_blank');
+            printResults(checked_list);
         }
 
         function print_loaded() {
-            const data = "?pk=" + JSON.stringify([parseInt($("#dir_num").text()),]);
-            window.open('/results/pdf' + data, '_blank');
+            printResults(parseInt($("#dir_num").text()));
         }
 
         function confirm_loaded() {

@@ -562,11 +562,11 @@
                             for (let direction of tmp_data[key].directions) {
                                 for (let research of direction.researches) {
                                     $("#dirs-list tbody").append(`<tr class='isnormal-${research.is_normal}'>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${row.type}</td>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${row.date}</td>
-<td onclick="window.open('/results/pdf?pk=[${direction.pk}]', '_blank')">${research.title}</td>
+<td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
+<td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
+<td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${row.type}</td>
+<td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.date}</td>
+<td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${research.title}</td>
 <td><label><input type='checkbox' class='batch-print' direction='${direction.pk}' /></label></td>
 </tr>`);
                                     tmp_rows.push({
@@ -614,7 +614,7 @@
             for (let i = 0; i < row.directions.length; i++) {
                 let dir = row.directions[i];
                 $("#directions_list").append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
-<a style='float: right' href='/results/pdf?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
+<a style='float: right' href='/results/preview?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
 <ul class='direction-researches'></ul>
 </div>`);
 
@@ -630,8 +630,8 @@
                 }
                 dirs.push(dir.pk);
             }
-            let data = "?pk=" + JSON.stringify(dirs) + "&show_norms=" + show_norms;
-            $("#printall").attr("href", '/results/pdf' + data);
+            let data = "?pk=" + JSON.stringify(dirs);
+            $("#printall").attr("href", '/results/preview' + data);
             resize();
             $('#directions-modal').modal({show: true});
         }
@@ -714,8 +714,7 @@
                     for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
-                                const st = "?pk=[" + c[e].join(",") + "]&show_norms=" + show_norms;
-                                window.open('/results/pdf' + st, '_blank');
+                                printResults(c[e]);
                             }, 1000 * e);
                         })(k);
                     }
@@ -739,7 +738,7 @@
                         print_array.push(parseInt(pk));
                 }
             });
-            window.open('/results/pdf?pk=' + JSON.stringify(print_array) + "&show_norms=" + show_norms, '_blank');
+            printResults(print_array);
         }
     </script>
 {% endblock %}

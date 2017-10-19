@@ -113,8 +113,7 @@
                     for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {
-                                const st = "?pk=[" + c[e].join(",") + "]";
-                                window.open('/results/pdf' + st, '_blank');
+                                printResults(c[e]);
                             }, 1000 * e);
                         })(k);
                     }
