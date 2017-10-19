@@ -977,9 +977,7 @@
                         $contentComment.val($(invokedOn).attr("comment"));
 
                     if ($comment >= 0) {
-                        let ft = $.map(material_types[$comment], function (item) {
-                            return {value: item};
-                        });
+                        let ft = $.map(material_types[$comment], (item) => ({value: item}));
                         let typeVals = new Bloodhound({
                             datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                             queryTokenizer: Bloodhound.tokenizers.whitespace,
