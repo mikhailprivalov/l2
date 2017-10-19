@@ -708,6 +708,7 @@
         ;
 
         const material_types = {
+            "-1": [],
         {% for v in material_types %}
             {{ v.pk }}: {{ v.get_variants|safe }},
         {% endfor %}
