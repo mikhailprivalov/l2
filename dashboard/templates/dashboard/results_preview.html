@@ -30,25 +30,25 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
-            if(localStorage.getItem("print_results_split") === null){
+            if(!localStorage.getItem("print_results_split")){
                 $("#split").prop("checked", true);
-                localStorage.setItem("print_results_split", true);
+                localStorage.setItem("print_results_split", 1);
             } else {
-                $("#split").prop("checked", localStorage.getItem("print_results_split"));
+                $("#split").prop("checked", localStorage.getItem("print_results_split") === 1);
             }
-            if(localStorage.getItem("print_results_margin") === null){
+            if(!localStorage.getItem("print_results_margin")){
                 $("#margin").prop("checked", true);
-                localStorage.setItem("print_results_margin", true);
+                localStorage.setItem("print_results_margin", 1);
             } else {
-                $("#margin").prop("checked", localStorage.getItem("print_results_margin"));
+                $("#margin").prop("checked", localStorage.getItem("print_results_margin") === 1);
             }
             updatePreview();
         });
         function updatePreview(){
             let split = $("#split").is(":checked");
-            localStorage.setItem("print_results_split", split);
+            localStorage.setItem("print_results_split", split? 1 : 2);
             let margin = $("#margin").is(":checked");
-            localStorage.setItem("print_results_margin", margin);
+            localStorage.setItem("print_results_margin", margin? 1 : 2);
             let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}`;
             PDFObject.embed(u, "#previewContainer");
         }
