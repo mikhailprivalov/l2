@@ -1487,7 +1487,7 @@ def result_print(request):
         client_prev = -1
         #cl = Client()
         normis = request.GET.get("normis", "0") == "1"
-        for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(), key=lambda dir: dir.client.individual.pk*10000 + Result.objects.filter(issledovaniye__napravleniye=dir).count()):
+        for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(), key=lambda dir: dir.client.individual.pk*100000 + Result.objects.filter(issledovaniye__napravleniye=dir).count()*1000 + dir.pk):
             dpk = direction.pk
             if not direction.is_all_confirm():
                 continue
