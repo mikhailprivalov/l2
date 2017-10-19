@@ -1,15 +1,13 @@
 {% extends "dbase.html" %}
 {% block title %}Предварительный просмотр бланков результатов{% endblock %}
-{% block container %}container-fluid" style="height: 100%;margin:0;padding:0{% endblock %}
+{% block container %}container-fluid" style="display: flex;flex-direction: column;height: 100%;margin:0;padding:0{% endblock %}
 
 {% block nav %}{#  Скрытие шапки #}{% endblock %}
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-    <div class="container-fluid" style="display: flex;flex-direction: column;height: 100%;margin:0;padding:0">
-        <div style="flex: 0 0 100px;"></div>
-        <div id="previewContainer" style="flex: 1"></div>
-    </div>
+    <div style="flex: 0 0 100px;"></div>
+    <div id="previewContainer" style="flex: 1"></div>
 {% endblock %}
 
 {% block scripts %}
