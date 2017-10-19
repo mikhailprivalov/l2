@@ -34,7 +34,7 @@
         });
         function updatePreview(){
             let split = $("#split").is(":checked");
-            let margin = $("#split").is(":margin");
+            let margin = $("#margin").is(":checked");
             let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}`;
             PDFObject.embed(u, "#previewContainer");
         }
