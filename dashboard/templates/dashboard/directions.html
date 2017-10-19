@@ -834,14 +834,9 @@
             for(let lab of _.keys(autoadd_labs)){
                 let autoadd = autoadd_labs[lab];
                 if(autoadd.length > 0){
-                    checked[lab] = _.union(checked[lab], autoadd);
                     let diff = _.difference(autoadd, checked[lab]);
-                    console.log(diff);
-                    _.each(diff, function (d) {
-                        $(`input[value=${d}]`).prop("checked", true).parent().addClass("active-b");
-                        checkAutoAdd(d);
-                        console.log(d);
-                    });
+                    checked[lab] = _.union(checked[lab], autoadd);
+                    _.each(diff, d => { $(`input[value=${d}]`).prop("checked", true).parent().addClass("active-b"); checkAutoAdd(d); });
                 }
             }
         }
