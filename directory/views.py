@@ -112,10 +112,11 @@ def directory_researches_list(request):
     else:
         lab_id = request.GET["lab_id"]
     researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
+    labs = [x.pk for x in Podrazdeleniya.objects.filter(isLab=True, hide=False)]
     for research in researches:
         autoadd = {}
-        for l in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-            autoadd[l.pk] = [x.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye=l)]
+        for l in labs:
+            autoadd[l] = [x.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye__pk=l)]
 
         return_result.append(
             {"pk": research.pk,
