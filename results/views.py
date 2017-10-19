@@ -682,7 +682,7 @@ def result_print(request):
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
         response['Content-Disposition'] = 'inline; filename="results.pdf"'
     else:
-        response['Content-Disposition'] = 'filename="results.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="results.pdf"'
 
     pk = json.loads(request.GET["pk"])
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
