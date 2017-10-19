@@ -253,9 +253,9 @@ class Patients(BaseRequester):
             return "NONERMIS"
         q = card.number
         from_rmis = self.client.getIndividual(q)
-        data = dict(family=from_rmis["surname"].title() or "",
-                   name=from_rmis["name"].title() or "",
-                   patronymic=from_rmis["patrName"].title() or "",
+        data = dict(family=(from_rmis["surname"] or "").title(),
+                   name=(from_rmis["name"] or "").title(),
+                   patronymic=(from_rmis["patrName"] or "").title(),
                    birthday=from_rmis["birthDate"],
                    sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"))
         ind = card.individual
@@ -324,11 +324,11 @@ class Patients(BaseRequester):
             if individual_row and (
                         (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
                             "patrName"] is not None) and individual_row["birthDate"] is not None):
-                qq = dict(family=individual_row["surname"].title() or "",
-                                                       name=individual_row["name"].title() or "",
-                                                       patronymic=individual_row["patrName"].title() or "",
-                                                       birthday=individual_row["birthDate"],
-                                                       sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))
+                qq = dict(family=(individual_row["surname"] or "").title(),
+                            name=(individual_row["name"] or "").title(),
+                            patronymic=(individual_row["patrName"] or "").title(),
+                           birthday=individual_row["birthDate"],
+                           sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"))
                 individual_set = clients_models.Individual.objects.filter(**qq)
                 if not individual_set.exists():
                     individual_set = [clients_models.Individual(**qq)]
