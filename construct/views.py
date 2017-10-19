@@ -28,7 +28,7 @@ def researches(request):
 def researches_tune(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
-    return render(request, 'construct_researches_tune.html', {"pk": pk})
+    return render(request, 'construct_researches_tune.html', {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
 
 
 @login_required

@@ -160,6 +160,13 @@
     <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
     <script>
         const pk = {{ pk }};
+
+        let material_types = {
+        {% for v in material_types %}
+            {{ v.pk }}: {{ v.get_variants|safe }},
+        {% endfor %}
+        };
+
         let $comments;
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
