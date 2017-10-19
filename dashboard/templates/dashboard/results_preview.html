@@ -34,6 +34,7 @@
                 if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true;
                 window.open(get_url(false), '_blank');
                 event.preventDefault();
+                console.log("SAVE");
                 return false;
             });
             if(!localStorage.getItem("print_results_split")){
