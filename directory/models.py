@@ -63,7 +63,7 @@ class Researches(models.Model):
                             help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
 
     def __str__(self):
-        return "%s" % self.title
+        return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.subgroup.podrazdeleniye, self.hide)
 
 
 class AutoAdd(models.Model):
