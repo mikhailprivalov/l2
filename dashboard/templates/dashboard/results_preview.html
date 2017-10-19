@@ -30,12 +30,15 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
-            $(window).keypress(function(event) {
-                if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true;
-                window.open(get_url(false), '_blank');
-                event.preventDefault();
-                console.log("SAVE");
-                return false;
+            $(window).bind('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                        case 's':
+                            event.preventDefault();
+                            window.open(get_url(false), '_blank');
+                            break;
+                    }
+                }
             });
             if(!localStorage.getItem("print_results_split")){
                 $("#split").prop("checked", true);
