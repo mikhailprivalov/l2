@@ -674,10 +674,16 @@ from rmis_integration.client import Client
 @login_required
 def result_print(request):
     """ Печать результатов """
-    if SettingManager.get("pdf_auto_print", "true", "b"):
-        pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
+    inline = request.GET.get("inline", "1") == 1
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="results.pdf"'
+
+    if inline:
+        if SettingManager.get("pdf_auto_print", "true", "b"):
+            pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
+        response['Content-Disposition'] = 'inline; filename="results.pdf"'
+    else:
+        response['Content-Disposition'] = 'filename="results.pdf"'
+
     pk = json.loads(request.GET["pk"])
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
 

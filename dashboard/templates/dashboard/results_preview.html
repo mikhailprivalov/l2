@@ -30,6 +30,12 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
+            $(window).keypress(function(event) {
+                if (!(event.which == 115 && event.ctrlKey) && !(event.which == 19)) return true;
+                window.open(get_url(true), '_blank');
+                event.preventDefault();
+                return false;
+            });
             if(!localStorage.getItem("print_results_split")){
                 $("#split").prop("checked", true);
                 localStorage.setItem("print_results_split", "true");
@@ -44,13 +50,15 @@
             }
             updatePreview();
         });
-        function updatePreview(){
+        function get_url(inline){
             let split = $("#split").is(":checked");
             localStorage.setItem("print_results_split", split + "");
             let margin = $("#margin").is(":checked");
             localStorage.setItem("print_results_margin", margin + "");
-            let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}`;
-            PDFObject.embed(u, "#previewContainer");
+            let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}`;
+        }
+        function updatePreview(false){
+            PDFObject.embed(get_url(), "#previewContainer");
         }
     </script>
     <style>
