@@ -6,8 +6,8 @@
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-    <div class="container-fluid" style="display: flex;flex-direction: column;">
-        <div style="flex: 0 0 50px;"></div>
+    <div class="container-fluid" style="display: flex;flex-direction: column;height: 100%">
+        <div style="flex: 0 0 100px;"></div>
         <div id="previewContainer" style="flex: 1"></div>
     </div>
 {% endblock %}
@@ -24,6 +24,8 @@
         }
     </script>
     <style>
-
+        body, html {
+            height: 100%;
+        }
     </style>
 {% endblock %}
