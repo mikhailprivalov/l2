@@ -275,7 +275,7 @@ class Patients(BaseRequester):
             ind.patronymic = data["patronymic"]
             ind.save()
 
-        if ind.birthday != data["birthday"]:
+        if ind.birthday != data["birthday"] and data["birthday"] is not None:
             updated.append(["birthday", ind.birthday, data["birthday"]])
             ind.birthday = data["birthday"]
             ind.save()
