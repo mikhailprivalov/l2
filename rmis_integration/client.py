@@ -250,7 +250,7 @@ class Patients(BaseRequester):
 
     def sync_data(self, card: clients_models.Card):
         if not card.base.is_rmis:
-            return "NONERMIS"
+            return False
         q = card.number
         from_rmis = self.client.getIndividual(q)
         data = dict(family=(from_rmis["surname"] or "").title(),
@@ -284,7 +284,9 @@ class Patients(BaseRequester):
             updated.append(["sex", ind.sex, data["sex"]])
             ind.sex = data["sex"]
             ind.save()
-        return json.dumps(updated)
+        if len(updated) > 0:
+            return str(updated)
+        return False
 
     def patient_first_id_by_poils(self, polis_serial, polis_number) -> str:
         if polis_number != "":

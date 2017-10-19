@@ -29,6 +29,8 @@ class Command(BaseCommand):
         i = 0
         for card in cds:
             i += 1
-            self.stdout.write("Обработка карты {}/{}".format(i, count))
-            self.stdout.write(c.patients.sync_data(card))
-
+            da = c.patients.sync_data(card)
+            if da:
+                self.stdout.write("Обработка карты {}/{}".format(i, count))
+                self.stdout.write(da)
+        self.stdout.write("OK")
