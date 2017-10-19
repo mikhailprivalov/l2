@@ -989,10 +989,6 @@
                             local: ft
                         });
 
-                        function typeValsDefaults(q, sync) {
-                            sync(typeVals.get(material_types[$comment]));
-                        }
-
                         const $val = $contentComment.val();
                         $contentComment.typeahead({
                             minLength: 0,
@@ -1002,7 +998,7 @@
                             name: 'typeval',
                             display: 'value',
                             limit: 40,
-                            source: typeValsDefaults
+                            source: (q, sync) => sync(typeVals.get(material_types[$comment]))
                         }).typeahead('val', $val);
                     }
                     $contentComment.focus();
