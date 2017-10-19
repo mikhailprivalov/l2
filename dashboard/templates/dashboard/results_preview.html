@@ -30,7 +30,6 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
-            updatePreview();
             if(!localStorage.getItem("print_results_split")){
                 $("#split").prop("checkded", true);
                 localStorage.setItem("print_results_split", true);
@@ -43,6 +42,7 @@
             } else {
                 $("#margin").prop("checkded", localStorage.getItem("print_results_margin"));
             }
+            updatePreview();
         });
         function updatePreview(){
             let split = $("#split").is(":checked");
