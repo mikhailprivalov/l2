@@ -32,23 +32,23 @@
         $(document).ready(function () {
             if(!localStorage.getItem("print_results_split")){
                 $("#split").prop("checked", true);
-                localStorage.setItem("print_results_split", 1);
+                localStorage.setItem("print_results_split", "true");
             } else {
-                $("#split").prop("checked", localStorage.getItem("print_results_split") === 1);
+                $("#split").prop("checked", JSON.parse(localStorage.getItem("print_results_split")));
             }
             if(!localStorage.getItem("print_results_margin")){
                 $("#margin").prop("checked", true);
-                localStorage.setItem("print_results_margin", 1);
+                localStorage.setItem("print_results_margin", "true");
             } else {
-                $("#margin").prop("checked", localStorage.getItem("print_results_margin") === 1);
+                $("#margin").prop("checked", JSON.parse(localStorage.getItem("print_results_margin")));
             }
             updatePreview();
         });
         function updatePreview(){
             let split = $("#split").is(":checked");
-            localStorage.setItem("print_results_split", split? 1 : 2);
+            localStorage.setItem("print_results_split", split + "");
             let margin = $("#margin").is(":checked");
-            localStorage.setItem("print_results_margin", margin? 1 : 2);
+            localStorage.setItem("print_results_margin", margin + "");
             let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}`;
             PDFObject.embed(u, "#previewContainer");
         }
