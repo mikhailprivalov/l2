@@ -68,10 +68,10 @@ class Researches(models.Model):
 
 class AutoAdd(models.Model):
     """
-    Перечисление связей исследований, которые могут быть назначены только вместе
+    Перечисление связей исследований, которые могут быть назначены только вместе (A только с B)
     """
-    research = models.ForeignKey(Researches, help_text="Исследование, для которого устанавливается связь", db_index=True, related_name="research")
-    onlywith = models.ForeignKey(Researches, help_text="Исследование, которое должно быть назначено вместе", related_name="onlywith")
+    a = models.ForeignKey(Researches, help_text="Исследование, для которого устанавливается связь", db_index=True)
+    b = models.ForeignKey(Researches, help_text="Исследование, которое должно быть назначено вместе")
 
 
 class References(models.Model):
