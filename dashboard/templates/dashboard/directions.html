@@ -983,9 +983,7 @@
                         let typeVals = new Bloodhound({
                             datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                             queryTokenizer: Bloodhound.tokenizers.whitespace,
-                            identify: function (obj) {
-                                return obj.value;
-                            },
+                            identify: (obj) => obj.value,
                             local: ft
                         });
 
