@@ -814,6 +814,7 @@
                 checked[active_lab].push(parseInt(el.value));
                 $(el).parent().addClass("active-b");
                 check_ow(parseInt(el.value));
+                checkAutoAdd(el.value);
             });
             checkedall = tmp;
             sync(true);
@@ -825,6 +826,17 @@
                 checked[active_lab].push(parseInt(ow));
                 $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
                 check_ow(ow);
+            }
+        }
+
+        function checkAutoAdd(top) {
+            let autoadd_labs = JSON.parse(_.unescape($(`input[value=${top}]`).attr("data-autoadd")));
+            for(let lab of _.keys(autoadd_labs)){
+                let autoadd = autoadd_labs[lab];
+                if(autoadd.length > 0){
+                    checked[lab] = _.union(checked[lab], autoadd);
+                    _.each(_.difference(autoadd, checked[lab]), checkAutoAdd);
+                }
             }
         }
 
