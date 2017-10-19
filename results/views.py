@@ -1487,11 +1487,8 @@ def result_print(request):
         client_prev = -1
         #cl = Client()
         normis = request.GET.get("normis", "0") == "1"
-        for dpk in pk:
-            direction = Napravleniya.objects.filter(pk=dpk)
-            if not direction.exists():
-                continue
-            direction = Napravleniya.objects.get(pk=dpk)
+        for direction in Napravleniya.objects.filter(pk__in=pk).order_by("client__individual"):
+            dpk = direction.pk
             if not direction.is_all_confirm():
                 continue
             #if not normis:
