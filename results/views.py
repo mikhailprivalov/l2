@@ -674,7 +674,7 @@ from rmis_integration.client import Client
 @login_required
 def result_print(request):
     """ Печать результатов """
-    inline = request.GET.get("inline", "1") == 1
+    inline = request.GET.get("inline", "1") == "1"
     response = HttpResponse(content_type='application/pdf')
 
     if inline:
