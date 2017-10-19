@@ -30,13 +30,13 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
-            if(!localStorage.getItem("print_results_split")){
+            if(localStorage.getItem("print_results_split") === null){
                 $("#split").prop("checked", true);
                 localStorage.setItem("print_results_split", true);
             } else {
                 $("#split").prop("checked", localStorage.getItem("print_results_split"));
             }
-            if(!localStorage.getItem("print_results_margin")){
+            if(localStorage.getItem("print_results_margin") === null){
                 $("#margin").prop("checked", true);
                 localStorage.setItem("print_results_margin", true);
             } else {
