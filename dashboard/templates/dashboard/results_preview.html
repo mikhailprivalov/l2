@@ -6,7 +6,7 @@
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-    <div id="previewContainer"></div>
+    <div id="previewContainer" style="height: 1000px;"></div>
     {% comment %}<object data="your_url_to_pdf" type="application/pdf">
         <embed src="your_url_to_pdf" type="application/pdf" />
     </object>{% endcomment %}
@@ -20,7 +20,7 @@
         });
         function updatePreview(){
             let u = '/results/preview?pk=' + JSON.stringify(pks);
-            $("#previewContainer").html(`<object data="${u}" type="application/pdf"><embed src="${u}" type="application/pdf" /></object>`);
+            $("#previewContainer").html(`<object data="${u}" type="application/pdf" width="100%" height="100%">Ваш браузер не поддерживает PDF.<br/>Пожалуйста, скачайте файл PDF для просмотра: <a href="${u}">Скачать PDF файл с результатами</a></object>`);
         }
     </script>
     <style>
