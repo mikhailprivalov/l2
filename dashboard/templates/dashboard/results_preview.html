@@ -57,8 +57,8 @@
             localStorage.setItem("print_results_margin", margin + "");
             let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}`;
         }
-        function updatePreview(false){
-            PDFObject.embed(get_url(), "#previewContainer");
+        function updatePreview(){
+            PDFObject.embed(get_url(false), "#previewContainer");
         }
     </script>
     <style>
