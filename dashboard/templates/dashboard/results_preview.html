@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/js/pdfobject.min.js"></script>
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
@@ -20,7 +21,7 @@
         });
         function updatePreview(){
             let u = '/results/preview?pk=' + JSON.stringify(pks);
-            $("#previewContainer").html(`<iframe src="${u}" type="application/pdf" width="100%" height="100%"></iframe>`);
+            $("#previewContainer").html(`<object data="${u}" type="application/pdf" width="100%" height="100%"></object>`);
         }
     </script>
     <style>
