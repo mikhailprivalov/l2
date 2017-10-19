@@ -171,6 +171,7 @@
         $(document).ready(function () {
             $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
             $comments = $("#select-comments");
+            $comments.append(`<option value="-1">Без вариантов</option>`);
             $.each(material_types, function (k, v) {
                 $comments.append(`<option value="${k}">${v.join("/")}</option>`);
             });
