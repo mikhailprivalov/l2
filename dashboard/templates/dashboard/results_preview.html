@@ -6,7 +6,7 @@
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-
+    <div id="previewContainer"></div>
     {% comment %}<object data="your_url_to_pdf" type="application/pdf">
         <embed src="your_url_to_pdf" type="application/pdf" />
     </object>{% endcomment %}
@@ -18,6 +18,10 @@
         $(document).ready(function () {
 
         });
+        function updatePreview(){
+            let u = '/results/preview?pk=' + JSON.stringify(pks);
+            $("#previewContainer").html(`<object data="${u}" type="application/pdf"><embed src="${u}" type="application/pdf" /></object>`);
+        }
     </script>
     <style>
 
