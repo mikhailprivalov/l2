@@ -24,11 +24,13 @@ class Command(BaseCommand):
         self.stdout.write("Пацтентов без карт удалено: {}".format(cnt))
 
         c = RC()
-        cds = Card.objects.filter(base__is_rmis=True, is_archive=False).exclude(base__is_rmis=False)
+        cds = Card.objects.filter(base__is_rmis=True, is_archive=False)
         count = cds.count()
         i = 0
         for card in cds:
             i += 1
+            if card.individual.card_set.filter(base__is_rmis=False).exists():
+                continue
             da = c.patients.sync_data(card)
             if da:
                 self.stdout.write("Обработка карты {}/{}".format(i, count))
