@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
+from barcodes.views import tubes
 from slog import models as slog
 
 
@@ -84,7 +85,7 @@ def send(request):
             if dpk >= 4600000000000:
                 dpk -= 4600000000000
                 dpk //= 10
-
+            tubes(request, direction_implict_id=dpk)
             if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
                 resdict["pk"] = directions.TubesRegistration.objects.filter(
                     issledovaniya__napravleniye__pk=dpk).first().pk
