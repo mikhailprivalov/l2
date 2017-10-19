@@ -7,6 +7,7 @@ import simplejson as json
 import directions.models as directions
 import directory.models as direct
 import slog.models as slog
+from podrazdeleniya.models import Podrazdeleniya
 
 
 @csrf_exempt
@@ -112,10 +113,20 @@ def directory_researches_list(request):
         lab_id = request.GET["lab_id"]
     researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     for research in researches:
+        autoadd = {}
+        for l in Podrazdeleniya.objects.filter(isLab=True, hide=False):
+            autoadd[l.pk] = [x.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye=l)]
+
         return_result.append(
-            {"pk": research.pk, "id": research.pk, "onlywith": -1 if not research.onlywith else research.onlywith.pk,
+            {"pk": research.pk,
+             "id": research.pk,
+             "onlywith": -1 if not research.onlywith else research.onlywith.pk,
              "fields": {"id_lab_fk": lab_id, "ref_title": research.title},
-             "isFolder": False, "text": research.title, "comment_template": "-1" if research.comment_variants is None else research.comment_variants.pk})
+             "isFolder": False,
+             "text": research.title,
+             "comment_template": "-1" if research.comment_variants is None else research.comment_variants.pk,
+             "autoadd": autoadd
+             })
 
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
