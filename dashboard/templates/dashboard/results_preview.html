@@ -21,7 +21,7 @@
         });
         function updatePreview(){
             let u = '/results/preview?pk=' + JSON.stringify(pks);
-            $("#previewContainer").html(`<object data="${u}" type="application/pdf" width="100%" height="100%"></object>`);
+            PDFObject.embed(u, "#previewContainer");
         }
     </script>
     <style>
