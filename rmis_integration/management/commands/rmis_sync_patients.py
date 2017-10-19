@@ -24,7 +24,7 @@ class Command(BaseCommand):
         self.stdout.write("Пацтентов без карт удалено: {}".format(cnt))
 
         c = RC()
-        cds = Card.objects.filter(base__is_rmis=True, is_archive=False)
+        cds = Card.objects.filter(base__is_rmis=True, is_archive=False).exclude(base__is_rmis=False)
         count = cds.count()
         i = 0
         for card in cds:
