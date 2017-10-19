@@ -10,10 +10,10 @@
         <div style="height: 100%;width: 100%;display: flex;flex-direction: row; justify-content: space-between;align-items:center">
             <div class="logo">L<sup>2</sup></div>
             <div style="text-align: center;flex-basis: 25%">
-                <label><input id="split" checked type="checkbox"> Результаты на отдельных страницах</label>
+                <label><input id="split" type="checkbox"> Результаты на отдельных страницах</label>
             </div>
             <div style="text-align: center;flex-basis: 25%">
-                <label><input id="margin" checked type="checkbox"> Большой отступ слева</label>
+                <label><input id="margin" type="checkbox"> Большой отступ слева</label>
             </div>
             <div style="text-align: right;flex-basis: 25%">
                 <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
@@ -31,10 +31,24 @@
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
             updatePreview();
+            if(!localStorage.getItem("print_results_split")){
+                $("#split").prop("checkded", true);
+                localStorage.setItem("print_results_split", true);
+            } else {
+                $("#split").prop("checkded", localStorage.getItem("print_results_split"));
+            }
+            if(!localStorage.getItem("print_results_margin")){
+                $("#margin").prop("checkded", true);
+                localStorage.setItem("print_results_margin", true);
+            } else {
+                $("#margin").prop("checkded", localStorage.getItem("print_results_margin"));
+            }
         });
         function updatePreview(){
             let split = $("#split").is(":checked");
+            localStorage.setItem("print_results_split", split);
             let margin = $("#margin").is(":checked");
+            localStorage.setItem("print_results_margin", margin);
             let u = `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}`;
             PDFObject.embed(u, "#previewContainer");
         }
