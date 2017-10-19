@@ -66,7 +66,7 @@ class Researches(models.Model):
         return "%s" % self.title
 
 
-class OnlyWith(models.Model):
+class AutoAdd(models.Model):
     """
     Перечисление связей исследований, которые могут быть назначены только вместе
     """
