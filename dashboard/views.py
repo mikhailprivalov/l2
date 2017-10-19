@@ -99,6 +99,9 @@ def change_password(request):
             for g in json.loads(request.POST.get("groups", "[]")):
                 group = Group.objects.get(pk=g)
                 doc.user.groups.add(group)
+        elif request.POST.get("update_fio") == "1":
+            doc.fio = request.POST.get("fio", "ФИО")
+            doc.save()
         else:
             doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
             doc.save()
