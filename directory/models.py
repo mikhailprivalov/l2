@@ -73,6 +73,9 @@ class AutoAdd(models.Model):
     a = models.ForeignKey(Researches, help_text="Исследование, для которого устанавливается связь", db_index=True, related_name="a")
     b = models.ForeignKey(Researches, help_text="Исследование, которое должно быть назначено вместе", related_name="b")
 
+    def __str__(self):
+        return "%s %s" % (self.a.title, self.b.title)
+
 
 class References(models.Model):
     """
