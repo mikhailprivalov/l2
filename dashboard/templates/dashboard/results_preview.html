@@ -6,10 +6,10 @@
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-    <div id="previewContainer" style="height: 1000px;"></div>
-    {% comment %}<object data="your_url_to_pdf" type="application/pdf">
-        <embed src="your_url_to_pdf" type="application/pdf" />
-    </object>{% endcomment %}
+    <div class="container-fluid" style="display: flex;flex-direction: row;">
+        <div style="flex: 0 0 50px;"></div>
+        <div id="previewContainer" style="flex: 1"></div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
@@ -20,7 +20,7 @@
         });
         function updatePreview(){
             let u = '/results/preview?pk=' + JSON.stringify(pks);
-            $("#previewContainer").html(`<iframe src="${u}" type="application/pdf" width="100%" height="100%">Ваш браузер не поддерживает PDF.<br/>Пожалуйста, скачайте файл PDF для просмотра: <a href="${u}">Скачать PDF файл с результатами</a></iframe>`);
+            $("#previewContainer").html(`<iframe src="${u}" type="application/pdf" width="100%" height="100%"></iframe>`);
         }
     </script>
     <style>
