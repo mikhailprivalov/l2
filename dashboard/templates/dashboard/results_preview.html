@@ -1,12 +1,12 @@
 {% extends "dbase.html" %}
 {% block title %}Предварительный просмотр бланков результатов{% endblock %}
-{% block container %}container{% endblock %}
+{% block container %}container-fluid{% endblock %}
 
 {% block nav %}{#  Скрытие шапки #}{% endblock %}
 
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
-    <div class="container-fluid" style="display: flex;flex-direction: row;">
+    <div class="container-fluid" style="display: flex;flex-direction: column;">
         <div style="flex: 0 0 50px;"></div>
         <div id="previewContainer" style="flex: 1"></div>
     </div>
