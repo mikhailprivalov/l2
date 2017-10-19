@@ -383,7 +383,8 @@ def directions(request):
                                                          "rmis_uid": request.GET.get("rmis_uid", ""),
                                                          "rmis_base_id": rid,
                                                          "users": json.dumps(users),
-                                                         "templates": json.dumps(templates)})
+                                                         "templates": json.dumps(templates),
+                                                         "material_types": directory.MaterialVariants.objects.all()})
 
 
 @login_required

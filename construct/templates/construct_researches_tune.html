@@ -161,7 +161,7 @@
     <script>
         const pk = {{ pk }};
 
-        let material_types = {
+        const material_types = {
         {% for v in material_types %}
             {{ v.pk }}: {{ v.get_variants|safe }},
         {% endfor %}

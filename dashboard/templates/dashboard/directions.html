@@ -707,6 +707,12 @@
         }
         ;
 
+        const material_types = {
+        {% for v in material_types %}
+            {{ v.pk }}: {{ v.get_variants|safe }},
+        {% endfor %}
+        };
+
         let tmp_direction = {};
         let res_stack = [];
         let checked = {};
