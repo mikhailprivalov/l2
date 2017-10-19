@@ -99,7 +99,7 @@ def change_password(request):
         return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
     if request.is_ajax():
         doc = DoctorProfile.objects.get(pk=request.GET["pk"])
-        groups = [{"pk": x.pk, "title": x.name} for x in doc.user.groups.all()]
+        groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
         return HttpResponse(json.dumps({"groups": groups}), content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
