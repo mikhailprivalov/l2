@@ -16,7 +16,7 @@
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
-
+            updatePreview();
         });
         function updatePreview(){
             let u = '/results/preview?pk=' + JSON.stringify(pks);
