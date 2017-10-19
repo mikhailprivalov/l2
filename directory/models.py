@@ -90,6 +90,17 @@ class ResultVariants(models.Model):
         return str(self.get_variants())
 
 
+class MaterialVariants(models.Model):
+    values = models.TextField(
+        help_text='Варианты комментариев для материала, перечисленные через вертикальную черту без пробела "|"')
+
+    def get_variants(self):
+        return self.values.split('|')
+
+    def __str__(self):
+        return str(self.get_variants())
+
+
 class Fractions(models.Model):
     """
     Фракции для исследований
