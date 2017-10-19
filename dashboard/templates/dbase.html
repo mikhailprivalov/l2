@@ -1917,7 +1917,14 @@
             $(selector).removeClass(e).removeClass('animated fast');
             blink_animated[s] = false;
         }.bind(this, selector), 334);
+    }
 
+    function printResults(ids){
+        let pk_param = "[]";
+        if(Array.isArray(ids) && ids.length > 0){
+            pk_param = JSON.stringify(ids);
+        }
+        window.open('/results/preview?pk=' + pk_param, '_blank');
     }
 
 </script>
