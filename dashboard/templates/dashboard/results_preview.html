@@ -7,7 +7,7 @@
 {% block content %}
 {#  TODO: Реализовать предварительный просмотр  #}
     <div style="flex: 0 0 48px;background-color: rgb(50, 54, 57);color:#fff;border-bottom: 2px solid #049372">
-        <img src="/static/img/l2logo2.png">
+        <div class="logo">L<sup>2</sup></div>
     </div>
     <div style="flex: 1">
         <div id="previewContainer" style="height: 100%"></div>
@@ -37,6 +37,12 @@
         .pdfobject-container {
             height: 100%;
             margin-bottom: -3px;
+        }
+        .logo{
+            font-weight: 400;
+            font-style: italic;
+            display: inline-block;
+            vertical-align: middle;
         }
     </style>
 {% endblock %}
