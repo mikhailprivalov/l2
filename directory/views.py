@@ -116,7 +116,7 @@ def directory_researches_list(request):
     for research in researches:
         autoadd = {}
         for l in labs:
-            autoadd[l] = [x.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye__pk=l)]
+            autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye__pk=l)]
 
         return_result.append(
             {"pk": research.pk,
