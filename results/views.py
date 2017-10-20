@@ -2944,7 +2944,7 @@ def results_search_directions(request):
                                        client__individual__birthday__contains=bdate)
 
     if filter_type == "card_number":
-        collection = collection.filter(client__number=query)
+        collection = collection.filter(client__number__iexact=query)
 
     import collections
     rows = collections.OrderedDict()
