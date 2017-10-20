@@ -146,7 +146,7 @@ def statistic_xls(request):
                     else:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
                                                                 time_confirmation__range=(date_start, date_end),
-                                                                napravleniye__istochnik_f__istype=source_type)
+                                                                napravleniye__istochnik_f__base=card_base)
 
                     for researches in iss_list:
                         n = False
