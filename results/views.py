@@ -2909,7 +2909,7 @@ def results_search_directions(request):
         family = query[0:1]
         name = query[1:2]
         twoname = query[2:3]
-        bdate = "%s.%s.%s" % (query[3:5], query[5:7], query[7:11])
+        bdate = "%s-%s-%s" % (query[7:11], query[5:7], query[3:5])
 
     if type == "d":
         day = period.get("date", "01.01.2015")
