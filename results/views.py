@@ -2888,7 +2888,7 @@ def results_search_directions(request):
     twoname = ""
     bdate = ""
 
-    if query.isdigit():
+    if query.isdigit() or bool(re.compile(r'^([a-zA-Z0-9]{14,17})$').match(query)):
         filter_type = "card_number"
     elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
             query)):
@@ -2904,6 +2904,12 @@ def results_search_directions(request):
             twoname = split[2]
         if len(split) > 3:
             bdate = split[3]
+    elif bool(re.compile(r'^(.)(.)(.)(\d{2})(\d{2})(\d{4})$').match(query)):
+        filter_type = "fio"
+        family = query[0:1]
+        name = query[1:2]
+        twoname = query[2:3]
+        bdate = "%s.%s.%s" % (query[3:5], query[5:7], query[7:11])
 
     if type == "d":
         day = period.get("date", "01.01.2015")
