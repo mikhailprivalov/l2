@@ -81,7 +81,7 @@ def statistic_xls(request):
                 if finsource is not False:
                     finsource_title = finsource.tilie
 
-                ws = wb.add_sheet(card_base.title + " " + finsource_title + " выполн.")
+                ws = wb.add_sheet(card_base.short_title + " " + finsource_title + " выполн.")
 
                 font_style = xlwt.XFStyle()
                 font_style.borders = borders
