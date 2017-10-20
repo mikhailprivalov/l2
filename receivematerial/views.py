@@ -191,7 +191,7 @@ def receive_execlist(request):
                                                                                                 tubes__time_recive__range=(
                                                                                                 date1, date2)).exists():
             research = directory.Researches.objects.get(pk=pk)
-            fractions = [x.title for x in directory.Fractions.objects.filter(research=research).order_by("sort_weight")]
+            fractions = [x.title for x in directory.Fractions.objects.filter(research=research, hide=False).order_by("sort_weight")]
             tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
                                                                     doc_recive=request.user.doctorprofile,
                                                                     issledovaniya__research=research).order_by(
