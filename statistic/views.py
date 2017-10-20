@@ -295,7 +295,7 @@ def statistic_xls(request):
         for executor in DoctorProfile.objects.filter(podrazileniye=lab).order_by("fio"):
 
             cnt_itogo = {}
-            ws = wb.add_sheet(executor.fio)
+            ws = wb.add_sheet(executor.get_fio(dots=False))
 
             row_num = 0
             row = [
