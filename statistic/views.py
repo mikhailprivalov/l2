@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import simplejson as json
 import slog.models as slog
+from clients.models import CardBase
 from laboratory.decorators import group_required
 from django.shortcuts import render
 from users.models import Podrazdeleniya
@@ -73,16 +74,14 @@ def statistic_xls(request):
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
 
-        source_types = {"poli": "Полик.", "stat": "Стац."}
-        for source_type in sorted(source_types.keys()):
-
-            for finsource in list(IstochnikiFinansirovaniya.objects.filter(istype=source_type)) + [False]:
+        for card_base in CardBase.objects.filter(hide=False):
+            for finsource in list(IstochnikiFinansirovaniya.objects.filter(base=card_base)) + [False]:
                 finsource_title = "Все источники"
 
                 if finsource is not False:
                     finsource_title = finsource.tilie
 
-                ws = wb.add_sheet(source_types[source_type] + " " + finsource_title + " выполн.")
+                ws = wb.add_sheet(card_base.title + " " + finsource_title + " выполн.")
 
                 font_style = xlwt.XFStyle()
                 font_style.borders = borders
@@ -115,7 +114,7 @@ def statistic_xls(request):
                 row_num = 2
                 row = [
                     "Выполнено исследований",
-                    source_types[source_type] + " " + finsource_title
+                    card_base.title + " " + finsource_title
                 ]
 
                 for col_num in range(len(row)):
@@ -199,7 +198,7 @@ def statistic_xls(request):
                         for col_num in range(len(row)):
                             ws.write(row_num, col_num, row[col_num], font_style)
 
-                ws_pat = wb.add_sheet(source_types[source_type] + " " + finsource_title + " паталог.")
+                ws_pat = wb.add_sheet(card_base.title + " " + finsource_title + " паталог.")
 
                 row_num = 0
                 row = [
@@ -229,7 +228,7 @@ def statistic_xls(request):
                 row_num = 2
                 row = [
                     "Паталогии",
-                    source_types[source_type] + " " + finsource_title
+                    card_base.title + " " + finsource_title
                 ]
 
                 for col_num in range(len(row)):
