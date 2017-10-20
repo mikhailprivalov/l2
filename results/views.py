@@ -2905,10 +2905,10 @@ def results_search_directions(request):
         if len(split) > 3:
             bdate = split[3]
     elif bool(re.compile(r'^(.)(.)(.)(\d{2})(\d{2})(\d{4})$').match(query)):
-        filter_type = "fio"
-        family = query[0:1].title()
-        name = query[1:2].title()
-        twoname = query[2:3].title()
+        filter_type = "fio_short"
+        family = query[0:1]
+        name = query[1:2]
+        twoname = query[2:3]
         bdate = "%s.%s.%s" % (query[3:5], query[5:7], query[7:11])
 
     if type == "d":
@@ -2942,6 +2942,11 @@ def results_search_directions(request):
                                        client__individual__name__contains=name,
                                        client__individual__patronymic__contains=twoname,
                                        client__individual__birthday__contains=bdate)
+    if filter_type == "fio_short":
+        collection = collection.filter(client__individual__family__istartswith=family,
+                                       client__individual__name__istartswith=name,
+                                       client__individual__patronymic__istartswith=twoname,
+                                       client__individual__birthday=bdate)
 
     if filter_type == "card_number":
         collection = collection.filter(client__number__iexact=query)
