@@ -2906,9 +2906,9 @@ def results_search_directions(request):
             bdate = split[3]
     elif bool(re.compile(r'^(.)(.)(.)(\d{2})(\d{2})(\d{4})$').match(query)):
         filter_type = "fio"
-        family = query[0:1]
-        name = query[1:2]
-        twoname = query[2:3]
+        family = query[0:1].title()
+        name = query[1:2].title()
+        twoname = query[2:3].title()
         bdate = "%s.%s.%s" % (query[3:5], query[5:7], query[7:11])
 
     if type == "d":
