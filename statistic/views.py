@@ -198,7 +198,7 @@ def statistic_xls(request):
                         for col_num in range(len(row)):
                             ws.write(row_num, col_num, row[col_num], font_style)
 
-                ws_pat = wb.add_sheet(card_base.title + " " + finsource_title + " паталог.")
+                ws_pat = wb.add_sheet(card_base.short_title + " " + finsource_title + " паталог.")
 
                 row_num = 0
                 row = [
