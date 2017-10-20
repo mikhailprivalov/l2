@@ -31,14 +31,7 @@
                         <li class="list-group-item" onclick="gen_stat('all-labs', 0)">Все лаборатории</li>
                     {% endif %}
                     {% for lab in labs %}
-                        {% if request.user.is_superuser %}
-                            <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
-                        {% else %}
-                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
-                                <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% endif %}
-
-                        {% endif %}
+                        <li class="list-group-item" onclick="gen_stat('lab', {{ lab.pk }})">{{ lab.title }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -48,14 +41,7 @@
                 </div>
                 <ul class="list-group">
                     {% for lab in labs %}
-                        {% if request.user.is_superuser %}
-                            <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
-                        {% else %}
-                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
-                                <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% endif %}
-
-                        {% endif %}
+                        <li class="list-group-item" onclick="gen_stat('lab-staff', {{ lab.pk }})">{{ lab.title }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -67,13 +53,7 @@
                 </div>
                 <ul class="list-group">
                     {% for lab in labs %}
-                        {% if request.user.is_superuser %}
-                            <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
-                        {% else %}
-                            {% if lab.pk == request.user.doctorprofile.podrazileniye.pk %}
-                                <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
-                            {% endif %}
-                        {% endif %}
+                        <li class="list-group-item" onclick="gen_stat('lab-receive', {{ lab.pk }})">{{ lab.title }}</li>
                     {% endfor %}
                 </ul>
             </div>
