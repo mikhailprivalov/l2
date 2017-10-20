@@ -292,8 +292,7 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(podrazileniye=lab).exclude(labtype=0).exclude(
-                labtype=None).order_by("fio"):
+        for executor in DoctorProfile.objects.filter(podrazileniye=lab).order_by("fio"):
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.fio)
@@ -750,7 +749,6 @@ def statistic_xls(request):
 
         font_style = xlwt.XFStyle()
         for usr in usrs:
-            if usr.labtype == 0: continue
             researches_uets = {}
             researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
                                                       time_save__range=(date_start_o, date_end_o))
