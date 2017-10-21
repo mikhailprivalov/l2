@@ -1052,7 +1052,7 @@ def result_print(request):
                     else:
                         tmp = [Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + '</font>' +
                                          (
-                                             "" if iss.comment == "" else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
+                                             "" if iss.comment == "" or True else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
                                          styleSheet["BodyText"]), '', '', '']
 
                         if iss.doc_confirmation:
@@ -1722,7 +1722,7 @@ def result_print(request):
                     else:
                         tmp = [Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + '</font>' +
                                          (
-                                             "" if iss.comment == "" else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
+                                             "" if iss.comment == "" or True else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
                                          styleSheet["BodyText"]), '', '', '']
 
                         if iss.doc_confirmation:
