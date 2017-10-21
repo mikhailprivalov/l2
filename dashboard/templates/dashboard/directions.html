@@ -683,9 +683,10 @@
         let has_unconfirmed = false;
 
         window.onbeforeunload = function() {
-          if (has_unconfirmed) {
-            return 'Имеются несохранённые действия. Продолжить?'
-          }
+            check_unconfirmed();
+            if (has_unconfirmed) {
+                return 'Имеются несохранённые действия. Продолжить?'
+            }
         };
 
         let d;
