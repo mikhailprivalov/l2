@@ -1594,7 +1594,7 @@
         }
 
         function check_unconfirmed(){
-            has_unconfirmed = !_.isEmpty(checked);
+            has_unconfirmed = !_.isEmpty(checked) && _.every(_.values(checked), v => !_.isEmpty(v));
         }
 
         function clear_fast() {
