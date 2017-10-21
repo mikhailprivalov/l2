@@ -561,7 +561,9 @@ class Result(models.Model):
                 x = spl[0]
                 y = spl[1]
                 if isnum(x) and isnum(y):
-                    return float(x) - 0.05, float(y) + 0.05
+                    x = val_normalize(x)
+                    y = val_normalize(y)
+                    return float(x) - 0.00001, float(y) + 0.00001
             signs_vars = [x for x in signs.values()]
             signs_vars = reduce(operator.add, signs_vars)
             if any([x in r for x in signs_vars]):
