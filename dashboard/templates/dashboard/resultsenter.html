@@ -2290,7 +2290,7 @@
                 if (Object.keys(data.directions).length > 0) {
                     let strs = [];
                     for (let l = 0; l < Object.keys(data.directions).length; l++) {
-                        strs.push(data.directions[Object.keys(data.directions)[l]].join(","));
+                        strs = _.union(data.directions[Object.keys(data.directions)[l]]);
                     }
                     printResults(strs);
                     $("#results-day-modal").modal('hide');
