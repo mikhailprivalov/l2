@@ -492,7 +492,7 @@ class Result(models.Model):
         ref = self.get_ref(fromsave=fromsave)
 
         def isnum(r):
-            return r.replace(".", "", 1).isdigit()
+            return r.replace(".", "", 1).replace(",", "", 1).isdigit()
 
         def replace_pow(v):
             v = str(v).replace(" ", "")
