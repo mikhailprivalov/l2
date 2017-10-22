@@ -1289,11 +1289,13 @@
 <body>{% load has_group %}
 <div class="{% block container %}container{% endblock %}">
     {% block nav %}
+        {% load setting_default %}
+        {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
         <nav class="navbar navbar-inverse">
             <div class="nav-cont">
-                <a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                {% if show_l2_logo %}<a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
                    title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                src="/static/img/l2logo2.png"></a>
+                                                                                src="/static/img/l2logo2.png"></a>{% endif %}
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                             aria-expanded="false" aria-controls="navbar">
@@ -1340,9 +1342,9 @@
                 </div>
             </div>
             <div class="nav-loader center">
-                <a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                {% if show_l2_logo %}<a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
                    title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                src="/static/img/l2logo2.png"></a>
+                                                                                src="/static/img/l2logo2.png"></a>{% endif %}
 
                 <div class="navbar-header">
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
