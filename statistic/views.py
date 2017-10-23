@@ -427,8 +427,22 @@ def statistic_xls(request):
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
 
-    elif tp == "tube":
-        pass
+    elif tp == "list-users":
+        response['Content-Disposition'] = str.translate("attachment; filename='Список_пользователей.xls'", tr)
+        ws = wb.add_sheet("Пользователи")
+        row_num = 0
+        font_style = xlwt.XFStyle()
+        for p in Podrazdeleniya.objects.filter(hide=False).order_by("title"):
+            for u in DoctorProfile.objects.filter(podrazileniye=p).exclude(user__username="admin").order_by("fio"):
+                row = [
+                    (p.title, 9000),
+                    (u.fio, 9000)
+                ]
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num][0], font_style)
+                    ws.col(col_num).width = row[col_num][1]
+                row_num += 1
+            row_num += 1
     elif tp == "lab-receive":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
