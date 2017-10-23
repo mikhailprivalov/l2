@@ -852,6 +852,7 @@
                     _.each(inter, d => { $(`input[value=${d}]`).prop("checked", false).parent().addClass("active-b"); rootCheck(d); });
                 }
             }
+            sync_checks();
         }
 
         function dechl() {
