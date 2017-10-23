@@ -900,7 +900,7 @@
                 hl();
                 clear_form();
                 $("#researches-container").html("");
-                data.researches.sort(SortByTubes);
+                //data.researches.sort(SortByTubes);
                 $.each(data.researches, function (k, v) {
                     const row = $("<div class='row res-row'></div>");
                     if (v.readonly) $(row).addClass("readonly");
