@@ -86,9 +86,9 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk).exists():
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
                 resdict["pk"] = directions.TubesRegistration.objects.filter(
-                    issledovaniya__napravleniye__pk=dpk).first().pk
+                    issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
             else:
                 resdict["pk"] = False
         result["A"] = appkey
