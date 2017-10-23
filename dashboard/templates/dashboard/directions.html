@@ -819,6 +819,7 @@
             });
             checkedall = tmp;
             sync(true);
+            sync_checks();
         }
 
         function check_ow(top) {
@@ -840,8 +841,6 @@
                     _.each(diff, d => { checkAutoAdd(d); });
                 }
             }
-            sync();
-            sync_checks();
         }
 
         function rootCheck(top) {
@@ -854,8 +853,6 @@
                     _.each(inter, d => { rootCheck(d); });
                 }
             }
-            sync();
-            sync_checks();
         }
 
         function dechl() {
@@ -981,6 +978,7 @@
             function check_change() {
                 if (!$(this).is(":checked")) {
                     rootCheck($(this).val());
+                    sync(true);
                 }
                 sync_checks();
             }
