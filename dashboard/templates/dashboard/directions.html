@@ -839,7 +839,7 @@
                 if(autoadd.length > 0){
                     let diff = _.difference(autoadd, checked[lab]);
                     checked[lab] = _.union(checked[lab], autoadd);
-                    _.each(diff, d => { checkAutoAdd(d); });
+                    _.each(diff, d => { $(`input[value=${d}]`).prop("checked", true).parent().addClass("active-b"); checkAutoAdd(d); });
                 }
             }
         }
@@ -851,7 +851,7 @@
                 if(addto.length > 0){
                     let inter = _.intersection(checked[lab], addto);
                     checked[lab] = _.difference(checked[lab], addto);
-                    _.each(inter, d => { rootCheck(d); });
+                    _.each(inter, d => { $(`input[value=${d}]`).prop("checked", false).parent().addClass("active-b"); rootCheck(d); });
                 }
             }
         }
@@ -979,7 +979,6 @@
             function check_change() {
                 if (!$(this).is(":checked")) {
                     rootCheck($(this).val());
-                    sync(true);
                 }
                 sync_checks();
             }
