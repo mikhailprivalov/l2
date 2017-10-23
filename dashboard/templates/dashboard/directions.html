@@ -1560,6 +1560,7 @@
                         }
                     }
                 }
+                console.log(v, ind);
                 if (!ind)
                     $tb.append("<label title='{1}' class=\"btn btn-default col-xs-12 col-sm-6 col-md-4 col-lg-3\"><input type=\"checkbox\" name=\"sel\" value=\"{0}\" autocomplete=\"off\" data-with='{2}' data-autoadd='{3}' data-addto='{4}'/> {1}</label>".f(v.pk, v.fields.ref_title, v.onlywith, _.escape(JSON.stringify(v.autoadd)), _.escape(JSON.stringify(v.addto))));
                 else
