@@ -433,7 +433,9 @@ def statistic_xls(request):
         row_num = 0
         font_style = xlwt.XFStyle()
         for p in Podrazdeleniya.objects.filter(hide=False).order_by("title"):
+            has = False
             for u in DoctorProfile.objects.filter(podrazileniye=p).exclude(user__username="admin").order_by("fio"):
+                has = True
                 row = [
                     (p.title, 9000),
                     (u.fio, 9000)
@@ -442,7 +444,8 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num][0], font_style)
                     ws.col(col_num).width = row[col_num][1]
                 row_num += 1
-            row_num += 1
+            if has:
+                row_num += 1
     elif tp == "lab-receive":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
