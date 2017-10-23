@@ -437,8 +437,11 @@ def statistic_xls(request):
             for u in DoctorProfile.objects.filter(podrazileniye=p).exclude(user__username="admin").order_by("fio"):
                 has = True
                 row = [
+                    ("ID отделения %s" % p.pk, 9000),
                     (p.title, 9000),
-                    (u.fio, 9000)
+                    ("ID пользователя %s" % u.pk, 9000),
+                    (u.user.username, 5000),
+                    (u.fio, 10000)
                 ]
                 for col_num in range(len(row)):
                     ws.write(row_num, col_num, row[col_num][0], font_style)
