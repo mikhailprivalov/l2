@@ -2875,7 +2875,8 @@ def results_search_directions(request):
     sorting = data.get("sorting", "confirm-date")
     sorting_direction = data.get("sorting_direction", "up")
     otd_search = int(data.get("otd", "-1"))
-    doc_search = int(data.get("doc", "-1"))
+    doc_search = data.get("doc", "-1")
+    doc_search = -1 if not doc_search.isdigit() else int(doc_search)
     # page = int(data.get("page", "1"))
 
     if type not in ["d", "m", "y"]:

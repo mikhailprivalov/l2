@@ -1095,57 +1095,60 @@ def get_client_directions(request):
     import datetime
     res = {"directions": [], "ok": False}
     if request.method == "GET":
-        pk = int(request.GET["pk"])
-        req_status = int(request.GET["status"])
-        date_start = request.GET["date[start]"]  # начальная дата назначения
-        date_end = request.GET["date[end]"]  # конечная дата назначения
+        try:
+            pk = int(request.GET["pk"])
+            req_status = int(request.GET["status"])
+            date_start = request.GET["date[start]"]  # начальная дата назначения
+            date_end = request.GET["date[end]"]  # конечная дата назначения
 
-        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
-        if pk >= 0 or req_status == 4:
-            rows = []
-            if req_status != 4:
-                rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
-                                                   client__pk=pk).order_by("-data_sozdaniya").prefetch_related()
-            else:
-                rows = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end),
-                                                     doc_who_create=request.user.doctorprofile)
-                                                   | Q(data_sozdaniya__range=(date_start, date_end),
-                                                       doc=request.user.doctorprofile)).order_by(
-                    "-data_sozdaniya").prefetch_related()
+            date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                       int(date_start.split(".")[0]))
+            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                     int(date_end.split(".")[0])) + datetime.timedelta(1)
+            if pk >= 0 or req_status == 4:
+                rows = []
+                if req_status != 4:
+                    rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
+                                                       client__pk=pk).order_by("-data_sozdaniya").prefetch_related()
+                else:
+                    rows = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end),
+                                                         doc_who_create=request.user.doctorprofile)
+                                                       | Q(data_sozdaniya__range=(date_start, date_end),
+                                                           doc=request.user.doctorprofile)).order_by(
+                        "-data_sozdaniya").prefetch_related()
 
-            for napr in rows:
-                iss_list = Issledovaniya.objects.filter(napravleniye=napr)
-                if not iss_list.exists():
-                    continue
-                status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
-                has_conf = False
-                for v in iss_list:
-                    iss_status = 1
-                    if not v.doc_confirmation and not v.doc_save and not v.deferred:
+                for napr in rows:
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+                    if not iss_list.exists():
+                        continue
+                    status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
+                    has_conf = False
+                    for v in iss_list:
                         iss_status = 1
-                        if v.tubes.count() == 0:
-                            iss_status = 0
-                        for t in v.tubes.all():
-                            if not t.time_recive:
+                        if not v.doc_confirmation and not v.doc_save and not v.deferred:
+                            iss_status = 1
+                            if v.tubes.count() == 0:
                                 iss_status = 0
-                    elif v.doc_confirmation or v.deferred:
-                        iss_status = 2
-                    if v.doc_confirmation and not has_conf:
-                        has_conf = True
-                    status = min(iss_status, status)
-                    tmpiss = v
-                if status == 2 and not has_conf:
-                    status = 1
-                if req_status in [3, 4] or req_status == status:
-                    res["directions"].append(
-                        {"pk": napr.pk, "status": status,
-                         "researches": ' | '.join(v.research.title for v in iss_list),
-                         "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                         "lab": iss_list[0].research.subgroup.podrazdeleniye.title, "cancel": napr.cancel})
-            res["ok"] = True
+                            for t in v.tubes.all():
+                                if not t.time_recive:
+                                    iss_status = 0
+                        elif v.doc_confirmation or v.deferred:
+                            iss_status = 2
+                        if v.doc_confirmation and not has_conf:
+                            has_conf = True
+                        status = min(iss_status, status)
+                        tmpiss = v
+                    if status == 2 and not has_conf:
+                        status = 1
+                    if req_status in [3, 4] or req_status == status:
+                        res["directions"].append(
+                            {"pk": napr.pk, "status": status,
+                             "researches": ' | '.join(v.research.title for v in iss_list),
+                             "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
+                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title, "cancel": napr.cancel})
+                res["ok"] = True
+        except ValueError:
+            pass
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
