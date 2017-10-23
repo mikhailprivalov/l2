@@ -98,7 +98,7 @@ def directory_researches(request):
                                                               "num": fraction.sort_weight}
             # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
-
+        return_result["researches"] = sorted(return_result["researches"], key=lambda d: d["pk"])
     return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
 
 
