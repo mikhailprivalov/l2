@@ -58,6 +58,18 @@
                 </ul>
             </div>
         </div>
+        {% if request.user.is_superuser %}
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика для администратора L2</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('list-users', 0)">Пользователи</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
 {% block scripts %}
