@@ -117,7 +117,7 @@ def tubes(request, direction_implict_id=None):
                     v.tubes.add(ntube)
 
                 tubes_buffer[vrpk]["researches"].add(v.research.title)
-        for tube_k in tubes_buffer.keys():
+        for tube_k in sorted(tubes_buffer.keys(), key=lambda k: tubes_buffer[k]["pk"]):
             tube = tubes_buffer[tube_k]["pk"]
             if tube not in tubes_id:
                 continue
