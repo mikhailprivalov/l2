@@ -796,7 +796,7 @@
             sync(true);
         }
 
-        function sync_checks() {
+        function sync_checks(retry) {
             checked[active_lab] = [];
             let tmp = [];
             $(".btn").removeClass("active-b");
@@ -819,7 +819,8 @@
             });
             checkedall = tmp;
             sync(true);
-            sync_checks();
+            if(retry === undefined)
+                sync_checks(true);
         }
 
         function check_ow(top) {
