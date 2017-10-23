@@ -837,9 +837,11 @@
                 if(autoadd.length > 0){
                     let diff = _.difference(autoadd, checked[lab]);
                     checked[lab] = _.union(checked[lab], autoadd);
-                    _.each(diff, d => { $(`input[value=${d}]`).prop("checked", true).parent().addClass("active-b"); checkAutoAdd(d); });
+                    _.each(diff, d => { checkAutoAdd(d); });
                 }
             }
+            sync();
+            sync_checks();
         }
 
         function rootCheck(top) {
