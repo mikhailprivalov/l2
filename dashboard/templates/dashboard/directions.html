@@ -849,7 +849,7 @@
                 if(addto.length > 0){
                     let inter = _.intersection(checked[lab], addto);
                     checked[lab] = _.difference(checked[lab], addto);
-                    _.each(inter, d => { $(`input[value=${d}]`).prop("checked", false).parent().addClass("active-b"); rootCheck(d); });
+                    _.each(inter, d => { rootCheck(d); });
                 }
             }
             sync();
