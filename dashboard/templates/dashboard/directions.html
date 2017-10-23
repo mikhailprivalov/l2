@@ -969,6 +969,7 @@
                 }
                 sync();
                 $("#select-lab").val(Object.keys(templates[active_template].values).slice(-1)[0]).change().selectpicker('refresh');
+                sync_checks();
 
             });
             $("body").on("change", "#table-researches .btn input", check_change);
