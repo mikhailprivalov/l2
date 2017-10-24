@@ -266,7 +266,7 @@ def tubes_get(request):
     """ Получение списка не принятых пробирок """
     result = []
     k = set()
-    if request.method == "GET" and "lab" in request.GET and "from" in request.GET and "datestart" in request.GET and "dateend" in request.GET:
+    if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit() and "from" in request.GET and request.GET["from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
         date_start = request.GET["datestart"]
