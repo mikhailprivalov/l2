@@ -501,10 +501,14 @@ def get_one_dir(request):
 
     response = {"ok": False}
     if request.method == 'GET':  # Проверка типа запроса
-        id = int(request.GET['id'])  # Получение идентификатора направления
-        if Napravleniya.objects.filter(pk=id).exists():  # Проверка на существование направления
+        direction_pk = request.GET['id']
+        direction_pk = ''.join(x for x in direction_pk if x.isdigit())
+        direction_pk = int(direction_pk)
+        if direction_pk == "":
+            direction_pk = -1
+        if Napravleniya.objects.filter(pk=direction_pk).exists():  # Проверка на существование направления
             if "check" not in request.GET.keys():
-                tmp2 = Napravleniya.objects.get(pk=id)
+                tmp2 = Napravleniya.objects.get(pk=direction_pk)
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
                 response["direction"] = {"pk": tmp2.pk,
                                          "cancel": tmp2.cancel,
