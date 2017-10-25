@@ -2973,9 +2973,11 @@ def results_search_directions(request):
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
-            if n + 1 > on_page or n < offset:
+            if n + 1 > on_page:
                 continue
             n += 1
+            if n < offset:
+                continue
             rows[key] = {"fio": direction.client.individual.fio(),
                          "birthdate": direction.client.individual.age_s(direction=direction),
                          "sex": direction.client.individual.sex,
