@@ -2974,9 +2974,8 @@ def results_search_directions(request):
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
             n += 1
-            if n > on_page:
-                n -= 1
-                break
+            if n > on_page or n < offset:
+                continue
             rows[key] = {"fio": direction.client.individual.fio(),
                          "birthdate": direction.client.individual.age_s(direction=direction),
                          "sex": direction.client.individual.sex,
