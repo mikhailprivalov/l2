@@ -1746,13 +1746,9 @@
     let willbe_error = false;
 
     function alive() {
-        let showed_error = false;
         $.ajax({
             method: "GET", url: "/dashboard/", cache: false, statusCode: {
                 500: function () {
-                    if(showed_error)
-                        return;
-                    showed_error = true;
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
@@ -1768,9 +1764,6 @@
                     sl(true);
                 },
                 502: function () {
-                    if(showed_error)
-                        return;
-                    showed_error = true;
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
@@ -1789,10 +1782,8 @@
                     document.location.href = "/";
                 }
             }
-        }).fail(() => {
-            if(showed_error)
-                return;
-            showed_error = true;
+        }).fail(jqXHR => {
+            console.log(jqXHR);
             $.amaran({
                 'theme': 'awesome no',
                 'content': {
