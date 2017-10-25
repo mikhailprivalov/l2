@@ -525,7 +525,7 @@
                 $("#patient-view,#researches-view,#directions-view").hide();
                 if(!loadmore)
                     tmp_rows = [];
-                if (i > 0) {
+                if (i > 0 || loadmore) {
                     $(`#${data.grouping}-view`).show();
                     if (data.grouping === "patient") {
                         for (let key in data.rows) {
