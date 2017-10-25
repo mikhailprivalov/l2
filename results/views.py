@@ -2966,6 +2966,7 @@ def results_search_directions(request):
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
+    filtered = []
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
@@ -2973,10 +2974,11 @@ def results_search_directions(request):
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
-            if n >= on_page:
+            if n >= on_page or key in filtered:
                 continue
             n += 1
             if n < offset:
+                filtered.append(key)
                 continue
             rows[key] = {"fio": direction.client.individual.fio(),
                          "birthdate": direction.client.individual.age_s(direction=direction),
