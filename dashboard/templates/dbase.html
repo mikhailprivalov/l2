@@ -1782,6 +1782,20 @@
                     document.location.href = "/";
                 }
             }
+        }).fail(() => {
+            $.amaran({
+                'theme': 'awesome no',
+                'content': {
+                    title: 'Сервер недоступен',
+                    message: "Ошибка связи с сервером. Сообщите администратору о проблеме",
+                    info: '',
+                    icon: 'fa fa-exclamation'
+                },
+                'position': 'bottom right',
+                delay: 13000
+            });
+            willbe_error = true;
+            sl(true);
         }).done(function () {
             if (willbe_error) {
                 willbe_error = false;
