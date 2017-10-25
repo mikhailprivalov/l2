@@ -376,14 +376,18 @@
     </style>
 {% endblock %}
 {% block scripts %}
+    {% load setting_default %}
+    {% s_default "search_directions_on_page" "30" "i" as search_directions_on_page %}
     <script>
         const users_av = {{ users|safe }};
         const current_user_pk = "{{ request.user.doctorprofile.pk }}";
+        const search_directions_on_page = {{ search_directions_on_page }};
         let page = 1;
         let request = {};
         let tmp_data = {};
         let tmp_rows = [];
         let show_norms = 0;
+        let offset = 0;
         const norm = {
             "none": "Не обработано",
             "normal": "Норма",
@@ -485,7 +489,7 @@
                     data: {
                         query: query,
                         type_patient: $('#type').val(),
-                        page: page,
+                        offset: 0,
                         period: JSON.stringify(period),
                         perform_norms: $("#perform_norms").is(":checked"),
                         otd: $("#use-otd").is(":checked") ? $("#select-otd").val() : -1,
@@ -497,12 +501,13 @@
                     }
                 };
                 show_norms = 0;
+                offset = 0;
                 if (request.data.perform_norms) {
                     show_norms = 1;
                 }
             }
             else {
-                request.data.page = gpage;
+                request.data.offset = offset;
             }
 
             if(request.data.query.length < 3 && (isNaN(request.data.query) || request.data.query === "") && request.data.otd === -1 && request.data.doc === -1){
@@ -510,7 +515,6 @@
                 hl();
                 return;
             }
-
             $.ajax(request).done(function (data) {
                 tmp_data = data.rows;
                 i = Object.keys(data.rows).length;

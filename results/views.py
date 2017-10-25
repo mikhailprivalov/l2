@@ -2877,7 +2877,10 @@ def results_search_directions(request):
     otd_search = int(data.get("otd", "-1"))
     doc_search = data.get("doc", "-1")
     doc_search = -1 if not doc_search.isdigit() else int(doc_search)
+    offset = data.get("offset", "0")
+    offset = 0 if not offset.isdigit() else int(offset)
     # page = int(data.get("page", "1"))
+    on_page = SettingManager.get("search_directions_on_page", "30", "i")
 
     if type not in ["d", "m", "y"]:
         type = "d"
@@ -2963,7 +2966,9 @@ def results_search_directions(request):
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
-    for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",)))[:]:
+    collection = collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",)))[offset:on_page]
+    cnt = collection.count()
+    for direction in collection:
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
         datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(
@@ -3025,8 +3030,8 @@ def results_search_directions(request):
                 rows[key]["is_normal"] = row_normal
         rows[key]["directions"].append(tmp_dir)
         directions_pks.append(direction.pk)
-
-    slog.Log(key="", type=27, body=json.dumps({"query": query,
+    if offset == 0:
+        slog.Log(key="", type=27, body=json.dumps({"query": query,
                                                "period": period,
                                                "type_patient": type_patient,
                                                "perform_norms": perform_norms,
@@ -3034,4 +3039,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping}), content_type="application/json")
+    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "length": cnt, "next_offset": offset+cnt}), content_type="application/json")
