@@ -377,11 +377,11 @@
 {% endblock %}
 {% block scripts %}
     {% load setting_default %}
-    {% s_default "search_directions_on_page" "30" "i" as search_directions_on_page %}
+    {% s_default "search_rows_on_page" "2" "i" as search_rows_on_page %}
     <script>
         const users_av = {{ users|safe }};
         const current_user_pk = "{{ request.user.doctorprofile.pk }}";
-        const search_directions_on_page = {{ search_directions_on_page }};
+        const search_rows_on_page = {{ search_rows_on_page }};
         let page = 1;
         let request = {};
         let tmp_data = {};

@@ -2880,7 +2880,7 @@ def results_search_directions(request):
     offset = data.get("offset", "0")
     offset = 0 if not offset.isdigit() else int(offset)
     # page = int(data.get("page", "1"))
-    on_page = SettingManager.get("search_directions_on_page", "30", "i")
+    on_page = SettingManager.get("search_rows_on_page", "2", "i")
 
     if type not in ["d", "m", "y"]:
         type = "d"
@@ -2966,9 +2966,7 @@ def results_search_directions(request):
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
-    collection = collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",)))[offset:on_page]
-    cnt = collection.count()
-    for direction in collection:
+    for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
         datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(
@@ -2976,8 +2974,9 @@ def results_search_directions(request):
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
             n += 1
-            # if n > 40:
-            #    break
+            if n > on_page:
+                n -= 1
+                break
             rows[key] = {"fio": direction.client.individual.fio(),
                          "birthdate": direction.client.individual.age_s(direction=direction),
                          "sex": direction.client.individual.sex,
@@ -3039,4 +3038,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "length": cnt, "next_offset": offset+cnt}), content_type="application/json")
+    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "length": n, "next_offset": offset+n}), content_type="application/json")
