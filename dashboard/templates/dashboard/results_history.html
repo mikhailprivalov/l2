@@ -592,13 +592,15 @@
                     } else if (data.grouping === "directions") {
 
                     }
-                    $("#dirs-list tbody").append(`<tr id='load_more'>
+                    if(data.len >= search_rows_on_page) {
+                        $("#dirs-list tbody").append(`<tr id='load_more'>
 <td colspan='6'><a href='#'>Загрузить ещё</a></td>
 </tr>`);
-                    $("#load_more").click(function(){
-                        search('', true);
-                       return false;
-                    });
+                        $("#load_more").click(function () {
+                            search('', true);
+                            return false;
+                        });
+                    }
                     offset = data.next_offset;
                 }
                 else if(!loadmore) {
