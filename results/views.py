@@ -2880,7 +2880,7 @@ def results_search_directions(request):
     offset = data.get("offset", "0")
     offset = 0 if not offset.isdigit() else int(offset)
     # page = int(data.get("page", "1"))
-    on_page = SettingManager.get("search_rows_on_page", "2", "i")
+    on_page = SettingManager.get("search_rows_on_page", "25", "i")
 
     if type not in ["d", "m", "y"]:
         type = "d"
