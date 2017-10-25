@@ -592,9 +592,13 @@
                     } else if (data.grouping === "directions") {
 
                     }
-                    $("#dirs-list tbody").append(`<tr class='load_more'>
-<td colspan='6'><a href='#' onclick='search("", true);return false;'>Загрузить ещё</a></td>
+                    $("#dirs-list tbody").append(`<tr id='load_more'>
+<td colspan='6'><a href='#'>Загрузить ещё</a></td>
 </tr>`);
+                    $("#load_more").click(function(){
+                        search('', true);
+                       return false;
+                    });
                 }
                 else if(!loadmore) {
                     $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
