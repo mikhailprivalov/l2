@@ -458,10 +458,11 @@
 
         function search(query, gpage) {
             sl();
-            $('#dirs-list').scrollTop(0);
-            query = query.capitalizeAll();
-            $("#select_all_rows,#select_all_rows_r").prop("checked", false);
+            let loadmore = false;
             if (typeof gpage === 'undefined') {
+                $('#dirs-list').scrollTop(0);
+                query = query.capitalizeAll();
+                $("#select_all_rows,#select_all_rows_r").prop("checked", false);
                 page = 1;
                 $("#dirs-list tbody").html("");
                 try {
@@ -508,6 +509,8 @@
             }
             else {
                 request.data.offset = offset;
+                $("#load_more").remove();
+                loadmore = true;
             }
 
             if(request.data.query.length < 3 && (isNaN(request.data.query) || request.data.query === "") && request.data.otd === -1 && request.data.doc === -1){
@@ -520,7 +523,8 @@
                 i = Object.keys(data.rows).length;
                 $("#dirs-list input[type=checkbox]").prop("checked", false);
                 $("#patient-view,#researches-view,#directions-view").hide();
-                tmp_rows = [];
+                if(!loadmore)
+                    tmp_rows = [];
                 if (i > 0) {
                     $(`#${data.grouping}-view`).show();
                     if (data.grouping === "patient") {
@@ -588,8 +592,11 @@
                     } else if (data.grouping === "directions") {
 
                     }
+                    $("#dirs-list tbody").append(`<tr class='load_more'>
+<td colspan='6'><a href='#' onclick='search("", true);return false;'>Загрузить ещё</a></td>
+</tr>`);
                 }
-                else {
+                else if(!loadmore) {
                     $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
                     $.amaran({
                         'theme': 'awesome wrn',
