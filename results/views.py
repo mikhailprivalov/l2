@@ -2974,7 +2974,7 @@ def results_search_directions(request):
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
-            if n >= on_page or key in filtered:
+            if n - offset >= on_page or key in filtered:
                 if key not in filtered:
                     filtered.append(key)
                 continue
