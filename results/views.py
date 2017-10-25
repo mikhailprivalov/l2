@@ -3039,4 +3039,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n, "next_offset": offset+n}), content_type="application/json")
+    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n}), content_type="application/json")
