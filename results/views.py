@@ -2967,6 +2967,7 @@ def results_search_directions(request):
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
     filtered = []
+    cnt = 0
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
         if direction.pk in directions_pks or not direction.is_all_confirm():
             continue
@@ -2974,6 +2975,7 @@ def results_search_directions(request):
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
+            cnt += 1
             if n - offset >= on_page or key in filtered:
                 if key not in filtered:
                     filtered.append(key)
@@ -3043,4 +3045,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1}), content_type="application/json")
+    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1, "all_rows": cnt}), content_type="application/json")
