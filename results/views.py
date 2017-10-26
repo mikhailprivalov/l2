@@ -2960,8 +2960,7 @@ def results_search_directions(request):
             if CardBase.objects.filter(assign_in_search=client_base).exists():
                 f = list(CardBase.objects.filter(assign_in_search=client_base))
             f.append(client_base)
-            collection = collection.filter(client__base__in=f)
-            filter_type = [str(x) for x in f]
+            collection = collection.filter(client__base__pk__in=[x.pk for x in f])
         collection = collection.filter(client__number__iexact=query)
     elif client_base is not None:
         collection = collection.filter(client__base=client_base)
@@ -3057,4 +3056,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"filter_type": filter_type, "type_patient": type_patient, "rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1, "all_rows": cnt}), content_type="application/json")
+    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1, "all_rows": cnt}), content_type="application/json")
