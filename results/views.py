@@ -2955,11 +2955,12 @@ def results_search_directions(request):
                                        client__individual__birthday=bdate)
 
     if filter_type == "card_number":
-        if client_base is not None and CardBase.objects.filter(assign_in_search=client_base).exists():
+        if type_patient != -1 and CardBase.objects.filter(assign_in_search=client_base).exists():
             f = [x for x in CardBase.objects.filter(assign_in_search=client_base)] + [client_base]
             collection = collection.filter(client__base__in=f)
-        elif client_base is not None:
+        elif type_patient != -1:
             collection = collection.filter(client__base=client_base)
+        collection = collection.filter(client__number__iexact=query)
     elif client_base is not None:
         collection = collection.filter(client__base=client_base)
 
