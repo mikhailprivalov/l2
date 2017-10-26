@@ -292,7 +292,7 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(podrazileniye=lab).order_by("fio"):
+        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант")).order_by("fio"):
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False))
