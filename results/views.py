@@ -4,6 +4,7 @@ from copy import deepcopy
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import dateformat
@@ -15,7 +16,7 @@ import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
-from clients.models import CardBase
+from clients.models import CardBase, Card
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -2957,12 +2958,12 @@ def results_search_directions(request):
     if filter_type == "card_number":
         filter = dict(client__number__iexact=query)
         if type_patient != -1:
-            f = []
-            if CardBase.objects.filter(assign_in_search=client_base).exists():
-                f = list(CardBase.objects.filter(assign_in_search=client_base))
-            f.append(client_base)
-            filter["client__base__pk__in"] = [x.pk for x in f]
-        collection = collection.filter(**filter)
+            qq = Q(client__base=client_base, client__number__iexact=query)
+            for cb in CardBase.objects.filter(assign_in_search=client_base):
+                qq |= Q(client__individual__card__number__iexact=query, client__base=cb)
+            collection = collection.filter(qq)
+        else:
+            collection = collection.filter(client__number__iexact=query)
     elif client_base is not None:
         collection = collection.filter(client__base=client_base)
 
