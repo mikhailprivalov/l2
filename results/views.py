@@ -2961,6 +2961,7 @@ def results_search_directions(request):
                 f = list(CardBase.objects.filter(assign_in_search=client_base))
             f.append(client_base)
             collection = collection.filter(client__base__in=f)
+            filter_type = f
         collection = collection.filter(client__number__iexact=query)
     elif client_base is not None:
         collection = collection.filter(client__base=client_base)
