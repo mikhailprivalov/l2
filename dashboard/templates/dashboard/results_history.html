@@ -377,7 +377,7 @@
 {% endblock %}
 {% block scripts %}
     {% load setting_default %}
-    {% s_default "search_rows_on_page" "25" "i" as search_rows_on_page %}
+    {% s_default "search_rows_on_page" "100" "i" as search_rows_on_page %}
     <script>
         const users_av = {{ users|safe }};
         const current_user_pk = "{{ request.user.doctorprofile.pk }}";
