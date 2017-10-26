@@ -2962,10 +2962,10 @@ def results_search_directions(request):
     sort_types = {}
     if sorting_direction == "up":
         sort_types = {"confirm-date": ("issledovaniya__time_confirmation",),
-                      "patient": ("client__individual__family", "client__individual__name", "client__individual__patronymic",)}
+                      "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",)}
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
-                      "patient": ("-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
+                      "patient": ("-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
     filtered = []
     cnt = 0
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
