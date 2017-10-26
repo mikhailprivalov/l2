@@ -15,6 +15,7 @@ import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
+from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -2939,8 +2940,9 @@ def results_search_directions(request):
     if doc_search != -1:
         collection = collection.filter(doc__pk=doc_search)
 
+    client_base = None
     if type_patient != -1:
-        collection = collection.filter(client__base__pk=type_patient)
+        client_base = CardBase.objects.get(pk=type_patient)
     if filter_type == "fio":
         collection = collection.filter(client__individual__family__contains=family,
                                        client__individual__name__contains=name,
@@ -2953,7 +2955,13 @@ def results_search_directions(request):
                                        client__individual__birthday=bdate)
 
     if filter_type == "card_number":
-        collection = collection.filter(client__number__iexact=query)
+        f = [client_base]
+        if client_base is not None and CardBase.objects.filter(assign_in_search=client_base).exists():
+            f = f + [x for x in CardBase.objects.filter(assign_in_search=client_base)]
+
+        collection = collection.filter(client__base__in=f, client__number__iexact=query)
+    elif client_base is not None:
+        collection = collection.filter(client__base__pk=type_patient)
 
     import collections
     rows = collections.OrderedDict()
