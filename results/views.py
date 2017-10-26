@@ -2955,9 +2955,9 @@ def results_search_directions(request):
                                        client__individual__birthday=bdate)
 
     if filter_type == "card_number":
-        f = [client_base]
+        f = []
         if client_base is not None and CardBase.objects.filter(assign_in_search=client_base).exists():
-            f = f + [x for x in CardBase.objects.filter(assign_in_search=client_base)]
+            f = [x for x in CardBase.objects.filter(assign_in_search=client_base)] + [client_base]
 
         collection = collection.filter(client__base__in=f, client__number__iexact=query)
     elif client_base is not None:
