@@ -124,6 +124,9 @@
 {% block scripts %}
     <script>
         $(document).ready(function () {
+            $("#search").bind('keyup', 'return', function () {
+                search();
+            });
         });
 
         function search() {
