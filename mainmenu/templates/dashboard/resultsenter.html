@@ -1423,7 +1423,7 @@
                     else {
                         all_o = false;
                         if (v.allow_disable_confirm)
-                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`;
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='event.preventDefault();reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`;
                     }
                     let t = "";
                     if (v.saved && v.is_norm !== "normal")
