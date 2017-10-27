@@ -746,7 +746,7 @@ def dir_multiprint(request):
 @login_required
 def direction_info(request):
     if request.is_ajax():
-        yesno = {True: "Да", False: "Нет"}
+        yesno = {True: "да", False: "нет"}
         data = []
         pk = request.GET.get("pk", "-1")
         if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
