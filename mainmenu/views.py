@@ -775,11 +775,13 @@ def direction_info(request):
                         ["Заборщик", get_userdata(tube.doc_get)]
                     ])
                 if tube.time_recive is not None:
-                    d["events"].append([
+                    tdata = [
                         ["title", timezone.localtime(tube.time_recive).strftime("%d.%m.%Y %X") + " Приём"],
                         ["Приёмщик", get_userdata(tube.doc_recive)],
-                        ["Комментарий не приёма", tube.notice]
-                    ])
+                    ]
+                    if tube.notice not in [None, ""]:
+                        tdata.append(["Комментарий не приёма", tube.notice])
+                    d["events"].append(tdata)
                 data.append(d)
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
