@@ -3,7 +3,7 @@ import clients.models as Clients
 from api.models import Application
 from users.models import DoctorProfile
 from jsonfield import JSONField
-from researches.models import Researches, Tubes
+from researches.models import Tubes
 import directory.models as directory
 import simplejson as json
 import users.models as umodels
