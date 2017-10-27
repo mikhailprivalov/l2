@@ -131,6 +131,8 @@
 
         function search() {
             let pk = $("#search").val().trim();
+            if(pk === "")
+                return;
             alert("SEARCH " + pk);
         }
     </script>
