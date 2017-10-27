@@ -9,6 +9,7 @@ from appconf.manager import SettingManager
 import clients.models as clients
 from rmis_integration.client import Client
 from slog.models import Log as slog
+import directory.models as directory
 
 
 @login_required
@@ -70,3 +71,14 @@ def patients_without_cards(request):
 def sync_departments(request):
     c = Client()
     return HttpResponse("Добавлено: %s. Обновлено: %s." % c.department.sync_departments(), content_type="text/plain")
+
+
+@login_required
+@staff_member_required
+def sync_researches(request):
+    r = directory.Researches.objects.filter(podrazdeleniye__isnull=True, subgroup__isnull=False)
+    cnt = r.count()
+    for research in r:
+        research.podrazdeleniye = research.subgroup.podrazdeleniye
+        research.save()
+    return HttpResponse(str(cnt), content_type="text/plain")

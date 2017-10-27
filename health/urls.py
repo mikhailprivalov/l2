@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^archive_cards$', views.archive_without_directions),
     url(r'^patients$', views.patients_without_cards),
     url(r'^sync/departments$', views.sync_departments),
+    url(r'^sync/researches$', views.sync_researches),
 ]
