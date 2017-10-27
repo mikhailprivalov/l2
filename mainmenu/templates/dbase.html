@@ -1745,6 +1745,12 @@
     });
     let willbe_error = false;
 
+    function blurall() {
+        $(function () {
+            $('input').blur();
+        });
+    }
+
     function alive() {
         $.ajax({
             method: "GET", url: "/mainmenu/", cache: false, statusCode: {
@@ -1762,6 +1768,7 @@
                     });
                     willbe_error = true;
                     sl(true);
+                    blurall();
                 },
                 502: function () {
                     $.amaran({
@@ -1777,6 +1784,7 @@
                     });
                     willbe_error = true;
                     sl(true);
+                    blurall();
                 },
                 302: function () {
                     document.location.href = "/";
@@ -1798,6 +1806,7 @@
             });
             willbe_error = true;
             sl(true);
+            blurall();
         }).done(function () {
             if (willbe_error) {
                 willbe_error = false;
