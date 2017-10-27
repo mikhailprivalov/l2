@@ -9,7 +9,7 @@
                 <input type="text" class="form-control" id="search" name="dir-field" data-container="body"
                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
                        maxlength="15"
-                       placeholder="Введите номер направления или пробирки">
+                       placeholder="Введите номер направления">
                   <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="search();" type="button">Поиск</button>
                   </span>
@@ -133,7 +133,13 @@
             let pk = $("#search").val().trim();
             if(pk === "")
                 return;
-            alert("SEARCH " + pk);
+            sl();
+            $.ajax({
+                url: "/mainmenu/direction/info",
+                data: {pk: pk}
+            }).done(data => {
+                console.log(data);
+            });
         }
     </script>
     <style>

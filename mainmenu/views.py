@@ -18,7 +18,7 @@ from laboratory import settings
 from rmis_integration.client import Client
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya
-from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
+from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
 from django.views.decorators.cache import cache_page
@@ -32,6 +32,7 @@ import directory.models as directory
 class IsNull(Func):
     template = '%(expressions)s IS NULL'
 
+
 # @cache_page(60 * 15)
 @login_required
 def dashboard(request):  # Представление панели управления
@@ -41,21 +42,35 @@ def dashboard(request):  # Представление панели управл�
         menu = []
         groups = [str(x) for x in request.user.groups.all()]
         pages = [
-            {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/direction/info", "title": "Информация о направлении", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант"]},
-            {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
-            {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/mainmenu/directions", "title": "Направления", "nt": False,
+             "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/direction/info", "title": "Информация о направлении", "nt": False,
+             "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант"]},
+            {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False,
+             "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False,
+             "access": ["Заборщик биоматериала"]},
+            {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False,
+             "access": ["Получатель биоматериала"]},
+            {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False,
+             "access": ["Получатель биоматериала"]},
+            {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False,
+             "access": ["Получатель биоматериала"]},
+            {"url": "/results/enter", "title": "Ввод результатов", "nt": False,
+             "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": []},
-            {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
-            {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
-            {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"]},
-            {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
-            {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
-            {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/statistic", "title": "Статистика", "nt": False,
+             "access": ["Просмотр статистики", "Врач-лаборант"]},
+            {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False,
+             "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
+            {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False,
+             "access": ["Загрузка выписок", "Поиск выписок"]},
+            {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False,
+             "access": ["Создание и редактирование пользователей"]},
+            {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False,
+             "access": ["Создание и редактирование пользователей"]},
+            {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False,
+             "access": ["Создание и редактирование пользователей"]},
             {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
             {"url": "/admin", "title": "Админ-панель", "nt": False, "access": []},
         ]
@@ -65,11 +80,14 @@ def dashboard(request):  # Представление панели управл�
         pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
 
         if SettingManager.get("home_page", default="http://home") != "false":
-            pages.append({"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница", "nt": True, "access": ["*"]})
+            pages.append(
+                {"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
+                 "nt": True, "access": ["*"]})
 
         groups_set = set(groups)
         for page in pages:
-            if not request.user.is_superuser and "*" not in page["access"] and len(groups_set & set(page["access"])) == 0:
+            if not request.user.is_superuser and "*" not in page["access"] and len(
+                            groups_set & set(page["access"])) == 0:
                 continue
             menu.append(page)
 
@@ -110,13 +128,15 @@ def change_password(request):
     if request.is_ajax():
         doc = DoctorProfile.objects.get(pk=request.GET["pk"])
         groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
-        return HttpResponse(json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username}), content_type="application/json")
+        return HttpResponse(json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username}),
+                            content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
         otds[x.title] = []
         for y in DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio'):
-            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye.pk})
+            otds[x.title].append(
+                {"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye.pk})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
 
 
@@ -135,6 +155,8 @@ def update_pass(request):
 
 
 from django.utils import timezone
+
+
 @csrf_exempt
 @login_required
 @group_required("Просмотр журнала")
@@ -202,7 +224,8 @@ def receive_journal_form(request):
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
-    return render(request, 'dashboard/receive_journal.html', {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
+    return render(request, 'dashboard/receive_journal.html',
+                  {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
 
 @csrf_exempt
@@ -226,8 +249,10 @@ def confirm_reset(request):
             ctime = int(time.time())
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
             if (ctime - ctp < SettingManager.get(
-                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [str(x) for x in request.user.groups.all()]:
-                predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk, "direction": iss.napravleniye.pk}
+                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                str(x) for x in request.user.groups.all()]:
+                predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk,
+                          "direction": iss.napravleniye.pk}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
@@ -287,6 +312,7 @@ def create_user(request):  # Страница создания пользова�
                   {'error': False, 'mess': '', 'uname': '', 'fio': '', 'status': registered, 'podr': podr,
                    'podrpost': podrpost, 'g': groups})  # Вывод
 
+
 @csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")
@@ -343,6 +369,7 @@ def get_fin():
         fin.append(o)
     return fin
 
+
 # @cache_page(60 * 15)
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
@@ -376,7 +403,8 @@ def directions(request):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
             tmp_template[r.research.get_podrazdeleniye().pk].append(r.research.pk)
-        templates[t.pk] = {"values": tmp_template, "title": t.title, "for_doc": t.doc is not None, "for_podr": t.podrazdeleniye is not None}
+        templates[t.pk] = {"values": tmp_template, "title": t.title, "for_doc": t.doc is not None,
+                           "for_podr": t.podrazdeleniye is not None}
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
                                                          "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
@@ -401,7 +429,7 @@ def results_history(request):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
     return render(request, 'dashboard/results_history.html', {'labs': podr,
-                                                                'fin': get_fin(),
+                                                              'fin': get_fin(),
                                                               "notlabs": podrazdeleniya,
                                                               "users": json.dumps(users)})
 
@@ -429,6 +457,8 @@ def discharge(request):
 
 
 import podrazdeleniya.models as pod
+
+
 @csrf_exempt
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок")
@@ -604,11 +634,12 @@ def dashboard_from(request):
     if request.GET.get("get_labs", "false") == "true":
         result = {}
         for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-            tubes = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False, doc_get__podrazdeleniye__isLab=False, notice="",
-                                                       doc_recive__isnull=True,
-                                                       time_get__range=(date_start, date_end),
-                                                       issledovaniya__research__podrazdeleniye=lab)\
-                    .distinct().count()
+            tubes = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False,
+                                                     doc_get__podrazdeleniye__isLab=False, notice="",
+                                                     doc_recive__isnull=True,
+                                                     time_get__range=(date_start, date_end),
+                                                     issledovaniya__research__podrazdeleniye=lab) \
+                .distinct().count()
             result[lab.pk] = tubes
         return HttpResponse(json.dumps(result), content_type="application/json")
     result = {}
@@ -714,4 +745,29 @@ def dir_multiprint(request):
 
 @login_required
 def direction_info(request):
+    if request.is_ajax():
+        data = []
+        pk = request.POST.get("pk", "-1")
+        if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
+            dir = Napravleniya.objects.get(pk=pk)
+            data.append({"type": "direction",
+                         "pk": pk,
+                         "events": [{"Направление создано": {
+                             "datetime": timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X"),
+                             "creator": get_userdata(dir.doc_who_create),
+                             "ofname": get_userdata(dir.doc),
+                             "patient": {"fio": dir.client.individual.fio(), "bd": dir.client.individual.bd(), "sex": dir.client.individual.sex},
+                             "card": "%s %s" % (dir.client.number, dir.client.base.title),
+                             "archive": dir.client.is_archive,
+                             "finsource": dir.istochnik_f.tilie,
+                             "diagnos": dir.diagnos}
+                            }]
+                         })
+        return HttpResponse(json.dumps(data), content_type="application/json")
     return render(request, 'dashboard/direction_info.html')
+
+
+def get_userdata(doc: DoctorProfile):
+    if doc is None:
+        return None
+    return {"fio": doc.fio, "podr": doc.podrazdeleniye.title, "username": doc.user.username}
