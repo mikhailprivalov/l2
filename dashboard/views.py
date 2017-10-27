@@ -103,7 +103,7 @@ def change_password(request):
             doc.fio = request.POST.get("fio", "ФИО")
             doc.save()
         else:
-            doc.podrazileniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
+            doc.podrazdeleniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
             doc.save()
         return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
     if request.is_ajax():
@@ -114,8 +114,8 @@ def change_password(request):
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
         otds[x.title] = []
-        for y in DoctorProfile.objects.filter(podrazileniye=x).order_by('fio'):
-            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazileniye.pk})
+        for y in DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio'):
+            otds[x.title].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye.pk})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
 
 
@@ -195,7 +195,7 @@ def researches_control(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
     if not lab.isLab:
         lab = labs[0]
@@ -266,7 +266,7 @@ def create_user(request):  # Страница создания пользова�
                 profile = DoctorProfile.objects.create()  # Создание профиля
                 profile.user = user  # Привязка профиля к пользователю
                 profile.fio = fio  # ФИО
-                profile.podrazileniye = podr.get(pk=podrpost)  # Привязка подразделения
+                profile.podrazdeleniye = podr.get(pk=podrpost)  # Привязка подразделения
                 profile.isLDAP_user = False
                 profile.save()  # Сохранение профиля
                 registered = True
@@ -356,14 +356,14 @@ def directions(request):
     podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
     if oper:
         p = podrazdeleniya.first()
-        if not request.user.doctorprofile.podrazileniye.isLab and not request.user.doctorprofile.podrazileniye.hide:
-            p = request.user.doctorprofile.podrazileniye
-        docs = DoctorProfile.objects.filter(podrazileniye=p,
+        if not request.user.doctorprofile.podrazdeleniye.isLab and not request.user.doctorprofile.podrazdeleniye.hide:
+            p = request.user.doctorprofile.podrazdeleniye
+        docs = DoctorProfile.objects.filter(podrazdeleniye=p,
                                             user__groups__name="Лечащий врач").order_by("fio")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazileniye=p,
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
                                               user__groups__name="Лечащий врач").order_by("fio"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
@@ -372,7 +372,7 @@ def directions(request):
     templates = {}
     for t in AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
                                                         Q(doc=request.user.doctorprofile) |
-                                                        Q(podrazdeleniye=request.user.doctorprofile.podrazileniye)):
+                                                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
             tmp_template[r.research.subgroup.podrazdeleniye.pk].append(r.research.pk)
@@ -396,7 +396,7 @@ def results_history(request):
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazileniye=p,
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
                                               user__groups__name="Лечащий врач"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
@@ -415,7 +415,7 @@ def discharge(request):
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazileniye=p,
+        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
                                               user__groups__name="Лечащий врач"):
             pd["docs"].append({"pk": d.pk, "fio": d.fio})
         users.append(pd)
@@ -575,7 +575,7 @@ def results_history_search(request):
     if type == "otd":
         collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
                                                 issledovaniya__time_confirmation__range=(day1, day2),
-                                                doc__podrazileniye=request.user.doctorprofile.podrazileniye)
+                                                doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
     else:
         collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
                                                 issledovaniya__time_confirmation__range=(day1, day2),
@@ -604,7 +604,7 @@ def dashboard_from(request):
     if request.GET.get("get_labs", "false") == "true":
         result = {}
         for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-            tubes = TubesRegistration.objects.filter(doc_get__podrazileniye__hide=False, doc_get__podrazileniye__isLab=False, notice="",
+            tubes = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False, doc_get__podrazdeleniye__isLab=False, notice="",
                                                        doc_recive__isnull=True,
                                                        time_get__range=(date_start, date_end),
                                                        issledovaniya__research__subgroup__podrazdeleniye=lab)\
@@ -617,7 +617,7 @@ def dashboard_from(request):
     i = 0
     for podr in podrazdeleniya:
         i += 1
-        result[i] = {"tubes": TubesRegistration.objects.filter(doc_get__podrazileniye=podr,
+        result[i] = {"tubes": TubesRegistration.objects.filter(doc_get__podrazdeleniye=podr,
                                                                notice="",
                                                                doc_recive__isnull=True,
                                                                time_get__range=(date_start, date_end),
@@ -685,7 +685,7 @@ def users_dosync(request):
 
             profile = DoctorProfile.objects.create()  # Создание профиля
             profile.user = user  # Привязка профиля к пользователю
-            profile.podrazileniye = pod
+            profile.podrazdeleniye = pod
 
             profile.labtype = 0
             if "врач" in emp or "зав" in emp:

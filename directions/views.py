@@ -241,7 +241,7 @@ def gen_pdf_execlist(request):
                                     inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(iss=inobj.issledovaniya_set.first()) + "<br/>№ напр.: " + str(
                         inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ пробирки.: " + str(
                         inobj.pk) + "<br/>" + Truncator(
-                        inobj.issledovaniya_set.first().napravleniye.doc.podrazileniye.title).chars(19) + "<br/><br/>")
+                        inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19) + "<br/><br/>")
             if len(data) < ysize:
                 for i in range(len(data), ysize):
                     data.append([])
@@ -472,7 +472,7 @@ def printDirection(c, n, dir):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138) + (h / 2) * yn - ht - 10,
                  "Всего назначено: " + str(len(issledovaniya)))
 
-    c.drawString(paddingx + (w / 2 * xn), 27 + (h / 2) * yn, "Отделение: " + dir.doc.podrazileniye.title)
+    c.drawString(paddingx + (w / 2 * xn), 27 + (h / 2) * yn, "Отделение: " + dir.doc.podrazdeleniye.title)
     c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn, "Врач: " + dir.doc.get_fio())
     c.setFont('OpenSans', 7)
     c.setLineWidth(0.25)
@@ -514,7 +514,7 @@ def get_one_dir(request):
                                          "cancel": tmp2.cancel,
                                          "date": str(
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                                         "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazileniye.title},
+                                         "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazdeleniye.title},
                                          "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
                 response["tubes"] = {}
                 tubes_buffer = {}
@@ -765,7 +765,7 @@ def print_history(request):
         idv = v.id
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = v.doc_get.podrazileniye.title + "@" + str(iss[
+        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[
                                                           0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
@@ -777,7 +777,7 @@ def print_history(request):
                  "client-type": iss[0].napravleniye.client.base.short_title,
                  "lab_title": iss[0].research.subgroup.title,
                  "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
-                 "podr": v.doc_get.podrazileniye.title,
+                 "podr": v.doc_get.podrazdeleniye.title,
                  "reciver": None,
                  "tube_id": str(v.id),
                  "history_num": iss[0].napravleniye.history_num,
@@ -1082,7 +1082,7 @@ def get_issledovaniya(request):
                 res["client_hisnum"] = napr.history_num
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["directioner"] = napr.doc.fio
-                res["otd"] = napr.doc.podrazileniye.title
+                res["otd"] = napr.doc.podrazdeleniye.title
                 res["fin_source"] = napr.istochnik_f.tilie
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send

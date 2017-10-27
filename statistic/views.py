@@ -160,15 +160,15 @@ def statistic_xls(request):
                         if n:
                             continue
 
-                        if researches.napravleniye.doc.podrazileniye.pk not in otds:
-                            otds[researches.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                        otds[researches.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                        if researches.napravleniye.doc.podrazdeleniye.pk not in otds:
+                            otds[researches.napravleniye.doc.podrazdeleniye.pk] = defaultdict(lambda: 0)
+                        otds[researches.napravleniye.doc.podrazdeleniye.pk][obj.pk] += 1
                         otds[pki][obj.pk] += 1
                         if any([x.get_is_norm() == "normal" for x in researches.result_set.all()]):
                             continue
-                        if researches.napravleniye.doc.podrazileniye.pk not in otds_pat:
-                            otds_pat[researches.napravleniye.doc.podrazileniye.pk] = defaultdict(lambda: 0)
-                        otds_pat[researches.napravleniye.doc.podrazileniye.pk][obj.pk] += 1
+                        if researches.napravleniye.doc.podrazdeleniye.pk not in otds_pat:
+                            otds_pat[researches.napravleniye.doc.podrazdeleniye.pk] = defaultdict(lambda: 0)
+                        otds_pat[researches.napravleniye.doc.podrazdeleniye.pk][obj.pk] += 1
                         otds_pat[pki][obj.pk] += 1
 
                 style = xlwt.XFStyle()
@@ -292,7 +292,7 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazileniye__isLab=True).order_by("fio").distinct():
+        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazdeleniye__isLab=True).order_by("fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -331,7 +331,7 @@ def statistic_xls(request):
                     if research.title not in cnt_itogo.keys():
                         cnt_itogo[research.title] = 0
 
-                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazileniye=pod,
+                    for i in iss.filter(doc_confirmation=executor, napravleniye__doc__podrazdeleniye=pod,
                                         research=research):
                         isadd = False
                         allempty = True
@@ -406,7 +406,7 @@ def statistic_xls(request):
         row_num += 1
         row = [
             (u"Всего выписано", 6000),
-            (str(Napravleniya.objects.filter(doc__podrazileniye=otd,
+            (str(Napravleniya.objects.filter(doc__podrazdeleniye=otd,
                                              data_sozdaniya__range=(date_start_o, date_end_o)).count()), 3000),
         ]
 
@@ -415,7 +415,7 @@ def statistic_xls(request):
             ws.col(col_num).width = row[col_num][1]
 
         row_num += 1
-        researches = Issledovaniya.objects.filter(napravleniye__doc__podrazileniye=otd,
+        researches = Issledovaniya.objects.filter(napravleniye__doc__podrazdeleniye=otd,
                                                   napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
                                                   time_confirmation__isnull=False)
         naprs = len(set([v.napravleniye.pk for v in researches]))
@@ -434,7 +434,7 @@ def statistic_xls(request):
         font_style = xlwt.XFStyle()
         for p in Podrazdeleniya.objects.filter(hide=False).order_by("title"):
             has = False
-            for u in DoctorProfile.objects.filter(podrazileniye=p).exclude(user__username="admin").order_by("fio"):
+            for u in DoctorProfile.objects.filter(podrazdeleniye=p).exclude(user__username="admin").order_by("fio"):
                 has = True
                 row = [
                     ("ID отделения %s" % p.pk, 9000),
@@ -511,7 +511,7 @@ def statistic_xls(request):
                 gets = d.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
                                                           type__tube=tube,
                                                           time_recive__range=(date_start, date_end),
-                                                          doc_get__podrazileniye=pod).filter(
+                                                          doc_get__podrazdeleniye=pod).filter(
                     Q(notice="") |
                     Q(notice__isnull=True)).distinct()
                 row.append("" if not gets.exists() else str(gets.count()))
@@ -731,7 +731,7 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "uets":
-        usrs = DoctorProfile.objects.filter(podrazileniye__isLab=True).order_by("podrazileniye__title")
+        usrs = DoctorProfile.objects.filter(podrazdeleniye__isLab=True).order_by("podrazdeleniye__title")
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
 
@@ -795,7 +795,7 @@ def statistic_xls(request):
             uets = sum([researches_uets[v]["uet"] for v in researches_uets.keys()])
             row_num += 1
             row = [
-                usr.podrazileniye.title,
+                usr.podrazdeleniye.title,
                 usr.fio,
                 uets,
             ]

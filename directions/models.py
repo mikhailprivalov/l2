@@ -87,8 +87,8 @@ class TubesRegistration(models.Model):
             last_num = 0
             date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
             date2 = datetime_safe.datetime.now()
-            if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazileniye).exists():
-                last_num = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazileniye)])
+            if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazdeleniye).exists():
+                last_num = max([x.daynum for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0, issledovaniya__research__subgroup__podrazdeleniye=doc.podrazdeleniye)])
             self.daynum = last_num + 1'''
             self.daynum = num
             self.save()

@@ -122,7 +122,7 @@ def tubes(request, direction_implict_id=None):
             if tube not in tubes_id:
                 continue
             # c.setFont('OpenSans', 8)
-            otd = list(tmp2.doc.podrazileniye.title.split(" "))
+            otd = list(tmp2.doc.podrazdeleniye.title.split(" "))
             fam = tmp2.client.individual.fio(short=True, dots=False)
             st = ""
             if len(otd) > 1:

@@ -68,7 +68,7 @@ def results_search(request):
 def enter(request):
     """ Представление для страницы ввода результатов """
     from podrazdeleniya.models import Podrazdeleniya
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
     if not lab.isLab:
         lab = labs[0]
@@ -87,9 +87,9 @@ def result_conformation(request):
     if "Зав. Лаб." in request.user.groups.values_list('name', flat=True):  # Если пользователь "Зав.Лаб."
         labs = users.Podrazdeleniya.objects.filter(isLab=True)  # Загрузка всех подразделений
     else:
-        labs = [request.user.doctorprofile.podrazileniye, request.user.doctorprofile.podrazileniye]
+        labs = [request.user.doctorprofile.podrazdeleniye, request.user.doctorprofile.podrazdeleniye]
     researches = directory.Researches.objects.filter(
-        subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)  # Загрузка списка анализов
+        subgroup__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
     return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
 
 
@@ -107,12 +107,12 @@ def loadready(request):
         date_start = request.POST["datestart"]
         date_end = request.POST["dateend"]
         deff = int(request.POST["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazileniye.pk))
+        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazdeleniye.pk))
     else:
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
         deff = int(request.GET["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazileniye.pk))
+        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazdeleniye.pk))
 
     date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                int(date_start.split(".")[0]))
@@ -124,9 +124,9 @@ def loadready(request):
     dirs = set()
 
     # if deff == 0:
-    #     cursor.execute("SELECT * FROM loadready WHERE time_receive BETWEEN %s AND %s AND podr_id = %s", [date_start, date_end, request.user.doctorprofile.podrazileniye.pk])
+    #     cursor.execute("SELECT * FROM loadready WHERE time_receive BETWEEN %s AND %s AND podr_id = %s", [date_start, date_end, request.user.doctorprofile.podrazdeleniye.pk])
     # else:
-    #     cursor.execute("SELECT * FROM loadready WHERE deff = TRUE AND podr_id = %s", [request.user.doctorprofile.podrazileniye.pk])
+    #     cursor.execute("SELECT * FROM loadready WHERE deff = TRUE AND podr_id = %s", [request.user.doctorprofile.podrazdeleniye.pk])
     # for row in cursor.fetchall():
     #     if row[1].date() not in dates_cache:
     #         dates_cache[row[1].date()] = dateformat.format(row[1], 'd.m.y')
@@ -797,7 +797,7 @@ def result_print(request):
 
             c.drawString(px(), py(24), lj('Карта:') + str(direction.client.number_with_type()))
             c.drawString(px(), py(28), lj('Врач:') + direction.doc.get_fio())
-            c.drawString(px(), py(32), lj(' ') + direction.doc.podrazileniye.title)
+            c.drawString(px(), py(32), lj(' ') + direction.doc.podrazdeleniye.title)
 
             '''
             c.setFont('OpenSans', 18)
@@ -809,7 +809,7 @@ def result_print(request):
                               dateformat.format(dir.client.bd(), settings.DATE_FORMAT)) + ")")
             c.drawRightString(pxr(), py(20), "Номер карты: %d" % dir.client.num)
             c.drawRightString(pxr(), py(25), "Лечащий врач: " + dir.doc.get_fio())
-            c.drawRightString(pxr(), py(30), "Отделение: " + dir.doc.podrazileniye.title)
+            c.drawRightString(pxr(), py(30), "Отделение: " + dir.doc.podrazdeleniye.title)
 
             c.setFont('OpenSans', 8)
             c.drawString(px(), py(25), SettingManager.get("org_title"))
@@ -1365,13 +1365,13 @@ def result_print(request):
                 direction.save()
 
             dp = request.user.doctorprofile
-            if not request.user.is_superuser and dp.podrazileniye != \
+            if not request.user.is_superuser and dp.podrazdeleniye != \
                     Issledovaniya.objects.filter(napravleniye=direction)[
-                        0].research.subgroup.podrazdeleniye and dp != direction.doc and dp.podrazileniye != direction.doc.podrazileniye:
+                        0].research.subgroup.podrazdeleniye and dp != direction.doc and dp.podrazdeleniye != direction.doc.podrazdeleniye:
                 slog.Log(key=dpk, type=998, body=json.dumps(
                     {"lab": str(
                         Issledovaniya.objects.filter(napravleniye=direction)[0].research.subgroup.podrazdeleniye),
-                        "doc": str(direction.doc), "print_otd": str(dp.podrazileniye),
+                        "doc": str(direction.doc), "print_otd": str(dp.podrazdeleniye),
                         "patient": str(direction.client.fio())}),
                          user=request.user.doctorprofile).save()
 
@@ -1525,7 +1525,7 @@ def result_print(request):
                 ["Дата забора:", date_t],
                 [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                 ["№ карты:", str(direction.client.number)],
-                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazileniye.title)]
+                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)]
             ]
 
             data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for
@@ -2245,7 +2245,7 @@ def result_journal_table_print(request):
     onlyjson = False
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
 
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
                                             research__subgroup__podrazdeleniye=lab,
@@ -2257,7 +2257,7 @@ def result_journal_table_print(request):
                                                                           "tubes__id",
                                                                           "research__sort_weight"):
         d = iss.napravleniye
-        otd = d.doc.podrazileniye
+        otd = d.doc.podrazdeleniye
         k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.tilie)
         if k not in patients:
             patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.tilie, "patients": {}}
@@ -2473,7 +2473,7 @@ def result_journal_print(request):
     import datetime
     dateo = request.GET["date"]
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
     group = int(request.GET.get("group", "-2"))
@@ -2546,7 +2546,7 @@ def result_journal_print(request):
         def draw_canvas(self, page_count):
             self.setFont('OpenSans', 12)
             self.drawCentredString((A4[0] - 25 * mm) / 2 + 20 * mm, ph - 12 * mm,
-                                   "%s - %s, %s" % (request.user.doctorprofile.podrazileniye.title, group_str, dateo))
+                                   "%s - %s, %s" % (request.user.doctorprofile.podrazdeleniye.title, group_str, dateo))
             self.saveState()
             if not codes:
                 self.setStrokeColorRGB(0, 0, 0)
@@ -2607,7 +2607,7 @@ def result_journal_print(request):
                             "fail"] = True
                 clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(tres)
         if not group_to_otd:
-            otds[iss.napravleniye.doc.podrazileniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = \
+            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = \
                 clientresults[key]
         else:
             otds[iss.napravleniye.istochnik_f.tilie][key] = clientresults[key]
@@ -2773,14 +2773,14 @@ def get_day_results(request):
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                                issledovaniya__research_id__in=researches).order_by("client__pk"):
 
-            if dir.pk not in directions[dir.doc.podrazileniye.title]:
-                directions[dir.doc.podrazileniye.title].append(dir.pk)
+            if dir.pk not in directions[dir.doc.podrazdeleniye.title]:
+                directions[dir.doc.podrazdeleniye.title].append(dir.pk)
     else:
         for dir in Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                                issledovaniya__research_id__in=researches,
-                                               doc__podrazileniye__pk=otd).order_by("client__pk"):
-            if dir.pk not in directions[dir.doc.podrazileniye.title]:
-                directions[dir.doc.podrazileniye.title].append(dir.pk)
+                                               doc__podrazdeleniye__pk=otd).order_by("client__pk"):
+            if dir.pk not in directions[dir.doc.podrazdeleniye.title]:
+                directions[dir.doc.podrazdeleniye.title].append(dir.pk)
 
     return HttpResponse(json.dumps({"directions": directions}), content_type="application/json")
 
@@ -2802,7 +2802,7 @@ def result_filter(request):
             iss_list = []
 
             iss_list = Issledovaniya.objects.filter(
-                research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazileniye)
+                research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
             if dir_pk == "" and status != 3:
                 date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                            int(date_start.split(".")[0]))
@@ -2936,7 +2936,7 @@ def results_search_directions(request):
                                              issledovaniya__time_confirmation__isnull=False,
                                              client__is_archive=archive)
     if otd_search != -1:
-        collection = collection.filter(doc__podrazileniye__pk=otd_search)
+        collection = collection.filter(doc__podrazdeleniye__pk=otd_search)
 
     if doc_search != -1:
         collection = collection.filter(doc__pk=doc_search)
@@ -3037,7 +3037,7 @@ def results_search_directions(request):
 
         tmp_dir = {"pk": direction.pk,
                    "laboratory": direction.issledovaniya_set.first().research.subgroup.podrazdeleniye.title,
-                   "otd": direction.doc.podrazileniye.title,
+                   "otd": direction.doc.podrazdeleniye.title,
                    "doc": direction.doc.get_fio(),
                    "researches": researches, "is_normal": row_normal}
 

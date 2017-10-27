@@ -73,7 +73,7 @@
                         <div class="col-xs-6" style="padding-right: 3px;">
                             <select class="select-b" id="select-otd" data-width="100%" onchange="update_av_docs();">
                                 {% for v in notlabs %}
-                                    {% if request.user.doctorprofile.podrazileniye.pk == v.pk %}
+                                    {% if request.user.doctorprofile.podrazdeleniye.pk == v.pk %}
                                         <option selected value="{{ v.pk }}">{{ v.title }}</option>
                                     {% else %}
                                         <option value="{{ v.pk }}">{{ v.title }}</option>

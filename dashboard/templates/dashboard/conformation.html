@@ -10,7 +10,7 @@
                     <select class="select-b" data-live-search="true" data-width="100%" id="select-lab"
                             onchange="load_researches();">
                         {% for v in labs %}
-                            <option {% if v.title == request.user.doctorprofile.podrazileniye.title %}selected{% endif %}
+                            <option {% if v.title == request.user.doctorprofile.podrazdeleniye.title %}selected{% endif %}
                                     value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
                     </select>
                 </div>

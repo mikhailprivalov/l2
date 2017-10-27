@@ -15,7 +15,7 @@
                 <td>
                     <select class="selectpicker" data-width="100%" id="lab" onchange="loadfrom();">
                         {% for v in labs %}
-                            <option{% if v.pk == request.user.doctorprofile.podrazileniye.pk %} selected{% endif %} data-pk="{{ v.pk }}" value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
+                            <option{% if v.pk == request.user.doctorprofile.podrazdeleniye.pk %} selected{% endif %} data-pk="{{ v.pk }}" value='{{ v.pk }}'>{{ v.title }}</option>{% endfor %}
                     </select>
                 </td>
                 <td>

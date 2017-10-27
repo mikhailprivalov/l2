@@ -15,7 +15,7 @@ from users.models import DoctorProfile
 # class DoctorSerializer(serializers.HyperlinkedModelSerializer):
 #     class Meta:
 #         model = DoctorProfile
-#         fields = ('url', 'user', 'fio', 'podrazileniye', 'isLDAP_user', 'labtype')
+#         fields = ('url', 'user', 'fio', 'podrazdeleniye', 'isLDAP_user', 'labtype')
 #
 #
 # class PodrazdeleniyaSerializer(serializers.HyperlinkedModelSerializer):

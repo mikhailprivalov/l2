@@ -14,7 +14,7 @@ class DoctorProfile(models.Model):
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт')
     fio = models.CharField(max_length=255, help_text='ФИО')
-    podrazileniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение')
     isLDAP_user = models.BooleanField(default=False,
                                       blank=True,
                                       help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
@@ -51,8 +51,8 @@ class DoctorProfile(models.Model):
         return self.user.groups.filter(name__in=groups).exists()
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
-        if self.podrazileniye:
-            return self.fio + ', ' + self.podrazileniye.title
+        if self.podrazdeleniye:
+            return self.fio + ', ' + self.podrazdeleniye.title
         else:
             return self.fio
 

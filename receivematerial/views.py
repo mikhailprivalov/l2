@@ -47,7 +47,7 @@ def receive(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_obo(request):
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk) if request.method == "GET" else request.POST.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk) if request.method == "GET" else request.POST.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     if request.method == "GET":
         labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
         if not lab.isLab:
@@ -75,9 +75,9 @@ def receive_obo(request):
                     else:
                         result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
                 else:
-                    otd = tube.issledovaniya_set.first().napravleniye.doc.podrazileniye
+                    otd = tube.issledovaniya_set.first().napravleniye.doc.podrazdeleniye
                     if tube.issledovaniya_set.first().napravleniye.doc_who_create:
-                        otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazileniye
+                        otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazdeleniye
                     result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
             else:
                 result = {"pk": p, "r": 3}
@@ -95,7 +95,7 @@ def receive_history(request):
     result = {"rows": []}
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     for row in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
                                                 doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).order_by("-daynum").distinct():
         result["rows"].append(
@@ -111,7 +111,7 @@ def last_received(request):
     from django.utils import datetime_safe
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     last_num = 0
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
                                         doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).exists():
@@ -225,7 +225,7 @@ def receive_execlist(request):
                     tmp = [
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube.daynum, styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
-                            "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazileniye.title),
+                            "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazdeleniye.title),
                                   styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
                     for _ in fractions:
@@ -276,7 +276,7 @@ def tubes_get(request):
                                    int(date_start.split(".")[0]))
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
-        for tube in TubesRegistration.objects.filter(doc_get__podrazileniye=podrazledeniye,
+        for tube in TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
                                                      notice="",
                                                      doc_recive__isnull=True,
                                                      time_get__range=(date_start, date_end),
@@ -305,7 +305,7 @@ w, h = A4
 @login_required
 def receive_journal(request):
     """Печать истории принятия материала за день"""
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazileniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     user = request.user.doctorprofile  # Профиль текущего пользователя
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -345,13 +345,13 @@ def receive_journal(request):
     if return_type == "directions":
         tubes = TubesRegistration.objects.filter(
             issledovaniya__research__subgroup__podrazdeleniye=lab,
-            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
+            time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'time_recive', 'daynum')
     else:
         tubes = TubesRegistration.objects.filter(
             issledovaniya__research__subgroup__podrazdeleniye=lab,
-            time_recive__gte=datetime.now().date(), doc_get__podrazileniye__pk__in=otd,
+            time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'issledovaniya__napravleniye__client__pk')
 
@@ -379,9 +379,9 @@ def receive_journal(request):
         iss_list = collections.OrderedDict()  # Список исследований
         k = "_"
         if v.doc_get:
-            k = str(v.doc_get.podrazileniye.pk) + "@" + str(v.doc_get.podrazileniye)
+            k = str(v.doc_get.podrazdeleniye.pk) + "@" + str(v.doc_get.podrazdeleniye)
         else:
-            k = str(iss.first().napravleniye.doc.podrazileniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazileniye)
+            k = str(iss.first().napravleniye.doc.podrazdeleniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazdeleniye)
         if k not in n_dict.keys():
             n_dict[k] = 0
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
@@ -411,7 +411,7 @@ def receive_journal(request):
                          "lab_title": iss[0].research.subgroup.title,
                          "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
                          "dir_id": iss[0].napravleniye.pk,
-                         "podr": iss[0].napravleniye.doc.podrazileniye.title,
+                         "podr": iss[0].napravleniye.doc.podrazdeleniye.title,
                          "receive_n": str(n),
                          "tube_id": str(v.id),
                          "direction": str(iss[0].napravleniye.pk),

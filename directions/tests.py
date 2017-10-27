@@ -83,7 +83,7 @@ class DirectionsTests(TestCase):
             response = self.client.get('/dashboard/receive')
             self.assertEqual(response.status_code, 200)
 
-            response = self.client.get('/tubes/get', data={"subgroup": podrs.Subgroups.objects.filter(podrazdeleniye=u.doctorprofile.podrazileniye).first().pk, "from": 36})
+            response = self.client.get('/tubes/get', data={"subgroup": podrs.Subgroups.objects.filter(podrazdeleniye=u.doctorprofile.podrazdeleniye).first().pk, "from": 36})
             self.assertEqual(response.status_code, 200)
 
             tubes = json.loads(response.content)
