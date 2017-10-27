@@ -3,7 +3,7 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 
 
-class SettingR(models.Model):
+class Setting(models.Model):
     name = models.CharField(max_length=100, unique=True, db_index=True)
     value = models.TextField()
     value_type = models.CharField(max_length=1, choices=(('s', 'string'), ('i', 'integer'),
