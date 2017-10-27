@@ -776,7 +776,10 @@ def direction_info(request):
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {"type": "Исследование: %s (#%s)" % (iss.research.title, iss.pk), "events": {}}
                 for l in slog.Log.objects.filter(key=str(iss.pk)):
-                    d["events"][timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk] = {"Исполнитель": get_userdata(l.user)}
+                    tdata = {"Исполнитель": get_userdata(l.user)}
+                    if l.body and l.body != "":
+                        tdata["json_data"] = l.body
+                    d["events"][timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk] = tdata
                 data.append(d)
         return HttpResponse(json.dumps(data), content_type="application/json")
     return render(request, 'dashboard/direction_info.html')
