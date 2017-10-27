@@ -19,3 +19,7 @@ class Discharge(models.Model):
     file = models.FileField(upload_to='discharges/%Y/%m/%d/')
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Выписка'
+        verbose_name_plural = 'Выписки'
