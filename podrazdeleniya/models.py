@@ -7,8 +7,13 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     isLab = models.BooleanField(default=False, blank=True)  # True=Это лаборатория
     hide = models.BooleanField(default=False, blank=True)  # True=Скрывать подразделение
     rmis_id = models.CharField(max_length=15, default=None, blank=True, null=True)
+
     def __str__(self):  # Функция перевода экземпляра класса Podrazdeleniya в строку
         return self.title  # Возврат поля Podrazdeleniya.title
+
+    class Meta:
+        verbose_name = 'Подразделение'
+        verbose_name_plural = 'Подразделения'
 
 
 class Subgroups(models.Model):  # Модель подгрупп подразделений
@@ -19,3 +24,7 @@ class Subgroups(models.Model):  # Модель подгрупп подразде
         if self.podrazdeleniye.title != self.title:
             return self.podrazdeleniye.title + " - " + self.title
         return self.title
+
+    class Meta:
+        verbose_name = 'Подгруппа (DEPRECATED)'
+        verbose_name_plural = 'Подгруппы (DEPRECATED)'
