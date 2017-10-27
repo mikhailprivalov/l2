@@ -395,7 +395,7 @@
                     return;
                 }
                 $.ajax({
-                    url: '/dashboard/discharge/send',
+                    url: '/mainmenu/discharge/send',
                     data: data,
                     cache: false,
                     contentType: false,
@@ -415,7 +415,7 @@
         function search(q) {
             sl();
             $.ajax({
-                url: '/dashboard/discharge/search',
+                url: '/mainmenu/discharge/search',
                 data: {
                     date_start: $("[name='date-start']").val(),
                     date_end: $("[name='date-end']").val(),

@@ -18,6 +18,6 @@ class UsersTests(TestCase):
 
         self.assertTrue(self.client.login(username='kamshekinaea', password='123456'))
 
-        response = self.client.get('/dashboard/')
+        response = self.client.get('/mainmenu/')
 
         self.assertContains(response, 'Камшекина')

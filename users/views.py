@@ -12,7 +12,7 @@ from users.models import DoctorProfile
 
 def home(request):
     """Страница автоизации"""
-    next = '/dashboard/'
+    next = '/mainmenu/'
     if request.method == 'POST':  # Проверка типа запроса
         username = request.POST['username']  # Имя пользователя
         password = request.POST['password']  # Пароль

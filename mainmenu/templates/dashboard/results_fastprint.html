@@ -91,7 +91,7 @@
         function print_results(type) {
             sl();
             $.ajax({
-                url: "/dashboard/results_history/search",
+                url: "/mainmenu/results_history/search",
                 data: {type: type, date: $("[name='dateday-otd']").val()},
                 method: "GET"
             }).done(function (data) {

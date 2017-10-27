@@ -1293,8 +1293,8 @@
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
         <nav class="navbar navbar-inverse">
             <div class="nav-cont">
-                {% if show_l2_logo %}<a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                   title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                                        title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
                                                                                 src="/static/img/l2logo2.png"></a>{% endif %}
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
@@ -1304,21 +1304,21 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a href="/dashboard"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+                    <a href="/mainmenu"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
                             <ul class="dropdown-menu" role="menu" style="z-index: 10000">
-                                <li><a href="/dashboard">Главная</a></li>
+                                <li><a href="/mainmenu">Главная</a></li>
                                 <li><a href="/logout">Выход из профиля</a></li>
                                 <li class="divider"></li>
-                                <li><a href="/dashboard/directions/multiprint" target="_blank">Печать направлений</a>
+                                <li><a href="/mainmenu/directions/multiprint" target="_blank">Печать направлений</a>
                                 </li>
                                 {% if request.user|has_group:"Получатель биоматериала" %}
                                     <li class="divider"></li>
-                                    <li><a href="/dashboard/receive/one_by_one">Прием материала по одному</a></li>
+                                    <li><a href="/mainmenu/receive/one_by_one">Прием материала по одному</a></li>
                                 {% endif %}
                             </ul>
                         </li>
@@ -1326,13 +1326,13 @@
                     </ul>
                     <ul class="nav navbar-nav navbar-right" id="right-navbar">
                         {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
-                            <li><a href="/dashboard/directions">Направления</a></li>
+                            <li><a href="/mainmenu/directions">Направления</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Заборщик биоматериала" %}
-                            <li><a href="/dashboard/biomaterial/get">Забор биоматериала</a></li>
+                            <li><a href="/mainmenu/biomaterial/get">Забор биоматериала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Получатель биоматериала" %}
-                            <li><a href="/dashboard/receive">Прием материала</a></li>
+                            <li><a href="/mainmenu/receive">Прием материала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
                             <li><a href="/results/enter">Ввод результатов</a></li>
@@ -1342,8 +1342,8 @@
                 </div>
             </div>
             <div class="nav-loader center">
-                {% if show_l2_logo %}<a href="/dashboard" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                   title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
+                                        title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
                                                                                 src="/static/img/l2logo2.png"></a>{% endif %}
 
                 <div class="navbar-header">
@@ -1747,7 +1747,7 @@
 
     function alive() {
         $.ajax({
-            method: "GET", url: "/dashboard/", cache: false, statusCode: {
+            method: "GET", url: "/mainmenu/", cache: false, statusCode: {
                 500: function () {
                     $.amaran({
                         'theme': 'awesome no',

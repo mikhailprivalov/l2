@@ -27,7 +27,7 @@ INSTALLED_APPS = (
     'appconf',
     'clients',
     'users',
-    'dashboard',
+    'mainmenu',
     'podrazdeleniya',
     'results',
     'researches',
@@ -77,7 +77,7 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = 'laboratory.wsgi.application'
 LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/mainmenu/'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 

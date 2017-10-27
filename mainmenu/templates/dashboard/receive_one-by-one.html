@@ -7,7 +7,7 @@
         <ul class="dropdown-menu" role="menu" style="z-index: 10000">
             {% for v in labs %}
                 {% if v.pk != lab.pk %}
-                <li><a href="/dashboard/receive/one_by_one?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+                <li><a href="/mainmenu/receive/one_by_one?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -65,7 +65,7 @@
             </div>
         </div>
     </div>
-    <h5><small class="fastlinks" style="display: inline-block;float: right"><a href="/dashboard/receive/journal_form?lab_pk={{ lab.pk }}" target="_blank">Журнал приема</a>&nbsp;<a href="#" onclick="openexeclist();return false">Лист исполнения</a></small> Принятые за сегодня </h5>
+    <h5><small class="fastlinks" style="display: inline-block;float: right"><a href="/mainmenu/receive/journal_form?lab_pk={{ lab.pk }}" target="_blank">Журнал приема</a>&nbsp;<a href="#" onclick="openexeclist();return false">Лист исполнения</a></small> Принятые за сегодня </h5>
     <div id="history-container">
         <table class="table table-bordered table-responsive floatThead">
             <thead>
@@ -278,7 +278,7 @@ function do_receive(pk){
         $("#next_num").val(v);
     }
 
-    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk}}).done(function(data){
+    $.ajax({method: "POST", url: "/mainmenu/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk}}).done(function(data){
         block = false;
         $("#receive-field").prop("disabled", false);
         enable_input();
@@ -339,7 +339,7 @@ function do_receive_direction(pk){
         $("#next_num").val(v);
     }
 
-    $.ajax({method: "POST", url: "/dashboard/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk, direction: 1}}).done(function(data){
+    $.ajax({method: "POST", url: "/mainmenu/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk, direction: 1}}).done(function(data){
         block = false;
         $("#receive-field").prop("disabled", false);
         enable_input();
@@ -406,7 +406,7 @@ let block2 = false;
 function load_history(highlight){
     if(block2) return;
     block2 = true;
-    $.ajax({method: "GET", url: "/dashboard/receive/history", data: {lab_pk: lab_pk}}).done(function(data){
+    $.ajax({method: "GET", url: "/mainmenu/receive/history", data: {lab_pk: lab_pk}}).done(function(data){
         block2 = false;
         $("#history-data").html("");
         if(data.rows.length === 0){
@@ -476,7 +476,7 @@ function openexeclist(){
 }
 function upd_next_num(){
     $.ajax({ // AJAX запрос
-        url: "/dashboard/receive/last_received",// Установка адреса и параметров запроса
+        url: "/mainmenu/receive/last_received",// Установка адреса и параметров запроса
         dataType: 'json',
         data: {lab_pk: lab_pk}
     }).done(function (data) {
@@ -505,7 +505,7 @@ function createlist() {
     }
 
     let date = $("[name=dateday]").val();
-    window.open('/dashboard/receive/execlist?date=' + date + "&researches=" + JSON.stringify(researches), '_blank');
+    window.open('/mainmenu/receive/execlist?date=' + date + "&researches=" + JSON.stringify(researches), '_blank');
 }
 
 function play_scan() {

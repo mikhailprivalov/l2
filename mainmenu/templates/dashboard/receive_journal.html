@@ -6,7 +6,7 @@
         <ul class="dropdown-menu" role="menu" style="z-index: 10000">
             {% for v in labs %}
                 {% if v.pk != lab.pk %}
-                <li><a href="/dashboard/receive/journal_form?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+                <li><a href="/mainmenu/receive/journal_form?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -98,7 +98,7 @@
                 });
                 return;
             }
-            window.open(`/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=[${otd}]&lab_pk={{ lab.pk }}`, '_blank')
+            window.open(`/mainmenu/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&otd=[${otd}]&lab_pk={{ lab.pk }}`, '_blank')
         }
         function print_directions() {
             const otd = $("#select-otd").val();
@@ -119,7 +119,7 @@
             sl();
             $.ajax({
                 method: "get",
-                url: `/dashboard/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=[${otd}]&lab_pk={{ lab.pk }}`
+                url: `/mainmenu/receive/journal?group=${$('#select-group').val()}&start=${$('#start-from').val().trim()}&return=directions&otd=[${otd}]&lab_pk={{ lab.pk }}`
             }).done(function (data) {
                 hl();
                 window.open('/directions/pdf?napr_id=' + JSON.stringify(data), '_blank');

@@ -89,7 +89,7 @@
             };
              $.ajax({
                 method: "GET",
-                 url: "/dashboard/view_logs",
+                 url: "/mainmenu/view_logs",
                 data: {checknew: 1, last_n: last_n, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                  $.each(d.data, function (k, v) {
@@ -138,7 +138,7 @@
             n = 0;
             $.ajax({
                 method: "GET",
-                url: "/dashboard/view_logs",
+                url: "/mainmenu/view_logs",
                 data: {checknew: 0, offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                 $.each(d.data, function (k, v) {

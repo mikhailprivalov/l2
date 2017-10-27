@@ -16,7 +16,7 @@
         });
 
         function update_users_count() {
-            $.ajax({"url": "/dashboard/users/count", method: "GET"}).done(function (data) {
+            $.ajax({"url": "/mainmenu/users/count", method: "GET"}).done(function (data) {
                 $("#users_count").text(data.all);
                 $("#ldap_users_count").text(data.ldap);
             });
@@ -28,7 +28,7 @@
             $("#cont a").isLoading({text: "Синхронизация...", position: "inside"});
 
             insync = true;
-            $.ajax({url: "/dashboard/users/ldap/dosync", method: "POST"}).done(function (data) {
+            $.ajax({url: "/mainmenu/users/ldap/dosync", method: "POST"}).done(function (data) {
                 update_users_count();
                 insync = false;
                 $("#cont a").isLoading("hide");

@@ -4,8 +4,8 @@
 {% block content %}
     <div class="row" style="margin: 0">
         <div class="fastlinks">
-            <a href="/dashboard/receive/one_by_one">Прием матриала по одному</a>
-            <a href="/dashboard/receive/journal_form" target="_blank">Журнал приема</a>
+            <a href="/mainmenu/receive/one_by_one">Прием матриала по одному</a>
+            <a href="/mainmenu/receive/journal_form" target="_blank">Журнал приема</a>
         </div>
         <table class="table table-bordered" id="control-table">
             <col width="200">
@@ -339,7 +339,7 @@
             });
             if (tubes.length <= 0) return;
             $.ajax({
-                url: "/dashboard/receive",
+                url: "/mainmenu/receive",
                 method: "POST",
                 data: {data: JSON.stringify(tubes)},
                 type: "json"
@@ -379,7 +379,7 @@
         function loadlab() {
             sl();
             $.ajax({
-                url: "/dashboard/from",
+                url: "/mainmenu/from",
                 method: "GET",
                 type: "json",
                 data: {
@@ -402,7 +402,7 @@
             $(from).html("");
             sl();
             $.ajax({
-                url: "/dashboard/from",
+                url: "/mainmenu/from",
                 method: "GET",
                 type: "json",
                 data: {
