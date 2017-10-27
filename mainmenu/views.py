@@ -746,6 +746,7 @@ def dir_multiprint(request):
 @login_required
 def direction_info(request):
     if request.is_ajax():
+        yesno = {True: "Да", False: "Нет"}
         data = []
         pk = request.GET.get("pk", "-1")
         if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
@@ -757,9 +758,13 @@ def direction_info(request):
                     ["От имени", get_userdata(dir.doc)],
                     ["Пациент", "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
                     ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
-                    ["Архив", dir.client.is_archive],
+                    ["Архив", yesno[dir.client.is_archive]],
                     ["Источник финансирования", dir.istochnik_f.tilie],
                     ["Диагноз", dir.diagnos],
+                    ["Направление отправлено в РМИС", yesno[dir.rmis_number not in ["", None, "NONERMIS"]]],
+                    ["Направление привязано к случаю", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
+                    ["Направление привязано к записи отделения госпитализации", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
+                    ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
                 ]
             ]})
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
