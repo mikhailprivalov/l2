@@ -79,7 +79,7 @@ def directory_researches(request):
                              "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
     elif request.method == "GET":
         return_result = {"researches": []}
-        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab_group"]).order_by("sort_weight")
+        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("sort_weight")
         i = 0
         for research in researches:
             i += 1
@@ -283,7 +283,7 @@ def directory_researches_group(request):
     if request.method == "GET":
         return_result = {"researches": []}
         gid = int(request.GET["gid"])
-        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab_group"])
+        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"])
 
         for research in researches:
             resdict = {"pk": research.pk, "title": research.title}
