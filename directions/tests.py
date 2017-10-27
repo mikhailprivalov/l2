@@ -21,8 +21,8 @@ class DirectionsTests(TestCase):
 
         response = self.client.get('/dashboard/directions')
         self.assertContains(response, 'Категория')
-        self.assertTrue(clients.Importedclients.objects.filter(num="65222").exists())
-        self.cl = clients.Importedclients.objects.get(num="65222")
+        # self.assertTrue(clients.Importedclients.objects.filter(num="65222").exists())
+        # self.cl = clients.Importedclients.objects.get(num="65222")
 
         response = self.client.get('/clients/ajax/search', data={"query": "65222", "type": "poli"})
         self.assertContains(response, json.dumps(self.cl.family))

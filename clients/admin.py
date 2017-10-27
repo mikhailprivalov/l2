@@ -1,8 +1,6 @@
 import clients.models as models
 from django.contrib import admin
 
-admin.site.register(models.Importedclients)
-
 
 @admin.register(models.Individual)
 class IndividualAdmin(admin.ModelAdmin):
