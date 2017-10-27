@@ -147,7 +147,13 @@
 
                     tmp += "<div class='events'>";
                     for(let key of _.keys(group.events)){
-                        tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${key}</div></div>`;
+                        let summary = `<div class="event-data">`;
+                        for(let data_type of _.keys(group.events[key])){
+                            if(data_type !== "json_data")
+                                summary += `<div class="data-row"><span class="data-title">${data_type}:</span> <span class="data-value">${group.events[key][data_type]}</span></div>`;
+                        }
+                        summary += "</div>"
+                        tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${key}</div>${summary}</div>`;
                     }
                     tmp += `</div>`;
 
