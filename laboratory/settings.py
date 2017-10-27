@@ -71,10 +71,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
             ],
-            'loaders': ('django.template.loaders.cached.Loader', [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader'
-            ], 'admin_tools.template_loaders.Loader')
+            'loaders': ['django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader',
+                        'admin_tools.template_loaders.Loader']
         },
     },
 ]
