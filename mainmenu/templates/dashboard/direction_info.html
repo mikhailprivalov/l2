@@ -3,8 +3,8 @@
 
 {% block content %}
     <div class="row">
-        <div class="col-xs-12 col-xs-12 col-md-2 col-lg-3"></div>
-        <div class="col-xs-12 col-xs-12 col-md-8 col-lg-6">
+        <div class="col-xs-12 col-sm-12 col-md-2 col-lg-3"></div>
+        <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6">
             <div class="input-group">
                 <input type="text" class="form-control" id="search" name="dir-field" data-container="body"
                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
@@ -15,7 +15,110 @@
                   </span>
             </div>
         </div>
-        <div class="col-xs-12 col-xs-12 col-md-2 col-lg-3"></div>
+        <div class="col-xs-12 col-sm-12 col-md-2 col-lg-3"></div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-2 col-lg-3"></div>
+        <div class="col-xs-12 col-sm-12 col-md-8 col-lg-6" id="direction-status">
+            <div class="direction-object">
+                <div id="direction-object-header">Направление №<span>100023</span> <small><a href="#" target="_blank">печать</a></small></div>
+                <hr/>
+                <div class="events">
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 10:05</span> <span class="just-event">Направление создано</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Создатель:</span> <span class="data-value">Иванов Иван Иванович (ivanovii), Терапевтическое отделение</span></div>
+                            <div class="data-row"><span class="data-title">От имени:</span> <span class="data-value">Попов Иван Викторович (popoviv), Терапевтическое отделение</span></div>
+                            <div class="data-row"><span class="data-title">Пациент:</span> <span class="data-value">Иванов Иван Иванович, 24.01.1997, Пол: м</span></div>
+                            <div class="data-row"><span class="data-title">Карта:</span> <span class="data-value">22641 Поликлиника</span></div>
+                            <div class="data-row"><span class="data-title">Архив:</span> <span class="data-value">нет</span></div>
+                            <div class="data-row"><span class="data-title">Источник финансирования:</span> <span class="data-value">ОМС</span></div>
+                            <div class="data-row"><span class="data-title">Диагноз:</span> <span class="data-value">не указан</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="direction-object">
+                <div id="direction-object-header">Пробирка №<span>514452</span> <small><a href="#" target="_blank">печать ш/к</a></small></div>
+                <hr/>
+                <div class="events">
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 10:08</span> <span class="just-event">Забор</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Заборщик:</span> <span class="data-value">Иванов Иван Иванович (ivanovii), КДП</span></div>
+                        </div>
+                    </div>
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 10:52</span> <span class="just-event">Приём</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Приёмщик:</span> <span class="data-value">Иванов Иван Иванович (ivanovii)</span></div>
+                            <div class="data-row"><span class="data-title">Комментарий не приёма:</span> <span class="data-value">отсутствует</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="direction-object">
+                <div id="direction-object-header">Исследование: <span>ТТГ</span></div>
+                <hr/>
+                <div class="events">
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 10:55</span> <span class="just-event">Сохранение</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Исполнитель:</span> <span class="data-value">Иванов Иван Иванович (ivanovii)</span></div>
+                            <div class="data-row"><span class="data-title">Данные:</span> <div class="data-value">
+                                <pre>{
+  <span class="key">"147":</span> <span class="string">"34.005"</span>
+}</pre>)</div></div>
+                        </div>
+                    </div>
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 11:01</span> <span class="just-event">Подтверждение</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Исполнитель:</span> <span class="data-value">Иванов Иван Иванович (ivanovii)</span></div>
+                        </div>
+                    </div>
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 11:03</span> <span class="just-event">Сброс подтверждения</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Исполнитель:</span> <span class="data-value">Администратор</span></div>
+                        </div>
+                    </div>
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 11:04</span> <span class="just-event">Сохранение</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Исполнитель:</span> <span class="data-value">Иванов Иван Иванович (ivanovii)</span></div>
+                            <div class="data-row"><span class="data-title">Данные:</span> <div class="data-value">
+                                <pre>{
+  <span class="key">"147":</span> <span class="string">"36.1"</span>
+}</pre>)</div></div>
+                        </div>
+                    </div>
+                    <div class="event">
+                        <div class="event-summary">
+                            <i class="fa fa-history" aria-hidden="true"></i> <span class="event-datetime">26.10.2017 11:04</span> <span class="just-event">Подтверждение</span>
+                        </div>
+                        <div class="event-data">
+                            <div class="data-row"><span class="data-title">Исполнитель:</span> <span class="data-value">Иванов Иван Иванович (ivanovii)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-2 col-lg-3"></div>
     </div>
 {% endblock %}
 
