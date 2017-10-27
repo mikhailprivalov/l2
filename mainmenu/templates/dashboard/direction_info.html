@@ -138,7 +138,7 @@
                 url: "/mainmenu/direction/info",
                 data: {pk: pk}
             }).done(data => {
-                $("#direction-status").html();
+                $("#direction-status").html("");
                 for(let group of data){
                     let tmp = `<div class="direction-object">`;
 
