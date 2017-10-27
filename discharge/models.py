@@ -2,6 +2,7 @@ from django.db import models
 import podrazdeleniya.models as pod
 import users.models as users
 
+
 class Discharge(models.Model):
     client_surname = models.CharField(max_length=60, help_text="Фамилия", db_index=True)
     client_name = models.CharField(max_length=60, help_text="Имя", db_index=True)
