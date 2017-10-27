@@ -277,6 +277,7 @@ def result_confirm_list(request):
                 from django.utils import timezone
                 issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
                 issledovaniye.save()
+                slog.Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         result["ok"] = True
     return HttpResponse(json.dumps(result), content_type="application/json")
 
