@@ -747,9 +747,9 @@ def dir_multiprint(request):
 def direction_info(request):
     if request.is_ajax():
         data = []
-        pk = request.POST.get("pk", "-1")
-        if pk != "-1" and Napravleniya.objects.filter(pk=int(pk)).exists():
-            dir = Napravleniya.objects.get(pk=int(pk))
+        pk = request.GET.get("pk", "-1")
+        if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
+            dir = Napravleniya.objects.get(pk=pk)
             data.append({"type": "direction",
                          "pk": pk,
                          "events": [{"Направление создано": {
