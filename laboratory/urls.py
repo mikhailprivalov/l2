@@ -64,7 +64,6 @@ urlpatterns = [
                   url(r'^directory/researches/update_uet$', directory_researches_update_uet),
                   url(r'^directory/researches/update_mode$', directory_researches_update_mode),
                   url(r'^directory/researches/update_template$', researches_update_template),
-                  url(r'^researches/ajax/search$', ajax_search_res),
                   url(r'^researches/get/one$', researches_get_one),
                   url(r'^dashboard/', include('dashboard.urls')),
                   url(r'^dashboard/receive$', receive),

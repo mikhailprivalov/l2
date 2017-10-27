@@ -1,31 +1,11 @@
-from django.core import serializers
 from django.http import HttpResponse
-from researches.models import Researches, Subgroups, Podrazdeleniya, Tubes
+from researches.models import Tubes
 from directions.models import Issledovaniya
 import simplejson as json
-from django.views.decorators.cache import cache_page
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import slog.models as slog
-
-
-@cache_page(60 * 15)
-@login_required
-def ajax_search_res(request):
-    """Получение исследований в лаборатории"""
-    res = []
-    if request.method == 'GET':
-        id = int(request.GET['lab_id'])  # Идентификатор лаборатории
-        if id and id >= 0:  # Проверка корректности id
-            groups = Subgroups.objects.filter(
-                podrazdeleniye=Podrazdeleniya.objects.get(pk=id))  # Получение всех групп для этой лаборатории
-            for v in groups:  # Перебор групп
-                tmp = Researches.objects.filter(subgroup_lab=v.pk, hide=0)  # Выборка исследований по id лаборатории
-                for val in tmp:
-                    res.append({"pk": val.pk, "fields": {"id_lab_fk": id,
-                                                         "ref_title": val.ref_title}})  # Добавление исследований к ответу сервера
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 
 
 @login_required
