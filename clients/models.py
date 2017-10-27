@@ -97,12 +97,20 @@ class Individual(models.Model):
             return self.check_rmis()
         return self.check_rmis(False)
 
+    class Meta:
+        verbose_name = 'Физическое лицо'
+        verbose_name_plural = 'Физические лица'
+
 
 class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
 
     def __str__(self):
         return "{0} | {1}".format(self.pk, self.title)
+
+    class Meta:
+        verbose_name = 'Вид документа'
+        verbose_name_plural = 'Виды документов'
 
 
 class Document(models.Model):
@@ -118,6 +126,10 @@ class Document(models.Model):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
                                                         self.is_active, self.individual)
 
+    class Meta:
+        verbose_name = 'Документ'
+        verbose_name_plural = 'Документы'
+
 
 class CardBase(models.Model):
     title = models.CharField(max_length=50, help_text="Полное название базы")
@@ -129,6 +141,10 @@ class CardBase(models.Model):
 
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
+
+    class Meta:
+        verbose_name = 'База карт'
+        verbose_name_plural = 'Базы карт'
 
 
 class Card(models.Model):
@@ -142,3 +158,7 @@ class Card(models.Model):
 
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")
+
+    class Meta:
+        verbose_name = 'Карта'
+        verbose_name_plural = 'Карты'
