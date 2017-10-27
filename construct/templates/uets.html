@@ -11,7 +11,7 @@
         <div class="col-xs-4" style="padding: 5px">
             <select class="select-b" id="select-lab" data-live-search="true" onchange="loadreslist();"
                     data-width="100%">
-                {% for v in lab_subgroups %}
+                {% for v in labs %}
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
             </select>
@@ -93,7 +93,7 @@
             $.ajax({
                 url: "/directory/researches",
                 method: "GET",
-                data: {lab_group: $("#select-lab option:selected").val()}
+                data: {lab: $("#select-lab option:selected").val()}
             }).done(function (data) {
                 $("#researches-container").html("");
                 $.each(data.researches, function(k,v){

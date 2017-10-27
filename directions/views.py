@@ -122,7 +122,7 @@ def get_xls_dir(request):
             ws.write(i, 0, lastfio, font_style)
         else:
             ws.write(i, 0, "", font_style)
-        ws.write(i, 1, iss.first().research.subgroup.podrazdeleniye.title, font_style)
+        ws.write(i, 1, iss.first().research.get_.title, font_style)
         ws.write(i, 2, dir.pk, font_style)
         fractiontubes = {}
         hasoak = False
@@ -395,7 +395,7 @@ def printDirection(c, n, dir):
     issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
-                 "Лаборатория: " + issledovaniya[0].research.subgroup.podrazdeleniye.title)
+                 "Лаборатория: " + issledovaniya[0].research.get_podrazdeleniye().title)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 134) + (h / 2) * yn, "Наименования исследований: ")
     c.setStrokeColorRGB(0, 0, 0)
@@ -515,7 +515,7 @@ def get_one_dir(request):
                                          "date": str(
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
                                          "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazdeleniye.title},
-                                         "lab": tmp[0].research.subgroup.podrazdeleniye.title}  # Формирование вывода
+                                         "lab": tmp[0].research.get_podrazdeleniye().title}  # Формирование вывода
                 response["tubes"] = {}
                 tubes_buffer = {}
 
@@ -766,7 +766,7 @@ def print_history(request):
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
         k = v.doc_get.podrazdeleniye.title + "@" + str(iss[
-                                                          0].research.subgroup.title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
+                                                          0].research.get_podrazdeleniye().title)  # Формирование ключа для группировки по подгруппе лаборатории и названию подразделения направившего на анализ врача
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
         if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
@@ -775,7 +775,7 @@ def print_history(request):
             labs[k].append(
                 {"type": v.type.tube.title, "researches": value,
                  "client-type": iss[0].napravleniye.client.base.short_title,
-                 "lab_title": iss[0].research.subgroup.title,
+                 "lab_title": iss[0].research.get_podrazdeleniye().title,
                  "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
                  "podr": v.doc_get.podrazdeleniye.title,
                  "reciver": None,
@@ -1149,7 +1149,7 @@ def get_client_directions(request):
                             {"pk": napr.pk, "status": status,
                              "researches": ' | '.join(v.research.title for v in iss_list),
                              "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                             "lab": iss_list[0].research.subgroup.podrazdeleniye.title, "cancel": napr.cancel})
+                             "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr.cancel})
                 res["ok"] = True
         except ValueError:
             pass
@@ -1163,7 +1163,7 @@ def order_researches(request):
     if request.method == "POST":
         order = json.loads(request.POST.get("order", "[]"))
         lab = request.POST.get("lab")
-        CustomResearchOrdering.objects.filter(research__subgroup__podrazdeleniye_id=lab).delete()
+        CustomResearchOrdering.objects.filter(research__podrazdeleniye_id=lab).delete()
         for i in range(len(order)):
             w = len(order) - i
             CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]),

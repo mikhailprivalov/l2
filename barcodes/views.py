@@ -133,7 +133,7 @@ def tubes(request, direction_implict_id=None):
             elif len(otd) == 1:
                 st = otd[0][:3]
             st = (
-            st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.subgroup.podrazdeleniye.title[
+            st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.get_podrazdeleniye().title[
                         :3]).lower()
             types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая", "желтая", "жёлтая",
                      "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]

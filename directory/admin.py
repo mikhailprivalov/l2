@@ -3,8 +3,8 @@ import directory.models as models
 
 
 class ResAdmin(admin.ModelAdmin):
-    list_filter = ('subgroup', 'groups', 'hide')
-    list_display = ('title', 'subgroup',)
+    list_filter = ('podrazdeleniye', 'groups', 'hide')
+    list_display = ('title', 'podrazdeleniye',)
     list_display_links = ('title',)
 
 

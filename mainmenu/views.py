@@ -17,7 +17,7 @@ from clients.models import CardBase
 from laboratory import settings
 from rmis_integration.client import Client
 from users.models import DoctorProfile
-from podrazdeleniya.models import Podrazdeleniya, Subgroups
+from podrazdeleniya.models import Podrazdeleniya
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya
 from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
@@ -312,7 +312,6 @@ def create_pod(request):
                 pd = Podrazdeleniya.objects.create()  # Создание подразделения
                 pd.title = title
                 pd.save()  # Сохранение подразделения
-                Subgroups(title=title, podrazdeleniye=pd).save()
                 p = True
                 e = False
                 slog.Log(key=str(pd.pk), user=request.user.doctorprofile, type=17,
@@ -375,7 +374,7 @@ def directions(request):
                                                         Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
-            tmp_template[r.research.subgroup.podrazdeleniye.pk].append(r.research.pk)
+            tmp_template[r.research.get_podrazdeleniye().pk].append(r.research.pk)
         templates[t.pk] = {"values": tmp_template, "title": t.title, "for_doc": t.doc is not None, "for_podr": t.podrazdeleniye is not None}
     return render(request, 'dashboard/directions.html', {'labs': podr,
                                                          'fin': get_fin(),
@@ -607,7 +606,7 @@ def dashboard_from(request):
             tubes = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False, doc_get__podrazdeleniye__isLab=False, notice="",
                                                        doc_recive__isnull=True,
                                                        time_get__range=(date_start, date_end),
-                                                       issledovaniya__research__subgroup__podrazdeleniye=lab)\
+                                                       issledovaniya__research__podrazdeleniye=lab)\
                     .distinct().count()
             result[lab.pk] = tubes
         return HttpResponse(json.dumps(result), content_type="application/json")
@@ -621,7 +620,7 @@ def dashboard_from(request):
                                                                notice="",
                                                                doc_recive__isnull=True,
                                                                time_get__range=(date_start, date_end),
-                                                               issledovaniya__research__subgroup__podrazdeleniye=lab
+                                                               issledovaniya__research__podrazdeleniye=lab
                                                                ).distinct().count(),
                      "title": podr.title, "pk": podr.pk}
 

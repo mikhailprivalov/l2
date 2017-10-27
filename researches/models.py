@@ -1,6 +1,5 @@
-from podrazdeleniya.models import Podrazdeleniya, Subgroups
+from podrazdeleniya.models import Podrazdeleniya
 from django.db import models
-import jsonfield
 import sys
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]

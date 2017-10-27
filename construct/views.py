@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
 from laboratory.decorators import group_required
-from podrazdeleniya.models import Subgroups
+from podrazdeleniya.models import Podrazdeleniya
 import directory.models as directory
 import simplejson as json
 
@@ -19,8 +19,8 @@ def menu(request):
 @group_required("Оператор")
 def researches(request):
     """ Конструктор исследований """
-    lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
-    return render(request, 'construct_researches.html', {"lab_subgroups": lab_subgroups, "variants": directory.ResultVariants.objects.all()})
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    return render(request, 'construct_researches.html', {"labs": labs, "variants": directory.ResultVariants.objects.all()})
 
 
 @login_required
@@ -42,16 +42,16 @@ def tubes(request):
 @group_required("Оператор")
 def directions_group(request):
     """ Группировка по направлениям """
-    lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
-    return render(request, 'construct_directions_group.html', {"lab_subgroups": lab_subgroups})
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    return render(request, 'construct_directions_group.html', {"labs": labs})
 
 
 @login_required
 @group_required("Оператор")
 def uets(request):
     """ Настройка УЕТов """
-    lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
-    return render(request, 'uets.html', {"lab_subgroups": lab_subgroups})
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    return render(request, 'uets.html', {"labs": labs})
 
 
 @csrf_exempt
@@ -60,8 +60,8 @@ def uets(request):
 def onlywith(request):
     """ Настройка назначения анализов вместе """
     if request.method == "GET":
-        lab_subgroups = Subgroups.objects.filter(podrazdeleniye__isLab=True)
-        return render(request, 'onlywith.html', {"lab_subgroups": lab_subgroups})
+        labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+        return render(request, 'onlywith.html', {"labs": labs})
     elif request.method == "POST":
         pk = int(request.POST["pk"])
         onlywith_value = int(request.POST.get("onlywith", "-1"))

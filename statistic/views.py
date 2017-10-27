@@ -137,7 +137,7 @@ def statistic_xls(request):
                     return True
 
                 ns = 0
-                for obj in directory.Researches.objects.filter(subgroup__podrazdeleniye__pk=lab.pk):
+                for obj in directory.Researches.objects.filter(podrazdeleniye__pk=lab.pk):
                     iss_list = []
                     if finsource is not False:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
@@ -264,7 +264,7 @@ def statistic_xls(request):
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(
-            directory.Researches.objects.filter(subgroup__podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
+            directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
         pods = list(Podrazdeleniya.objects.filter(hide=False, isLab=False).order_by("title"))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
@@ -277,7 +277,7 @@ def statistic_xls(request):
                                    int(date_start_o.split(".")[0]))
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
-        iss = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False,
+        iss = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False,
                                            time_confirmation__range=(date_start, date_end))
 
         font_style_wrap = xlwt.XFStyle()
@@ -503,12 +503,12 @@ def statistic_xls(request):
         row_num += 1
 
         for tube in directory.Tubes.objects.filter(
-                releationsft__fractions__research__subgroup__podrazdeleniye=lab).distinct().order_by("title"):
+                releationsft__fractions__research__podrazdeleniye=lab).distinct().order_by("title"):
             row = [
                 tube.title
             ]
             for pod in pods:
-                gets = d.TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
+                gets = d.TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab,
                                                           type__tube=tube,
                                                           time_recive__range=(date_start, date_end),
                                                           doc_get__podrazdeleniye=pod).filter(
@@ -560,7 +560,7 @@ def statistic_xls(request):
         all = 0
         for lab in labs:
             row_num += 1
-            c = Issledovaniya.objects.filter(research__subgroup__podrazdeleniye=lab, time_confirmation__isnull=False,
+            c = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False,
                                              time_confirmation__range=(date_start_o, date_end_o)).count()
             row = [
                 lab.title,
@@ -694,13 +694,13 @@ def statistic_xls(request):
             for tube in Tubes.objects.all():
 
                 row_num += 1
-                c_get = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
+                c_get = TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab,
                                                          type__tube=tube, time_get__isnull=False,
                                                          time_get__range=(date_start_o, date_end_o)).count()
-                c_rec = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
+                c_rec = TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab,
                                                          type__tube=tube, time_recive__isnull=False, notice="",
                                                          time_get__range=(date_start_o, date_end_o)).count()
-                c_nrec = TubesRegistration.objects.filter(issledovaniya__research__subgroup__podrazdeleniye=lab,
+                c_nrec = TubesRegistration.objects.filter(issledovaniya__research__podrazdeleniye=lab,
                                                           type__tube=tube, time_get__isnull=False,
                                                           time_get__range=(date_start_o, date_end_o)).exclude(
                     notice="").count()

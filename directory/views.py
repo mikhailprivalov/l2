@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from directory.models import Researches, Subgroups, ReleationsFT, Fractions, DirectionsGroup
+from directory.models import Researches, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
 import directions.models as directions
 import directory.models as direct
@@ -23,7 +23,7 @@ def directory_researches(request):
             return_result = {"ok": False, "tubes_r": []}
         else:
             if research["id"] == -1:
-                research_obj = Researches(subgroup=Subgroups.objects.get(pk=research["lab_group"]))
+                research_obj = Researches(podrazdeleniye=Podrazdeleniya.objects.get(pk=research["lab"]))
             else:
                 research_obj = Researches.objects.get(pk=int(research["id"]))
 
@@ -79,8 +79,7 @@ def directory_researches(request):
                              "tubes_r": return_result["tubes_r"], "F": return_result["F"]}
     elif request.method == "GET":
         return_result = {"researches": []}
-        subgroup_id = request.GET["lab_group"]
-        researches = Researches.objects.filter(subgroup__pk=subgroup_id).order_by("sort_weight")
+        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab_group"]).order_by("sort_weight")
         i = 0
         for research in researches:
             i += 1
@@ -111,16 +110,16 @@ def directory_researches_list(request):
         lab_id = request.POST["lab_id"]
     else:
         lab_id = request.GET["lab_id"]
-    researches = Researches.objects.filter(subgroup__podrazdeleniye__pk=lab_id, hide=False).order_by("title")
+    researches = Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     labs = [x.pk for x in Podrazdeleniya.objects.filter(isLab=True, hide=False)]
     for research in researches:
         autoadd = {}
         for l in labs:
-            autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__subgroup__podrazdeleniye__pk=l)]
+            autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__podrazdeleniye__pk=l)]
 
         addto = {}
         for l in labs:
-            addto[l] = [x.a.pk for x in direct.AutoAdd.objects.filter(b=research, a__subgroup__podrazdeleniye__pk=l)]
+            addto[l] = [x.a.pk for x in direct.AutoAdd.objects.filter(b=research, a__podrazdeleniye__pk=l)]
 
         return_result.append(
             {"pk": research.pk,
@@ -283,9 +282,8 @@ def directory_researches_group(request):
     return_result = {}
     if request.method == "GET":
         return_result = {"researches": []}
-        subgroup_id = request.GET["lab_group"]
         gid = int(request.GET["gid"])
-        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab_group"])
 
         for research in researches:
             resdict = {"pk": research.pk, "title": research.title}
@@ -332,8 +330,7 @@ def directory_get_directions(request):
     return_result = {}
     if request.method == "GET":
         return_result = {"directions": {}}
-        subgroup_id = request.GET["lab_group"]
-        researches = Researches.objects.filter(subgroup__pk=subgroup_id)
+        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"])
         for research in researches:
             if not research.direction: continue
             if research.direction.pk not in return_result["directions"].keys():

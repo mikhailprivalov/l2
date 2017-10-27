@@ -17,7 +17,7 @@ from barcodes.views import tubes
 from directions.models import Issledovaniya, TubesRegistration
 from laboratory import settings
 from laboratory.decorators import group_required
-from podrazdeleniya.models import Podrazdeleniya, Subgroups
+from podrazdeleniya.models import Podrazdeleniya
 
 
 @csrf_exempt
@@ -67,13 +67,13 @@ def receive_obo(request):
             if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
                 tube = TubesRegistration.objects.get(pk=p)
                 if tube.getstatus(one_by_one=True):
-                    if tube.issledovaniya_set.first().research.subgroup.podrazdeleniye == lab:
+                    if tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
                                   "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
                                   "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)]}
                     else:
-                        result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.subgroup.podrazdeleniye)}
+                        result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.get_podrazdeleniye())}
                 else:
                     otd = tube.issledovaniya_set.first().napravleniye.doc.podrazdeleniye
                     if tube.issledovaniya_set.first().napravleniye.doc_who_create:
@@ -97,7 +97,7 @@ def receive_history(request):
     date2 = datetime_safe.datetime.now()
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     for row in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
-                                                doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).order_by("-daynum").distinct():
+                                                doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab).order_by("-daynum").distinct():
         result["rows"].append(
             {"pk": row.pk, "n": row.daynum or 0, "type": str(row.type.tube), "color": row.type.tube.color,
              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)]})
@@ -114,10 +114,10 @@ def last_received(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     last_num = 0
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab).exists():
+                                        doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile, issledovaniya__research__subgroup__podrazdeleniye=lab)])
+                                        doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab)])
     return HttpResponse(json.dumps({"last_n": last_num}), content_type="application/json")
 
 
@@ -200,7 +200,7 @@ def receive_execlist(request):
             for pg_num in pages.page_range:
                 c.setFont('OpenSans', 12)
                 c.drawString(px(), py(), "Лист исполнения - %s за %s" % (research.title, date1.strftime("%d.%m.%Y")))
-                c.drawRightString(pxr(), py(), research.subgroup.podrazdeleniye.title)
+                c.drawRightString(pxr(), py(), research.get_podrazdeleniye().title)
                 c.drawString(px(), 6 * mm, "Страница %d из %d" % (pg_num, pages.num_pages))
 
                 styleSheet = getSampleStyleSheet()
@@ -280,11 +280,11 @@ def tubes_get(request):
                                                      notice="",
                                                      doc_recive__isnull=True,
                                                      time_get__range=(date_start, date_end),
-                                                     issledovaniya__research__subgroup__podrazdeleniye=lab):
+                                                     issledovaniya__research__podrazdeleniye=lab):
             if tube.getbc() in k or tube.rstatus():
                 continue
             issledovaniya_tmp = []
-            for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__subgroup__podrazdeleniye=lab,
+            for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__podrazdeleniye=lab,
                                                     tubes__time_get__range=(date_start, date_end)):
                 issledovaniya_tmp.append(iss.research.title)
             if len(issledovaniya_tmp) > 0:
@@ -344,13 +344,13 @@ def receive_journal(request):
 
     if return_type == "directions":
         tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=lab,
+            issledovaniya__research__podrazdeleniye=lab,
             time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'time_recive', 'daynum')
     else:
         tubes = TubesRegistration.objects.filter(
-            issledovaniya__research__subgroup__podrazdeleniye=lab,
+            issledovaniya__research__podrazdeleniye=lab,
             time_recive__gte=datetime.now().date(), doc_get__podrazdeleniye__pk__in=otd,
             doc_recive__isnull=False).order_by(
             'issledovaniya__napravleniye__client__pk')
@@ -408,7 +408,7 @@ def receive_journal(request):
                     labs[k].append(
                         {"type": v.type.tube.title, "researches": iss_list[value],
                          "client-type": iss[0].napravleniye.client.base.short_title,
-                         "lab_title": iss[0].research.subgroup.title,
+                         "lab_title": iss[0].research.get_podrazdeleniye().title,
                          "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
                          "dir_id": iss[0].napravleniye.pk,
                          "podr": iss[0].napravleniye.doc.podrazdeleniye.title,

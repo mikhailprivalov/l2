@@ -88,8 +88,7 @@ def result_conformation(request):
         labs = users.Podrazdeleniya.objects.filter(isLab=True)  # Загрузка всех подразделений
     else:
         labs = [request.user.doctorprofile.podrazdeleniye, request.user.doctorprofile.podrazdeleniye]
-    researches = directory.Researches.objects.filter(
-        subgroup__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
+    researches = directory.Researches.objects.filter(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
     return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
 
 
@@ -143,13 +142,13 @@ def loadready(request):
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_recive__range=(date_start, date_end),
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=lab,
+                                                 issledovaniya__research__podrazdeleniye=lab,
                                                  issledovaniya__isnull=False)
     else:
         tlist = TubesRegistration.objects.filter(doc_recive__isnull=False, time_get__isnull=False,
                                                  # issledovaniya__napravleniye__is_printed=False,
                                                  issledovaniya__doc_confirmation__isnull=True,
-                                                 issledovaniya__research__subgroup__podrazdeleniye=lab,
+                                                 issledovaniya__research__podrazdeleniye=lab,
                                                  issledovaniya__deferred=True, issledovaniya__isnull=False)
     # tubes =   # Загрузка пробирок,
     # лаборатория исследования которых равна лаборатории
@@ -819,7 +818,7 @@ def result_print(request):
             # iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__pk", "research__sort_weight")
 
             # c.setFont('OpenSans', 9)
-            # c.drawString(px(), py(35), iss_list.first().research.subgroup.podrazdeleniye.title)
+            # c.drawString(px(), py(35), iss_list.first().research.get_podrazdeleniye().title)
 
             c.setFont('OpenSans', 8)
             from reportlab.platypus import Table, TableStyle
@@ -1367,10 +1366,10 @@ def result_print(request):
             dp = request.user.doctorprofile
             if not request.user.is_superuser and dp.podrazdeleniye != \
                     Issledovaniya.objects.filter(napravleniye=direction)[
-                        0].research.subgroup.podrazdeleniye and dp != direction.doc and dp.podrazdeleniye != direction.doc.podrazdeleniye:
+                        0].research.get_podrazdeleniye() and dp != direction.doc and dp.podrazdeleniye != direction.doc.podrazdeleniye:
                 slog.Log(key=dpk, type=998, body=json.dumps(
                     {"lab": str(
-                        Issledovaniya.objects.filter(napravleniye=direction)[0].research.subgroup.podrazdeleniye),
+                        Issledovaniya.objects.filter(napravleniye=direction)[0].research.get_podrazdeleniye()),
                         "doc": str(direction.doc), "print_otd": str(dp.podrazdeleniye),
                         "patient": str(direction.client.fio())}),
                          user=request.user.doctorprofile).save()
@@ -2248,7 +2247,7 @@ def result_journal_table_print(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
 
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
-                                            research__subgroup__podrazdeleniye=lab,
+                                            research__podrazdeleniye=lab,
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
     patients = {}
     researches_pks = set()
@@ -2385,8 +2384,8 @@ def result_journal_table_print(request):
 
     ordered = {}
     from django.db.models import Q
-    for f in directory.Fractions.objects.filter(Q(research__subgroup__podrazdeleniye=lab, hide=False,
-                                                  research__hide=False) | Q(research__subgroup__podrazdeleniye=lab,
+    for f in directory.Fractions.objects.filter(Q(research__podrazdeleniye=lab, hide=False,
+                                                  research__hide=False) | Q(research__podrazdeleniye=lab,
                                                                             hide=False,
                                                                             research__hide=True,
                                                                             research__pk__in=researches_pks)):
@@ -2483,7 +2482,7 @@ def result_journal_print(request):
 
     end_date = date + datetime.timedelta(days=1)
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
-                                            research__subgroup__podrazdeleniye=lab,
+                                            research__podrazdeleniye=lab,
                                             napravleniye__cancel=False, napravleniye__istochnik_f__pk__in=ist_f)
     group_str = "Все исследования"
     if group != -2:
@@ -2802,7 +2801,7 @@ def result_filter(request):
             iss_list = []
 
             iss_list = Issledovaniya.objects.filter(
-                research__subgroup__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+                research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
             if dir_pk == "" and status != 3:
                 date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
                                            int(date_start.split(".")[0]))
@@ -3036,7 +3035,7 @@ def results_search_directions(request):
             researches.append(tmp_r)
 
         tmp_dir = {"pk": direction.pk,
-                   "laboratory": direction.issledovaniya_set.first().research.subgroup.podrazdeleniye.title,
+                   "laboratory": direction.issledovaniya_set.first().research.get_podrazdeleniye().title,
                    "otd": direction.doc.podrazdeleniye.title,
                    "doc": direction.doc.get_fio(),
                    "researches": researches, "is_normal": row_normal}

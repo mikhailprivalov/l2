@@ -52,7 +52,7 @@ class Researches(models.Model):
     """
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления')
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
-    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории (DEPRECATED)', db_index=True)
+    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории (DEPRECATED)', db_index=True, null=True, blank=True, default=None)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
@@ -77,6 +77,12 @@ class Researches(models.Model):
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
+
+    def get_podrazdeleniye(self):
+        if self.podrazdeleniye is None:
+            self.podrazdeleniye = self.subgroup.podrazdeleniye
+            self.save()
+        return self.podrazdeleniye
 
     class Meta:
         verbose_name = 'Вид исследования'

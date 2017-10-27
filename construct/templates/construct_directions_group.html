@@ -11,7 +11,7 @@
         <div class="col-xs-4" style="padding: 5px">
             <select class="select-b" id="select-lab" data-live-search="true" onchange="loadreslist();"
                     data-width="100%">
-                {% for v in lab_subgroups %}
+                {% for v in labs %}
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
             </select>
@@ -288,7 +288,7 @@
             $.ajax({
                 url: "/directory/researches/directions",
                 method: "GET",
-                data: {lab_group: $("#select-lab option:selected").val()}
+                data: {lab: $("#select-lab option:selected").val()}
             }).done(function (data) {
                 $("#researches-container").html("");
                 $.each(data.directions, function (k, v) {
@@ -325,7 +325,7 @@
                 $.ajax({
                     url: "/directory/researches/group",
                     method: "GET",
-                    data: {lab_group: $("#select-lab option:selected").val(), gid: group_id}
+                    data: {lab: $("#select-lab option:selected").val(), gid: group_id}
                 }).done(function (data) {
                     $("#cangroup").html("");
                     $.each(data.researches, function (k, v) {
@@ -343,7 +343,7 @@
                 $.ajax({
                     url: "/directory/researches/group",
                     method: "GET",
-                    data: {lab_group: $("#select-lab option:selected").val(), gid: group_id}
+                    data: {lab: $("#select-lab option:selected").val(), gid: group_id}
                 }).done(function (data) {
                     $("#cangroup").html("");
                     $.each(data.researches, function (k, v) {
@@ -357,7 +357,7 @@
                     $.ajax({
                         url: "/directory/researches/group",
                         method: "GET",
-                        data: {lab_group: $("#select-lab option:selected").val(), gid: -1}
+                        data: {lab: $("#select-lab option:selected").val(), gid: -1}
                     }).done(function (data) {
                         $.each(data.researches, function (kk, vv) {
                             $("#cangroup").multiSelect('addOption', {value: vv.pk + "", text: vv.title});
