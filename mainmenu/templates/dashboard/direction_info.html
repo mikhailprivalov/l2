@@ -147,20 +147,20 @@
 
                     tmp += "<div class='events'>";
                     for(let evs of group.events){
-                        let summary = `<div class="event-data">`;
+                        let evdata = `<div class="event-data">`;
                         let subtitle = "";
                         for(let events of evs){
                             let key = events[0];
                             let val = events[1];
 
                             if(key !== "json_data" && key !== "title")
-                                summary += `<div class="data-row"><span class="data-title">${key}:</span> <span class="data-value">${val}</span></div>`;
+                                evdata += `<div class="data-row"><span class="data-title">${key}:</span> <span class="data-value">${val}</span></div>`;
                             else if(key === "title"){
                                 subtitle = val;
                             }
                         }
-                        summary += "</div>";
-                        tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${subtitle}</div>${summary}</div>`;
+                        evdata += "</div>";
+                        tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${subtitle}</div><div class="event-data">${evdata}</div></div>`;
                     }
                     tmp += `</div>`;
 
@@ -223,6 +223,9 @@
     }
     pre{
         margin-bottom: 0;
+    }
+    .event-summary{
+        font-weight: bold;
     }
     </style>
 {% endblock %}
