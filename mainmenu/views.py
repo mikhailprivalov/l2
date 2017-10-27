@@ -5,7 +5,7 @@ import datetime
 # from astm.tests.test_server import null_dispatcher
 import re
 
-from django.db.models import Func
+from django.db.models import Func, collections
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -750,17 +750,17 @@ def direction_info(request):
         pk = request.GET.get("pk", "-1")
         if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
             dir = Napravleniya.objects.get(pk=pk)
-            data.append({"type": "Направление №%s" % pk,
-                         "events": {timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X") + " Направление создано": {
-                             "Создатель": get_userdata(dir.doc_who_create),
-                             "От имени": get_userdata(dir.doc),
-                             "Пациент": "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex),
-                             "Карта": "%s %s" % (dir.client.number, dir.client.base.title),
-                             "Архив": dir.client.is_archive,
-                             "Источник финансирования": dir.istochnik_f.tilie,
-                             "Диагноз": dir.diagnos}
-                            }
-                         })
+            data.append(collections.OrderedDict(type="Направление №%s" % pk, events={
+                timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X") + " Направление создано": {
+                    "Создатель": get_userdata(dir.doc_who_create),
+                    "От имени": get_userdata(dir.doc),
+                    "Пациент": "%s, %s, Пол: %s" % (
+                    dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex),
+                    "Карта": "%s %s" % (dir.client.number, dir.client.base.title),
+                    "Архив": dir.client.is_archive,
+                    "Источник финансирования": dir.istochnik_f.tilie,
+                    "Диагноз": dir.diagnos}
+            }))
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
                 if tube.time_get is not None:
@@ -774,7 +774,7 @@ def direction_info(request):
                     }
                 data.append(d)
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
-                d = {"type": "Исследование: %s (#%s)" % (iss.research.title, iss.pk), "events": {}}
+                d = collections.OrderedDict(type="Исследование: %s (#%s)" % (iss.research.title, iss.pk), events={})
                 for l in slog.Log.objects.filter(key=str(iss.pk)):
                     tdata = {"Исполнитель": get_userdata(l.user)}
                     if l.body and l.body != "" and l.type != 24:
