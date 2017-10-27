@@ -193,10 +193,3 @@ class Absorption(models.Model):
         verbose_name = 'Поглощение фракции'
         verbose_name_plural = 'Поглощения фракций'
 
-
-class AssignmentTemplate(models.Model):
-    """
-    Шаблоны назначений
-    """
-    user = models.ForeignKey(DoctorProfile, blank=True, null=True)
-    researches = models.ManyToManyField(Researches)
