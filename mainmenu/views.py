@@ -766,12 +766,12 @@ def direction_info(request):
                 d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
                 if tube.time_get is not None:
                     d["events"]["Забор"] = {
-                        "datetime": timezone.localtime(dir.time_get).strftime("%d.%m.%Y %X"),
+                        "datetime": timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X"),
                         "Заборщик": get_userdata(tube.doc_get)
                     }
                 if tube.time_recive is not None:
                     d["events"]["Приём"] = {
-                        "datetime": timezone.localtime(dir.time_recive).strftime("%d.%m.%Y %X"),
+                        "datetime": timezone.localtime(tube.time_recive).strftime("%d.%m.%Y %X"),
                         "Приёмщик": get_userdata(tube.doc_recive),
                         "Комментарий не приёма": tube.notice
                     }
