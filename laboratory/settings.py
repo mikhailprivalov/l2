@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'debug_panel',
     'rest_framework',
     'cachalot',
+    'django_logtail',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -184,6 +185,10 @@ warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarn
 MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
 DEBUG = False
+
+LOGTAIL_FILES = {
+    'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')
+}
 
 try:
     from laboratory.local_settings import *
