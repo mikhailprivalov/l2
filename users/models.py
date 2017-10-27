@@ -56,6 +56,10 @@ class DoctorProfile(models.Model):
         else:
             return self.fio
 
+    class Meta:
+        verbose_name = 'Профиль пользователя L2'
+        verbose_name_plural = 'Профили пользователей L2'
+
 
 class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
@@ -65,6 +69,10 @@ class AssignmentTemplates(models.Model):
     def __str__(self):
         return (self.title + " | Шаблон для ") + (("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc))
 
+    class Meta:
+        verbose_name = 'Шаблон назначений'
+        verbose_name_plural = 'Шаблоны назначений'
+
 
 class AssignmentResearches(models.Model):
     template = models.ForeignKey(AssignmentTemplates)
@@ -72,3 +80,7 @@ class AssignmentResearches(models.Model):
 
     def __str__(self):
         return str(self.template) + "  | " + str(self.research)
+
+    class Meta:
+        verbose_name = 'Исследование для шаблона назначений'
+        verbose_name_plural = 'Исследования для шаблонов назначений'
