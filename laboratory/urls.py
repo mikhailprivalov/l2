@@ -102,7 +102,6 @@ urlpatterns = [
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^health/', include('health.urls')),
                   url(r'^logout/$', logout, {'next_page': '/'}),
-                  url(r'^admin_tools/', include('admin_tools.urls')),
               ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

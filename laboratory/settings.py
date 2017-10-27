@@ -12,10 +12,6 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
 X_FRAME_OPTIONS = 'ALLOWALL'
 INSTALLED_APPS = (
-    'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,6 +60,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates'), ],
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -72,9 +69,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
             ],
-            'loaders': ['django.template.loaders.filesystem.Loader',
-                        'django.template.loaders.app_directories.Loader',
-                        'admin_tools.template_loaders.Loader']
         },
     },
 ]
