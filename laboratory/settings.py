@@ -71,6 +71,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
+            ],
+            'loaders': [
+                'admin_tools.template_loaders.Loader'
             ]
         },
     },
