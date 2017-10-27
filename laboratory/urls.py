@@ -65,6 +65,7 @@ urlpatterns = [
                   url(r'^directory/researches/update_mode$', directory_researches_update_mode),
                   url(r'^directory/researches/update_template$', researches_update_template),
                   url(r'^researches/get/one$', researches_get_one),
+                  url(r'^dashboard/$', RedirectView.as_view(url='/mainmenu/')),
                   url(r'^mainmenu/', include('mainmenu.urls')),
                   url(r'^mainmenu/receive$', receive),
                   url(r'^mainmenu/receive/one_by_one$', receive_obo),
