@@ -5,7 +5,7 @@ import datetime
 # from astm.tests.test_server import null_dispatcher
 import re
 
-from django.db.models import Func, collections
+from django.db.models import Func
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -27,7 +27,7 @@ import slog.models as slog
 from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
-
+import collections
 
 class IsNull(Func):
     template = '%(expressions)s IS NULL'
@@ -760,7 +760,7 @@ def direction_info(request):
                     "Архив": dir.client.is_archive,
                     "Источник финансирования": dir.istochnik_f.tilie,
                     "Диагноз": dir.diagnos}
-            }))
+                }))
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
                 if tube.time_get is not None:
