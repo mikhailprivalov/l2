@@ -7,7 +7,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from users.views import home
 from clients.views import ajax_search, receive_db, get_db
-from researches.views import ajax_search_res, researches_get_one, get_all_tubes, tubes_control, tubes_relation
+from researches.views import researches_get_one, get_all_tubes, tubes_control, tubes_relation
 from directions.views import dir_save, gen_pdf_dir, get_one_dir, update_direction, cancel_direction, load_history, \
     print_history, \
     get_issledovaniya, get_client_directions, get_xls_dir, setdef, gen_pdf_execlist, get_worklist, group_confirm_get, \
