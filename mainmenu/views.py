@@ -42,6 +42,7 @@ def dashboard(request):  # Представление панели управл�
         groups = [str(x) for x in request.user.groups.all()]
         pages = [
             {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/direction/info", "title": "Информация о направлении", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант"]},
             {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
             {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
@@ -709,3 +710,8 @@ def users_dosync(request):
 def dir_multiprint(request):
     """ Страница пакетной печати направлений """
     return render(request, 'dashboard/dir_multiprint.html')
+
+
+@login_required
+def direction_info(request):
+    return render(request, 'dashboard/direction_info.html')

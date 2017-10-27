@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     url(r'^$', views.dashboard),
     url(r'^directions/multiprint$', views.dir_multiprint),
+    url(r'^direction/info$', views.direction_info),
     url(r'^biomaterial/get$', views.researches_control),
     url(r'^create_user$', views.create_user),
     url(r'^from$', views.dashboard_from),
