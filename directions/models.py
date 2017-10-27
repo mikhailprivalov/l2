@@ -33,6 +33,10 @@ class FrequencyOfUseResearches(models.Model):
             f.cnt = 0
             f.save()
 
+    class Meta:
+        verbose_name = 'Частота назначения исследований пользователем'
+        verbose_name_plural = 'Частоты назначения исследований пользователем'
+
 
 class CustomResearchOrdering(models.Model):
     research = models.ForeignKey(directory.Researches)
@@ -41,6 +45,10 @@ class CustomResearchOrdering(models.Model):
 
     def __str__(self):
         return str(self.user) + " - " + str(self.research) + ", " + str(self.weight)
+
+    class Meta:
+        verbose_name = 'Пользовательская сортировка исследований'
+        verbose_name_plural = 'Пользовательские сортировки исследований'
 
 
 class TubesRegistration(models.Model):
@@ -150,6 +158,10 @@ class TubesRegistration(models.Model):
             return self.barcode
         return self.id
 
+    class Meta:
+        verbose_name = 'Пробирка для направления'
+        verbose_name_plural = 'Пробирки для направлений'
+
 
 class IstochnikiFinansirovaniya(models.Model):
     """
@@ -159,6 +171,10 @@ class IstochnikiFinansirovaniya(models.Model):
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования')
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
+
+    class Meta:
+        verbose_name = 'Источник финансирования'
+        verbose_name_plural = 'Источники финансирования'
 
 
 class Napravleniya(models.Model):
@@ -359,6 +375,10 @@ class Napravleniya(models.Model):
         """
         return not self.is_all_confirm() and any([x.deferred for x in Issledovaniya.objects.filter(napravleniye=self)])
 
+    class Meta:
+        verbose_name = 'Направление'
+        verbose_name_plural = 'Направления'
+
 
 class Issledovaniya(models.Model):
     """
@@ -401,6 +421,10 @@ class Issledovaniya(models.Model):
     def get_analyzer(self):
         return "" if not self.api_app else self.api_app.name
 
+    class Meta:
+        verbose_name = 'Назначение на исследование'
+        verbose_name_plural = 'Назначения на исследования'
+
 
 class RmisServices(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True)
@@ -409,6 +433,10 @@ class RmisServices(models.Model):
 
     def __str__(self):
         return "%s %s" % (self.napravleniye, self.code)
+
+    class Meta:
+        verbose_name = 'Выгруженная в РМИС услуга для направления'
+        verbose_name_plural = 'Выгруженные в РМИС услуги для направлений'
 
 
 class Result(models.Model):
@@ -639,3 +667,7 @@ class Result(models.Model):
 
         calc = clc(ref, value)
         return calc
+
+    class Meta:
+        verbose_name = 'Результат исследования'
+        verbose_name_plural = 'Результаты исследований'
