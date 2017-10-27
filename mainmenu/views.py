@@ -762,7 +762,7 @@ def direction_info(request):
                              "Диагноз": dir.diagnos}
                             }
                          })
-            for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir):
+            for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
                 if tube.time_get is not None:
                     d["events"]["Забор"] = {
