@@ -183,6 +183,7 @@
                 }
                 resize();
                 $("tr.loading").remove();
+            }).always(function () {
                 in_load = false;
             });
         }
