@@ -11,6 +11,10 @@ class DirectionsGroup(models.Model):
     """
     pass
 
+    class Meta:
+        verbose_name = 'Группа направлений'
+        verbose_name_plural = 'Группы направлений'
+
 
 class ReleationsFT(models.Model):
     """
@@ -22,6 +26,10 @@ class ReleationsFT(models.Model):
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)
 
+    class Meta:
+        verbose_name = 'Физическая пробирка для фракций'
+        verbose_name_plural = 'Физические пробирки для фракций'
+
 
 class ResearchGroup(models.Model):
     """
@@ -32,6 +40,10 @@ class ResearchGroup(models.Model):
 
     def __str__(self):
         return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Группа исследований'
+        verbose_name_plural = 'Группы исследований'
 
 
 class Researches(models.Model):
@@ -65,6 +77,10 @@ class Researches(models.Model):
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.subgroup.podrazdeleniye, self.hide)
 
+    class Meta:
+        verbose_name = 'Вид исследования'
+        verbose_name_plural = 'Виды исследований'
+
 
 class AutoAdd(models.Model):
     """
@@ -75,6 +91,10 @@ class AutoAdd(models.Model):
 
     def __str__(self):
         return "%s -> %s" % (self.a.title, self.b.title)
+
+    class Meta:
+        verbose_name = 'Автоматическое добавление назначений'
+        verbose_name_plural = 'Автоматическоие добавления назначений'
 
 
 class References(models.Model):
@@ -90,6 +110,10 @@ class References(models.Model):
     def __str__(self):
         return str(self.fraction) + " | " + str(self.fraction) + " | " + self.title
 
+    class Meta:
+        verbose_name = 'Референс'
+        verbose_name_plural = 'Референсы'
+
 
 class ResultVariants(models.Model):
     values = models.TextField(
@@ -101,6 +125,10 @@ class ResultVariants(models.Model):
     def __str__(self):
         return str(self.get_variants())
 
+    class Meta:
+        verbose_name = 'Вариант результата'
+        verbose_name_plural = 'Варианты результатов'
+
 
 class MaterialVariants(models.Model):
     values = models.TextField(
@@ -111,6 +139,10 @@ class MaterialVariants(models.Model):
 
     def __str__(self):
         return str(self.get_variants())
+
+    class Meta:
+        verbose_name = 'Вариант комментария'
+        verbose_name_plural = 'Варианты комментариев'
 
 
 class Fractions(models.Model):
@@ -142,6 +174,10 @@ class Fractions(models.Model):
     def __str__(self):
         return self.research.title + " | " + self.title
 
+    class Meta:
+        verbose_name = 'Фракция'
+        verbose_name_plural = 'Фракции'
+
 
 class Absorption(models.Model):
     """
@@ -152,6 +188,10 @@ class Absorption(models.Model):
 
     def __str__(self):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
+
+    class Meta:
+        verbose_name = 'Поглощение фракции'
+        verbose_name_plural = 'Поглощения фракций'
 
 
 class AssignmentTemplate(models.Model):
