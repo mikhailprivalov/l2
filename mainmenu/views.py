@@ -750,24 +750,37 @@ def direction_info(request):
         pk = request.GET.get("pk", "-1")
         if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
             dir = Napravleniya.objects.get(pk=pk)
-            data.append({"type": "direction",
-                         "pk": pk,
-                         "events": [{"Направление создано": {
+            data.append({"type": "Направление №%s" % pk,
+                         "events": {"Направление создано": {
                              "datetime": timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X"),
-                             "creator": get_userdata(dir.doc_who_create),
-                             "ofname": get_userdata(dir.doc),
-                             "patient": {"fio": dir.client.individual.fio(), "bd": dir.client.individual.bd(), "sex": dir.client.individual.sex},
-                             "card": "%s %s" % (dir.client.number, dir.client.base.title),
-                             "archive": dir.client.is_archive,
-                             "finsource": dir.istochnik_f.tilie,
-                             "diagnos": dir.diagnos}
-                            }]
+                             "Создатель": get_userdata(dir.doc_who_create),
+                             "От имени": get_userdata(dir.doc),
+                             "Пациент": "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex),
+                             "Карта": "%s %s" % (dir.client.number, dir.client.base.title),
+                             "Архив": dir.client.is_archive,
+                             "Источник финансирования": dir.istochnik_f.tilie,
+                             "Диагноз": dir.diagnos}
+                            }
                          })
+            for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir):
+                d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
+                if tube.time_get is not None:
+                    d["events"]["Забор"] = {
+                        "datetime": timezone.localtime(dir.time_get).strftime("%d.%m.%Y %X"),
+                        "Заборщик": get_userdata(tube.doc_get)
+                    }
+                if tube.time_recive is not None:
+                    d["events"]["Приём"] = {
+                        "datetime": timezone.localtime(dir.time_recive).strftime("%d.%m.%Y %X"),
+                        "Приёмщик": get_userdata(tube.doc_recive),
+                        "Комментарий не приёма": tube.notice
+                    }
+                data.append(d)
         return HttpResponse(json.dumps(data), content_type="application/json")
     return render(request, 'dashboard/direction_info.html')
 
 
 def get_userdata(doc: DoctorProfile):
     if doc is None:
-        return None
-    return {"fio": doc.fio, "podr": doc.podrazdeleniye.title, "username": doc.user.username}
+        return ""
+    return "%s (%s) - %s" % (doc.fio, doc.user.username, doc.podrazdeleniye.title)
