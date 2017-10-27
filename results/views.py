@@ -1509,7 +1509,7 @@ def result_print(request):
                         dates[dt] = 0
                     dates[dt] += 1
                 if iss.tubes.exists() and iss.tubes.first().time_get:
-                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y %H:%M')
+                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
 
             maxdate = ""
             if dates != {}:
