@@ -777,7 +777,7 @@ def direction_info(request):
                 d = {"type": "Исследование: %s (#%s)" % (iss.research.title, iss.pk), "events": {}}
                 for l in slog.Log.objects.filter(key=str(iss.pk)):
                     tdata = {"Исполнитель": get_userdata(l.user)}
-                    if l.body and l.body != "":
+                    if l.body and l.body != "" and l.type != 24:
                         tdata["json_data"] = l.body
                     d["events"][timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk] = tdata
                 data.append(d)
