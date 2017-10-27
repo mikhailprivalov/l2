@@ -48,7 +48,7 @@ MIDDLEWARE = [
     'django.contrib.admindocs.middleware.XViewMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -163,11 +163,16 @@ LDAP = {
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
+
+
 class DisableMigrations(object):
     def __contains__(self, item):
         return True
+
     def __getitem__(self, item):
         return "notmigrations"
+
+
 TESTS_IN_PROGRESS = False
 if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     logging.disable(logging.CRITICAL)
@@ -181,6 +186,7 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
 CACHALOT_ENABLED = True
 
 import warnings
+
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
 MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
