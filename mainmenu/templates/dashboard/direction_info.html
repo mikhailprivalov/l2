@@ -138,9 +138,24 @@
                 url: "/mainmenu/direction/info",
                 data: {pk: pk}
             }).done(data => {
-                console.log(data);
-                hl();
-            });
+                $("#direction-status").html();
+                for(let group of data){
+                    let tmp = `<div class="direction-object">`;
+
+                    tmp += `<div class="direction-object-header">${group.type}</div>`;
+
+
+                    tmp += "<div class='events'>";
+                    for(let key of _.keys(group.events)){
+                        tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${key}</div></div>`;
+                    }
+                    tmp += `</div>`;
+
+
+                    tmp += `</div>`;
+                    $("#direction-status").append(tmp);
+                }
+            }).always(() => { hl(); });
         }
     </script>
     <style>
