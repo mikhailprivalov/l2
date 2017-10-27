@@ -751,8 +751,7 @@ def direction_info(request):
         if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
             dir = Napravleniya.objects.get(pk=pk)
             data.append({"type": "Направление №%s" % pk,
-                         "events": {"Направление создано": {
-                             "datetime": timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X"),
+                         "events": {timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X") + " Направление создано": {
                              "Создатель": get_userdata(dir.doc_who_create),
                              "От имени": get_userdata(dir.doc),
                              "Пациент": "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex),
@@ -765,17 +764,19 @@ def direction_info(request):
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Пробирка №%s" % tube.pk, "events": {}}
                 if tube.time_get is not None:
-                    d["events"]["Забор"] = {
-                        "datetime": timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X"),
+                    d["events"][timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X") + " Забор"] = {
                         "Заборщик": get_userdata(tube.doc_get)
                     }
                 if tube.time_recive is not None:
-                    d["events"]["Приём"] = {
-                        "datetime": timezone.localtime(tube.time_recive).strftime("%d.%m.%Y %X"),
+                    d["events"][ timezone.localtime(tube.time_recive).strftime("%d.%m.%Y %X") + " Приём"] = {
                         "Приёмщик": get_userdata(tube.doc_recive),
                         "Комментарий не приёма": tube.notice
                     }
                 data.append(d)
+            for iss in Issledovaniya.objects.filter(napravleniye=dir):
+                d = {"type": "Исследование: %s (#%s)" % (iss.research.title, iss.pk), "events": {}}
+                for l in slog.Log.objects.filter(key=str(iss.pk)):
+                    d["events"][timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk] = {"Исполнитель": get_userdata(l.user)}
         return HttpResponse(json.dumps(data), content_type="application/json")
     return render(request, 'dashboard/direction_info.html')
 
