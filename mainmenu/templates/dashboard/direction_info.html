@@ -55,27 +55,32 @@
                         for (let evs of group.events) {
                             let evdata = `<div class="event-data">`;
                             let subtitle = "";
-                            for (let events of evs) {
-                                let key = events[0];
-                                let val = events[1];
+                            if(evs.length > 0) {
+                                for (let events of evs) {
+                                    let key = events[0];
+                                    let val = events[1];
 
-                                if (key !== "json_data" && key !== "title")
-                                    evdata += `<div class="data-row"><span class="data-title">${key}:</span> <span class="data-value">${val}</span></div>`;
-                                else if (key === "title") {
-                                    subtitle = val;
-                                } else if (key === "json_data") {
-                                    let dbody;
-                                    try {
-                                        const par = JSON.parse(val.replaceAll("{'", "{\"").replaceAll("':", "\":"));
-                                        dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
-                                            return n !== undefined
-                                        }) : par), null, 2));
+                                    if (key !== "json_data" && key !== "title")
+                                        evdata += `<div class="data-row"><span class="data-title">${key}:</span> <span class="data-value">${val}</span></div>`;
+                                    else if (key === "title") {
+                                        subtitle = val;
+                                    } else if (key === "json_data") {
+                                        let dbody;
+                                        try {
+                                            const par = JSON.parse(val.replaceAll("{'", "{\"").replaceAll("':", "\":"));
+                                            dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                                                return n !== undefined
+                                            }) : par), null, 2));
+                                        }
+                                        catch (e) {
+                                            dbody = syntaxHighlight(val);
+                                        }
+                                        evdata += `<div class="data-row"><pre>${dbody}</pre></div>`;
                                     }
-                                    catch (e) {
-                                        dbody = syntaxHighlight(val);
-                                    }
-                                    evdata += `<div class="data-row"><pre>${dbody}</pre></div>`;
                                 }
+                            }
+                            else {
+                                evdata += "Нет действий";
                             }
                             evdata += "</div>";
                             tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${subtitle}</div><div class="event-data">${evdata}</div></div>`;
