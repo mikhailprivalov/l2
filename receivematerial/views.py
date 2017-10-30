@@ -282,7 +282,7 @@ def tubes_get(request):
                                                       time_get__range=(date_start, date_end),
                                                       issledovaniya__research__podrazdeleniye=lab)
         if not_received:
-            tubes_list = tubes_list.exclude(notice="").exclude(notice__isnull=True).exclude(doc_recive__isnull=True)
+            tubes_list = tubes_list.exclude(notice="").exclude(notice__isnull=True).exclude(doc_recive__isnull=False)
         else:
             tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
 
