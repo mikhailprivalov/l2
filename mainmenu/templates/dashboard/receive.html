@@ -297,7 +297,7 @@
         function load_tubes() {
             sl();
             $("#tubes").html("");
-            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${$("[name='date-start']").val()}&dateend=${$("[name='date-end']").val()}&lab=${$("#lab").val()}&type=${$("[name='filter']").val()}`}).done(function (data) {
+            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${$("[name='date-start']").val()}&dateend=${$("[name='date-end']").val()}&lab=${$("#lab").val()}&type=${$("[name='filter']:checked").val()}`}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     let x = a.tube.id,
@@ -391,7 +391,7 @@
                     datestart: $("[name='date-start']").val(),
                     dateend: $("[name='date-end']").val(),
                     get_labs: true,
-                    type: $("[name='filter']").val()
+                    type: $("[name='filter']:checked").val()
                 }
             }).done(function(data) {
                 for(let lab of _.keys(data)){
@@ -403,7 +403,6 @@
         }
 
         function loadfrom() {
-            console.trace();
             let $from = $("#from");
             let selected = $from.find("option:selected").attr("num");
             $from.html("");
