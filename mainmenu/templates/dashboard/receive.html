@@ -415,7 +415,7 @@
                     datestart: $("[name='date-start']").val(),
                     dateend: $("[name='date-end']").val(),
                     lab: $("#lab").val(),
-                    type: $("[name='filter']").val()
+                    type: $("[name='filter']:checked").val()
                 }
             }).done(function (data) {
                 $.each(data, function (k, v) {
