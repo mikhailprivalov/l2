@@ -657,31 +657,28 @@ class Result(models.Model):
         def clc(r, val):
             result = "normal"
             if val.strip() != "":
-                if val.lower().strip() == "гемолиз":
-                    result = "not_normal"
-                else:
-                    for k in r.keys():
-                        tmp_result = "normal"
-                        rigth = rigths(k.strip().lower())
+                for k in r.keys():
+                    tmp_result = "normal"
+                    rigth = rigths(k.strip().lower())
 
-                        if not rigth:
-                            tmp_result = "maybe"
-                        elif rigth[0] <= age <= rigth[1]:
-                            rigth_v = rigths_v(r[k].strip().lower())
-                            pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
-                            if pattern.match(r[k]):
-                                if self.compare(r[k], val):
-                                    tmp_result = "normal"
-                                else:
-                                    tmp_result = "not_normal"
-                            elif rigth_v == "":
-                                tmp_result = "maybe"
+                    if not rigth:
+                        tmp_result = "maybe"
+                    elif rigth[0] <= age <= rigth[1]:
+                        rigth_v = rigths_v(r[k].strip().lower())
+                        pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
+                        if pattern.match(r[k]):
+                            if self.compare(r[k], val):
+                                tmp_result = "normal"
                             else:
-                                test_v = test_value(rigth_v, val)
-                                if not test_v:
-                                    tmp_result = "not_normal"
-                        if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
-                            result = tmp_result
+                                tmp_result = "not_normal"
+                        elif rigth_v == "":
+                            tmp_result = "maybe"
+                        else:
+                            test_v = test_value(rigth_v, val)
+                            if not test_v:
+                                tmp_result = "not_normal"
+                    if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
+                        result = tmp_result
             return result
 
         calc = clc(ref, value)
