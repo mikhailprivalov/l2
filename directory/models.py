@@ -36,7 +36,7 @@ class ResearchGroup(models.Model):
     Группы исследований
     """
     title = models.CharField(max_length=63, help_text='Название группы')
-    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Лаборатория')
+    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Лаборатория', db_index=True)
 
     def __str__(self):
         return "%s" % self.title
@@ -67,7 +67,7 @@ class Researches(models.Model):
     comment_template = models.IntegerField(default=-1, null=True, blank=True,
                                            help_text='Варианты комментариев к материалу (DEPRECATED)')
     comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу')
-    groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории')
+    groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории', db_index=True)
     onlywith = models.ForeignKey('self', null=True, blank=True,
                                  help_text='Без выбранного анализа не можеть быть назначено')
     can_lab_result_comment = models.BooleanField(default=False, blank=True,
@@ -162,7 +162,7 @@ class Fractions(models.Model):
     default_ref = models.ForeignKey(References, help_text='Референс по-умолчанию', blank=True, null=True, default=None)
     ref_m = JSONField(help_text='Референсы (М)', blank=True)
     ref_f = JSONField(help_text='Референсы (Ж)', blank=True)
-    relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)')
+    relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)', db_index=True)
     uet_doc = models.FloatField(default=0, help_text='УЕТы для врача')
     uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта')
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций')
@@ -170,7 +170,7 @@ class Fractions(models.Model):
     #                           help_text='Варианты подсказок результатов (deprecated)')
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
     render_type = models.IntegerField(default=0, blank=True,
                                       help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
     options = models.CharField(max_length=511, default="", blank=True,
@@ -190,7 +190,7 @@ class Absorption(models.Model):
     """
     Поглощение
     """
-    fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее')
+    fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее', db_index=True)
     flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглащяется главной')
 
     def __str__(self):

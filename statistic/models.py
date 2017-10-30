@@ -3,9 +3,10 @@ import users.models as users
 import slog.models as slog
 import directory.models as directory
 
+
 class Uet(models.Model):
-    user = models.ForeignKey(users.DoctorProfile)
-    date = models.DateTimeField(auto_now_add=True, blank=True)
+    user = models.ForeignKey(users.DoctorProfile, db_index=True)
+    date = models.DateTimeField(auto_now_add=True, blank=True, db_index=True)
     points = models.FloatField()
 
     @staticmethod

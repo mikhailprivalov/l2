@@ -14,7 +14,7 @@ class DoctorProfile(models.Model):
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт')
     fio = models.CharField(max_length=255, help_text='ФИО')
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True)
     isLDAP_user = models.BooleanField(default=False,
                                       blank=True,
                                       help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
