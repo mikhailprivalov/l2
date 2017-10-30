@@ -979,7 +979,11 @@ def get_issledovaniya(request):
                             titles.append(tube_o.type.tube.title)
 
                         not_received_tubes_list = [str(x.pk) for x in
-                                                   issledovaniye.tubes.exclude(doc_recive__isnull=False).all()]
+                                                   issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+
+                        not_received_why = [x.notice for x in
+                                                   issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+
 
                         saved = True
                         confirmed = True
@@ -1027,6 +1031,7 @@ def get_issledovaniya(request):
                                                      "status_key": str(saved) + str(confirmed) + str(
                                                          issledovaniye.deferred and not confirmed),
                                                      "not_received_tubes": ", ".join(not_received_tubes_list),
+                                                     "not_received_why": ", ".join(not_received_why),
                                                      "tube": {"pk": tb,
                                                               "title": ' | '.join(titles)},
                                                      "template": str(issledovaniye.research.template),
