@@ -79,7 +79,7 @@ def statistic_xls(request):
                 finsource_title = "Все источники"
 
                 if finsource is not False:
-                    finsource_title = finsource.tilie
+                    finsource_title = finsource.title
 
                 ws = wb.add_sheet(card_base.short_title + " " + finsource_title + " выполн.")
 

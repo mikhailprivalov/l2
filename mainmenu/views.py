@@ -357,7 +357,7 @@ def get_fin():
     for b in CardBase.objects.filter(hide=False):
         o = {"pk": b.pk, "sources": []}
         for f in IstochnikiFinansirovaniya.objects.filter(base=b, hide=False):
-            o["sources"].append({"pk": f.pk, "title": f.tilie})
+            o["sources"].append({"pk": f.pk, "title": f.title})
         fin.append(o)
     return fin
 
@@ -720,11 +720,6 @@ def users_dosync(request):
             profile.user = user  # Привязка профиля к пользователю
             profile.podrazdeleniye = pod
 
-            profile.labtype = 0
-            if "врач" in emp or "зав" in emp:
-                profile.labtype = 1
-            elif "лаб" in emp or "лаборант" in emp:
-                profile.labtype = 2
         else:
             user = User.objects.get(username=username)
             user.set_password(password)
@@ -770,7 +765,7 @@ def direction_info(request):
                     ["Пациент", "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
                     ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
                     ["Архив", yesno[dir.client.is_archive]],
-                    ["Источник финансирования", dir.istochnik_f.tilie],
+                    ["Источник финансирования", dir.istochnik_f.title],
                     ["Диагноз", dir.diagnos],
                     ["Направление отправлено в РМИС", yesno[dir.rmis_number not in ["", None, "NONERMIS"]]],
                     ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],

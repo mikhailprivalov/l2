@@ -388,7 +388,7 @@ def printDirection(c, n, dir):
 
     if dir.istochnik_f:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
-                     "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.tilie)
+                     "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
     else:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
 
@@ -1088,7 +1088,7 @@ def get_issledovaniya(request):
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
                 res["directioner"] = napr.doc.fio
                 res["otd"] = napr.doc.podrazdeleniye.title
-                res["fin_source"] = napr.istochnik_f.tilie
+                res["fin_source"] = napr.istochnik_f.title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
 

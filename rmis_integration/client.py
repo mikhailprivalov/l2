@@ -440,7 +440,7 @@ class Directions(BaseRequester):
                                                              refServiceId=self.main_client.services.get_service_ids(
                                                                  direction),
                                                              fundingSourceTypeId=Utils.get_fin_src_id(
-                                                                 direction.istochnik_f.tilie,
+                                                                 direction.istochnik_f.title,
                                                                  self.main_client.get_fin_dict()),
                                                              note='Автоматический вывод из Лабораторной Информационной Системы L2',
                                                              goalId=self.main_client.get_directory(
@@ -478,7 +478,7 @@ class Directions(BaseRequester):
         send_data = dict(referralId=refferal_id, serviceId=service_id, isRendered="false", patientUid=patient_uid,
                          orgId=self.main_client.search_organization_id(),
                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
-                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.main_client.get_fin_dict()),
+                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title, self.main_client.get_fin_dict()),
                          quantity=1)
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
@@ -549,7 +549,7 @@ class Directions(BaseRequester):
                                          timeFrom=timezone.localtime(direction.data_sozdaniya).strftime("%X"),
                                          dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
                                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
-                                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.tilie, self.main_client.get_fin_dict()),
+                                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title, self.main_client.get_fin_dict()),
                                          patientUid=rindiv)
                         if stdout:
                             stdout.write("SR: " + str(service_rend_id))

@@ -2258,9 +2258,9 @@ def result_journal_table_print(request):
                                                                           "research__sort_weight"):
         d = iss.napravleniye
         otd = d.doc.podrazdeleniye
-        k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.tilie)
+        k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.title)
         if k not in patients:
-            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.tilie, "patients": {}}
+            patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.title, "patients": {}}
         if d.client.pk not in patients[k]["patients"]:
             patients[k]["patients"][d.client.pk] = {"fio": d.client.individual.fio(short=True, dots=True),
                                                     "card": d.client.number_with_type(),
@@ -2578,7 +2578,7 @@ def result_journal_print(request):
         key = iss.napravleniye.client.individual.family + "-" + str(iss.napravleniye.client.pk)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
-                                  "ist_f": iss.napravleniye.istochnik_f.tilie,
+                                  "ist_f": iss.napravleniye.istochnik_f.title,
                                   "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                                          ((
                                               "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
@@ -2607,10 +2607,10 @@ def result_journal_print(request):
                             "fail"] = True
                 clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(tres)
         if not group_to_otd:
-            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.tilie][key] = \
+            otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.title][key] = \
                 clientresults[key]
         else:
-            otds[iss.napravleniye.istochnik_f.tilie][key] = clientresults[key]
+            otds[iss.napravleniye.istochnik_f.title][key] = clientresults[key]
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():

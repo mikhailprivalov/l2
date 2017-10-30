@@ -3,7 +3,7 @@ from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches
 
 
 class DocAdmin(admin.ModelAdmin):
-    list_filter = ('isLDAP_user', 'podrazdeleniye', 'labtype')
+    list_filter = ('isLDAP_user', 'podrazdeleniye')
     list_display = ('fio', 'podrazdeleniye', 'isLDAP_user')
     list_display_links = ('fio',)
 

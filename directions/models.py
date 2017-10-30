@@ -177,7 +177,7 @@ class IstochnikiFinansirovaniya(models.Model):
     """
     Таблица источников финансирования
     """
-    tilie = models.CharField(max_length=511, help_text='Название')
+    title = models.CharField(max_length=511, help_text='Название')
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
@@ -355,7 +355,7 @@ class Napravleniya(models.Model):
                          body=json.dumps({"researches": [x for x in researches if x is not None],
                                           "client_num": Clients.Card.objects.get(pk=client_id).number,
                                           "client_id": client_id, "diagnos": diagnos,
-                                          "finsource": finsource.tilie + " " + finsource.base.title,
+                                          "finsource": finsource.title + " " + finsource.base.title,
                                           "history_num": history_num, "ofname": str(ofname),
                                           "comments": comments})).save()
 
