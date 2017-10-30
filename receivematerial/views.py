@@ -35,7 +35,7 @@ def receive(request):
         rt = []
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
-            rt.append(dict(k=tube_get["id"], s=tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice))))
+            rt.append(dict(k=tube_get["id"], s=tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)), tn=tube.notice not in [None, ""]))
             if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
                 if tube.notice not in [None, ""]:
                     tube.clear_notice(request.user.doctorprofile)
