@@ -140,6 +140,19 @@ class TubesRegistration(models.Model):
         slog.Log(key=str(self.pk), user=doc_r, type=12,
                  body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
+    def clear_notice(self, doc_r):
+        """
+        Очистка замечания для пробирки
+        :param doc_r: врач/лаборант, указавший замечание
+        :param notice: текст замечания
+        :return:
+        """
+        old_notice = self.notice
+        self.notice = ""
+        self.save()
+        slog.Log(key=str(self.pk), user=doc_r, type=13,
+                 body=json.dumps({"Удалённое замечание": old_notice})).save()
+
     def rstatus(self, check_not=False):
         """
         Получение статуса принятия материала лабораторией

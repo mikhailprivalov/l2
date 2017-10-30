@@ -68,6 +68,7 @@ def receive_obo(request):
                 tube = TubesRegistration.objects.get(pk=p)
                 if tube.getstatus(one_by_one=True):
                     if tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
+                        tube.clear_notice(request.user.doctorprofile)
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
                                   "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
