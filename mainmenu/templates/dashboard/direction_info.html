@@ -52,10 +52,10 @@
 
 
                         tmp += "<div class='events'>";
-                        for (let evs of group.events) {
-                            let evdata = `<div class="event-data">`;
-                            let subtitle = "";
-                            if(evs.length > 0) {
+                        if(group.events.length > 0) {
+                            for (let evs of group.events) {
+                                let evdata = `<div class="event-data">`;
+                                let subtitle = "";
                                 for (let events of evs) {
                                     let key = events[0];
                                     let val = events[1];
@@ -78,12 +78,12 @@
                                         evdata += `<div class="data-row"><pre>${dbody}</pre></div>`;
                                     }
                                 }
+                                evdata += "</div>";
+                                tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${subtitle}</div><div class="event-data">${evdata}</div></div>`;
                             }
-                            else {
-                                evdata += "Нет действий";
-                            }
-                            evdata += "</div>";
-                            tmp += `<div class="event"><div class="event-summary"><i class="fa fa-history" aria-hidden="true"></i> ${subtitle}</div><div class="event-data">${evdata}</div></div>`;
+                        }
+                        else {
+                            tmp += "Нет действий";
                         }
                         tmp += `</div>`;
 
