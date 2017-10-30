@@ -122,7 +122,7 @@ def get_xls_dir(request):
             ws.write(i, 0, lastfio, font_style)
         else:
             ws.write(i, 0, "", font_style)
-        ws.write(i, 1, iss.first().research.get_.title, font_style)
+        ws.write(i, 1, iss.first().research.get_podrazdeleniye().title, font_style)
         ws.write(i, 2, dir.pk, font_style)
         fractiontubes = {}
         hasoak = False
