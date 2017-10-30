@@ -32,8 +32,10 @@ def receive(request):
         return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])
+        rt = []
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
+            rt.append(dict(k=tube_get["id"], s=tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice))))
             if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
                 if tube.notice not in [None, ""]:
                     tube.clear_notice(request.user.doctorprofile)
@@ -47,7 +49,7 @@ def receive(request):
             elif tube_get["notice"] != "":
                 tube.set_notice(request.user.doctorprofile, tube_get["notice"])
 
-        result = {"r": True}
+        result = {"r": True, "rt": rt}
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
