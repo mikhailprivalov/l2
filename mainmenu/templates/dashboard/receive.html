@@ -445,9 +445,12 @@
                     clearTimeout(timeoutID);
                     timeoutID = setTimeout(function () {
                         let barcode = chars.join("");
+                        if(barcode === ""){
+                            return;
+                        }
                         chars = [];
                         pressed = false;
-                        let $ch = $("[value={0}]".f(barcode));
+                        let $ch = $(`input[value='${barcode}']:checkbox`);
                         if ($ch.length) {
                             if (!$ch.prop("checked"))
                                 $ch.click();
