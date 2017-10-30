@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^discharge$', views.discharge),
     url(r'^discharge/send$', views.discharge_add),
     url(r'^discharge/search$', views.discharge_search),
+    url(r'^researches_from_directions$', views.researches_from_directions),
 ]

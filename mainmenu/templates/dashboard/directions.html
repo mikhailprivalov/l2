@@ -1918,7 +1918,7 @@
                 data: {pk: JSON.stringify(directions)}
             })
                 .done(data => {
-
+                    add_researches(data);
                 })
                 .always(() => { hl(); });
         }

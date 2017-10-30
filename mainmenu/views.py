@@ -746,6 +746,15 @@ def dir_multiprint(request):
 
 
 @login_required
+def researches_from_directions(request):
+    pk = json.loads(request.GET.get("pk", "[]"))
+    data = defaultdict(list)
+    for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk):
+        data[i.research.podrazdeleniye.pk].append(i.research.pk)
+    return HttpResponse(json.dumps(data), content_type="application/json")
+
+
+@login_required
 def direction_info(request):
     if request.is_ajax():
         yesno = {True: "да", False: "нет"}
