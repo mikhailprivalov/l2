@@ -749,7 +749,7 @@ def dir_multiprint(request):
 def researches_from_directions(request):
     pk = json.loads(request.GET.get("pk", "[]"))
     data = defaultdict(list)
-    for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk):
+    for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk, research__hide=False):
         data[i.research.podrazdeleniye.pk].append(i.research.pk)
     return HttpResponse(json.dumps(data), content_type="application/json")
 
