@@ -331,6 +331,7 @@
 
         function save() {
             let tubes = [];
+            sl();
             $(".confirm").each(function (k, v) {
                 tubes.push({
                     "id": $(v).val(),
@@ -357,7 +358,7 @@
                     'position': 'bottom right',
                     delay: 6000
                 });
-            });
+            }).always(() => { hl(); });
         }
 
         function resize() {
