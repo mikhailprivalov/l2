@@ -286,7 +286,7 @@ def tubes_get(request):
         if filter_type == "not_received":
             tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
         elif filter_type == "received":
-            tubes_list = tubes_list.filter(notice="", doc_recive__isnull=False)
+            tubes_list = tubes_list.filter(doc_recive__isnull=False)
         else:
             tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
 
