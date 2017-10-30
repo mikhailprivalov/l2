@@ -35,6 +35,8 @@ def receive(request):
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
             if tube_get["status"]:
+                if tube.notice not in [None, ""]:
+                    tube.clear_notice()
                 tube.set_r(request.user.doctorprofile)
             elif tube_get["notice"] != "":
                 tube.set_notice(request.user.doctorprofile, tube_get["notice"])
