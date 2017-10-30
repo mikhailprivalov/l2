@@ -37,7 +37,10 @@ def receive(request):
             if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
                 if tube.notice not in [None, ""]:
                     tube.clear_notice(request.user.doctorprofile)
-                tube.set_r(request.user.doctorprofile)
+                if tube_get["notice"] == "":
+                    tube.set_r(request.user.doctorprofile)
+                else:
+                    tube.set_notice(request.user.doctorprofile, tube_get["notice"])
             elif tube_get["notice"] != "":
                 tube.set_notice(request.user.doctorprofile, tube_get["notice"])
 
