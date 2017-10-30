@@ -774,15 +774,7 @@ def direction_info(request):
                         ["title", timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X") + " Забор"],
                         ["Заборщик", get_userdata(tube.doc_get)]
                     ])
-                if tube.time_recive is not None:
-                    tdata = [
-                        ["title", timezone.localtime(tube.time_recive).strftime("%d.%m.%Y %X") + " Приём"],
-                        ["Приёмщик", get_userdata(tube.doc_recive)],
-                    ]
-                    if tube.notice not in [None, ""]:
-                        tdata.append(["Комментарий не приёма", tube.notice])
-                    d["events"].append(tdata)
-                for l in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12)).distinct():
+                for l in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
                     tdata = [["Приёмщик", get_userdata(l.user)], ["title", timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk]]
                     if l.body and l.body != "":
                         tdata.append(["json_data", l.body])
