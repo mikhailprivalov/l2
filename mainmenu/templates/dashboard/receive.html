@@ -338,7 +338,7 @@
             $(".confirm").each(function (k, v) {
                 tubes.push({
                     "id": $(v).val(),
-                    "notice": $("#notice_" + $(v).val()).val(),
+                    "notice": $("#notice_" + $(v).val()).val().trim(),
                     "status": $(v).prop("checked")
                 })
             });
