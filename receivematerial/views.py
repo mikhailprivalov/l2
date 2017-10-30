@@ -34,7 +34,7 @@ def receive(request):
         tubes = json.loads(request.POST["data"])
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
-            if tube_get["status"] and tube_get["notice"] == "":
+            if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
                 if tube.notice not in [None, ""]:
                     tube.clear_notice()
                 tube.set_r(request.user.doctorprofile)
