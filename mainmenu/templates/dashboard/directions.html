@@ -1904,6 +1904,20 @@
                 });
                 return;
             }
+            if (client_id < 0) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Копирование невозможно",
+                        message: "Не загружен пациент",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
             let copy_array = [];
             $.each($bp, function (k, v) {
                 copy_array.push(parseInt($(v).attr("pk")));
