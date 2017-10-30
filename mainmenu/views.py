@@ -1,8 +1,6 @@
 from collections import defaultdict
-from copy import deepcopy
 
 import datetime
-# from astm.tests.test_server import null_dispatcher
 import re
 
 from django.db.models import Func
@@ -21,21 +19,16 @@ from podrazdeleniya.models import Podrazdeleniya
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
-from django.views.decorators.cache import cache_page
 from laboratory.decorators import group_required
 import slog.models as slog
 from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
-import collections
 from numba import jit
-
-class IsNull(Func):
-    template = '%(expressions)s IS NULL'
 
 
 # @cache_page(60 * 15)
-@jit
+@jit(nopython=True)
 @login_required
 def dashboard(request):  # Представление панели управления
     if not request.is_ajax():
