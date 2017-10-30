@@ -39,7 +39,10 @@ def receive(request):
                     tube.clear_notice(request.user.doctorprofile)
                 if tube_get["notice"] == "":
                     tube.set_r(request.user.doctorprofile)
-                else:
+                elif not tube.issledovaniya_set.exists() or not tube.issledovaniya_set.all()[0].napravleniye.is_all_confirm():
+                    tube.doc_recive = None
+                    tube.time_recive = None
+                    tube.save()
                     tube.set_notice(request.user.doctorprofile, tube_get["notice"])
             elif tube_get["notice"] != "":
                 tube.set_notice(request.user.doctorprofile, tube_get["notice"])
