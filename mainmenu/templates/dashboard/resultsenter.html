@@ -1416,7 +1416,7 @@
                             }
                         }
                         if (v.tube.pk === "") {
-                            sv = `&nbsp;<span class='no-tube'>Ёмк. ${v.not_received_tubes} не принята${v.not_received_why != ""? ` (${v.not_received_why})`: ""}</span>`;
+                            sv = `&nbsp;<span class='no-tube'>Ёмк. ${v.not_received_tubes} не принята${v.not_received_why !== ""? ` (${v.not_received_why})`: ""}</span>`;
                         }
                         deffc = "<br/>" + deffc;
                     }
@@ -1428,7 +1428,7 @@
                     let t = "";
                     if (v.saved && v.is_norm !== "normal")
                         t = `title='${iss_isnorm[v.is_norm]}'`;
-                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/><small>Пробирка: ${v.tube.pk}</small>${sv}</li>`);
+                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/>${v.tube.pk !== ""? `<small>Пробирка: ${v.tube.pk}</small>`: sv}</li>`);
 
                     const tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {
