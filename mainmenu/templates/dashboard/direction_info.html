@@ -43,8 +43,8 @@
                 url: "/mainmenu/direction/info",
                 data: {pk: pk}
             }).done(data => {
-                $("#direction-status").html("");
                 if(data.length > 0) {
+                    $("#direction-status").html("");
                     for (let group of data) {
                         let tmp = `<div class="direction-object">`;
 
@@ -93,7 +93,7 @@
                     }
                 }
                 else{
-                    errmessage("Направление не найдено");
+                    $("#direction-status").html(`Направление ${pk} не найдено`);
                 }
 
             }).always(() => { hl(); });
