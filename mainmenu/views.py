@@ -28,12 +28,14 @@ from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
 import collections
+from numba import jit
 
 class IsNull(Func):
     template = '%(expressions)s IS NULL'
 
 
 # @cache_page(60 * 15)
+@jit
 @login_required
 def dashboard(request):  # Представление панели управления
     if not request.is_ajax():
