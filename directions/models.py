@@ -141,12 +141,6 @@ class TubesRegistration(models.Model):
                  body=json.dumps({"status": self.getstatus(), "notice": self.notice})).save()
 
     def clear_notice(self, doc_r):
-        """
-        Очистка замечания для пробирки
-        :param doc_r: врач/лаборант, указавший замечание
-        :param notice: текст замечания
-        :return:
-        """
         old_notice = self.notice
         self.notice = ""
         self.save()
