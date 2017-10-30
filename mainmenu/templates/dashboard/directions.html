@@ -1912,15 +1912,17 @@
         }
 
         function copy_directions(directions) {
+            if(client_id === -1)
+                return;
             sl();
             $.ajax({
                 url: "/mainmenu/researches_from_directions",
                 data: {pk: JSON.stringify(directions)}
             })
-                .done(data => {
-                    add_researches(data);
-                })
-                .always(() => { hl(); });
+            .done(data => {
+                add_researches(data);
+            })
+            .always(() => { hl(); });
         }
 
         function batch_print() {
