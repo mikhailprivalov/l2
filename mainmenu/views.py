@@ -754,8 +754,8 @@ def direction_info(request):
                     ["Источник финансирования", dir.istochnik_f.tilie],
                     ["Диагноз", dir.diagnos],
                     ["Направление отправлено в РМИС", yesno[dir.rmis_number not in ["", None, "NONERMIS"]]],
-                    ["Направление привязано к случаю", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
-                    ["Направление привязано к записи отделения госпитализации", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
+                    ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
+                    ["Направление привязано к записи отделения госпитализации РМИС", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                     ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
                 ]
             ]})
