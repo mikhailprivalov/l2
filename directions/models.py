@@ -150,7 +150,7 @@ class TubesRegistration(models.Model):
         old_notice = self.notice
         self.notice = ""
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=13,
+        slog.Log(key=str(self.pk), user=doc_r, type=4000,
                  body=json.dumps({"Удалённое замечание": old_notice})).save()
 
     def rstatus(self, check_not=False):
