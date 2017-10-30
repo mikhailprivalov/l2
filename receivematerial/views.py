@@ -291,7 +291,7 @@ def tubes_get(request):
             tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
 
         for tube in tubes_list:
-            if tube.getbc() in k or tube.rstatus():
+            if tube.getbc() in k or (tube.rstatus() and filter_type != "received"):
                 continue
             issledovaniya_tmp = []
             for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__podrazdeleniye=lab,
