@@ -403,9 +403,9 @@
         }
 
         function loadfrom() {
-            let selected = $("#from option:selected").attr("num");
-            let from = $("#from");
-            $(from).html("");
+            let $from = $("#from");
+            let selected = $from.find("option:selected").attr("num");
+            $from.html("");
             sl();
             $.ajax({
                 url: "/mainmenu/from",
@@ -420,13 +420,13 @@
             }).done(function (data) {
                 $.each(data, function (k, v) {
                     if (v.pk == selected) {
-                        $(from).append(`<option selected num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
+                        $from.append(`<option selected num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
                     }
                     else {
-                        $(from).append(`<option num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
+                        $from.append(`<option num='${v.pk}' data-subtext="${v.tubes}">${v.title}</option>`);
                     }
                 });
-                $(from).selectpicker("refresh");
+                $from.selectpicker("refresh");
                 loadlab();
                 hl();
                 load_tubes();
