@@ -567,10 +567,6 @@ class Result(models.Model):
             return tmp[-1]
 
         def rigths(r):
-            pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
-            if pattern.match(r):
-                return r
-
             if r == "все" or r == "":
                 return 0, 200
 
@@ -670,14 +666,15 @@ class Result(models.Model):
 
                         if not rigth:
                             tmp_result = "maybe"
-                        elif isinstance(rigth, str):
-                            if self.compare(rigth, val):
-                                tmp_result = "normal"
-                            else:
-                                tmp_result = "not_normal"
                         elif rigth[0] <= age <= rigth[1]:
                             rigth_v = rigths_v(r[k].strip().lower())
-                            if rigth_v == "":
+                            pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
+                            if pattern.match(r[k]):
+                                if self.compare(r[k], val):
+                                    tmp_result = "normal"
+                                else:
+                                    tmp_result = "not_normal"
+                            elif rigth_v == "":
                                 tmp_result = "maybe"
                             else:
                                 test_v = test_value(rigth_v, val)
