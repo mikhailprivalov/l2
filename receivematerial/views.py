@@ -280,9 +280,10 @@ def tubes_get(request):
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
         tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
                                                       time_get__range=(date_start, date_end),
-                                                      issledovaniya__research__podrazdeleniye=lab)
+                                                      issledovaniya__research__podrazdeleniye=lab,
+                                                      doc_recive__isnull=True)
         if not_received:
-            tubes_list = tubes_list.exclude(notice="").exclude(notice__isnull=True).exclude(doc_recive__isnull=False)
+            tubes_list = tubes_list.exclude(notice="")
         else:
             tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
 
