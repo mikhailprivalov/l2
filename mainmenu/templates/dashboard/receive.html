@@ -296,7 +296,7 @@
         function load_tubes() {
             sl();
             $("#tubes").html("");
-            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${$("[name='date-start']").val()}&dateend=${$("[name='date-end']").val()}&lab=${$("#lab").val()}&not_received=${$("#show_not_received").is(":checked")}`}).done(function (data) {
+            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${$("[name='date-start']").val()}&dateend=${$("[name='date-end']").val()}&lab=${$("#lab").val()}&type=${$("[name='filter']").val()}`}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     let x = a.tube.id,
@@ -390,7 +390,7 @@
                     datestart: $("[name='date-start']").val(),
                     dateend: $("[name='date-end']").val(),
                     get_labs: true,
-                    not_received: $("#show_not_received").is(":checked")
+                    type: $("[name='filter']").val()
                 }
             }).done(function(data) {
                 for(let lab of _.keys(data)){
@@ -414,7 +414,7 @@
                     datestart: $("[name='date-start']").val(),
                     dateend: $("[name='date-end']").val(),
                     lab: $("#lab").val(),
-                    not_received: $("#show_not_received").is(":checked")
+                    type: $("[name='filter']").val()
                 }
             }).done(function (data) {
                 $.each(data, function (k, v) {

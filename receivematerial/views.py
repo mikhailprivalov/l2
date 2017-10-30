@@ -270,7 +270,7 @@ def tubes_get(request):
     result = []
     k = set()
     if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit() and "from" in request.GET and request.GET["from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
-        not_received = request.GET.get("not_received", "false") == "true"
+        filter_type = request.GET.get("type", "wait")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
         date_start = request.GET["datestart"]
@@ -282,10 +282,11 @@ def tubes_get(request):
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
         tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
                                                       time_get__range=(date_start, date_end),
-                                                      issledovaniya__research__podrazdeleniye=lab,
-                                                      doc_recive__isnull=True)
-        if not_received:
-            tubes_list = tubes_list.exclude(notice="")
+                                                      issledovaniya__research__podrazdeleniye=lab)
+        if filter_type == "not_received":
+            tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
+        elif filter_type == "received":
+            tubes_list = tubes_list.filter(notice="", doc_recive__isnull=False)
         else:
             tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
 
