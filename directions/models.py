@@ -135,6 +135,9 @@ class TubesRegistration(models.Model):
         :param notice: текст замечания
         :return:
         """
+        if notice != "":
+            self.doc_recive = None
+            self.time_recive = None
         self.notice = notice
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=12,
