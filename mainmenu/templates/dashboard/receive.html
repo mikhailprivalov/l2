@@ -1,12 +1,12 @@
 {% extends "dbase.html" %}
-{% block title %}Прием материала{% endblock %}
+{% block title %}Приём материала{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block content %}
     <div class="row" style="margin: 0">
         <div class="fastlinks">
             <label style="float: right;">Показать непринятые <input id="show_not_received" style="vertical-align: sub;" type="checkbox" onchange="loadfrom();"></label>
-            <a href="/mainmenu/receive/one_by_one">Прием матриала по одному</a>
-            <a href="/mainmenu/receive/journal_form" target="_blank">Журнал приема</a>
+            <a href="/mainmenu/receive/one_by_one">Приём матриала по одному</a>
+            <a href="/mainmenu/receive/journal_form" target="_blank">Журнал приёма</a>
         </div>
         <table class="table table-bordered" id="control-table">
             <col width="200">

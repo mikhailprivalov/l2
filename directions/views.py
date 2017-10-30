@@ -895,7 +895,7 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
 
     c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
-    c.drawCentredString(w / 2, h - 50, "АКТ приема-передачи емкостей с биоматериалом")
+    c.drawCentredString(w / 2, h - 50, "АКТ приёма-передачи емкостей с биоматериалом")
 
     c.setFont('OpenSans', 10)
     # c.drawString(paddingx * 3, h - 70, "№ " + str(doc_num))

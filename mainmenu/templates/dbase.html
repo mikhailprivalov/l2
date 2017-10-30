@@ -1318,7 +1318,7 @@
                                 </li>
                                 {% if request.user|has_group:"Получатель биоматериала" %}
                                     <li class="divider"></li>
-                                    <li><a href="/mainmenu/receive/one_by_one">Прием материала по одному</a></li>
+                                    <li><a href="/mainmenu/receive/one_by_one">Приём материала по одному</a></li>
                                 {% endif %}
                             </ul>
                         </li>
@@ -1332,7 +1332,7 @@
                             <li><a href="/mainmenu/biomaterial/get">Забор биоматериала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Получатель биоматериала" %}
-                            <li><a href="/mainmenu/receive">Прием материала</a></li>
+                            <li><a href="/mainmenu/receive">Приём материала</a></li>
                         {% endif %}
                         {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
                             <li><a href="/results/enter">Ввод результатов</a></li>
