@@ -26,5 +26,3 @@ markdown
 django-filter
 django-redis
 django_logtail
-llvmlite
-numba

@@ -24,11 +24,8 @@ import slog.models as slog
 from django.http import HttpResponse
 import simplejson as json
 import directory.models as directory
-from numba import jit
 
 
-# @cache_page(60 * 15)
-@jit(nopython=True)
 @login_required
 def dashboard(request):  # Представление панели управления
     if not request.is_ajax():
