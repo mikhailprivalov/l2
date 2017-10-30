@@ -109,7 +109,7 @@ def get_xls_dir(request):
                         flowers.add(absor_obj.flower.pk)
                         fresearches.add(absor_obj.flower.research.pk)
         iss = Issledovaniya.objects.filter(napravleniye=dir)
-        if lastfio != dir.client.fio():
+        if lastfio != dir.client.individual.fio():
             nn += 1
             ncolor = first_color
             if nn % 2 == 0:
@@ -118,7 +118,7 @@ def get_xls_dir(request):
             pattern.pattern = xlwt.Pattern.SOLID_PATTERN
             pattern.pattern_fore_colour = xlwt.Style.colour_map[ncolor]
             font_style.pattern = pattern
-            lastfio = dir.client.fio()
+            lastfio = dir.client.individual.fio()
             ws.write(i, 0, lastfio, font_style)
         else:
             ws.write(i, 0, "", font_style)
