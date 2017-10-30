@@ -162,6 +162,7 @@
                                     <option value="directions_print">Печать направлений</option>
                                     <option value="barcodes_print">Печать штрих-кодов</option>
                                     <option value="results_print">Печать результатов</option>
+                                    <option value="copy_direction">Скопировать исследования для назначения</option>
                                     <option value="table">Сводная таблица</option>
                                     <option value="rmis_directions_resend">Повтор отправки направлений в РМИС</option>
                                     <option value="rmis_results_resend">Повтор отправки результатов в РМИС</option>
@@ -878,6 +879,19 @@
             sl();
         }
 
+        function add_researches(researches_to_add){
+            for(let t_pk of _.keys(researches_to_add))
+            {
+                if(!_.has(checked, t_pk)){
+                    checked[t_pk] = [];
+                }
+                checked[t_pk] = _.union(checked[t_pk], researches_to_add[t_pk]);
+            }
+            sync();
+            $("#select-lab").val(_.keys(researches_to_add).slice(-1)[0]).change().selectpicker('refresh');
+            sync_checks();
+        }
+
         $(document).ready(function () {
             if(rmis_uid !== "")
                 window.history.pushState("", "", window.location.href.split("?")[0]);
@@ -960,19 +974,7 @@
 
             $("#select-template-btn").click(function () {
                 const active_template = parseInt(document.querySelector("#select-template").value);
-                for(let t_pk in templates[active_template].values)
-                {
-                    if(templates[active_template].values.hasOwnProperty(t_pk)){
-                        if(!_.has(checked, t_pk)){
-                            checked[t_pk] = [];
-                        }
-                        checked[t_pk] = _.union(checked[t_pk], templates[active_template].values[t_pk]);
-                    }
-                }
-                sync();
-                $("#select-lab").val(Object.keys(templates[active_template].values).slice(-1)[0]).change().selectpicker('refresh');
-                sync_checks();
-
+                add_researches(templates[active_template].values);
             });
             $("body").on("change", "#table-researches .btn input", check_change);
 
@@ -1790,6 +1792,9 @@
                 case 'rmis_results_resend':
                     rmis_results_resend();
                     break;
+                case 'copy_direction':
+                    copy_direction();
+                    break;
                 default:
                     break;
             }
@@ -1881,6 +1886,41 @@
                     delay: 6000
                 });
             });
+        }
+
+        function copy_direction() {
+            const $bp = $(".batch-print:checked");
+            if ($bp.length < 1) {
+                $.amaran({
+                    'theme': 'awesome wrn',
+                    'content': {
+                        title: "Копирование невозможно",
+                        message: "Ничего не выбрано",
+                        info: '',
+                        icon: 'fa fa-exclamation'
+                    },
+                    'position': 'bottom right',
+                    delay: 6000
+                });
+                return;
+            }
+            let copy_array = [];
+            $.each($bp, function (k, v) {
+                copy_array.push(parseInt($(v).attr("pk")));
+            });
+            copy_directions(copy_array);
+        }
+
+        function copy_directions(directions) {
+            sl();
+            $.ajax({
+                url: "/mainmenu/researches_from_directions",
+                data: {pk: JSON.stringify(directions)}
+            })
+                .done(data => {
+
+                })
+                .always(() => { hl(); });
         }
 
         function batch_print() {
