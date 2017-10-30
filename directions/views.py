@@ -95,7 +95,7 @@ def get_xls_dir(request):
     lastfio = ""
     nn = 0
 
-    for dir in Napravleniya.objects.filter(pk__in=direction_id).order_by("client__family"):
+    for dir in Napravleniya.objects.filter(pk__in=direction_id).order_by("client__individual__family"):
         fresearches = set()
         fuppers = set()
         flowers = set()
