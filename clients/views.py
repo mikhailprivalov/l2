@@ -45,9 +45,12 @@ def ajax_search(request):
         p2 = re.compile(
             r'([А-я]{2,})( ([А-я]{2,})( ([А-я]*)( ([0-9]{2}.[0-9]{2}.[0-9]{4}))?)?)?')  # Регулярное выражение для определения запроса вида Иванов Иван Иванович 10.12.1999
         p3 = re.compile(r'[0-9]{1,15}')  # Регулярное выражение для определения запроса по номеру карты
+        pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
         if re.search(p, query.lower()):  # Если это краткий запрос
             initials = query[0:3].upper()
             btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
+            if not pat_bd.match(btday):
+                return HttpResponse('[]', content_type="application/json")
             objects = Clients.Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
                                                         patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
             if card_type.is_rmis and len(objects) == 0:
