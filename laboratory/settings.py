@@ -49,13 +49,11 @@ MIDDLEWARE = [
     'django.contrib.admindocs.middleware.XViewMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'debug_panel.middleware.DebugPanelMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'silk.middleware.SilkyMiddleware', # ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
+    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE = ['django.contrib.sessions.middleware.SessionMiddleware', 'django.contrib.admindocs.middleware.XViewMiddleware', 'django.middleware.clickjacking.XFrameOptionsMiddleware', 'django.middleware.security.SecurityMiddleware', 'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.auth.middleware.SessionAuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware', 'debug_panel.middleware.DebugPanelMiddleware', 'django.middleware.common.CommonMiddleware', 'silk.middleware.SilkyMiddleware']
 ]
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
