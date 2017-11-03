@@ -112,14 +112,15 @@ def directory_researches_list(request):
         lab_id = request.GET["lab_id"]
     researches = Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title")
     labs = [x.pk for x in Podrazdeleniya.objects.filter(isLab=True, hide=False)]
+    aadd = direct.AutoAdd.objects.all().prefetch_related()
     for research in researches:
         autoadd = {}
         for l in labs:
-            autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__podrazdeleniye__pk=l)]
+            autoadd[l] = [x.b.pk for x in aadd.filter(a=research, b__podrazdeleniye__pk=l)]
 
         addto = {}
         for l in labs:
-            addto[l] = [x.a.pk for x in direct.AutoAdd.objects.filter(b=research, a__podrazdeleniye__pk=l)]
+            addto[l] = [x.a.pk for x in aadd.filter(b=research, a__podrazdeleniye__pk=l)]
 
         return_result.append(
             {"pk": research.pk,
