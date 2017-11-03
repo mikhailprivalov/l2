@@ -110,25 +110,30 @@ def directory_researches_list(request):
         lab_id = request.POST["lab_id"]
     else:
         lab_id = request.GET["lab_id"]
-    researches = Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title")
-    labs = [x.pk for x in Podrazdeleniya.objects.filter(isLab=True, hide=False)]
-    for research in researches:
+    researches = Researches.objects.filter(podrazdeleniye__pk=lab_id, hide=False).order_by("title").values("pk",
+                                                                                                           "onlywith",
+                                                                                                           "onlywith__pk",
+                                                                                                           "title",
+                                                                                                           "comment_variants",
+                                                                                                           "comment_variants__pk")
+    labs = [x["pk"] for x in Podrazdeleniya.objects.filter(isLab=True, hide=False).values("pk")]
+    for r in researches:
         autoadd = {}
         for l in labs:
-            autoadd[l] = [x["b__pk"] for x in direct.AutoAdd.objects.filter(a=research, b__podrazdeleniye__pk=l).values("b__pk")]
+            autoadd[l] = [x["b__pk"] for x in direct.AutoAdd.objects.filter(a__pk=r["pk"], b__podrazdeleniye__pk=l).values("b__pk")]
 
         addto = {}
         for l in labs:
-            addto[l] = [x["a__pk"] for x in direct.AutoAdd.objects.filter(b=research, a__podrazdeleniye__pk=l).values("a__pk")]
+            addto[l] = [x["a__pk"] for x in direct.AutoAdd.objects.filter(b__pk=r["pk"], a__podrazdeleniye__pk=l).values("a__pk")]
 
         return_result.append(
-            {"pk": research.pk,
-             "id": research.pk,
-             "onlywith": -1 if not research.onlywith else research.onlywith.pk,
-             "fields": {"id_lab_fk": lab_id, "ref_title": research.title},
+            {"pk": r["pk"],
+             "id": r["pk"],
+             "onlywith": -1 if not r["onlywith"] else r["onlywith__pk"],
+             "fields": {"id_lab_fk": lab_id, "ref_title": r["title"]},
              "isFolder": False,
-             "text": research.title,
-             "comment_template": "-1" if research.comment_variants is None else research.comment_variants.pk,
+             "text": r["title"],
+             "comment_template": "-1" if r["comment_variants"] is None else r["comment_variants__pk"],
              "autoadd": autoadd,
              "addto": addto
              })
