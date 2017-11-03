@@ -1,4 +1,3 @@
-# coding=utf-8
 from datetime import date, datetime
 from io import BytesIO
 
@@ -8,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils import dateformat
-from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc
@@ -19,9 +17,8 @@ from reportlab.pdfgen import canvas
 
 import directory.models as directory
 import slog.models as slog
-from directions.models import Napravleniya, Issledovaniya, IstochnikiFinansirovaniya, TubesRegistration
 from appconf.manager import SettingManager
-
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 
 w, h = A4
 
@@ -641,7 +638,6 @@ def cancel_direction(request):
 @login_required
 def update_direction(request):
     """Функция обновления исследований в направлении"""
-    from django.utils import timezone
 
     res = {"r": False, "o": []}
     if request.method == 'POST':  # Проверка типа запроса
@@ -662,7 +658,6 @@ def update_direction(request):
 @login_required
 def group_confirm_get(request):
     """Функция группового подтвержения взятия материала"""
-    from django.utils import timezone
     res = {"r": False}
     if request.method == 'POST':  # Проверка типа запроса
         checked = json.loads(request.POST["checked"])
@@ -1127,7 +1122,7 @@ def get_client_directions(request):
                         "-data_sozdaniya").prefetch_related()
 
                 for napr in rows:
-                    iss_list = Issledovaniya.objects.filter(napravleniye=napr)
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes_set")
                     if not iss_list.exists():
                         continue
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
