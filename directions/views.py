@@ -1119,10 +1119,10 @@ def get_client_directions(request):
                                                          doc_who_create=request.user.doctorprofile)
                                                        | Q(data_sozdaniya__range=(date_start, date_end),
                                                            doc=request.user.doctorprofile)).order_by(
-                        "-data_sozdaniya").prefetch_related()
+                        "-data_sozdaniya")
 
-                for napr in rows:
-                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes", "research", "research__podrazdeleniye")
+                for napr in rows.values("pk", "data_sozdaniya", "cancel"):
+                    iss_list = Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related("tubes", "research", "research__podrazdeleniye")
                     if not iss_list.exists():
                         continue
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
@@ -1149,10 +1149,10 @@ def get_client_directions(request):
                         status = 1
                     if req_status in [3, 4] or req_status == status:
                         res["directions"].append(
-                            {"pk": napr.pk, "status": status,
+                            {"pk": napr["pk"], "status": status,
                              "researches": ' | '.join(researches_list),
-                             "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                             "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr.cancel})
+                             "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT)),
+                             "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"]})
                 res["ok"] = True
         except ValueError:
             pass
