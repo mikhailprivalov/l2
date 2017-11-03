@@ -2013,12 +2013,12 @@ def result_print(request):
 
                     t.setStyle(style)
                     fwb.append(t)
-            if client_prev == direction.client.pk and not split:
+            if client_prev == direction.client.individual.pk and not split:
                 naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
             elif client_prev > -1:
                 naprs.append(PageBreak())
             naprs.append(PTOContainer(fwb))
-            client_prev = direction.client.pk
+            client_prev = direction.client.individual.pk
 
         doc.build(naprs)
     elif type == "a5":
