@@ -755,7 +755,13 @@ def direction_info(request):
         yesno = {True: "да", False: "нет"}
         data = []
         pk = request.GET.get("pk", "-1")
-        if pk != "-1" and Napravleniya.objects.filter(pk=pk).exists():
+
+        try:
+            pk = int(pk)
+        except ValueError:
+            pk = -1
+
+        if pk != -1 and Napravleniya.objects.filter(pk=pk).exists():
             dir = Napravleniya.objects.get(pk=pk)
             data.append({'type': "Направление №%s" % pk, 'events': [
                 [
