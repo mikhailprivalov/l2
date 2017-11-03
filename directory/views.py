@@ -115,11 +115,11 @@ def directory_researches_list(request):
     for research in researches:
         autoadd = {}
         for l in labs:
-            autoadd[l] = [x.b.pk for x in direct.AutoAdd.objects.filter(a=research, b__podrazdeleniye__pk=l).values("b__pk")]
+            autoadd[l] = [x["b__pk"] for x in direct.AutoAdd.objects.filter(a=research, b__podrazdeleniye__pk=l).values("b__pk")]
 
         addto = {}
         for l in labs:
-            addto[l] = [x.a.pk for x in direct.AutoAdd.objects.filter(b=research, a__podrazdeleniye__pk=l).values("a__pk")]
+            addto[l] = [x["a__pk"] for x in direct.AutoAdd.objects.filter(b=research, a__podrazdeleniye__pk=l).values("a__pk")]
 
         return_result.append(
             {"pk": research.pk,
