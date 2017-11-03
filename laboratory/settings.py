@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'cachalot',
     'django_logtail',
+    'silk',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
