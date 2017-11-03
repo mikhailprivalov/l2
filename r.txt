@@ -27,3 +27,4 @@ django-filter
 django-redis
 django_logtail
 django-silk
+gprof2dot
