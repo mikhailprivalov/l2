@@ -104,7 +104,7 @@ def directory_researches(request):
 @csrf_exempt
 @login_required
 def directory_researches_list(request):
-    """GET: получение списка исследований для лаборатории. POST: добавление нового исследования"""
+    """GET: получение списка исследований для лаборатории"""
     return_result = []
     if request.method == "POST":
         lab_id = request.POST["lab_id"]
@@ -116,15 +116,10 @@ def directory_researches_list(request):
                                                                                                            "title",
                                                                                                            "comment_variants",
                                                                                                            "comment_variants__pk")
-    labs = [x["pk"] for x in Podrazdeleniya.objects.filter(isLab=True, hide=False).values("pk")]
+    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).values("pk")
     for r in researches:
-        autoadd = {}
-        for l in labs:
-            autoadd[l] = [x["b__pk"] for x in direct.AutoAdd.objects.filter(a__pk=r["pk"], b__podrazdeleniye__pk=l).values("b__pk")]
-
-        addto = {}
-        for l in labs:
-            addto[l] = [x["a__pk"] for x in direct.AutoAdd.objects.filter(b__pk=r["pk"], a__podrazdeleniye__pk=l).values("a__pk")]
+        autoadd = {l["pk"]: [x["b__pk"] for x in direct.AutoAdd.objects.filter(a__pk=r["pk"], b__podrazdeleniye__pk=l["pk"]).values("b__pk")] for l in labs}
+        addto = {l["pk"]: [x["a__pk"] for x in direct.AutoAdd.objects.filter(b__pk=r["pk"], a__podrazdeleniye__pk=l["pk"]).values("a__pk")] for l in labs}
 
         return_result.append(
             {"pk": r["pk"],
