@@ -302,7 +302,7 @@
             }
             dates.allvalid = dateStartValid && dateEndValid;
             if(!dates.allvalid){
-                errmessg("Некорректная дата");
+                errmessage("Некорректная дата");
             }
             return dates;
         }
@@ -319,7 +319,7 @@
 
         function load_tubes() {
             let vd = validDates();
-            if(!v.allvalid){
+            if(!vd.allvalid){
                 return;
             }
             sl();
@@ -432,7 +432,7 @@
 
         function loadfrom() {
             let vd = validDates();
-            if(!v.allvalid){
+            if(!vd.allvalid){
                 return;
             }
             let $from = $("#from");
