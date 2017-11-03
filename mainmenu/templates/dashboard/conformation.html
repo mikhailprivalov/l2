@@ -367,8 +367,6 @@
             $("#dir-id").bind('keydown', 'return', function () {
                 load_data();
             });
-
-            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
             $('#datepicker').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -376,9 +374,34 @@
                 autoclose: true,
                 todayHighlight: true
             });
+            validDates();
 
             $("body").on("change", "#no-printed-list .dir-ch input", sync_checked);
         });
+
+        function validDates() {
+            let dates = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+
+            let dateReg = /^\d{2}[./-]\d{2}[./-]\d{4}$/;
+
+            let dateStartValid = dates.start.match(dateReg);
+            let dateEndValid = dates.end.match(dateReg);
+
+            if(!dateStartValid && !dateEndValid) {
+                dates.start = dates.end = getFormattedDate(today);
+            } else if(dateStartValid && !dateEndValid){
+                dates.end = dates.start;
+            } else if(dateEndValid && !dateStartValid){
+                dates.start = dates.end;
+            }
+
+            $("[name='date-start']").val(dates.start);
+            $("[name='date-end']").val(dates.end);
+
+            $('#datepicker').datepicker('update');
+
+            return dates;
+        }
 
 
         function sync_checked() {
@@ -455,7 +478,7 @@
             let req_data = {};
             req_data.research = $("#sel-researches").val();
             req_data.status = $("#status").val();
-            req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+            req_data.date = validDates();
             last_dir = req_data.dir_id = $("#dir-id").val();
             $.ajax({url: "/results/filter", method: "POST", data: req_data}).done(function (data) {
                 if (data.ok && Object.keys(data.list).length > 0) {
@@ -564,7 +587,7 @@
             let req_data = {status: 3};
 
             req_data.research = $("#sel-researches").val();
-            req_data.date = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+            req_data.date = validDates()
             req_data.dir_id = "";
 
             $.ajax({url: "/results/filter", data: req_data, method: "POST"}).done(function (data) {
