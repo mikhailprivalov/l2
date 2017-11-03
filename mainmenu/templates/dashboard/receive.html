@@ -253,10 +253,10 @@
         let loadt = false;
         let first_resize = true;
 
-        $(document).ready(function () {
+        let daybefore = new Date();
+        daybefore.setDate(daybefore.getDate() - 1);
 
-            let daybefore = new Date();
-            daybefore.setDate(daybefore.getDate() - 1);
+        $(document).ready(function () {
 
             $("[name='date-start']").val(getFormattedDate(daybefore)).attr("pre-val", getFormattedDate(daybefore));
             $("[name='date-end']").val(getFormattedDate(today)).attr("pre-val", getFormattedDate(today));
