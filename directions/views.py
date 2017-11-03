@@ -14,6 +14,7 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
+from silk.profiling.profiler import silk_profile
 
 import directory.models as directory
 import slog.models as slog
@@ -1093,6 +1094,7 @@ def get_issledovaniya(request):
 from django.db.models import Q
 
 
+@silk_profile(name="get_client_directions")
 @login_required
 def get_client_directions(request):
     """ Получение направлений для пациента """
