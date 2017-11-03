@@ -300,7 +300,10 @@
             } else if(dateEndValid && !dateStartValid){
                 dates.datestart = dates.dateend;
             }
-
+            dates.allvalid = dateStartValid && dateEndValid;
+            if(!dates.allvalid){
+                errmessg("Некорректная дата");
+            }
             return dates;
         }
 
@@ -315,9 +318,12 @@
         }
 
         function load_tubes() {
+            let vd = validDates();
+            if(!v.allvalid){
+                return;
+            }
             sl();
             $("#tubes").html("");
-            let vd = validDates();
             $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${vd.datestart}&dateend=${vd.dateend}&lab=${$("#lab").val()}&type=${$("[name='filter']:checked").val()}`}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
@@ -425,11 +431,14 @@
         }
 
         function loadfrom() {
+            let vd = validDates();
+            if(!v.allvalid){
+                return;
+            }
             let $from = $("#from");
             let selected = $from.find("option:selected").attr("num");
             $from.html("");
             sl();
-            let vd = validDates();
             $.ajax({
                 url: "/mainmenu/from",
                 method: "GET",
