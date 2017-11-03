@@ -53,8 +53,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE = ['django.contrib.sessions.middleware.SessionMiddleware', 'django.contrib.admindocs.middleware.XViewMiddleware', 'django.middleware.clickjacking.XFrameOptionsMiddleware', 'django.middleware.security.SecurityMiddleware', 'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.auth.middleware.SessionAuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware', 'debug_panel.middleware.DebugPanelMiddleware', 'django.middleware.common.CommonMiddleware', 'silk.middleware.SilkyMiddleware']
+    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['debug_panel.middleware.DebugPanelMiddleware', 'silk.middleware.SilkyMiddleware']
 ]
+MIDDLEWARE_ADD = []
+
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
     {
@@ -200,3 +202,5 @@ try:
     from laboratory.local_settings import *
 except ImportError:
     pass
+
+MIDDLEWARE += MIDDLEWARE_ADD
