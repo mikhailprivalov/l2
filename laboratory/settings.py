@@ -55,7 +55,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'silk.middleware.SilkyMiddleware',
+    # 'silk.middleware.SilkyMiddleware', # ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE += ['silk.middleware.SilkyMiddleware']
 ]
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [
