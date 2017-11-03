@@ -285,6 +285,26 @@
             $("input[name=filter]:radio").change(loadfrom);
         });
 
+        function validDates() {
+            let dates = {datestart: $("[name='date-start']").val(), dateend: $("[name='date-end']").val()};
+
+            let dateReg = /^\d{2}[./-]\d{2}[./-]\d{4}$/;
+
+            let dateStartValid = dates.datestart.match(dateReg);
+            let dateEndValid = dates.dateend.match(dateReg);
+
+            if(!dateStartValid && !dateEndValid) {
+                dates.datestart = getFormattedDate(daybefore);
+                dates.dateend = getFormattedDate(today);
+            } else if(dateStartValid && !dateEndValid){
+                dates.dateend = dates.datestart;
+            } else if(dateEndValid && !dateStartValid){
+                dates.datestart = dates.dateend;
+            }
+
+            return dates;
+        }
+
         function highlight(th) {
             const $tr = $("tr[pk={0}]".f($(th).val()));
             if ($(th).prop("checked")) {
@@ -298,7 +318,8 @@
         function load_tubes() {
             sl();
             $("#tubes").html("");
-            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${$("[name='date-start']").val()}&dateend=${$("[name='date-end']").val()}&lab=${$("#lab").val()}&type=${$("[name='filter']:checked").val()}`}).done(function (data) {
+            let vd = validDates();
+            $.ajax({url: `/tubes/get?from=${$("#from option:selected").attr("num")}&datestart=${vd.datestart}&dateend=${vd.dateend}&lab=${$("#lab").val()}&type=${$("[name='filter']:checked").val()}`}).done(function (data) {
                 $('button').blur();
                 data = data.sort(function (a, b) {
                     let x = a.tube.id,
