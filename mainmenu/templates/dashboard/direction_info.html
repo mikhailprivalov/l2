@@ -8,7 +8,7 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="search" name="dir-field" data-container="body"
                        data-toggle="popover" data-placement="bottom" data-content="" spellcheck="false"
-                       maxlength="15" autofocus onchange="$(this).val($(this).val().replace(/[^0-9]/g, ''));"
+                       maxlength="15" autofocus onchange="$(this).val($(this).val().replace(/[^0-9]/g, ''));" onkeyup="$(this).val($(this).val().replace(/[^0-9]/g, ''));"
                        placeholder="Введите номер направления">
                   <span class="input-group-btn">
                         <button class="btn btn-blue-nb" onclick="search();" type="button">Загрузить направление</button>
