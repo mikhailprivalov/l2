@@ -1094,7 +1094,6 @@ def get_issledovaniya(request):
 from django.db.models import Q
 
 
-@silk_profile(name="get_client_directions")
 @login_required
 def get_client_directions(request):
     """ Получение направлений для пациента """
