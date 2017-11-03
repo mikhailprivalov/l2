@@ -257,6 +257,8 @@
         daybefore.setDate(daybefore.getDate() - 1);
 
         $(document).ready(function () {
+            $("[name='date-start']").val(getFormattedDate(daybefore)).attr("pre-val", getFormattedDate(daybefore));
+            $("[name='date-end']").val(getFormattedDate(today)).attr("pre-val", getFormattedDate(today));
             $('#datepickermain').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -264,7 +266,6 @@
                 autoclose: true,
                 todayHighlight: true
             });
-            validDates();
             $("[name='date-end'],[name='date-start']").change(function () {
                 let v = $(this).val();
                 let b = $(this).attr("pre-val");
@@ -299,16 +300,6 @@
             } else if(dateEndValid && !dateStartValid){
                 dates.datestart = dates.dateend;
             }
-
-            $("[name='date-start']").val(dates.datestart).attr("pre-val", dates.datestart);
-            $("[name='date-end']").val(dates.dateend).attr("pre-val", dates.dateend);
-            $('#datepickermain').datepicker({
-                format: "dd.mm.yyyy",
-                todayBtn: "linked",
-                language: "ru",
-                autoclose: true,
-                todayHighlight: true
-            });
 
             return dates;
         }
