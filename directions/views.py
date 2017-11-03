@@ -1122,7 +1122,7 @@ def get_client_directions(request):
                         "-data_sozdaniya").prefetch_related()
 
                 for napr in rows:
-                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes_set")
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes")
                     if not iss_list.exists():
                         continue
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
