@@ -1122,12 +1122,14 @@ def get_client_directions(request):
                         "-data_sozdaniya").prefetch_related()
 
                 for napr in rows:
-                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes")
+                    iss_list = Issledovaniya.objects.filter(napravleniye=napr).prefetch_related("tubes", "research", "research__podrazdeleniye")
                     if not iss_list.exists():
                         continue
                     status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
                     has_conf = False
+                    researches_list = []
                     for v in iss_list:
+                        researches_list.append(v.research.title)
                         iss_status = 1
                         if not v.doc_confirmation and not v.doc_save and not v.deferred:
                             iss_status = 1
@@ -1148,7 +1150,7 @@ def get_client_directions(request):
                     if req_status in [3, 4] or req_status == status:
                         res["directions"].append(
                             {"pk": napr.pk, "status": status,
-                             "researches": ' | '.join(v.research.title for v in iss_list),
+                             "researches": ' | '.join(researches_list),
                              "date": str(dateformat.format(napr.data_sozdaniya.date(), settings.DATE_FORMAT)),
                              "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr.cancel})
                 res["ok"] = True
