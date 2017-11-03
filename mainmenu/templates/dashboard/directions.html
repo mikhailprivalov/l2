@@ -985,6 +985,11 @@
 
             sync(true);
 
+            let dates = validDates();
+
+            $("[name='date-start']").val(dates.start);
+            $("[name='date-end']").val(dates.end);
+
             $('#datepicker').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -992,7 +997,6 @@
                 autoclose: true,
                 todayHighlight: true
             });
-            validDates();
 
             $("#selectAllDirs").click(function () {
                 let checkedStatus = this.checked;
@@ -1086,11 +1090,6 @@
             } else if(dateEndValid && !dateStartValid){
                 dates.start = dates.end;
             }
-
-            $("[name='date-start']").val(dates.start);
-            $("[name='date-end']").val(dates.end);
-
-            $('#datepicker').datepicker('update');
 
             return dates;
         }
