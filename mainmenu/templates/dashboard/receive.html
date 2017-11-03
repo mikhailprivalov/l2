@@ -302,6 +302,11 @@
                 dates.datestart = dates.dateend;
             }
 
+            $("[name='date-start']").val(dates.start);
+            $("[name='date-end']").val(dates.end);
+
+            $('#datepickermain').datepicker('update');
+
             return dates;
         }
 
