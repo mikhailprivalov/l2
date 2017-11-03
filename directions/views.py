@@ -1133,9 +1133,10 @@ def get_client_directions(request):
                             iss_status = 1
                             if v.tubes.count() == 0:
                                 iss_status = 0
-                            for t in v.tubes.all():
-                                if not t.time_recive:
-                                    iss_status = 0
+                            else:
+                                for t in v.tubes.all():
+                                    if not t.time_recive:
+                                        iss_status = 0
                         elif v.doc_confirmation or v.deferred:
                             iss_status = 2
                         if v.doc_confirmation and not has_conf:
