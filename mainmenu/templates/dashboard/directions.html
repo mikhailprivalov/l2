@@ -985,7 +985,6 @@
 
             sync(true);
 
-            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
             $('#datepicker').datepicker({
                 format: "dd.mm.yyyy",
                 todayBtn: "linked",
@@ -993,6 +992,7 @@
                 autoclose: true,
                 todayHighlight: true
             });
+            validDates();
 
             $("#selectAllDirs").click(function () {
                 let checkedStatus = this.checked;
@@ -1070,6 +1070,30 @@
                 console.log(order);
             });*/
         });
+
+        function validDates() {
+            let dates = {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()};
+
+            let dateReg = /^\d{2}[./-]\d{2}[./-]\d{4}$/;
+
+            let dateStartValid = dates.start.match(dateReg);
+            let dateEndValid = dates.end.match(dateReg);
+
+            if(!dateStartValid && !dateEndValid) {
+                dates.start = dates.end = getFormattedDate(today);
+            } else if(dateStartValid && !dateEndValid){
+                dates.end = dates.start;
+            } else if(dateEndValid && !dateStartValid){
+                dates.start = dates.end;
+            }
+
+            $("[name='date-start']").val(dates.start);
+            $("[name='date-end']").val(dates.end);
+
+            $('#datepicker').datepicker('update');
+
+            return dates;
+        }
 
         function checkType(tr) {
             const $search_field = $('#search-field');
@@ -1283,7 +1307,7 @@
                 prev_selected.push(parseInt($(v).attr("pk")));
             });
             $story_table.html("<tr><td colspan='8' style='text-align: center'>загрузка...</td></tr>");
-            let data = {pk: id, date: {start: $("[name='date-start']").val(), end: $("[name='date-end']").val()}};
+            let data = {pk: id, date: validDates()};
             data.status = $("#status").val();
             $.ajax({url: "/directions/list/client", data: data}).done(function (data) {
                 $("#selectAllDirs").prop("checked", false);
