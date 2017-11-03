@@ -98,7 +98,7 @@ def ajax_search(request):
         for i in objects:
             c.patients.get_rmis_id_for_individual(i, True)'''
 
-        for row in Clients.Card.objects.filter(base=card_type, individual__in=objects, is_archive=False).distinct():
+        for row in Clients.Card.objects.filter(base=card_type, individual__in=objects, is_archive=False).prefetch_related("individual").distinct():
             data.append({"type_title": card_type.title,
                          "num": row.number,
                          "family": row.individual.family,
