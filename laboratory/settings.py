@@ -201,14 +201,6 @@ LOGTAIL_FILES = {
     'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')
 }
 
-OAUTH2_PROVIDER = {
-    'SCOPES': {
-        'read': 'Read scope',
-        'write': 'Write scope',
-    },
-    'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',
-}
-
 try:
     from laboratory.local_settings import *
 except ImportError:
