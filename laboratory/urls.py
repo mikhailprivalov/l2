@@ -103,7 +103,9 @@ urlpatterns = [
                   url(r'^barcodes/', include(barcodes_urls.urlpatterns)),
                   url(r'^health/', include('health.urls')),
                   url(r'^logout/$', logout, {'next_page': '/'}),
-              ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [url(r'^silk/', include('silk.urls', namespace='silk'))]
+                  url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+                  url(r'^silk/', include('silk.urls', namespace='silk'))
+              ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar

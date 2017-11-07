@@ -43,6 +43,8 @@ INSTALLED_APPS = (
     'cachalot',
     'django_logtail',
     'silk',
+    'oauth2_provider',
+    'corsheaders',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
