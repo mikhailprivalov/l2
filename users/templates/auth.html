@@ -22,7 +22,7 @@
                     <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
                            required>
                     <input name="next" type="hidden" value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}" />
-                    <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>{{ request.GET.next }}
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>
                 </div>
             </div>
         </form>
