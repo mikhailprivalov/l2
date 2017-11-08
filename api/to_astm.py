@@ -4,6 +4,7 @@ from django.utils import timezone
 import directions.models as directions
 import directory.models as directory
 import api.models as api
+import simplejson as json
 
 
 def get_astm_header() -> list:
@@ -46,6 +47,8 @@ def encode(m) -> list:
     return codec.encode(m)
 
 
-def get_astm(directions_list, analyzer: api.Analyzer, full=False) -> list:
+def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> list:
     iss = [get_iss_direction(x, analyzer, full) for x in directions_list]
+    if out:
+        out.write(json.dumps(iss))
     return encode([get_astm_header(), get_patient()] + iss + [get_leave()])
