@@ -14,4 +14,4 @@ class Command(BaseCommand):
         parser.add_argument('analyzer_id', type=int)
 
     def handle(self, *args, **options):
-        self.stdout.write(json.dumps(get_astm(Napravleniya.objects.get(pk__in=options['direction_id'].split(",")), Analyzer.objects.get(pk=options['analyzer_id']), True)))
+        self.stdout.write(json.dumps(get_astm(Napravleniya.objects.get(pk__in=options['directions'].split(",")), Analyzer.objects.get(pk=options['analyzer_id']), True)))
