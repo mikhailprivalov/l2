@@ -22,6 +22,11 @@ class Command(BaseCommand):
             out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
             sema.release()
 
+        def resend(out):
+            sema.acquire()
+            self.stdout.write("END")
+            sema.release()
+
         r = options['directions_range'].split('-')
         f = r[0]
         t = r[1]
@@ -30,5 +35,9 @@ class Command(BaseCommand):
             thread = threading.Thread(target=task, args=(d, self.stdout))
             threads.append(thread)
             thread.start()
-        self.stdout.write("END")
+
+        thread = threading.Thread(target=resend, args=(self.stdout,))
+        threads.append(thread)
+        thread.start()
+
         #self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout)))
