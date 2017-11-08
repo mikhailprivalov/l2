@@ -14,4 +14,4 @@ class Command(BaseCommand):
         parser.add_argument('analyzer_id', type=int)
 
     def handle(self, *args, **options):
-        self.stdout.write(json.dumps(get_iss_direction(Napravleniya.objects.get(pk=options['direction_id']), Analyzer.objects.get(pk=options['analyzer_id']))))
+        self.stdout.write(json.dumps(get_iss_direction(Napravleniya.objects.get(pk=options['direction_id']), Analyzer.objects.get(pk=options['analyzer_id']), True)))
