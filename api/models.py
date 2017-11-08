@@ -36,3 +36,20 @@ class RelationFractionASTM(models.Model):
     class Meta:
         verbose_name = 'Связь ASTM и фракций'
         verbose_name_plural = 'Связи ASTM и фракций'
+
+
+class Analyzer(models.Model):
+    PROTOCOLS = ((0, "ASTM 1394-97"), (1, "HL7 2.5"))
+    MODES = ((0, "TCP Connection"),)
+
+    title = models.CharField(max_length=60, help_text="Название")
+    protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
+    mode = models.IntegerField(choices=MODES, help_text="Режим")
+    connection_string = models.TextField(help_text="Строка подключения")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Анализатор'
+        verbose_name_plural = 'Анализаторы'
