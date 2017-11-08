@@ -694,7 +694,7 @@ class Directions(BaseRequester):
             return
 
         def update_lock():
-            cache.set('upload_lock', '1', 180)
+            cache.set('upload_lock', '1', 15)
             pass
 
         maxthreads = 40
