@@ -1,18 +1,5 @@
 import datetime
-
-import requests
 from django.core.management import BaseCommand
-from django.db.models import Q
-from django.utils.timezone import now
-from requests import Session
-from requests.auth import HTTPBasicAuth
-from requests_toolbelt import MultipartEncoder
-from zeep.transports import Transport
-from zeep import Client
-from time import strftime, gmtime, localtime
-from appconf.manager import SettingManager
-from directions.models import Issledovaniya, Result
-from django.test import Client as TC
 from rmis_integration.client import Client as RC
 
 import simplejson as json
