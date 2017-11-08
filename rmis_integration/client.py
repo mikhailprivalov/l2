@@ -712,13 +712,11 @@ class Directions(BaseRequester):
             stdout.write("Directions to upload: {}".format(cnt))
         i = 0
 
-        def upload_dir(self, direct, out):
+        def upload_dir(self, direct, out, i):
             sema.acquire()
-            global i
             update_lock()
             uploaded.append(self.check_send(direct, out))
             if out:
-                i += 1
                 out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk,  i, cnt, uploaded[-1]))
             sema.release()
 
@@ -740,7 +738,8 @@ class Directions(BaseRequester):
             sema.release()
 
         for d in to_upload:
-            thread = threading.Thread(target=upload_dir, args=(self, d, stdout))
+            i += 1
+            thread = threading.Thread(target=upload_dir, args=(self, d, stdout, i))
             threads.append(thread)
             thread.start()
         [t.join() for t in threads]
@@ -767,6 +766,7 @@ class Directions(BaseRequester):
             if stdout:
                 stdout.write("Results to upload: {}".format(cnt))
             for d in to_upload:
+                i += 1
                 thread = threading.Thread(target=upload_results, args=(self, d, stdout, i))
                 threads.append(thread)
                 thread.start()
