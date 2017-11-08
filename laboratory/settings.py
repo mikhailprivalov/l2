@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from collections import OrderedDict
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
@@ -215,4 +216,6 @@ except ImportError:
     pass
 
 MIDDLEWARE += MIDDLEWARE_ADD
+MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
+INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS))
