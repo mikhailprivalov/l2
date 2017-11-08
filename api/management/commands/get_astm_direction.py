@@ -1,5 +1,4 @@
 from django.core.management import BaseCommand
-import simplejson as json
 
 from api.models import Analyzer
 from api.to_astm import get_astm
