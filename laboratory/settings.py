@@ -43,7 +43,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'cachalot',
     'django_logtail',
-    'silk',
+    #'silk',
     'oauth2_provider',
     'corsheaders',
 )
@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['debug_panel.middleware.DebugPanelMiddleware', 'silk.middleware.SilkyMiddleware']
 ]
+INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []
 
 AUTHENTICATION_BACKENDS = [
@@ -213,3 +214,4 @@ except ImportError:
     pass
 
 MIDDLEWARE += MIDDLEWARE_ADD
+INSTALLED_APPS += INSTALLED_APPS_ADD
