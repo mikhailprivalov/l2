@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         maxthreads = 20
-        sema = threading.Semaphore(value=maxthreads)
+        sema = threading.BoundedSemaphore(maxthreads)
         threads = list()
         t = 0
 
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             sema.release()
 
         def resend(out):
-            self.stdout.write("END")
+            out.write("END")
 
         r = options['directions_range'].split('-')
         f = r[0]
@@ -40,5 +40,6 @@ class Command(BaseCommand):
             t += 1
             threads.append(thread)
             thread.start()
-
+        [t.join() for t in threads]
+        resend(self.stdout)
         #self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout)))
