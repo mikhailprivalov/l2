@@ -684,7 +684,7 @@ class Directions(BaseRequester):
                                                  "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
         return direction.result_rmis_send
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=10):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=20):
         def check_lock():
             return cache.get('upload_lock') is not None
 
@@ -697,7 +697,6 @@ class Directions(BaseRequester):
             cache.set('upload_lock', '1', 15)
             pass
 
-        maxthreads = 40
         sema = threading.BoundedSemaphore(maxthreads)
         threads = list()
 
