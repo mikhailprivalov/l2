@@ -648,7 +648,7 @@ class Directions(BaseRequester):
                                                  self.main_client.get_addr("referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
         return direction.result_rmis_send
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=20):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=2):
         def check_lock():
             return cache.get('upload_lock') is not None
 
