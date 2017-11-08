@@ -13,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument('directions_range', type=str)
 
     def handle(self, *args, **options):
-        maxthreads = 10
+        maxthreads = 20
         sema = threading.Semaphore(value=maxthreads)
         threads = list()
 
