@@ -1,5 +1,5 @@
 import threading
-
+import simplejson as json
 from django.core.management import BaseCommand
 from directions.models import Napravleniya
 from rmis_integration.client import Client
@@ -30,3 +30,5 @@ class Command(BaseCommand):
             thread = threading.Thread(target=task, args=(d, self.stdout))
             threads.append(thread)
             thread.start()
+        self.stdout.write("END")
+        #self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout)))
