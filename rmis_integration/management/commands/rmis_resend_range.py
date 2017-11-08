@@ -31,13 +31,12 @@ class Command(BaseCommand):
         f = r[0]
         t = r[1]
         c = Client()
-        lock = threading.RLock()
-        lock.acquire()
+        sema.acquire()
         for d in Napravleniya.objects.filter(pk__gte=f, pk__lte=t):
             thread = threading.Thread(target=task, args=(d, self.stdout))
             threads.append(thread)
             thread.start()
-        lock.release()
+        sema.release()
         thread = threading.Thread(target=resend, args=(self.stdout,))
         threads.append(thread)
         thread.start()
