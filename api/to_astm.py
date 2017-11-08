@@ -1,5 +1,3 @@
-from typing import List
-
 from astm import codec
 from collections import defaultdict
 from django.utils import timezone
@@ -48,6 +46,6 @@ def encode(m) -> list:
     return codec.encode(m)
 
 
-def get_astm(directions_list: List[directions.Napravleniya], analyzer: api.Analyzer, full=False) -> list:
+def get_astm(directions_list, analyzer: api.Analyzer, full=False) -> list:
     iss = [get_iss_direction(x, analyzer, full) for x in directions_list]
     return encode([get_astm_header(), get_patient()] + iss + [get_leave()])
