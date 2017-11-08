@@ -28,6 +28,9 @@ import barcodes.urls as barcodes_urls
 from ajax_select import urls as ajax_select_urls
 from django.contrib.auth.views import logout
 
+
+admin.site.site_header = 'Администрирование L2'
+
 urlpatterns = [
                   url(r'^favicon\.ico$', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
                   url(r'^$', home, name='home'),
