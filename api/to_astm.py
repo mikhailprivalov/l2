@@ -49,4 +49,5 @@ def encode(m) -> list:
 
 
 def get_astm(directions_list: List[directions.Napravleniya], analyzer: api.Analyzer, full=False) -> list:
-    return encode([get_astm_header(), get_patient()] + [get_iss_direction(x, analyzer, full) for x in directions_list] + [get_leave()])
+    iss = [get_iss_direction(x, analyzer, full) for x in directions_list]
+    return encode([get_astm_header(), get_patient()] + iss + [get_leave()])
