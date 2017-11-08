@@ -16,29 +16,29 @@ class Command(BaseCommand):
         maxthreads = 20
         sema = threading.Semaphore(value=maxthreads)
         threads = list()
+        t = 0
 
         def task(dir: Napravleniya, out):
             sema.acquire()
             out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
+            global t
+            t -= 1
+            if t == 0:
+                resend(out)
             sema.release()
 
         def resend(out):
-            sema.acquire()
             self.stdout.write("END")
-            sema.release()
 
         r = options['directions_range'].split('-')
         f = r[0]
         t = r[1]
         c = Client()
-        sema.acquire()
+        event = threading.Event()
         for d in Napravleniya.objects.filter(pk__gte=f, pk__lte=t):
             thread = threading.Thread(target=task, args=(d, self.stdout))
+            t += 1
             threads.append(thread)
             thread.start()
-        sema.release()
-        thread = threading.Thread(target=resend, args=(self.stdout,))
-        threads.append(thread)
-        thread.start()
 
         #self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout)))
