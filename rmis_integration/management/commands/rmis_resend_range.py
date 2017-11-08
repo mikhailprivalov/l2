@@ -1,3 +1,5 @@
+import threading
+
 from django.core.management import BaseCommand
 from directions.models import Napravleniya
 from rmis_integration.client import Client
@@ -5,15 +7,26 @@ from users.models import DoctorProfile
 
 
 class Command(BaseCommand):
-    help = "Выгрузка результатов и направлений в РМИС"
+    help = "Повторная выгрузка результатов"
 
     def add_arguments(self, parser):
         parser.add_argument('directions_range', type=str)
 
     def handle(self, *args, **options):
+        maxthreads = 10
+        sema = threading.Semaphore(value=maxthreads)
+        threads = list()
+
+        def task(dir: Napravleniya, out):
+            sema.acquire()
+            out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
+            sema.release()
+
         r = options['directions_range'].split('-')
         f = r[0]
         t = r[1]
         c = Client()
         for d in Napravleniya.objects.filter(pk__gte=f, pk__lte=t):
-            self.stdout.write("RESEND %s -> %s" % (d.pk, c.directions.delete_services(d, user=DoctorProfile.objects.all().order_by("pk")[0])))
+            thread = threading.Thread(target=task, args=(d, self.stdout))
+            threads.append(thread)
+            thread.start()
