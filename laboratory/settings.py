@@ -57,7 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['debug_panel.middleware.DebugPanelMiddleware', 'silk.middleware.SilkyMiddleware']
+    'debug_panel.middleware.DebugPanelMiddleware',
+    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware']
 ]
 INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []
