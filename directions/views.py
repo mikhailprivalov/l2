@@ -14,7 +14,7 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
-from silk.profiling.profiler import silk_profile
+#from silk.profiling.profiler import silk_profile
 
 import directory.models as directory
 import slog.models as slog
