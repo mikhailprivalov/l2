@@ -46,6 +46,7 @@ class Analyzer(models.Model):
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
+    applications = models.ManyToManyField(Application, help_text="Приложения анализатора", blank=True, default=None, null=True)
 
     def __str__(self):
         return self.title
