@@ -16,7 +16,6 @@ class Command(BaseCommand):
         maxthreads = 20
         sema = threading.BoundedSemaphore(maxthreads)
         threads = list()
-        t = 0
 
         def task(dir: Napravleniya, out):
             sema.acquire()
@@ -34,10 +33,8 @@ class Command(BaseCommand):
         f = r[0]
         t = r[1]
         c = Client()
-        event = threading.Event()
         for d in Napravleniya.objects.filter(pk__gte=f, pk__lte=t):
             thread = threading.Thread(target=task, args=(d, self.stdout))
-            t += 1
             threads.append(thread)
             thread.start()
         [t.join() for t in threads]
