@@ -13,14 +13,16 @@ class Command(BaseCommand):
         parser.add_argument('directions_range', type=str)
 
     def handle(self, *args, **options):
-        maxthreads = 5
+        maxthreads = 10
         sema = threading.BoundedSemaphore(maxthreads)
         threads = list()
 
         def task(dir: Napravleniya, out):
             sema.acquire()
-            out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
-            sema.release()
+            try:
+                out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
+            finally:
+                sema.release()
 
         def resend(out):
             out.write("END")
@@ -32,7 +34,10 @@ class Command(BaseCommand):
         for d in Napravleniya.objects.filter(pk__gte=f, pk__lte=t):
             thread = threading.Thread(target=task, args=(d, self.stdout))
             threads.append(thread)
-            thread.start()
+            try:
+                thread.start()
+            except RuntimeError:
+                threads.remove(thread)
         [t.join() for t in threads]
         resend(self.stdout)
-        self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout, maxthreads=5)))
+        self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout, maxthreads=6)))
