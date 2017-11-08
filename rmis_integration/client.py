@@ -521,6 +521,8 @@ class Directions(BaseRequester):
                     sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction,
                                                          stdout)
         for k in sended_ids:
+            if sended_ids[k] is None:
+                continue
             RmisServices(napravleniye=direction, code=k, rmis_id=sended_ids[k]).save()
         direction.rmis_resend_services = False
         direction.save()
