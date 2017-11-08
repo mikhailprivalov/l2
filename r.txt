@@ -29,3 +29,4 @@ django_logtail
 django-silk
 django-oauth-toolkit
 django-cors-middleware
+python-astm
