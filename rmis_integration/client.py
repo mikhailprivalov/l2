@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import threading
 import urllib.parse
 from collections import defaultdict
 
@@ -683,7 +684,7 @@ class Directions(BaseRequester):
                                                  "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
         return direction.result_rmis_send
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=10):
         def check_lock():
             return cache.get('upload_lock') is not None
 
@@ -696,6 +697,10 @@ class Directions(BaseRequester):
             cache.set('upload_lock', '1', 180)
             pass
 
+        maxthreads = 40
+        sema = threading.BoundedSemaphore(maxthreads)
+        threads = list()
+
         upload_after = Settings.get("upload_results_after", default="11.09.2017")
         date = datetime.date(int(upload_after.split(".")[2]), int(upload_after.split(".")[1]),
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
@@ -706,19 +711,49 @@ class Directions(BaseRequester):
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
         i = 0
-        for d in to_upload:
-            update_lock()
-            uploaded.append(self.check_send(d, stdout))
-            if stdout:
-                i += 1
-                stdout.write("Upload direction {} ({}/{}); RMIS number={}".format(d.pk,  i, cnt, uploaded[-1]))
 
+        def upload_dir(self, direct, out):
+            sema.acquire()
+            global i
+            update_lock()
+            uploaded.append(self.check_send(direct, out))
+            if out:
+                i += 1
+                out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk,  i, cnt, uploaded[-1]))
+            sema.release()
+
+        def upload_services(self, direct, out):
+            sema.acquire()
+            update_lock()
+            self.check_service(direct, out)
+            if out:
+                out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
+            sema.release()
+
+        def upload_results(self, direct, out):
+            sema.acquire()
+            global i
+            update_lock()
+            if direct.is_all_confirm():
+                uploaded_results.append(self.check_send_results(direct))
+                if out:
+                    i += 1
+                    out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
+            sema.release()
+
+        for d in to_upload:
+            thread = threading.Thread(target=upload_dir, args=(self, d, stdout))
+            threads.append(thread)
+            thread.start()
+        [t.join() for t in threads]
+        threads = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct()
         for d in to_upload:
-            update_lock()
-            self.check_service(d, stdout)
-            if stdout:
-                stdout.write("Check services for direction {}; RMIS number={}".format(d.pk, d.rmis_number))
+            thread = threading.Thread(target=upload_services, args=(self, d, stdout))
+            threads.append(thread)
+            thread.start()
+        [t.join() for t in threads]
+        threads = []
 
         uploaded_results = []
         if not without_results:
@@ -734,12 +769,10 @@ class Directions(BaseRequester):
             if stdout:
                 stdout.write("Results to upload: {}".format(cnt))
             for d in to_upload:
-                update_lock()
-                if d.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(d))
-                    if stdout:
-                        i += 1
-                        stdout.write("Upload result for direction {} ({}/{})".format(d.pk, i, cnt))
+                thread = threading.Thread(target=upload_results, args=(self, d, stdout))
+                threads.append(thread)
+                thread.start()
+            [t.join() for t in threads]
 
         return {"directions": [x for x in uploaded if x != ""], "results": [x for x in uploaded_results if x != ""]}
 
