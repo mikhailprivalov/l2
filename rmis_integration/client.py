@@ -488,8 +488,11 @@ class Directions(BaseRequester):
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
             send_data["stepId"] = direction.rmis_hosp_id
-        rendered_id = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-        return rendered_id
+        rendered_id = None
+        try:
+            rendered_id = self.main_client.rendered_services.client.sendServiceRend(**send_data)
+        finally:
+            return rendered_id
 
     def check_service(self, direction: Napravleniya, stdout: OutputWrapper = None):
         if direction.rmis_number == "NONERMIS":
