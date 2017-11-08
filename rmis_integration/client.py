@@ -8,6 +8,7 @@ import requests
 from django.core.management.base import OutputWrapper
 from django.db.models import Q, Model
 from requests_toolbelt import MultipartEncoder
+from simplejson import JSONDecodeError
 from zeep.exceptions import Fault
 
 from appconf.manager import SettingManager
@@ -184,7 +185,10 @@ class Client(object):
         if ret == "bool":
             return str(resip.status_code) == "200"
         elif ret == "json":
-            return json.loads(resip.content)
+            try:
+                return json.loads(resip.content)
+            except JSONDecodeError:
+                return []
         else:
             return resip.content
 
