@@ -20,10 +20,6 @@ class Command(BaseCommand):
         def task(dir: Napravleniya, out):
             sema.acquire()
             out.write("ADD TO RESEND %s -> %s" % (dir.pk, c.directions.delete_services(dir, user=DoctorProfile.objects.all().order_by("pk")[0])))
-            global t
-            t -= 1
-            if t == 0:
-                resend(out)
             sema.release()
 
         def resend(out):
