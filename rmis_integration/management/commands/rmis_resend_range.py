@@ -35,4 +35,4 @@ class Command(BaseCommand):
             thread.start()
         [t.join() for t in threads]
         resend(self.stdout)
-        self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout, maxthreads=30)))
+        self.stdout.write(json.dumps(c.directions.check_and_send_all(self.stdout, maxthreads=50)))
