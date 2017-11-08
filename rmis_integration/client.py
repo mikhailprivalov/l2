@@ -730,14 +730,12 @@ class Directions(BaseRequester):
                 out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
             sema.release()
 
-        def upload_results(self, direct, out):
+        def upload_results(self, direct, out, i):
             sema.acquire()
-            global i
             update_lock()
             if direct.is_all_confirm():
                 uploaded_results.append(self.check_send_results(direct))
                 if out:
-                    i += 1
                     out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             sema.release()
 
@@ -769,7 +767,7 @@ class Directions(BaseRequester):
             if stdout:
                 stdout.write("Results to upload: {}".format(cnt))
             for d in to_upload:
-                thread = threading.Thread(target=upload_results, args=(self, d, stdout))
+                thread = threading.Thread(target=upload_results, args=(self, d, stdout, i))
                 threads.append(thread)
                 thread.start()
             [t.join() for t in threads]
