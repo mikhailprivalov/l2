@@ -1,3 +1,4 @@
+import itertools
 from astm import codec
 from collections import defaultdict
 from django.utils import timezone
@@ -49,7 +50,9 @@ def encode(m) -> list:
 
 def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> list:
     iss = [get_iss_direction(x, analyzer, full) for x in directions_list]
-    m = [get_astm_header(), get_patient()] + iss + [get_leave()]
+    m = [get_astm_header(), get_patient()]
+    m = itertools.chain(m, iss)
+    m.append(get_leave())
     if out:
         out.write(json.dumps(m))
     return encode(m)
