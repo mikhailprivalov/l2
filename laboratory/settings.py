@@ -43,7 +43,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'cachalot',
     'django_logtail',
-    'silk',
+    #'silk',
     'oauth2_provider',
     'corsheaders',
 )
