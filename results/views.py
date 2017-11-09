@@ -1,6 +1,7 @@
 import collections
 from copy import deepcopy
 
+import bleach
 import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -208,7 +209,7 @@ def results_save(request):
                     fraction_result = Result(issledovaniye=issledovaniye,
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
-                fraction_result.value = fractions[key]  # Установка значения
+                fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']) # Установка значения
                 fraction_result.iteration = 1  # Установка итерации
                 if key in fractions_ref:
                     r = fractions_ref[key]
