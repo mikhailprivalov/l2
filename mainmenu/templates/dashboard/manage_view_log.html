@@ -187,7 +187,7 @@
 
         let first_resize = true;
         function resize() {
-            $('#table_cont').height($(window).height() - $('#table_cont').position().top - 20);
+            $('#table_cont').height($(window).height() - $('#table_cont').position().top);
             if (first_resize) {
                 $('#table_cont').perfectScrollbar();
                 first_resize = false;
@@ -233,6 +233,9 @@
         }
     </script>
     <style>
+        body{
+            padding-bottom: 0;
+        }
 
         .floatThead th {
             background: #fff;
