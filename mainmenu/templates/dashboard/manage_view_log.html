@@ -123,8 +123,7 @@
                             "</tr>");
                     n++;
                 });
-                in_load = false;
-             });
+             }).always(() => { in_load = false; });
         }
         function loadlog(offset, replace) {
             if(in_load) return;
@@ -183,9 +182,7 @@
                 }
                 resize();
                 $("tr.loading").remove();
-            }).always(function () {
-                in_load = false;
-            });
+            }).always(() => { in_load = false; });
         }
 
         let first_resize = true;
