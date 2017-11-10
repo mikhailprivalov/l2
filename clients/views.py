@@ -3,6 +3,7 @@ import re
 
 import simplejson as json
 from django.core import serializers
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -35,15 +36,12 @@ def ajax_search(request):
     """ Поиск пациентов """
     objects = []
     data = []
-    if request.method == "GET" and request.GET['query'] and request.GET[
-        'type']:  # Проверка типа запроса и наличия полей
+    if request.method == "GET" and request.GET['query'] and request.GET['type']:  # Проверка типа запроса и наличия полей
         type = request.GET['type']
         card_type = Clients.CardBase.objects.get(pk=type)
         query = request.GET['query'].strip()
-        p = re.compile(r'[а-я]{3}[0-9]{8}',
-                       re.IGNORECASE)  # Регулярное выражение для определения запроса вида иии10121999
-        p2 = re.compile(
-            r'([А-я]{2,})( ([А-я]{2,})( ([А-я]*)( ([0-9]{2}.[0-9]{2}.[0-9]{4}))?)?)?')  # Регулярное выражение для определения запроса вида Иванов Иван Иванович 10.12.1999
+        p = re.compile(r'[а-я]{3}[0-9]{8}', re.IGNORECASE)  # Регулярное выражение для определения запроса вида иии10121999
+        p2 = re.compile(r'([А-я]{2,})( ([А-я]{2,})( ([А-я]*)( ([0-9]{2}.[0-9]{2}.[0-9]{4}))?)?)?')  # Регулярное выражение для определения запроса вида Иванов Иван Иванович 10.12.1999
         p3 = re.compile(r'[0-9]{1,15}')  # Регулярное выражение для определения запроса по номеру карты
         pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
         if re.search(p, query.lower()):  # Если это краткий запрос
@@ -51,11 +49,14 @@ def ajax_search(request):
             btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
             if not pat_bd.match(btday):
                 return HttpResponse('[]', content_type="application/json")
-            objects = Clients.Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
-                                                        patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
-            if card_type.is_rmis and len(objects) == 0:
-                c = Client()
-                objects = c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
+            try:
+                objects = Clients.Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
+                                                            patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
+                if card_type.is_rmis and len(objects) == 0:
+                    c = Client()
+                    objects = c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
+            except ValidationError:
+                objects = []
         elif re.search(p2, query):  # Если это полный запрос
             split = str(query).split()
             f = n = p = btday = ""

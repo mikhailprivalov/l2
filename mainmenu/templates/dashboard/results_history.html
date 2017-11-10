@@ -603,7 +603,10 @@
                     }
                     offset = data.next_offset;
                 }
-                else if(!loadmore) {
+                else if(data.error_message !== "") {
+                    $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
+                    errmessage(data.error_message);
+                }else if(!loadmore) {
                     $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
                     $.amaran({
                         'theme': 'awesome wrn',

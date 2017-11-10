@@ -6,7 +6,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
@@ -40,8 +40,8 @@ def results_search(request):
                                              issledovaniya__research_id=result["research_id"]):
             tmp_d = {"pk": d.pk}
             if d.pk in dirs:
-                tmp_d["date"] = Issledovaniya.objects.filter(napravleniye=d).first().time_confirmation.strftime(
-                    '%d.%m.%Y')
+                tc = Issledovaniya.objects.filter(napravleniye=d).first().time_confirmation
+                tmp_d["date"] = "не подтверждено" if tc is None else tc.strftime('%d.%m.%Y')
                 result["directions"].append(tmp_d)
             else:
                 tmp_d["get_material"] = all([x.is_get_material() for x in Issledovaniya.objects.filter(napravleniye=d)])
@@ -209,7 +209,7 @@ def results_save(request):
                     fraction_result = Result(issledovaniye=issledovaniye,
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
-                fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']) # Установка значения
+                fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div'])  # Установка значения
                 fraction_result.iteration = 1  # Установка итерации
                 if key in fractions_ref:
                     r = fractions_ref[key]
@@ -2918,21 +2918,24 @@ def results_search_directions(request):
         twoname = query[2:3]
         bdate = "%s-%s-%s" % (query[7:11], query[5:7], query[3:5])
 
-    if type == "d":
-        day = period.get("date", "01.01.2015")
-        day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
-        day2 = day1 + datetime.timedelta(days=1)
-    elif type == "m":
-        month = int(period.get("month", "0")) + 1
-        next_m = month + 1 if month < 12 else 1
-        year = int(period.get("year", "2015"))
-        next_y = year + 1 if next_m == 1 else year
-        day1 = datetime.date(year, month, 1)
-        day2 = datetime.date(next_y, next_m, 1)
-    else:
-        year = int(period.get("year", "2015"))
-        day1 = datetime.date(year, 1, 1)
-        day2 = datetime.date(year + 1, 1, 1)
+    try:
+        if type == "d":
+            day = period.get("date", "01.01.2015")
+            day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+            day2 = day1 + datetime.timedelta(days=1)
+        elif type == "m":
+            month = int(period.get("month", "0")) + 1
+            next_m = month + 1 if month < 12 else 1
+            year = int(period.get("year", "2015"))
+            next_y = year + 1 if next_m == 1 else year
+            day1 = datetime.date(year, month, 1)
+            day2 = datetime.date(next_y, next_m, 1)
+        else:
+            year = int(period.get("year", "2015"))
+            day1 = datetime.date(year, 1, 1)
+            day2 = datetime.date(year + 1, 1, 1)
+    except ValueError:
+        return JsonResponse({"rows": [], "grouping": grouping, "len": 0, "next_offset": 0, "all_rows": 0, "error_message": "Некорректная дата"})
     collection = Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                              issledovaniya__time_confirmation__isnull=False,
                                              client__is_archive=archive)
@@ -3059,4 +3062,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return HttpResponse(json.dumps({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1, "all_rows": cnt}), content_type="application/json")
+    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n+1, "all_rows": cnt, "error_message": ""})

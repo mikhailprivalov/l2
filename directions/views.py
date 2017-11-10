@@ -501,8 +501,9 @@ def get_one_dir(request):
     if request.method == 'GET':  # Проверка типа запроса
         direction_pk = request.GET['id']
         direction_pk = ''.join(x for x in direction_pk if x.isdigit())
-        direction_pk = int(direction_pk)
-        if direction_pk == "":
+        try:
+            direction_pk = int(direction_pk)
+        except ValueError:
             direction_pk = -1
         if Napravleniya.objects.filter(pk=direction_pk).exists():  # Проверка на существование направления
             if "check" not in request.GET.keys():
@@ -1106,10 +1107,8 @@ def get_client_directions(request):
             date_start = request.GET["date[start]"]  # начальная дата назначения
             date_end = request.GET["date[end]"]  # конечная дата назначения
 
-            date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                       int(date_start.split(".")[0]))
-            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                     int(date_end.split(".")[0])) + datetime.timedelta(1)
+            date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]), int(date_start.split(".")[0]))
+            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
             if pk >= 0 or req_status == 4:
                 rows = []
                 if req_status != 4:
@@ -1155,7 +1154,7 @@ def get_client_directions(request):
                              "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT)),
                              "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"]})
                 res["ok"] = True
-        except ValueError:
+        except (ValueError, IndexError):
             pass
     return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
 

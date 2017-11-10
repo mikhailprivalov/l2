@@ -441,10 +441,8 @@ def discharge(request):
             pd["docs"].append({"pk": d.pk, "fio": d.fio})
         users.append(pd)
     return render(request, 'dashboard/discharge.html', {'labs': podr,
-                                                        'fin_poli': IstochnikiFinansirovaniya.objects.filter(
-                                                            istype="poli"),
-                                                        'fin_stat': IstochnikiFinansirovaniya.objects.filter(
-                                                            istype="stat"),
+                                                        'fin_poli': [],  # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
+                                                        'fin_stat': [],  # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
                                                         "notlabs": podrazdeleniya,
                                                         "users": json.dumps(users)})
 
@@ -621,15 +619,33 @@ def dashboard_from(request):
     date_end = request.GET["dateend"]
     filter_type = request.GET.get("type", "wait")
     import datetime
-    date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                               int(date_start.split(".")[0]))
-    date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                             int(date_end.split(".")[0])) + datetime.timedelta(1)
-    if request.GET.get("get_labs", "false") == "true":
-        result = {}
-        for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-            tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False,
-                                                          doc_get__podrazdeleniye__isLab=False,
+    result = {}
+    try:
+        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
+                                   int(date_start.split(".")[0]))
+        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
+                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        if request.GET.get("get_labs", "false") == "true":
+            for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
+                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False,
+                                                              doc_get__podrazdeleniye__isLab=False,
+                                                              time_get__range=(date_start, date_end),
+                                                              issledovaniya__research__podrazdeleniye=lab)
+                if filter_type == "not_received":
+                    tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
+                elif filter_type == "received":
+                    tubes_list = tubes_list.filter(doc_recive__isnull=False)
+                else:
+                    tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
+                tubes = tubes_list.distinct().count()
+                result[lab.pk] = tubes
+            return HttpResponse(json.dumps(result), content_type="application/json")
+        podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+        lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
+        i = 0
+        for podr in podrazdeleniya:
+            i += 1
+            tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podr,
                                                           time_get__range=(date_start, date_end),
                                                           issledovaniya__research__podrazdeleniye=lab)
             if filter_type == "not_received":
@@ -638,26 +654,10 @@ def dashboard_from(request):
                 tubes_list = tubes_list.filter(doc_recive__isnull=False)
             else:
                 tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
-            tubes = tubes_list.distinct().count()
-            result[lab.pk] = tubes
-        return HttpResponse(json.dumps(result), content_type="application/json")
-    result = {}
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
-    lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
-    i = 0
-    for podr in podrazdeleniya:
-        i += 1
-        tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podr,
-                                                      time_get__range=(date_start, date_end),
-                                                      issledovaniya__research__podrazdeleniye=lab)
-        if filter_type == "not_received":
-            tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
-        elif filter_type == "received":
-            tubes_list = tubes_list.filter(doc_recive__isnull=False)
-        else:
-            tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
-        result[i] = {"tubes": tubes_list.distinct().count(),
-                     "title": podr.title, "pk": podr.pk}
+            result[i] = {"tubes": tubes_list.distinct().count(),
+                         "title": podr.title, "pk": podr.pk}
+    except ValueError:
+        pass
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
