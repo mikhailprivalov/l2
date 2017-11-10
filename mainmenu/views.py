@@ -801,6 +801,7 @@ def direction_info(request):
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
                 data.append(d)
+            slog.Log(key=str(pk), type=5000, body="", user=request.user.doctorprofile).save()
         return JsonResponse(data, safe=False)
     return render(request, 'dashboard/direction_info.html')
 
