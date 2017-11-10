@@ -133,7 +133,7 @@ def directory_researches_list(request):
              "addto": addto
              })
 
-    return JsonResponse(return_result)
+    return JsonResponse(return_result, safe=False)
 
 
 @csrf_exempt

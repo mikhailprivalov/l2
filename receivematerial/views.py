@@ -95,7 +95,7 @@ def receive_obo(request):
             ret.append(result)
         if not direction:
             ret = {"r": 3} if len(ret) == 0 else ret[0]
-    return JsonResponse(ret)
+    return JsonResponse(ret, safe=False)
 
 
 @csrf_exempt
@@ -312,7 +312,7 @@ def tubes_get(request):
                                "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),
                                         "color": tube.type.tube.color, "notice": tube.notice}})
 
-    return JsonResponse(list(result))
+    return JsonResponse(list(result), safe=False)
 
 
 from reportlab.lib.pagesizes import A4
@@ -441,7 +441,7 @@ def receive_journal(request):
             directions += [iss[0].napravleniye.pk]
         n += 1
     if return_type == "directions":
-        return JsonResponse(directions)
+        return JsonResponse(directions, safe=False)
 
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)

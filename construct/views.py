@@ -84,7 +84,7 @@ def refs(request):
         fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))
         for r in directory.References.objects.filter(fraction=fraction).order_by("pk"):
             rows.append({'pk': r.pk, 'title': r.title, 'about': r.about, 'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m, 'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False, 'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
-        return JsonResponse(rows)
+        return JsonResponse(rows, safe=False)
     elif request.method == "POST":
         pk = int(request.POST["pk"])
         default = int(request.POST["default"])

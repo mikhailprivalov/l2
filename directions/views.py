@@ -1171,7 +1171,7 @@ def order_researches(request):
             CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]),
                                    user=request.user.doctorprofile, weight=w).save()
 
-    return JsonResponse(1)
+    return JsonResponse(1, safe=False)
 
 
 @login_required
@@ -1187,4 +1187,4 @@ def resend(request):
             d.append(c.directions.delete_direction(direction, user=request.user.doctorprofile))
         if t in ["results", "full"]:
             r.append(c.directions.delete_services(direction, user=request.user.doctorprofile))
-    return JsonResponse(all(d) if t == "directions" else [d, r])
+    return JsonResponse(all(d) if t == "directions" else [d, r], safe=False)

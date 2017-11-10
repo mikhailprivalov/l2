@@ -82,9 +82,9 @@ def researches_get_one(request):
                         res["fractions"][val.pk] = tmp
             a.append(res)
         if multi:
-            return JsonResponse(a)
+            return JsonResponse(a, safe=False)
         elif len(a) > 0:
-            return JsonResponse(a[0])
+            return JsonResponse(a[0], safe=False)
 
     return JsonResponse(res_o)
 
@@ -96,7 +96,7 @@ def get_all_tubes(request):
     tubes = Tubes.objects.all().order_by('title')
     for v in tubes:
         res.append({"id": v.id, "title": v.title, "color": v.color})
-    return JsonResponse(res)
+    return JsonResponse(res, safe=False)
 
 
 @csrf_exempt

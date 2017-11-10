@@ -608,7 +608,7 @@ def results_history_search(request):
             if dpk not in result:
                 result.append(dpk)
 
-    return JsonResponse(result)
+    return JsonResponse(result, safe=False)
 
 
 @login_required
@@ -801,7 +801,7 @@ def direction_info(request):
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
                 data.append(d)
-        return JsonResponse(data)
+        return JsonResponse(data, safe=False)
     return render(request, 'dashboard/direction_info.html')
 
 

@@ -48,7 +48,7 @@ def ajax_search(request):
             initials = query[0:3].upper()
             btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
             if not pat_bd.match(btday):
-                return JsonResponse([])
+                return JsonResponse([], safe=False)
             try:
                 objects = Clients.Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
                                                             patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
@@ -109,7 +109,7 @@ def ajax_search(request):
                          "sex": row.individual.sex,
                          "individual_pk": row.individual.pk,
                          "pk": row.pk})
-    return JsonResponse(data)
+    return JsonResponse(data, safe=False)
 
 
 def get_db(request):
@@ -129,7 +129,7 @@ def get_db(request):
             "Polisser": "" if not doc.exists() else doc.first().serial,
             "Polisnum": "" if not doc.exists() else doc.first().number
         })
-    return JsonResponse(data)
+    return JsonResponse(data, safe=False)
 
 
 @csrf_exempt

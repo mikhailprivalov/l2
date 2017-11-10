@@ -34,7 +34,7 @@ def log_cleanup(request):
 @staff_member_required
 def db(request):
     response = []
-    return JsonResponse(response)
+    return JsonResponse(response, safe=False)
 
 
 @login_required
