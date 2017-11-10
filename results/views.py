@@ -3062,4 +3062,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n, "all_rows": cnt, "error_message": ""})
+    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": n, "all_rows": cnt, "error_message": ""})
