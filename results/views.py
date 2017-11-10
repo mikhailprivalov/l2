@@ -2991,14 +2991,14 @@ def results_search_directions(request):
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
         key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
         if key not in rows:
-            if n - offset + (0 if offset == 0 else 1) >= on_page or key in filtered:
+            if n - offset >= on_page or key in filtered:
                 if key not in filtered:
                     filtered.append(key)
                     cnt += 1
                 continue
             cnt += 1
             n += 1
-            if n < offset:
+            if n <= offset:
                 filtered.append(key)
                 continue
             rows[key] = {"fio": direction.client.individual.fio(),
@@ -3062,4 +3062,4 @@ def results_search_directions(request):
                                                "otd_search": otd_search,
                                                "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset + (0 if offset == 0 else 1), "next_offset": offset+n+1, "all_rows": cnt, "error_message": ""})
+    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": offset+n, "all_rows": cnt, "error_message": ""})
