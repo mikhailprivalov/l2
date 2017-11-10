@@ -4,7 +4,7 @@ from datetime import datetime, date
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
@@ -50,7 +50,7 @@ def receive(request):
                 tube.set_notice(request.user.doctorprofile, tube_get["notice"])
 
         result = {"r": True}
-        return HttpResponse(json.dumps(result), content_type="application/json")
+        return JsonResponse(result)
 
 
 @csrf_exempt
@@ -95,7 +95,7 @@ def receive_obo(request):
             ret.append(result)
         if not direction:
             ret = {"r": 3} if len(ret) == 0 else ret[0]
-    return HttpResponse(json.dumps(ret), content_type="application/json")
+    return JsonResponse(ret)
 
 
 @csrf_exempt
@@ -112,7 +112,7 @@ def receive_history(request):
         result["rows"].append(
             {"pk": row.pk, "n": row.daynum or 0, "type": str(row.type.tube), "color": row.type.tube.color,
              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)]})
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 @csrf_exempt
@@ -129,7 +129,7 @@ def last_received(request):
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
                                         doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab)])
-    return HttpResponse(json.dumps({"last_n": last_num}), content_type="application/json")
+    return JsonResponse({"last_n": last_num})
 
 
 @csrf_exempt
@@ -312,7 +312,7 @@ def tubes_get(request):
                                "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),
                                         "color": tube.type.tube.color, "notice": tube.notice}})
 
-    return HttpResponse(json.dumps(list(result)), content_type="application/json")
+    return JsonResponse(list(result))
 
 
 from reportlab.lib.pagesizes import A4
@@ -441,7 +441,7 @@ def receive_journal(request):
             directions += [iss[0].napravleniye.pk]
         n += 1
     if return_type == "directions":
-        return HttpResponse(json.dumps(directions), content_type="application/json")
+        return JsonResponse(directions)
 
     labs = collections.OrderedDict(sorted(labs.items()))  # Сортировка словаря
     c.setFont('OpenSans', 20)

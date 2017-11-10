@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from researches.models import Tubes
 from directions.models import Issledovaniya
 import simplejson as json
@@ -82,11 +82,11 @@ def researches_get_one(request):
                         res["fractions"][val.pk] = tmp
             a.append(res)
         if multi:
-            return HttpResponse(json.dumps(a))
+            return JsonResponse(a)
         elif len(a) > 0:
-            return HttpResponse(json.dumps(a[0]))
+            return JsonResponse(a[0])
 
-    return HttpResponse(json.dumps(res_o))  # Создание JSON
+    return JsonResponse(res_o)
 
 
 @login_required
@@ -96,7 +96,7 @@ def get_all_tubes(request):
     tubes = Tubes.objects.all().order_by('title')
     for v in tubes:
         res.append({"id": v.id, "title": v.title, "color": v.color})
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 @csrf_exempt
@@ -134,7 +134,7 @@ def tubes_control(request):
         tube.save()
         slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
                  body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
-    return HttpResponse(json.dumps({}), content_type="application/json")  # Создание JSON
+    return JsonResponse({})
 
 
 @csrf_exempt
@@ -169,4 +169,4 @@ def tubes_relation(request):
         return_result["color"] = tube.color
         slog.Log(key=str(relation.pk), user=request.user.doctorprofile, type=20,
                  body=json.dumps({"data": {"id": tube_id}})).save()
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)

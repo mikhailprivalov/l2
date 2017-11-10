@@ -186,14 +186,11 @@
                 template = data;
                 $.ajax({
                     url: "/researches/get/one",
-                    type: "text",
                     method: "GET",
                     data: {id: id}
                 }).done(function (data2) {
                     $("#form-scroll").isLoading("hide");
                     $("#issledovaniya .active").removeClass("active");
-                    data2 = JSON.parse(data2);
-                    console.log(data2);
                     data2["sex"] = dir_data.client_sex;
                     data2["age"] = dir_data.client_vozrast;
                     $("#result-form").html(jade.compile(template)(data2));

@@ -513,12 +513,10 @@
                 $("#client_sex").html(data.client_sex);
                 $.ajax({
                     url: "/researches/get/one",
-                    type: "text",
                     method: "GET",
                     data: {id: id}
                 }).done(function (data2) {
                     $(".active").removeClass("active");
-                    data2 = JSON.parse(data2);
                     $.each(data2.fractions, function (k, v) {
                         $("#fractions").append(`<tr class='field-row'><td class='field-title'>${v.title}</td><td render-type='${v.render_type}' data-pk='${v.pk}'></td><td>${v.unit}</td></tr>`);
                     });

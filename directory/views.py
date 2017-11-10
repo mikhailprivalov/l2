@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from directory.models import Researches, ReleationsFT, Fractions, DirectionsGroup
 import simplejson as json
 import directions.models as directions
@@ -98,7 +98,7 @@ def directory_researches(request):
             # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
         return_result["researches"] = sorted(return_result["researches"], key=lambda d: d["pk"])
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -133,7 +133,7 @@ def directory_researches_list(request):
              "addto": addto
              })
 
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -153,7 +153,7 @@ def directory_researches_update_uet(request):
                 fraction.uet_doc = value
             fraction.save()
             return_result["ok"] = True
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -169,7 +169,7 @@ def directory_researches_update_mode(request):
             research.edit_mode = value
             research.save()
             return_result["ok"] = True
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -184,7 +184,7 @@ def directory_researches_update_sort(request):
             res.sort_weight = sort[k]
             res.save()
         return_result["ok"] = True
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -205,7 +205,7 @@ def directory_toggle_hide_research(request):
     research.save()
     slog.Log(key=pk, type=19, body=json.dumps({"hide": research.hide}),
              user=request.user.doctorprofile).save()
-    return HttpResponse(json.dumps({"status_hide": research.hide}), content_type="application/json")  # Создание JSON
+    return JsonResponse({"status_hide": research.hide})
 
 
 @csrf_exempt
@@ -223,7 +223,7 @@ def directory_copy_research(request):
     research = Researches.objects.get(pk=int(pk))
     research.pk = None
     research.save()
-    return HttpResponse(json.dumps({"pk": research.pk}), content_type="application/json")  # Создание JSON
+    return JsonResponse({"pk": research.pk})
 
 
 @csrf_exempt
@@ -272,7 +272,7 @@ def directory_research(request):
         color: color,
         title: title,
         '''
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -320,7 +320,7 @@ def directory_researches_group(request):
 
         return_result["gid"] = direction.pk
 
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -337,7 +337,7 @@ def directory_get_directions(request):
                 return_result["directions"][research.direction.pk] = []
             return_result["directions"][research.direction.pk].append(research.title)
 
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -369,7 +369,7 @@ def researches_get_details(request):
                 temp_fraction.formula = row["formula"].strip()
                 temp_fraction.save()
         return_result["ok"] = True
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)
 
 
 @csrf_exempt
@@ -386,4 +386,4 @@ def researches_update_template(request):
         return_result["ok"] = True
         return_result["comment_template_saved"] = research_obj.comment_template
         return_result["comment_template"] = request.POST["comment_template"]
-    return HttpResponse(json.dumps(return_result), content_type="application/json")  # Создание JSON
+    return JsonResponse(return_result)

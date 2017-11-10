@@ -1171,7 +1171,6 @@
                 nn++;
                 $.ajaxq('precache', {
                     url: "/researches/get/one",
-                    type: "text",
                     method: "GET",
                     cache: false,
                     data: {
@@ -1181,7 +1180,6 @@
                         multi: true
                     }
                 }).done(function (data2) {
-                    data2 = JSON.parse(data2);
                     for (let v of data2) {
                         researches_cache[v.i] = {
                             "title": v.title,
@@ -1534,7 +1532,6 @@
                 function callback2(data2) {
                     $("#form-scroll").isLoading("hide");
                     $("#issledovaniya .active").removeClass("active");
-                    data2 = JSON.parse(data2);
                     if (!data2.cached) {
                         researches_cache[research_pk] = {
                             "title": data2.title,
@@ -1675,7 +1672,6 @@
 
                 $.ajaxq('precache', {
                     url: "/researches/get/one",
-                    type: "text",
                     method: "GET",
                     cache: false,
                     data: {
@@ -2178,11 +2174,9 @@
                     queue_fill.push(res_pk);
                     $.ajaxq('/researches/get/one', {
                         url: "/researches/get/one",
-                        type: "text",
                         method: "GET",
                         data: {id: res_pk}
                     }).done(function (data) {
-                        data = JSON.parse(data);
                         $.ajaxq('/results/get', {
                             url: "/results/get",
                             type: "text",

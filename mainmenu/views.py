@@ -21,7 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from researches.models import Tubes
 from laboratory.decorators import group_required
 import slog.models as slog
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import simplejson as json
 import directory.models as directory
 
@@ -117,7 +117,7 @@ def change_password(request):
         else:
             doc.podrazdeleniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
             doc.save()
-        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+        return JsonResponse({"ok": True})
     if request.is_ajax():
         doc = DoctorProfile.objects.get(pk=request.GET["pk"])
         groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
@@ -143,8 +143,8 @@ def update_pass(request):
         user = DoctorProfile.objects.get(pk=userid).user
         user.set_password(password)
         user.save()
-        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
-    return HttpResponse(json.dumps({"ok": False}), content_type="application/json")
+        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": False})
 
 
 from django.utils import timezone
@@ -197,7 +197,7 @@ def load_logs(request):
             result["data"].append(tmp_object)
 
     result["s"] = states
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 # @cache_page(60 * 15)
@@ -256,7 +256,7 @@ def confirm_reset(request):
             else:
                 result["msg"] = "Сброс подтверждения разрешен в течении %s минут" % (
                     str(SettingManager.get("lab_reset_confirm_time_min")))
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 @login_required
@@ -325,7 +325,7 @@ def create_pod(request):
             if "is_lab" in request.POST:
                 pd.isLab = request.POST["is_lab"] == "true"
             pd.save()
-            return HttpResponse("{}", content_type="application/json")
+            return JsonResponse({})
         title = request.POST['title']  # Получение названия
         if title:  # Если название есть
             if not Podrazdeleniya.objects.filter(title=title).exists():  # Если название не существует
@@ -492,7 +492,7 @@ def discharge_add(request):
                                                              "doc_fio": doc_fio,
                                                              "file": obj.file.name}),
                      user=request.user.doctorprofile).save()
-    return HttpResponse(json.dumps(r), content_type="application/json")
+    return JsonResponse(r)
 
 
 @csrf_exempt
@@ -570,7 +570,7 @@ def discharge_search(request):
                               "filename": os.path.basename(row.file.name),
                               "fileurl": row.file.url})
 
-    return HttpResponse(json.dumps(r), content_type="application/json")
+    return JsonResponse(r)
 
 
 @login_required
@@ -579,7 +579,7 @@ def users_count(request):
     """ Получение количества пользователей """
     result = {"all": User.objects.all().count(), "ldap": DoctorProfile.objects.filter(isLDAP_user=True).count()}
 
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 @login_required
@@ -608,7 +608,7 @@ def results_history_search(request):
             if dpk not in result:
                 result.append(dpk)
 
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 @login_required
@@ -639,7 +639,7 @@ def dashboard_from(request):
                     tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
                 tubes = tubes_list.distinct().count()
                 result[lab.pk] = tubes
-            return HttpResponse(json.dumps(result), content_type="application/json")
+            return JsonResponse(result)
         podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
@@ -659,7 +659,7 @@ def dashboard_from(request):
     except ValueError:
         pass
 
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    return JsonResponse(result)
 
 
 @csrf_exempt
@@ -732,7 +732,7 @@ def users_dosync(request):
         profile.fio = dn
         profile.save()
     c.unbind()
-    return HttpResponse(json.dumps(groups), content_type="application/json")
+    return JsonResponse(groups)
 
 
 @login_required
@@ -747,7 +747,7 @@ def researches_from_directions(request):
     data = defaultdict(list)
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk, research__hide=False):
         data[i.research.podrazdeleniye.pk].append(i.research.pk)
-    return HttpResponse(json.dumps(data), content_type="application/json")
+    return JsonResponse(data)
 
 
 @login_required
@@ -801,7 +801,7 @@ def direction_info(request):
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
                 data.append(d)
-        return HttpResponse(json.dumps(data), content_type="application/json")
+        return JsonResponse(data)
     return render(request, 'dashboard/direction_info.html')
 
 

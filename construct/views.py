@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -72,7 +72,7 @@ def onlywith(request):
         else:
             res.onlywith = None
             res.save()
-        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+        return JsonResponse({"ok": True})
 
 
 @csrf_exempt
@@ -84,7 +84,7 @@ def refs(request):
         fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))
         for r in directory.References.objects.filter(fraction=fraction).order_by("pk"):
             rows.append({'pk': r.pk, 'title': r.title, 'about': r.about, 'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m, 'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False, 'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
-        return HttpResponse(json.dumps(rows), content_type="application/json")
+        return JsonResponse(rows)
     elif request.method == "POST":
         pk = int(request.POST["pk"])
         default = int(request.POST["default"])
@@ -111,4 +111,4 @@ def refs(request):
                     row.save()
             fraction.default_ref = None if default == -1 else directory.References.objects.get(pk=default)
             fraction.save()
-        return HttpResponse(json.dumps({"ok": True}), content_type="application/json")
+        return JsonResponse({"ok": True})

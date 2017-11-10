@@ -5,7 +5,7 @@ import simplejson as json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
@@ -49,7 +49,7 @@ def dir_save(request):
                                                                 request.user.doctorprofile,
                                                                 researches, comments)
 
-    return HttpResponse(json.dumps((result,)), content_type="application/json")
+    return JsonResponse(result)
 
 
 @login_required
@@ -577,7 +577,7 @@ def get_one_dir(request):
                                       "sx": tmp2.client.individual.sex,
                                       "bth": tmp2.client.individual.bd()}  # Добавление информации о пациенте в вывод
             response["ok"] = True
-    return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
+    return JsonResponse(response)
 
 
 @csrf_exempt
@@ -607,7 +607,7 @@ def setdef(request):
         iss = Issledovaniya.objects.get(pk=int(pk))
         iss.deferred = status
         iss.save()
-    return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
+    return JsonResponse(response)
 
 
 @csrf_exempt
@@ -633,7 +633,7 @@ def cancel_direction(request):
         nap = Napravleniya.objects.get(pk=int(pk))
         nap.cancel = cancel
         nap.save()
-    return HttpResponse(json.dumps(response), content_type="application/json")  # Создание JSON
+    return JsonResponse(response)
 
 
 @csrf_exempt
@@ -653,7 +653,7 @@ def update_direction(request):
             res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
         res["r"] = True
 
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 @csrf_exempt
@@ -667,7 +667,7 @@ def group_confirm_get(request):
         for t in TubesRegistration.objects.filter(pk__in=checked, doc_get__isnull=True):
             t.set_get(request.user.doctorprofile)
 
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 @login_required
@@ -687,9 +687,8 @@ def load_history(request):
             iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
         res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
                             "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"),
-                            "dir_id": iss[0].napravleniye.pk, "tube_id": v.id})  # Добавление пробирки с исследованиями
-        # в вывод
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+                            "dir_id": iss[0].napravleniye.pk, "tube_id": v.id})  # Добавление пробирки с исследованиями в вывод
+    return JsonResponse(res)
 
 
 @login_required
@@ -716,7 +715,7 @@ def get_worklist(request):
     res["rows"] = sorted(res["rows"], key=lambda k: k['pk'])
     res["rows"] = sorted(res["rows"], key=lambda k: k['patient'])
 
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 @login_required
@@ -1089,7 +1088,7 @@ def get_issledovaniya(request):
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
 
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 from django.db.models import Q
@@ -1156,7 +1155,7 @@ def get_client_directions(request):
                 res["ok"] = True
         except (ValueError, IndexError):
             pass
-    return HttpResponse(json.dumps(res), content_type="application/json")  # Создание JSON
+    return JsonResponse(res)
 
 
 @csrf_exempt
@@ -1172,7 +1171,7 @@ def order_researches(request):
             CustomResearchOrdering(research=directory.Researches.objects.get(pk=order[i]),
                                    user=request.user.doctorprofile, weight=w).save()
 
-    return HttpResponse(1, content_type="application/json")
+    return JsonResponse(1)
 
 
 @login_required
@@ -1188,4 +1187,4 @@ def resend(request):
             d.append(c.directions.delete_direction(direction, user=request.user.doctorprofile))
         if t in ["results", "full"]:
             r.append(c.directions.delete_services(direction, user=request.user.doctorprofile))
-    return HttpResponse(json.dumps(all(d) if t == "directions" else [d, r]), content_type="application/json")
+    return JsonResponse(all(d) if t == "directions" else [d, r])

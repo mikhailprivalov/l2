@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import simplejson as json
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 from appconf.manager import SettingManager
 import clients.models as clients
@@ -19,7 +19,7 @@ def log(request):
                 "store_days": SettingManager.get("max_log_store_days", "120", "i")}
     response["to_delete"] = slog.objects.filter(
         time__lt=datetime.today() - timedelta(days=response["store_days"])).exclude(type__in=(7, 21, 9, 11, 12, 4000, 13, 14, 24)).count()
-    return HttpResponse(json.dumps(response), content_type="application/json")
+    return JsonResponse(response)
 
 
 @login_required
@@ -34,14 +34,14 @@ def log_cleanup(request):
 @staff_member_required
 def db(request):
     response = []
-    return HttpResponse(json.dumps(response), content_type="application/json")
+    return JsonResponse(response)
 
 
 @login_required
 @staff_member_required
 def rmis_check(request):
     c = Client()
-    return HttpResponse(c.search_organization_id(check=True) + " " + c.search_dep_id(check=True), content_type="application/json")
+    return HttpResponse(c.search_organization_id(check=True) + " " + c.search_dep_id(check=True), content_type="text/plain")
 
 
 @login_required

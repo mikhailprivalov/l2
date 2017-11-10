@@ -1741,15 +1741,15 @@
                     }
                 }
             }).done(function (data) {
-                if (data[0].r && data[0].list_id) {
+                if (data.r && data.list_id) {
                     if (!tr) {
-                        window.open('/directions/pdf?napr_id=' + data[0].list_id, '_blank');
+                        window.open('/directions/pdf?napr_id=' + data.list_id, '_blank');
                     } else {
                         $.amaran({
                             'theme': 'awesome ok',
                             'content': {
                                 title: 'Направления созданы',
-                                message: "Номера: " + JSON.parse(data[0].list_id).join(", "),
+                                message: "Номера: " + JSON.parse(data.list_id).join(", "),
                                 info: '',
                                 icon: 'fa fa-exclamation'
                             },
@@ -1757,19 +1757,19 @@
                             delay: 10000
                         });
                         if (bc) {
-                            window.open('/barcodes/tubes?napr_id=' + data[0].list_id, '_blank');
+                            window.open('/barcodes/tubes?napr_id=' + data.list_id, '_blank');
                         }
                     }
                     $("#sources").find(".active").removeClass("active");
                     load_client_dirs(client_id);
                     setTimeout(clear_fast, 200);
                 }
-                else if (data[0].message) {
+                else if (data.message) {
 
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
-                            title: data[0].message,
+                            title: data.message,
                             message: "",
                             info: '',
                             icon: 'fa fa-exclamation'

@@ -1,6 +1,6 @@
 import simplejson as json
 import yaml
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
@@ -146,4 +146,4 @@ def send(request):
             slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=astm_user).save()
     except Exception as e:
         result = {"ok": False, "Exception": True, "MSG": str(e)}
-    return HttpResponse(json.dumps(result), content_type="application/json")  # Создание JSON
+    return JsonResponse(result)
