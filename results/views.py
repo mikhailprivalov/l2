@@ -1525,7 +1525,7 @@ def result_print(request):
                 ["Возраст:", direction.client.individual.age_s(direction=direction)],
                 ["Дата забора:", date_t],
                 [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-                ["№ карты:", str(direction.client.number)],
+                ["№ карты:", str(direction.client.number) + (" - архив" if direction.client.is_archive else "")],
                 ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)]
             ]
 
