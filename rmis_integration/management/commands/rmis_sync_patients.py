@@ -30,8 +30,6 @@ class Command(BaseCommand):
         self.stdout.write("Карт для проверки: {}".format(count))
         for card in cds:
             i += 1
-            if card.individual.card_set.filter(base__is_rmis=False).exists():
-                continue
             da = c.patients.sync_data(card)
             if da:
                 self.stdout.write("Обработка карты {}/{}".format(i, count))

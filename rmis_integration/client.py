@@ -264,31 +264,40 @@ class Patients(BaseRequester):
                     birthday=from_rmis["birthDate"],
                     sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"))
         ind = card.individual
+
+        def n(s):
+            return s.lower().replace("ё", "е").replace('%', '').replace('`', '').replace('~', '').replace('-', '').replace(',', '').replace('\'', '').replace('"', '').replace('$', '').replace('@', '').replace('*', '').replace('.', '').replace('!', '').replace('&', '').strip()
+
+        def cmp(a: str, b: str):
+            a = n(a)
+            b = n(b)
+            return a == b
+
         updated = []
-        if ind.family != data["family"]:
+        if not cmp(ind.family, data["family"]):
             updated.append(["family", ind.family, data["family"]])
             ind.family = data["family"]
             ind.save()
+        if not card.individual.card_set.filter(base__is_rmis=False).exists():
+            if ind.name != data["name"]:
+                updated.append(["name", ind.name, data["name"]])
+                ind.name = data["name"]
+                ind.save()
 
-        if ind.name != data["name"]:
-            updated.append(["name", ind.name, data["name"]])
-            ind.name = data["name"]
-            ind.save()
+            if ind.patronymic != data["patronymic"]:
+                updated.append(["patronymic", ind.patronymic, data["patronymic"]])
+                ind.patronymic = data["patronymic"]
+                ind.save()
 
-        if ind.patronymic != data["patronymic"]:
-            updated.append(["patronymic", ind.patronymic, data["patronymic"]])
-            ind.patronymic = data["patronymic"]
-            ind.save()
+            if ind.birthday != data["birthday"] and data["birthday"] is not None:
+                updated.append(["birthday", ind.birthday.strftime("%d.%m.%Y"), data["birthday"].strftime("%d.%m.%Y")])
+                ind.birthday = data["birthday"]
+                ind.save()
 
-        if ind.birthday != data["birthday"] and data["birthday"] is not None:
-            updated.append(["birthday", ind.birthday.strftime("%d.%m.%Y"), data["birthday"].strftime("%d.%m.%Y")])
-            ind.birthday = data["birthday"]
-            ind.save()
-
-        if ind.sex != data["sex"]:
-            updated.append(["sex", ind.sex, data["sex"]])
-            ind.sex = data["sex"]
-            ind.save()
+            if ind.sex != data["sex"]:
+                updated.append(["sex", ind.sex, data["sex"]])
+                ind.sex = data["sex"]
+                ind.save()
         if len(updated) > 0:
             return str(updated)
         return False
