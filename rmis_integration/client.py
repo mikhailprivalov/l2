@@ -241,6 +241,8 @@ class Patients(BaseRequester):
             tmp = [Utils.get_column_value(x, "ID") for x in self.document_types_directory.get_values_by_data(search_data=t.title)]
             if len(tmp) > 0:
                 self.local_types[t.pk] = tmp[0]
+            elif t.title == "СНИЛС":
+                self.local_types[t.pk] = 19
 
     def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "", doc_number: str = ""):
         if document is not None:
