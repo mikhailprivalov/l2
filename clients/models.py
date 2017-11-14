@@ -92,10 +92,13 @@ class Individual(models.Model):
                         if out:
                             out.write("Проверка и обновление докумена: %s" % doc)
                         continue
-                    else:
+                    elif docs.exclude(individual=self):
                         if out:
                             out.write("Объединение записей физ.лиц")
                         # TODO: Объединение физ.лиц
+                    else:
+                        if out:
+                            out.write("Данные для документов верны: %s" % [str(x) for x in docs])
         else:
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
