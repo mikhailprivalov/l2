@@ -237,18 +237,18 @@ class Patients(BaseRequester):
         self.polis_types_id_list = [Utils.get_column_value(x, "ID") for x in
                                     self.document_types_directory.get_values_by_data(search_data="Полис")]
 
-    def search_by_polis(self, doc_type_id: str, polis_serial: str, polis_number: str):
+    def search_by_document(self, doc_type_id: str, doc_serial: str, doc_number: str):
         search_dict = {"docTypeId": doc_type_id}
-        if polis_serial != "":
-            search_dict["docSeries"] = polis_serial
-        if polis_number != "":
-            search_dict["docNumber"] = polis_number
+        if doc_serial != "":
+            search_dict["docSeries"] = doc_serial
+        if doc_number != "":
+            search_dict["docNumber"] = doc_number
         return self.client.searchIndividual(searchDocument=search_dict)
 
     def patient_ids_by_poils(self, polis_serial, polis_number) -> list:
         patients = []
         for polis_type_id in self.polis_types_id_list:
-            patients = self.search_by_polis(polis_type_id, polis_serial, polis_number)
+            patients = self.search_by_document(polis_type_id, polis_serial, polis_number)
             if len(patients) > 0:
                 break
         return patients

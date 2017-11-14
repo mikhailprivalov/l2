@@ -15,6 +15,9 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
+    def sync_with_rmis(self):
+        pass
+
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
 
