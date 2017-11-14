@@ -1,3 +1,4 @@
+import simplejson
 from django.core.management.base import OutputWrapper
 from django.db import models
 from datetime import date
@@ -71,6 +72,8 @@ class Individual(models.Model):
                 return None
 
             document_ids = c.patients.client.getIndividualDocuments(rmis_uid)
+            if out:
+                out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
             for document_id in document_ids:
                 if out:
                     out.write("Документ в РМИС: %s" % document_id)
