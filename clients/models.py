@@ -99,11 +99,8 @@ class Individual(models.Model):
                         if out:
                             out.write("Обновление докумена: %s" % doc)
                         continue
-                    elif docs.exclude(individual=self).exists():
-                        if out:
-                            out.write("Объединение записей физ.лиц")
-                        # TODO: Объединение физ.лиц
                     else:
+                        docs = docs.filter(individual=self)
                         to_delete = []
                         has = []
                         for d in docs:
@@ -115,9 +112,18 @@ class Individual(models.Model):
                         Document.objects.filter(pk__in=to_delete).delete()
                         docs = Document.objects.filter(document_type=data['document_type'],
                                                        serial=data['serial'],
-                                                       number=data['number'])
+                                                       number=data['number'],
+                                                       individual=self)
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
+
+                    docs = Document.objects.filter(document_type=data['document_type'],
+                                                   serial=data['serial'],
+                                                   number=data['number']).exclude(individual=self)
+                    if docs.exists():
+                        if out:
+                            out.write("Объединение записей физ.лиц")
+                            # TODO: Объединение физ.лиц
         else:
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
