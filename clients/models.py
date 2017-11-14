@@ -47,7 +47,7 @@ class Individual(models.Model):
                 self.name = data["name"]
                 self.patronymic = data["patronymic"]
                 if data["birthday"] is not None:
-                    self.birthday = data["birthday"].strftime("%d.%m.%Y")
+                    self.birthday = data["birthday"].strftime("%Y-%m-%d")
                 self.sex = data["sex"]
                 self.save()
                 if out:
