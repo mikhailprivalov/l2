@@ -107,7 +107,7 @@ class DocumentType(models.Model):
     check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
 
     def __str__(self):
-        return "{0} | {1}".format(self.pk, self.title)
+        return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
 
     class Meta:
         verbose_name = 'Вид документа'
