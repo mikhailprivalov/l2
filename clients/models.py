@@ -1,9 +1,6 @@
 from django.db import models
 from datetime import date
-
 import sys
-
-from rmis_integration.client import Client
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -16,6 +13,7 @@ class Individual(models.Model):
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
     def sync_with_rmis(self):
+        from rmis_integration.client import Client
         c = Client()
         ok = False
         rmis_uid = ""
