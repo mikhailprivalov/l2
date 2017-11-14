@@ -97,7 +97,7 @@ class Individual(models.Model):
                         doc = Document(**data)
                         doc.save()
                         if out:
-                            out.write("Проверка и обновление докумена: %s" % doc)
+                            out.write("Обновление докумена: %s" % doc)
                         continue
                     elif docs.exclude(individual=self):
                         if out:
