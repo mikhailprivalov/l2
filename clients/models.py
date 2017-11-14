@@ -49,7 +49,11 @@ class Individual(models.Model):
                 self.save()
 
         if not ok:
-            pass  # TODO: Search by FNP
+            query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
+            rows = c.patients.client.searchIndividual(**query)
+            if len(query) == 1:
+                rmis_uid = rows[0]
+                ok = True
 
         if ok:
             pass  # TODO: Import documents
