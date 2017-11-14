@@ -238,7 +238,7 @@ class Patients(BaseRequester):
                                     self.document_types_directory.get_values_by_data(search_data="Полис")]
         self.local_types = {}
         for t in clients_models.DocumentType.objects.all():
-            tmp = [Utils.get_column_value(x, "ID") for x in self.document_types_directory.get_values_by_data(search_data=t.title)]
+            tmp = [Utils.get_column_value(x, "ID") for x in self.document_types_directory.get_values_by_data(search_data=t.title + "%")]
             if len(tmp) > 0:
                 self.local_types[t.pk] = tmp[0]
 
