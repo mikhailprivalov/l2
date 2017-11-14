@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 import sys
 
+from rmis_integration.client import Client
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -16,7 +18,11 @@ class Individual(models.Model):
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
     def sync_with_rmis(self):
-        pass
+        c = Client()
+        docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
+        ok = False
+        for document in docs:
+            ok = True
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)

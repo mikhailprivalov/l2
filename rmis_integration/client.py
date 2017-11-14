@@ -236,8 +236,20 @@ class Patients(BaseRequester):
         self.document_types_directory = client.get_directory("pc_doc_type")
         self.polis_types_id_list = [Utils.get_column_value(x, "ID") for x in
                                     self.document_types_directory.get_values_by_data(search_data="Полис")]
+        self.local_types = {}
+        for t in clients_models.DocumentType.objects.all():
+            tmp = [Utils.get_column_value(x, "ID") for x in self.document_types_directory.get_values_by_data(search_data=t.title)]
+            if len(tmp) > 0:
+                self.local_types[t.pk] = tmp[0]
 
-    def search_by_document(self, doc_type_id: str, doc_serial: str, doc_number: str):
+    def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "", doc_number: str = ""):
+        if document is not None:
+            if document.document_type.pk in self.local_types:
+                doc_type_id = str(self.local_types[document.document_type.pk])
+                doc_serial = document.serial
+                doc_number = document.number
+            else:
+                return []
         search_dict = {"docTypeId": doc_type_id}
         if doc_serial != "":
             search_dict["docSeries"] = doc_serial
@@ -248,7 +260,7 @@ class Patients(BaseRequester):
     def patient_ids_by_poils(self, polis_serial, polis_number) -> list:
         patients = []
         for polis_type_id in self.polis_types_id_list:
-            patients = self.search_by_document(polis_type_id, polis_serial, polis_number)
+            patients = self.search_by_document(doc_type_id=polis_type_id, doc_serial=polis_serial, doc_number=polis_number)
             if len(patients) > 0:
                 break
         return patients
