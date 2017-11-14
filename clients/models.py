@@ -1,3 +1,4 @@
+from django.core.management.base import OutputWrapper
 from django.db import models
 from datetime import date
 import sys
@@ -12,14 +13,19 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
-    def sync_with_rmis(self):
+    def sync_with_rmis(self, out: OutputWrapper = None):
+        if out:
+            out.write("Обновление данных для: %s" % self.fio(full=True))
         from rmis_integration.client import Client
         c = Client()
         ok = False
+        has_rmis = False
         rmis_uid = ""
         if Card.objects.filter(individual=self, base__is_rmis=True).exists():
             rmis_uid = Card.objects.filter(individual=self, base__is_rmis=True)[0].number
-            ok = True
+            ok = has_rmis = True
+            if out:
+                out.write("Есть РМИС запись: %s" % rmis_uid)
 
         if not ok:
             docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
@@ -28,7 +34,8 @@ class Individual(models.Model):
                 if len(s) > 0:
                     rmis_uid = s[0]
                     ok = True
-                if ok:
+                    if out:
+                        out.write("Физ.лицо найдено по документу: %s -> %s" % (document, rmis_uid))
                     break
 
         if ok:
@@ -43,6 +50,8 @@ class Individual(models.Model):
                     self.birthday = data["birthday"].strftime("%d.%m.%Y")
                 self.sex = data["sex"]
                 self.save()
+                if out:
+                    out.write("Обновление данных: %s" % self.fio(full=True))
 
         if not ok:
             query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
@@ -50,6 +59,8 @@ class Individual(models.Model):
             if len(query) == 1:
                 rmis_uid = rows[0]
                 ok = True
+                if out:
+                    out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
 
         if ok and rmis_uid != "":
 
@@ -76,9 +87,16 @@ class Individual(models.Model):
                     if not docs.exists():
                         doc = Document(**data)
                         doc.save()
+                        if out:
+                            out.write("Проверка и обновление докумена: %s" % doc)
                         continue
                     else:
-                        pass  # TODO: Объединение физ.лиц
+                        if out:
+                            out.write("Объединение записей физ.лиц")
+                        # TODO: Объединение физ.лиц
+        else:
+            if out:
+                out.write("Физ.лицо не найдено в РМИС")
         return ok
 
     def bd(self):
