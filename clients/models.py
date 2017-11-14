@@ -99,7 +99,7 @@ class Individual(models.Model):
                         if out:
                             out.write("Обновление докумена: %s" % doc)
                         continue
-                    elif docs.exclude(individual=self):
+                    elif docs.exclude(individual=self).exists():
                         if out:
                             out.write("Объединение записей физ.лиц")
                         # TODO: Объединение физ.лиц
@@ -113,6 +113,9 @@ class Individual(models.Model):
                             else:
                                 has.append(kk)
                         Document.objects.filter(pk__in=to_delete).delete()
+                        docs = Document.objects.filter(document_type=data['document_type'],
+                                                       serial=data['serial'],
+                                                       number=data['number'])
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
         else:
