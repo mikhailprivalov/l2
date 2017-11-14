@@ -112,6 +112,7 @@ class Individual(models.Model):
                                 to_delete.append(d.pk)
                             else:
                                 has.append(kk)
+                        Document.objects.filter(pk__in=to_delete).delete()
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
         else:
