@@ -14,8 +14,11 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
-    def join_individual(self, b, out: OutputWrapper = None):
-        pass
+    def join_individual(self, b: 'Individual', out: OutputWrapper = None):
+        if out:
+            out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
+        Card.objects.filter(individual=b).update(individual=self)
+        b.delete()
 
     def sync_with_rmis(self, out: OutputWrapper = None):
         if out:
@@ -65,6 +68,11 @@ class Individual(models.Model):
                 ok = True
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
+
+        if not has_rmis and ok:
+            if out:
+                out.write("Добавление РМИС карты")
+            c.patients.create_rmis_card(self, rmis_uid)
 
         if ok and rmis_uid != "":
 
@@ -127,7 +135,6 @@ class Individual(models.Model):
                             out.write("Объединение записей физ.лиц")
                         for doc in docs:
                             self.join_individual(doc.individual, out)
-                            # doc.delete()
         else:
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
