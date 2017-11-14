@@ -104,6 +104,14 @@ class Individual(models.Model):
                             out.write("Объединение записей физ.лиц")
                         # TODO: Объединение физ.лиц
                     else:
+                        to_delete = []
+                        has = []
+                        for d in docs:
+                            kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
+                            if kk in has:
+                                to_delete.append(d.pk)
+                            else:
+                                has.append(kk)
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
         else:
