@@ -242,7 +242,7 @@ class Patients(BaseRequester):
             if len(tmp) > 0:
                 self.local_types[t.pk] = tmp[0]
             elif t.title == "СНИЛС":
-                self.local_types[t.pk] = 19
+                self.local_types[t.pk] = "19"
 
     def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "", doc_number: str = ""):
         if document is not None:
