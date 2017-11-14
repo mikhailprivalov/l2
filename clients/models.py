@@ -55,9 +55,34 @@ class Individual(models.Model):
                 rmis_uid = rows[0]
                 ok = True
 
-        if ok:
-            pass  # TODO: Import documents
+        if ok and rmis_uid != "":
 
+            def get_key(d: dict, val):
+                r = [key for key, v in d.items() if v == val]
+                if len(r) > 0:
+                    return r[0]
+                return None
+
+            document_ids = c.patients.client.getIndividualDocuments(rmis_uid)
+            for document_id in document_ids:
+                document_object = c.patients.client.getDocument(document_id)
+                k = get_key(c.patients.local_types, document_object["type"])
+                if k and document_object["active"]:
+                    data = dict(document_type=DocumentType.objects.get(pk=k),
+                                serial=document_object["series"] or "",
+                                number=document_object["number"] or "",
+                                individual=self,
+                                is_active=True)
+                    Document.objects.filter(document_type=data['document_type'], individual=self).delete()
+                    docs = Document.objects.filter(document_type=data['document_type'],
+                                                   serial=data['serial'],
+                                                   number=data['number'])
+                    if not docs.exists():
+                        doc = Document(**data)
+                        doc.save()
+                        continue
+                    else:
+                        pass  # TODO: Объединение физ.лиц
         return ok
 
     def bd(self):
