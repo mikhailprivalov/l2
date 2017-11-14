@@ -265,16 +265,19 @@ class Patients(BaseRequester):
                 break
         return patients
 
+    def get_data(self, uid):
+        from_rmis = self.client.getIndividual(uid)
+        return dict(family=(from_rmis["surname"] or "").title().strip(),
+                    name=(from_rmis["name"] or "").title().strip(),
+                    patronymic=(from_rmis["patrName"] or "").title().strip(),
+                    birthday=from_rmis["birthDate"],
+                    sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"))
+
     def sync_data(self, card: clients_models.Card):
         if not card.base.is_rmis:
             return False
         q = card.number
-        from_rmis = self.client.getIndividual(q)
-        data = dict(family=(from_rmis["surname"] or "").title(),
-                    name=(from_rmis["name"] or "").title(),
-                    patronymic=(from_rmis["patrName"] or "").title(),
-                    birthday=from_rmis["birthDate"],
-                    sex={"1": "м", "2": "ж"}.get(from_rmis["gender"], "м"))
+        data = self.get_data(q)
         ind = card.individual
 
         def n(s):

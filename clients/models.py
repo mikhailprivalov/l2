@@ -19,10 +19,42 @@ class Individual(models.Model):
 
     def sync_with_rmis(self):
         c = Client()
-        docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
         ok = False
-        for document in docs:
+        rmis_uid = ""
+        if Card.objects.filter(individual=self, base__is_rmis=True).exists():
+            rmis_uid = Card.objects.filter(individual=self, base__is_rmis=True)[0].number
             ok = True
+
+        if not ok:
+            docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
+            for document in docs:
+                s = c.patients.search_by_document(document)
+                if len(s) > 0:
+                    rmis_uid = s[0]
+                    ok = True
+                if ok:
+                    break
+
+        if ok:
+            data = c.patients.get_data(rmis_uid)
+            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
+
+            if upd:
+                self.family = data["family"]
+                self.name = data["name"]
+                self.patronymic = data["patronymic"]
+                if data["birthday"] is not None:
+                    self.birthday = data["birthday"].strftime("%d.%m.%Y")
+                self.sex = data["sex"]
+                self.save()
+
+        if not ok:
+            pass  # TODO: Search by FNP
+
+        if ok:
+            pass  # TODO: Import documents
+
+        return ok
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
