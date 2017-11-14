@@ -72,8 +72,12 @@ class Individual(models.Model):
 
             document_ids = c.patients.client.getIndividualDocuments(rmis_uid)
             for document_id in document_ids:
+                if out:
+                    out.write("Документ в РМИС: %s" % document_id)
                 document_object = c.patients.client.getDocument(document_id)
                 k = get_key(c.patients.local_types, document_object["type"])
+                if out:
+                    out.write("Тип: %s -> %s" % (document_object["type"], k))
                 if k and document_object["active"]:
                     data = dict(document_type=DocumentType.objects.get(pk=k),
                                 serial=document_object["series"] or "",
