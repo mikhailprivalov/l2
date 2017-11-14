@@ -199,3 +199,8 @@ def receive_db(request):
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)
     return HttpResponse("OK", content_type="text/plain")
+
+
+@csrf_exempt
+def receive_db_ng(request):
+    return HttpResponse("OK", content_type="text/plain")
