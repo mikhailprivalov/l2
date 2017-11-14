@@ -14,6 +14,9 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
 
+    def join_individual(self, b, out: OutputWrapper = None):
+        pass
+
     def sync_with_rmis(self, out: OutputWrapper = None):
         if out:
             out.write("Обновление данных для: %s" % self.fio(full=True))
@@ -122,7 +125,9 @@ class Individual(models.Model):
                     if docs.exists():
                         if out:
                             out.write("Объединение записей физ.лиц")
-                            # TODO: Объединение физ.лиц
+                        for doc in docs:
+                            self.join_individual(doc.individual, out)
+                            # doc.delete()
         else:
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
