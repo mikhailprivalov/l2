@@ -104,6 +104,7 @@ class Individual(models.Model):
 
 class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
+    check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
 
     def __str__(self):
         return "{0} | {1}".format(self.pk, self.title)
