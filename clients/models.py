@@ -80,7 +80,9 @@ class Individual(models.Model):
                                 number=document_object["number"] or "",
                                 individual=self,
                                 is_active=True)
-                    Document.objects.filter(document_type=data['document_type'], individual=self).delete()
+                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self)
+                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).exists():
+                        Document.objects.filter(document_type=data['document_type'], individual=self).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
                                                    number=data['number'])
