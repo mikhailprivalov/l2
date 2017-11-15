@@ -247,7 +247,6 @@ class Document(models.Model):
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    card = models.CharField(max_length=30, help_text="Номер карты, для которой импортирован документ", blank=True, null=True, default="")
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
@@ -279,6 +278,7 @@ class Card(models.Model):
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
+    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
