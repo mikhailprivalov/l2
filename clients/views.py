@@ -186,7 +186,7 @@ def receive_db(request):
             if not polis.exists():
                 bulk_polises.append(Clients.Document(
                     document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
-                    number=x["Polisnum"], individual=individual))
+                    number=x["Polisnum"], individual=individual, for_card=))
         c.patients.get_rmis_id_for_individual(individual, True)
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(
             individual=individual)
