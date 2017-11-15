@@ -104,7 +104,7 @@ class Individual(models.Model):
                                 individual=self,
                                 is_active=True)
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self)
-                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).exists():
+                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(card__isnull=True).exists():
                         Document.objects.filter(document_type=data['document_type'], individual=self).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
@@ -118,13 +118,20 @@ class Individual(models.Model):
                     else:
                         docs = docs.filter(individual=self)
                         to_delete = []
+                        cards = []
                         has = []
+                        ndocs = {}
                         for d in docs:
                             kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
                             if kk in has:
                                 to_delete.append(d.pk)
+                                if Card.objects.filter(polis=d).exists():
+                                    for c in Card.objects.filter(polis=d):
+                                        Card.objects.filter(polis=d).update(polis=ndocs[kk])
                             else:
                                 has.append(kk)
+                                ndocs[kk] = d
+
                         Document.objects.filter(pk__in=to_delete).delete()
                         docs = Document.objects.filter(document_type=data['document_type'],
                                                        serial=data['serial'],
