@@ -118,8 +118,11 @@ def get_db(request):
     data = []
     for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False).prefetch_related():
         docs = x.individual.document_set.filter(
-            document_type=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС").first())
+            document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"))
+        snilses = x.individual.document_set.filter(
+            document_type__in=Clients.DocumentType.objects.filter(title__startswith="СНИЛС"))
         doc = x.polis if x.polis is not None else (None if not docs.exists() else docs.first())
+        snils = "" if not snilses.exists() else snilses[0].number
         data.append({
             "Family": x.individual.family,
             "Name": x.individual.name,
@@ -128,7 +131,8 @@ def get_db(request):
             "Bday": "{:%d.%m.%Y}".format(x.individual.birthday),
             "Number": x.number,
             "Polisser": "" if not doc else doc.serial,
-            "Polisnum": "" if not doc else doc.number
+            "Polisnum": "" if not doc else doc.number,
+            "Snils": snils
         })
     return JsonResponse(data, safe=False)
 
