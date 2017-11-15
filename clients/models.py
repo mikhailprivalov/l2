@@ -54,6 +54,7 @@ class Individual(models.Model):
             upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
 
             if upd:
+                prev = str(self)
                 self.family = data["family"]
                 self.name = data["name"]
                 self.patronymic = data["patronymic"]
@@ -63,6 +64,7 @@ class Individual(models.Model):
                 self.save()
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
+                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=DoctorProfile.objects.all().order_by("-pk").first()).save()
 
         if not ok:
             query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
