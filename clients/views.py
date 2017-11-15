@@ -117,8 +117,9 @@ def get_db(request):
     code = request.GET["code"]
     data = []
     for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False).prefetch_related():
-        doc = x.individual.document_set.filter(
-            document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first())
+        docs = x.individual.document_set.filter(
+            document_type=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС").first())
+        doc = x.polis if x.polis is not None else (None if not docs.exists() else docs.first())
         data.append({
             "Family": x.individual.family,
             "Name": x.individual.name,
@@ -126,8 +127,8 @@ def get_db(request):
             "Sex": x.individual.sex,
             "Bday": "{:%d.%m.%Y}".format(x.individual.birthday),
             "Number": x.number,
-            "Polisser": "" if not doc.exists() else doc.first().serial,
-            "Polisnum": "" if not doc.exists() else doc.first().number
+            "Polisser": "" if not doc else doc.serial,
+            "Polisnum": "" if not doc else doc.number
         })
     return JsonResponse(data, safe=False)
 
@@ -150,28 +151,34 @@ def receive_db(request):
     from rmis_integration.client import Client
     c = Client()
     for x in d:
-        individual = Clients.Individual.objects.filter(family=x["Family"], name=x["Name"],
+        individual = Clients.Individual.objects.filter(family=x["Family"],
+                                                       name=x["Name"],
                                                        patronymic=x["Twoname"],
-                                                       birthday=datetime.datetime.strptime(x["Bday"],
-                                                                                           "%d.%m.%Y").date()).order_by("-pk")
+                                                       birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()).order_by("-pk")
+        polis = [None]
+        snils = [None]
         if not individual.exists():
             polis = Clients.Document.objects.filter(
-                document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
+                document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(),
+                serial=x["Polisser"],
                 number=x["Polisnum"])
-            if polis.exists():
-                individual = polis[0].individual
-                individual.family = fix(x["Family"])
-                individual.name = fix(x["Name"])
-                individual.patronymic = fix(x["Twoname"])
-                individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()
-                individual.sex = x["Sex"].lower().strip()
-                individual.save()
+            snils = Clients.Document.objects.filter(
+                document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
+                number=x.get("Snils", ""))
+            if snils.exists() or polis.exists():
+                individual = (snils if snils.exists() else polis)[0].individual
+                if not Clients.Card.objects.filter(individual=individual, base__is_rmis=True).exists():
+                    individual.family = fix(x["Family"])
+                    individual.name = fix(x["Name"])
+                    individual.patronymic = fix(x["Twoname"])
+                    individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()
+                    individual.sex = x["Sex"].lower().strip()
+                    individual.save()
             else:
                 individual = Clients.Individual(family=fix(x["Family"]),
                                                 name=fix(x["Name"]),
                                                 patronymic=fix(x["Twoname"]),
-                                                birthday=datetime.datetime.strptime(x["Bday"],
-                                                                                    "%d.%m.%Y").date(),
+                                                birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date(),
                                                 sex=x["Sex"])
                 individual.save()
         else:
@@ -184,23 +191,25 @@ def receive_db(request):
                 document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
                 number=x["Polisnum"], individual=individual).order_by("-pk")
             if not polis.exists():
-                bulk_polises.append(Clients.Document(
+                polis = [Clients.Document(
                     document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
-                    number=x["Polisnum"], individual=individual, card=x["Number"]))
-        c.patients.get_rmis_id_for_individual(individual, True)
+                    number=x["Polisnum"], individual=individual, card=x["Number"]).save()]
+        if x.get("Snils", "") != "":
+            snils = Clients.Document.objects.filter(
+                document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
+                number=x["Snils"], individual=individual).order_by("-pk")
+            if not snils.exists():
+                snils = [Clients.Document(
+                    document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
+                    number=x["Snils"], individual=individual).save()]
+        individual.sync_with_rmis()
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(
             individual=individual)
         cards.update(is_archive=True)
         cards.filter(napravleniya__isnull=True).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
-            bulk_cards.append(Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False))
-    if len(bulk_polises) != 0:
-        Clients.Document.objects.bulk_create(bulk_polises)
+            polis = list(polis)
+            bulk_cards.append(Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0]))
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)
-    return HttpResponse("OK", content_type="text/plain")
-
-
-@csrf_exempt
-def receive_db_ng(request):
     return HttpResponse("OK", content_type="text/plain")
