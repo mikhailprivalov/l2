@@ -156,7 +156,6 @@ def receive_db(request):
                                                        patronymic=x["Twoname"],
                                                        birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()).order_by("-pk")
         polis = [None]
-        snils = [None]
         if not individual.exists():
             polis = Clients.Document.objects.filter(
                 document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(),
@@ -193,15 +192,15 @@ def receive_db(request):
             if not polis.exists():
                 polis = [Clients.Document(
                     document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
-                    number=x["Polisnum"], individual=individual, card=x["Number"]).save()]
+                    number=x["Polisnum"], individual=individual).save()]
         if x.get("Snils", "") != "":
             snils = Clients.Document.objects.filter(
                 document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
                 number=x["Snils"], individual=individual).order_by("-pk")
             if not snils.exists():
-                snils = [Clients.Document(
+                Clients.Document(
                     document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
-                    number=x["Snils"], individual=individual).save()]
+                    number=x["Snils"], individual=individual).save()
         individual.sync_with_rmis()
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(
             individual=individual)
