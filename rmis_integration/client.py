@@ -255,8 +255,9 @@ class Patients(BaseRequester):
         search_dict = {"docTypeId": doc_type_id}
         if doc_serial != "":
             search_dict["docSeries"] = doc_serial
-        if doc_number != "":
-            search_dict["docNumber"] = doc_number
+        search_dict["docNumber"] = doc_number
+        if search_dict["docNumber"] == "":
+            return []
         return self.client.searchIndividual(searchDocument=search_dict)
 
     def patient_ids_by_poils(self, polis_serial, polis_number) -> list:
