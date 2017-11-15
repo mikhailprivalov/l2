@@ -158,7 +158,7 @@ def receive_db(request):
         polis = [None]
         if not individual.exists():
             polis = Clients.Document.objects.filter(
-                document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(),
+                document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"),
                 serial=x["Polisser"],
                 number=x["Polisnum"])
             snils = Clients.Document.objects.filter(
@@ -187,11 +187,11 @@ def receive_db(request):
                 individual.save()
         if x["Polisser"] != "" or x["Polisnum"] != "":
             polis = Clients.Document.objects.filter(
-                document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
+                document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"), serial=x["Polisser"],
                 number=x["Polisnum"], individual=individual).order_by("-pk")
             if not polis.exists():
                 polis = [Clients.Document(
-                    document_type=Clients.DocumentType.objects.filter(title="Полис ОМС").first(), serial=x["Polisser"],
+                    document_type=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС").first(), serial=x["Polisser"],
                     number=x["Polisnum"], individual=individual).save()]
         if x.get("Snils", "") != "":
             snils = Clients.Document.objects.filter(
