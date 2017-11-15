@@ -247,7 +247,7 @@ class Document(models.Model):
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    for_card = models.ForeignKey(Card, help_text="Карта, для которой импортирован документ", blank=True, null=True)
+    for_card = models.ForeignKey("clients.Card", help_text="Карта, для которой импортирован документ", blank=True, null=True)
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
