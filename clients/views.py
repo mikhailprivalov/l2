@@ -185,7 +185,7 @@ def receive_db(request):
             if individual.sex != x["Sex"]:
                 individual.sex = x["Sex"]
                 individual.save()
-        if x["Polisser"] != "" or x["Polisnum"] != "":
+        if x["Polisnum"] != "":
             polis = Clients.Document.objects.filter(
                 document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"), serial=x["Polisser"],
                 number=x["Polisnum"], individual=individual).order_by("-pk")
