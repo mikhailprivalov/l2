@@ -6,6 +6,7 @@ import sys
 
 import slog.models as slog
 from users.models import DoctorProfile
+from rmis_integration.client import Client
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -24,11 +25,11 @@ class Individual(models.Model):
         Card.objects.filter(individual=b).update(individual=self)
         b.delete()
 
-    def sync_with_rmis(self, out: OutputWrapper = None):
+    def sync_with_rmis(self, out: OutputWrapper = None, c: Client = None):
         if out:
             out.write("Обновление данных для: %s" % self.fio(full=True))
-        from rmis_integration.client import Client
-        c = Client()
+        if c is None:
+            c = Client()
         ok = False
         has_rmis = False
         rmis_uid = ""
