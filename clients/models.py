@@ -4,6 +4,9 @@ from django.db import models
 from datetime import date
 import sys
 
+import slog.models as slog
+from users.models import DoctorProfile
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -17,6 +20,7 @@ class Individual(models.Model):
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
+        slog.Log(key=str(self.pk), type=2002, body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}), user=DoctorProfile.objects.all().order_by("-pk").first()).save()
         Card.objects.filter(individual=b).update(individual=self)
         b.delete()
 
