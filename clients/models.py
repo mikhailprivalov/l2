@@ -76,10 +76,10 @@ class Individual(models.Model):
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
 
-        if not has_rmis and ok:
+        if not has_rmis and rmis_uid and rmis_uid != '':
+            s = str(c.patients.create_rmis_card(self, rmis_uid))
             if out:
-                out.write("Добавление РМИС карты")
-            c.patients.create_rmis_card(self, rmis_uid)
+                out.write("Добавление РМИС карты -> %s" % s)
 
         if ok and rmis_uid != "":
 
