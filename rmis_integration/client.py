@@ -379,7 +379,7 @@ class Patients(BaseRequester):
                             individual=individual,
                             is_active=True)
                         doc.save()
-                self.create_rmis_card(individual, q)
+                individual.sync_with_rmis(c=self.main_client)
                 return_rows.append(individual)
         return return_rows
 
