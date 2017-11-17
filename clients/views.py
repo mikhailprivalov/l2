@@ -61,13 +61,13 @@ def ajax_search(request):
             split = str(query).split()
             f = n = p = btday = ""
             f = split[0]
-            rmis_req = {"surname": f+"%"}
+            rmis_req = {"surname": f + "%"}
             if len(split) > 1:
                 n = split[1]
-                rmis_req["name"] = n+"%"
+                rmis_req["name"] = n + "%"
             if len(split) > 2:
                 p = split[2]
-                rmis_req["patrName"] = p+"%"
+                rmis_req["patrName"] = p + "%"
             if len(split) > 3:
                 btday = split[3].split(".")
                 btday = btday[2] + "-" + btday[1] + "-" + btday[0]
@@ -80,9 +80,12 @@ def ajax_search(request):
                                                             birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
 
             if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
-                c = Client()
                 objects = list(objects)
-                objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10-len(objects))
+                try:
+                    c = Client()
+                    objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
+                except ConnectionError:
+                    pass
 
         if (re.search(p3, query) or card_type.is_rmis) and len(list(objects)) == 0:  # Если это запрос номер карты
             try:
@@ -152,8 +155,13 @@ def receive_db(request):
 
     def fix(s: str):
         return s.strip().title()
+
     from rmis_integration.client import Client
-    c = Client()
+    c = None
+    try:
+        c = Client()
+    except ConnectionError:
+        pass
     for x in d:
         individual = Clients.Individual.objects.filter(family=x["Family"],
                                                        name=x["Name"],
@@ -205,7 +213,8 @@ def receive_db(request):
                 Clients.Document(
                     document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
                     number=x["Snils"], individual=individual).save()
-        individual.sync_with_rmis(c=c)
+        if c is not None:
+            individual.sync_with_rmis(c=c)
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(
             individual=individual)
         cards.update(is_archive=True)
