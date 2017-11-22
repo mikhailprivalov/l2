@@ -533,9 +533,9 @@ def lr(s, l=7, r=17):
 
 def result_normal(s):
     s = s.strip()
-    if re.match(r'\d+\.\d{2,}$', s):
+    if re.match(r'\d+\.\d{5,}$', s):
         try:
-            s = str(round(float(s), 2))
+            s = str(round(float(s), 4))
         except:
             pass
     # s = lr(s).replace(" ", "&nbsp;")
