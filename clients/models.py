@@ -20,7 +20,7 @@ class Individual(models.Model):
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
-        slog.Log(key=str(self.pk), type=2002, body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}), user=DoctorProfile.objects.all().order_by("-pk").first()).save()
+        slog.Log(key=str(self.pk), type=2002, body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}), user=DoctorProfile.objects.all().order_by("pk").first()).save()
         Card.objects.filter(individual=b).update(individual=self)
         b.delete()
 
@@ -65,7 +65,7 @@ class Individual(models.Model):
                 self.save()
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
-                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=DoctorProfile.objects.all().order_by("-pk").first()).save()
+                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=DoctorProfile.objects.all().order_by("pk").first()).save()
 
         if not ok:
             query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
