@@ -20,12 +20,13 @@
   },
   "homepage": "l2-irk.ru",
   "dependencies": {
+    "clean-webpack-plugin": "^0.1.17",
+    "copy-webpack-plugin": "latest",
     "vue": "^2.5.9",
     "vue-hot-reload-api": "^2.2.4",
     "vue-html-loader": "^1.2.4",
     "vue-loader": "^13.5.0",
     "vue-template-compiler": "^2.5.9",
-    "copy-webpack-plugin": "latest",
     "webpack-bundle-tracker": "latest"
   }
 }

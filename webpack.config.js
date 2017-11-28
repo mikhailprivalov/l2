@@ -13,6 +13,7 @@ module.exports = {
     },
 
     plugins: [
+        new CleanWebpackPlugin(['static']),
         new BundleTracker({filename: './webpack-stats.json'}),
         new CopyWebpackPlugin([
             {from: nodeModules + '/vue/dist/vue.js.min'}
