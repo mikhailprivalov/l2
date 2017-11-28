@@ -14,5 +14,8 @@
   "bugs": {
     "url": "https://github.com/moodpulse/l2/issues"
   },
-  "homepage": "l2-irk.ru"
+  "homepage": "l2-irk.ru",
+  "dependencies": {
+    "webpack-bundle-tracker": "^0.2.0"
+  }
 }
