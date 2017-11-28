@@ -47,6 +47,7 @@ INSTALLED_APPS = (
     # 'silk',
     'oauth2_provider',
     'corsheaders',
+    'webpack_loader',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -233,3 +234,15 @@ MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
 INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS))
+
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': 'webpack_bundles/',
+        'STATS_FILE': os.path.join(BASE_DIR, 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.1,
+        'TIMEOUT': None,
+        'IGNORE': ['.+\.hot-update.js', '.+\.map']
+    }
+}
