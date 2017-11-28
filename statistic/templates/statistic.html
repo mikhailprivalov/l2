@@ -21,6 +21,7 @@
     </div>
     <br/>
     <div class="row">
+        {% if request.user.is_superuser or request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант"  %}
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
@@ -58,6 +59,19 @@
                 </ul>
             </div>
         </div>
+        {% endif %}
+        {% if request.user.is_superuser or request.user|has_group:"Заборщик биоматериала" %}
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика заборщика биоматериала</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="gen_stat('get-material_people-report', 0)">Отчёт по людям</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
         {% if request.user.is_superuser %}
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
