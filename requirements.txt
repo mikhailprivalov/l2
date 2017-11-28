@@ -31,3 +31,4 @@ django-oauth-toolkit
 django-cors-middleware
 astm
 bleach
+django-webpack-loader
