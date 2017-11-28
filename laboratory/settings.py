@@ -44,7 +44,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'cachalot',
     'django_logtail',
-    #'silk',
+    # 'silk',
     'oauth2_provider',
     'corsheaders',
 )
@@ -125,8 +125,19 @@ USE_TZ = True
 TIME_ZONE = 'Asia/Irkutsk'
 USE_I18N = True
 USE_L10N = True
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'assets'),
+)
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)
