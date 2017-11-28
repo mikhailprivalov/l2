@@ -138,6 +138,8 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+FONTS_FOLDER = os.path.join(BASE_DIR, 'assets', 'fonts')
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 FIXTURE_DIRS = (os.path.join(BASE_DIR, 'fixtures'),)

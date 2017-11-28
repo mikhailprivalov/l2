@@ -19,13 +19,12 @@ from reportlab.pdfgen import canvas
 import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from laboratory.settings import FONTS_FOLDER
 
-
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 pdfmetrics.registerFont(
-    TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+    TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
 pdfmetrics.registerFont(
-    TTFont('clacon', PROJECT_ROOT + '/../static/fonts/clacon.ttf'))
+    TTFont('clacon', os.path.join(FONTS_FOLDER, 'clacon.ttf')))
 
 
 @login_required

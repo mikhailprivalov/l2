@@ -20,6 +20,7 @@ import directory.models as directory
 import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from laboratory.settings import FONTS_FOLDER
 
 w, h = A4
 
@@ -189,9 +190,8 @@ def gen_pdf_execlist(request):
     from reportlab.pdfbase.ttfonts import TTFont
     import os.path
     from django.utils.text import Truncator
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
     pdfmetrics.registerFont(
-        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     elements = []
     hb = False
     for res in directory.Researches.objects.filter(pk__in=researches):
@@ -296,10 +296,8 @@ def gen_pdf_dir(request):
     from reportlab.pdfbase.ttfonts import TTFont
     import os.path
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
-
     pdfmetrics.registerFont(
-        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта из файла
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
 
     p = Paginator(direction_id, 4)  # Деление списка направлений по 4
 
@@ -740,8 +738,7 @@ def print_history(request):
         filter = True
         filterArray = json.loads(request.GET["filter"])
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
-    pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа
     response[

@@ -20,6 +20,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase, Card
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
+from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -698,24 +699,22 @@ def result_print(request):
     from django.utils import timezone
     import os.path
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
-
     pdfmetrics.registerFont(
-        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     pdfmetrics.registerFont(
-        TTFont('Champ', PROJECT_ROOT + '/../static/fonts/Champ.ttf'))
+        TTFont('Champ', os.path.join(FONTS_FOLDER, 'Champ.ttf')))
     pdfmetrics.registerFont(
-        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/Calibri.ttf'))
+        TTFont('ChampB', os.path.join(FONTS_FOLDER, 'Calibri.ttf')))
     pdfmetrics.registerFont(
-        TTFont('CalibriBold', PROJECT_ROOT + '/../static/fonts/calibrib.ttf'))
+        TTFont('CalibriBold', os.path.join(FONTS_FOLDER, 'calibrib.ttf')))
     pdfmetrics.registerFont(
-        TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
+        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
     pdfmetrics.registerFont(
-        TTFont('OpenSansItalic', PROJECT_ROOT + '/../static/fonts/OpenSans-Italic.ttf'))
+        TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
     pdfmetrics.registerFont(
-        TTFont('Consolas', PROJECT_ROOT + '/../static/fonts/consolas.ttf'))
+        TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
     pdfmetrics.registerFont(
-        TTFont('Consolas-Bold', PROJECT_ROOT + '/../static/fonts/Consolas-Bold.ttf'))
+        TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
 
     buffer = BytesIO()
 
@@ -775,8 +774,7 @@ def result_print(request):
 
             iss_list = Issledovaniya.objects.filter(napravleniye=direction)
 
-            c.drawImage(PROJECT_ROOT + '/../static/img/cliches.jpg', pxr(3.5), py(18), preserveAspectRatio=True,
-                        height=20 * mm, anchor="nw")
+            c.drawImage(os.path.join(FONTS_FOLDER, '..', 'static', 'img', 'cliches.jpg'), pxr(3.5), py(18), preserveAspectRatio=True, height=20 * mm, anchor="nw")
 
             c.setFont('OpenSans', 7)
             c.drawString(pxr(5.5), py(21), SettingManager.get("org_title"))
@@ -1421,7 +1419,10 @@ def result_print(request):
         stl.alignment = TA_CENTER
 
         import base64
-        logo_path = PROJECT_ROOT + '/../static/img/logo.png'
+        img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
+        if not os.path.exists(img_path):
+            os.makedirs(img_path)
+        logo_path = os.path.join(img_path, 'logo.jpg')
         if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
             with open(logo_path, "wb") as fh:
                 fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
@@ -2290,12 +2291,8 @@ def result_journal_table_print(request):
     from io import BytesIO
     import os
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-
-    pdfmetrics.registerFont(
-        TTFont('Calibri', PROJECT_ROOT + '/../static/fonts/Calibri.ttf'))
-    pdfmetrics.registerFont(
-        TTFont('CalibriBold', PROJECT_ROOT + '/../static/fonts/calibrib.ttf'))
+    pdfmetrics.registerFont(TTFont('Calibri', os.path.join(FONTS_FOLDER, 'Calibri.ttf')))
+    pdfmetrics.registerFont(TTFont('CalibriBold', os.path.join(FONTS_FOLDER, 'calibrib.ttf')))
 
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
@@ -2509,18 +2506,17 @@ def result_journal_print(request):
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
     from reportlab.lib.units import mm
     import collections
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Путь до текущего скрипта
 
     pdfmetrics.registerFont(
-        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     pdfmetrics.registerFont(
-        TTFont('Champ', PROJECT_ROOT + '/../static/fonts/Champ.ttf'))
+        TTFont('Champ', os.path.join(FONTS_FOLDER, 'Champ.ttf')))
     pdfmetrics.registerFont(
-        TTFont('ChampB', PROJECT_ROOT + '/../static/fonts/ChampB.ttf'))
+        TTFont('ChampB', os.path.join(FONTS_FOLDER, 'ChampB.ttf')))
     pdfmetrics.registerFont(
-        TTFont('OpenSansBold', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
+        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
     pdfmetrics.registerFont(
-        TTFont('cour', PROJECT_ROOT + '/../static/fonts/cour.ttf'))
+        TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
 
     buffer = BytesIO()
     elements = []

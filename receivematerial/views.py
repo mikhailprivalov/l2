@@ -17,6 +17,7 @@ from barcodes.views import tubes
 from directions.models import Issledovaniya, TubesRegistration
 from laboratory import settings
 from laboratory.decorators import group_required
+from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
 
 
@@ -153,11 +154,10 @@ def receive_execlist(request):
     from reportlab.lib import colors
     from reportlab.platypus import Paragraph
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
     pdfmetrics.registerFont(
-        TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     pdfmetrics.registerFont(
-        TTFont('OpenSansB', PROJECT_ROOT + '/../static/fonts/OpenSans-Bold.ttf'))
+        TTFont('OpenSansB', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
 
     w, h = landscape(A4)
     response = HttpResponse(content_type='application/pdf')
@@ -347,8 +347,7 @@ def receive_journal(request):
     group = -2 if group not in ["-2", "-1"] and (not group.isdigit() or not directory.ResearchGroup.objects.filter(pk=int(group)).exists()) else int(group)
     otd = [int(x) for x in json.loads(otd)]
 
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))  # Директория Django
-    pdfmetrics.registerFont(TTFont('OpenSans', PROJECT_ROOT + '/../static/fonts/OpenSans.ttf'))  # Загрузка шрифта
+    pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа
     response[
