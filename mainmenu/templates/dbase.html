@@ -1415,6 +1415,8 @@
     <li class="divider context-st"></li>
     <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
 </ul>
+{% load render_bundle from webpack_loader %}
+{% render_bundle 'main' 'js' %}
 <script src="/static/js/bootstrap.min.js?2"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
 <script src="/static/js/typeahead.bundle.min.js"></script>
