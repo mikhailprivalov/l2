@@ -14,10 +14,10 @@
 
         bind(el, binding, vnode) {
           let $el = $(el)
-          if (!$el.hasClass('bootstrap-select'))
-            $el.selectpicker('refresh')
+          //if (!$el.hasClass('bootstrap-select'))
+          //  $el.selectpicker('refresh')
           $el.on('change', () => {
-            vnode.context.func($(el).val())
+            vnode.context.func($el.val())
           })
         }
       }
