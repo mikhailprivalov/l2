@@ -30,6 +30,7 @@
             orientation: 'top left'
           }).on('changeDate', () => {
             vnode.context.val = $(el).val()
+            vnode.context.emit('update:val', $(el).val())
           })
         }
       }
