@@ -58,10 +58,8 @@
 <script>
   export default {
     name: 'journal-get-material-modal',
-    data() {
-      return {
-        date_type: 'd'
-      }
+    data: {
+      date_type: 'd'
     },
     methods: {}
   }
