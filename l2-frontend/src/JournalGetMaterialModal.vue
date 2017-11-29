@@ -1,13 +1,13 @@
 <template>
   <div class="modal fade" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="width: 50%;">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Test1</h4>
+          <h4 class="modal-title">Печать отчёта забора биоматериала</h4>
         </div>
-        <div class="modal-content">
-          Test
+        <div class="modal-body">
+
         </div>
       </div>
     </div>

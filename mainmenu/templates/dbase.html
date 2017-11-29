@@ -36,14 +36,16 @@
     <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
 
     <script src="/static/js/jquery.min.js?2"></script>
+    {% load render_bundle from webpack_loader %}
+    {% render_bundle 'main' 'css' %}
     <script>
         function getFormattedDate(date) {
-            const year = date.getFullYear();
-            let month = (1 + date.getMonth()).toString();
-            month = month.length > 1 ? month : '0' + month;
-            let day = date.getDate().toString();
-            day = day.length > 1 ? day : '0' + day;
-            return day + '.' + month + '.' + year;
+            const year = date.getFullYear()
+            let month = (1 + date.getMonth()).toString()
+            month = month.length > 1 ? month : '0' + month
+            let day = date.getDate().toString()
+            day = day.length > 1 ? day : '0' + day
+            return day + '.' + month + '.' + year
         }
     </script>
     <style>
@@ -1296,7 +1298,7 @@
             <div class="nav-cont">
                 {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
                                         title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                src="/static/img/l2logo2.png"></a>{% endif %}
+                                                                                                     src="/static/img/l2logo2.png"></a>{% endif %}
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                             aria-expanded="false" aria-controls="navbar">
@@ -1337,7 +1339,7 @@
                         {% endif %}
                         {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
                             <li><a href="/results/enter">Ввод результатов</a></li>
-{#                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>#}
+                            {#                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>#}
                         {% endif %}
                     </ul>
                 </div>
@@ -1345,7 +1347,7 @@
             <div class="nav-loader center">
                 {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
                                         title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                src="/static/img/l2logo2.png"></a>{% endif %}
+                                                                                                     src="/static/img/l2logo2.png"></a>{% endif %}
 
                 <div class="navbar-header">
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
@@ -1380,11 +1382,11 @@
     {% endblock %}
 </div>
 <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
-    <li class="context-st"><a class="noclick" onclick="return false;"><label>Число:<input type="number" value="10"
+    <li class="context-st"><a class="noclick" onclick="return false"><label>Число:<input type="number" value="10"
                                                                                           id="contextNumber"
                                                                                           class="form-control w50"/></label>
         <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt"/></label></a></li>
-    <li class="context-st"><a action="addnum" onclick="return false;" tabindex="-1" href="#">Дописать число со
+    <li class="context-st"><a action="addnum" onclick="return false" tabindex="-1" href="#">Дописать число со
         степенью</a></li>
     <li class="divider context-st"></li>
     <li class="context-st">
@@ -1414,10 +1416,8 @@
         </div>
     </li>
     <li class="divider context-st"></li>
-    <li><a action="clear" onclick="return false;" tabindex="-1" href="#">Очистка</a></li>
+    <li><a action="clear" onclick="return false" tabindex="-1" href="#">Очистка</a></li>
 </ul>
-{% load render_bundle from webpack_loader %}
-{% render_bundle 'main' 'js' %}
 <script src="/static/js/bootstrap.min.js?2"></script>
 <script src="/static/js/jquery.hotkeys.js"></script>
 <script src="/static/js/typeahead.bundle.min.js"></script>
@@ -1439,59 +1439,59 @@
 <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
 <script src="/static/js/underscore-min.js"></script>
 <script>
-    let ajax_cache_token = (new Date()) + "";
-    let $body = $("body");
-    let $loader = {};
-    const today = new Date();
+    let ajax_cache_token = (new Date()) + ''
+    let $body = $('body')
+    let $loader = {}
+    const today = new Date()
 
-    var card_bases = {{ card_bases|safe }};
+    var card_bases = {{ card_bases|safe }}
 
     function get_base(title) {
-        return card_bases.filter(function(obj) {
-          return obj.title === title;
-        })[0];
+        return card_bases.filter(function (obj) {
+            return obj.title === title
+        })[0]
     }
 
     $loader.Particle = function (opt) {
-        this.radius = 7;
-        this.x = opt.x;
-        this.y = opt.y;
-        this.angle = opt.angle;
-        this.speed = opt.speed;
-        this.accel = opt.accel;
-        this.decay = 0.01;
-        this.life = 1;
-    };
+        this.radius = 7
+        this.x = opt.x
+        this.y = opt.y
+        this.angle = opt.angle
+        this.speed = opt.speed
+        this.accel = opt.accel
+        this.decay = 0.01
+        this.life = 1
+    }
 
     $loader.Particle.prototype.step = function (i) {
-        this.speed += this.accel;
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
-        this.angle += $loader.PI / 64;
-        this.accel *= 1.01;
-        this.life -= this.decay;
+        this.speed += this.accel
+        this.x += Math.cos(this.angle) * this.speed
+        this.y += Math.sin(this.angle) * this.speed
+        this.angle += $loader.PI / 64
+        this.accel *= 1.01
+        this.life -= this.decay
 
         if (this.life <= 0) {
-            $loader.particles.splice(i, 1);
+            $loader.particles.splice(i, 1)
         }
-    };
+    }
 
     $loader.Particle.prototype.draw = function (i) {
-        $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ( $loader.tick + ( this.life * 120 ) ) + ', 100%, 60%, ' + this.life + ')';
-        $loader.ctx.beginPath();
+        $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ( $loader.tick + ( this.life * 120 ) ) + ', 100%, 60%, ' + this.life + ')'
+        $loader.ctx.beginPath()
         if ($loader.particles[i - 1]) {
-            $loader.ctx.moveTo(this.x, this.y);
-            $loader.ctx.lineTo($loader.particles[i - 1].x, $loader.particles[i - 1].y);
+            $loader.ctx.moveTo(this.x, this.y)
+            $loader.ctx.lineTo($loader.particles[i - 1].x, $loader.particles[i - 1].y)
         }
-        $loader.ctx.stroke();
+        $loader.ctx.stroke()
 
-        $loader.ctx.beginPath();
-        $loader.ctx.arc(this.x, this.y, Math.max(0.001, this.life * this.radius), 0, $loader.TWO_PI);
-        $loader.ctx.fill();
+        $loader.ctx.beginPath()
+        $loader.ctx.arc(this.x, this.y, Math.max(0.001, this.life * this.radius), 0, $loader.TWO_PI)
+        $loader.ctx.fill()
 
-        let size = Math.random() * 1.25;
-        $loader.ctx.fillRect(~~( this.x + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), ~~( this.y + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), size, size);
-    };
+        let size = Math.random() * 1.25
+        $loader.ctx.fillRect(~~( this.x + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), ~~( this.y + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), size, size)
+    }
 
     $loader.step = function () {
         $loader.particles.push(new $loader.Particle({
@@ -1500,425 +1500,425 @@
             angle: $loader.globalRotation + $loader.globalAngle,
             speed: 0,
             accel: 0.01
-        }));
+        }))
 
         $loader.particles.forEach(function (elem, index) {
-            elem.step(index);
-        });
+            elem.step(index)
+        })
 
-        $loader.globalRotation += $loader.PI / 6;
-        $loader.globalAngle += $loader.PI / 6;
-    };
+        $loader.globalRotation += $loader.PI / 6
+        $loader.globalAngle += $loader.PI / 6
+    }
 
     $loader.draw = function () {
-        $loader.ctx.clearRect(0, 0, $loader.width, $loader.height);
+        $loader.ctx.clearRect(0, 0, $loader.width, $loader.height)
 
         $loader.particles.forEach(function (elem, index) {
-            elem.draw(index);
-        });
-    };
+            elem.draw(index)
+        })
+    }
 
     $loader.init = function () {
-        $loader.canvas = document.getElementById("loader-canvas");
-        $loader.ctx = $loader.canvas.getContext('2d');
-        $loader.width = $loader.canvas.width = 150;
-        $loader.height = $loader.canvas.height = 150;
-        $loader.min = $loader.width * 0.5;
-        $loader.particles = [];
-        $loader.globalAngle = 0;
-        $loader.globalRotation = 0;
-        $loader.tick = 0;
-        $loader.PI = Math.PI;
-        $loader.TWO_PI = $loader.PI * 2;
-        $loader.ctx.globalCompositeOperation = 'lighter';
-        $loader.loop();
-    };
-    let exitLoop = false;
+        $loader.canvas = document.getElementById('loader-canvas')
+        $loader.ctx = $loader.canvas.getContext('2d')
+        $loader.width = $loader.canvas.width = 150
+        $loader.height = $loader.canvas.height = 150
+        $loader.min = $loader.width * 0.5
+        $loader.particles = []
+        $loader.globalAngle = 0
+        $loader.globalRotation = 0
+        $loader.tick = 0
+        $loader.PI = Math.PI
+        $loader.TWO_PI = $loader.PI * 2
+        $loader.ctx.globalCompositeOperation = 'lighter'
+        $loader.loop()
+    }
+    let exitLoop = false
     $loader.loop = function () {
         if (exitLoop) {
-            exitLoop = false;
-            return;
+            exitLoop = false
+            return
         }
-        requestAnimationFrame($loader.loop);
-        $loader.step();
-        $loader.draw();
-        $loader.tick++;
-    };
+        requestAnimationFrame($loader.loop)
+        $loader.step()
+        $loader.draw()
+        $loader.tick++
+    }
     String.prototype.replaceAll = function (search, replacement) {
-        let target = this;
-        return target.split(search).join(replacement);
-    };
+        let target = this
+        return target.split(search).join(replacement)
+    }
     String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.slice(1);
-    };
+        return this.charAt(0).toUpperCase() + this.slice(1)
+    }
     String.prototype.capitalizeAll = function () {
-        let r;
-        r = this;
-        for (let s of this.split(" ")) {
-            r = r.replace(s, s.capitalize());
+        let r
+        r = this
+        for (let s of this.split(' ')) {
+            r = r.replace(s, s.capitalize())
         }
-        return r;
-    };
+        return r
+    }
 
     String.prototype.format = String.prototype.f = function () {
         let s = this,
-            i = arguments.length;
+            i = arguments.length
 
         while (i--) {
-            s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+            s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i])
         }
-        return s;
-    };
+        return s
+    }
     Array.prototype.reversedCopy = function () {
-        let arr = [];
+        let arr = []
         for (let i = this.length; i--;) {
-            arr.push(this[i]);
+            arr.push(this[i])
         }
-        return arr;
-    };
+        return arr
+    }
     if (!Array.prototype.last) {
         Array.prototype.last = function () {
-            return this[this.length - 1];
-        };
+            return this[this.length - 1]
+        }
     }
 
     function startTime() {
-        let h = today.getHours();
-        let m = today.getMinutes();
-        let s = today.getSeconds();
-        if (h < 10) h = " " + h;
-        m = checkTime(m);
-        s = checkTime(s);
+        let h = today.getHours()
+        let m = today.getMinutes()
+        let s = today.getSeconds()
+        if (h < 10) h = ' ' + h
+        m = checkTime(m)
+        s = checkTime(s)
         let t = setTimeout(function () {
             startTime()
-        }, 500);
+        }, 500)
     }
 
     function checkTime(i) {
         if (i < 10) {
-            i = "0" + i
+            i = '0' + i
         }
-        return i;
+        return i
     }
 
     function uHash() {
-        let indx = document.URL.indexOf('#');
+        let indx = document.URL.indexOf('#')
         if (indx === -1)
-            return "";
-        return document.URL.substr(indx + 1);
+            return ''
+        return document.URL.substr(indx + 1)
     }
 
     function setUHash(hash) {
-        if (hash === "" || hash === {} || hash === null) {
-            history.pushState("", document.title, window.location.pathname + window.location.search);
-            return;
+        if (hash === '' || hash === {} || hash === null) {
+            history.pushState('', document.title, window.location.pathname + window.location.search)
+            return
         }
         if (typeof hash === 'object') {
-            hash = JSON.stringify(hash);
+            hash = JSON.stringify(hash)
         }
 
-        history.pushState("", document.title, window.location.pathname + window.location.search + "#" + hash);
+        history.pushState('', document.title, window.location.pathname + window.location.search + '#' + hash)
     }
 
     function sTitle(title) {
-        document.title = title;
+        document.title = title
     }
 
-    let stopped = true;
-    let inload = false;
+    let stopped = true
+    let inload = false
 
     function sl(no_sloader) {
         if (!inload) {
-            document.title = lang.loading + document.title;
+            document.title = lang.loading + document.title
         }
-        inload = true;
-        $("#page-preloader").css({opacity: 0});
+        inload = true
+        $('#page-preloader').css({opacity: 0})
         if (!no_sloader) {
-            $(".navbar").addClass("sloader");
-            stopped = false;
+            $('.navbar').addClass('sloader')
+            stopped = false
             setTimeout(function () {
-                if (stopped) return;
-                $("#page-preloader").animate({opacity: 1}, 7000);
-            }, 1500);
+                if (stopped) return
+                $('#page-preloader').animate({opacity: 1}, 7000)
+            }, 1500)
         }
-        $("#page-preloader").show();
+        $('#page-preloader').show()
         //$loader.init();
     }
 
     function hl() {
-        document.title = document.title.replace(lang.loading, "");
-        inload = false;
-        $(".navbar").removeClass("sloader");
-        $("#page-preloader").hide();
-        exitLoop = true;
-        stopped = true;
-        $("#page-preloader").stop(true, true);
+        document.title = document.title.replace(lang.loading, '')
+        inload = false
+        $('.navbar').removeClass('sloader')
+        $('#page-preloader').hide()
+        exitLoop = true
+        stopped = true
+        $('#page-preloader').stop(true, true)
     }
 
     function update_select(base) {
-        base = base || "";
+        base = base || ''
         $(`${base} .select-b`).selectpicker({
-            deselectAllText: "Снять выбор",
-            selectAllText: "Выбрать всё",
-            noneSelectedText: "Ничего не выбрано"
-        });
+            deselectAllText: 'Снять выбор',
+            selectAllText: 'Выбрать всё',
+            noneSelectedText: 'Ничего не выбрано'
+        })
     }
 
     Object.getKeys = function (obj, add) {
         if (obj === undefined || obj === null) {
-            return undefined;
+            return undefined
         }
-        var keys = [];
+        var keys = []
         if (add !== undefined) {
-            keys = jQuery.merge(keys, add);
+            keys = jQuery.merge(keys, add)
         }
         for (key in obj) {
             if (obj.hasOwnProperty(key)) {
-                keys.push(key);
+                keys.push(key)
             }
         }
-        return keys;
-    };
+        return keys
+    }
 
     Object.compare = function (obj1, obj2) {
         for (var p in obj1) {
-            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
+            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false
 
             switch (typeof (obj1[p])) {
                 case 'object':
-                    if (!Object.compare(obj1[p], obj2[p])) return false;
-                    break;
+                    if (!Object.compare(obj1[p], obj2[p])) return false
+                    break
                 case 'function':
-                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false;
-                    break;
+                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false
+                    break
                 default:
-                    if (obj1[p] != obj2[p]) return false;
+                    if (obj1[p] != obj2[p]) return false
             }
         }
 
         for (var p in obj2) {
-            if (typeof (obj1[p]) == 'undefined') return false;
+            if (typeof (obj1[p]) == 'undefined') return false
         }
-        return true;
-    };
+        return true
+    }
 
     $(document).ready(function () {
-        update_select();
+        update_select()
         //startTime();
-        $("#page-preloader").hide();
-        $body.addClass("showloader");
-        alive();
-        $(".context-st").hide();
+        $('#page-preloader').hide()
+        $body.addClass('showloader')
+        alive()
+        $('.context-st').hide()
         $.contextMenu({
-            elementSelector: "input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)",
-            menuSelector: "#contextMenu",
+            elementSelector: 'input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)',
+            menuSelector: '#contextMenu',
             menuSelected: function (invokedOn, selectedMenu) {
-                let val;
-                switch (selectedMenu.attr("action")) {
-                    case "clear":
-                        invokedOn.val("").typeahead('val', "");
-                        break;
-                    case "addnum":
-                        val = invokedOn.val() + $("#contextNumber").val() + "<sup>" + $("#contextSt").val() + "</sup>";
-                        $(invokedOn).val(val);
-                        $(invokedOn).typeahead('val', val);
-                        $("#contextNumber").val(10);
-                        $("#contextSt").val(1);
-                        break;
-                    case "addrecalc":
-                        let r = $("#recalcValue").val();
-                        if (r !== "") {
-                            r = " " + r;
+                let val
+                switch (selectedMenu.attr('action')) {
+                    case 'clear':
+                        invokedOn.val('').typeahead('val', '')
+                        break
+                    case 'addnum':
+                        val = invokedOn.val() + $('#contextNumber').val() + '<sup>' + $('#contextSt').val() + '</sup>'
+                        $(invokedOn).val(val)
+                        $(invokedOn).typeahead('val', val)
+                        $('#contextNumber').val(10)
+                        $('#contextSt').val(1)
+                        break
+                    case 'addrecalc':
+                        let r = $('#recalcValue').val()
+                        if (r !== '') {
+                            r = ' ' + r
                         }
-                        val = `${invokedOn.val()} (пересчитано${r})`;
-                        $(invokedOn).val(val);
-                        $(invokedOn).typeahead('val', val);
-                        $("#recalcValue").val("");
-                        break;
-                    case "addleic":
-                        val = `${invokedOn.val()}п${$("#leicP").val()}\\с${$("#leicS").val()}\\э${$("#leicE").val()}\\м${$("#leicM").val()}\\л${$("#leicL").val()}`;
-                        $(invokedOn).val(val);
-                        $(invokedOn).typeahead('val', val);
-                        $("#leicP,#leicE,#leicL,#leicM,#leicS").val("");
-                        break;
+                        val = `${invokedOn.val()} (пересчитано${r})`
+                        $(invokedOn).val(val)
+                        $(invokedOn).typeahead('val', val)
+                        $('#recalcValue').val('')
+                        break
+                    case 'addleic':
+                        val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}`
+                        $(invokedOn).val(val)
+                        $(invokedOn).typeahead('val', val)
+                        $('#leicP,#leicE,#leicL,#leicM,#leicS').val('')
+                        break
                 }
-                invokedOn.focus();
+                invokedOn.focus()
             }
-        });
-    });
-    let willbe_error = false;
+        })
+    })
+    let willbe_error = false
 
     function blurall() {
         $(function () {
-            $('input').blur();
-        });
+            $('input').blur()
+        })
     }
 
     function alive() {
         $.ajax({
-            method: "GET", url: "/mainmenu/", cache: false, statusCode: {
+            method: 'GET', url: '/mainmenu/', cache: false, statusCode: {
                 500: function () {
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
                             title: 'Сервер недоступен',
-                            message: "Ошибка 500. Ожидайте доступность сервера.",
+                            message: 'Ошибка 500. Ожидайте доступность сервера.',
                             info: '',
                             icon: 'fa fa-exclamation'
                         },
                         'position': 'bottom right',
                         delay: 13000
-                    });
-                    willbe_error = true;
-                    sl(true);
-                    blurall();
+                    })
+                    willbe_error = true
+                    sl(true)
+                    blurall()
                 },
                 502: function () {
                     $.amaran({
                         'theme': 'awesome no',
                         'content': {
                             title: 'Сервер недоступен',
-                            message: "Ошибка 502. Ожидайте доступность сервера.",
+                            message: 'Ошибка 502. Ожидайте доступность сервера.',
                             info: '',
                             icon: 'fa fa-exclamation'
                         },
                         'position': 'bottom right',
                         delay: 13000
-                    });
-                    willbe_error = true;
-                    sl(true);
-                    blurall();
+                    })
+                    willbe_error = true
+                    sl(true)
+                    blurall()
                 },
                 302: function () {
-                    document.location.href = "/";
+                    document.location.href = '/'
                 }
             }
         }).fail(jqXHR => {
-            if(jqXHR.status === 502 || jqXHR.status === 500)
-                return;
+            if (jqXHR.status === 502 || jqXHR.status === 500)
+                return
             $.amaran({
                 'theme': 'awesome no',
                 'content': {
                     title: 'Сервер недоступен',
-                    message: "Ошибка связи с сервером. Сообщите администратору о проблеме",
+                    message: 'Ошибка связи с сервером. Сообщите администратору о проблеме',
                     info: '',
                     icon: 'fa fa-exclamation'
                 },
                 'position': 'bottom right',
                 delay: 13000
-            });
-            willbe_error = true;
-            sl(true);
-            blurall();
+            })
+            willbe_error = true
+            sl(true)
+            blurall()
         }).done(function () {
             if (willbe_error) {
-                willbe_error = false;
+                willbe_error = false
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
                         title: 'Сервер доступен',
-                        message: "ОК",
+                        message: 'ОК',
                         info: '',
                         icon: 'glyphicon glyphicon-ok'
                     },
                     'position': 'bottom right',
                     delay: 30000
-                });
-                hl();
+                })
+                hl()
             }
         }).always(function () {
-            setTimeout(alive, 13000);
-        });
+            setTimeout(alive, 13000)
+        })
     }
 
-    $(document).ajaxComplete(checkSession);
+    $(document).ajaxComplete(checkSession)
 
     function checkSession(event, xhr, ajaxOptions) {
         if (xhr.readyState === 4) {
-            if (xhr.getResponseHeader("Login-Screen") !== null && xhr.getResponseHeader("Login-Screen").length) {
-                document.location.href = "/";
+            if (xhr.getResponseHeader('Login-Screen') !== null && xhr.getResponseHeader('Login-Screen').length) {
+                document.location.href = '/'
             }
         }
     }
 
     $.extend($.expr[':'], {
         textboxEmpty: function (el) {
-            return $(el).val() === "";
+            return $(el).val() === ''
         }
-    });
+    })
     $.fn.refresh = function () {
-        let elems = $(this.selector);
-        this.splice(0, this.length);
-        this.push.apply(this, elems);
-        return this;
-    };
+        let elems = $(this.selector)
+        this.splice(0, this.length)
+        this.push.apply(this, elems)
+        return this
+    }
 
     function convertArrayOfObjectsToCSV(args) {
-        let result, ctr, keys, columnDelimiter, lineDelimiter, data;
+        let result, ctr, keys, columnDelimiter, lineDelimiter, data
 
-        data = args.data || null;
+        data = args.data || null
         if (data === null || !data.length) {
-            return null;
+            return null
         }
 
-        columnDelimiter = args.columnDelimiter || ';';
-        lineDelimiter = args.lineDelimiter || '\n';
+        columnDelimiter = args.columnDelimiter || ';'
+        lineDelimiter = args.lineDelimiter || '\n'
 
-        keys = Object.keys(data[0]);
+        keys = Object.keys(data[0])
 
-        result = '';
-        result += keys.join(columnDelimiter);
-        result += lineDelimiter;
+        result = ''
+        result += keys.join(columnDelimiter)
+        result += lineDelimiter
 
         data.forEach(function (item) {
-            ctr = 0;
+            ctr = 0
             keys.forEach(function (key) {
-                if (ctr > 0) result += columnDelimiter;
+                if (ctr > 0) result += columnDelimiter
 
-                result += item[key];
-                ctr++;
-            });
-            result += lineDelimiter;
-        });
+                result += item[key]
+                ctr++
+            })
+            result += lineDelimiter
+        })
 
-        return result;
+        return result
     }
 
     function downloadCSV(args) {
-        let data, filename, link;
+        let data, filename, link
 
         let csv = convertArrayOfObjectsToCSV({
             data: args.data || {}
-        });
-        if (csv === null) return;
+        })
+        if (csv === null) return
 
-        filename = args.filename || 'export.csv';
+        filename = args.filename || 'export.csv'
 
         if (!csv.match(/^data:text\/csv/i)) {
-            csv = 'data:text/csv;charset=utf-8,' + csv;
+            csv = 'data:text/csv;charset=utf-8,' + csv
         }
-        data = encodeURI(csv);
+        data = encodeURI(csv)
 
-        link = document.createElement('a');
-        link.setAttribute('href', data);
-        link.setAttribute('download', filename);
-        link.click();
+        link = document.createElement('a')
+        link.setAttribute('href', data)
+        link.setAttribute('download', filename)
+        link.click()
     }
 
-    let mess_pos = false;
+    let mess_pos = false
 
     function okmessage(title, body, delay) {
         $.amaran({
             'theme': 'awesome ok',
             'content': {
                 title: title,
-                message: body || "",
+                message: body || '',
                 info: '',
                 icon: 'fa fa-exclamation'
             },
             'position': mess_pos || 'bottom right',
             delay: delay || 5000
-        });
+        })
     }
 
     function errmessage(title, body, delay) {
@@ -1926,40 +1926,41 @@
             'theme': 'awesome no',
             'content': {
                 title: title,
-                message: body || "",
+                message: body || '',
                 info: '',
                 icon: 'fa fa-exclamation'
             },
             'position': mess_pos || 'bottom right',
             delay: delay || 5000
-        });
+        })
     }
 
-    let blink_animated = {};
+    let blink_animated = {}
 
     function okblink(selector, effect) {
-        if (blink_animated[selector]) return;
-        e = effect || 'fadeIn';
-        $(selector).removeClass(e).removeClass('animated fast');
-        $(selector).addClass(e).addClass("animated fast");
-        blink_animated[selector] = true;
+        if (blink_animated[selector]) return
+        e = effect || 'fadeIn'
+        $(selector).removeClass(e).removeClass('animated fast')
+        $(selector).addClass(e).addClass('animated fast')
+        blink_animated[selector] = true
         setTimeout(function (s) {
-            $(selector).removeClass(e).removeClass('animated fast');
-            blink_animated[s] = false;
-        }.bind(this, selector), 334);
+            $(selector).removeClass(e).removeClass('animated fast')
+            blink_animated[s] = false
+        }.bind(this, selector), 334)
     }
 
-    function printResults(ids){
-        let pk_param = "[]";
-        if(Array.isArray(ids) && ids.length > 0){
-            pk_param = JSON.stringify(ids);
-        } else if(ids != "" && ids){
-            pk_param = JSON.stringify([ids]);
+    function printResults(ids) {
+        let pk_param = '[]'
+        if (Array.isArray(ids) && ids.length > 0) {
+            pk_param = JSON.stringify(ids)
+        } else if (ids != '' && ids) {
+            pk_param = JSON.stringify([ids])
         }
-        window.open('/results/preview?pk=' + pk_param, '_blank');
+        window.open('/results/preview?pk=' + pk_param, '_blank')
     }
 
 </script>
+{% render_bundle 'main' 'js' %}
 {% block scripts %}{% endblock %}
 <div id="page-preloader" style="text-align: center"></div>
 </body>
