@@ -14,22 +14,22 @@
 
         bind() {
           console.log('bind')
-          $(this.el).selectpicker()
+          $(this.$el).selectpicker()
 
-          $(this.el).on('change', function (e) {
-            this.set($(this.el).val())
+          $(this.$el).on('change', function (e) {
+            this.set($(this.$el).val())
           }.bind(this))
         },
 
         update(newValue) {
           console.log('update')
-          $(this.el).val(newValue)
-          $(this.el).selectpicker('val', newValue)
+          $(this.$el).val(newValue)
+          $(this.$el).selectpicker('val', newValue)
         },
 
         unbind() {
           console.log('unbind')
-          $(this.el).selectpicker('destroy')
+          $(this.$el).selectpicker('destroy')
         }
       }
     }
