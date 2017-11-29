@@ -1,3 +1,0 @@
-<template>
-    Main
-</template>
