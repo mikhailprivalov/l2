@@ -46,6 +46,7 @@
       change_type() {
         alert(this.date_type)
       }
-    }
+    },
+    components: {SelectPicker}
   }
 </script>
