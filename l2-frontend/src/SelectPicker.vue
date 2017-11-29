@@ -14,8 +14,8 @@
 
         bind(el, binding, vnode) {
           let $el = $(el)
-          //if (!$el.hasClass('bootstrap-select'))
-          //  $el.selectpicker('refresh')
+          if (!$el.hasClass('bs-select-hidden'))
+            $el.selectpicker('refresh')
           $el.on('change', () => {
             vnode.context.func($el.val())
           })
