@@ -13,8 +13,10 @@
         twoWay: true,
 
         bind(el, binding, vnode) {
-          $(el).selectpicker('refresh')
-          $(el).on('change', () => {
+          let $el = $(el)
+          if (!$el.hasClass('bootstrap-select'))
+            $el.selectpicker('refresh')
+          $el.on('change', () => {
             vnode.context.func($(el).val())
           })
         }
