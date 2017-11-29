@@ -1287,7 +1287,7 @@
     {% block head_cn %}{% endblock %}
 </head>
 <body>{% load has_group %}
-<div class="{% block container %}container{% endblock %}">
+<div id="app" class="{% block container %}container{% endblock %}">
     {% block nav %}
         {% load setting_default %}
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
