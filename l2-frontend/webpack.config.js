@@ -1,7 +1,8 @@
-var path = require('path')
-var webpack = require('webpack')
-var BundleTracker = require('webpack-bundle-tracker');
-var glob = require("glob");
+const path = require('path')
+const webpack = require('webpack')
+const BundleTracker = require('webpack-bundle-tracker')
+const glob = require("glob")
+const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
   entry: glob.sync("./src/*"),
@@ -11,7 +12,8 @@ module.exports = {
     filename: '[name]-[hash].js'
   },
   plugins: [
-    new BundleTracker({filename: '../webpack-stats.json'})
+    new BundleTracker({filename: '../webpack-stats.json'}),
+    new CleanWebpackPlugin([path.resolve(__dirname, '../assets/webpack_bundles/'), path.resolve(__dirname, '../static/webpack_bundles/')])
   ],
   module: {
     rules: [
