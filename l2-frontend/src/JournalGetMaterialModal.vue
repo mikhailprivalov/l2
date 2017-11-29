@@ -6,7 +6,7 @@
           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Test1</h4>
         </div>
-        <div class="modal-body content">
+        <div class="modal-content">
           Test
         </div>
       </div>
