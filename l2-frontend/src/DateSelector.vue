@@ -25,6 +25,11 @@
 
   export default {
     name: 'date-selector',
+    props: {
+      users: {
+        type: Array
+      }
+    },
     data() {
       return {
         date_type: 'd',
