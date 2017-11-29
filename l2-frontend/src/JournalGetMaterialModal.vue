@@ -15,10 +15,10 @@
               </select>
             </div>
             <div class="col-xs-8">
-              <div v-if="type == 'd'">
+              <div v-if="date_type == 'd'">
                 <input type="text" class="form-control no-context" name="dateday-type"/>
               </div>
-              <div class="row" v-if="type == 'm'">
+              <div class="row" v-if="date_type == 'm'">
                 <div class="col-xs-6" style="padding-right: 3px;">
                   <select class="selectpicker" data-width="100%">
                     <option value="0">Январь</option>
