@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import Tester from './Tester.vue'
+import JournalGetMaterialModal from './JournalGetMaterialModal.vue'
 
 new Vue({
   el: '#app',
-  components: { Tester },
+  components: { JournalGetMaterialModal },
 })
