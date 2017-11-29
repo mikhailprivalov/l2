@@ -11,7 +11,7 @@
             <div class="col-xs-6">
               <date-selector></date-selector>
             </div>
-            <div class="col-xs-6">
+            <div class="col-xs-6" style="padding-left: 0">
               <select-picker :val.sync="user" :options="users_list" :func="change_user"></select-picker>
             </div>
           </div>
