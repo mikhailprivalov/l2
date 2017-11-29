@@ -13,8 +13,8 @@
         twoWay: true,
 
         bind(el) {
-          console.log(this, 'bind')
-          $(el).selectpicker()
+          console.log('bind')
+          $(el).addClass('selectpicker').selectpicker()
 
           $(el).on('change', function (e) {
             this.set($(el).val())
@@ -29,7 +29,7 @@
 
         unbind(el) {
           console.log(this, 'unbind')
-          $(el).selectpicker('destroy')
+          $(el).removeClass('selectpicker').selectpicker('destroy')
         }
       }
     }
