@@ -37,15 +37,14 @@
 
 <script>
   export default {
-    props: [
-      {
-        date_type: {
-          type: String,
-          required: false,
-          default: 'd'
-        }
+    props: {
+      date_type: {
+        type: String,
+        required: false,
+        default: 'd'
       }
-    ],
+    }
+    ,
     name: 'date-selector',
     data() {
       return {}
