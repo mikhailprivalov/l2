@@ -136,7 +136,7 @@
             </div>
         </div>
     </div>
-    <journal-get-material-modal id="journal-get-material-modal" :users="[{pk: {{ user.pk }}, fio: '{{ user.fio }}']"></journal-get-material-modal>
+    <journal-get-material-modal id="journal-get-material-modal" :users="[{pk: {{ user.pk }}, fio: '{{ user.doctorprofile.fio }}']"></journal-get-material-modal>
 {% endblock %}
 {% block head_cn %}
     <style>
