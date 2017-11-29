@@ -5,27 +5,14 @@
     </div>
     <div class="col-xs-8">
       <div v-if="date_type === 'd'">
-        <input type="text" class="form-control no-context" name="dateday-type"/>
+        <input type="text" class="form-control no-context">
       </div>
       <div class="row" v-if="date_type === 'm'">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select class="selectpicker" data-width="100%">
-            <option value="0">Январь</option>
-            <option value="1">Февраль</option>
-            <option value="2">Март</option>
-            <option value="3">Апрель</option>
-            <option value="4">Май</option>
-            <option value="5">Июнь</option>
-            <option value="6">Июль</option>
-            <option value="7">Август</option>
-            <option value="8">Сентябрь</option>
-            <option value="9">Октябрь</option>
-            <option value="10">Ноябрь</option>
-            <option value="11">Декабрь</option>
-          </select>
+          <select-picker :name.sync="values.month" :options.sync="monthes" :func="change_type"></select-picker>
         </div>
         <div class="col-xs-6">
-          <input type="number" class="form-control year" id="m-year" value="" min="2015" max="2100"/>
+          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
         </div>
       </div>
     </div>
@@ -40,12 +27,34 @@
     data() {
       return {
         date_type: 'd',
-        date_types: [{value: 'd', label: 'За день'}, {value: 'm', label: 'За месяц'}]
+        date_types: [{value: 'd', label: 'За день'}, {value: 'm', label: 'За месяц'}],
+        monthes: [
+          {value: '0', label: 'Январь'},
+          {value: '1', label: 'Февраль'},
+          {value: '2', label: 'Март'},
+          {value: '3', label: 'Апрель'},
+          {value: '4', label: 'Май'},
+          {value: '5', label: 'Июнь'},
+          {value: '6', label: 'Июль'},
+          {value: '7', label: 'Август'},
+          {value: '8', label: 'Сентябрь'},
+          {value: '9', label: 'Октябрь'},
+          {value: '10', label: 'Ноябрь'},
+          {value: '11', label: 'Декабрь'},
+        ],
+        values: {
+          date: '',
+          month: (new Date()).getMonth() + '',
+          year: (new Date()).getFullYear() + ''
+        }
       }
     },
     methods: {
       change_type(v) {
         this.date_type = v
+      },
+      change_month(v) {
+        this.values.month = v
       }
     },
     components: {SelectPicker}
