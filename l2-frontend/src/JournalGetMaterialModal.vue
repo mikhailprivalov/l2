@@ -7,7 +7,10 @@
           <h4 class="modal-title">Печать отчёта забора биоматериала</h4>
         </div>
         <div class="modal-body">
-          <date-selector></date-selector>
+          <div class="row">
+            <div class="col-xs-6"><date-selector></date-selector></div>
+            <div class="col-xs-6"></div>
+          </div>
         </div>
         <div class="modal-footer">
           <div class="row">
