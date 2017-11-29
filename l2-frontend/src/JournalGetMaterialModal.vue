@@ -1,6 +1,6 @@
 <template>
   <div class="modal fade" tabindex="-1">
-    <div class="modal-dialog" style="width: 50%;">
+    <div class="modal-dialog" style="width: 40%;min-width: 680px">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
@@ -18,11 +18,11 @@
         </div>
         <div class="modal-footer">
           <div class="row">
-            <div class="col-xs-6"></div>
-            <div class="col-xs-3">
+            <div class="col-xs-3"></div>
+            <div class="col-xs-6">
               <button type="button" class="btn btn-primary-nb btn-blue-nb2">Сформировать отчёт</button>
             </div>
-            <div class="col-xs-3">
+            <div class="col-xs-3" style="padding-left: 0">
               <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть</button>
             </div>
           </div>
