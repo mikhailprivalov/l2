@@ -1,5 +1,5 @@
 <template>
-  <div class="modal fade" v-bind:class="{ 'in': isShow, 'hide': !isShow }" tabindex="-1" role="dialog">
+  <div class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -18,17 +18,8 @@
   export default {
     name: 'journal-get-material-modal',
     data() {
-      return {
-        isShow: false
-      }
+      return {}
     },
-    methods: {
-      show() {
-        this.isShow = true
-      },
-      hide() {
-        this.isShow = false
-      }
-    }
+    methods: {}
   }
 </script>
