@@ -12,23 +12,12 @@
       selectpicker: {
         twoWay: true,
 
-        bind(el) {
-          console.log('bind')
-
-          $(el).on('change', function (e) {
-            this.set($(el).val())
-          }.bind(this))
+        bind(el, binding, vnode) {
+          vnode.context.func()
         },
 
-        update(el, newValue) {
-          console.log(this, 'update')
-          $(el).val(newValue)
-          $(el).selectpicker('val', newValue)
-        },
-
-        unbind(el) {
-          console.log(this, 'unbind')
-          $(el).removeClass('selectpicker').selectpicker('destroy')
+        update(el, binding, vnode) {
+          vnode.context.name = binding.value
         }
       }
     }
