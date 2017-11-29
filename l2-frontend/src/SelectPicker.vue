@@ -1,0 +1,15 @@
+<template>
+  <select v-model="name" data-width="100%" class="themed-select" @change="func">
+    <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
+  </select>
+</template>
+
+<script>
+  export default {
+    name: 'select-picker',
+    props: ['options', 'name', 'func'],
+    updated: function () {
+      $(this.$el).selectpicker('refresh')
+    }
+  }
+</script>

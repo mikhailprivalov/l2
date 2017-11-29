@@ -1,10 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select v-model="date_type" class="selectpicker" data-width="100%" ref="select_type">
-        <option value="d">За день</option>
-        <option value="m">За месяц</option>
-      </select>
+      <select-picker :name.sync="date_type" :options.sync="[{value:'d', label: 'За день'},{value:'m', label: 'За месяц'}]" :func="change_type"></select-picker>
     </div>
     <div class="col-xs-8">
       <div v-if="date_type === 'd'">
@@ -36,6 +33,8 @@
 </template>
 
 <script>
+  import SelectPicker from './SelectPicker.vue'
+
   export default {
     name: 'date-selector',
     data() {
@@ -47,9 +46,6 @@
       change_type() {
         alert(this.date_type)
       }
-    },
-    updated() {
-      $(this.$refs.select_type).selectpicker('refresh')
     }
   }
 </script>
