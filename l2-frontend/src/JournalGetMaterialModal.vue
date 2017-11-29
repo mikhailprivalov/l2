@@ -1,5 +1,5 @@
 <template>
-  <div class="modal fade" v-bind:class="{ 'in': isShow }" tabindex="-1" role="dialog">
+  <div class="modal fade" v-bind:class="{ 'in': isShow, 'hide': !isShow }" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
