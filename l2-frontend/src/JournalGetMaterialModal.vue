@@ -30,6 +30,11 @@
 
   export default {
     name: 'journal-get-material-modal',
+    props: {
+      users: {
+        type: Array
+      }
+    },
     data() {
       return {}
     },
