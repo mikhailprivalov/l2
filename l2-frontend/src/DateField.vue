@@ -1,5 +1,5 @@
 <template>
-  <input type="text" class="form-control no-context" v-model="val"/>
+  <input v-datepicker type="text" class="form-control no-context" v-model="val"/>
 </template>
 
 <script>
@@ -18,10 +18,11 @@
       }
     },
     directives: {
-      selectpicker: {
+      datepicker: {
         bind(el, binding, vnode) {
           $(el).datepicker({
             format: 'dd.mm.yyyy',
+              todayBtn: "linked",
             language: 'ru',
             autoclose: true,
             todayHighlight: true,
