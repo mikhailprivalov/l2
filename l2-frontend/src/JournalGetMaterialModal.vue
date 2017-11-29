@@ -22,14 +22,12 @@
         isShow: false
       }
     },
-    methods() {
-      return {
-        show() {
-          this.isShow = true
-        },
-        hide() {
-          this.isShow = false
-        }
+    methods: {
+      show() {
+        this.isShow = true
+      },
+      hide() {
+        this.isShow = false
       }
     }
   }
