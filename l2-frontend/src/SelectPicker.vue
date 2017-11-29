@@ -12,6 +12,7 @@
       selectpicker: {
         bind(el, binding, vnode) {
           let $el = $(el)
+          vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
           })
