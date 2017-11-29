@@ -12,24 +12,24 @@
       selectpicker: {
         twoWay: true,
 
-        bind() {
-          console.log('bind')
-          $(this.$el).selectpicker()
+        bind(el) {
+          console.log(this, 'bind')
+          $(el).selectpicker()
 
-          $(this.$el).on('change', function (e) {
-            this.set($(this.$el).val())
+          $(el).on('change', function (e) {
+            this.set($(el).val())
           }.bind(this))
         },
 
-        update(newValue) {
-          console.log('update')
-          $(this.$el).val(newValue)
-          $(this.$el).selectpicker('val', newValue)
+        update(el, newValue) {
+          console.log(this, 'update')
+          $(el).val(newValue)
+          $(el).selectpicker('val', newValue)
         },
 
-        unbind() {
-          console.log('unbind')
-          $(this.$el).selectpicker('destroy')
+        unbind(el) {
+          console.log(this, 'unbind')
+          $(el).selectpicker('destroy')
         }
       }
     }
