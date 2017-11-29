@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker :name.sync="date_type" :options.sync="[{value:'d', label: 'За день'},{value:'m', label: 'За месяц'}]" :func="change_type"></select-picker>
+      <select-picker :name.sync="date_type" :options.sync="date_types" :func="change_type"></select-picker>
     </div>
     <div class="col-xs-8">
       <div v-if="date_type === 'd'">
@@ -39,7 +39,8 @@
     name: 'date-selector',
     data() {
       return {
-        date_type: 'd'
+        date_type: 'd',
+        date_types: [{value: 'd', label: 'За день'}, {value: 'm', label: 'За месяц'}]
       }
     },
     methods: {
