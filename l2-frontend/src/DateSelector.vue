@@ -5,6 +5,7 @@
     </div>
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
+        <date-field :val.sync="values.date" :def="values.date"></date-field>
         <input type="text" class="form-control no-context">
       </div>
       <div class="row" :class="[{hidden: date_type !== 'm'}]">
@@ -44,7 +45,7 @@
           {value: '11', label: 'Декабрь'},
         ],
         values: {
-          date: '',
+          date: getFormattedDate(today),
           month: (new Date()).getMonth() + '',
           year: (new Date()).getFullYear() + ''
         }

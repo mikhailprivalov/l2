@@ -1,26 +1,11 @@
 <template>
-  <input :type="type" class="form-control" v-model="val" :min="min" :max="max"/>
+  <input type="text" class="form-control no-context" v-model="val"/>
 </template>
 
 <script>
   export default {
     name: 'date-field',
     props: {
-      type: {
-        type: String,
-        required: false,
-        default: 'text'
-      },
-      min: {
-        type: String,
-        required: false,
-        default: ''
-      },
-      max: {
-        type: String,
-        required: false,
-        default: ''
-      },
       def: {
         type: String,
         required: false,
@@ -30,6 +15,21 @@
     data() {
       return {
         val: this.def
+      }
+    },
+    directives: {
+      selectpicker: {
+        bind(el, binding, vnode) {
+          let $el = $(el)
+          $el.datepicker({
+            format: 'dd.mm.yyyy',
+            language: 'ru',
+            autoclose: true,
+            todayHighlight: true,
+            enableOnReadonly: true,
+            orientation: 'top left'
+          })
+        }
       }
     }
   }

@@ -10,8 +10,6 @@
     props: ['options', 'val', 'func'],
     directives: {
       selectpicker: {
-        twoWay: true,
-
         bind(el, binding, vnode) {
           let $el = $(el)
           $el.on('change', () => {
