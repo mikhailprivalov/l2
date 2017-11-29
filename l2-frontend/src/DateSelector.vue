@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select v-model="date_type" class="selectpicker" data-width="100%" ref="select_type" @change="change_type">
+      <select v-model="date_type" class="selectpicker" data-width="100%" ref="select_type">
         <option value="d">За день</option>
         <option value="m">За месяц</option>
       </select>
@@ -37,17 +37,11 @@
 
 <script>
   export default {
-    props: {
-      date_type: {
-        type: String,
-        required: false,
-        default: 'd'
-      }
-    }
-    ,
     name: 'date-selector',
     data() {
-      return {}
+      return {
+        date_type: 'd'
+      }
     },
     methods: {
       change_type() {
