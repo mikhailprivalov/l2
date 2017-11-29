@@ -13,11 +13,11 @@
         twoWay: true,
 
         bind(el, binding, vnode) {
-          vnode.context.func()
+          vnode.context.func(binding.value)
         },
 
         update(el, binding, vnode) {
-          vnode.context.name = binding.value
+          vnode.context.func(binding.value)
         }
       }
     }

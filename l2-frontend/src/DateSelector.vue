@@ -44,8 +44,8 @@
       }
     },
     methods: {
-      change_type() {
-        alert(this.date_type)
+      change_type(v) {
+        this.date_type = v
       }
     },
     components: {SelectPicker}
