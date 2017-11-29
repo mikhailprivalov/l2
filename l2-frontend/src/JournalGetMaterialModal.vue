@@ -31,6 +31,6 @@
       return {}
     },
     methods: {},
-    components: { DateSelector }
+    components: {DateSelector}
   }
 </script>
