@@ -3,7 +3,7 @@ var webpack = require('webpack')
 var BundleTracker = require('webpack-bundle-tracker');
 
 module.exports = {
-  entry: './src/main.js',
+  entry: './src/main',
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
