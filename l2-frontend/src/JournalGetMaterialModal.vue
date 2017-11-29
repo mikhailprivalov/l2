@@ -27,8 +27,10 @@
 
   export default {
     name: 'journal-get-material-modal',
-    data() {},
+    data() {
+      return {}
+    },
     methods: {},
-    components: {}
+    components: { DateSelector }
   }
 </script>
