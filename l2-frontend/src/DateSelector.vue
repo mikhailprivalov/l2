@@ -9,7 +9,7 @@
       </div>
       <div class="row" v-if="date_type === 'm'">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker :name.sync="values.month" :options.sync="monthes" :func="change_type"></select-picker>
+          <select-picker :name.sync="values.month" :options.sync="monthes" :func="change_month"></select-picker>
         </div>
         <div class="col-xs-6">
           <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
