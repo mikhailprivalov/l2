@@ -28,7 +28,7 @@
             todayHighlight: true,
             enableOnReadonly: true,
             orientation: 'top left'
-          }).on('change', () => {
+          }).on('changeDate', () => {
             vnode.context.val = $(el).val()
           })
         }
