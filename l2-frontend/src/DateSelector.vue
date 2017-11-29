@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select v-model="date_type" @change="change_type">
+      <select v-model="date_type" class="selectpicker" data-width="100%" ref="select_type" @change="change_type">
         <option value="d">За день</option>
         <option value="m">За месяц</option>
       </select>
@@ -51,8 +51,11 @@
     },
     methods: {
       change_type() {
-        alert(this.date_type);
+        alert(this.date_type)
       }
     },
+    updated() {
+      $(this.$refs.select_type).selectpicker('refresh')
+    }
   }
 </script>
