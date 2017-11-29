@@ -28,6 +28,8 @@
             todayHighlight: true,
             enableOnReadonly: true,
             orientation: 'top left'
+          }).on('change', () => {
+            vnode.context.val = $(el).val()
           })
         }
       }
