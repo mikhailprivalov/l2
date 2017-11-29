@@ -9,7 +9,7 @@
         <div class="modal-body">
           <div class="row">
             <div class="col-xs-4" style="padding-right: 3px;">
-              <select class="selectpicker" data-width="100%" v-model="type">
+              <select class="selectpicker" data-width="100%" v-model="date_type">
                 <option value="d">За день</option>
                 <option value="m">За месяц</option>
               </select>
@@ -60,7 +60,7 @@
     name: 'journal-get-material-modal',
     data() {
       return {
-        type: 'd'
+        date_type: 'd'
       }
     },
     methods: {}
