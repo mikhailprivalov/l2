@@ -1,5 +1,7 @@
 import Vue from 'vue'
+import Tester from './Tester.vue'
 
 new Vue({
-  el: '#app'
+  el: '#app',
+  components: { Tester },
 })
