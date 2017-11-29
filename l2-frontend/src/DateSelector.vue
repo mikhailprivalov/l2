@@ -12,7 +12,7 @@
           <select-picker :val.sync="values.month" :options.sync="monthes" :func="change_month"></select-picker>
         </div>
         <div class="col-xs-6">
-          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
+          <date-field type="number" min="2015" max="2100" :def="values.year" :val.sync="values.year"></date-field>
         </div>
       </div>
     </div>
@@ -21,6 +21,7 @@
 
 <script>
   import SelectPicker from './SelectPicker.vue'
+  import DateField from './DateField.vue'
 
   export default {
     name: 'date-selector',
@@ -57,6 +58,6 @@
         this.values.month = v
       }
     },
-    components: {SelectPicker}
+    components: {SelectPicker, DateField}
   }
 </script>
