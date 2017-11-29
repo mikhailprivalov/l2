@@ -1,9 +1,10 @@
 var path = require('path')
 var webpack = require('webpack')
 var BundleTracker = require('webpack-bundle-tracker');
+var glob = require("glob");
 
 module.exports = {
-  entry: ['./src/Tester'],
+  entry: glob.sync("./src/*"),
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
