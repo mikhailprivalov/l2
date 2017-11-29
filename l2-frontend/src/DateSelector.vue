@@ -12,7 +12,7 @@
           <select-picker :val.sync="values.month" :options.sync="monthes" :func="change_month"></select-picker>
         </div>
         <div class="col-xs-6">
-          <date-field type="number" min="2015" max="2100" :def="values.year" :val.sync="values.year"></date-field>
+          <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
         </div>
       </div>
     </div>
