@@ -18,7 +18,10 @@
         </div>
         <div class="modal-footer">
           <div class="row">
-            <div class="col-xs-9"></div>
+            <div class="col-xs-6"></div>
+            <div class="col-xs-3">
+              <button type="button" class="btn btn-primary-nb btn-blue-nb2">Сформировать отчёт</button>
+            </div>
             <div class="col-xs-3">
               <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть</button>
             </div>
