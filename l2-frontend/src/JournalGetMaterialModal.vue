@@ -1,6 +1,6 @@
 <template>
-  <div class="modal fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" @click=""><span aria-hidden="true">&times;</span></button>
