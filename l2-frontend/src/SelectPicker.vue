@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker v-model="name" data-width="100%" @change="func">
+  <select v-selectpicker class="selectpicker" v-model="name" data-width="100%" @change="func">
     <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
   </select>
 </template>
@@ -14,7 +14,7 @@
 
         bind(el) {
           console.log('bind')
-          $(el).addClass('selectpicker').selectpicker()
+          $(el).selectpicker('refresh')
 
           $(el).on('change', function (e) {
             this.set($(el).val())
