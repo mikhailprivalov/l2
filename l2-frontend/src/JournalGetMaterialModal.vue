@@ -8,8 +8,12 @@
         </div>
         <div class="modal-body">
           <div class="row">
-            <div class="col-xs-6"><date-selector></date-selector></div>
-            <div class="col-xs-6"></div>
+            <div class="col-xs-6">
+              <date-selector></date-selector>
+            </div>
+            <div class="col-xs-6">
+              <select-picker :val.sync="user" :options="users_list" :func="change_user"></select-picker>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -36,9 +40,24 @@
       }
     },
     data() {
-      return {}
+      return {
+        user: '-1'
+      }
     },
-    methods: {},
+    computed:{
+      users_list(){
+        let u = []
+        for(let u_row of this.users){
+          u.push({value: u_row.pk, label: u_row.fio})
+        }
+        return u
+      }
+    },
+    methods: {
+      change_user(v) {
+        this.user = v
+      }
+    },
     components: {DateSelector}
   }
 </script>
