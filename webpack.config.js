@@ -4,11 +4,11 @@ const BundleTracker = require('webpack-bundle-tracker');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require("clean-webpack-plugin");
 
-const nodeModules = path.resolve(__dirname, '../node_modules');
+const nodeModules = path.resolve(__dirname, 'node_modules');
 
 module.exports = {
     context: __dirname,
-    entry: './vue',
+    entry: path.resolve(__dirname, 'vue'),
     output: {
         path: path.resolve('./assets/webpack_bundles/'),
         filename: "[name]-[hash].js"
