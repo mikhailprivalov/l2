@@ -1,8 +1,10 @@
-let path = require('path');
-let webpack = require('webpack');
-let BundleTracker = require('webpack-bundle-tracker');
-let CopyWebpackPlugin = require('copy-webpack-plugin');
-let nodeModules = path.resolve(__dirname, '../node_modules');
+const path = require('path');
+const webpack = require('webpack');
+const BundleTracker = require('webpack-bundle-tracker');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CleanWebpackPlugin = require("clean-webpack-plugin");
+
+const nodeModules = path.resolve(__dirname, '../node_modules');
 
 module.exports = {
     context: __dirname,
