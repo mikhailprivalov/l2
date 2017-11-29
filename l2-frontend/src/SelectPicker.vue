@@ -14,7 +14,6 @@
 
         bind(el) {
           console.log('bind')
-          $(el).selectpicker('refresh')
 
           $(el).on('change', function (e) {
             this.set($(el).val())
