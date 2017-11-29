@@ -6,7 +6,6 @@
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
         <date-field :val.sync="values.date" :def="values.date"></date-field>
-        <input type="text" class="form-control no-context">
       </div>
       <div class="row" :class="[{hidden: date_type !== 'm'}]">
         <div class="col-xs-6" style="padding-right: 3px;">

@@ -20,8 +20,7 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
-          let $el = $(el)
-          $el.datepicker({
+          $(el).datepicker({
             format: 'dd.mm.yyyy',
             language: 'ru',
             autoclose: true,
