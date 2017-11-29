@@ -31,6 +31,7 @@
 
 <script>
   import DateSelector from './DateSelector.vue'
+  import SelectPicker from './SelectPicker.vue'
 
   export default {
     name: 'journal-get-material-modal',
@@ -58,6 +59,6 @@
         this.user = v
       }
     },
-    components: {DateSelector}
+    components: {DateSelector, SelectPicker}
   }
 </script>
