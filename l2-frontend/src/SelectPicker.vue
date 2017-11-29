@@ -14,10 +14,10 @@
 
         bind(el, binding, vnode) {
           vnode.context.func(binding.value)
-        },
 
-        update(el, binding, vnode) {
-          vnode.context.func(binding.value)
+          $(el).on('change', () => {
+            vnode.context.func($(el).val())
+          })
         }
       }
     }
