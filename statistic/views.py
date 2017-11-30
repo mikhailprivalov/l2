@@ -69,7 +69,7 @@ def statistic_xls(request):
     borders.bottom = xlwt.Borders.THIN
 
     if tp == "journal-get-material":
-        access_to_all = 'Статистика' in request.user.groups.values_list('name', falst=True) or request.user.is_superuser
+        access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if access_to_all or int(x) == request.user.doctorprofile]
         date_values = json.loads(date_values_o)
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
