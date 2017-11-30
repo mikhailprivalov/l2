@@ -163,12 +163,26 @@ def statistic_xls(request):
                 k = iss.napravleniye.client.individual.pk
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": []}
+                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": []}
                 if iss.napravleniye.pk not in patients[k]["directions"]:
                     patients[k]["directions"].append(iss.napravleniye.pk)
+                patients[k]["researches"].append(iss.research.title)
+
             n = 0
             for p_pk in patients:
                 n += 1
+                row = [
+                    str(n),
+                    patients[p_pk]["fio"],
+                    patients[p_pk]["age"],
+                    len(patients[p_pk]["directions"]),
+                    ", ".join(patients[p_pk]["researches"]),
+                ]
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num], font_style)
+
+                row_num += 1
+            row_num += 1
 
         ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
