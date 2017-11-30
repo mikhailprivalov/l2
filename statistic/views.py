@@ -80,7 +80,7 @@ def statistic_xls(request):
             font_style.borders = borders
             row_num = 0
             row = [
-                ("Исполнитель: ", 3500),
+                ("Исполнитель: ", 4000),
                 (user_row.fio, 10000)
             ]
             for col_num in range(len(row)):
@@ -91,6 +91,14 @@ def statistic_xls(request):
             row = [
                 "Подразделение: ",
                 user_row.podrazdeleniye.title
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+
+            row_num += 1
+            row = [
+                "Дата: ",
+                date_values["date"] if date_type == "d" else "{month} {year}".format(**date_values)
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
