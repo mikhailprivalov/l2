@@ -13,10 +13,7 @@
         type: Array,
         required: true
       },
-      val: {
-        type: String,
-        required: true
-      },
+      val: {},
       func: {
         type: Function,
         required: true
