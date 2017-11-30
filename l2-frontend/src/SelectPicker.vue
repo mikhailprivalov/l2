@@ -35,13 +35,17 @@
         bind(el, binding, vnode) {
           console.log(1)
           let $el = $(el)
+          console.log(101)
           let v = vnode.context.val
+          console.log(102)
           if (v === '-1' || !v)
             v = ''
           if (vnode.context.multiple) {
+            console.log(111)
             $el.selectpicker('val', v.split(','))
             console.log(11)
           } else {
+            console.log(121)
             $el.selectpicker('val', v)
             console.log(12)
           }
