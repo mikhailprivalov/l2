@@ -92,7 +92,7 @@ def statistic_xls(request):
             row_num += 1
             row = [
                 "Подразделение: ",
-                user_row.podrazdeleniye
+                user_row.podrazdeleniye.title
             ]
             for col_num in range(len(row)):
                 if col_num == 0:
