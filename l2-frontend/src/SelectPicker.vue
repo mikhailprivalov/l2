@@ -32,14 +32,17 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
+          console.log(1)
           let $el = $(el)
           let v = vnode.context.val
-          if(v === "-1" || !v)
-            v = ""
-          if(vnode.context.multiple)
-            $el.val(v.split(","))
+          if (v === '-1' || !v)
+            v = ''
+          if (vnode.context.multiple)
+            $el.val(v.split(','))
+          console.log(2)
           vnode.context.func($el.val())
           $el.on('change', () => {
+            console.log(3)
             vnode.context.func($el.val())
           })
         }
