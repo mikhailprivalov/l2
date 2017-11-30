@@ -28,10 +28,12 @@
     props: {
       values_def: {
         type: Object,
-        default: {
-          date: getFormattedDate(today),
-          month: today.getMonth() + '',
-          year: today.getFullYear() + ''
+        default() {
+          return {
+            date: getFormattedDate(today),
+            month: today.getMonth() + '',
+            year: today.getFullYear() + ''
+          }
         }
       }
     },
