@@ -9,7 +9,7 @@
         <h1>{{ message }}</h1>
         {% if update %}
             <br/>
-            <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.reload();return false;">Попробовать снова</button>
+            <button class="btn btn-lg btn-primary-nb" href="#" onclick="window.open(window.location.href, '_blank');this.close();return false;">Попробовать снова</button>
         {% endif %}
     </div>
 {% endblock %}
