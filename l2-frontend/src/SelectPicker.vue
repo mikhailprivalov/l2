@@ -33,6 +33,7 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
+          console.log(vnode.context.val)
           let $el = $(el).parent().children('select')
           let v = vnode.context.val
           if (v === '-1' || !v) {
@@ -56,6 +57,7 @@
           $el.on('changed.bs.select', function () {
             vnode.context.func($(this).selectpicker('val'))
           })
+          console.log(vnode.context.val)
         }
       }
     }
