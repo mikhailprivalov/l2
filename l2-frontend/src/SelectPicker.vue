@@ -31,7 +31,7 @@
       }
     },
     created() {
-      console.log(this.val)
+      console.log('L ', this.val)
     },
     directives: {
       selectpicker: {
