@@ -86,7 +86,6 @@ def statistic_xls(request):
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num][0], font_style)
                 ws.col(col_num).width = row[col_num][1]
-                ws.write(row_num, col_num + 1, "", font_style)
 
             row_num += 1
             row = [
