@@ -69,6 +69,10 @@
         deep: true
       }
     },
+    created() {
+      this.$emit('update:date_type', this.date_type)
+      this.$emit('update:values', this.values)
+    },
     methods: {
       change_type(v) {
         this.date_type = v
