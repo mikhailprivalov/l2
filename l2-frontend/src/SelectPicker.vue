@@ -38,11 +38,10 @@
           if (v === '-1' || !v)
             v = ''
           if (vnode.context.multiple) {
-            $el.val(v.split(','))
+            $el.selectpicker('val', v.split(','))
           } else {
-            $el.val(v)
+            $el.selectpicker('val', v)
           }
-          //$el.selectpicker('render')
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
