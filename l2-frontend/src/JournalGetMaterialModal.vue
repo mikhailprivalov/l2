@@ -62,6 +62,9 @@
         if(!v){
           v = ""
         }
+        if(Array.isArray(obj)){
+          v.join(",")
+        }
         this.user = v
       }
     },
