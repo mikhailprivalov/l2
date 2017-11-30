@@ -34,7 +34,7 @@
       selectpicker: {
         bind(el, binding, vnode) {
           console.log(1)
-          let $el = $(el)
+          let $el = $(el).parent().children('select')
           console.log(101)
           let v = vnode.context.val
           console.log(102)
