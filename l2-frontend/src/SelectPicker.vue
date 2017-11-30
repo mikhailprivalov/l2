@@ -29,7 +29,6 @@
     },
     methods: {
       update_val(v) {
-        this.val = v
         this.func(v)
       }
     },
