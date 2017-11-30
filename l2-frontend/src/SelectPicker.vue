@@ -46,7 +46,10 @@
           }
           if (vnode.context.multiple && !Array.isArray(v)) {
             v = v.split(',')
+          } else if(!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)){
+            v = v.toString()
           }
+
           console.log(v)
           $el.selectpicker('val', v)
           vnode.context.func($el.val())
