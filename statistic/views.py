@@ -52,7 +52,7 @@ def statistic_xls(request):
         date_end_o = request.GET.get("date-end", "")  # Конец периода
         users_o = request.GET.get("users", "[]")
         date_values_o = request.GET.get("values", "{}")
-        date_type = request.POST.get("date_type", "d")
+        date_type = request.GET.get("date_type", "d")
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
