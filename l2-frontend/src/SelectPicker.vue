@@ -40,7 +40,7 @@
           if (vnode.context.multiple) {
             $el.val(v.split(','))
           } else {
-            $el.val(v.split(','))
+            $el.val(v)
           }
           $el.selectpicker('refresh')
           vnode.context.func($el.val())
