@@ -60,7 +60,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
     'debug_panel.middleware.DebugPanelMiddleware',
-    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware']
+    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware'],
+    'ratelimit.middleware.RatelimitMiddleware'
 ]
 INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []
