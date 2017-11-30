@@ -38,18 +38,25 @@ def statistic_xls(request):
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
     if request.method == "POST":
-        pk = request.POST["pk"]  # Первичный ключ
-        tp = request.POST["type"]  # Тип статистики
-        date_start_o = request.POST["date-start"]  # Начало периода
-        date_end_o = request.POST["date-end"]  # Конец периода
+        pk = request.POST.get("pk", "")  # Первичный ключ
+        tp = request.POST.get("type", "")  # Тип статистики
+        date_start_o = request.POST.get("date-start", "")  # Начало периода
+        date_end_o = request.POST.get("date-end", "")  # Конец периода
+        users_o = request.POST.get("users", "[]")
+        date_values_o = request.POST.get("values", "{}")
+        date_type = request.POST.get("date_type", "d")
     else:
-        pk = request.GET["pk"]  # Первичный ключ
-        tp = request.GET["type"]  # Тип статистики
-        date_start_o = request.GET["date-start"]  # Начало периода
-        date_end_o = request.GET["date-end"]  # Конец периода
+        pk = request.GET.get("pk", "")
+        tp = request.GET.get("type", "")  # Тип статистики
+        date_start_o = request.GET.get("date-start", "")  # Начало периода
+        date_end_o = request.GET.get("date-end", "")  # Конец периода
+        users_o = request.GET.get("users", "[]")
+        date_values_o = request.GET.get("values", "{}")
+        date_type = request.POST.get("date_type", "d")
 
-    slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
-             user=request.user.doctorprofile).save()
+    if date_start_o != "" and date_end_o != "":
+        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
+                 user=request.user.doctorprofile).save()
 
     symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
                u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
@@ -61,11 +68,15 @@ def statistic_xls(request):
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
-    if tp == "lab":
+    if tp == "journal-get-material":
+        access_to_all = 'Статистика' in request.user.groups.values_list('name', falst=True) or request.user.is_superuser
+        users = [x for x in json.loads(users_o) if access_to_all or int(x) == request.user.doctorprofile]
+        date_values = json.loads(date_values_o)
+        response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
+
+    elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
-        response['Content-Disposition'] = str.translate(
-            "attachment; filename='Статистика_Лаборатория_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
-                                                                                   date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
 
         import datetime
         import directions.models as d
