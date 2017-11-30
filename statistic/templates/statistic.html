@@ -58,9 +58,24 @@
                 </ul>
             </div>
         </div>
+    {% if request.user|has_group:"Статистика" %}
+        <div class="col-xs-6">
+            <div class="panel panel-default panel-flt">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Статистика по заборщикам биоматериала</h3>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item" onclick="$('#journal-get-material-modal').modal('show')">Отчёт по забору</li>
+                </ul>
+            </div>
+        </div>
+    {% endif %}
     </div>
 {% endblock %}
 {% block scripts %}
+    {% if request.user|has_group:"Статистика" %}
+    <journal-get-material-modal id="journal-get-material-modal" :users='{{ getters_material|safe }}'></journal-get-material-modal>
+    {% endif %}
     <script>
         $(document).ready(function () {
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));

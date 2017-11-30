@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" v-model="val" data-width="100%" @change="func">
+  <select v-selectpicker class="selectpicker" v-model="val" data-width="100%" @change="func" :multiple="multiple" :data-action-box="action_box">
     <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
   </select>
 </template>
@@ -7,7 +7,28 @@
 <script>
   export default {
     name: 'select-picker',
-    props: ['options', 'val', 'func'],
+    props: {
+      options: {
+        type: Array,
+        required: true
+      },
+      val: {
+        type: String,
+        required: true
+      },
+      func: {
+        type: Function,
+        required: true
+      },
+      multiple: {
+        type: Boolean,
+        default: false
+      },
+      action_box: {
+        type: Boolean,
+        default: false
+      }
+    },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {

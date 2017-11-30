@@ -24,7 +24,8 @@ def statistic_page(request):
     labs = Podrazdeleniya.objects.filter(isLab=True)  # Лаборатории
     tubes = directory.Tubes.objects.all()  # Пробирки
     podrs = Podrazdeleniya.objects.filter(isLab=False, hide=False)  # Подлазделения
-    return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs})
+    getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
+    return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
 
 
 @csrf_exempt
