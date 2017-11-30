@@ -20,6 +20,7 @@ from django.http import HttpResponse
 from users.models import DoctorProfile
 
 
+@ratelimit(key="user", rate="15/m")
 @csrf_exempt
 @login_required
 def statistic_page(request):
