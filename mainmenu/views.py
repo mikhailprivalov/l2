@@ -796,3 +796,7 @@ def get_userdata(doc: DoctorProfile):
     if doc is None:
         return ""
     return "%s (%s) - %s" % (doc.fio, doc.user.username, doc.podrazdeleniye.title)
+
+
+def ratelimited(request):
+    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее"})
