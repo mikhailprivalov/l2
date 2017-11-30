@@ -20,7 +20,7 @@ from django.http import HttpResponse
 from users.models import DoctorProfile
 
 
-@ratelimit(key="user", rate="15/m")
+@ratelimit(key="user", rate="15/m", block=True)
 @csrf_exempt
 @login_required
 def statistic_page(request):
@@ -32,7 +32,7 @@ def statistic_page(request):
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
 
 
-@ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="15/m")
+@ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="15/m", block=True)
 @csrf_exempt
 @login_required
 def statistic_xls(request):
