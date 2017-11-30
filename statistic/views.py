@@ -7,6 +7,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import simplejson as json
+from ratelimit.decorators import ratelimit
+
 import slog.models as slog
 from clients.models import CardBase
 from laboratory.decorators import group_required
@@ -29,6 +31,7 @@ def statistic_page(request):
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
 
 
+@ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="15/m")
 @csrf_exempt
 @login_required
 def statistic_xls(request):
