@@ -195,7 +195,7 @@ def statistic_xls(request):
 
             row = [
                 "Число пациентов: ",
-                len(patients)
+                str(len(patients))
             ]
             for col_num in range(len(row)):
                 ws.write(daterow + 1, col_num, row[col_num], font_style)
