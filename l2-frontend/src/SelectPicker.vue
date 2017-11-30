@@ -30,6 +30,9 @@
         default: false
       }
     },
+    created() {
+      console.log(this.val)
+    },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
