@@ -1,10 +1,8 @@
 <template>
-  <div>
-    <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
-            data-deselect-all-text="Отменить весь выбор">
-      <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
-    </select>
-  </div>
+  <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
+          data-deselect-all-text="Отменить весь выбор">
+    <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
+  </select>
 </template>
 
 <script>
@@ -35,7 +33,8 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
-          let $el = $('.selectpicker', el)
+          let $el = $(el)
+          console.log($el)
           let v = vnode.context.val
           if (v === '-1' || !v)
             v = ''
