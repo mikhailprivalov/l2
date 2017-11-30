@@ -76,6 +76,31 @@ def statistic_xls(request):
         for user_pk in users:
             user_row = DoctorProfile.objects.get(pk=user_pk)
             ws = wb.add_sheet("{} {}".format(user_row.get_fio(dots=False), user_pk))
+            font_style = xlwt.XFStyle()
+            font_style.borders = borders
+            row_num = 0
+            row = [
+                "Исполнитель: ",
+                user_row.fio
+            ]
+            for col_num in range(len(row)):
+                if col_num == 0:
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num + 2, row[col_num], style=font_style)
+
+            row_num += 1
+            row = [
+                "Подразделение: ",
+                user_row.podrazdeleniye
+            ]
+            for col_num in range(len(row)):
+                if col_num == 0:
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                else:
+                    ws.write_merge(row_num, row_num, col_num, col_num + 2, row[col_num], style=font_style)
+
+            row_num += 2
 
         ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
