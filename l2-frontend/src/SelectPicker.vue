@@ -34,7 +34,6 @@
       selectpicker: {
         bind(el, binding, vnode) {
           let $el = $(el)
-          console.log($el)
           let v = vnode.context.val
           if (v === '-1' || !v)
             v = ''
@@ -43,7 +42,7 @@
           } else {
             $el.val(v)
           }
-          $el.selectpicker('refresh')
+          $el.selectpicker('render')
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
