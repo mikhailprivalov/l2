@@ -52,6 +52,7 @@
 
           console.log(v)
           $el.selectpicker('val', v)
+          console.log('ok')
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
