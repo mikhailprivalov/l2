@@ -31,7 +31,7 @@ def statistic_page(request):
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
 
 
-@ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="1/m", block=True)
+@ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
 @csrf_exempt
 @login_required
 def statistic_xls(request):
