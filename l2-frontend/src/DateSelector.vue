@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"></select-picker>
+      <!--<select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"></select-picker>-->
     </div>
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
