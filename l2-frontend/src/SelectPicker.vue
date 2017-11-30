@@ -42,7 +42,7 @@
           } else {
             $el.val(v)
           }
-          $el.selectpicker('render')
+          //$el.selectpicker('render')
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
