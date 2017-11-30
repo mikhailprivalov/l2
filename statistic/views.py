@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import collections
 
-from django.db.models import Q
+from django.db.models import Q, timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import simplejson as json
@@ -69,6 +69,7 @@ def statistic_xls(request):
     borders.bottom = xlwt.Borders.THIN
 
     if tp == "journal-get-material":
+        import datetime
         access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile) and DoctorProfile.objects.filter(pk=x).exists()]
         date_values = json.loads(date_values_o)
@@ -119,6 +120,30 @@ def statistic_xls(request):
                 ws.write(row_num, col_num, row[col_num], font_style)
 
             row_num += 2
+
+            if date_type == "d":
+                day = date_values.get("date", "01.01.2015")
+                day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+                day2 = day1 + datetime.timedelta(days=1)
+            elif date_type == "m":
+                month = int(date_values.get("month", "0")) + 1
+                next_m = month + 1 if month < 12 else 1
+                year = int(date_values.get("year", "2015"))
+                next_y = year + 1 if next_m == 1 else year
+                day1 = datetime.date(year, month, 1)
+                day2 = datetime.date(next_y, next_m, 1)
+            else:
+                day1 = day2 = timezone.now()
+
+            iss_list = Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False, tubes__time_get__range=(day1, day2)).order_by("napravleniye__client__individual__patronymic",
+                                                                                                                                                          "napravleniye__client__individual__name",
+                                                                                                                                                          "napravleniye__client__individual__family").distinct()
+            patients = {}
+            for iss in iss_list:
+                k = iss.napravleniye.client.individual.pk
+                if k not in patients:
+                    client = iss.napravleniye.client.individual
+                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye)}
 
         ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
