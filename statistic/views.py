@@ -137,6 +137,7 @@ def statistic_xls(request):
                 ("Возраст", 3000),
                 ("Карта", 6000),
                 ("Число направлений", 5000),
+                ("Номера направлений", 5000),
                 ("Наименования исследований", 20000),
             ]
             for col_num in range(len(row)):
@@ -184,6 +185,7 @@ def statistic_xls(request):
                     patients[p_pk]["age"],
                     ", ".join(patients[p_pk]["cards"]),
                     len(patients[p_pk]["directions"]),
+                    ", ".join(patients[p_pk]["directions"]),
                     ", ".join(patients[p_pk]["researches"]),
                 ]
                 for col_num in range(len(row)):
