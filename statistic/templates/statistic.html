@@ -58,7 +58,7 @@
                 </ul>
             </div>
         </div>
-    {% if request.user|has_group:"Статистика" %}
+    {% if request.user|has_group:"Статистика" or request.user.is_superuser %}
         <div class="col-xs-6">
             <div class="panel panel-default panel-flt">
                 <div class="panel-heading">
