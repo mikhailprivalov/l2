@@ -136,7 +136,8 @@ def statistic_xls(request):
                 ("Наименования исследований", 20000),
             ]
             for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], font_style_b)
+                ws.write(row_num, col_num, row[col_num][0], font_style_b)
+                ws.col(col_num).width = row[col_num][1]
 
             row_num += 1
 
