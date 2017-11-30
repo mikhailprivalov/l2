@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" v-model="val" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box">
+  <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box">
     <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
   </select>
 </template>
@@ -34,7 +34,7 @@
         bind(el, binding, vnode) {
           let $el = $(el)
           let v = vnode.context.val
-          if(v === "-1")
+          if(v === "-1" || !v)
             v = ""
           if(vnode.context.multiple)
             $el.val(v.split(","))
