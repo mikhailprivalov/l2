@@ -73,6 +73,7 @@ def statistic_xls(request):
         users = [x for x in json.loads(users_o) if access_to_all or int(x) == request.user.doctorprofile]
         date_values = json.loads(date_values_o)
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
+        ws = wb.add_sheet("Все выбранные пользователи")
 
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
