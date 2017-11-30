@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box">
+  <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано">
     <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
   </select>
 </template>
