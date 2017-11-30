@@ -93,6 +93,12 @@ def statistic_xls(request):
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
+
+        font_style_b = xlwt.XFStyle()
+        font_style_b.alignment.wrap = 1
+        font_style_b.font.bold = True
+        font_style_b.borders = borders
+
         for user_pk in users:
             user_row = DoctorProfile.objects.get(pk=user_pk)
             ws = wb.add_sheet("{} {}".format(user_row.get_fio(dots=False), user_pk))
@@ -122,6 +128,17 @@ def statistic_xls(request):
                 ws.write(row_num, col_num, row[col_num], font_style)
 
             row_num += 2
+            row = [
+                ("№", 4000),
+                ("ФИО", 10000),
+                ("Возраст", 3000),
+                ("Число направлений", 5000),
+                ("Наименования исследований", 20000),
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style_b)
+
+            row_num += 1
 
             if date_type == "d":
                 day = date_values.get("date", "01.01.2015")
@@ -145,7 +162,12 @@ def statistic_xls(request):
                 k = iss.napravleniye.client.individual.pk
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye)}
+                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": []}
+                if iss.napravleniye.pk not in patients[k]["directions"]:
+                    patients[k]["directions"].append(iss.napravleniye.pk)
+            n = 0
+            for p_pk in patients:
+                n += 1
 
         ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
