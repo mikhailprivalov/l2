@@ -80,14 +80,13 @@ def statistic_xls(request):
             font_style.borders = borders
             row_num = 0
             row = [
-                "Исполнитель: ",
-                user_row.fio
+                ("Исполнитель: ", 16000),
+                (user_row.fio, 30000)
             ]
             for col_num in range(len(row)):
-                if col_num == 0:
-                    ws.write(row_num, col_num, row[col_num], font_style)
-                else:
-                    ws.write_merge(row_num, row_num, col_num, col_num + 2, row[col_num], style=font_style)
+                ws.write(row_num, col_num, row[col_num][0], font_style)
+                ws.col(col_num).width = row[col_num][1]
+                ws.write(row_num, col_num + 1, "", font_style)
 
             row_num += 1
             row = [
