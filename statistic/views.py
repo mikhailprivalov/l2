@@ -75,7 +75,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
         for user_pk in users:
             user_row = DoctorProfile.objects.get(pk=user_pk)
-            ws = wb.add_sheet(user_row.get_fio(dots=False))
+            ws = wb.add_sheet("{} {}".format(user_row.get_fio(dots=False), user_pk))
 
         ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
