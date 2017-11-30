@@ -129,8 +129,8 @@ def statistic_xls(request):
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
-
-            row_num += 2
+            daterow = row_num
+            row_num += 3
             row = [
                 ("№", 4000),
                 ("ФИО", 7600),
@@ -192,6 +192,14 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num], font_style)
 
                 row_num += 1
+
+            row = [
+                "Число пациентов: ",
+                len(patients)
+            ]
+            for col_num in range(len(row)):
+                ws.write(daterow + 1, col_num, row[col_num], font_style)
+
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
