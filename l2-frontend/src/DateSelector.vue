@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker :val.sync="date_type" :options.sync="date_types" :func="change_type"></select-picker>
+      <select-picker :val="date_type" :options.sync="date_types" :func="change_type"></select-picker>
     </div>
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
@@ -9,7 +9,7 @@
       </div>
       <div class="row" :class="[{hidden: date_type !== 'm'}]">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker :val.sync="values.month" :options.sync="monthes" :func="change_month"></select-picker>
+          <select-picker :val="values.month" :options.sync="monthes" :func="change_month"></select-picker>
         </div>
         <div class="col-xs-6">
           <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
