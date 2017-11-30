@@ -49,6 +49,7 @@
           vnode.context.func(v)
           $el.on('change', function () {
             let lval = $(this).selectpicker('val')
+            vnode.context.val = lval
             vnode.context.func(lval)
           })
         }
