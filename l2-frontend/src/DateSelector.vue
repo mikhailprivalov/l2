@@ -60,7 +60,7 @@
         this.$emit('update:date_type', this.date_type)
       },
       values: {
-        handler(){
+        handler() {
           this.$emit('update:values', this.values)
         },
         deep: true
