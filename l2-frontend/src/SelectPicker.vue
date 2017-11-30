@@ -47,6 +47,7 @@
           if (vnode.context.multiple && !Array.isArray(v)) {
             v = v.split(',')
           }
+          console.log(v)
           $el.selectpicker('val', v)
           vnode.context.func($el.val())
           $el.on('change', () => {
