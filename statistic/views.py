@@ -188,8 +188,14 @@ def statistic_xls(request):
 
                 row_num += 1
             row_num += 1
+            row = [
+                "Кол-во людей:",
+                len(patients),
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
 
-        ws = wb.add_sheet("Все выбранные пользователи")
+            row_num += 1
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
