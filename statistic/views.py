@@ -2,7 +2,8 @@ from collections import defaultdict
 
 import collections
 
-from django.db.models import Q, timezone
+from django.db.models import Q
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import simplejson as json
