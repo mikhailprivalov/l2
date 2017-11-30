@@ -71,11 +71,11 @@
         </div>
     {% endif %}
     </div>
-{% endblock %}
-{% block scripts %}
     {% if request.user|has_group:"Статистика" or request.user.is_superuser %}
     <journal-get-material-modal id="journal-get-material-modal" :users='{{ getters_material|safe }}'></journal-get-material-modal>
     {% endif %}
+{% endblock %}
+{% block scripts %}
     <script>
         $(document).ready(function () {
             $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
