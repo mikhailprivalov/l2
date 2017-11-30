@@ -45,8 +45,8 @@
         ],
         values: {
           date: getFormattedDate(today),
-          month: (new Date()).getMonth() + '',
-          year: (new Date()).getFullYear() + ''
+          month: today.getMonth() + '',
+          year: today.getFullYear() + ''
         }
       }
     },
