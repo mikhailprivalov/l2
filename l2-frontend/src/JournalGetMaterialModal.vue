@@ -62,8 +62,8 @@
         if(!v){
           v = ""
         }
-        if(Array.isArray(obj)){
-          v.join(",")
+        if(Array.isArray(v)){
+          v = v.join(",")
         }
         this.user = v
       }
