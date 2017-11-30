@@ -70,11 +70,14 @@ def statistic_xls(request):
 
     if tp == "journal-get-material":
         access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
-        users = [x for x in json.loads(users_o) if access_to_all or int(x) == request.user.doctorprofile]
+        users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile) and DoctorProfile.objects.filter(pk=x).exists()]
         date_values = json.loads(date_values_o)
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
-        ws = wb.add_sheet("Все выбранные пользователи")
+        for user_pk in users:
+            user_row = DoctorProfile.objects.get(pk=user_pk)
+            ws = wb.add_sheet(user_row.get_fio(dots=False))
 
+        ws = wb.add_sheet("Все выбранные пользователи")
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
