@@ -47,8 +47,9 @@
           }
           $el.selectpicker('val', v)
           vnode.context.func(v)
-          $el.on('changed.bs.select', function () {
+          $el.on('changed.bs.select', function (e) {
             let lval = $(this).selectpicker('val')
+            console.log(e)
             console.log(lval)
             vnode.context.func(lval)
           })
