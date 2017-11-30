@@ -185,7 +185,7 @@ def statistic_xls(request):
                     patients[p_pk]["age"],
                     ", ".join(patients[p_pk]["cards"]),
                     len(patients[p_pk]["directions"]),
-                    ", ".join(patients[p_pk]["directions"]),
+                    ", ".join([str(x) for x in patients[p_pk]["directions"]]),
                     ", ".join(patients[p_pk]["researches"]),
                 ]
                 for col_num in range(len(row)):
