@@ -35,18 +35,17 @@
         bind(el, binding, vnode) {
           let $el = $(el).parent().children('select')
           let v = vnode.context.val
-          if (v === '-1' || !v)
-          {
-            if(vnode.context.multiple)
+          if (v === '-1' || !v) {
+            if (vnode.context.multiple)
               v = []
-            else if(vnode.context.options.length > 0)
+            else if (vnode.context.options.length > 0)
               v = vnode.context.options[0].value
             else
-              v = ""
+              v = ''
           }
           if (vnode.context.multiple && !Array.isArray(v)) {
             v = v.split(',')
-          } else if(!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)){
+          } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
             v = v.toString()
           }
 
@@ -54,8 +53,8 @@
           $el.selectpicker('val', v)
           console.log('ok')
           vnode.context.func($el.val())
-          $el.on('change', () => {
-            vnode.context.func($el.val())
+          $el.on('changed.bs.select', function () {
+            vnode.context.func($(this).selectpicker('val'))
           })
         }
       }
