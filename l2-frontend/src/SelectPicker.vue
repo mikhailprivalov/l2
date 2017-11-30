@@ -36,12 +36,18 @@
           let $el = $(el).parent().children('select')
           let v = vnode.context.val
           if (v === '-1' || !v)
-            v = ''
-          if (vnode.context.multiple) {
+          {
+            if(vnode.context.multiple)
+              v = []
+            else if(vnode.context.options.length > 0)
+              v = vnode.context.options[0].value
+            else
+              v = ""
+          }
+          if (vnode.context.multiple && !Array.isArray(v)) {
             v = v.split(',')
           }
           $el.selectpicker('val', v)
-          console.log(v, vnode.context.multiple)
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
