@@ -9,7 +9,7 @@
         <div class="modal-body">
           <div class="row">
             <div class="col-xs-6">
-              <date-selector></date-selector>
+              <date-selector :date_type.sync="date_type" :values.sync="values"></date-selector>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
               <select-picker :val="user" :options="users_list" :func="change_user" :multiple="users.length > 1" :actions_box="users.length > 1"></select-picker>
@@ -20,7 +20,7 @@
           <div class="row">
             <div class="col-xs-3"></div>
             <div class="col-xs-6">
-              <button type="button" class="btn btn-primary-nb btn-blue-nb2">Сформировать отчёт</button>
+              <button type="button" @click="make_report" class="btn btn-primary-nb btn-blue-nb2">Сформировать отчёт</button>
             </div>
             <div class="col-xs-3" style="padding-left: 0">
               <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть</button>
@@ -45,27 +45,40 @@
     },
     data() {
       return {
-        user: '-1'
+        user: '-1',
+        date_type: 'd',
+        values: {
+          date: '',
+          month: '',
+          year: ''
+        }
       }
     },
-    computed:{
-      users_list(){
+    computed: {
+      users_list() {
         let u = []
-        for(let u_row of this.users){
+        for (let u_row of this.users) {
           u.push({value: u_row.pk, label: u_row.fio})
         }
         return u
+      },
+      selected_users() {
+        return this.user.split(',')
       }
     },
     methods: {
       change_user(v) {
-        if(!v){
-          v = ""
+        if (!v) {
+          v = ''
         }
-        if(Array.isArray(v)){
-          v = v.join(",")
+        if (Array.isArray(v)) {
+          v = v.join(',')
         }
         this.user = v
+      },
+      make_report() {
+        window.open('/statistic/xls?type=' + stype + '&pk=' + pk + '&date-start=' + $('[name=\'date-start\']').val() + '&date-end=' + $('[name=\'date-end\']').val(), '_blank')
+        window.open(`/statistic/xls?type=journal-get-material&users=${JSON.stringify(this.selected_users())}&date_type=${this.date_type}&`, '_blank')
       }
     },
     components: {DateSelector, SelectPicker}

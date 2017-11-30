@@ -50,6 +50,17 @@
         }
       }
     },
+    watch: {
+      date_type() {
+        this.$emit('update:date_type', this.date_type)
+      },
+      values: {
+        handler(){
+          this.$emit('update:values', this.values)
+        },
+        deep: true
+      }
+    },
     methods: {
       change_type(v) {
         this.date_type = v
