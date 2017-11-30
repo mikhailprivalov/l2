@@ -40,7 +40,7 @@
             $el.val(v.split(","))
           vnode.context.func($el.val())
           $el.on('change', () => {
-            vnode.context.func($el.val().join(","))
+            vnode.context.func($el.val())
           })
         }
       }
