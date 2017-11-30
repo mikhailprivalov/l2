@@ -29,7 +29,7 @@
     },
     created() {
       this.func(this.val)
-    }
+    },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
