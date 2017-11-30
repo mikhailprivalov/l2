@@ -27,8 +27,14 @@
         default: false
       }
     },
+    methods: {
+      update_val(v) {
+        this.val = v
+        this.func(v)
+      }
+    },
     created() {
-      this.func(this.val)
+      update_val(this.val)
     },
     directives: {
       selectpicker: {
@@ -49,11 +55,10 @@
             v = v.toString()
           }
           $el.selectpicker('val', v)
-          vnode.context.func(v)
+          vnode.context.update_val(v)
           $(el).change(function () {
             let lval = $(this).selectpicker('val')
-            vnode.context.val = lval
-            vnode.context.func(lval)
+            vnode.context.update_val(lval)
           })
         }
       }
