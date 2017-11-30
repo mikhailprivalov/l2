@@ -34,6 +34,7 @@
     },
     created() {
       this.update_val(this.val)
+      $(this.$el).selectpicker('val', this.val)
     },
     directives: {
       selectpicker: {
