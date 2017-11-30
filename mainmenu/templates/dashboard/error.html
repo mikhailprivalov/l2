@@ -5,11 +5,13 @@
 {% block container %}container-fluid" style="height: 100%;display: flex;align-items: center;justify-content: center;{% endblock %}
 
 {% block content %}
-    <h1>{{ message }}</h1>
-    {% if update %}
-        <br/>
-        <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.reload();return false;">Попробовать снова</button>
-    {% endif %}
+    <div>
+        <h1>{{ message }}</h1>
+        {% if update %}
+            <br/>
+            <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.reload();return false;">Попробовать снова</button>
+        {% endif %}
+    </div>
     <style>
         html, body {
             height: 100% !important;;
