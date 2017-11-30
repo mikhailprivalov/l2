@@ -415,7 +415,6 @@
                     dnum = data.direction.pk;
                     $("#success-b").show();
                     $(".btn#success-b").removeAttr("disabled");
-                    $("#dir-num").html(data.direction.pk + (data.direction.cancel ? " отменено" : ""));
                     $("#date").html(data.direction.date);
                     $("#fio").html(data.client.fio);
                     $("#sx").html(data.client.sx);
@@ -448,6 +447,7 @@
                             probirki[v.title]++;
                         $("#researches-tb").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label onclick='toggle_check(this);'><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
                     });
+                    $('#dir-num').html(data.direction.pk + (complete ? 'исполнено' : (data.direction.cancel ? ' отменено' : '')))
 
                     let tmpstr = "";
                     let f = true;
