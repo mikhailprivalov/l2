@@ -6,4 +6,7 @@
 
 {% block content %}
     <h1>{{ message }}</h1>
+    {% if update %}
+        <br/><a href="#" onclick="location.reload();return false;">Обновить</a>
+    {% endif %}
 {% endblock %}

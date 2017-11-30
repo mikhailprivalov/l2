@@ -798,5 +798,5 @@ def get_userdata(doc: DoctorProfile):
     return "%s (%s) - %s" % (doc.fio, doc.user.username, doc.podrazdeleniye.title)
 
 
-def ratelimited(request, e):
-    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее " + json.dumps(dict(e))})
+def ratelimited(request):
+    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
