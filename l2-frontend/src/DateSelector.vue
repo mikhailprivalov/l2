@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker val="date_type" options="date_types" func="change_type" multiple="false" actions_box="false"></select-picker>
+      <select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"></select-picker>
     </div>
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
@@ -9,7 +9,7 @@
       </div>
       <div class="row" :class="[{hidden: date_type !== 'm'}]">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker val="values.month" options="monthes" func="change_month" multiple="false" actions_box="false"></select-picker>
+          <select-picker :val="values.month" :options="monthes" :func="change_month" :multiple="false" :actions_box="false"></select-picker>
         </div>
         <div class="col-xs-6">
           <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
@@ -25,6 +25,16 @@
 
   export default {
     name: 'date-selector',
+    props: {
+      values_def: {
+        type: Object,
+        default: {
+          date: getFormattedDate(today),
+          month: today.getMonth() + '',
+          year: today.getFullYear() + ''
+        }
+      }
+    },
     data() {
       return {
         date_type: 'd',
@@ -43,11 +53,7 @@
           {value: '10', label: 'Ноябрь'},
           {value: '11', label: 'Декабрь'},
         ],
-        values: {
-          date: getFormattedDate(today),
-          month: today.getMonth() + '',
-          year: today.getFullYear() + ''
-        }
+        values: this.values_def
       }
     },
     watch: {
