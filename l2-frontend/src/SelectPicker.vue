@@ -41,7 +41,7 @@
             v = v.split(',')
           }
           $el.selectpicker('val', v)
-          console.log(v)
+          console.log(v, vnode.context.multiple)
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
