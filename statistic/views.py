@@ -90,11 +90,12 @@ def statistic_xls(request):
         }
         date_values["month_title"] = monthes[date_values["month"]]
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
+        font_style = xlwt.XFStyle()
+        font_style.alignment.wrap = 1
+        font_style.borders = borders
         for user_pk in users:
             user_row = DoctorProfile.objects.get(pk=user_pk)
             ws = wb.add_sheet("{} {}".format(user_row.get_fio(dots=False), user_pk))
-            font_style = xlwt.XFStyle()
-            font_style.borders = borders
             row_num = 0
             row = [
                 ("Исполнитель: ", 4000),
