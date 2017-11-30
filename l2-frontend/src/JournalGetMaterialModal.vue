@@ -48,9 +48,9 @@
         user: '-1',
         date_type: 'd',
         values: {
-          date: '',
-          month: '',
-          year: ''
+          date: getFormattedDate(today),
+          month: (new Date()).getMonth() + '',
+          year: (new Date()).getFullYear() + ''
         }
       }
     },

@@ -44,16 +44,11 @@
           {value: '11', label: 'Декабрь'},
         ],
         values: {
-          date: '',
-          month: '',
-          year: ''
+          date: getFormattedDate(today),
+          month: (new Date()).getMonth() + '',
+          year: (new Date()).getFullYear() + ''
         }
       }
-    },
-    created() {
-      this.values.date = getFormattedDate(today)
-      this.values.month = (new Date()).getMonth() + ''
-      this.values.year = (new Date()).getFullYear() + ''
     },
     watch: {
       date_type() {
