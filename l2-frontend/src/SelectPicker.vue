@@ -34,12 +34,12 @@
       selectpicker: {
         bind(el, binding, vnode) {
           let $el = $(el).parent().children('select')
-          let v = vnode.context.val
+          let v = JSON.parse(JSON.stringify(vnode.context.val))
           if (v === '-1' || !v) {
             if (vnode.context.multiple)
               v = []
             else if (vnode.context.options.length > 0)
-              v = vnode.context.options[0].value
+              v = JSON.parse(JSON.stringify(vnode.context.options[0].value))
             else
               v = ''
           }
