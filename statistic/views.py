@@ -132,6 +132,7 @@ def statistic_xls(request):
                 ("№", 4000),
                 ("ФИО", 10000),
                 ("Возраст", 3000),
+                ("Карта", 6000),
                 ("Число направлений", 5000),
                 ("Наименования исследований", 20000),
             ]
@@ -163,9 +164,12 @@ def statistic_xls(request):
                 k = iss.napravleniye.client.individual.pk
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": []}
+                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [], "cards": []}
                 if iss.napravleniye.pk not in patients[k]["directions"]:
                     patients[k]["directions"].append(iss.napravleniye.pk)
+                kn = iss.napravleniye.client.number_with_type()
+                if kn not in patients[k]["cards"]:
+                    patients[k]["cards"].append(kn)
                 patients[k]["researches"].append(iss.research.title)
 
             n = 0
@@ -175,6 +179,7 @@ def statistic_xls(request):
                     str(n),
                     patients[p_pk]["fio"],
                     patients[p_pk]["age"],
+                    ", ".join(patients[p_pk]["cards"]),
                     len(patients[p_pk]["directions"]),
                     ", ".join(patients[p_pk]["researches"]),
                 ]
