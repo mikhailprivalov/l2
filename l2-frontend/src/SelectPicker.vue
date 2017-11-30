@@ -27,13 +27,9 @@
         default: false
       }
     },
-    created() {
-      console.log('L ', this.val)
-    },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
-          console.log(vnode.context.val)
           let $el = $(el).parent().children('select')
           let v = vnode.context.val
           if (v === '-1' || !v) {
@@ -50,11 +46,11 @@
             v = v.toString()
           }
           $el.selectpicker('val', v)
-          vnode.context.func($el.val())
+          vnode.context.func(v)
           $el.on('changed.bs.select', function () {
-            vnode.context.func($(this).selectpicker('val'))
+            let lval = $(this).selectpicker('val')
+            vnode.context.func(lval)
           })
-          console.log(vnode.context.val)
         }
       }
     }
