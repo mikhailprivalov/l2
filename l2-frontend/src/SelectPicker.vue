@@ -15,7 +15,7 @@
       },
       val: {
         type: String,
-        default: ''
+        required: true
       },
       func: {
         type: Function,
@@ -38,10 +38,10 @@
           if (v === '-1' || !v)
             v = ''
           if (vnode.context.multiple) {
-            $el.selectpicker('val', v.split(','))
-          } else {
-            $el.selectpicker('val', v)
+            v = v.split(',')
           }
+          $el.selectpicker('val', v)
+          console.log(v)
           vnode.context.func($el.val())
           $el.on('change', () => {
             vnode.context.func($el.val())
