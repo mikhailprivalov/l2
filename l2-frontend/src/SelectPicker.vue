@@ -49,10 +49,7 @@
           } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
             v = v.toString()
           }
-
-          console.log(v)
           $el.selectpicker('val', v)
-          console.log('ok')
           vnode.context.func($el.val())
           $el.on('changed.bs.select', function () {
             vnode.context.func($(this).selectpicker('val'))
