@@ -54,21 +54,6 @@ def statistic_xls(request):
         date_values_o = request.GET.get("values", "{}")
         date_type = request.GET.get("date_type", "d")
 
-    monthes = {
-        "0": "Январь",
-        "1": "Февраль",
-        "2": "Март",
-        "3": "Апрель",
-        "4": "Май",
-        "5": "Июнь",
-        "6": "Июль",
-        "7": "Август",
-        "8": "Сентябрь",
-        "9": "Октябрь",
-        "10": "Ноябрь",
-        "11": "Декабрь",
-    }
-
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
                  user=request.user.doctorprofile).save()
@@ -87,6 +72,20 @@ def statistic_xls(request):
         access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile) and DoctorProfile.objects.filter(pk=x).exists()]
         date_values = json.loads(date_values_o)
+        monthes = {
+            "0": "Январь",
+            "1": "Февраль",
+            "2": "Март",
+            "3": "Апрель",
+            "4": "Май",
+            "5": "Июнь",
+            "6": "Июль",
+            "7": "Август",
+            "8": "Сентябрь",
+            "9": "Октябрь",
+            "10": "Ноябрь",
+            "11": "Декабрь",
+        }
         date_values["month_title"] = monthes[date_values["month"]]
         response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Забор_биоматериала.xls'", tr)
         for user_pk in users:
