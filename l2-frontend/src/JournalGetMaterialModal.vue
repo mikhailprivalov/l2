@@ -12,7 +12,7 @@
               <date-selector :date_type.sync="date_type" :values.sync="values"></date-selector>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
-              <select-picker :val="user" :options="users_list" :func="change_user" :multiple="users.length > 1" :actions_box="users.length > 1"></select-picker>
+              <select-picker val="user" :options="users_list" :func="change_user" multiple="users.length > 1" actions_box="users.length > 1"></select-picker>
             </div>
           </div>
         </div>
