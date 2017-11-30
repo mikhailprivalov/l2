@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
+  <select v-selectpicker v-model="val" class="selectpicker" data-width="100%" @change="func" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
           data-deselect-all-text="Отменить весь выбор">
     <option v-bind:value="option.value" v-for="option in options">{{ option.label }}</option>
   </select>
@@ -34,12 +34,12 @@
       selectpicker: {
         bind(el, binding, vnode) {
           let $el = $(el).parent().children('select')
-          let v = JSON.parse(JSON.stringify(vnode.context.val))
+          let v = vnode.context.val
           if (v === '-1' || !v) {
             if (vnode.context.multiple)
               v = []
             else if (vnode.context.options.length > 0)
-              v = JSON.parse(JSON.stringify(vnode.context.options[0].value))
+              v = vnode.context.options[0].value
             else
               v = ''
           }
