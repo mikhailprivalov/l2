@@ -105,7 +105,7 @@ def statistic_xls(request):
             row_num = 0
             row = [
                 ("Исполнитель: ", 4000),
-                (user_row.fio, 10000)
+                (user_row.fio, 7600)
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num][0], font_style)
@@ -130,7 +130,7 @@ def statistic_xls(request):
             row_num += 2
             row = [
                 ("№", 4000),
-                ("ФИО", 10000),
+                ("ФИО", 7600),
                 ("Возраст", 3000),
                 ("Карта", 6000),
                 ("Число направлений", 5000),
