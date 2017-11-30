@@ -33,9 +33,14 @@
       selectpicker: {
         bind(el, binding, vnode) {
           let $el = $(el)
+          let v = vnode.context.val
+          if(v === "-1")
+            v = ""
+          if(vnode.context.multiple)
+            $el.val(v.split(","))
           vnode.context.func($el.val())
           $el.on('change', () => {
-            vnode.context.func($el.val())
+            vnode.context.func($el.val().join(","))
           })
         }
       }
