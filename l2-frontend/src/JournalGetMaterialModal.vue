@@ -77,8 +77,7 @@
         this.user = v
       },
       make_report() {
-        window.open('/statistic/xls?type=' + stype + '&pk=' + pk + '&date-start=' + $('[name=\'date-start\']').val() + '&date-end=' + $('[name=\'date-end\']').val(), '_blank')
-        window.open(`/statistic/xls?type=journal-get-material&users=${JSON.stringify(this.selected_users())}&date_type=${this.date_type}&`, '_blank')
+        window.open(`/statistic/xls?type=journal-get-material&users=${encodeURIComponent(JSON.stringify(this.selected_users()))}&date_type=${this.date_type}&values=${encodeURIComponent(JSON.stringify(this.values))}`, '_blank')
       }
     },
     components: {DateSelector, SelectPicker}
