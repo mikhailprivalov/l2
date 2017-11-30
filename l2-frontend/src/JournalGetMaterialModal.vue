@@ -59,7 +59,9 @@
     },
     methods: {
       change_user(v) {
-        console.log(v)
+        if(!v){
+          v = ""
+        }
         this.user = v
       }
     },
