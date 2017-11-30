@@ -27,6 +27,13 @@
         default: false
       }
     },
+    created() {
+      $(this.$el).change(function () {
+        let lval = $(this).selectpicker('val')
+        this.func(lval)
+        console.log(lval)
+      })
+    },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
@@ -47,10 +54,6 @@
           }
           $el.selectpicker('val', v)
           vnode.context.func(v)
-          $el.on('change', function () {
-            let lval = $(this).selectpicker('val')
-            vnode.context.func(lval)
-          })
         }
       }
     }
