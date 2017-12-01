@@ -87,16 +87,21 @@ def ajax_search(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) or card_type.is_rmis) and len(list(objects)) == 0:  # Если это запрос номер карты
-            try:
-                objects = Clients.Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
-                                                            card__base=card_type)
-            except ValueError:
-                pass
-            if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
-                c = Client()
-                objects = c.patients.import_individual_to_base(query)
-            else:
+        if re.search(p3, query) or card_type.is_rmis:
+            resync = True
+            if len(list(objects)) == 0:  # Если это запрос номер карты
+                resync = False
+                try:
+                    objects = Clients.Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
+                                                                card__base=card_type)
+                except ValueError:
+                    pass
+                if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
+                    c = Client()
+                    objects = c.patients.import_individual_to_base(query)
+                else:
+                    resync = True
+            if resync:
                 c = Client()
                 for o in objects:
                     o.sync_with_rmis(c=c)
