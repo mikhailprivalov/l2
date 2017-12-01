@@ -101,7 +101,7 @@ def ajax_search(request):
                     objects = c.patients.import_individual_to_base(query)
                 else:
                     resync = True
-            if resync:
+            if resync and card_type.is_rmis:
                 c = Client()
                 for o in objects:
                     o.sync_with_rmis(c=c)
