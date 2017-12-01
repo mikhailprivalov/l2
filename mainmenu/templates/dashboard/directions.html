@@ -205,10 +205,9 @@
                             </div>
                             <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8" id="sources" style="text-align: center; padding-right: 0; padding-left: 0">
                                 {% for f in fin %}
-                                <div class="btn-group btn-group-justified fin_source" id="fin_{{ f.pk }}" data-toggle="buttons"
-                                     style="display: inline-block;">
+                                <div class="btn-group btn-group-justified fin_source" id="fin_{{ f.pk }}" data-toggle="buttons">
                                     {% for v in f.sources %}
-                                        <label class="btn btn-blue-nb3 btn-ell"><input type="radio" name="source"
+                                        <label class="btn btn-blue-nb3 btn-sm btn-ell"><input type="radio" name="source"
                                                                                       value="{{ v.pk }}"
                                                                                       autocomplete="off"> {{ v.title }}
                                         </label>
