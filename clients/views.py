@@ -96,6 +96,10 @@ def ajax_search(request):
             if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
                 c = Client()
                 objects = c.patients.import_individual_to_base(query)
+            else:
+                c = Client()
+                for o in objects:
+                    o.sync_with_rmis(c=c)
 
         '''
         c = Client()
