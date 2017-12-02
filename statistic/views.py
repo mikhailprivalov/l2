@@ -75,7 +75,7 @@ def statistic_xls(request):
     if tp == "journal-get-material":
         import datetime
         access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
-        users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile) and DoctorProfile.objects.filter(pk=x).exists()]
+        users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
             "0": "Январь",
