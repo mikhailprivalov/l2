@@ -42,7 +42,7 @@ INSTALLED_APPS = (
     # 'debug_toolbar',
     # 'debug_panel',
     'rest_framework',
-    'cachalot',
+    # 'cachalot',
     'django_logtail',
     # 'silk',
     'oauth2_provider',
