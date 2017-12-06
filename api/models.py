@@ -25,9 +25,9 @@ class RelationFractionASTM(models.Model):
     """
     MULTIPLIERS = ((0, 1), (1, 10), (2, 100), (3, 1000), (4, 1.9), (5, 2.2), (6, 2.5), (7, 0.1), (8, 0.01),)
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле", db_index=True)
-    fraction = models.ForeignKey(directory_models.Fractions, help_text="Фракция")
+    fraction = models.ForeignKey(directory_models.Fractions, help_text="Фракция", on_delete=models.CASCADE)
     multiplier = models.IntegerField(choices=MULTIPLIERS, default=0, help_text="Множитель результата")
-    default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API", default=None, blank=True, null=True)
+    default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API", default=None, blank=True, null=True, on_delete=models.CASCADE)
     full_round = models.BooleanField(default=False, blank=True, help_text="Округлять весь результат?")
     analyzer = models.ManyToManyField('api.Analyzer', help_text="Анализаторы", blank=True, default=None)
     application_api = models.ManyToManyField('api.Application', help_text="Приложение API", blank=True, default=None)

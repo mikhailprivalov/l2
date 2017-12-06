@@ -12,9 +12,9 @@ class Discharge(models.Model):
     client_cardnum = models.CharField(max_length=20, help_text="Номер карты", blank=True, null=True, db_index=True)
     client_historynum = models.CharField(max_length=20, help_text="Номер истории", blank=True, null=True)
 
-    otd = models.ForeignKey(pod.Podrazdeleniya, help_text="Отделение", db_index=True)
+    otd = models.ForeignKey(pod.Podrazdeleniya, help_text="Отделение", db_index=True, on_delete=models.CASCADE)
     doc_fio = models.CharField(max_length=255, help_text="Врач", db_index=True)
-    creator = models.ForeignKey(users.DoctorProfile)
+    creator = models.ForeignKey(users.DoctorProfile, on_delete=models.CASCADE)
 
     file = models.FileField(upload_to='discharges/%Y/%m/%d/')
 

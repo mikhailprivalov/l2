@@ -254,10 +254,10 @@ class DocumentType(models.Model):
 
 
 class Document(models.Model):
-    document_type = models.ForeignKey(DocumentType, help_text="Тип документа", db_index=True)
+    document_type = models.ForeignKey(DocumentType, help_text="Тип документа", db_index=True, on_delete=models.CASCADE)
     serial = models.CharField(max_length=30, blank=True, help_text="Серия")
     number = models.CharField(max_length=30, blank=True, help_text="Номер")
-    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
@@ -277,7 +277,8 @@ class CardBase(models.Model):
     is_rmis = models.BooleanField(help_text="Это РМИС?", default=False)
     hide = models.BooleanField(help_text="Скрыть базу", default=False)
     history_number = models.BooleanField(help_text="Ввод номера истории", default=False)
-    assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base", help_text="Показывать результаты в поиске вместе с этой базой", null=True, blank=True, default=None)
+    assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base", help_text="Показывать результаты в поиске вместе с этой базой", null=True, blank=True, default=None,
+                                         on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
@@ -289,8 +290,8 @@ class CardBase(models.Model):
 
 class Card(models.Model):
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
-    base = models.ForeignKey(CardBase, help_text="База карты", db_index=True)
-    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True)
+    base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None)
 

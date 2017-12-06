@@ -14,8 +14,8 @@ import slog.models as slog
 
 
 class FrequencyOfUseResearches(models.Model):
-    research = models.ForeignKey(directory.Researches)
-    user = models.ForeignKey(DoctorProfile, db_index=True)
+    research = models.ForeignKey(directory.Researches, on_delete=models.CASCADE)
+    user = models.ForeignKey(DoctorProfile, db_index=True, on_delete=models.CASCADE)
     cnt = models.IntegerField(default=0)
 
     def __str__(self):
@@ -42,8 +42,8 @@ class FrequencyOfUseResearches(models.Model):
 
 
 class CustomResearchOrdering(models.Model):
-    research = models.ForeignKey(directory.Researches)
-    user = models.ForeignKey(DoctorProfile, db_index=True)
+    research = models.ForeignKey(directory.Researches, on_delete=models.CASCADE)
+    user = models.ForeignKey(DoctorProfile, db_index=True, on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
 
     def __str__(self):
@@ -59,13 +59,11 @@ class TubesRegistration(models.Model):
     Таблица с пробирками для исследований
     """
     id = models.AutoField(primary_key=True, db_index=True)
-    type = models.ForeignKey(directory.ReleationsFT, help_text='Тип пробирки')
+    type = models.ForeignKey(directory.ReleationsFT, help_text='Тип пробирки', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
-    doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
-                                related_name='docget', help_text='Кто взял материал')
+    doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
     time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
-    doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True,
-                                   related_name='docrecive', help_text='Кто получил материал')
+    doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive', help_text='Кто получил материал', on_delete=models.SET_NULL)
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер пробирки', db_index=True)
 
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
@@ -182,7 +180,7 @@ class IstochnikiFinansirovaniya(models.Model):
     """
     title = models.CharField(max_length=511, help_text='Название')
     active_status = models.BooleanField(default=True, help_text='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True)
+    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
 
     class Meta:
@@ -196,23 +194,19 @@ class Napravleniya(models.Model):
     """
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
-    client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент')
-    doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач')
-    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True,
-                                    help_text='Источник финансирования')
+    client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
+    doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач', on_delete=models.CASCADE)
+    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования', on_delete=models.CASCADE)
     is_printed = models.BooleanField(default=False, blank=True, help_text='Флаг - напечатано ли направление')
     time_print = models.DateTimeField(default=None, blank=True, null=True, help_text='Время печати')
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?', db_index=True)
-    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print",
-                                  help_text='Профиль, который был использован при печати')
-    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
-                                       related_name="doc_who_create", help_text='Создатель направления')
+    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print", help_text='Профиль, который был использован при печати', on_delete=models.SET_NULL)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
-    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True,
-                                   help_text='ID направления в РМИС')
+    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, help_text='ID направления в РМИС')
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
 
     def __str__(self):
@@ -397,22 +391,17 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
-    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True)
-    research = models.ForeignKey(directory.Researches, null=True, blank=True,
-                                 help_text='Вид исследования из справочника', db_index=True)
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования', db_index=True)
-    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True,
-                                 help_text='Профиль пользователя, сохранившего результат')
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True, help_text='Профиль пользователя, сохранившего результат', on_delete=models.SET_NULL)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation",
-                                         db_index=True, help_text='Профиль пользователя, подтвердившего результат')
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
-                                             help_text='Время подтверждения результата')
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
-    comment = models.CharField(max_length=10, default="", blank=True,
-                               help_text='Комментарий (отображается на пробирке)')
+    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
-    api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены')
+    api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)
@@ -440,7 +429,7 @@ class Issledovaniya(models.Model):
 
 
 class RmisServices(models.Model):
-    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True)
+    napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     code = models.TextField(help_text='Код выгруженной услуги', db_index=True)
     rmis_id = models.CharField(max_length=15, default="", blank=True, help_text='ID выгруженной услуги в РМИС')
 
@@ -456,9 +445,8 @@ class Result(models.Model):
     """
     Результат исследований
     """
-    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
-                                      help_text='Направление на исследование, для которого сохранен результат')
-    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True)
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
+    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True, on_delete=models.CASCADE)
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")

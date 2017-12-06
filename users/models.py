@@ -14,12 +14,9 @@ class DoctorProfile(models.Model):
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт')
     fio = models.CharField(max_length=255, help_text='ФИО')
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True)
-    isLDAP_user = models.BooleanField(default=False,
-                                      blank=True,
-                                      help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
-    labtype = models.IntegerField(choices=labtypes, default=0, blank=True,
-                                  help_text='Категория профиля для лаборатории')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
+    labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
 
     def get_fio(self, dots=True):
         """
@@ -63,8 +60,8 @@ class DoctorProfile(models.Model):
 
 class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
-    doc = models.ForeignKey(DoctorProfile, null=True, blank=True)
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr')
+    doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc))
@@ -75,8 +72,8 @@ class AssignmentTemplates(models.Model):
 
 
 class AssignmentResearches(models.Model):
-    template = models.ForeignKey(AssignmentTemplates)
-    research = models.ForeignKey('directory.Researches')
+    template = models.ForeignKey(AssignmentTemplates, on_delete=models.CASCADE)
+    research = models.ForeignKey('directory.Researches', on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.template) + "  | " + str(self.research)

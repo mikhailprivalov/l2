@@ -18,7 +18,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
 
 class Subgroups(models.Model):  # Модель подгрупп подразделений
     title = models.CharField(max_length=255)  # Название подгруппы
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya)  # Подразделение группы
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, on_delete=models.CASCADE)  # Подразделение группы
 
     def __str__(self):
         if self.podrazdeleniye.title != self.title:

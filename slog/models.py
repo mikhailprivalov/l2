@@ -62,7 +62,7 @@ class Log(models.Model):
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
     body = models.TextField()
-    user = models.ForeignKey(DoctorProfile)
+    user = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, blank=True, null=True)
     time = models.DateTimeField(auto_now=True)
 
     @staticmethod

@@ -5,7 +5,7 @@ import directory.models as directory
 
 
 class Uet(models.Model):
-    user = models.ForeignKey(users.DoctorProfile, db_index=True)
+    user = models.ForeignKey(users.DoctorProfile, db_index=True, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True, blank=True, db_index=True)
     points = models.FloatField()
 
