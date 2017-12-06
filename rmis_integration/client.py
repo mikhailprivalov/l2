@@ -252,10 +252,13 @@ class Patients(BaseRequester):
                 doc_number = document.number
             else:
                 return []
-        search_dict = {"docTypeId": doc_type_id}
+        search_dict = {}
         if doc_serial != "":
             search_dict["docSeries"] = doc_serial
+        elif doc_type_id == "24":
+            doc_type_id = "26"
         search_dict["docNumber"] = doc_number
+        search_dict["docTypeId"] = doc_type_id
         if search_dict["docNumber"] == "":
             return []
         return self.client.searchIndividual(searchDocument=search_dict)
