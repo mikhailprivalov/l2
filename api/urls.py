@@ -1,7 +1,8 @@
-from django.conf.urls import url
+from django.urls import path
+
 from . import views
 
 urlpatterns = [
-    url(r'^send$', views.send),
-    url(r'^endpoint$', views.endpoint)
+    path('^send', views.send),
+    path('^endpoint', views.endpoint)
 ]

@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.urls import path, include
 from rest_framework import routers
 
 # from rest.l2_serializers import DoctorSerializer, PodrazdeleniyaSerializer
@@ -10,6 +10,6 @@ router = routers.DefaultRouter()
 # router.register(r'podrazdeleniyas', PodrazdeleniyaSerializer)
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path('', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

@@ -1,13 +1,13 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    url(r'^log$', views.log),
-    url(r'^log/cleanup$', views.log_cleanup),
-    url(r'^db$', views.db),
-    url(r'^rmis/check$', views.rmis_check),
-    url(r'^archive_cards$', views.archive_without_directions),
-    url(r'^patients$', views.patients_without_cards),
-    url(r'^sync/departments$', views.sync_departments),
-    url(r'^sync/researches$', views.sync_researches),
+    path('log', views.log),
+    path('log/cleanup', views.log_cleanup),
+    path('db', views.db),
+    path('rmis/check', views.rmis_check),
+    path('archive_cards', views.archive_without_directions),
+    path('patients', views.patients_without_cards),
+    path('sync/departments', views.sync_departments),
+    path('sync/researches', views.sync_researches),
 ]
