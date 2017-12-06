@@ -107,7 +107,7 @@ urlpatterns = [
                   path('health/', include('health.urls')),
                   path('logout/', logout, {'next_page': '/'}),
                   path('o/', include('oauth2_provider.urls', namespace='oauth2_provider'))
-              ] + staticfiles_urlpatterns() + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if 'silk' in settings.INSTALLED_APPS:
     urlpatterns.append(path('silk/', include('silk.urls', namespace='silk')))
