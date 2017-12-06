@@ -293,7 +293,7 @@ class Card(models.Model):
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
-    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None)
+    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
