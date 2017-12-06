@@ -39,7 +39,7 @@ INSTALLED_APPS = (
     'api',
     'discharge',
     'rmis_integration',
-    'debug_toolbar',
+    # 'debug_toolbar',
     # 'debug_panel',
     'rest_framework',
     'cachalot',
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     # 'debug_panel.middleware.DebugPanelMiddleware',
     # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware'],
     'ratelimit.middleware.RatelimitMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []

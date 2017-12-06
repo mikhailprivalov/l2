@@ -1,5 +1,3 @@
-from debug_panel.cache import cache
-
 import appconf.models as appconf
 
 
