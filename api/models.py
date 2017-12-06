@@ -30,6 +30,7 @@ class RelationFractionASTM(models.Model):
     default_ref = models.ForeignKey(directory_models.References, help_text="Референс для сохранения через API", default=None, blank=True, null=True)
     full_round = models.BooleanField(default=False, blank=True, help_text="Округлять весь результат?")
     analyzer = models.ManyToManyField('api.Analyzer', help_text="Анализаторы", blank=True, default=None)
+    application_api = models.ManyToManyField('api.Application', help_text="Приложение API", blank=True, default=None)
 
     def __str__(self):
         return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(self.get_multiplier_display())

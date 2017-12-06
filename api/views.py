@@ -151,4 +151,17 @@ def send(request):
 
 
 def endpoint(request):
-    return JsonResponse({})
+    result = {"answer": False, "body": ""}
+    data = json.loads(request.POST.get("data", request.GET.get("data", "{}")))
+    api_key = data.get("api_key", "")
+    message_type = data.get("message_type", "C")
+    if models.Application.objects.filter(key=api_key).exists():
+        if message_type == "R":
+            pass
+        elif message_type == "Q":
+            pass
+        else:
+            pass
+    else:
+        request["body"] = "API key is incorrect"
+    return JsonResponse(result)
