@@ -3,7 +3,7 @@ from . import views
 from directory import views as d_views
 
 urlpatterns = [
-    path('menu$', views.menu),
+    path('menu', views.menu),
     path('researches', views.researches),
     path('researches/tune', views.researches_tune),
     path('researches/get_details', d_views.researches_get_details),
