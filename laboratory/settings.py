@@ -89,7 +89,7 @@ TEMPLATES = [
         },
     },
 ]
-WSGI_APPLICATION = 'wsgi.application'
+WSGI_APPLICATION = 'laboratory.wsgi.application'
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/mainmenu/'
 # Database
