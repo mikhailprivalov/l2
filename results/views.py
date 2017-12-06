@@ -540,6 +540,7 @@ def result_normal(s):
         except:
             pass
     # s = lr(s).replace(" ", "&nbsp;")
+    s = s.replace("<br>", "<br/>")
     return s
 
 
