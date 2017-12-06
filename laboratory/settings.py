@@ -112,14 +112,14 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
         'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")
     },
-    'debug-panel': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/debug-panel-cache-2',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 200
-        }
-    }
+    # 'debug-panel': {
+    #     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+    #     'LOCATION': '/var/tmp/debug-panel-cache-2',
+    #     'TIMEOUT': 300,
+    #     'OPTIONS': {
+    #         'MAX_ENTRIES': 200
+    #     }
+    # }
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
