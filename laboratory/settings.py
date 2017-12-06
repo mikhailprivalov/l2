@@ -40,7 +40,7 @@ INSTALLED_APPS = (
     'discharge',
     'rmis_integration',
     'debug_toolbar',
-    'debug_panel',
+    # 'debug_panel',
     'rest_framework',
     'cachalot',
     'django_logtail',
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'debug_panel.middleware.DebugPanelMiddleware',
+    # 'debug_panel.middleware.DebugPanelMiddleware',
     # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware'],
     'ratelimit.middleware.RatelimitMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware'
