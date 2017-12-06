@@ -100,7 +100,7 @@ urlpatterns = [
                   path('statistic/xls', statistic_xls),
                   path('ajax_select/', include(ajax_select_urls)),
                   path('admin/doc/', include('django.contrib.admindocs.urls')),
-                  path('admin/', include(admin.site.urls)),
+                  path('admin/', admin.site.urls),
                   path('construct/', include(urls.urlpatterns)),
                   path('api/', include(api_urls.urlpatterns)),
                   path('barcodes/', include(barcodes_urls.urlpatterns)),
