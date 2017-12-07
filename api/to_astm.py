@@ -77,6 +77,6 @@ def get_iss_astm(issledovaniya: list, app: api.Application):
                 researches[k].append([None, rel.astm_field, None, None])
     for tpk in researches:
         n += 1
-        m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])
+        m.append(['O', n, tpk, None, researches[tpk]])
     m.append(get_leave())
     return encode(m)
