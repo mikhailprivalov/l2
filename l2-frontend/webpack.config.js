@@ -13,7 +13,7 @@ module.exports = {
   },
   plugins: [
     new BundleTracker({filename: '../webpack-stats.json'}),
-    new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'])
+    new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternalRoot: true})
   ],
   module: {
     rules: [
