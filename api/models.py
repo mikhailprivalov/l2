@@ -1,5 +1,6 @@
 from django.db import models
 import directory.models as directory_models
+import directions.models as directions
 import uuid
 
 
@@ -18,6 +19,19 @@ class Application(models.Model):
     class Meta:
         verbose_name = 'Приложение API'
         verbose_name_plural = 'Приложения API'
+
+    def get_issledovaniya(self, pk):
+        t_filter = dict(pk__in=pk)
+        if self.direction_work:
+            pkin = []
+            for p in pk:
+                if p >= 4600000000000:
+                    p -= 4600000000000
+                    p //= 10
+                pkin.append(p)
+            t_filter = dict(issledovaniya__napravleniye__pk__in=pkin)
+        tubes = directions.TubesRegistration.objects.filter(**t_filter)
+        return directions.Issledovaniya.objects.filter(tubes__in=tubes)
 
 
 class RelationFractionASTM(models.Model):

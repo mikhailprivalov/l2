@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
+from api.to_astm import get_iss_astm
 from barcodes.views import tubes
 from slog import models as slog
 
@@ -160,15 +161,16 @@ def endpoint(request):
     if models.Application.objects.filter(key=api_key).exists():
         app = models.Application.objects.get(key=api_key)
         if app.active:
-            if pk != -1:
                 if message_type == "R":
-                    pass
+                    if pk != -1:
+                        pass
+                    else:
+                        request["body"] = "pk '{}' is not exists".format(pk_s)
                 elif message_type == "Q":
-                    pass
+                    pks = data.get("query", [])
+                    result["body"] = get_iss_astm(app.get_issledovaniya(pks), app)
                 else:
                     pass
-            else:
-                request["body"] = "pk '{}' is not exists".format(pk_s)
         else:
             request["body"] = "API app banned"
     else:
