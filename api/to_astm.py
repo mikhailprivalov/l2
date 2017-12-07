@@ -17,7 +17,7 @@ def get_leave() -> list:
 
 
 def get_patient() -> list:
-    return ['P', 1, None, None, ['', '', '', '']]
+    return ['P', 1]
 
 
 def get_iss_direction(direction: directions.Napravleniya, analyzer: api.Analyzer, full=False) -> list:
@@ -71,7 +71,10 @@ def get_iss_astm(issledovaniya: list, app: api.Application):
             if not rel.exists():
                 continue
             rel = rel[0]
-            researches[k].append(rel.astm_field)
+            if rel.is_code:
+                researches[k].append([None, None, None, rel.astm_field])
+            else:
+                researches[k].append([None, rel.astm_field, None, None])
     for tpk in researches:
         n += 1
         m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])

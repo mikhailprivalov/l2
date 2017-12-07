@@ -52,6 +52,7 @@ class RelationFractionASTM(models.Model):
     full_round = models.BooleanField(default=False, blank=True, help_text="Округлять весь результат?")
     analyzer = models.ManyToManyField('api.Analyzer', help_text="Анализаторы", blank=True, default=None)
     application_api = models.ManyToManyField('api.Application', help_text="Приложение API", blank=True, default=None)
+    is_code = models.BooleanField(default=False, help_text="astm_field - это код (id)?")
 
     def __str__(self):
         return self.astm_field + " to \"" + self.fraction.research.title + "." + self.fraction.title + "\" x " + str(self.get_multiplier_display())
