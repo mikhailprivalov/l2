@@ -9,7 +9,7 @@ import simplejson as json
 
 
 def get_astm_header() -> list:
-    return ['H', [[None], [None, '&']], None, None, ['1', '2.00'], None, None, None, None, None, None, 'P', '1.00', timezone.now().strftime("%Y%m%d%H%M%S")]
+    return ['H|\\^&', None, None, ['1', '2.00'], None, None, None, None, None, None, 'P', '1.00', timezone.now().strftime("%Y%m%d%H%M%S")]
 
 
 def get_leave() -> list:
