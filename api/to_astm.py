@@ -62,7 +62,6 @@ def get_iss_astm(issledovaniya: [directions.Issledovaniya], app: api.Application
     m = [get_astm_header(), get_patient()]
     n = 0
 
-    r = []
     for i in issledovaniya:
         researches = defaultdict(list)
         for fraction in directory.Fractions.objects.filter(research=i.research, relationfractionastm__application_api=app, hide=False):
@@ -77,6 +76,6 @@ def get_iss_astm(issledovaniya: [directions.Issledovaniya], app: api.Application
             researches[tube.pk].append(rel.astm_field)
         for tpk in researches:
             n += 1
-            r.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])
+            m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])
     m.append(get_leave())
     return encode(m)
