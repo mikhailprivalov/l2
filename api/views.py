@@ -168,7 +168,7 @@ def endpoint(request):
                         request["body"] = "pk '{}' is not exists".format(pk_s)
                 elif message_type == "Q":
                     pks = data.get("query", [])
-                    result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
+                    result["body"] = [get_iss_astm(app.get_issledovaniya(pks), app)]
                 else:
                     pass
         else:

@@ -44,11 +44,11 @@ def get_iss_direction(direction: directions.Napravleniya, analyzer: api.Analyzer
     return r
 
 
-def encode(m) -> list:
-    return codec.encode(m)
+def encode(m) -> str:
+    return codec.iter_encode(m)
 
 
-def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> list:
+def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> str:
     iss = [get_iss_direction(x, analyzer, full) for x in directions_list]
     m = [get_astm_header(), get_patient()]
     m = list(itertools.chain(m, *iss))
