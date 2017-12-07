@@ -62,18 +62,18 @@ def get_iss_astm(issledovaniya: list, app: api.Application):
     m = [get_astm_header(), get_patient()]
     n = 0
 
+    researches = defaultdict(list)
     for row in issledovaniya:
         k = row["pk"]
         i = row["iss"]
-        researches = defaultdict(list)
         for fraction in directory.Fractions.objects.filter(research=i.research, relationfractionastm__application_api=app, hide=False):
             rel = api.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
             if not rel.exists():
                 continue
             rel = rel[0]
             researches[k].append(rel.astm_field)
-        for tpk in researches:
-            n += 1
-            m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])
+    for tpk in researches:
+        n += 1
+        m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])
     m.append(get_leave())
     return encode(m)
