@@ -155,15 +155,20 @@ def endpoint(request):
     data = json.loads(request.POST.get("data", request.GET.get("data", "{}")))
     api_key = data.get("api_key", "")
     message_type = data.get("message_type", "C")
+    pk_s = str(data.get("pk", ""))
+    pk = -1 if not pk_s.isdigit() else int(pk_s)
     if models.Application.objects.filter(key=api_key).exists():
         app = models.Application.objects.get(key=api_key)
         if app.active:
-            if message_type == "R":
-                pass
-            elif message_type == "Q":
-                pass
+            if pk != -1:
+                if message_type == "R":
+                    pass
+                elif message_type == "Q":
+                    pass
+                else:
+                    pass
             else:
-                pass
+                request["body"] = "pk '{}' is not exists".format(pk_s)
         else:
             request["body"] = "API app banned"
     else:
