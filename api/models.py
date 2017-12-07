@@ -10,6 +10,7 @@ class Application(models.Model):
     key = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
     name = models.CharField(max_length=255, help_text="Название приложения")
     active = models.BooleanField(default=True, help_text="Флаг активности")
+    direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
 
     def __str__(self):
         return self.name
