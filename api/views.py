@@ -156,12 +156,16 @@ def endpoint(request):
     api_key = data.get("api_key", "")
     message_type = data.get("message_type", "C")
     if models.Application.objects.filter(key=api_key).exists():
-        if message_type == "R":
-            pass
-        elif message_type == "Q":
-            pass
+        app = models.Application.objects.get(key=api_key)
+        if app.active:
+            if message_type == "R":
+                pass
+            elif message_type == "Q":
+                pass
+            else:
+                pass
         else:
-            pass
+            request["body"] = "API app banned"
     else:
         request["body"] = "API key is incorrect"
     return JsonResponse(result)
