@@ -9,11 +9,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'key', 'active')
 
 
-@admin.register(models.RelationFractionASTM)
-class ApplicationAdmin(AjaxSelectAdmin):
-    form = make_ajax_form(models.RelationFractionASTM, {
-        'fraction': 'fraction'
-    })
+admin.site.register(models.RelationFractionASTM)
 
 
 @admin.register(models.Analyzer)
