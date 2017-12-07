@@ -58,22 +58,20 @@ def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> s
     return encode(m)
 
 
-def get_iss_astm(issledovaniya: [directions.Issledovaniya], app: api.Application):
+def get_iss_astm(issledovaniya: list, app: api.Application):
     m = [get_astm_header(), get_patient()]
     n = 0
 
-    for i in issledovaniya:
+    for row in issledovaniya:
+        k = row["pk"]
+        i = row["iss"]
         researches = defaultdict(list)
         for fraction in directory.Fractions.objects.filter(research=i.research, relationfractionastm__application_api=app, hide=False):
             rel = api.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
             if not rel.exists():
                 continue
             rel = rel[0]
-            tube = directions.TubesRegistration.objects.filter(type__fractions=fraction)
-            if not tube.exists():
-                continue
-            tube = tube[0]
-            researches[tube.pk].append(rel.astm_field)
+            researches[k].append(rel.astm_field)
         for tpk in researches:
             n += 1
             m.append(['O', n, tpk, None, [[None, x, None, None] for x in researches[tpk]]])

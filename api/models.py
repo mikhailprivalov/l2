@@ -20,18 +20,24 @@ class Application(models.Model):
         verbose_name_plural = 'Приложения API'
 
     def get_issledovaniya(self, pk):
+        r = []
         from directions.models import TubesRegistration, Issledovaniya
-        t_filter = dict(pk__in=pk)
-        if self.direction_work:
-            pkin = []
-            for p in pk:
-                if p >= 4600000000000:
-                    p -= 4600000000000
-                    p //= 10
-                pkin.append(p)
-            t_filter = dict(issledovaniya__napravleniye__pk__in=pkin)
-        tubes = TubesRegistration.objects.filter(**t_filter)
-        return Issledovaniya.objects.filter(tubes__in=tubes)
+        for ps in pk:
+            d = self.direction_work
+            p = ps
+            if p >= 4600000000000:
+                d = True
+                p -= 4600000000000
+                p //= 10
+
+            if d:
+                t_filter = dict(issledovaniya__napravleniye__pk=p)
+            else:
+                t_filter = dict(pk=p)
+            tubes = TubesRegistration.objects.filter(**t_filter)
+            for i in Issledovaniya.objects.filter(tubes__in=tubes):
+                r.append({"pk": ps, "iss": i})
+        return r
 
 
 class RelationFractionASTM(models.Model):
