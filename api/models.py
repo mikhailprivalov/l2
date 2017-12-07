@@ -1,7 +1,8 @@
 from django.db import models
 import directory.models as directory_models
-import directions.models as directions
 import uuid
+
+from directions.models import TubesRegistration, Issledovaniya
 
 
 class Application(models.Model):
@@ -30,8 +31,8 @@ class Application(models.Model):
                     p //= 10
                 pkin.append(p)
             t_filter = dict(issledovaniya__napravleniye__pk__in=pkin)
-        tubes = directions.TubesRegistration.objects.filter(**t_filter)
-        return directions.Issledovaniya.objects.filter(tubes__in=tubes)
+        tubes = TubesRegistration.objects.filter(**t_filter)
+        return Issledovaniya.objects.filter(tubes__in=tubes)
 
 
 class RelationFractionASTM(models.Model):
