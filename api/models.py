@@ -2,8 +2,6 @@ from django.db import models
 import directory.models as directory_models
 import uuid
 
-from directions.models import TubesRegistration, Issledovaniya
-
 
 class Application(models.Model):
     """
@@ -22,6 +20,7 @@ class Application(models.Model):
         verbose_name_plural = 'Приложения API'
 
     def get_issledovaniya(self, pk):
+        from directions.models import TubesRegistration, Issledovaniya
         t_filter = dict(pk__in=pk)
         if self.direction_work:
             pkin = []
