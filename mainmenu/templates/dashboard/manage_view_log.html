@@ -9,6 +9,7 @@
                 <label class="col-xs-3">
                     <select class="select-b" data-width="100%" data-live-search="true" id="user">
                         <option selected value="-1">Все пользователи</option>
+                        <option value="-2">Нет пользователя</option>
                         {% for u in users %}
                             <option value="{{ u.pk }}">{{ u.fio }}</option>
                         {% endfor %}

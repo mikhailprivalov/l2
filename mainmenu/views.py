@@ -66,7 +66,7 @@ def dashboard(request):  # Представление панели управл�
         groups_set = set(groups)
         for page in pages:
             if not request.user.is_superuser and "*" not in page["access"] and len(
-                            groups_set & set(page["access"])) == 0:
+                    groups_set & set(page["access"])) == 0:
                 continue
             menu.append(page)
 
@@ -151,8 +151,11 @@ def load_logs(request):
         states = json.loads(request.GET["searchdata"])
 
     obj = slog.Log.objects.all()
-    if states["user"] != -1:
+    if states["user"] > -1:
         obj = obj.filter(user__pk=states["user"])
+    if states["user"] == -2:
+        obj = obj.filter(user__isnull=True)
+
     if states["type"] != -1:
         obj = obj.filter(type=states["type"])
     if states["pk"] != "-1":
@@ -377,8 +380,8 @@ def directions(request):
     rid = -1 if not rmis_base.exists() else rmis_base[0].pk
     templates = {}
     for t in AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                                                        Q(doc=request.user.doctorprofile) |
-                                                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+                                                Q(doc=request.user.doctorprofile) |
+                                                Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
         tmp_template = defaultdict(list)
         for r in AssignmentResearches.objects.filter(template=t):
             tmp_template[r.research.get_podrazdeleniye().pk].append(r.research.pk)
