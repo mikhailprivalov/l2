@@ -169,8 +169,8 @@
                         '<td>{0}</td>'.f(v.user_fio) +
                         '<td>{0}</td>'.f(v.user_pk) +
                         '<td>{0}</td>'.f(v.type) +
-                        '<td><pre>{0}</pre></td>'.f(dkey) +
-                        '<td><pre>{0}</pre></td>'.f(dbody) +
+                        '<td class="np"><pre>{0}</pre></td>'.f(dkey) +
+                        '<td class="np"><pre>{0}</pre></td>'.f(dbody) +
                         '<td>{0}</td>'.f(v.time) +
                         '</tr>')
                     n++
@@ -276,6 +276,14 @@
 
         td pre {
             overflow-x: auto;
+            margin: 0;
+            border-radius: 0;
+            background-color: #fff;
+            border: none;
+        }
+
+        .np {
+            padding: 0;
         }
 
         .string {
