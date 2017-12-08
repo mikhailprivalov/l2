@@ -220,7 +220,7 @@ def endpoint(request):
                                         fraction_result.issledovaniye.time_save = timezone.now()
                                         fraction_result.issledovaniye.save()
                 else:
-                    request["body"] = "pk '{}' is not exists".format(pk_s)
+                    result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
                 result["answer"] = True
                 pks = [int(x) for x in data.get("query", [])]
@@ -229,8 +229,8 @@ def endpoint(request):
                 pass
         else:
             data["app_name"] = "API app banned"
-            request["body"] = "API app banned"
+            result["body"] = "API app banned"
     else:
-        request["body"] = "API key is incorrect"
+        result["body"] = "API key is incorrect"
     slog.Log(key=pk, type=6000, body=json.dumps(data), user=None).save()
     return JsonResponse(result)
