@@ -1,3 +1,4 @@
+import math
 from django.db import models
 import directory.models as directory_models
 import uuid
@@ -11,6 +12,7 @@ class Application(models.Model):
     name = models.CharField(max_length=255, help_text="Название приложения")
     active = models.BooleanField(default=True, help_text="Флаг активности")
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
+    decimal_places = models.PositiveIntegerField(default=4)
 
     def __str__(self):
         return self.name
@@ -38,6 +40,9 @@ class Application(models.Model):
             for i in Issledovaniya.objects.filter(tubes__in=tubes):
                 r.append({"pk": ps, "iss": i})
         return r
+
+    def truncate(self, f):
+        return math.floor(f * 10 ** self.decimal_places) / 10 ** self.decimal_places
 
 
 class RelationFractionASTM(models.Model):

@@ -158,21 +158,77 @@ def endpoint(request):
     message_type = data.get("message_type", "C")
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
+    data["app_name"] = "API key is incorrect"
     if models.Application.objects.filter(key=api_key).exists():
+        astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
+        if astm_user is None:
+            astm_user = users.DoctorProfile.objects.filter(user__is_staff=True).order_by("pk").first()
         app = models.Application.objects.get(key=api_key)
         if app.active:
-                if message_type == "R":
-                    if pk != -1:
-                        pass
+            data["app_name"] = app.name
+            if message_type == "R":
+                if pk != -1:
+                    dw = app.direction_work
+                    if pk >= 4600000000000:
+                        pk -= 4600000000000
+                        pk //= 10
+                        dw = True
+                    if dw:
+                        direction = directions.Napravleniya.objects.filter(pk=pk)
                     else:
-                        request["body"] = "pk '{}' is not exists".format(pk_s)
-                elif message_type == "Q":
-                    result["answer"] = True
-                    pks = [int(x) for x in data.get("query", [])]
-                    result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
+                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk)
+                    results = data.get("result", {})
+                    for key in results:
+                        ok = False
+                        q = models.RelationFractionASTM.objects.filter(astm_field=key)
+                        if q.filter(application_api=app).exists():
+                            q = q.filter(application_api=app)
+                            ok = True
+                        elif q.filter(application_api__isnull=True).exists():
+                            q = q.filter(application_api__isnull=True)
+                            ok = True
+                        if ok:
+                            for fraction_rel in q:
+                                if directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.research, doc_confirmation__isnull=True).exists():
+                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.research, doc_confirmation__isnull=True):
+                                        if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
+                                            fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                        else:
+                                            fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                        fraction_result.value = str(results[key]).strip()
+                                        import re
+                                        find = re.findall("\d+.\d+", fraction_result.value)
+                                        if len(find) > 0:
+                                            val_str = fraction_result.value
+                                            for f in find:
+                                                val = app.truncate(float(f) * fraction_rel.get_multiplier_display())
+                                                val_str = val_str.replace(f, str(val))
+                                            fraction_result.value = val_str
+
+                                        fraction_result.iteration = 1
+                                        ref = fraction_rel.default_ref
+                                        if ref:
+                                            fraction_result.ref_title = ref.title
+                                            fraction_result.ref_about = ref.about
+                                            fraction_result.ref_m = ref.m
+                                            fraction_result.ref_f = ref.f
+                                        fraction_result.save()
+                                        issled.api_app = app
+                                        issled.save()
+                                        fraction_result.get_ref(re_save=True)
+                                        fraction_result.issledovaniye.doc_save = astm_user
+                                        fraction_result.issledovaniye.time_save = timezone.now()
+                                        fraction_result.issledovaniye.save()
                 else:
-                    pass
+                    request["body"] = "pk '{}' is not exists".format(pk_s)
+            elif message_type == "Q":
+                result["answer"] = True
+                pks = [int(x) for x in data.get("query", [])]
+                result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
+            else:
+                pass
         else:
+            data["app_name"] = "API app banned"
             request["body"] = "API app banned"
     else:
         request["body"] = "API key is incorrect"
