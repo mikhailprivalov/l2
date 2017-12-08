@@ -192,6 +192,7 @@ def endpoint(request):
                             if ok:
                                 for fraction_rel in q:
                                     save_state = []
+                                    issleds = []
                                     for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
                                         if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                             fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
@@ -222,7 +223,8 @@ def endpoint(request):
                                         fraction_result.issledovaniye.time_save = timezone.now()
                                         fraction_result.issledovaniye.save()
                                         save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
-                                    slog.Log(key=json.dumps({"direction": direction.pk, "issled_pk": issled.pk, "issled_title": issled.research.title}), type=22, body=json.dumps(save_state), user=None).save()
+                                        issleds.append({"pk": issled.pk, "title": issled.research.title})
+                                    slog.Log(key=json.dumps({"direction": direction.pk, "issleds": issleds}), type=22, body=json.dumps(save_state), user=None).save()
                             oks.append(ok)
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
                 else:
