@@ -1346,11 +1346,11 @@
                 </div>
             </div>
             <div class="nav-loader center">
-                {% if show_l2_logo %}
-                    <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block" title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                                                                                                                src="{% static 'img/l2logo2.png' %}"></a>{% endif %}
-
                 <div class="navbar-header">
+                    {% if show_l2_logo %}
+                        <div class="navbar-left" style="height: 36px;width: 36px;display: inline-block" title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                                                                                                                                                                     src="{% static 'img/l2logo2.png' %}"></div>
+                    {% endif %}
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
                 </div>
                 <div class="din-spinner" style="text-align: center">
