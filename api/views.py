@@ -140,12 +140,12 @@ def send(request):
                             from datetime import datetime
                             fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                             fraction_result.issledovaniye.save()
-            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=astm_user).save()
+            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
             result["ok"] = True
         elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             if dpk > -1:
                 resdict["pk"] = dpk
-            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=astm_user).save()
+            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
     except Exception as e:
         result = {"ok": False, "Exception": True, "MSG": str(e)}
     return JsonResponse(result)
