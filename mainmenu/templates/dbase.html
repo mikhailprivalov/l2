@@ -1304,10 +1304,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block" title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                                                                                                                    src="{% static 'img/l2logo2.png' %}"></a>{% endif %}
-                    <a href="/mainmenu"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
+                    <a href="/mainmenu">{% if show_l2_logo %}<img style="height: 36px;width: 36px;" src="{% static 'img/l2logo2.png' %}">{% endif %} <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
