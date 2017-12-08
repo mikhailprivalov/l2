@@ -192,7 +192,7 @@ def endpoint(request):
                             if ok:
                                 for fraction_rel in q:
                                     save_state = []
-                                    for issled in directions.Issledovaniya.objects.filter(napravleniye__in=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
+                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
                                         if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
                                             fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
                                         else:
