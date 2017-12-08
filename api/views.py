@@ -224,7 +224,7 @@ def endpoint(request):
                                         fraction_result.issledovaniye.save()
                                         save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
                                         issleds.append({"pk": issled.pk, "title": issled.research.title})
-                                    slog.Log(key=json.dumps({"direction": direction.pk, "issleds": issleds}), type=22, body=json.dumps(save_state), user=None).save()
+                                    slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}), type=22, body=json.dumps(save_state), user=None).save()
                             oks.append(ok)
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
                 else:
