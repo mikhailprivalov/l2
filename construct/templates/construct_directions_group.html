@@ -239,7 +239,8 @@
             background-color: #E6E9ED;
         }
     </style>
-    <script src="/static/js/jquery.multi-select.js"></script>
+    {% load static %}
+    <script src="{% static 'js/jquery.multi-select.js' %}"></script>
     <script>
         // Буфер выбраных исследований
         let selected = {"researches": {}};
@@ -248,7 +249,7 @@
         $(document).ready(function () {
             $("#mes").show();
             $("#form").hide();
-            $('head').append($('<link rel="stylesheet" type="text/css" />').attr('href', '/static/css/multi-select.css'));
+            $('head').append($('<link rel="stylesheet" type="text/css" />').attr('href', '{% static 'css/multi-select.css' %}'))
 
             $(window).resize(function () {
                 resize();

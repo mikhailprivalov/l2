@@ -59,8 +59,8 @@
     </form>
 {% endblock %}
 {% block scripts %}
-
-    <script src="/static/js/omgopass.js"></script>
+    {% load static %}
+    <script src="{% static 'js/omgopass.js' %}"></script>
     <script>
         let toTranslit = function (text) {
             return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,

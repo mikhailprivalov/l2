@@ -21,41 +21,43 @@
                            value="{{ username }}" required autofocus>
                     <input type="password" id="inputPassword" class="form-control" name='password' placeholder="Пароль"
                            required>
-                    <input name="next" type="hidden" value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}" />
+                    <input name="next" type="hidden" value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}"/>
                     <button class="btn btn-lg btn-primary btn-block" type="submit">Вход</button>
                 </div>
             </div>
         </form>
     </div>
     <style>
-
+        {% load static %}
         @font-face {
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 300;
-            src: local('Open Sans Light'), local('OpenSans-Light'), url(/static/fonts/OpenSans/OpenSans-Light.ttf);
+            src: local('Open Sans Light'), local('OpenSans-Light'), url({% static 'fonts/OpenSans/OpenSans-Light.ttf' %});
         }
 
         @font-face {
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 400;
-            src: local('Open Sans'), local('OpenSans'), url(/static/fonts/OpenSans/OpenSans-Regular.ttf)
+            src: local('Open Sans'), local('OpenSans'), url({% static 'fonts/OpenSans/OpenSans-Regular.ttf' %})
         }
 
         @font-face {
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 700;
-            src: local('Open Sans Bold'), local('OpenSans-Bold'), url(/static/fonts/OpenSans/OpenSans-Bold.ttf)
+            src: local('Open Sans Bold'), local('OpenSans-Bold'), url({% static 'fonts/OpenSans/OpenSans-Bold.ttf' %})
         }
 
         input:-webkit-autofill {
             -webkit-box-shadow: 0 0 0 1000px white inset !important;
         }
-.panel-flt{
-    background: transparent;
-}
+
+        .panel-flt {
+            background: transparent;
+        }
+
         .panel-flt .panel-heading {
             background-color: #95A5A6;
             color: #fff
@@ -64,16 +66,18 @@
         .panel-flt .panel-title {
             color: #fff !important;
         }
-        .panel-flt .panel-body{
+
+        .panel-flt .panel-body {
             border-radius: 0 0 4px 4px;
-            background: rgba(255,255,255,.5)!important;
+            background: rgba(255, 255, 255, .5) !important;
         }
 
         .panel-flt .panel-body, .panel-flt .list-group-item {
             background-color: #ECF0F1;
         }
-        .panel-flt input{
-            background: rgba(255,255,255,.5)!important;
+
+        .panel-flt input {
+            background: rgba(255, 255, 255, .5) !important;
         }
 
         .btn-primary {
@@ -85,9 +89,10 @@
             background: #049372;
             border: 0
         }
+
         body {
             background: #f0f0f0;
-            background: linear-gradient(to bottom, rgba(240,240,240,1) 0%, rgba(108,122,137,0.2) 75%, rgba(108,122,137,.4) 100%);
+            background: linear-gradient(to bottom, rgba(240, 240, 240, 1) 0%, rgba(108, 122, 137, 0.2) 75%, rgba(108, 122, 137, .4) 100%);
         }
 
         .form-signin {
@@ -109,7 +114,6 @@
             font-size: 16px;
             border-radius: 5px 5px 0 0;
         }
-
 
         .form-signin .form-control:focus {
             z-index: 2;

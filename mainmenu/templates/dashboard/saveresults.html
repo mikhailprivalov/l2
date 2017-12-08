@@ -92,8 +92,9 @@
     </div>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/runtime.js"></script>
-    <script src="/static/js/jade.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/runtime.js' %}"></script>
+    <script src="{% static 'js/jade.min.js' %}"></script>
     <script>
         let type = 0;
         $(document).ready(function () {
@@ -182,7 +183,7 @@
                 position: "inside",
                 'tpl': loading_tpl,
             });
-            $.ajax({url: "/static/templates/0.jade", type: "text", method: "GET", cache: false}).done(function (data) {
+            $.ajax({url: "{% static 'templates/0.jade' %}", type: 'text', method: 'GET', cache: false}).done(function (data) {
                 template = data;
                 $.ajax({
                     url: "/researches/get/one",

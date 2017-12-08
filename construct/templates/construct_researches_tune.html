@@ -157,7 +157,8 @@
             width: 100%;
         }
     </style>
-    <script src="/static/bti/bootstrap-tagsinput.min.js"></script>
+    {% load static %}
+    <script src="{% static 'bti/bootstrap-tagsinput.min.js' %}"></script>
     <script>
         const pk = {{ pk }};
 
@@ -169,7 +170,7 @@
 
         let $comments;
         $(document).ready(function () {
-            $('head').append('<link rel="stylesheet" href="/static/bti/bootstrap-tagsinput.css" type="text/css" />');
+            $('head').append('<link rel="stylesheet" href="{% static 'bti/bootstrap-tagsinput.css' %}" type="text/css" />')
             $comments = $("#select-comments");
             $comments.append(`<option value="-1">Без вариантов</option>`);
             $.each(material_types, function (k, v) {

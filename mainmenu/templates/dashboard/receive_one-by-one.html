@@ -131,7 +131,6 @@
     </div>
 {% endblock %}
 {% block head_cn %}
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css" />
     <style>
         #history-container, #researches-scroll {
             padding-right: 15px;
@@ -177,16 +176,15 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    <script src="/static/js/bootstrap-datepicker.min.js"></script>
-    <script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
-    <script src="/static/js/jquery.idle.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/jquery.idle.min.js' %}"></script>
     <audio id="snd-scan" preload="none">
-        <source src="/static/sound/scan.mp3" type="audio/mpeg">
-        <source src="/static/sound/scan.ogg" type="audio/ogg">
+        <source src="{% static 'sound/scan.mp3' %}" type="audio/mpeg">
+        <source src="{% static 'sound/scan.ogg' %}" type="audio/ogg">
     </audio>
     <audio id="snd-warn" preload="none">
-        <source src="/static/sound/warn.mp3" type="audio/mpeg">
-        <source src="/static/sound/warn.ogg" type="audio/ogg">
+        <source src="{% static 'sound/warn.mp3' %}" type="audio/mpeg">
+        <source src="{% static 'sound/warn.ogg' %}" type="audio/ogg">
     </audio>
 <script>
 let lab_pk = {{ lab.pk }};

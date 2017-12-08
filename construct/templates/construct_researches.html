@@ -359,7 +359,8 @@
             padding: 6px 6px 5px;
         }
     </style>
-    <script src="/static/js/jquery.clearsearch.js"></script>
+    {% load static %}
+    <script src="{% static 'js/jquery.clearsearch.js' %}"></script>
     <script>
 
         let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};

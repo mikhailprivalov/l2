@@ -1092,9 +1092,10 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="/static/js/runtime.js"></script>
-    <script src="/static/js/jade.min.js"></script>
-    <script src="/static/js/ajaxq.js"></script>
+    {% load static %}
+    <script src="{% static 'js/runtime.js' %}"></script>
+    <script src="{% static 'js/jade.min.js' %}"></script>
+    <script src="{% static 'js/ajaxq.js' %}"></script>
     <script>
         let firstrun = true;
         let first_resize = true;
@@ -1193,7 +1194,7 @@
                     nn++;
                     (function (i) {
                         $.ajaxq('precache', {
-                            url: `/static/templates/${i}.jade`,
+                            url: `{% static 'templates' %}/${i}.jade`,
                             type: "text",
                             cache: false,
                             method: "GET"
@@ -1684,7 +1685,7 @@
 
             if (!cached_templates[templateid]) {
                 $.ajax({
-                    url: `/static/templates/${templateid}.jade`,
+                    url: `{% static 'templates' %}/${templateid}.jade`,
                     type: "text",
                     cache: false,
                     method: "GET"

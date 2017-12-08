@@ -5,37 +5,37 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="apple-touch-icon" sizes="57x57" href="/static/icon/apple-icon-57x57.png?2">
-    <link rel="apple-touch-icon" sizes="60x60" href="/static/icon/apple-icon-60x60.png?2">
-    <link rel="apple-touch-icon" sizes="72x72" href="/static/icon/apple-icon-72x72.png?2">
-    <link rel="apple-touch-icon" sizes="76x76" href="/static/icon/apple-icon-76x76.png?2">
-    <link rel="apple-touch-icon" sizes="114x114" href="/static/icon/apple-icon-114x114.png?2">
-    <link rel="apple-touch-icon" sizes="120x120" href="/static/icon/apple-icon-120x120.png?2">
-    <link rel="apple-touch-icon" sizes="144x144" href="/static/icon/apple-icon-144x144.png?2">
-    <link rel="apple-touch-icon" sizes="152x152" href="/static/icon/apple-icon-152x152.png?2">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/icon/apple-icon-180x180.png?2">
-    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon/android-icon-192x192.png?2">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/icon/favicon-32x32.png?2">
-    <link rel="icon" type="image/png" sizes="96x96" href="/static/icon/favicon-96x96.png?2">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/icon/favicon-16x16.png?2">
-    <link rel="manifest" href="/static/icon/manifest.json">
+    <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
+    <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
+    <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'icon/apple-icon-76x76.png' %}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{% static 'icon/apple-icon-114x114.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'icon/apple-icon-120x120.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'icon/apple-icon-144x144.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'icon/apple-icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'icon/apple-icon-180x180.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'icon/android-icon-192x192.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'icon/favicon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'icon/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'icon/manifest.json' %}">
     <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="/static/icon/ms-icon-144x144.png?2">
+    <meta name="msapplication-TileImage" content="{% static 'icon/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
 
     <title>{% block title %}{% endblock %}</title>
-    <link href="/static/css/bootstrap.min.css?2" rel="stylesheet">
-    <link href="/static/bootflat/css/bootflat.min.css" rel="stylesheet">
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
-    <link href="/static/css/bootstrap-select.min.css" rel="stylesheet">
-    <link href="/static/css/perfect-scrollbar.min.css" rel="stylesheet">
-    <link href="/static/css/amaran.min.css" rel="stylesheet">
-    <link href="/static/css/animate.min.css" rel="stylesheet">
-    <link href="/static/css/tooltipster.css" rel="stylesheet">
-    <link href="/static/css/themes/tooltipster-shadow.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/bootstrap-datepicker3.standalone.min.css" type="text/css"/>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bootflat/css/bootflat.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-select.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/perfect-scrollbar.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/amaran.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/animate.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/tooltipster.css' %}" rel="stylesheet">
+    <link href="{% static 'css/themes/tooltipster-shadow.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker3.standalone.min.css' %}" type="text/css"/>
 
-    <script src="/static/js/jquery.min.js?2"></script>
+    <script src="{% static 'js/jquery.min.js' %}"></script>
     {% load render_bundle from webpack_loader %}
     {% render_bundle 'main' 'css' %}
     <script>
@@ -53,21 +53,21 @@
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 300;
-            src: local('Open Sans Light'), local('OpenSans-Light'), url(/static/fonts/OpenSans/OpenSans-Light.ttf);
+            src: local('Open Sans Light'), local('OpenSans-Light'), url({% static 'fonts/OpenSans/OpenSans-Light.ttf' %});
         }
 
         @font-face {
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 400;
-            src: local('Open Sans'), local('OpenSans'), url(/static/fonts/OpenSans/OpenSans-Regular.ttf)
+            src: local('Open Sans'), local('OpenSans'), url({% static 'fonts/OpenSans/OpenSans-Regular.ttf' %})
         }
 
         @font-face {
             font-family: 'Open Sans';
             font-style: normal;
             font-weight: 700;
-            src: local('Open Sans Bold'), local('OpenSans-Bold'), url(/static/fonts/OpenSans/OpenSans-Bold.ttf)
+            src: local('Open Sans Bold'), local('OpenSans-Bold'), url({% static 'fonts/OpenSans/OpenSans-Bold.ttf' %})
         }
 
         * {
@@ -1290,15 +1290,13 @@
     {% block head_cn %}{% endblock %}
 </head>
 <body>{% load has_group %}
+{% load static %}
 <div id="app" class="{% block container %}container{% endblock %}">
     {% block nav %}
         {% load setting_default %}
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
         <nav class="navbar navbar-inverse">
             <div class="nav-cont">
-                {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                                        title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                                     src="/static/img/l2logo2.png"></a>{% endif %}
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                             aria-expanded="false" aria-controls="navbar">
@@ -1307,6 +1305,9 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
+                    {% if show_l2_logo %}
+                        <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block" title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                                                                                                                                                                                    src="{% static 'img/l2logo2.png' %}"></a>{% endif %}
                     <a href="/mainmenu"><span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span></a>
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
@@ -1345,9 +1346,9 @@
                 </div>
             </div>
             <div class="nav-loader center">
-                {% if show_l2_logo %}<a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                                        title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
-                                                                                                     src="/static/img/l2logo2.png"></a>{% endif %}
+                {% if show_l2_logo %}
+                    <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block" title="L2 - Лучшая Лабораторная Информационная Система"><img style="height: 36px;width: 36px;"
+                                                                                                                                                                                src="{% static 'img/l2logo2.png' %}"></a>{% endif %}
 
                 <div class="navbar-header">
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
@@ -1383,8 +1384,8 @@
 </div>
 <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
     <li class="context-st"><a class="noclick" onclick="return false"><label>Число:<input type="number" value="10"
-                                                                                          id="contextNumber"
-                                                                                          class="form-control w50"/></label>
+                                                                                         id="contextNumber"
+                                                                                         class="form-control w50"/></label>
         <label>Степень:<input type="number" class="form-control w50" value="1" id="contextSt"/></label></a></li>
     <li class="context-st"><a action="addnum" onclick="return false" tabindex="-1" href="#">Дописать число со
         степенью</a></li>
@@ -1418,26 +1419,26 @@
     <li class="divider context-st"></li>
     <li><a action="clear" onclick="return false" tabindex="-1" href="#">Очистка</a></li>
 </ul>
-<script src="/static/js/bootstrap.min.js?2"></script>
-<script src="/static/js/jquery.hotkeys.js"></script>
-<script src="/static/js/typeahead.bundle.min.js"></script>
-<script src="/static/js/bootstrap-select.js"></script>
-<script src="/static/js/bootbox.min.js"></script>
-<script src="/static/js/lang.ru.js?n=50"></script>
-<script src="/static/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js"></script>
-<script src="/static/js/jquery-ui.min.js"></script>
-<script src="/static/js/jquery.isloading.min.js"></script>
-<script src="/static/js/jquery.scrollTo.js"></script>
-<script src="/static/bootflat/js/jquery.fs.selecter.min.js"></script>
-<script src="/static/bootflat/js/jquery.fs.stepper.min.js"></script>
-<script src="/static/bootflat/js/icheck.min.js"></script>
-<script src="/static/js/jquery.amaran.min.js"></script>
-<script src="/static/js/jquery.tooltipster.min.js"></script>
-<script src="/static/js/jquery.floatThead.min.js?3"></script>
-<script src="/static/js/context.jq.bs.js"></script>
-<script src="/static/js/bootstrap-datepicker.min.js"></script>
-<script src="/static/locales/bootstrap-datepicker.ru.min.js"></script>
-<script src="/static/js/underscore-min.js"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/jquery.hotkeys.js' %}"></script>
+<script src="{% static 'js/typeahead.bundle.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-select.js' %}"></script>
+<script src="{% static 'js/bootbox.min.js' %}"></script>
+<script src="{% static 'js/lang.ru.js' %}"></script>
+<script src="{% static 'perfect-scrollbar/js/perfect-scrollbar.jquery.min.js' %}"></script>
+<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+<script src="{% static 'js/jquery.isloading.min.js' %}"></script>
+<script src="{% static 'js/jquery.scrollTo.js' %}"></script>
+<script src="{% static 'bootflat/js/jquery.fs.selecter.min.js' %}"></script>
+<script src="{% static 'bootflat/js/jquery.fs.stepper.min.js' %}"></script>
+<script src="{% static 'bootflat/js/icheck.min.js' %}"></script>
+<script src="{% static 'js/jquery.amaran.min.js' %}"></script>
+<script src="{% static 'js/jquery.tooltipster.min.js' %}"></script>
+<script src="{% static 'js/jquery.floatThead.min.js' %}"></script>
+<script src="{% static 'js/context.jq.bs.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
+<script src="{% static 'js/underscore-min.js' %}"></script>
 <script>
     let ajax_cache_token = (new Date()) + ''
     let $body = $('body')
@@ -1446,11 +1447,11 @@
 
     var card_bases = {{ card_bases|safe }}
 
-    function get_base(title) {
-        return card_bases.filter(function (obj) {
-            return obj.title === title
-        })[0]
-    }
+        function get_base(title) {
+            return card_bases.filter(function (obj) {
+                return obj.title === title
+            })[0]
+        }
 
     $loader.Particle = function (opt) {
         this.radius = 7
@@ -1477,7 +1478,7 @@
     }
 
     $loader.Particle.prototype.draw = function (i) {
-        $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ( $loader.tick + ( this.life * 120 ) ) + ', 100%, 60%, ' + this.life + ')'
+        $loader.ctx.fillStyle = $loader.ctx.strokeStyle = 'hsla(' + ($loader.tick + (this.life * 120)) + ', 100%, 60%, ' + this.life + ')'
         $loader.ctx.beginPath()
         if ($loader.particles[i - 1]) {
             $loader.ctx.moveTo(this.x, this.y)
@@ -1490,7 +1491,7 @@
         $loader.ctx.fill()
 
         let size = Math.random() * 1.25
-        $loader.ctx.fillRect(~~( this.x + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), ~~( this.y + ( ( Math.random() - 0.5 ) * 35 ) * this.life ), size, size)
+        $loader.ctx.fillRect(~~(this.x + ((Math.random() - 0.5) * 35) * this.life), ~~(this.y + ((Math.random() - 0.5) * 35) * this.life), size, size)
     }
 
     $loader.step = function () {

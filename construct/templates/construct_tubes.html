@@ -40,10 +40,11 @@
             color: #000000;
         }
     </style>
-    <script src="/static/js/colpick.js"></script>
+    {% load static %}
+    <script src="{% static 'js/colpick.js' %}"></script>
     <script>
         $(document).ready(function () {
-            $('head').append($('<link rel="stylesheet" type="text/css" />').attr('href', '/static/css/colpick.css'));
+            $('head').append($('<link rel="stylesheet" type="text/css" />').attr('href', '{% static 'css/colpick.css' %}'))
             loadtubes();
         });
         function loadtubes() {

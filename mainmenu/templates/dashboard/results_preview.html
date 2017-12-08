@@ -26,7 +26,8 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="/static/js/pdfobject.min.js"></script>
+    {% load static %}
+    <script src="{% static 'js/pdfobject.min.js' %}"></script>
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
