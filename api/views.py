@@ -221,7 +221,8 @@ def endpoint(request):
                                     fraction_result.issledovaniye.time_save = timezone.now()
                                     fraction_result.issledovaniye.save()
                                     save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
-                                slog.Log(key=json.dumps({"direction": direction.pk, "issled_pk": issled.pk, "issled_title": issled.research.title}), type=22, body=json.dumps(save_state), user=None).save()
+                                slog.Log(key=json.dumps({"direction": direction.pk, "issled_pk": [x.pk for x in issled], "issled_title": [x.research.title for x in issled]}), type=22, body=json.dumps(save_state),
+                                         user=None).save()
                         oks.append(ok)
                     result["body"] = "{} {} {}".format(dw, pk, json.dumps(oks))
                 else:
