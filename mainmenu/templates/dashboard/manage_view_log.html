@@ -52,189 +52,197 @@
 
 {% block scripts %}
     <script>
-        let loaded = -1;
-        let last_n = 0;
-        const loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>';
-        const end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>';
-        const loading = '<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div> \
-  <span></span>\
-  <span></span>\
-  <span></span>\
-</div></td></tr>';
-        let searchdata = {"user": -1, "type": -1, "pk": "-1"};
-        let endF = false;
-        let in_load = false;
+        let loaded = -1
+        let last_n = 0
+        const loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>'
+        const end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>'
+        const loading = `<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div>
+  <span></span>
+  <span></span>
+  <span></span>
+</div></td></tr>`
+        let searchdata = {'user': -1, 'type': -1, 'pk': '-1'}
+        let endF = false
+        let in_load = false
         $(document).ready(function () {
-            resize();
+            resize()
             $(window).resize(function () {
-                resize();
-            });
-            $("#table_cont").scroll(function () {
-                if ($("#table_cont").scrollTop() + $("#table_cont").height() >= $("#log_table").height() + 20 && !endF && !in_load) {
-                    loadlog(loaded + 1);
+                resize()
+            })
+            $('#table_cont').scroll(function () {
+                if ($('#table_cont').scrollTop() + $('#table_cont').height() >= $('#log_table').height() + 20 && !endF && !in_load) {
+                    loadlog(loaded + 1)
                 }
-            });
-            $("#log_table").append(loadmore);
-            loadlog(loaded + 1);
-            setTimeout(function(){
-                setInterval(check_new_rows, 500);
-            }, 1500);
-        });
+            })
+            $('#log_table').append(loadmore)
+            loadlog(loaded + 1)
+            setTimeout(check_new_rows, 500)
+        })
+
         function check_new_rows() {
-            if(in_load) return;
-            in_load = true;
+            if (in_load) return
+            in_load = true
             searchdata = {
-                "user": parseInt($("#user").val()),
-                "type": parseInt($("#type").val()),
-                "pk": $("#key").val() === "" ? '-1' : $("#key").val()
-            };
-             $.ajax({
-                method: "GET",
-                 url: "/mainmenu/view_logs",
+                'user': parseInt($('#user').val()),
+                'type': parseInt($('#type').val()),
+                'pk': $('#key').val() === '' ? '-1' : $('#key').val()
+            }
+            $.ajax({
+                method: 'GET',
+                url: '/mainmenu/view_logs',
                 data: {checknew: 1, last_n: last_n, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
-                 $.each(d.data, function (k, v) {
-                    let dbody = v.body;
+                $.each(d.data, function (k, v) {
+                    let dbody = v.body
                     try {
-                        const par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
-                        dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                        const par = JSON.parse(v.body.replaceAll(`{'`, `{"`).replaceAll(`':`, `":`))
+                        dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
                             return n !== undefined
-                        }) : par), null, 2));
+                        }) : par), null, 2))
                     }
                     catch (e) {
-                        dbody = syntaxHighlight(v.body);
+                        dbody = syntaxHighlight(v.body)
                     }
-                    let dkey;
+                    let dkey
                     try {
-                        const park = JSON.parse(v.key.replaceAll("\"", ""));
-                        dkey = syntaxHighlight(JSON.stringify(park, null, 2));
+                        const park = JSON.parse(v.key.replaceAll('\"', ''))
+                        dkey = syntaxHighlight(JSON.stringify(park, null, 2))
                     }
                     catch (e) {
-                        dkey = syntaxHighlight(v.key);
+                        dkey = syntaxHighlight(v.key)
                     }
-                    last_n = Math.max(last_n, v.id);
-                    $("#log_table tbody").prepend("<tr>" +
-                            "<td>{0}</td>".f(v.id) +
-                            "<td>{0}</td>".f(v.user_fio) +
-                            "<td>{0}</td>".f(v.user_pk) +
-                            "<td>{0}</td>".f(v.type) +
-                            "<td><pre>{0}</pre></td>".f(dkey) +
-                            "<td><pre>{0}</pre></td>".f(dbody) +
-                            "<td>{0}</td>".f(v.time) +
-                            "</tr>");
-                    n++;
-                });
-             }).always(() => { in_load = false; });
+                    last_n = Math.max(last_n, v.id)
+                    $('#log_table tbody').prepend('<tr>' +
+                        '<td>{0}</td>'.f(v.id) +
+                        '<td>{0}</td>'.f(v.user_fio) +
+                        '<td>{0}</td>'.f(v.user_pk) +
+                        '<td>{0}</td>'.f(v.type) +
+                        '<td><pre>{0}</pre></td>'.f(dkey) +
+                        '<td><pre>{0}</pre></td>'.f(dbody) +
+                        '<td>{0}</td>'.f(v.time) +
+                        '</tr>')
+                    n++
+                })
+            }).always(() => {
+                in_load = false
+                setTimeout(check_new_rows, 500)
+            })
         }
+
         function loadlog(offset, replace) {
-            if(in_load) return;
-            in_load = true;
+            if (in_load) return
+            in_load = true
             if (replace) {
-                $("#log_table tbody").html("");
+                $('#log_table tbody').html('')
             }
-            $(".loadmore").remove();
-            $(".loading").remove();
-            $("#log_table tbody").append(loading);
-            n = 0;
+            $('.loadmore').remove()
+            $('.loading').remove()
+            $('#log_table tbody').append(loading)
+            n = 0
             $.ajax({
-                method: "GET",
-                url: "/mainmenu/view_logs",
+                method: 'GET',
+                url: '/mainmenu/view_logs',
                 data: {checknew: 0, offset: offset, size: 40, searchdata: JSON.stringify(searchdata)}
             }).done(function (d) {
                 $.each(d.data, function (k, v) {
-                    let dbody = v.body;
+                    let dbody = v.body
                     try {
-                        const par = JSON.parse(v.body.replaceAll("{'", "{\"").replaceAll("':", "\":"));
-                        dbody = syntaxHighlight(JSON.stringify((( Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
+                        const par = JSON.parse(v.body.replaceAll(`{'`, `{"`).replaceAll(`':`, `":`))
+                        dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
                             return n !== undefined
-                        }) : par), null, 2));
+                        }) : par), null, 2))
                     }
                     catch (e) {
-                        dbody = syntaxHighlight(v.body);
+                        dbody = syntaxHighlight(v.body)
                     }
-                    let dkey;
+                    let dkey
                     try {
-                        const park = JSON.parse(v.key.replaceAll("\"", ""));
-                        dkey = syntaxHighlight(JSON.stringify(park, null, 2));
+                        const park = JSON.parse(v.key.replaceAll('\"', ''))
+                        dkey = syntaxHighlight(JSON.stringify(park, null, 2))
                     }
                     catch (e) {
-                        dkey = syntaxHighlight(v.key);
+                        dkey = syntaxHighlight(v.key)
                     }
-                    last_n = Math.max(last_n, v.id);
-                    $("#log_table tbody").append("<tr>" +
-                            "<td>{0}</td>".f(v.id) +
-                            "<td>{0}</td>".f(v.user_fio) +
-                            "<td>{0}</td>".f(v.user_pk) +
-                            "<td>{0}</td>".f(v.type) +
-                            "<td><pre>{0}</pre></td>".f(dkey) +
-                            "<td><pre>{0}</pre></td>".f(dbody) +
-                            "<td>{0}</td>".f(v.time) +
-                            "</tr>");
-                    n++;
-                });
+                    last_n = Math.max(last_n, v.id)
+                    $('#log_table tbody').append('<tr>' +
+                        '<td>{0}</td>'.f(v.id) +
+                        '<td>{0}</td>'.f(v.user_fio) +
+                        '<td>{0}</td>'.f(v.user_pk) +
+                        '<td>{0}</td>'.f(v.type) +
+                        '<td><pre>{0}</pre></td>'.f(dkey) +
+                        '<td><pre>{0}</pre></td>'.f(dbody) +
+                        '<td>{0}</td>'.f(v.time) +
+                        '</tr>')
+                    n++
+                })
                 if (n > 0) {
-                    $("#log_table tbody").append(loadmore);
-                    loaded += n;
-                    endF = false;
+                    $('#log_table tbody').append(loadmore)
+                    loaded += n
+                    endF = false
                 }
                 else {
-                    $("#log_table tbody").append(end);
-                    endF = true;
+                    $('#log_table tbody').append(end)
+                    endF = true
                 }
-                resize();
-                $("tr.loading").remove();
-            }).always(() => { in_load = false; });
+                resize()
+                $('tr.loading').remove()
+            }).always(() => {
+                in_load = false
+            })
         }
 
-        let first_resize = true;
+        let first_resize = true
+
         function resize() {
-            $('#table_cont').height($(window).height() - $('#table_cont').position().top);
+            $('#table_cont').height($(window).height() - $('#table_cont').position().top)
             if (first_resize) {
-                $('#table_cont').perfectScrollbar();
-                first_resize = false;
+                $('#table_cont').perfectScrollbar()
+                first_resize = false
             } else {
-                $('#table_cont').perfectScrollbar('update');
+                $('#table_cont').perfectScrollbar('update')
             }
 
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            $('.floatThead').floatThead('reflow')
+            $('.floatThead').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
-                    return $table.closest("div");
+                    return $table.closest('div')
                 }
-            });
+            })
         }
+
         function syntaxHighlight(json) {
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'number';
+                let cls = 'number'
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
-                        cls = 'key';
+                        cls = 'key'
                     } else {
-                        cls = 'string';
+                        cls = 'string'
                     }
                 } else if (/true|false/.test(match)) {
-                    cls = 'boolean';
+                    cls = 'boolean'
                 } else if (/null/.test(match)) {
-                    cls = 'null';
+                    cls = 'null'
                 }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
+                return '<span class="' + cls + '">' + match + '</span>'
+            })
         }
+
         function update() {
             searchdata = {
-                "user": parseInt($("#user").val()),
-                "type": parseInt($("#type").val()),
-                "pk": $("#key").val() === "" ? '-1' : $("#key").val()
-            };
-            loaded = -1;
-            $("#table_cont").scrollTop(0);
-            loadlog(loaded + 1, true);
+                'user': parseInt($('#user').val()),
+                'type': parseInt($('#type').val()),
+                'pk': $('#key').val() === '' ? '-1' : $('#key').val()
+            }
+            loaded = -1
+            $('#table_cont').scrollTop(0)
+            loadlog(loaded + 1, true)
         }
     </script>
     <style>
-        body{
+        body {
             padding-bottom: 0;
         }
 
@@ -299,7 +307,8 @@
             position: relative;
             display: inline-block;
         }
-        .loading_dots div{
+
+        .loading_dots div {
             font-size: 12pt;
             color: #fff
         }
