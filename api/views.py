@@ -174,56 +174,57 @@ def endpoint(request):
                         pk //= 10
                         dw = True
                     if dw:
-                        direction = directions.Napravleniya.objects.filter(pk=pk)
+                        direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
-                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk)
-                    results = data.get("result", {})
+                        direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
                     oks = []
-                    for key in results:
-                        ok = False
-                        q = models.RelationFractionASTM.objects.filter(astm_field=key)
-                        if q.filter(application_api=app).exists():
-                            q = q.filter(application_api=app)
-                            ok = True
-                        elif q.filter(application_api__isnull=True).exists():
-                            q = q.filter(application_api__isnull=True)
-                            ok = True
-                        if ok:
-                            for fraction_rel in q:
-                                save_state = []
-                                for issled in directions.Issledovaniya.objects.filter(napravleniye__in=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
-                                    if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
-                                        fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                    else:
-                                        fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
-                                    fraction_result.value = str(results[key]).strip()
-                                    import re
-                                    find = re.findall("\d+.\d+", fraction_result.value)
-                                    if len(find) > 0:
-                                        val_str = fraction_result.value
-                                        for f in find:
-                                            val = app.truncate(float(f) * fraction_rel.get_multiplier_display())
-                                            val_str = val_str.replace(f, str(val))
-                                        fraction_result.value = val_str
+                    if direction:
+                        results = data.get("result", {})
+                        for key in results:
+                            ok = False
+                            q = models.RelationFractionASTM.objects.filter(astm_field=key)
+                            if q.filter(application_api=app).exists():
+                                q = q.filter(application_api=app)
+                                ok = True
+                            elif q.filter(application_api__isnull=True).exists():
+                                q = q.filter(application_api__isnull=True)
+                                ok = True
+                            if ok:
+                                for fraction_rel in q:
+                                    save_state = []
+                                    for issled in directions.Issledovaniya.objects.filter(napravleniye__in=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
+                                        if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
+                                            fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                        else:
+                                            fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                        fraction_result.value = str(results[key]).strip()
+                                        import re
+                                        find = re.findall("\d+.\d+", fraction_result.value)
+                                        if len(find) > 0:
+                                            val_str = fraction_result.value
+                                            for f in find:
+                                                val = app.truncate(float(f) * fraction_rel.get_multiplier_display())
+                                                val_str = val_str.replace(f, str(val))
+                                            fraction_result.value = val_str
 
-                                    fraction_result.iteration = 1
-                                    ref = fraction_rel.default_ref
-                                    if ref:
-                                        fraction_result.ref_title = ref.title
-                                        fraction_result.ref_about = ref.about
-                                        fraction_result.ref_m = ref.m
-                                        fraction_result.ref_f = ref.f
-                                    fraction_result.save()
-                                    issled.api_app = app
-                                    issled.save()
-                                    fraction_result.get_ref(re_save=True)
-                                    fraction_result.issledovaniye.doc_save = astm_user
-                                    fraction_result.issledovaniye.time_save = timezone.now()
-                                    fraction_result.issledovaniye.save()
-                                    save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
-                                slog.Log(key=json.dumps({"direction": [x.pk for x in direction], "issled_pk": issled.pk, "issled_title": issled.research.title}), type=22, body=json.dumps(save_state), user=None).save()
-                        oks.append(ok)
-                    result["body"] = "{} {} {}".format(dw, pk, json.dumps(oks))
+                                        fraction_result.iteration = 1
+                                        ref = fraction_rel.default_ref
+                                        if ref:
+                                            fraction_result.ref_title = ref.title
+                                            fraction_result.ref_about = ref.about
+                                            fraction_result.ref_m = ref.m
+                                            fraction_result.ref_f = ref.f
+                                        fraction_result.save()
+                                        issled.api_app = app
+                                        issled.save()
+                                        fraction_result.get_ref(re_save=True)
+                                        fraction_result.issledovaniye.doc_save = astm_user
+                                        fraction_result.issledovaniye.time_save = timezone.now()
+                                        fraction_result.issledovaniye.save()
+                                        save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
+                                    slog.Log(key=json.dumps({"direction": direction.pk, "issled_pk": issled.pk, "issled_title": issled.research.title}), type=22, body=json.dumps(save_state), user=None).save()
+                            oks.append(ok)
+                    result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
