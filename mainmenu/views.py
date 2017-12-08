@@ -166,7 +166,7 @@ def load_logs(request):
             offset = int(request.GET["offset"])
             size = int(request.GET["size"])
         for row in obj.order_by("-pk")[offset:size + offset]:
-            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
+            tmp_object = {"id": row.pk, "user_fio": "" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
                           "time": timezone.localtime(row.time).strftime("%d.%m.%Y %X")}
             result["data"].append(tmp_object)
@@ -177,7 +177,7 @@ def load_logs(request):
             pkgt = int(request.GET["last_n"])
 
         for row in obj.filter(pk__gt=pkgt).order_by("pk"):
-            tmp_object = {"id": row.pk, "user_fio": row.user.get_fio() + ", " + row.user.user.username,
+            tmp_object = {"id": row.pk, "user_fio": "" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
                           "user_pk": row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
                           "time": timezone.localtime(row.time).strftime("%d.%m.%Y %X")}
             result["data"].append(tmp_object)
