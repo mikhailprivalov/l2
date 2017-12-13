@@ -267,9 +267,7 @@
             $('input, textarea').focus(function () {
                 SFinFocus = true;
                 input_buffer_scan = "";
-            });
-
-            $('input, textarea').blur(function () {
+            }).blur(function () {
                 SFinFocus = false;
             });
             update_history();
@@ -317,7 +315,7 @@
 
         function cancel_direction_pk(pk) {
             let tubes = [];
-            $.each($(`#work-modal tr[pk=${pk}] .tube-pk`), function (k, v) {
+            $.each($(`#work-modal`).find(`tr[pk=${pk}] .tube-pk`), function (k, v) {
                 tubes.push("№" + $(v).text());
             });
             if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? "Пробирка" : "Пробирки"} ${tubes.join(", ")} из этого направления ${(tubes.length < 2) ? "будет не доступна" : "будут не доступны"} для подтверждения`)) {
@@ -335,9 +333,10 @@
 
         function worklist(nc) {
             sl();
+            const $wm = $('#work-modal')
             if (!nc) {
                 $("#getconfirmbtn").prop("disabled", true);
-                $("#work-modal tbody").html('<tr><td style="text-align: center" colspan="5">загрузка...</td></tr>');
+                $wm.find('tbody').html('<tr><td style="text-align: center" colspan="5">загрузка...</td></tr>')
             }
             $.ajax({
                 url: "/directions/worklist",
@@ -347,23 +346,23 @@
                 hl();
                 if (!nc)
                     $("#work-modal").modal();
-                $("#work-modal tbody").html("");
-                $("#work-modal .allprint").prop("checked", true);
+                $wm.find('tbody').html('')
+                $wm.find('.allprint').prop('checked', true)
                 if (d.rows.length > 0) {
                     $.each(d.rows, function (k, v) {
-                        $("#work-modal tbody").append("<tr pk='{3}'><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' style='cursor: pointer'>{0}</td><td class='cnc'>{3}<br/><small><a onclick='cancel_direction_pk({3});return false;' href='#'>отменить</a></small></td><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' class='tube-pk' style='cursor: pointer'>{1}</td><td onclick='toggle_check($(\"#work-modal tr[pk={3}]\"));' style='cursor: pointer'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {4}'></div></div>{2}</div></div></td><td class='label-c'><label><input class='custom_print' checked type='checkbox' value='{1}' name='complete-res-fast'/></label></td></tr>".f(v.patient, v.pk, v.title, v.direction, v.color));
+                        $wm.find('tbody').append('<tr pk=\'{3}\'><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'>{0}</td><td class=\'cnc\'>{3}<br/><small><a onclick=\'cancel_direction_pk({3});return false;\' href=\'#\'>отменить</a></small></td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' class=\'tube-pk\' style=\'cursor: pointer\'>{1}</td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {4}\'></div></div>{2}</div></div></td><td class=\'label-c\'><label><input class=\'custom_print\' checked type=\'checkbox\' value=\'{1}\' name=\'complete-res-fast\'/></label></td></tr>'.f(v.patient, v.pk, v.title, v.direction, v.color))
                     });
                     $("#getconfirmbtn").prop("disabled", false);
                 }
                 else
-                    $("#work-modal tbody").html('<tr><td style="text-align: center" colspan="5">Ничего не найдено</td></tr>');
+                    $wm.find('tbody').html('<tr><td style="text-align: center" colspan="5">Ничего не найдено</td></tr>')
             });
         }
 
         function getconfirm() {
             $("#getconfirmbtn").prop("disabled", true);
             let checked = [];
-            $.each($("#work-modal .custom_print:checked"), function (k, v) {
+            $.each($('#work-modal').find('.custom_print:checked'), function (k, v) {
                 checked.push(parseInt($(v).val()));
             });
             $.ajax({url: "/directions/group_confirm_get", method: "POST", type: "json", data: {checked: JSON.stringify(checked)}}).done(function (d) {
@@ -425,7 +424,8 @@
                     cancel_d = data.direction.cancel;
                     if (!reload)
                         $(".last").removeClass("last");
-                    $("#researches-tb").html("<tr><th>Исследования</th><th class='col-xs-4'>Тип пробирки</th><th class='col-xs-2'>Номер пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint3'  checked /></label></th></tr>");
+                    const $rt = $('#researches-tb')
+                    $rt.html('<tr><th>Исследования</th><th class=\'col-xs-4\'>Тип пробирки</th><th class=\'col-xs-2\'>Номер пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint3\'  checked /></label></th></tr>')
                     let n = 0;
 
                     let complete = true;
@@ -445,7 +445,7 @@
                             probirki[v.title] = 1;
                         else
                             probirki[v.title]++;
-                        $("#researches-tb").append("<tr onclick='toggle_check(this);' style='cursor: pointer'><td>{0}</td><td style='padding: 2px'><div class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {1}'></div></div>{2}</div></div></td><td><input type='text' value='{4}' readonly class='form-control' {5} id='barcode-{4}'/> </td><td class='c'><label onclick='toggle_check(this);'><input tabindex='9' type='checkbox' {3} {5} value='{4}' id='complete-{4}' class='custom_print' name='complete-res'/> </label></td></tr>".format(v.researches.join(", "), v.color, v.title, c, v.id, d, v.barcode));
+                        $rt.append('<tr onclick=\'toggle_check(this);\' style=\'cursor: pointer\'><td>{0}</td><td style=\'padding: 2px\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {1}\'></div></div>{2}</div></div></td><td><input type=\'text\' value=\'{4}\' readonly class=\'form-control\' {5} id=\'barcode-{4}\'/> </td><td class=\'c\'><label onclick=\'toggle_check(this);\'><input tabindex=\'9\' type=\'checkbox\' {3} {5} value=\'{4}\' id=\'complete-{4}\' class=\'custom_print\' name=\'complete-res\'/> </label></td></tr>'.format(v.researches.join(', '), v.color, v.title, c, v.id, d, v.barcode))
                     });
                     $('#dir-num').html(data.direction.pk + (complete ? ' (исполнено)' : (data.direction.cancel ? ' (отменено)' : '')))
 
@@ -462,7 +462,7 @@
                         }
                         all_cnt += v;
                     });
-                    $("#researches-tb").append("<tr><td style='text-align:right;font-size:10pt' colspan='3'>Итого пробирок: {0} шт ({1})</td><td></td></tr>".format(all_cnt, tmpstr));
+                    $rt.append('<tr><td style=\'text-align:right;font-size:10pt\' colspan=\'3\'>Итого пробирок: {0} шт ({1})</td><td></td></tr>'.format(all_cnt, tmpstr))
 
                     $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", false);
                     if (complete) {
@@ -482,8 +482,7 @@
                     $("#lab").html("");
                     $("#researches-tb").html("");
                     $(".btn#success-b").attr("disabled", "true");
-                    $("#search-field").focus();
-                    $("#search-field").parent().addClass("has-error");
+                    $('#search-field').focus().parent().addClass('has-error')
                     $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", true);
                 }
 
@@ -537,8 +536,7 @@
              $("#story-" + num + " td").addClass("last");*/
             //$("#story-"+num+" td").effect( "highlight", {color:"#D4E6C2"}, 20000 );
             input_buffer_scan = "";
-            $("#search-field").val("");
-            $("#search-field").focus();
+            $('#search-field').val('').focus()
             $("#print-bc").hide();
         }
 
@@ -549,7 +547,8 @@
                 type: "json",
                 method: "GET"
             }).done(function (d) {
-                $("#history-tb").html("");
+                const $ht = $('#history-tb')
+                $ht.html('')
                 const array = d.rows;
                 $.each(array, function (k, v) {
                     let f = true;
@@ -574,9 +573,9 @@
                             tmpstr = key + " " + value + " шт, " + tmpstr
                         }
                     });
-                    $("#history-tb").prepend("<tr id='story-{3}'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class='label-c'><label><input type='checkbox' name='custom_print' class='custom_print' value='{3}' onchange='checkboxes_to_array();' /></label></td></tr>".f(v.time, v.dir_id, v.researches, v.tube_id, v.type));
+                    $ht.prepend('<tr id=\'story-{3}\'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class=\'label-c\'><label><input type=\'checkbox\' name=\'custom_print\' class=\'custom_print\' value=\'{3}\' onchange=\'checkboxes_to_array();\' /></label></td></tr>'.f(v.time, v.dir_id, v.researches, v.tube_id, v.type))
                 });
-                $("#history-tb").prepend("<tr><th class='btn-ell'>Время забора</th><th>Направление</th><th class='btn-ell'>Исследования</th><th>Номер пробирки</th><th class='btn-ell'>Тип пробирки</th><th style='width: 20px;text-align:right'><label><input type='checkbox' class='allprint' onchange='sync_checkboxes(this);' name='allprint' checked /></label></th></tr>");
+                $ht.prepend('<tr><th class=\'btn-ell\'>Время забора</th><th>Направление</th><th class=\'btn-ell\'>Исследования</th><th>Номер пробирки</th><th class=\'btn-ell\'>Тип пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint\' checked /></label></th></tr>')
                 hl();
                 resize();
                 sync_checkboxes("[name=allprint]");
@@ -594,16 +593,18 @@
         let first_resize = true;
 
         function resize() {
-            $('#scroll-tb').height($(window).height() - 100);
-            $('#scroll-res').height($(window).height() - $('#scroll-res').position().top - 65);
+            const $st = $('#scroll-tb')
+            const $sr = $('#scroll-res')
+            $st.height($(window).height() - 100)
+            $sr.height($(window).height() - $sr.position().top - 65)
             if (first_resize) {
-                $('#scroll-res').perfectScrollbar();
-                $('#scroll-tb').perfectScrollbar();
+                $sr.perfectScrollbar()
+                $st.perfectScrollbar()
                 first_resize = true;
             }
             else {
-                $('#scroll-res').perfectScrollbar('update');
-                $('#scroll-tb').perfectScrollbar('update');
+                $sr.perfectScrollbar('update')
+                $st.perfectScrollbar('update')
             }
         }
 

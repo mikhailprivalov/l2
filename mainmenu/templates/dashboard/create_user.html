@@ -116,7 +116,8 @@
         }
 
         function fix() {
-            $('#inputFio').val($('#inputFio').val().trim().replace(/\s\s\s/g, " ").replace(/\s\s/g, " ").replace(/\s\s\s/g, " ").replace(/\s\s/g, " "));
+            const $if = $('#inputFio')
+            $if.val($if.val().trim().replace(/\s\s\s/g, ' ').replace(/\s\s/g, ' ').replace(/\s\s\s/g, ' ').replace(/\s\s/g, ' '))
         }
 
         function generate() {
@@ -127,7 +128,8 @@
 
         function autogen() {
             fix();
-            let v = $("#inputFio").val();
+            const $if = $('#inputFio')
+            let v = $if.val()
             let ls = v.split(" ");
             if (ls.length > 3) {
                 ls = [ls[0], ls.slice(1, ls.length - 2).join(" "), ls[ls.length - 1]];
@@ -137,9 +139,9 @@
             }
             v = ls[0] + ls[1][0] + ls[2][0];
             v = toTranslit(v.replace(/\s/g, ""));
-            if(v === "" || (v === $("#inputFio").val() && v.indexOf("user-") !== -1 && v.length >= 8 && v.length <= 9)){
+            if (v === '' || (v === $if.val() && v.indexOf('user-') !== -1 && v.length >= 8 && v.length <= 9)) {
                 v = "user-" + omgopass({syllables: 1, titlecase: false});
-                $("#inputFio").val(v);
+                $if.val(v)
             }
             return v;
         }

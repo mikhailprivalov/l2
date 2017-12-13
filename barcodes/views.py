@@ -1,14 +1,11 @@
 # coding=utf-8
-import datetime
 import os.path
 import re
 from io import BytesIO
 
 import simplejson as json
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.utils import dateformat
 from reportlab.graphics.barcode import code128
 from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfdoc
@@ -50,7 +47,6 @@ def tubes(request, direction_implict_id=None):
 
     barcode_size = [int(x) for x in request.GET.get("barcode_size", "43x25").strip().split("x")]
     barcode_type = request.GET.get("barcode_type", "std").strip()
-    padding = [int(x) for x in request.GET.get("padding", "0x0x0x0").strip().split("x")]
 
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
@@ -68,7 +64,6 @@ def tubes(request, direction_implict_id=None):
     pdfdoc.PDFInfo.title = 'Barcodes'
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm), bottomup=barcode_type == "std")
     c.setTitle(doctitle)
-    dt = {"poli": "Поликлиника", "stat": "Стационар", "poli_stom": "Поликлиника-стом."}
     if istubes:
         direction_id = set([x.napravleniye.pk for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
 

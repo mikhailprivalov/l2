@@ -1,7 +1,7 @@
-from django.contrib import admin
-import api.models as models
-from ajax_select import make_ajax_form
 from ajax_select.admin import AjaxSelectAdmin
+from django.contrib import admin
+
+import api.models as models
 
 
 @admin.register(models.Application)

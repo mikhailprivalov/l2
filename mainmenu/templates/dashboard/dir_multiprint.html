@@ -40,8 +40,9 @@
         const maxPerOne = 16, maxAll = 16;
         function add_direction() {
             sync();
-            let pattern = /\d+\-\d+/;
-            let pk = $("#dir-field").val();
+            let pattern = /\d+-\d+/
+            const $df = $('#dir-field')
+            let pk = $df.val()
             if (pk.match(pattern)) {
                 let splitA = pk.split("-");
                 let from = parseInt(splitA[0]), to = parseInt(splitA[1]);
@@ -79,7 +80,7 @@
                     dir_queue.push(i);
                 }
                 put_direction();
-                $("#dir-field").val("");
+                $df.val('')
             }
             else if (pk.match(/\d+/)) {
                 if (directions.length + 1 > maxAll) {
@@ -99,7 +100,7 @@
                 dir_queue.push(parseInt(pk));
                 put_direction();
             }
-            $("#dir-field").val("");
+            $df.val('')
         }
         function put_direction(pk) {
             let f = false;

@@ -1,16 +1,16 @@
+import re
 import unicodedata
 
-import re
+import simplejson as json
 from django.db import models
+from jsonfield import JSONField
+
 import clients.models as Clients
+import directory.models as directory
+import slog.models as slog
+import users.models as umodels
 from api.models import Application
 from users.models import DoctorProfile
-from jsonfield import JSONField
-from researches.models import Tubes
-import directory.models as directory
-import simplejson as json
-import users.models as umodels
-import slog.models as slog
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -226,7 +226,7 @@ class Napravleniya(models.Model):
         :return: созданое направление
         """
         if issledovaniya is None:
-            issledovaniya = []
+            pass
         dir = Napravleniya(client=Clients.Card.objects.get(pk=client_id),
                            doc=doc,
                            istochnik_f=istochnik_f,
@@ -342,7 +342,6 @@ class Napravleniya(models.Model):
                         issledovaniye.comment = comments.get(str(research.pk), "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
                         FrequencyOfUseResearches.inc(research, doc_current)
-                from rmis_integration.client import Client
                 #c = Client()
                 #for dk in directions_for_researches:
                 #    c.directions.check_send(directions_for_researches[dk])
@@ -512,10 +511,7 @@ class Result(models.Model):
                  False: ["отриц.", "отрицательно", "нет", "1/0", "отрицательный", "не обнаружено"]}
         signs = {">": [">", "&gt;", "более", "старше"], "<": ["<", "&lt;", "до", "младше", "менее"]}
 
-        calc = "maybe"
-
         value = self.value
-        sex = self.issledovaniye.napravleniye.client.individual.sex.lower()
         age = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye)
 
         ref = self.get_ref(fromsave=fromsave)
@@ -536,12 +532,11 @@ class Result(models.Model):
             if v == float("inf"):
                 return v
             v = replace_pow(v)
-
-            mode = 0
+            '''
             if any([x in v for x in signs["<"]]):
-                mode = 1
+                pass
             elif any([x in v for x in signs[">"]]):
-                mode = 2
+                pass'''
 
             import re
             tmp = re.findall("\d+,\d+", v)
@@ -676,7 +671,8 @@ class Result(models.Model):
         verbose_name = 'Результат исследования'
         verbose_name_plural = 'Результаты исследований'
 
-    def NFD(self, text):
+    @staticmethod
+    def NFD(text):
         return unicodedata.normalize('NFD', text)
 
     def canonical_caseless(self, text):

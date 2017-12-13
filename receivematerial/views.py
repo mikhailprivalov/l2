@@ -33,7 +33,6 @@ def receive(request):
         return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])
-        rt = []
         for tube_get in tubes:
             tube = TubesRegistration.objects.get(id=tube_get["id"])
             if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
@@ -175,7 +174,6 @@ def receive_execlist(request):
     marginy = 10 * mm
 
     pw = w - marginx * 2
-    ph = h - marginy * 2
 
     from datetime import timedelta
     date1 = date
@@ -188,10 +186,6 @@ def receive_execlist(request):
     def px(x=0):
         x *= mm
         return x + marginx
-
-    def pxc(x=0):
-        x *= mm
-        return w / 2 + x
 
     def pxr(x=0):
         x *= mm
@@ -357,7 +351,6 @@ def receive_journal(request):
     from reportlab.pdfgen import canvas
 
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
-    tubes = []
 
     if return_type == "directions":
         tubes = TubesRegistration.objects.filter(
@@ -394,7 +387,6 @@ def receive_journal(request):
             iss = iss.filter(research__groups__pk=group)
 
         iss_list = collections.OrderedDict()  # Список исследований
-        k = "_"
         if v.doc_get:
             k = str(v.doc_get.podrazdeleniye.pk) + "@" + str(v.doc_get.podrazdeleniye)
         else:
@@ -469,7 +461,7 @@ def receive_journal(request):
             if len(pg) == 0:
                 continue
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0], lab=lab, group=group, otd=key.split("@")[1], start=start)
+                drawTituls(c, p.num_pages, pg_num, paddingx, pg[0], lab=lab, group=group, otd=key.split("@")[1])
             data = []
             tmp = []
             for v in data_header:
@@ -547,7 +539,6 @@ def receive_journal(request):
     buffer.close()
     response.write(pdf)
 
-    group_str = "Все исследования"
     if group >= 0:
         group_str = directory.ResearchGroup.objects.get(pk=group).title
     elif group == -2:
@@ -559,7 +550,7 @@ def receive_journal(request):
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, lab, otd="", group=-2, start=1):
+def drawTituls(c, pages, page, paddingx, lab, otd="", group=-2):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
@@ -568,7 +559,6 @@ def drawTituls(c, user, pages, page, paddingx, obj, lab, otd="", group=-2, start
     c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
     c.drawCentredString(w / 2, h - 50, "Журнал приёма материала - " + lab.title)
-    group_str = "Все исследования"
 
     if group >= 0:
         group_str = directory.ResearchGroup.objects.get(pk=group).title

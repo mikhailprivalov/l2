@@ -12,13 +12,11 @@ class Command(BaseCommand):
         self.stdout.write("{:%Y-%m-%d %H:%M}".format(datetime.datetime.now()) + " - TRIGGER")
 
         objs = Card.objects.filter(napravleniya__isnull=True, is_archive=True)
-        cnt = objs.count()
         _, cnt = objs.delete()
         cnt = cnt.get("clients.Card", 0)
         self.stdout.write("Архивных карт без направлений удалено: {}".format(cnt))
 
         objs = Individual.objects.filter(card__isnull=True)
-        cnt = objs.count()
         _, cnt = objs.delete()
         cnt = cnt.get("clients.Individual", 0)
         self.stdout.write("Пацтентов без карт удалено: {}".format(cnt))

@@ -124,8 +124,6 @@ def get_xls_dir(request):
         ws.write(i, 1, iss.first().research.get_podrazdeleniye().title, font_style)
         ws.write(i, 2, dir.pk, font_style)
         fractiontubes = {}
-        hasoak = False
-        relpk = -1
         for isobj in iss:
             for fraction in directory.Fractions.objects.filter(research=isobj.research).order_by("sort_weight"):
                 rpk = fraction.relation.pk
@@ -193,7 +191,6 @@ def gen_pdf_execlist(request):
     pdfmetrics.registerFont(
         TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     elements = []
-    hb = False
     for res in directory.Researches.objects.filter(pk__in=researches):
         if type != 2:
             iss_list = Issledovaniya.objects.filter(tubes__doc_recive_id__isnull=False,
@@ -207,9 +204,7 @@ def gen_pdf_execlist(request):
         if iss_list.count() == 0:
             # if not hb:
             #    elements.append(PageBreak())
-            hb = True
             continue
-        hb = False
         pn = 0
         tubes = []
         for iss in iss_list:
@@ -220,7 +215,6 @@ def gen_pdf_execlist(request):
                 tubes.append(tube)
         if len(tubes) == 0:
             continue
-        data = []
         pn += 1
         p = Paginator(tubes, xsize * (ysize - 1))
 
@@ -759,7 +753,6 @@ def print_history(request):
     local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
-        idv = v.id
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
         k = v.doc_get.podrazdeleniye.title + "@" + str(iss[
@@ -805,7 +798,7 @@ def print_history(request):
         for pg_num in p.page_range:
             pg = p.page(pg_num)
             if pg_num >= 0:
-                drawTituls(c, user, p.num_pages, pg_num, paddingx, pg[0])
+                drawTituls(c, p.num_pages, pg_num, paddingx, pg[0])
             data = []
             tmp = []
             for v in data_header:
@@ -884,7 +877,7 @@ def print_history(request):
     return response
 
 
-def drawTituls(c, user, pages, page, paddingx, obj, lab=""):
+def drawTituls(c, pages, page, paddingx, obj):
     """Функция рисования шапки и подвала страницы pdf"""
     c.setFont('OpenSans', 9)
     c.setStrokeColorRGB(0, 0, 0)
@@ -922,7 +915,6 @@ def get_issledovaniya(request):
         napr = None
         id = request.GET["id"]
         res["all_confirmed"] = True
-        su = request.user.is_superuser
         if id.isnumeric():
             if request.GET["type"] == "0":
                 if TubesRegistration.objects.filter(pk=id).count() == 1:
@@ -1110,7 +1102,6 @@ def get_client_directions(request):
             date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]), int(date_start.split(".")[0]))
             date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
             if pk >= 0 or req_status == 4:
-                rows = []
                 if req_status != 4:
                     rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
                                                        client__pk=pk).order_by("-data_sozdaniya").prefetch_related()
@@ -1144,7 +1135,6 @@ def get_client_directions(request):
                         if v.doc_confirmation and not has_conf:
                             has_conf = True
                         status = min(iss_status, status)
-                        tmpiss = v
                     if status == 2 and not has_conf:
                         status = 1
                     if req_status in [3, 4] or req_status == status:

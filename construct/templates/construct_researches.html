@@ -569,7 +569,7 @@
          * @param auto - bool, автоматический вызов функции?
          */
         function showtubes(auto) {
-            s = "#tubes";
+            const s = '#tubes'
             $(s).html("");
             $(".tube.active").removeClass("active");
             const fullrefhead = "<table class='table table-bordered reftable'><thead><tr><th>Условие</th><th>Значения</th></tr></thead><tbody>";
@@ -808,7 +808,7 @@
             fractiontubes = {};
             tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": tune.edit_mode};
             $(".fraction-tr").each(function (i) {
-                k = $(this).attr("k");
+                const k = $(this).attr('k')
                 const key = $(this).attr("key");
                 const sel = $(this).attr("sel");
                 if (fractiontubes[k] == undefined) {

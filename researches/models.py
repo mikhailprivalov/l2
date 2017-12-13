@@ -1,6 +1,6 @@
-from podrazdeleniya.models import Podrazdeleniya
-from django.db import models
 import sys
+
+from django.db import models
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 

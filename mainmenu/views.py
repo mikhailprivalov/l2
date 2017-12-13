@@ -30,7 +30,6 @@ import directory.models as directory
 def dashboard(request):  # Представление панели управления
     if not request.is_ajax():
         from laboratory import settings
-        dt = ""
         menu = []
         groups = [str(x) for x in request.user.groups.all()]
         pages = [
@@ -659,14 +658,10 @@ def users_dosync(request):
     from ldap3 import Server, Connection, SIMPLE, SYNC, ALL_ATTRIBUTES, SUBTREE, ALL
     from laboratory import settings
 
-    result = {}
-
     s = Server(settings.LDAP["server"]["host"], port=settings.LDAP["server"]["port"], get_info=ALL)
     c = Connection(s, auto_bind=True, user=settings.LDAP["server"]["user"],
                    password=settings.LDAP["server"]["password"], client_strategy=SYNC, authentication=SIMPLE,
                    check_names=True)
-
-    result_t = ""
 
     groups = {}
     c.search(search_base=settings.LDAP["base"],
@@ -716,7 +711,6 @@ def users_dosync(request):
             user.is_active = active
             user.save()
             profile = DoctorProfile.objects.get(user=user)
-        emp = ldap_user["attributes"]["employeeType"][0].lower()
         profile.isLDAP_user = True
         profile.fio = dn
         profile.save()

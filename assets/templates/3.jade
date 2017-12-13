@@ -47,8 +47,7 @@ script.
     var group = -1;
     var groups = {0: "Oαβ (I)", 1: "A₁ (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB (IV)", 5: "A₂B₀ (IV)"};
     function genresult(th) {
-        let k = $(th).attr("pk");
-        let pk = k;
+        let pk = $(th).attr("pk");
         $("#res-modal h4").text($(th).attr("ftitle"));
         $("#res-modal #res-modal-dir").text($("#dir_num a").text());
         $("#hiddenresmodal-1, #hiddenresmodal-2").hide();

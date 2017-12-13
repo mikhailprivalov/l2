@@ -5,7 +5,6 @@ class SettingManager:
 
     @staticmethod
     def get(key, default=None, default_type='s'):
-        value = ""
         if appconf.Setting.objects.filter(name=key).exists():
             row = appconf.Setting.objects.get(name=key)
         else:

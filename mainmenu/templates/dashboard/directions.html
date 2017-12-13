@@ -824,8 +824,8 @@
 
         function check_ow(top) {
             let ow = parseInt($(`input[value=${top}]`).attr("data-with"));
-            if (ow > -1 && checked[active_lab].indexOf(parseInt(ow)) === -1) {
-                checked[active_lab].push(parseInt(ow));
+            if (ow > -1 && checked[active_lab].indexOf(ow) === -1) {
+                checked[active_lab].push(ow)
                 $(`input[value=${ow}]`).prop("checked", true).parent().addClass("active-b");
                 check_ow(ow);
             }
@@ -861,12 +861,13 @@
                 hl();
                 if (firstrun) {
                     firstrun = false;
-                    $("#search-field").focus();
+                    const $sf = $('#search-field')
+                    $sf.focus()
                     if(rmis_uid !== ""){
-                        $("#search-field").val(rmis_uid);
+                        $sf.val(rmis_uid)
                         $("#clients-base").val("{{ rmis_base_id }}").selectpicker('refresh');
                         sync_fin_sources();
-                        search($('#search-field').val());
+                        search($sf.val())
                     }
                 }
             }
@@ -931,11 +932,11 @@
                     checked[active_lab] = [];
                 load_researches();
             });
-
+            const $cb = $('#clients-base')
             for (let base of card_bases) {
-                $("#clients-base").append(`<option value="${base.pk}">${base.title}</option>`);
+                $cb.append(`<option value="${base.pk}">${base.title}</option>`)
             }
-            $("#clients-base").val(card_bases[0].pk).selectpicker('refresh');
+            $cb.val(card_bases[0].pk).selectpicker('refresh')
             sync_fin_sources();
             $("#table-researches").css({opacity: 0});
             let f = true;
@@ -946,12 +947,14 @@
                     keys.push({pk: t, v: templates[t].for_doc || templates[t].for_podr ? (templates[t].for_podr ? 1 : 2) : 0})
                 }
             }
+
+            const $st = $('#select-template')
             for(let t of _.sortBy(keys, "v")){
                 let t_pk = t.pk;
-                $("#select-template").append(`<option ${f? "selected ": ""}value="${t_pk}">Шаблон: ${templates[t_pk].title}</option>`);
+                $st.append(`<option ${f ? 'selected ' : ''}value="${t_pk}">Шаблон: ${templates[t_pk].title}</option>`)
                 f = false;
             }
-            $("#select-template").selectpicker('refresh');
+            $st.selectpicker('refresh')
             sl();
             for (let pk in labs) {
                 nn++;
@@ -1418,8 +1421,8 @@
             sl();
             $("[name=is_hospital]").prop("checked", false);
             query = query.toLowerCase().trim();
-            $("#results-data tbody").html(""); // Очищение результатов
-            $("#sources .active").removeClass("active");
+            $('#results-data').find('tbody').html('') // Очищение результатов
+            $('#sources').find('.active').removeClass('active')
             try {
                 $sf.tooltipster('destroy');
             }
@@ -1435,7 +1438,7 @@
                 if (i > 1) // Если результатов больше, чем 1
                 {
                     $.each(data, function (key, val) { // Перебор результатов
-                        $("#results-data tbody").append(`<tr onclick="$('#res-modal').modal('hide');show_res(${key}, ${val.pk});" style='cursor: pointer'>
+                        $('#results-data').find('tbody').append(`<tr onclick="$('#res-modal').modal('hide');show_res(${key}, ${val.pk});" style='cursor: pointer'>
                             <td>${val.type_title}</td>
                             <td>${val.num}</td>
                             <td>${val.family} ${val.name} ${val.twoname}</td>
@@ -1457,7 +1460,7 @@
                         content: lang.client_not_found,
                         theme: "tooltipster-shadow"
                     }).tooltipster('show').parent().addClass("has-error");
-                    $("#table-researches input").prop("checked", false);
+                    $('#table-researches').find('input').prop('checked', false)
                     clear_fast();
                     clear_direction(true);
                 }
@@ -1531,9 +1534,10 @@
                 fin_source: parseInt($('#sources').find('.active-s .btn.active input[name=source]').val())
             };
             clear_fast();
-            $("#history-num-tr").find("input").val("");
+            const $hn = $('#history-num-tr')
+            $hn.find('input').val('')
             if (get_base(type).history_number)
-                $("#history-num-tr").find("input[type=text]").focus();
+                $hn.find('input[type=text]').focus()
             load_researches();
         }
 
@@ -1654,12 +1658,13 @@
 
         function create_template(){
             sync();
+            const $tt = $('#template-title-field')
             let data = {
                 researches: JSON.stringify(tmp_direction.researches),
-                title: $("#template-title-field").val()
+                title: $tt.val()
             };
             console.log(data);
-            $("#template-title-field").val("");
+            $tt.val('')
         }
 
         function save_direction(tr, bc) {
@@ -2053,9 +2058,10 @@
         function open_search_results() {
             const $results_container = $("#results_container");
             $results_container.html("<b>Ничего не выбрано</b>");
-            $("#tree-modal").find("ul").html("");
+            const $tm = $('#tree-modal')
+            $tm.find('ul').html('')
             $.each(labs, function (k, v) {
-                $("#tree-modal").find("ul").append("<li pk='{1}' id='li-lab-{1}' class='isLazy isFolder'>{0}</li>".f(v, k));
+                $tm.find('ul').append(`<li pk='${k}' id='li-lab-${k}' class='isLazy isFolder'>${v}</li>`)
             });
 
             function openLazyNode(event, nodes, node, hasChildren) {
@@ -2105,7 +2111,7 @@
             }
 
             $("#results-search-modal").modal();
-            easyTree = $('#tree-modal').easytree({
+            easyTree = $tm.easytree({
                 openLazyNode: openLazyNode,
                 toggling: Toggling
             });

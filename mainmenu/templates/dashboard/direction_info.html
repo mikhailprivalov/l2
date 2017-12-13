@@ -43,13 +43,13 @@
                 url: "/mainmenu/direction/info",
                 data: {pk: pk}
             }).done(data => {
+                const $ds = $('#direction-status')
                 if(data.length > 0) {
-                    $("#direction-status").html("");
+                    $ds.html('')
                     for (let group of data) {
                         let tmp = `<div class="direction-object">`;
 
                         tmp += `<div class="direction-object-header">${group.type}</div>`;
-
 
                         tmp += "<div class='events'>";
                         if(group.events.length > 0) {
@@ -89,11 +89,11 @@
 
 
                         tmp += `</div>`;
-                        $("#direction-status").append(tmp);
+                        $ds.append(tmp)
                     }
                 }
                 else{
-                    $("#direction-status").html(`<div class="direction-object">Направление ${pk} не найдено</div>`);
+                    $ds.html(`<div class="direction-object">Направление ${pk} не найдено</div>`)
                 }
 
             }).always(() => { hl(); });

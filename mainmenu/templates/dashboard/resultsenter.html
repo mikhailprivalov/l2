@@ -1455,7 +1455,7 @@
             });
         }
         function fix_signs(input) {
-            if (/^(<|>)\s*\d+$/g.test(input)) {
+            if (/^([<>])\s*\d+$/g.test(input)) {
                 input = input.replace(">", "&gt;").replace("<", "&lt;");
             }
             return input;
@@ -2084,7 +2084,7 @@
 
         function createjournal() {
             const date = $("[name=date-confirm]").val();
-            v = $("#ist_f").val();
+            const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',
@@ -2104,7 +2104,7 @@
         }
         function createjournalcodes() {
             const date = $("[name=date-confirm]").val();
-            v = $("#ist_f").val();
+            const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',
@@ -2124,7 +2124,7 @@
         }
         function createjournaltable() {
             const date = $("[name=date-confirm]").val();
-            v = $("#ist_f").val();
+            const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',

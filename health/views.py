@@ -1,15 +1,14 @@
 from datetime import datetime, timedelta
 
-import simplejson as json
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 
-from appconf.manager import SettingManager
 import clients.models as clients
+import directory.models as directory
+from appconf.manager import SettingManager
 from rmis_integration.client import Client
 from slog.models import Log as slog
-import directory.models as directory
 
 
 @login_required

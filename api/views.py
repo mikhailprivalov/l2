@@ -1,6 +1,6 @@
 import simplejson as json
 import yaml
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
@@ -106,7 +106,6 @@ def send(request):
                                                                    research=fraction.research, doc_confirmation__isnull=True).exists():
                             issled = directions.Issledovaniya.objects.filter(napravleniye=direction,
                                                                              research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
-                            fraction_result = None
                             if directions.Result.objects.filter(issledovaniye=issled,
                                                                 fraction=fraction).exists():  # Если результат для фракции существует
                                 fraction_result = directions.Result.objects.get(issledovaniye=issled,

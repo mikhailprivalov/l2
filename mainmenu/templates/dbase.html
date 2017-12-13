@@ -1633,16 +1633,17 @@
             document.title = lang.loading + document.title
         }
         inload = true
-        $('#page-preloader').css({opacity: 0})
+        const $preloader = $('#page-preloader')
+        $preloader.css({opacity: 0})
         if (!no_sloader) {
             $('.navbar').addClass('sloader')
             stopped = false
             setTimeout(function () {
                 if (stopped) return
-                $('#page-preloader').animate({opacity: 1}, 7000)
+                $preloader.animate({opacity: 1}, 7000)
             }, 1500)
         }
-        $('#page-preloader').show()
+        $preloader.show()
         //$loader.init();
     }
 
@@ -1650,10 +1651,11 @@
         document.title = document.title.replace(lang.loading, '')
         inload = false
         $('.navbar').removeClass('sloader')
-        $('#page-preloader').hide()
+        const $preloader = $('#page-preloader')
+        $preloader.hide()
         exitLoop = true
         stopped = true
-        $('#page-preloader').stop(true, true)
+        $preloader.stop(true, true)
     }
 
     function update_select(base) {
@@ -1669,11 +1671,11 @@
         if (obj === undefined || obj === null) {
             return undefined
         }
-        var keys = []
+        let keys = []
         if (add !== undefined) {
             keys = jQuery.merge(keys, add)
         }
-        for (key in obj) {
+        for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
                 keys.push(key)
             }
@@ -1682,7 +1684,7 @@
     }
 
     Object.compare = function (obj1, obj2) {
-        for (var p in obj1) {
+        for (let p in obj1) {
             if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false
 
             switch (typeof (obj1[p])) {
@@ -1690,15 +1692,15 @@
                     if (!Object.compare(obj1[p], obj2[p])) return false
                     break
                 case 'function':
-                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false
+                    if (typeof (obj2[p]) === 'undefined' || (p !== 'compare' && obj1[p].toString() !== obj2[p].toString())) return false
                     break
                 default:
-                    if (obj1[p] != obj2[p]) return false
+                    if (obj1[p] !== obj2[p]) return false
             }
         }
 
-        for (var p in obj2) {
-            if (typeof (obj1[p]) == 'undefined') return false
+        for (let p in obj2) {
+            if (typeof (obj1[p]) === 'undefined') return false
         }
         return true
     }
@@ -1710,6 +1712,10 @@
         $body.addClass('showloader')
         alive()
         $('.context-st').hide()
+
+        const $contextNumber = $('#contextNumber')
+        const $contextSt = $('#contextSt')
+        const $recalcValue = $('#recalcValue')
         $.contextMenu({
             elementSelector: 'input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)',
             menuSelector: '#contextMenu',
@@ -1720,21 +1726,21 @@
                         invokedOn.val('').typeahead('val', '')
                         break
                     case 'addnum':
-                        val = invokedOn.val() + $('#contextNumber').val() + '<sup>' + $('#contextSt').val() + '</sup>'
+                        val = invokedOn.val() + $contextNumber.val() + '<sup>' + $contextSt.val() + '</sup>'
                         $(invokedOn).val(val)
                         $(invokedOn).typeahead('val', val)
-                        $('#contextNumber').val(10)
-                        $('#contextSt').val(1)
+                        $contextNumber.val(10)
+                        $contextSt.val(1)
                         break
                     case 'addrecalc':
-                        let r = $('#recalcValue').val()
+                        let r = $recalcValue.val()
                         if (r !== '') {
                             r = ' ' + r
                         }
                         val = `${invokedOn.val()} (пересчитано${r})`
                         $(invokedOn).val(val)
                         $(invokedOn).typeahead('val', val)
-                        $('#recalcValue').val('')
+                        $recalcValue.val('')
                         break
                     case 'addleic':
                         val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}`
@@ -1940,7 +1946,7 @@
 
     function okblink(selector, effect) {
         if (blink_animated[selector]) return
-        e = effect || 'fadeIn'
+        let e = effect || 'fadeIn'
         $(selector).removeClass(e).removeClass('animated fast')
         $(selector).addClass(e).addClass('animated fast')
         blink_animated[selector] = true

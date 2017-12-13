@@ -408,11 +408,12 @@
             $(".year").val((today.getFullYear()));
             $("#m-type").val(today.getMonth());
             $("#patient-view,#researches-view,#directions-view").hide();
-            $("#type").append(`<option value="-1">Все категории</option>`);
+            const $type = $('#type')
+            $type.append(`<option value="-1">Все категории</option>`)
             for (let base of card_bases) {
-                $("#type").append(`<option value="${base.pk}">${base.title}</option>`);
+                $type.append(`<option value="${base.pk}">${base.title}</option>`)
             }
-            $("#type").val("-1").selectpicker('refresh');
+            $type.val('-1').selectpicker('refresh')
             change_type();
             $("#search-field").bind('keydown', 'return', function () {
                 search($('#search-field').val());
@@ -427,26 +428,27 @@
 
 
         function update_av_docs() {
-            $("#select-doc").html("");
+            const $sd = $('#select-doc')
+            $sd.html('')
             let kv = parseInt($("#select-otd").val());
             for (let i = 0; i < users_av.length; i++) {
                 if (kv === users_av[i].pk) {
                     for (let j = 0; j < users_av[i].docs.length; j++)
-                        $("#select-doc").append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`);
+                        $sd.append(`<option value='${users_av[i].docs[j].pk}'>${users_av[i].docs[j].fio}</option>`)
                     break;
                 }
             }
-            $("#select-doc").val(current_user_pk);
+            $sd.val(current_user_pk)
             sync_otd_doc();
         }
         function sync_otd_doc() {
-            $("#select-doc,#select-otd,#use-doc").prop("disabled", true);
-            $("#select-doc,#select-otd,#use-doc").closest("label").addClass("disabled");
+            $('#select-doc,#select-otd,#use-doc').prop('disabled', true).closest('label').addClass('disabled')
+            const $ud = $('#use-doc')
             const otd = $("#use-otd").is(":checked");
-            const doc = otd && $("#use-doc").is(":checked");
+            const doc = otd && $ud.is(':checked')
             if (otd) {
                 $("#select-otd").prop("disabled", false).closest("label").removeClass("disabled");
-                $("#use-doc").prop("disabled", false).closest("label").removeClass("disabled");
+                $ud.prop('disabled', false).closest('label').removeClass('disabled')
             }
             if (doc) {
                 $("#select-doc").prop("disabled", false).closest("label").removeClass("disabled");
@@ -464,7 +466,7 @@
                 query = query.capitalizeAll();
                 $("#select_all_rows,#select_all_rows_r").prop("checked", false);
                 page = 1;
-                $("#dirs-list tbody").html("");
+                $('#dirs-list').find('tbody').html('')
                 try {
                     $('.ttip').tooltipster('destroy');
                 }
@@ -485,6 +487,7 @@
                         break;
 
                 }
+                const $uo = $('#use-otd')
                 request = {
                     method: "GET", url: "/results/search/directions",
                     data: {
@@ -493,8 +496,8 @@
                         offset: 0,
                         period: JSON.stringify(period),
                         perform_norms: $("#perform_norms").is(":checked"),
-                        otd: $("#use-otd").is(":checked") ? $("#select-otd").val() : -1,
-                        doc: $("#use-doc").is(":checked") && $("#use-otd").is(":checked") ? $("#select-doc").val() : -1,
+                        otd: $uo.is(':checked') ? $('#select-otd').val() : -1,
+                        doc: $('#use-doc').is(':checked') && $uo.is(':checked') ? $('#select-doc').val() : -1,
                         grouping: $(".active [name='grouping']").val(),
                         sorting: $("#sort-type").val(),
                         sorting_direction: $("#sort-dir").val(),
@@ -520,8 +523,8 @@
             }
             $.ajax(request).done(function (data) {
                 tmp_data = data.rows;
-                i = Object.keys(data.rows).length;
-                $("#dirs-list input[type=checkbox]").prop("checked", false);
+                const i = Object.keys(data.rows).length
+                $('#dirs-list').find('input[type=checkbox]').prop('checked', false)
                 $("#patient-view,#researches-view,#directions-view").hide();
                 if(!loadmore)
                     tmp_rows = [];
@@ -531,7 +534,7 @@
                         for (let key in data.rows) {
                             const row = data.rows[key];
 
-                            $("#dirs-list tbody").append(`<tr class='ttip isnormal-${tmp_data[key].is_normal}' pk='${key}'>
+                            $('#dirs-list').find('tbody').append(`<tr class='ttip isnormal-${tmp_data[key].is_normal}' pk='${key}'>
 <td onclick="open_print_form('${key}', ${i});">${row.fio}</td>
 <td onclick="open_print_form('${key}', ${i});">${row.birthdate}</td>
 <td onclick="open_print_form('${key}', ${i});">${row.cardnum}<br/>${row.type}</td>
@@ -569,7 +572,7 @@
 
                             for (let direction of tmp_data[key].directions) {
                                 for (let research of direction.researches) {
-                                    $("#dirs-list tbody").append(`<tr class='isnormal-${research.is_normal}'>
+                                    $('#dirs-list').find('tbody').append(`<tr class='isnormal-${research.is_normal}'>
 <td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.fio}</td>
 <td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.birthdate}</td>
 <td onclick="window.open('/results/preview?pk=[${direction.pk}]', '_blank')">${row.cardnum}<br/>${row.type}</td>
@@ -593,7 +596,7 @@
 
                     }
                     if(data.len >= search_rows_on_page) {
-                        $("#dirs-list tbody").append(`<tr id='load_more'>
+                        $('#dirs-list').find('tbody').append(`<tr id='load_more'>
 <td colspan='6'><a href='#'>Загрузить ещё</a></td>
 </tr>`);
                         $("#load_more").click(function () {
@@ -604,10 +607,10 @@
                     offset = data.next_offset;
                 }
                 else if(data.error_message !== "") {
-                    $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
+                    $('#dirs-list').find('tbody').append('<tr style=\'text-align: center\'>Ничего не найдено</tr>')
                     errmessage(data.error_message);
                 }else if(!loadmore) {
-                    $("#dirs-list tbody").append("<tr style='text-align: center'>Ничего не найдено</tr>");
+                    $('#dirs-list').find('tbody').append('<tr style=\'text-align: center\'>Ничего не найдено</tr>')
                     $.amaran({
                         'theme': 'awesome wrn',
                         'content': {
@@ -631,10 +634,11 @@
             $('#dir-fio').html(row.fio);
             $('#dir-card').html(`${row.cardnum}, ${row.type}`);
             let dirs = [];
-            $("#directions_list").html("");
+            const $dl = $('#directions_list')
+            $dl.html('')
             for (let i = 0; i < row.directions.length; i++) {
                 let dir = row.directions[i];
-                $("#directions_list").append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
+                $dl.append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
 <a style='float: right' href='/results/preview?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
 <ul class='direction-researches'></ul>
 </div>`);
@@ -647,7 +651,7 @@
                             data = `<b>${data}</b>`;
                         }
                     }
-                    $(`#direction-${dir.pk} .direction-researches`).append(`<li class='research'>${data}</li>`);
+                    $(`#direction-${dir.pk}`).find(`.direction-researches`).append(`<li class='research'>${data}</li>`)
                 }
                 dirs.push(dir.pk);
             }
@@ -658,13 +662,15 @@
         }
 
         function checkType(tr) {
+            const $itc = $('input[name=type]:checked')
             if (tr) {
-                let tmp = $('input[name=type]:checked').val();
-                if (type !== tmp && $('#search-field').val() && $('#search-field').val().length > 0) {
-                    search($('#search-field').val());
+                let tmp = $itc.val()
+                const $sf = $('#search-field')
+                if (type !== tmp && $sf.val() && $sf.val().length > 0) {
+                    search($sf.val())
                 }
             }
-            let type = $('input[name=type]:checked').val();
+            let type = $itc.val()
             if (type === "stat") {
                 $("#history-num-tr").show();
             }
@@ -675,7 +681,7 @@
 
         function change_type() {
             $(".hide-panel").hide();
-            v = $("#search-type").val();
+            const v = $('#search-type').val()
             $(`#${v}-controls`).show();
         }
 
@@ -693,7 +699,8 @@
         let first_resize = true;
 
         function resize() {
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 100);
+            const $dl = $('#dirs-list')
+            $dl.height($(window).height() - $dl.position().top - 100)
             if (first_resize) {
                 $('#dirs-list, #directions_list').perfectScrollbar();
                 first_resize = false;
@@ -701,8 +708,7 @@
             else {
                 $('#dirs-list, #directions_list').perfectScrollbar('update');
             }
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            $('.floatThead').floatThead('reflow').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
                     return $table.closest("div");
@@ -731,7 +737,7 @@
                         delay: 6000
                     });
                 } else {
-                    c = chunk(data, 200);
+                    const c = chunk(data, 200)
                     for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {

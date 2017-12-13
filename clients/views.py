@@ -2,7 +2,6 @@ import datetime
 import re
 
 import simplejson as json
-from django.core import serializers
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -59,7 +58,6 @@ def ajax_search(request):
                 objects = []
         elif re.search(p2, query):  # Если это полный запрос
             split = str(query).split()
-            f = n = p = btday = ""
             f = split[0]
             rmis_req = {"surname": f + "%"}
             if len(split) > 1:
@@ -125,7 +123,7 @@ def ajax_search(request):
 
 
 def get_db(request):
-    key = request.GET["key"]
+    # key = request.GET["key"]
     code = request.GET["code"]
     data = []
     for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False).prefetch_related():
@@ -151,15 +149,12 @@ def get_db(request):
 
 @csrf_exempt
 def receive_db(request):
-    key = request.POST["key"]
+    # key = request.POST["key"]
     data = request.POST["data"]
     code = request.POST["code"]
     base = Clients.CardBase.objects.filter(short_title=code).first()
     d = json.loads(data)
-    c = "OK"
 
-    api_user = DoctorProfile.objects.filter(user__username="api").first()
-    bulk_polises = []
     bulk_cards = []
 
     def fix(s: str):

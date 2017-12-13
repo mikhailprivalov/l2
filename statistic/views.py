@@ -1,23 +1,20 @@
 from collections import defaultdict
 
-import collections
-
+import simplejson as json
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-import simplejson as json
 from ratelimit.decorators import ratelimit
 
+import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from laboratory.decorators import group_required
-from django.shortcuts import render
-from users.models import Podrazdeleniya
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration, Tubes, IstochnikiFinansirovaniya, Result
-import directory.models as directory
-from django.http import HttpResponse
+from directions.models import Napravleniya, TubesRegistration, Tubes, IstochnikiFinansirovaniya, Result
 from users.models import DoctorProfile
+from users.models import Podrazdeleniya
 
 
 @csrf_exempt
@@ -268,15 +265,8 @@ def statistic_xls(request):
                 otds = {pki: defaultdict(lambda: 0)}
                 otds_pat = {pki: defaultdict(lambda: 0)}
 
-                def all(iterable):
-                    for element in iterable:
-                        if not element:
-                            return False
-                    return True
-
                 ns = 0
                 for obj in directory.Researches.objects.filter(podrazdeleniye__pk=lab.pk):
-                    iss_list = []
                     if finsource is not False:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
                                                                 time_confirmation__range=(date_start, date_end),
@@ -451,7 +441,6 @@ def statistic_xls(request):
                 ws.col(col_num).width = row[col_num][1]
 
             row_num += 1
-            data = {"otds": {}, "all": defaultdict(lambda: 0)}
             itogo_row = [executor.get_fio(dots=True), nl("Итого")]
             empty_row = ["", ""]
             cnt_local_itogo = {}
@@ -511,7 +500,6 @@ def statistic_xls(request):
                                                                                  date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("Выписано направлений")
-        row_num = 0
 
         font_style = xlwt.XFStyle()
         row_num = 0
@@ -614,7 +602,6 @@ def statistic_xls(request):
         ]
 
         replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
-        otds = {}
         n = len(row) - 1
         pods = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
         for pod in pods:
@@ -874,7 +861,6 @@ def statistic_xls(request):
             "attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("УЕТы")
-        row_num = 0
 
         font_style = xlwt.XFStyle()
         row_num = 0
@@ -911,7 +897,6 @@ def statistic_xls(request):
             researches = Issledovaniya.objects.filter(doc_save=usr, time_save__isnull=False,
                                                       time_save__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
-                uet_tmp = 0
                 if usr.labtype == 1:
                     uet_tmp = sum(
                         [v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])
@@ -922,7 +907,6 @@ def statistic_xls(request):
             researches = Issledovaniya.objects.filter(doc_confirmation=usr, time_confirmation__isnull=False,
                                                       time_confirmation__range=(date_start_o, date_end_o))
             for issledovaniye in researches:
-                uet_tmp = 0
                 if usr.labtype == 1:
                     uet_tmp = sum(
                         [v.uet_doc for v in directory.Fractions.objects.filter(research=issledovaniye.research)])

@@ -109,7 +109,7 @@
                         delay: 6000
                     });
                 } else {
-                    c = chunk(data, 200);
+                    let c = chunk(data, 200)
                     for (let k = 0; k < c.length; k++) {
                         (function (e) {
                             setTimeout(function () {

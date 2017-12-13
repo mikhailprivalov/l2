@@ -1,9 +1,3 @@
-from django.contrib.auth.models import User
-from rest_framework import serializers
-
-from podrazdeleniya.models import Podrazdeleniya
-from users.models import DoctorProfile
-
 #
 # class UserSerializer(serializers.HyperlinkedModelSerializer):
 #     profile =

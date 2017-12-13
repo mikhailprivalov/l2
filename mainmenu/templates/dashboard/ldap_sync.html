@@ -24,15 +24,15 @@
         let insync = false;
         function ldap_sync() {
             if (insync) return;
-
-            $("#cont a").isLoading({text: "Синхронизация...", position: "inside"});
+            const $ca = $('#cont').find('a')
+            $ca.isLoading({text: 'Синхронизация...', position: 'inside'})
 
             insync = true;
             $.ajax({url: "/mainmenu/users/ldap/dosync", method: "POST"}).done(function (data) {
                 update_users_count();
                 insync = false;
-                $("#cont a").isLoading("hide");
-                $("#cont a").text("Синхронизировать с LDAP")
+                $ca.isLoading('hide')
+                $ca.text('Синхронизировать с LDAP')
             });
         }
     </script>

@@ -2,23 +2,21 @@ import datetime
 import hashlib
 import threading
 import urllib.parse
-from collections import defaultdict
 
 import requests
+from django.core.cache import cache
 from django.core.management.base import OutputWrapper
-from django.db.models import Q, Model
-from requests_toolbelt import MultipartEncoder
-from simplejson import JSONDecodeError
-from zeep.exceptions import Fault
-
-from appconf.manager import SettingManager
+from django.db.models import Q
 from requests import Session
 from requests.auth import HTTPBasicAuth
+from requests_toolbelt import MultipartEncoder
+from simplejson import JSONDecodeError
 from zeep import Client as zeepClient, helpers
+from zeep.exceptions import Fault
 from zeep.transports import Transport
-import clients.models as clients_models
-from django.core.cache import cache
 
+import clients.models as clients_models
+from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices
 from directory.models import Fractions
 from podrazdeleniya.models import Podrazdeleniya
@@ -330,7 +328,8 @@ class Patients(BaseRequester):
                 return patients[0]
         return "NONERMIS"
 
-    def create_rmis_card(self, individual: clients_models.Individual, get_id: str):
+    @staticmethod
+    def create_rmis_card(individual: clients_models.Individual, get_id: str):
         base = clients_models.CardBase.objects.filter(is_rmis=True, hide=False).first()
         if not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
             clients_models.Card.objects.filter(base=base, individual=individual).update(is_archive=True)
@@ -338,7 +337,7 @@ class Patients(BaseRequester):
             return c
         return None
 
-    def get_rmis_id_for_individual(self, individual: clients_models.Individual, update_rmis=False):
+    def get_rmis_id_for_individual(self, individual: clients_models.Individual):
         return_none = "NONERMIS"
         for doc in clients_models.Document.objects.filter(individual=individual, document_type__title="Полис ОМС"):
             get_id = self.patient_first_id_by_poils(doc.serial, doc.number)
@@ -348,7 +347,6 @@ class Patients(BaseRequester):
         return return_none
 
     def import_individual_to_base(self, query, fio=False, limit=10) -> clients_models.Individual or None:
-        qs = []
         return_rows = []
         if fio:
             qs = self.client.searchIndividual(**query)[:limit]
@@ -505,8 +503,7 @@ class Directions(BaseRequester):
         self.check_service(direction, stdout)
         return direction.rmis_number
 
-    def send_service(self, code: str, patient_uid: str, refferal_id: str, direction: Napravleniya,
-                     stdout: OutputWrapper = None) -> str:
+    def send_service(self, code: str, patient_uid: str, refferal_id: str, direction: Napravleniya) -> str:
         service_id = self.main_client.services.get_service_id(code)
         if service_id is None:
             return ""
@@ -543,13 +540,12 @@ class Directions(BaseRequester):
             code = i.research.code
             if code not in sended_researches:
                 sended_researches.append(code)
-                sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction, stdout)
+                sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction)
             for fraction in Fractions.objects.filter(research=i.research):
                 code = fraction.code
                 if code not in sended_researches:
                     sended_researches.append(code)
-                    sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction,
-                                                         stdout)
+                    sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction)
         for k in sended_ids:
             if sended_ids[k] is None:
                 continue
@@ -580,7 +576,6 @@ class Directions(BaseRequester):
                                 continue
                             sended_codes.append(code)
                             ssd = self.main_client.services.get_service_id(code)
-                            ss = None
                             send_data = dict(referralId=rid,
                                              serviceId=ssd,
                                              isRendered="true",
@@ -675,7 +670,7 @@ class Directions(BaseRequester):
                                 xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                 if x.issledovaniye.get_analyzer() != "":
                                     xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}", x.issledovaniye.get_analyzer()).replace("{{едизм}}", "")
-                                sd = self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace(
+                                self.main_client.put_content("Protocol.otg", protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace(
                                     "{{результат}}", xresult), self.main_client.get_addr(
                                     "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
                                 RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()

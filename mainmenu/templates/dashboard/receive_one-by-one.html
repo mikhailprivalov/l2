@@ -105,13 +105,13 @@
                             <div class="row">
                                 <div class="col-xs-6">
                                     <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
-                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', true);sync_checks();return false;">
+                                            onclick="$('#table-researches').find('input[type=checkbox]').prop('checked', true);sync_checks();return false;">
                                         Выбрать всe
                                     </button>
                                 </div>
                                 <div class="col-xs-6">
                                     <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
-                                            onclick="$('#table-researches input[type=checkbox]').prop('checked', false);sync_checks();return false;">
+                                            onclick="$('#table-researches').find('input[type=checkbox]').prop('checked', false);sync_checks();return false;">
                                         Снять всe
                                     </button>
                                 </div>
@@ -212,10 +212,11 @@ $(document).ready(function(){
         todayHighlight: true
     });
     upd_next_num();
-    $("#next_num").change(function(){
-        v = parseInt($("#next_num").val());
+    const $nn = $('#next_num')
+    $nn.change(function () {
+        const v = parseInt($nn.val())
         if(v <= before_num) {
-            $("#next_num").val(before_num + 1);
+            $nn.val(before_num + 1)
         }
     });
     $(document).idle({
@@ -269,11 +270,11 @@ function do_receive(pk){
     sl();
     clr();
     disable_input();
-
-    let v = parseInt($("#next_num").val());
+    const $nn = $('#next_num')
+    let v = parseInt($nn.val())
     if(v <= before_num) {
         v = before_num + 1;
-        $("#next_num").val(v);
+        $nn.val(v)
     }
 
     $.ajax({method: "POST", url: "/mainmenu/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk}}).done(function(data){
@@ -330,11 +331,11 @@ function do_receive_direction(pk){
     sl();
     clr();
     disable_input();
-
-    let v = parseInt($("#next_num").val());
+    const $nn = $('#next_num')
+    let v = parseInt($nn.val())
     if(v <= before_num) {
         v = before_num + 1;
-        $("#next_num").val(v);
+        $nn.val(v)
     }
 
     $.ajax({method: "POST", url: "/mainmenu/receive/one_by_one", data: {pk: pk, num: v, lab_pk: lab_pk, direction: 1}}).done(function(data){
@@ -406,13 +407,14 @@ function load_history(highlight){
     block2 = true;
     $.ajax({method: "GET", url: "/mainmenu/receive/history", data: {lab_pk: lab_pk}}).done(function(data){
         block2 = false;
-        $("#history-data").html("");
+        const $hd = $('#history-data')
+        $hd.html('')
         if(data.rows.length === 0){
-            $("#history-data").html("<tr><td colspan='4' style='text-align: center;'>Нет данных</td></tr>");
+            $hd.html('<tr><td colspan=\'4\' style=\'text-align: center;\'>Нет данных</td></tr>')
             return;
         }
         $.each(data.rows, function(k, v){
-            $("#history-data").append("<tr>" +
+            $hd.append('<tr>' +
                     "<td>{0}</td>".f(v.n) +
                     "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.color, v.type) +
                     "<td>{0}</td>".f(v.pk) +
@@ -428,18 +430,18 @@ function load_history(highlight){
 
 let first_resize = true;
 function resize() {
-    $('#history-container').height($(window).height() - $('#history-container').position().top - 70);
+    const $hc = $('#history-container')
+    $hc.height($(window).height() - $hc.position().top - 70)
 
     if (first_resize) {
-        $('#history-container').perfectScrollbar();
+        $hc.perfectScrollbar()
         $('#researches-scroll').perfectScrollbar();
         first_resize = false;
     } else {
-        $('#history-container').perfectScrollbar('update');
+        $hc.perfectScrollbar('update')
     }
 
-    $(".floatThead").floatThead('reflow');
-    $(".floatThead").floatThead({
+    $('.floatThead').floatThead('reflow').floatThead({
         useAbsolutePositioning: false,
         scrollContainer: function ($table) {
             return $table.closest("div");
@@ -448,7 +450,7 @@ function resize() {
 }
 function load_researches(cont)
 {
-    $o = $("#table-researches");
+    let $o = $('#table-researches')
     if(cont !== undefined)
         $o = $(cont);
     $o.html("");
@@ -484,7 +486,7 @@ function upd_next_num(){
 }
 function createlist() {
     let researches = [];
-    $.each($("#table-researches .research-sel:checked"), function (k, v) {
+    $.each($('#table-researches').find('.research-sel:checked'), function (k, v) {
         researches.push(parseInt($(v).val()));
     });
     if (researches.length === 0) {
@@ -508,16 +510,14 @@ function createlist() {
 
 function play_scan() {
     try{
-       $("#snd-scan").prop("currentTime", 0);
-       $("#snd-scan").trigger('play');
+        $('#snd-scan').prop('currentTime', 0).trigger('play')
     }catch(e){
 
     }
  }
 function play_warn() {
     try{
-       $("#snd-warn").prop("currentTime", 0);
-       $("#snd-warn").trigger('play');
+        $('#snd-warn').prop('currentTime', 0).trigger('play')
     }catch(e){
 
     }

@@ -35,9 +35,8 @@ def directory_researches(request):
                 research["quota_oms"] = -1
             research_obj.quota_oms = research["quota_oms"]
             research_obj.save()
-            type = 4
             if research["id"] == -1:
-                type = 3
+                pass
             # slog.Log(key=str(research_obj.pk), type=type, body="{'data': " + request.POST["research"] + "}",
             #          user=request.user.doctorprofile).save()
             # Fractions.objects.filter(research=research_obj).delete()
@@ -195,7 +194,6 @@ def directory_toggle_hide_research(request):
     :param request:
     :return:
     """
-    result = {}
     if request.method == "POST":
         pk = request.POST["pk"]
     else:

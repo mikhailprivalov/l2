@@ -119,7 +119,6 @@ class Individual(models.Model):
                     else:
                         docs = docs.filter(individual=self)
                         to_delete = []
-                        cards = []
                         has = []
                         ndocs = {}
                         for d in docs:
@@ -203,7 +202,6 @@ class Individual(models.Model):
         return "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
 
     def fio(self, short=False, dots=False, full=False):
-        r = ""
 
         if not short:
             if full:

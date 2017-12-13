@@ -17,7 +17,7 @@ import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
-from clients.models import CardBase, Card
+from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
@@ -201,7 +201,6 @@ def results_save(request):
         if issledovaniye:  # Если исследование найдено
 
             for key in fractions.keys():  # Перебор фракций из запроса
-                fraction_result = None
                 if Result.objects.filter(issledovaniye=issledovaniye,
                                          fraction__pk=key).exists():  # Если результат для фракции существует
                     fraction_result = Result.objects.get(issledovaniye=issledovaniye,
@@ -305,7 +304,6 @@ def get_full_result(request):
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
 
         iss_list = Issledovaniya.objects.filter(napravleniye=napr)  # Выборка списка исследований из базы по направлению
-        kint = 0
         t = 0
         if not iss_list.filter(doc_confirmation__isnull=True).exists() or iss_list.filter(
                 deferred=False).exists():  # Если для направления все исследования подтверждены
@@ -554,7 +552,6 @@ def result_html(request):
         dir = Napravleniya.objects.get(pk=dpk)
         if not dir.has_confirm(): continue
         dates = {}
-        date_t = ""
         for iss in Issledovaniya.objects.filter(napravleniye=dir, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -562,7 +559,7 @@ def result_html(request):
                     dates[dt] = 0
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
-                date_t = iss.tubes.first().time_get.strftime('%d.%m.%Y')
+                pass
 
         import operator
         maxdate = ""
@@ -675,7 +672,6 @@ def result_html(request):
     return render(request, "dashboard/results_html.html", {"results": results_rows})
 
 
-from rmis_integration.client import Client
 @login_required
 def result_print(request):
     """ Печать результатов """
@@ -731,7 +727,6 @@ def result_print(request):
         marginy = 10 * mm
 
         pw = w - marginx - lmargin
-        ph = h - marginy * 2
 
         def py(y=0.0):
             y *= mm
@@ -740,10 +735,6 @@ def result_print(request):
         def px(x=0.0):
             x *= mm
             return x + lmargin
-
-        def pxc(x=0.0):
-            x *= mm
-            return w / 2 + x
 
         def pxr(x=0.0):
             x *= mm
@@ -873,7 +864,6 @@ def result_print(request):
             t.setStyle(style)
 
             t.canv = c
-            wt, ht = t.wrap(0, 0)
             pos = py(38)
             has0 = directory.Fractions.objects.filter(
                 research__pk__in=[x.research.pk for x in Issledovaniya.objects.filter(napravleniye=direction)],
@@ -889,7 +879,6 @@ def result_print(request):
             def print_vtype(data, f, iss, j, style, styleSheet):
 
                 import operator
-                tmp = []
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     result = Result.objects.get(issledovaniye=iss, fraction=f).value
                     # try:
@@ -1209,7 +1198,6 @@ def result_print(request):
                     has_anti = False
                     for f in fractions:
                         j = 0
-                        tmp = []
                         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                             result = Result.objects.get(issledovaniye=iss, fraction=f).value
                             if result == "":
@@ -1441,7 +1429,6 @@ def result_print(request):
         def print_vtype(data, f, iss, j, style, styleSheet):
 
             import operator
-            tmp = []
             if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                 result = Result.objects.get(issledovaniye=iss, fraction=f).value.replace("<br>", "<br/>")
                 # try:
@@ -1497,7 +1484,6 @@ def result_print(request):
 
         client_prev = -1
         #cl = Client()
-        normis = request.GET.get("normis", "0") == "1"
         for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(), key=lambda dir: dir.client.individual.pk*100000000 + Result.objects.filter(issledovaniye__napravleniye=dir).count()*10000000 + dir.pk):
             dpk = direction.pk
             if not direction.is_all_confirm():
@@ -1878,7 +1864,6 @@ def result_print(request):
                     has_anti = False
                     for f in fractions:
                         j = 0
-                        tmp = []
                         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                             result = Result.objects.get(issledovaniye=iss, fraction=f).value
                             if result == "":
@@ -2303,7 +2288,6 @@ def result_journal_table_print(request):
     marginy = 10 * mm
 
     pw = w - marginx
-    ph = h - marginy * 2
 
     def py(y=0.0):
         y *= mm
@@ -2312,10 +2296,6 @@ def result_journal_table_print(request):
     def pyb(y=0.0):
         y *= mm
         return y + marginy
-
-    def pxc(x=0.0):
-        x *= mm
-        return w / 2 + x
 
     def px(x=0.0):
         return x * mm + marginx
@@ -2408,7 +2388,6 @@ def result_journal_table_print(request):
             c.rotate(-90)
             c.drawRightString(pxr(marginx / 2), pyb(-1), "Страница %d из %d" % (pagenum, p.num_pages))
             data = []
-            tmp = []
             tmp2 = [Paragraph('<font face="Calibri" size="8">Исследования<br/><br/><br/><br/><br/><br/><br/></font>',
                               styleSheet["BodyText"])]
             for patient in p.page(pagenum).object_list:
@@ -2466,7 +2445,6 @@ def result_journal_table_print(request):
 def result_journal_print(request):
     """ Печать журнала подтверждений """
     pw, ph = A4
-    paddingx = 30
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="journal.pdf"'
     import datetime
@@ -2501,7 +2479,6 @@ def result_journal_print(request):
     from django.utils.text import Truncator
     from django.utils import timezone
     from reportlab.lib.styles import getSampleStyleSheet
-    styleSheet = getSampleStyleSheet()
     styles = getSampleStyleSheet()
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
@@ -2612,7 +2589,6 @@ def result_journal_print(request):
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():
-        data = data_header = []
         if not codes:
             data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
             data_header = ["№", "ФИО", "Направление: Результаты"]
@@ -2709,7 +2685,6 @@ def get_r(ref) -> str:
     else:
         r = ref
     tmp = []
-    s = ""
     for k in r.keys():
         if len(r[k]) > 0:
             if k == "Все" and len(r) == 1:
@@ -2797,7 +2772,6 @@ def result_filter(request):
         date_start = request.POST["date[start]"]  # Начальная дата
         date_end = request.POST["date[end]"]  # Конечная дата
         if research_pk.isnumeric() or research_pk == "-1":
-            iss_list = []
 
             iss_list = Issledovaniya.objects.filter(
                 research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
@@ -2859,7 +2833,6 @@ def result_filter(request):
 @csrf_exempt
 @login_required
 def results_search_directions(request):
-    data = {}
     if request.method == "POST":
         data = request.POST
     else:
@@ -2957,7 +2930,6 @@ def results_search_directions(request):
                                        client__individual__birthday=bdate)
 
     if filter_type == "card_number":
-        filter = dict(client__number__iexact=query)
         if type_patient != -1:
             qq = Q(client__base=client_base, client__number__iexact=query)
             for cb in CardBase.objects.filter(assign_in_search=client_base):
@@ -2972,7 +2944,6 @@ def results_search_directions(request):
     rows = collections.OrderedDict()
     n = 0
     directions_pks = []
-    sort_types = {}
     if sorting_direction == "up":
         sort_types = {"confirm-date": ("issledovaniya__time_confirmation",),
                       "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",)}

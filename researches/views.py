@@ -1,11 +1,12 @@
-from django.http import HttpResponse, JsonResponse
-from researches.models import Tubes
-from directions.models import Issledovaniya
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
 import directory.models as directory
 import slog.models as slog
+from directions.models import Issledovaniya
+from researches.models import Tubes
 
 
 @login_required
