@@ -12,7 +12,8 @@ from ratelimit.decorators import ratelimit
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from directions.models import Napravleniya, TubesRegistration, Tubes, IstochnikiFinansirovaniya, Result
+from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result
+from researches.models import Tubes
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 
