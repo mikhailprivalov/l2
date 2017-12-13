@@ -523,7 +523,7 @@
             }
             $.ajax(request).done(function (data) {
                 tmp_data = data.rows;
-                const i = Object.keys(data.rows).length
+                let i = Object.keys(data.rows).length
                 $('#dirs-list').find('input[type=checkbox]').prop('checked', false)
                 $("#patient-view,#researches-view,#directions-view").hide();
                 if(!loadmore)
