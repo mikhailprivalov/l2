@@ -471,13 +471,13 @@ def printDirection(c, n, dir):
     nn = 0
     if dir.doc_who_create:
         nn = 9
-        c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn, "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))
-    c.drawString(paddingx + (w / 2 * xn), 24 + (h / 2) * yn + nn, "Отделение: " + dir.doc.podrazdeleniye.title)
-    c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
+        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn, "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))
+    c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + dir.doc.podrazdeleniye.title)
+    c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     c.setFont('OpenSans', 7)
     c.setLineWidth(0.25)
-    c.line(w / 2 * (xn + 1) - paddingx, 23 + (h / 2) * yn + nn, w / 2 * (xn + 1) - 82, 23 + (h / 2) * yn + nn)
-    c.drawRightString(w / 2 * (xn + 1) - paddingx - paddingx, 15 + (h / 2) * yn + nn, "(подпись)")
+    c.line(w / 2 * (xn + 1) - paddingx, 21 + (h / 2) * yn + nn, w / 2 * (xn + 1) - 82, 21 + (h / 2) * yn + nn)
+    c.drawRightString(w / 2 * (xn + 1) - paddingx - paddingx, 13 + (h / 2) * yn + nn, "(подпись)")
 
 
 def calculate_age(born):
