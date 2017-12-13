@@ -193,7 +193,7 @@ class Napravleniya(models.Model):
     """
     Таблица направлений
     """
-    data_sozdaniya = models.DateTimeField(default=timezone.now, help_text='Дата создания направления', db_index=True)
+    data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач', on_delete=models.CASCADE)
