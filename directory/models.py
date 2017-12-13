@@ -1,5 +1,5 @@
 from django.db import models
-from podrazdeleniya.models import Subgroups, Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
 from researches.models import Tubes
 from users.models import DoctorProfile
@@ -71,9 +71,6 @@ class Researches(models.Model):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
 
     def get_podrazdeleniye(self):
-        if self.podrazdeleniye is None:
-            self.podrazdeleniye = self.subgroup.podrazdeleniye
-            self.save()
         return self.podrazdeleniye
 
     class Meta:
