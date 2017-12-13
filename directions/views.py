@@ -468,8 +468,12 @@ def printDirection(c, n, dir):
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138) + (h / 2) * yn - ht - 10,
                  "Всего назначено: " + str(len(issledovaniya)))
 
-    c.drawString(paddingx + (w / 2 * xn), 27 + (h / 2) * yn, "Отделение: " + dir.doc.podrazdeleniye.title)
-    c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn, "Врач: " + dir.doc.get_fio())
+    nn = 0
+    if dir.doc_who_create:
+        nn = 11
+        c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn + nn, "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))
+    c.drawString(paddingx + (w / 2 * xn), 26 + (h / 2) * yn + nn, "Отделение: " + dir.doc.podrazdeleniye.title)
+    c.drawString(paddingx + (w / 2 * xn), 15 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     c.setFont('OpenSans', 7)
     c.setLineWidth(0.25)
     c.line(w / 2 * (xn + 1) - paddingx, 23 + (h / 2) * yn, w / 2 * (xn + 1) - 82, 23 + (h / 2) * yn)
