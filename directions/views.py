@@ -1100,7 +1100,7 @@ def get_client_directions(request):
             date_end = request.GET["date[end]"]  # конечная дата назначения
 
             date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]), int(date_start.split(".")[0]))
-            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(1)
+            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]), int(date_end.split(".")[0])) + datetime.timedelta(days=1)
             if pk >= 0 or req_status == 4:
                 if req_status != 4:
                     rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
