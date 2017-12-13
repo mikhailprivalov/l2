@@ -52,7 +52,6 @@ class Researches(models.Model):
     """
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
-    subgroup = models.ForeignKey(Subgroups, related_name="subgroup", help_text='Подгруппа в лаборатории (DEPRECATED)', db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
@@ -62,8 +61,6 @@ class Researches(models.Model):
                                     help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
-    comment_template = models.IntegerField(default=-1, null=True, blank=True,
-                                           help_text='Варианты комментариев к материалу (DEPRECATED)')
     comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу', on_delete=models.SET_NULL)
     groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории', db_index=True)
     onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)

@@ -15,16 +15,3 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
 
-
-class Subgroups(models.Model):  # Модель подгрупп подразделений
-    title = models.CharField(max_length=255)  # Название подгруппы
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, on_delete=models.CASCADE)  # Подразделение группы
-
-    def __str__(self):
-        if self.podrazdeleniye.title != self.title:
-            return self.podrazdeleniye.title + " - " + self.title
-        return self.title
-
-    class Meta:
-        verbose_name = 'Подгруппа (DEPRECATED)'
-        verbose_name_plural = 'Подгруппы (DEPRECATED)'
