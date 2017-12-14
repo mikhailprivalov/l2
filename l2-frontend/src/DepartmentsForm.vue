@@ -1,8 +1,11 @@
 <template>
   <table class="table table-bordered table-responsive">
-    <col width="40">
-    <col>
-    <col v-if="can_edit" width="300">
+    <colgroup>
+      <col width="40">
+      <col>
+      <col v-if="can_edit" width="300">
+    </colgroup>
+    <tbody>
     <tr v-for="department in departments">
       <td>{{ department.pk }}</td>
       <td><input class="form-control" v-model="department.title"/></td>
@@ -13,6 +16,7 @@
       <td><input type="text" class="form-control" placeholder="Название" v-model="create.title" autofocus></td>
       <td><input type="submit" class="btn btn-primary-nb form-control" value="Добавить"></td>
     </tr>
+    </tbody>
   </table>
 </template>
 
