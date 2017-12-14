@@ -6,7 +6,7 @@ async function getDepartments() {
     if (response.statusText === 'OK') {
       return response.data.departments
     }
-  } catch {
+  } catch () {
   }
   return []
 }
