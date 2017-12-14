@@ -18,7 +18,7 @@ new Vue({
           }
         }
       }
-      console.log(val, oldVal)
+      console.log(diff)
     }, {deep: true})
     this.$store.dispatch('getAllDepartments').then()
   }
