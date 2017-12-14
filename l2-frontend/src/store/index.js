@@ -1,6 +1,6 @@
 import Vue from 'vue'
+import Vuex from 'vuex'
 import departments from './modules/departments'
-import Vuex from 'vuex/types/index'
 
 Vue.use(Vuex)
 
