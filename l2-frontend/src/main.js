@@ -7,9 +7,9 @@ new Vue({
   el: '#app',
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
-  created() {
+  activated() {
     let vm = this
-    (async () => {
+    (async function () {
       await vm.$store.dispatch('getAllDepartments')
     })()
   }
