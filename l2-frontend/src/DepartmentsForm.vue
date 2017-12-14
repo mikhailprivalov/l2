@@ -28,13 +28,13 @@
     },
     computed: {
       departments() {
-        return this.$store.state.all
+        return this.$store.state.departments.all
       },
       can_edit() {
-        return this.$store.state.can_edit
+        return this.$store.state.departments.can_edit
       },
       types() {
-        return this.$store.state.types
+        return this.$store.state.departments.types
       }
     }
   }
