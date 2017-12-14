@@ -1,11 +1,11 @@
 const path = require('path')
 const webpack = require('webpack')
 const BundleTracker = require('webpack-bundle-tracker')
-const glob = require('glob')
+//const glob = require('glob')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: glob.sync('./src/*'),
+  entry: path.resolve(__dirname, 'src/main'), //glob.sync('./src/*'),
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
@@ -84,7 +84,7 @@ module.exports = {
     overlay: true
   },
   performance: {
-    hints: false
+    hints: true
   },
   devtool: '#eval-source-map'
 }
