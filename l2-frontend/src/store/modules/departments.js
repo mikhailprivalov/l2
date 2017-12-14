@@ -24,9 +24,19 @@ const mutations = {
   },
 }
 
+const watch = {
+  all: {
+    deep: true,
+    handler: function (val, oldVal) {
+      console.log(val, oldVal)
+    }
+  }
+}
+
 export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
+  watch
 }
