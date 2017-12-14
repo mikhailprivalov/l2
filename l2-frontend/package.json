@@ -6,8 +6,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV=development webpack --progress --hide-modules",
-    "build_prod": "cross-env NODE_ENV=production webpack --progress --hide-modules"
+    "build": "cross-env NODE_ENV=development webpack --progress -d",
+    "build_prod": "cross-env NODE_ENV=production webpack --progress -p"
   },
   "dependencies": {
     "vue": "^2.4.4",
