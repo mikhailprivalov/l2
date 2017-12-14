@@ -5,7 +5,9 @@ const BundleTracker = require('webpack-bundle-tracker')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src/main'), //glob.sync('./src/*'),
+  entry: {
+    main: './src/main',
+  }, //glob.sync('./src/*'),
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
