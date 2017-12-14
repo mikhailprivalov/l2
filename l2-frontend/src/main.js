@@ -7,4 +7,8 @@ new Vue({
   el: '#app',
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
+  created() {
+    this.store.dispatch('departments/getAllDepartments').then(() => {
+    })
+  }
 })
