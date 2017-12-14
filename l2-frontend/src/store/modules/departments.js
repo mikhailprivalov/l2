@@ -12,8 +12,7 @@ const getters = {
 const actions = {
   async getAllDepartments({commit}) {
     const departments = await departments_directory.getDepartments()
-    console.log(departments)
-    // commit(types.RECEIVE_ALL_DEPARTMENTS, {departments})
+    commit(types.RECEIVE_ALL_DEPARTMENTS, {departments})
   }
 }
 
