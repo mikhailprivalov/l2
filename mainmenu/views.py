@@ -330,8 +330,7 @@ def create_pod(request):
             mess = "Название заполнено некорректно"
     else:
         e = False
-    return render(request, 'dashboard/create_podr.html',
-                  {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr})
+    return render(request, 'dashboard/create_podr.html', {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
 
 
 @login_required

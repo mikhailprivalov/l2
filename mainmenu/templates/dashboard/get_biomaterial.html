@@ -1,6 +1,7 @@
 {% extends "dbase.html" %}
 {% block title %}Забор биоматериала{% endblock %}
 {% block container %}container-fluid{% endblock %}
+{% load render_bundle from webpack_loader %}
 {% block content %}
     <div class="col-xs-4 col-sm-4 col-md-5 col-lg-6" style="padding-right: 0; padding-left: 0">
         <div class="row">
@@ -139,6 +140,7 @@
     <journal-get-material-modal id="journal-get-material-modal" :users="[{pk: {{ user.doctorprofile.pk }}, fio: '{{ user.doctorprofile.fio }}'}]"></journal-get-material-modal>
 {% endblock %}
 {% block head_cn %}
+    {% render_bundle 'JournalGetMaterial' 'css' %}
     <style>
         .navbar {
             margin-bottom: 10px;
@@ -241,8 +243,9 @@
     </style>
 {% endblock %}
 {% block scripts %}
+    {% render_bundle 'JournalGetMaterial' 'js' %}
     <script>
-        let dnum = -1;
+        let dnum = -1
         const tubes = {
         {% for tube in tubes %}{{ tube.pk }}:
         {
@@ -253,344 +256,344 @@
         }
         ,{% endfor %}
         }
-        ;
 
-        let clear_timer_start = false, input_buffer_scan = "";
-        let SFinFocus = false;
-        let checkboxed = [];
+
+        let clear_timer_start = false, input_buffer_scan = ''
+        let SFinFocus = false
+        let checkboxed = []
         $(document).ready(function () {
-            resize();
-            $("#print-bc-save, #print-bc, #success-b, #can-dir").prop("disabled", true);
-            $("#search-field").bind('keydown', 'return', function () {
-                search($('#search-field').val());
-            });
+            resize()
+            $('#print-bc-save, #print-bc, #success-b, #can-dir').prop('disabled', true)
+            $('#search-field').bind('keydown', 'return', function () {
+                search($('#search-field').val())
+            })
             $('input, textarea').focus(function () {
-                SFinFocus = true;
-                input_buffer_scan = "";
+                SFinFocus = true
+                input_buffer_scan = ''
             }).blur(function () {
-                SFinFocus = false;
-            });
-            update_history();
-            $(document).on("keypress", function (e) {
-                if (SFinFocus) return;
-                const sym = String.fromCharCode(e.which);
-                if (isNaN(sym)) return;
-                input_buffer_scan += sym;
-                input_buffer_scan = input_buffer_scan.replace("\n", "").trim();
-                bar_scanner(input_buffer_scan);
-                if (input_buffer_scan.length === 13 && input_buffer_scan.substr(0, 3) === "460") {
+                SFinFocus = false
+            })
+            update_history()
+            $(document).on('keypress', function (e) {
+                if (SFinFocus) return
+                const sym = String.fromCharCode(e.which)
+                if (isNaN(sym)) return
+                input_buffer_scan += sym
+                input_buffer_scan = input_buffer_scan.replace('\n', '').trim()
+                bar_scanner(input_buffer_scan)
+                if (input_buffer_scan.length === 13 && input_buffer_scan.substr(0, 3) === '460') {
                     //console.log("ok");
-                    bar_scanner(input_buffer_scan);
-                    input_buffer_scan = "";
+                    bar_scanner(input_buffer_scan)
+                    input_buffer_scan = ''
                 }
-                else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) !== "460") {
+                else if (input_buffer_scan.length >= 3 && input_buffer_scan.substr(0, 3) !== '460') {
                     //console.log("clear buffer " + input_buffer_scan);
-                    input_buffer_scan = "";
+                    input_buffer_scan = ''
                 }
-            });
+            })
             $(window).resize(function () {
-                resize();
-            });
+                resize()
+            })
             $(document).on('keyup', null, 'ctrl+return', function () {
-                save_research();
-            });
-        });
+                save_research()
+            })
+        })
 
         function toggle_check(th) {
-            $("[type=checkbox]", th).prop("checked", !$("[type=checkbox]", th).prop("checked"));
+            $('[type=checkbox]', th).prop('checked', !$('[type=checkbox]', th).prop('checked'))
         }
 
         function cancel_direction() {
-            $("#can-dir").prop("disabled", true);
-            sl();
+            $('#can-dir').prop('disabled', true)
+            sl()
             $.ajax({
-                url: "/direction/researches/cancel",
-                method: "POST",
+                url: '/direction/researches/cancel',
+                method: 'POST',
                 data: {status: !cancel_d, pk: dnum}
             }).done(function (data) {
-                search(dnum, true);
-                hl();
-            });
+                search(dnum, true)
+                hl()
+            })
         }
 
         function cancel_direction_pk(pk) {
-            let tubes = [];
+            let tubes = []
             $.each($(`#work-modal`).find(`tr[pk=${pk}] .tube-pk`), function (k, v) {
-                tubes.push("№" + $(v).text());
-            });
-            if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? "Пробирка" : "Пробирки"} ${tubes.join(", ")} из этого направления ${(tubes.length < 2) ? "будет не доступна" : "будут не доступны"} для подтверждения`)) {
-                sl(true);
+                tubes.push('№' + $(v).text())
+            })
+            if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? 'Пробирка' : 'Пробирки'} ${tubes.join(', ')} из этого направления ${(tubes.length < 2) ? 'будет не доступна' : 'будут не доступны'} для подтверждения`)) {
+                sl(true)
                 $.ajax({
-                    url: "/direction/researches/cancel",
-                    method: "POST",
+                    url: '/direction/researches/cancel',
+                    method: 'POST',
                     data: {status: true, pk: pk}
                 }).done(function (data) {
                     //$(`#work-modal tr[pk=${pk}]`).remove();
-                    worklist(true);
-                });
+                    worklist(true)
+                })
             }
         }
 
         function worklist(nc) {
-            sl();
+            sl()
             const $wm = $('#work-modal')
             if (!nc) {
-                $("#getconfirmbtn").prop("disabled", true);
+                $('#getconfirmbtn').prop('disabled', true)
                 $wm.find('tbody').html('<tr><td style="text-align: center" colspan="5">загрузка...</td></tr>')
             }
             $.ajax({
-                url: "/directions/worklist",
-                type: "json",
-                method: "GET"
+                url: '/directions/worklist',
+                type: 'json',
+                method: 'GET'
             }).done(function (d) {
-                hl();
+                hl()
                 if (!nc)
-                    $("#work-modal").modal();
+                    $('#work-modal').modal()
                 $wm.find('tbody').html('')
                 $wm.find('.allprint').prop('checked', true)
                 if (d.rows.length > 0) {
                     $.each(d.rows, function (k, v) {
                         $wm.find('tbody').append('<tr pk=\'{3}\'><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'>{0}</td><td class=\'cnc\'>{3}<br/><small><a onclick=\'cancel_direction_pk({3});return false;\' href=\'#\'>отменить</a></small></td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' class=\'tube-pk\' style=\'cursor: pointer\'>{1}</td><td onclick=\'toggle_check($("#work-modal tr[pk={3}]"));\' style=\'cursor: pointer\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {4}\'></div></div>{2}</div></div></td><td class=\'label-c\'><label><input class=\'custom_print\' checked type=\'checkbox\' value=\'{1}\' name=\'complete-res-fast\'/></label></td></tr>'.f(v.patient, v.pk, v.title, v.direction, v.color))
-                    });
-                    $("#getconfirmbtn").prop("disabled", false);
+                    })
+                    $('#getconfirmbtn').prop('disabled', false)
                 }
                 else
                     $wm.find('tbody').html('<tr><td style="text-align: center" colspan="5">Ничего не найдено</td></tr>')
-            });
+            })
         }
 
         function getconfirm() {
-            $("#getconfirmbtn").prop("disabled", true);
-            let checked = [];
+            $('#getconfirmbtn').prop('disabled', true)
+            let checked = []
             $.each($('#work-modal').find('.custom_print:checked'), function (k, v) {
-                checked.push(parseInt($(v).val()));
-            });
-            $.ajax({url: "/directions/group_confirm_get", method: "POST", type: "json", data: {checked: JSON.stringify(checked)}}).done(function (d) {
-                $("#work-modal").modal("hide");
-                update_history();
+                checked.push(parseInt($(v).val()))
+            })
+            $.ajax({url: '/directions/group_confirm_get', method: 'POST', type: 'json', data: {checked: JSON.stringify(checked)}}).done(function (d) {
+                $('#work-modal').modal('hide')
+                update_history()
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
                         title: 'Забор материала подтвержден',
-                        message: "Номера пробирок: " + JSON.parse(checked).join(", "),
+                        message: 'Номера пробирок: ' + JSON.parse(checked).join(', '),
                         info: '',
                         icon: 'fa fa-check'
                     },
                     'position': 'top left',
                     delay: 10000
-                });
-            });
+                })
+            })
         }
 
         function bar_scanner(v) {
-            const tdnum = parseInt(v.substr(0, 12)) - 460000000000;
-            if (v.substr(0, 3) === "460" && v.length === 13) {
+            const tdnum = parseInt(v.substr(0, 12)) - 460000000000
+            if (v.substr(0, 3) === '460' && v.length === 13) {
                 if (dnum !== tdnum) {
-                    dnum = tdnum;
-                    search(dnum);
+                    dnum = tdnum
+                    search(dnum)
                 }
             }
         }
 
-        let com = false, cancel_d = false;
+        let com = false, cancel_d = false
 
         function search(q, reload) {
-            com = true;
-            input_buffer_scan = "";
-            if (!q || q === "") return;
-            sl();
-            $("#search-field").val("");
-            $(".has-error").removeClass("has-error");
-            $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc").prop("disabled", true);
+            com = true
+            input_buffer_scan = ''
+            if (!q || q === '') return
+            sl()
+            $('#search-field').val('')
+            $('.has-error').removeClass('has-error')
+            $('#researches-tb .allprint, #print-bc-save, #success-b, #print-bc').prop('disabled', true)
             $.ajax(
                 {
-                    url: "/directions/get/one?id=" + q,
+                    url: '/directions/get/one?id=' + q,
                 }
             ).done(function (data) {
-                hl();
-                com = false;
+                hl()
+                com = false
                 if (data && data.direction && data.direction.pk) {
 
-                    dnum = data.direction.pk;
-                    $("#success-b").show();
-                    $(".btn#success-b").removeAttr("disabled");
-                    $("#date").html(data.direction.date);
-                    $("#fio").html(data.client.fio);
-                    $("#sx").html(data.client.sx);
-                    $("#bth").html(data.client.bth);
-                    $("#doc-fio").html(data.direction.doc.fio);
-                    $("#doc-otd").html(", " + data.direction.doc.otd);
-                    $("#lab").html(data.direction.lab);
-                    cancel_d = data.direction.cancel;
+                    dnum = data.direction.pk
+                    $('#success-b').show()
+                    $('.btn#success-b').removeAttr('disabled')
+                    $('#date').html(data.direction.date)
+                    $('#fio').html(data.client.fio)
+                    $('#sx').html(data.client.sx)
+                    $('#bth').html(data.client.bth)
+                    $('#doc-fio').html(data.direction.doc.fio)
+                    $('#doc-otd').html(', ' + data.direction.doc.otd)
+                    $('#lab').html(data.direction.lab)
+                    cancel_d = data.direction.cancel
                     if (!reload)
-                        $(".last").removeClass("last");
+                        $('.last').removeClass('last')
                     const $rt = $('#researches-tb')
                     $rt.html('<tr><th>Исследования</th><th class=\'col-xs-4\'>Тип пробирки</th><th class=\'col-xs-2\'>Номер пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint3\'  checked /></label></th></tr>')
-                    let n = 0;
+                    let n = 0
 
-                    let complete = true;
-                    let probirki = {};
-                    let c = "";
-                    let d = "";
+                    let complete = true
+                    let probirki = {}
+                    let c = ''
+                    let d = ''
                     $.each(data.tubes, function (k, v) {
-                        c = "checked";
+                        c = 'checked'
                         if (v.status === true) {
-                            d = "disabled"
+                            d = 'disabled'
                         }
                         else {
-                            d = "";
-                            complete = false;
+                            d = ''
+                            complete = false
                         }
                         if (!probirki[v.title])
-                            probirki[v.title] = 1;
+                            probirki[v.title] = 1
                         else
-                            probirki[v.title]++;
+                            probirki[v.title]++
                         $rt.append('<tr onclick=\'toggle_check(this);\' style=\'cursor: pointer\'><td>{0}</td><td style=\'padding: 2px\'><div class=\'well tube\'><div><div class=\'sq\'><div class=\'color-sq\' style=\'background-color: {1}\'></div></div>{2}</div></div></td><td><input type=\'text\' value=\'{4}\' readonly class=\'form-control\' {5} id=\'barcode-{4}\'/> </td><td class=\'c\'><label onclick=\'toggle_check(this);\'><input tabindex=\'9\' type=\'checkbox\' {3} {5} value=\'{4}\' id=\'complete-{4}\' class=\'custom_print\' name=\'complete-res\'/> </label></td></tr>'.format(v.researches.join(', '), v.color, v.title, c, v.id, d, v.barcode))
-                    });
+                    })
                     $('#dir-num').html(data.direction.pk + (complete ? ' (исполнено)' : (data.direction.cancel ? ' (отменено)' : '')))
 
-                    let tmpstr = "";
-                    let f = true;
-                    let all_cnt = 0;
+                    let tmpstr = ''
+                    let f = true
+                    let all_cnt = 0
                     $.each(probirki, function (k, v) {
                         if (f) {
-                            tmpstr = k + " &mdash; " + v + " шт";
-                            f = false;
+                            tmpstr = k + ' &mdash; ' + v + ' шт'
+                            f = false
                         }
                         else {
-                            tmpstr = k + " &mdash; " + v + " шт, " + tmpstr
+                            tmpstr = k + ' &mdash; ' + v + ' шт, ' + tmpstr
                         }
-                        all_cnt += v;
-                    });
+                        all_cnt += v
+                    })
                     $rt.append('<tr><td style=\'text-align:right;font-size:10pt\' colspan=\'3\'>Итого пробирок: {0} шт ({1})</td><td></td></tr>'.format(all_cnt, tmpstr))
 
-                    $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", false);
+                    $('#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir').prop('disabled', false)
                     if (complete) {
-                        com = true;
-                        $("#researches-tb .allprint, #print-bc-save, #success-b, #can-dir").prop("disabled", true);
+                        com = true
+                        $('#researches-tb .allprint, #print-bc-save, #success-b, #can-dir').prop('disabled', true)
                     }
-                    $("input[name=complete-res]").first().focus();
+                    $('input[name=complete-res]').first().focus()
                 }
                 else {
-                    $("#dir-num").html("Не найдено");
-                    $("#date").html("");
-                    $("#fio").html("");
-                    $("#sx").html("");
-                    $("#bth").html("");
-                    $("#doc-fio").html("");
-                    $("#doc-otd").html("");
-                    $("#lab").html("");
-                    $("#researches-tb").html("");
-                    $(".btn#success-b").attr("disabled", "true");
+                    $('#dir-num').html('Не найдено')
+                    $('#date').html('')
+                    $('#fio').html('')
+                    $('#sx').html('')
+                    $('#bth').html('')
+                    $('#doc-fio').html('')
+                    $('#doc-otd').html('')
+                    $('#lab').html('')
+                    $('#researches-tb').html('')
+                    $('.btn#success-b').attr('disabled', 'true')
                     $('#search-field').focus().parent().addClass('has-error')
-                    $("#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir").prop("disabled", true);
+                    $('#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir').prop('disabled', true)
                 }
 
-            });
+            })
         }
 
         function barcodes_print() {
-            window.open('/barcodes/tubes?napr_id=' + JSON.stringify([dnum]), '_blank');
+            window.open('/barcodes/tubes?napr_id=' + JSON.stringify([dnum]), '_blank')
         }
 
         function save_research() {
             //$(".btn#success-b").attr("disabled", "true");
-            if (com) return;
+            if (com) return
             let data = {
                 dir_id: dnum,
                 statuses: {},
                 barcodes: {}
-            };
-            $.each($("input[name=complete-res]"), function (k, v) {
-                data.statuses[$(v).val()] = $(v).is(':checked');
-                data.barcodes[$(v).val()] = $("#barcode-" + $(v).val()).is(':checked');
-            });
+            }
+            $.each($('input[name=complete-res]'), function (k, v) {
+                data.statuses[$(v).val()] = $(v).is(':checked')
+                data.barcodes[$(v).val()] = $('#barcode-' + $(v).val()).is(':checked')
+            })
             $.ajax({
-                url: "/direction/researches/update",
+                url: '/direction/researches/update',
                 data: {data: JSON.stringify(data)},
-                type: "json",
-                method: "POST"
+                type: 'json',
+                method: 'POST'
             }).done(function (d) {
                 if (d.r) {
-                    update_history(d.o, d.dn);
+                    update_history(d.o, d.dn)
 
                 }
-            });
+            })
         }
 
         function clear(num) {
 
-            $("#dir-num").html("");
-            $("#date").html("");
-            $("#fio").html("");
-            $("#sx").html("");
-            $("#bth").html("");
-            $("#doc-fio").html("");
-            $("#doc-otd").html("");
-            $("#lab").html("");
+            $('#dir-num').html('')
+            $('#date').html('')
+            $('#fio').html('')
+            $('#sx').html('')
+            $('#bth').html('')
+            $('#doc-fio').html('')
+            $('#doc-otd').html('')
+            $('#lab').html('')
 
             if (num)
-                $("#researches-tb").html("<tr><td>Материал по направлению {0} занесен в базу</td></tr>".f(num));
-            $(".btn#success-b").attr("disabled", "true");
+                $('#researches-tb').html('<tr><td>Материал по направлению {0} занесен в базу</td></tr>'.f(num))
+            $('.btn#success-b').attr('disabled', 'true')
             /*$(".last").removeClass("last");
              $("#story-" + num + " td").addClass("last");*/
             //$("#story-"+num+" td").effect( "highlight", {color:"#D4E6C2"}, 20000 );
-            input_buffer_scan = "";
+            input_buffer_scan = ''
             $('#search-field').val('').focus()
-            $("#print-bc").hide();
+            $('#print-bc').hide()
         }
 
         function update_history(clearn, dn) {
-            sl();
+            sl()
             $.ajax({
-                url: "/direction/researches/update/history",
-                type: "json",
-                method: "GET"
+                url: '/direction/researches/update/history',
+                type: 'json',
+                method: 'GET'
             }).done(function (d) {
                 const $ht = $('#history-tb')
                 $ht.html('')
-                const array = d.rows;
+                const array = d.rows
                 $.each(array, function (k, v) {
-                    let f = true;
-                    let tmpstr = "";
-                    let num = {};
-                    let time = "";
-                    let dir_id = -1;
+                    let f = true
+                    let tmpstr = ''
+                    let num = {}
+                    let time = ''
+                    let dir_id = -1
                     $.each(v, function (key, val) {
                         if (!num[val.title])
-                            num[val.title] = 1;
+                            num[val.title] = 1
                         else
-                            num[val.title]++;
-                        time = val.time;
+                            num[val.title]++
+                        time = val.time
                         dir_id = val.dir_id
-                    });
+                    })
                     $.each(num, function (key, value) {
                         if (f) {
-                            tmpstr = key + " " + value + " шт";
-                            f = false;
+                            tmpstr = key + ' ' + value + ' шт'
+                            f = false
                         }
                         else {
-                            tmpstr = key + " " + value + " шт, " + tmpstr
+                            tmpstr = key + ' ' + value + ' шт, ' + tmpstr
                         }
-                    });
+                    })
                     $ht.prepend('<tr id=\'story-{3}\'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class=\'label-c\'><label><input type=\'checkbox\' name=\'custom_print\' class=\'custom_print\' value=\'{3}\' onchange=\'checkboxes_to_array();\' /></label></td></tr>'.f(v.time, v.dir_id, v.researches, v.tube_id, v.type))
-                });
+                })
                 $ht.prepend('<tr><th class=\'btn-ell\'>Время забора</th><th>Направление</th><th class=\'btn-ell\'>Исследования</th><th>Номер пробирки</th><th class=\'btn-ell\'>Тип пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint\' checked /></label></th></tr>')
-                hl();
-                resize();
-                sync_checkboxes("[name=allprint]");
-                if (!clearn || !dn) return;
-                search(dnum, true);
+                hl()
+                resize()
+                sync_checkboxes('[name=allprint]')
+                if (!clearn || !dn) return
+                search(dnum, true)
                 //clear(dn);
-                $(".last").removeClass("last");
+                $('.last').removeClass('last')
                 $.each(clearn, function (k, v) {
-                    $("#story-" + v + " td").addClass("last");
-                    console.log(v);
-                });
-            });
+                    $('#story-' + v + ' td').addClass('last')
+                    console.log(v)
+                })
+            })
         }
 
-        let first_resize = true;
+        let first_resize = true
 
         function resize() {
             const $st = $('#scroll-tb')
@@ -600,7 +603,7 @@
             if (first_resize) {
                 $sr.perfectScrollbar()
                 $st.perfectScrollbar()
-                first_resize = true;
+                first_resize = true
             }
             else {
                 $sr.perfectScrollbar('update')
@@ -609,33 +612,33 @@
         }
 
         function sync_checkboxes(th) {
-            const $table = $(th).parents(".table").first();
-            $(".custom_print", $table).prop("checked", $(".allprint", $table).is(':checked'));
-            checkboxes_to_array();
+            const $table = $(th).parents('.table').first()
+            $('.custom_print', $table).prop('checked', $('.allprint', $table).is(':checked'))
+            checkboxes_to_array()
         }
 
-        let nochecked = false;
+        let nochecked = false
 
         function checkboxes_to_array() {
-            checkboxed = [];
-            nochecked = false;
-            $.each($("input[name='custom_print']"), function (k, v) {
-                if ($(v).is(":checked")) {
-                    checkboxed.push(parseInt($(v).val()));
+            checkboxed = []
+            nochecked = false
+            $.each($('input[name=\'custom_print\']'), function (k, v) {
+                if ($(v).is(':checked')) {
+                    checkboxed.push(parseInt($(v).val()))
                 }
                 else {
-                    nochecked = true;
+                    nochecked = true
                 }
-            });
+            })
         }
 
         function print_history() {
-            checkboxes_to_array();
+            checkboxes_to_array()
             if (!nochecked) {
-                window.open('/direction/researches/update/history/print', '_blank');
+                window.open('/direction/researches/update/history/print', '_blank')
             }
             else {
-                window.open('/direction/researches/update/history/print?filter=' + JSON.stringify(checkboxed), '_blank');
+                window.open('/direction/researches/update/history/print?filter=' + JSON.stringify(checkboxed), '_blank')
             }
         }
 

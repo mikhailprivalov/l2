@@ -1,5 +1,6 @@
 {% extends "dbase.html" %}
 {% block title %}Статистика{% endblock %}
+{% load render_bundle from webpack_loader %}
 {% block content %}
     {% load has_group %}
     <div class="row">
@@ -58,37 +59,23 @@
                 </ul>
             </div>
         </div>
-    {% if request.user|has_group:"Статистика" or request.user.is_superuser %}
-        <div class="col-xs-6">
-            <div class="panel panel-default panel-flt">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Статистика по заборщикам биоматериала</h3>
+        {% if request.user|has_group:"Статистика" or request.user.is_superuser %}
+            <div class="col-xs-6">
+                <div class="panel panel-default panel-flt">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Статистика по заборщикам биоматериала</h3>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item" onclick="$('#journal-get-material-modal').modal('show')">Отчёт по забору</li>
+                    </ul>
                 </div>
-                <ul class="list-group">
-                    <li class="list-group-item" onclick="$('#journal-get-material-modal').modal('show')">Отчёт по забору</li>
-                </ul>
             </div>
-        </div>
-        <journal-get-material-modal id="journal-get-material-modal" :users='{{ getters_material|safe }}'></journal-get-material-modal>
-    {% endif %}
+            <journal-get-material-modal id="journal-get-material-modal" :users='{{ getters_material|safe }}'></journal-get-material-modal>
+        {% endif %}
     </div>
 {% endblock %}
-{% block scripts %}
-    <script>
-        $(document).ready(function () {
-            $("[name='date-start'],[name='date-end']").val(getFormattedDate(today));
-            $('#datepicker').datepicker({
-                format: "dd.mm.yyyy",
-                todayBtn: "linked",
-                language: "ru",
-                autoclose: true,
-                todayHighlight: true
-            });
-        });
-        function gen_stat(stype, pk) {
-            window.open('/statistic/xls?type=' + stype + "&pk=" + pk + "&date-start=" + $("[name='date-start']").val() + "&date-end=" + $("[name='date-end']").val(), '_blank');
-        }
-    </script>
+{% block head_cn %}
+    {% render_bundle 'JournalGetMaterial' 'css' %}
     <style>
         .panel-flt .list-group-item {
             padding: 4px;
@@ -99,4 +86,23 @@
             cursor: pointer;
         }
     </style>
+{% endblock %}
+{% block scripts %}
+    {% render_bundle 'JournalGetMaterial' 'js' %}
+    <script>
+        $(document).ready(function () {
+            $('[name=\'date-start\'],[name=\'date-end\']').val(getFormattedDate(today))
+            $('#datepicker').datepicker({
+                format: 'dd.mm.yyyy',
+                todayBtn: 'linked',
+                language: 'ru',
+                autoclose: true,
+                todayHighlight: true
+            })
+        })
+
+        function gen_stat(stype, pk) {
+            window.open('/statistic/xls?type=' + stype + '&pk=' + pk + '&date-start=' + $('[name=\'date-start\']').val() + '&date-end=' + $('[name=\'date-end\']').val(), '_blank')
+        }
+    </script>
 {% endblock %}
