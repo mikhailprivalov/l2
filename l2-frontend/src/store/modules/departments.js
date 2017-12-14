@@ -1,4 +1,4 @@
-import departments_directory from '../../api/departments_directory'
+import departments_directory from '../../api/departments-directory'
 import * as types from '../mutation-types'
 
 const state = {
