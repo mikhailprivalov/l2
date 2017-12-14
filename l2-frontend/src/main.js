@@ -8,7 +8,7 @@ new Vue({
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
   created() {
-    this.$store.$watch((state) => (state.departments.all), (val, oldVal) => {
+    this.$store.watch((state) => (state.departments.all), (val, oldVal) => {
       console.log(val, oldVal)
     }, {deep: true})
     this.$store.dispatch('getAllDepartments').then()
