@@ -10,7 +10,7 @@
     </tr>
     <tr v-if="can_edit">
       <td></td>
-      <td><input type="text" class="form-control" name='title' placeholder="Название" value="{{ title }}" required autofocus></td>
+      <td><input type="text" class="form-control" placeholder="Название" v-model="create.title" autofocus></td>
       <td><input type="submit" class="btn btn-primary-nb form-control" value="Добавить"></td>
     </tr>
   </table>
@@ -19,6 +19,13 @@
 <script>
   export default {
     name: 'departments-form',
+    data() {
+      return {
+        create: {
+          title: ''
+        }
+      }
+    },
     computed: {
       departments() {
         return this.$store.state.all
