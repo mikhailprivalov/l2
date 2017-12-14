@@ -60,11 +60,11 @@ module.exports = {
           }
         }
       },
-      {
+      /*{
         test: /\.js$/,
         loader: 'babel-loader',
         exclude: /node_modules/
-      },
+      },*/
       {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
