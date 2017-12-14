@@ -13,7 +13,7 @@
             Подразделение добавлено
         </div>
     {% endif %}
-    <form method="POST">
+    <form method="POST" v-if="false">
         {% csrf_token %}
         <table class="table table-bordered table-responsive">
             <col width="40">
