@@ -2,7 +2,9 @@ import departments_directory from '../../api/departments-directory'
 import * as types from '../mutation-types'
 
 const state = {
-  all: []
+  all: [],
+  can_edit: false,
+  types: []
 }
 
 const getters = {
