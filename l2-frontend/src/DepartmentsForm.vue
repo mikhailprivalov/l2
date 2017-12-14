@@ -5,7 +5,7 @@
     <col v-if="can_edit" width="300">
     <tr v-for="department in departments">
       <td>{{ department.pk }}</td>
-      <td><input class="form-control" v-model="department"/></td>
+      <td><input class="form-control" v-model="department.title"/></td>
       <td v-if="can_edit"></td>
     </tr>
     <tr v-if="can_edit">
