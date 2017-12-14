@@ -1,7 +1,7 @@
 import {HTTP} from '../http-common'
 
 async function getDepartments() {
-  const response = HTTP.get('departments')
+  const response = await HTTP.get('departments')
   if (response.statusText === 'OK') {
     return response.data.departments
   }
