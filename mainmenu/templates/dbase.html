@@ -36,6 +36,8 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker3.standalone.min.css' %}" type="text/css"/>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
+    {% load render_bundle from webpack_loader %}
+    {% render_bundle 'main' 'css' %}
     <script>
         function getFormattedDate(date) {
             const year = date.getFullYear()
@@ -1965,6 +1967,7 @@
     }
 
 </script>
+{% render_bundle 'main' 'js' %}
 {% block scripts %}{% endblock %}
 <div id="page-preloader" style="text-align: center"></div>
 </body>

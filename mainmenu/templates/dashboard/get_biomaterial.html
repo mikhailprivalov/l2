@@ -1,7 +1,6 @@
 {% extends "dbase.html" %}
 {% block title %}Забор биоматериала{% endblock %}
 {% block container %}container-fluid{% endblock %}
-{% load render_bundle from webpack_loader %}
 {% block content %}
     <div class="col-xs-4 col-sm-4 col-md-5 col-lg-6" style="padding-right: 0; padding-left: 0">
         <div class="row">
@@ -140,7 +139,6 @@
     <journal-get-material-modal id="journal-get-material-modal" :users="[{pk: {{ user.doctorprofile.pk }}, fio: '{{ user.doctorprofile.fio }}'}]"></journal-get-material-modal>
 {% endblock %}
 {% block head_cn %}
-    {% render_bundle 'JournalGetMaterial' 'css' %}
     <style>
         .navbar {
             margin-bottom: 10px;
@@ -243,7 +241,6 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    {% render_bundle 'JournalGetMaterial' 'js' %}
     <script>
         let dnum = -1
         const tubes = {

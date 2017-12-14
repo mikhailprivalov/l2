@@ -1,6 +1,5 @@
 {% extends "dbase.html" %}
 {% block title %}Статистика{% endblock %}
-{% load render_bundle from webpack_loader %}
 {% block content %}
     {% load has_group %}
     <div class="row">
@@ -75,7 +74,6 @@
     </div>
 {% endblock %}
 {% block head_cn %}
-    {% render_bundle 'JournalGetMaterial' 'css' %}
     <style>
         .panel-flt .list-group-item {
             padding: 4px;
@@ -88,7 +86,6 @@
     </style>
 {% endblock %}
 {% block scripts %}
-    {% render_bundle 'JournalGetMaterial' 'js' %}
     <script>
         $(document).ready(function () {
             $('[name=\'date-start\'],[name=\'date-end\']').val(getFormattedDate(today))

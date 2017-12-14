@@ -1,11 +1,11 @@
 const path = require('path')
 const webpack = require('webpack')
 const BundleTracker = require('webpack-bundle-tracker')
-const glob = require("glob")
+const glob = require('glob')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: glob.sync("./src/*"),
+  entry: glob.sync('./src/*'),
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
@@ -45,9 +45,6 @@ module.exports = {
         loader: 'vue-loader',
         options: {
           loaders: {
-            // Since sass-loader (weirdly) has SCSS as its default parse mode, we map
-            // the "scss" and "sass" values for the lang attribute to the right configs here.
-            // other preprocessors should work out of the box, no loader config like this necessary.
             'scss': [
               'vue-style-loader',
               'css-loader',
@@ -59,14 +56,13 @@ module.exports = {
               'sass-loader?indentedSyntax'
             ]
           }
-          // other vue-loader options go here
         }
       },
-      /*{
+      {
         test: /\.js$/,
         loader: 'babel-loader',
         exclude: /node_modules/
-      },*/
+      },
       {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
