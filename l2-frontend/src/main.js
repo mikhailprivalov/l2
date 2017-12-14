@@ -8,7 +8,9 @@ new Vue({
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
   created() {
-    this.$store.dispatch('getAllDepartments').then(() => {
-    })
+    let vm = this
+    (async () => {
+      await vm.$store.dispatch('getAllDepartments')
+    })()
   }
 })
