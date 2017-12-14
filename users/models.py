@@ -47,6 +47,9 @@ class DoctorProfile(models.Model):
         """
         return self.user.groups.filter(name__in=groups).exists()
 
+    def has_group(self, group) -> bool:
+        return self.is_member([group])
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.fio + ', ' + self.podrazdeleniye.title

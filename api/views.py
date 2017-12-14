@@ -1,5 +1,6 @@
 import simplejson as json
 import yaml
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -241,3 +242,15 @@ def endpoint(request):
         result["body"] = "API key is incorrect"
     slog.Log(key=pk, type=6000, body=json.dumps(data), user=None).save()
     return JsonResponse(result)
+
+
+@login_required
+def departments(request):
+    from podrazdeleniya.models import Podrazdeleniya
+    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
+    if request.method == "GET":
+        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": x.p_type} for x in Podrazdeleniya.objects.all()],
+                             "can_edit": can_edit,
+                             "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES]})
+    else:
+        pass
