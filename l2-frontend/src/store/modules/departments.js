@@ -9,7 +9,8 @@ const state = {
 }
 
 const getters = {
-  allDepartments: state => state.all
+  allDepartments: state => state.all,
+  oldDepartments: state => state.old_all,
 }
 
 const actions = {
