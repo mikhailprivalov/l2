@@ -13,6 +13,21 @@ const state = {
 const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
+  diff_departments: state => {
+    let diff = []
+    let departments = state.all
+    for (let row of departments) {
+      for (let in_row of state.old_all) {
+        if (in_row.pk === row.pk) {
+          if (in_row.title !== row.title) {
+            diff.push(row)
+          }
+          break
+        }
+      }
+    }
+    return diff
+  },
   canEditDepartments: state => state.can_edit,
   allTypes: state => state.department_types,
 }
@@ -26,29 +41,20 @@ const actions = {
     commit(mutation_types.SET_CAN_EDIT, {can_edit: answer.can_edit})
     commit(mutation_types.SET_TYPES, {department_types: answer.types})
   },
-  [action_types.UPDATE_DEPARTMENTS]: _.debounce(async ({commit, getters}) => {
-    let diff = []
-    let departments = getters.allDepartments
-    for (let row of departments) {
-      for (let in_row of getters.oldDepartments) {
-        if (in_row.pk === row.pk) {
-          if (in_row.title !== row.title) {
-            diff.push(row)
-          }
-          break
-        }
-      }
-    }
-    if (diff.length === 0)
+
+  [action_types.UPDATE_DEPARTMENTS]: _.debounce(async ({commit, getters}, type_update, to_update) => {
+    to_update = to_update || getters.diff_departments
+    type_update = type_update || 'update'
+    if (to_update.length === 0)
       return []
     try {
-      const answer = await departments_directory.sendDepartments('update', diff)
+      const answer = await departments_directory.sendDepartments(type_update, to_update)
       if (answer.ok) {
-        return diff
+        return to_update
       }
-      commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments})
+      commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments: getters.allDepartments})
     } catch (e) {
-
+      return []
     }
   }, 650)
 }
