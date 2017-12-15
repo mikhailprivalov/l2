@@ -8,7 +8,7 @@
     <tbody>
     <tr v-for="department in departments">
       <td>{{ department.pk }}</td>
-      <td><input class="form-control" :class="{'has-success': department.updated}" v-model="department.title" :disabled="!can_edit"/></td>
+      <td :class="{'has-success': department.updated}"><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
       <td v-if="can_edit"></td>
     </tr>
     <tr v-if="can_edit">
