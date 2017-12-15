@@ -1,5 +1,6 @@
 import departments_directory from '../../api/departments-directory'
 import * as types from '../mutation-types'
+import _ from 'lodash'
 
 const state = {
   all: [],
@@ -19,7 +20,7 @@ const actions = {
     commit(types.UPDATE_DEPARTMENTS, {departments})
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
   },
-  updateDepartments({commit, getters}) {
+  updateDepartments: _.debounce(({commit, getters}) => {
     let diff = []
     let departments = getters.allDepartments
     for (let row of departments) {
@@ -36,7 +37,7 @@ const actions = {
       return
     console.log(diff)
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
-  }
+  }, 400)
 }
 
 const mutations = {
