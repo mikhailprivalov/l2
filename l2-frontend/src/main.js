@@ -10,12 +10,13 @@ new Vue({
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
   data: {
-    timeouts: {}
+    timeouts: {},
   },
   created() {
     let vm = this
     this.$store.watch((state) => (state.departments.all), () => {
       let diff = vm.$store.getters.diff_departments
+      console.log(diff)
       vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, 'update', diff).then((ok) => {
         if (Array.isArray(ok) && ok.length > 0) {
           for (let r of ok) {
