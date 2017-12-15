@@ -32,13 +32,13 @@
     },
     computed: {
       departments() {
-        return this.$store.state.getters.allDepartments
+        return this.$store.getters.allDepartments
       },
       can_edit() {
-        return this.$store.state.getters.canEditDepartments
+        return this.$store.getters.canEditDepartments
       },
       types() {
-        return this.$store.state.getters.allTypes
+        return this.$store.getters.allTypes
       }
     }
   }
