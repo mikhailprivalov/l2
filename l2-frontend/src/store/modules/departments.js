@@ -72,11 +72,10 @@ const mutations = {
   [mutation_types.SET_TYPES](state, {department_types}) {
     state.department_types = department_types
   },
-  [mutation_types.SET_UPDATED_DEPARTMENT](state, pk, value) {
-    console.log(state, pk, value)
+  [mutation_types.SET_UPDATED_DEPARTMENT](state, data) {
     for (let i = 0; i < state.all; i++) {
-      if (state.all[i].pk === pk) {
-        state.all[i].updated = value
+      if (state.all[i].pk === data.pk) {
+        state.all[i].updated = data.value
         console.log(state.all[i])
         break
       }
