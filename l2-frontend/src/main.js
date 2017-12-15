@@ -9,11 +9,11 @@ new Vue({
   store,
   components: {JournalGetMaterialModal, DepartmentsForm},
   created() {
+    let vm = this
     this.$store.watch((state) => (state.departments.all), (departments) => {
       let diff = []
       for (let row of departments) {
-        for (let in_row of this.$store.departments.old_all) {
-          console.log(in_row.pk, row.pk, in_row.pk === row.pk, in_row.title, row.title, in_row.title !== row.title)
+        for (let in_row of vm.$store.departments.old_all) {
           if (in_row.pk === row.pk) {
             if (in_row.title !== row.title) {
               diff.push(row)
@@ -23,7 +23,7 @@ new Vue({
         }
       }
       console.log(diff)
-      this.$store.commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+      vm.$store.commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
     }, {deep: true})
     this.$store.dispatch('getAllDepartments').then()
   }
