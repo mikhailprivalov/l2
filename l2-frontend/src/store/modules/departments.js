@@ -72,6 +72,13 @@ const mutations = {
   [mutation_types.SET_TYPES](state, {department_types}) {
     state.department_types = department_types
   },
+  [mutation_types.SET_UPDATED_DEPARTMENT](state, {pk, value}) {
+    for (let i = 0; i < state.all; i++) {
+      if (state.all.pk === pk) {
+        state.all[i].updated = value
+      }
+    }
+  },
 }
 
 export default {
