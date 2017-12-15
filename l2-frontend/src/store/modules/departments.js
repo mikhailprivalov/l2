@@ -74,9 +74,8 @@ const mutations = {
   },
   [mutation_types.SET_UPDATED_DEPARTMENT](state, pk, value) {
     for (let i = 0; i < state.all; i++) {
-      if (state.all.pk === pk) {
+      if (state.all[i].pk === pk) {
         state.all[i].updated = value
-        console.log(state.all[i])
         break
       }
     }
