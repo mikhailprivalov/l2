@@ -26,7 +26,7 @@ const mutations = {
     state.all = departments
   },
   [types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
-    state.old_all = departments
+    state.old_all = JSON.parse(JSON.stringify(departments))
   },
 }
 
