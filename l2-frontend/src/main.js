@@ -19,13 +19,13 @@ new Vue({
       vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, 'update', diff).then((ok) => {
         if (Array.isArray(ok) && ok.length > 0) {
           for (let r of ok) {
-            vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, r.pk, true)
+            vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: true})
             if (vm.timeouts.hasOwnProperty(r.pk) && vm.timeouts[r.pk] !== null) {
               clearTimeout(vm.timeouts[r.pk])
               vm.timeouts[r.pk] = null
             }
             vm.timeouts[r.pk] = setTimeout(() => {
-              vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, r.pk, false)
+              vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
               vm.timeouts[r.pk] = null
             }, 2000)
           }
