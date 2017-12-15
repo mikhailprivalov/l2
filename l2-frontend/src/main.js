@@ -19,9 +19,9 @@ new Vue({
         console.log(ok)
         if (Array.isArray(ok) && ok.length > 0) {
           for (let row of ok) {
-            row.updated = true;
+            row.updated = true
             console.log(0)
-            ((r) => {
+            (function (r) {
               console.log(1)
               if (vm.timeouts.hasOwnProperty(r.pk) && vm.timeouts[r.pk] !== null) {
                 console.log(2)
