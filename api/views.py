@@ -249,10 +249,9 @@ def departments(request):
     from podrazdeleniya.models import Podrazdeleniya
     can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
     if request.method == "GET":
-        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": x.p_type} for x in Podrazdeleniya.objects.all().order_by("pk")],
+        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": x.p_type, "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")],
                              "can_edit": can_edit,
-                             "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES],
-                             "updated": False})
+                             "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES]})
     else:
         ok = False
         message = ""
