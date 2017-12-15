@@ -12,13 +12,18 @@ const state = {
 const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
+  can_edit_departments: state => state.can_edit,
+  allTypes: state => state.types,
 }
 
 const actions = {
   async getAllDepartments({commit}) {
-    const departments = await departments_directory.getDepartments()
+    const answer = await departments_directory.getDepartments()
+    let departments = answer.departments
     commit(types.UPDATE_DEPARTMENTS, {departments})
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+    commit(types.SET_CAN_EDIT, {can_edit: answer.can_edit})
+    commit(types.SET_TYPES, {types: answer.types})
   },
   updateDepartments: _.debounce(({commit, getters}) => {
     let diff = []
@@ -46,6 +51,12 @@ const mutations = {
   },
   [types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
     state.old_all = JSON.parse(JSON.stringify(departments))
+  },
+  [types.SET_CAN_EDIT](state, {can_edit}) {
+    state.can_edit = can_edit
+  },
+  [types.SET_TYPES](state, {p_types}) {
+    state.types = p_types
   },
 }
 

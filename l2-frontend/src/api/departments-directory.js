@@ -4,11 +4,11 @@ async function getDepartments() {
   try {
     const response = await HTTP.get('departments')
     if (response.statusText === 'OK') {
-      return response.data.departments
+      return response.data
     }
   } catch (e) {
   }
-  return []
+  return {can_edit: false, departments: [], types: []}
 }
 
 export default {getDepartments}
