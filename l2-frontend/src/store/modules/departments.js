@@ -76,7 +76,6 @@ const mutations = {
     for (let i = 0; i < state.all; i++) {
       if (state.all[i].pk === data.pk) {
         state.all[i].updated = data.value
-        console.log(state.all[i])
         break
       }
     }
