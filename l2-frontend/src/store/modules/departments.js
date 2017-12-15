@@ -18,6 +18,22 @@ const actions = {
     const departments = await departments_directory.getDepartments()
     commit(types.UPDATE_DEPARTMENTS, {departments})
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+  },
+  updateDepartments({commit, getters}) {
+    let diff = []
+    let departments = getters.allDepartments
+    for (let row of departments) {
+      for (let in_row of getters.oldDepartments) {
+        if (in_row.pk === row.pk) {
+          if (in_row.title !== row.title) {
+            diff.push(row)
+          }
+          break
+        }
+      }
+    }
+    console.log(diff)
+    commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
   }
 }
 
