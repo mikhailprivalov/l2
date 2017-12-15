@@ -32,6 +32,8 @@ const actions = {
         }
       }
     }
+    if (diff.length === 0)
+      return
     console.log(diff)
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
   }
