@@ -37,7 +37,7 @@ const actions = {
       return
     console.log(diff)
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
-  }, 400)
+  }, 650)
 }
 
 const mutations = {
