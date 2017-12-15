@@ -22,15 +22,15 @@ new Vue({
             console.log(0)
             ((r) => {
               console.log(1)
-              if (timeouts.hasOwnProperty(r.pk) && timeouts[r.pk] !== null) {
+              if (vm.timeouts.hasOwnProperty(r.pk) && vm.timeouts[r.pk] !== null) {
                 console.log(2)
-                clearTimeout(timeouts[r.pk])
-                timeouts[r.pk] = null
+                clearTimeout(vm.timeouts[r.pk])
+                vm.timeouts[r.pk] = null
               }
-              timeouts[r.pk] = setTimeout(() => {
+              vm.timeouts[r.pk] = setTimeout(() => {
                 console.log(3)
                 r.updated = false
-                timeouts[r.pk] = null
+                vm.timeouts[r.pk] = null
               }, 2000)
             })(row)
           }
