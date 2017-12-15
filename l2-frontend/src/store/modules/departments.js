@@ -14,6 +14,7 @@ const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
   diff_departments: state => {
+    console.log(state.all, state.old_all)
     let diff = []
     let departments = state.all
     for (let row of departments) {
