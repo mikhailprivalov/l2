@@ -13,7 +13,7 @@ new Vue({
     this.$store.watch((state) => (state.departments.all), (departments) => {
       let diff = []
       for (let row of departments) {
-        for (let in_row of vm.$store.oldDepartments) {
+        for (let in_row of vm.$store.getters.oldDepartments) {
           if (in_row.pk === row.pk) {
             if (in_row.title !== row.title) {
               diff.push(row)
