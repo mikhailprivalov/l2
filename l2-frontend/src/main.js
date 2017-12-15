@@ -22,6 +22,7 @@ new Vue({
             if (vm.timeouts.hasOwnProperty(r.pk) && vm.timeouts[r.pk] !== null) {
               clearTimeout(vm.timeouts[r.pk])
               vm.timeouts[r.pk] = null
+              console.log('CTM')
             }
             vm.timeouts[r.pk] = setTimeout(() => {
               r.updated = false
