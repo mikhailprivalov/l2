@@ -251,7 +251,8 @@ def departments(request):
     if request.method == "GET":
         return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": x.p_type} for x in Podrazdeleniya.objects.all().order_by("pk")],
                              "can_edit": can_edit,
-                             "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES]})
+                             "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES],
+                             "updated": False})
     else:
         ok = False
         message = ""
