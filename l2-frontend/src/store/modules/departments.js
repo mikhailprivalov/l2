@@ -3,6 +3,7 @@ import * as types from '../mutation-types'
 
 const state = {
   all: [],
+  old_all: [],
   can_edit: false,
   types: []
 }
@@ -14,13 +15,17 @@ const getters = {
 const actions = {
   async getAllDepartments({commit}) {
     const departments = await departments_directory.getDepartments()
-    commit(types.RECEIVE_ALL_DEPARTMENTS, {departments})
+    commit(types.UPDATE_DEPARTMENTS, {departments})
+    commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
   }
 }
 
 const mutations = {
-  [types.RECEIVE_ALL_DEPARTMENTS](state, {departments}) {
+  [types.UPDATE_DEPARTMENTS](state, {departments}) {
     state.all = departments
+  },
+  [types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
+    state.old_all = departments
   },
 }
 
