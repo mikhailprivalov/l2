@@ -42,7 +42,7 @@ const actions = {
     commit(mutation_types.SET_TYPES, {department_types: answer.types})
   },
 
-  [action_types.UPDATE_DEPARTMENTS]: async ({commit, getters}, type_update, to_update) => {
+  async [action_types.UPDATE_DEPARTMENTS]({commit, getters}, type_update, to_update) {
     to_update = to_update || getters.diff_departments
     type_update = type_update || 'update'
     if (to_update.length === 0)
