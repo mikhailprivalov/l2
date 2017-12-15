@@ -256,8 +256,9 @@ def departments(request):
         ok = False
         message = ""
         try:
-            data_type = request.POST.get("type", "update")
-            rows = json.loads(request.POST.get("data", "[]"))
+            req = json.loads(request.body)
+            data_type = req.get("type", "update")
+            rows = req.get("data", [])
             if data_type == "update":
                 for row in rows:
                     department = Podrazdeleniya.objects.get(pk=row["pk"])
