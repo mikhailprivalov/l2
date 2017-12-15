@@ -24,7 +24,7 @@ new Vue({
                 clearTimeout(timeouts[r.pk])
                 timeouts[r.pk] = null
               }
-              setTimeout(() => {
+              timeouts[r.pk] = setTimeout(() => {
                 r.updated = false
                 timeouts[r.pk] = null
               }, 2000)
