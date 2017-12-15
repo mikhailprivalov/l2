@@ -11,4 +11,15 @@ async function getDepartments() {
   return {can_edit: false, departments: [], types: []}
 }
 
-export default {getDepartments}
+async function sendDepartments(type, data) {
+  try {
+    const response = await HTTP.post('departments', {type: type, data: data})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {ok: false, message: ''}
+}
+
+export default {getDepartments, sendDepartments}

@@ -253,4 +253,17 @@ def departments(request):
                              "can_edit": can_edit,
                              "types": [{"pk": x[0], "title": x[1]} for x in Podrazdeleniya.TYPES]})
     else:
-        pass
+        ok = False
+        message = ""
+        try:
+            data_type = request.POST.get("type", "update")
+            rows = json.loads(request.POST.get("data", "[]"))
+            if data_type == "update":
+                for row in rows:
+                    department = Podrazdeleniya.objects.get(pk=row["pk"])
+                    department.title = row["title"]
+                    department.p_type = row["department_type"]
+                    department.save()
+            ok = True
+        finally:
+            return JsonResponse({"ok": ok, "message": message})

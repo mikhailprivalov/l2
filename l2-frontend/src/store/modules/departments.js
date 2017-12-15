@@ -25,7 +25,7 @@ const actions = {
     commit(types.SET_CAN_EDIT, {can_edit: answer.can_edit})
     commit(types.SET_TYPES, {department_types: answer.types})
   },
-  updateDepartments: _.debounce(({commit, getters}) => {
+  updateDepartments: _.debounce(async ({commit, getters}) => {
     let diff = []
     let departments = getters.allDepartments
     for (let row of departments) {
@@ -41,7 +41,13 @@ const actions = {
     if (diff.length === 0)
       return
     console.log(diff)
-    commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+    try {
+      const answer = await departments_directory.sendDepartments('update', diff)
+      console.log(answer)
+      commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+    } catch (e) {
+
+    }
   }, 650)
 }
 
