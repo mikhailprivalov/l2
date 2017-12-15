@@ -1,6 +1,7 @@
 import departments_directory from '../../api/departments-directory'
-import * as types from '../mutation-types'
+import * as mutation_types from '../mutation-types'
 import _ from 'lodash'
+import * as action_types from '../action-types'
 
 const state = {
   all: [],
@@ -17,15 +18,15 @@ const getters = {
 }
 
 const actions = {
-  async getAllDepartments({commit}) {
+  async [action_types.GET_ALL_DEPARTMENTS]({commit}) {
     const answer = await departments_directory.getDepartments()
     let departments = answer.departments
-    commit(types.UPDATE_DEPARTMENTS, {departments})
-    commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
-    commit(types.SET_CAN_EDIT, {can_edit: answer.can_edit})
-    commit(types.SET_TYPES, {department_types: answer.types})
+    commit(mutation_types.UPDATE_DEPARTMENTS, {departments})
+    commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments})
+    commit(mutation_types.SET_CAN_EDIT, {can_edit: answer.can_edit})
+    commit(mutation_types.SET_TYPES, {department_types: answer.types})
   },
-  updateDepartments: _.debounce(async ({commit, getters}) => {
+  [action_types.UPDATE_DEPARTMENTS]: _.debounce(async ({commit, getters}) => {
     let diff = []
     let departments = getters.allDepartments
     for (let row of departments) {
@@ -39,12 +40,13 @@ const actions = {
       }
     }
     if (diff.length === 0)
-      return
-    console.log(diff)
+      return []
     try {
       const answer = await departments_directory.sendDepartments('update', diff)
-      console.log(answer)
-      commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
+      if (answer.ok) {
+        return diff
+      }
+      commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments})
     } catch (e) {
 
     }
@@ -52,16 +54,16 @@ const actions = {
 }
 
 const mutations = {
-  [types.UPDATE_DEPARTMENTS](state, {departments}) {
+  [mutation_types.UPDATE_DEPARTMENTS](state, {departments}) {
     state.all = departments
   },
-  [types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
+  [mutation_types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
     state.old_all = JSON.parse(JSON.stringify(departments))
   },
-  [types.SET_CAN_EDIT](state, {can_edit}) {
+  [mutation_types.SET_CAN_EDIT](state, {can_edit}) {
     state.can_edit = can_edit
   },
-  [types.SET_TYPES](state, {department_types}) {
+  [mutation_types.SET_TYPES](state, {department_types}) {
     state.department_types = department_types
   },
 }

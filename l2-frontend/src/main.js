@@ -2,7 +2,7 @@ import Vue from 'vue'
 import JournalGetMaterialModal from './JournalGetMaterialModal.vue'
 import DepartmentsForm from './DepartmentsForm.vue'
 import store from './store'
-import * as types from './store/mutation-types'
+import * as action_types from './store/action-types'
 
 new Vue({
   el: '#app',
@@ -11,8 +11,12 @@ new Vue({
   created() {
     let vm = this
     this.$store.watch((state) => (state.departments.all), () => {
-      vm.$store.dispatch('updateDepartments').then()
+      vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS).then((ok) => {
+        if (Array.isArray(ok) && ok.length > 0) {
+
+        }
+      })
     }, {deep: true})
-    this.$store.dispatch('getAllDepartments').then()
+    this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then()
   }
 })

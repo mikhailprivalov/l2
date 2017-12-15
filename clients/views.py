@@ -127,10 +127,8 @@ def get_db(request):
     code = request.GET["code"]
     data = []
     for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False).prefetch_related():
-        docs = x.individual.document_set.filter(
-            document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"))
-        snilses = x.individual.document_set.filter(
-            document_type__in=Clients.DocumentType.objects.filter(title__startswith="СНИЛС"))
+        docs = x.individual.document_set.filter(document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"))
+        snilses = x.individual.document_set.filter(document_type__in=Clients.DocumentType.objects.filter(title__startswith="СНИЛС"))
         doc = x.polis if x.polis is not None else (None if not docs.exists() else docs.first())
         snils = "" if not snilses.exists() else snilses[0].number
         data.append({
@@ -219,8 +217,7 @@ def receive_db(request):
                     number=x["Snils"], individual=individual).save()
         if c is not None:
             individual.sync_with_rmis(c=c)
-        cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(
-            individual=individual)
+        cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(individual=individual)
         cards.update(is_archive=True)
         cards.filter(napravleniya__isnull=True).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
