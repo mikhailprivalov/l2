@@ -262,7 +262,7 @@ def departments(request):
                 for row in rows:
                     department = Podrazdeleniya.objects.get(pk=row["pk"])
                     department.title = row["title"]
-                    department.p_type = row["department_type"]
+                    department.p_type = row["type"]
                     department.save()
             ok = True
         finally:
