@@ -6,14 +6,14 @@ const state = {
   all: [],
   old_all: [],
   can_edit: false,
-  types: []
+  department_types: []
 }
 
 const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
   canEditDepartments: state => state.can_edit,
-  allTypes: state => state.types,
+  allTypes: state => state.department_types,
 }
 
 const actions = {
@@ -23,7 +23,7 @@ const actions = {
     commit(types.UPDATE_DEPARTMENTS, {departments})
     commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
     commit(types.SET_CAN_EDIT, {can_edit: answer.can_edit})
-    commit(types.SET_TYPES, {types: answer.types})
+    commit(types.SET_TYPES, {department_types: answer.types})
   },
   updateDepartments: _.debounce(({commit, getters}) => {
     let diff = []
@@ -55,8 +55,8 @@ const mutations = {
   [types.SET_CAN_EDIT](state, {can_edit}) {
     state.can_edit = can_edit
   },
-  [types.SET_TYPES](state, {p_types}) {
-    state.types = p_types
+  [types.SET_TYPES](state, {department_types}) {
+    state.department_types = department_types
   },
 }
 
