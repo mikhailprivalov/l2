@@ -5,5 +5,8 @@ export const HTTP = axions.create({
   baseURL: window.location.origin + '/api',
   headers: {
     'X-CSRF-Token': Cookies.get('csrftoken')
+  },
+  params: {
+    _: new Date().getTime()
   }
 })
