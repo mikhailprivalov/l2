@@ -24,10 +24,12 @@ new Vue({
               clearTimeout(vm.timeouts[r.pk])
               vm.timeouts[r.pk] = null
             }
-            vm.timeouts[r.pk] = setTimeout(() => {
-              vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
-              vm.timeouts[r.pk] = null
-            }, 2000)
+            vm.timeouts[r.pk] = (function (vm, r) {
+              return setTimeout(() => {
+                vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: false})
+                vm.timeouts[r.pk] = null
+              }, 2000)
+            })(vm, r)
           }
         }
       })
