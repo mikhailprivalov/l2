@@ -12,8 +12,10 @@ new Vue({
       let diff = []
       for (let row of val) {
         for (let in_row of oldVal) {
-          if (in_row.pk === row.pk && in_row.title !== row.title) {
-            diff.push(row)
+          if (in_row.pk === row.pk) {
+            if (in_row.title !== row.title) {
+              diff.push(row)
+            }
             break
           }
         }
