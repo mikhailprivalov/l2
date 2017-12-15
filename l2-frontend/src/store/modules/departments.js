@@ -73,11 +73,9 @@ const mutations = {
     state.department_types = department_types
   },
   [mutation_types.SET_UPDATED_DEPARTMENT](state, data) {
-    console.log(state, data.pk, data.value)
-    for (let i = 0; i < state.all; i++) {
+    for (let i = 0; i < state.all.length; i++) {
       if (state.all[i].pk === data.pk) {
         state.all[i].updated = data.value
-        console.log(state.all[i])
         break
       }
     }
