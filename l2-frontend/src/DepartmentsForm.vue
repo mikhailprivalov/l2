@@ -8,7 +8,7 @@
     <tbody>
     <tr v-for="department in departments">
       <td>{{ department.pk }}</td>
-      <td><input class="form-control" v-model="department.title"/></td>
+      <td><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
       <td v-if="can_edit"></td>
     </tr>
     <tr v-if="can_edit">
@@ -32,13 +32,13 @@
     },
     computed: {
       departments() {
-        return this.$store.state.departments.all
+        return this.$store.state.getters.allDepartments
       },
       can_edit() {
-        return this.$store.state.departments.can_edit
+        return this.$store.state.getters.canEditDepartments
       },
       types() {
-        return this.$store.state.departments.types
+        return this.$store.state.getters.allTypes
       }
     }
   }

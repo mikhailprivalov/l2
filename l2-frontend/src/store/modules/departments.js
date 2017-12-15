@@ -12,7 +12,7 @@ const state = {
 const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
-  can_edit_departments: state => state.can_edit,
+  canEditDepartments: state => state.can_edit,
   allTypes: state => state.types,
 }
 
