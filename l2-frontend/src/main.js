@@ -19,12 +19,16 @@ new Vue({
         if (Array.isArray(ok) && ok.length > 0) {
           for (let row of ok) {
             row.updated = true;
+            console.log(0)
             ((r) => {
+              console.log(1)
               if (timeouts.hasOwnProperty(r.pk) && timeouts[r.pk] !== null) {
+                console.log(2)
                 clearTimeout(timeouts[r.pk])
                 timeouts[r.pk] = null
               }
               timeouts[r.pk] = setTimeout(() => {
+                console.log(3)
                 r.updated = false
                 timeouts[r.pk] = null
               }, 2000)
