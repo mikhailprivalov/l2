@@ -22,6 +22,8 @@ new Vue({
           }
         }
       }
+      console.log(departments)
+      console.log(vm.$store.getters.oldDepartments)
       console.log(diff)
       vm.$store.commit(types.UPDATE_OLD_DEPARTMENTS, {departments})
     }, {deep: true})
