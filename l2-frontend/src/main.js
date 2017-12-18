@@ -9,7 +9,8 @@ new Vue({
   components: {
     'JournalGetMaterialModal': () => import('./JournalGetMaterialModal'),
     'DepartmentsForm': () => import('./DepartmentsForm'),
-    'ResearchesPicker': () => import('./ResearchesPicker')
+    'ResearchesPicker': () => import('./ResearchesPicker'),
+    'PatientPicker': () => import('./PatientPicker'),
   },
   data: {
     timeouts: {},
