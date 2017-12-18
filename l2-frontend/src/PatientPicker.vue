@@ -34,5 +34,6 @@
     margin-top: 0;
     margin-bottom: 0;
     border-radius: 0;
+    border-left-width: 0;
   }
 </style>
