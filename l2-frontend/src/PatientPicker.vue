@@ -37,6 +37,11 @@
 
 <style scoped lang="scss">
   .input-group-btn {
+
+    select.btn {
+      text-align: left;
+    }
+
     .btn {
       height: 34px;
       padding: 6px 12px;
