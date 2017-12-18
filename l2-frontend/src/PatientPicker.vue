@@ -9,6 +9,7 @@
       </span>
       <span class="input-group-btn"><button class="btn last" type="button">Поиск</button></span>
     </div>
+
   </div>
 </template>
 
@@ -59,6 +60,7 @@
       &.last {
         border-radius: 0 4px 4px 0;
         border-left: 1px solid #aab2bd;
+        margin-right: -2px;
 
         &:hover {
           background-color: #434A54;
