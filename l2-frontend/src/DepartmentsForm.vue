@@ -9,7 +9,9 @@
     <tr v-for="department in departments">
       <td>{{ department.pk }}</td>
       <td :class="{'has-success': department.updated}"><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
-      <td v-if="can_edit"></td>
+      <td v-if="can_edit">
+        <select-picker-m v-model="department.type" :options="types_options"></select-picker-m>
+      </td>
     </tr>
     <tr v-if="can_edit">
       <td></td>
@@ -21,7 +23,10 @@
 </template>
 
 <script>
+  import SelectPickerM from './SelectPickerM'
+
   export default {
+    components: {SelectPickerM},
     name: 'departments-form',
     data() {
       return {
@@ -39,6 +44,13 @@
       },
       types() {
         return this.$store.getters.allTypes
+      },
+      types_options() {
+        let r = []
+        for (let row of this.types) {
+          r.push({label: row.title, value: row.pk})
+        }
+        return r
       }
     }
   }
