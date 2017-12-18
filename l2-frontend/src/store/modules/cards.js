@@ -11,7 +11,7 @@ const getters = {
 }
 
 const actions = {
-  async [action_types.GET_ALL_DEPARTMENTS]({commit}) {
+  async [action_types.GET_BASES]({commit}) {
     const answer = await cards_point.getBases()
     let bases = answer.bases
     commit(mutation_types.UPDATE_BASES, {bases})
