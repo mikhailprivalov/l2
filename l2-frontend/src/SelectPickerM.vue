@@ -25,6 +25,7 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
+          el.selectpicker()
           let $el = $(el).parent().children('select')
           let v = vnode.context.value
           if (v === '-1' || !v) {
@@ -40,7 +41,7 @@
           } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
             v = v.toString()
           }
-          $el.selectpicker().selectpicker('val', v)
+          $el.selectpicker('val', v)
           vnode.context.update_val(v)
           $(el).change(function () {
             let lval = $(this).selectpicker('val')
