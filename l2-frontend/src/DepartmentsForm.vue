@@ -17,7 +17,7 @@
       <td></td>
       <td><input type="text" class="form-control" placeholder="Название" v-model="create.title" autofocus></td>
       <td>
-        <select-picker-m v-model="create.type" :options="types_options"></select-picker-m>
+        <select-picker-m v-model="create.type" :options="types_options" style="margin-bottom: 5px"></select-picker-m>
         <br/>
         <input type="button" class="btn btn-primary-nb form-control" value="Добавить">
       </td>
