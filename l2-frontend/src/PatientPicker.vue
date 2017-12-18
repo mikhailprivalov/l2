@@ -7,7 +7,7 @@
           <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
         </select>
       </span>
-      <span class="input-group-btn"><button class="btn" type="button">Поиск</button></span>
+      <span class="input-group-btn"><button class="btn last" type="button">Поиск</button></span>
     </div>
   </div>
 </template>
@@ -35,7 +35,7 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .input-group-btn .btn {
     height: 34px;
     padding: 6px 12px;
@@ -46,7 +46,11 @@
     border: 1px solid #aab2bd;
     margin-top: 0;
     margin-bottom: 0;
-    border-radius: 0;
     border-left-width: 0;
+
+    .last {
+      border-radius: 0 4px 4px 0;
+    }
   }
+
 </style>
