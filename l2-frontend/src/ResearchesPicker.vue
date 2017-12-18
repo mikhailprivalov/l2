@@ -1,5 +1,7 @@
 <template>
-  // TODO: Picker
+  <div>
+    // TODO: Picker
+  </div>
 </template>
 
 <script>
