@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор">
+  <select v-selectpicker ref="self" class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор">
     <option :value="option.value" v-for="option in options" :selected="option.value === value">{{ option.label }}</option>
   </select>
 </template>
@@ -21,11 +21,11 @@
     },
     created() {
       this.update_val(this.value)
+      $(this.$refs.self).selectpicker()
     },
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
-          $(el).selectpicker()
           let $el = $(el).parent().children('select')
           let v = vnode.context.value
           if (v === '-1' || !v) {
