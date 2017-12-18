@@ -53,11 +53,11 @@
       &.last {
         border-radius: 0 4px 4px 0;
         border-left: 1px solid #aab2bd;
-      }
 
-      &:hover {
-        background-color: #434A54;
-        color: #fff;
+        &:hover {
+          background-color: #434A54;
+          color: #fff;
+        }
       }
     }
   }
