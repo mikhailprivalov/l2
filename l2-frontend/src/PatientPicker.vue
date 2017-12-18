@@ -17,12 +17,12 @@
     name: 'patient-picker',
     data() {
       return {
-        base: JSON.parse(JSON.stringify(this.$store.cards.getters.bases()[0].pk))
+        base: JSON.parse(JSON.stringify(this.$store.getters.bases()[0].pk))
       }
     },
     computed: {
       bases() {
-        return this.$store.cards.getters.bases()
+        return this.$store.getters.bases()
       }
     }
   }
