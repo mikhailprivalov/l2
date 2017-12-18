@@ -49,14 +49,14 @@ const actions = {
       return []
     try {
       const answer = await departments_directory.sendDepartments(type_update, to_update)
+      commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments: getters.allDepartments})
       if (answer.ok) {
         return to_update
       }
-      commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments: getters.allDepartments})
     } catch (e) {
       console.log(e)
-      return []
     }
+    return []
   }
 }
 
