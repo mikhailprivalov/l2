@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="input-group">
-      <input type="text" class="form-control" id="search-field" name="search-field" placeholder="Введите запрос">
+      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <span class="input-group-btn">
         <select class="btn" v-model.number="base">
           <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
@@ -17,7 +17,8 @@
     name: 'patient-picker',
     data() {
       return {
-        base: null
+        base: null,
+        query: ''
       }
     },
     watch: {
