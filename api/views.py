@@ -252,7 +252,7 @@ def departments(request):
         return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")],
                              "can_edit": can_edit,
                              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
-    else:
+    elif can_edit:
         ok = False
         message = ""
         try:
@@ -279,3 +279,4 @@ def departments(request):
                         ok = True
         finally:
             return JsonResponse({"ok": ok, "message": message})
+    return JsonResponse(0)
