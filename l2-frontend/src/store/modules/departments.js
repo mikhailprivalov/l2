@@ -54,6 +54,7 @@ const actions = {
       }
       commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments: getters.allDepartments})
     } catch (e) {
+      console.log(e)
       return []
     }
   }
