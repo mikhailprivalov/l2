@@ -52,6 +52,7 @@
 
       &.last {
         border-radius: 0 4px 4px 0;
+        border-left: 1px solid #aab2bd;
       }
     }
   }
