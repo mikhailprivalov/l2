@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "build": "cross-env NODE_ENV=development webpack --progress -d",
-    "build_prod": "cross-env NODE_ENV=production webpack --progress -p"
+    "build_prod": "cross-env NODE_ENV=production webpack --progress"
   },
   "dependencies": {
     "axios": "^0.17.1",
