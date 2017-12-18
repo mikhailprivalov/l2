@@ -16,7 +16,7 @@ new Vue({
     let vm = this
     this.$store.watch((state) => (state.departments.all), () => {
       let diff = vm.$store.getters.diff_departments
-      vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, 'update', diff).then((ok) => {
+      vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, {type_update: 'update', to_update: diff}).then((ok) => {
         if (Array.isArray(ok) && ok.length > 0) {
           for (let r of ok) {
             vm.$store.commit(mutation_types.SET_UPDATED_DEPARTMENT, {pk: r.pk, value: true})
