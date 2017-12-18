@@ -25,7 +25,7 @@
     directives: {
       selectpicker: {
         bind(el, binding, vnode) {
-          el.selectpicker()
+          $(el).selectpicker()
           let $el = $(el).parent().children('select')
           let v = vnode.context.value
           if (v === '-1' || !v) {
