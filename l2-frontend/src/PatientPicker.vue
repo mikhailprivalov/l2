@@ -17,7 +17,14 @@
     name: 'patient-picker',
     data() {
       return {
-        base: JSON.parse(JSON.stringify(this.$store.getters.bases[0].pk))
+        base: null
+      }
+    },
+    watch: {
+      bases(newVal) {
+        if (newVal.length > 0) {
+          this.base = JSON.parse(JSON.stringify(newVal[0].pk))
+        }
       }
     },
     computed: {
