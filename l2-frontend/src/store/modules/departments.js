@@ -64,6 +64,7 @@ const mutations = {
     state.all = departments
   },
   [mutation_types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
+    console.log(departments)
     state.old_all = JSON.parse(JSON.stringify(departments))
   },
   [mutation_types.SET_CAN_EDIT](state, {can_edit}) {
