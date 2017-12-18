@@ -13,7 +13,7 @@ const getters = {
   allDepartments: state => state.all,
   oldDepartments: state => state.old_all,
   diff_departments: state => {
-    console.log(state.all, state.old_all)
+    // console.log(state.all, state.old_all)
     let diff = []
     let departments = state.all
     for (let row of departments) {
@@ -54,7 +54,7 @@ const actions = {
         return to_update
       }
     } catch (e) {
-      console.log(e)
+      // console.log(e)
     }
     return []
   }
@@ -65,7 +65,7 @@ const mutations = {
     state.all = departments
   },
   [mutation_types.UPDATE_OLD_DEPARTMENTS](state, {departments}) {
-    console.log(departments)
+    // console.log(departments)
     state.old_all = JSON.parse(JSON.stringify(departments))
   },
   [mutation_types.SET_CAN_EDIT](state, {can_edit}) {
