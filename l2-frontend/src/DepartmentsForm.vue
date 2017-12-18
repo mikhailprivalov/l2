@@ -19,7 +19,7 @@
       <td>
         <select-picker-m v-model="create.type" :options="types_options"></select-picker-m>
         <br/>
-        <input type="button" class="btn btn-primary-nb form-control" value="Добавить" style="margin-top: 5px">
+        <input type="button" class="btn btn-primary-nb form-control" @click="insert" value="Добавить" style="margin-top: 15px" :disabled="!create_valid">
       </td>
     </tr>
     </tbody>
@@ -40,6 +40,11 @@
         }
       }
     },
+    methods: {
+      insert() {
+
+      }
+    },
     computed: {
       departments() {
         return this.$store.getters.allDepartments
@@ -56,6 +61,9 @@
           r.push({label: row.title, value: row.pk})
         }
         return r
+      },
+      create_valid() {
+        return this.create.title.trim().length > 0
       }
     }
   }
