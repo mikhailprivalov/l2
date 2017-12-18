@@ -260,11 +260,23 @@ def departments(request):
             data_type = req.get("type", "update")
             rows = req.get("data", [])
             if data_type == "update":
+                has_ok = False
                 for row in rows:
-                    department = Podrazdeleniya.objects.get(pk=row["pk"])
-                    department.title = row["title"]
-                    department.p_type = int(row["type"])
-                    department.save()
-            ok = True
+                    title = row["title"].strip()
+                    if len(title) > 0:
+                        department = Podrazdeleniya.objects.get(pk=row["pk"])
+                        department.title = title
+                        department.p_type = int(row["type"])
+                        department.save()
+                        has_ok = True
+            elif data_type == "insert":
+                has_ok = False
+                for row in rows:
+                    title = row["title"].strip()
+                    if len(title) > 0:
+                        department = Podrazdeleniya(title=title, p_type=int(row["type"]))
+                        department.save()
+                        has_ok = True
+            ok = has_ok
         finally:
             return JsonResponse({"ok": ok, "message": message})

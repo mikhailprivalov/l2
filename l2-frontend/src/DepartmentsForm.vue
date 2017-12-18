@@ -28,6 +28,7 @@
 
 <script>
   import SelectPickerM from './SelectPickerM'
+  import * as action_types from './store/action-types'
 
   export default {
     components: {SelectPickerM},
@@ -42,7 +43,15 @@
     },
     methods: {
       insert() {
-
+        if (!this.create_valid)
+          return
+        let vm = this
+        vm.$store.dispatch(action_types.UPDATE_DEPARTMENTS, 'insert', [{pk: -1, title: vm.create.title, type: vm.create.type}]).then((ok) => {
+          if (ok) {
+            vm.create.title = ''
+          }
+          vm.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then()
+        })
       }
     },
     computed: {
@@ -62,8 +71,11 @@
         }
         return r
       },
+      trim_title() {
+        return this.create.title.trim()
+      },
       create_valid() {
-        return this.create.title.trim().length > 0
+        return this.trim_title.length > 0
       }
     }
   }
