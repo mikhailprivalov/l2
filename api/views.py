@@ -260,7 +260,7 @@ def departments(request):
             data_type = req.get("type", "update")
             rows = req.get("data", [])
             if data_type == "update":
-                has_ok = False
+                ok = False
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
@@ -268,15 +268,14 @@ def departments(request):
                         department.title = title
                         department.p_type = int(row["type"])
                         department.save()
-                        has_ok = True
+                        ok = True
             elif data_type == "insert":
-                has_ok = False
+                ok = False
                 for row in rows:
                     title = row["title"].strip()
                     if len(title) > 0:
                         department = Podrazdeleniya(title=title, p_type=int(row["type"]))
                         department.save()
-                        has_ok = True
-            ok = has_ok
+                        ok = True
         finally:
             return JsonResponse({"ok": ok, "message": message})
