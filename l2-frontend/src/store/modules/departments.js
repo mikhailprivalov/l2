@@ -42,6 +42,7 @@ const actions = {
   },
 
   async [action_types.UPDATE_DEPARTMENTS]({commit, getters}, type_update, to_update) {
+    console.log(type_update, to_update)
     to_update = to_update || getters.diff_departments
     type_update = type_update || 'update'
     if (type_update === 'update') {
