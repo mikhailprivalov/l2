@@ -249,7 +249,7 @@ def departments(request):
     from podrazdeleniya.models import Podrazdeleniya
     can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
     if request.method == "GET":
-        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": x.p_type, "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")],
+        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")],
                              "can_edit": can_edit,
                              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
     else:
@@ -263,7 +263,7 @@ def departments(request):
                 for row in rows:
                     department = Podrazdeleniya.objects.get(pk=row["pk"])
                     department.title = row["title"]
-                    department.p_type = row["type"]
+                    department.p_type = int(row["type"])
                     department.save()
             ok = True
         finally:
