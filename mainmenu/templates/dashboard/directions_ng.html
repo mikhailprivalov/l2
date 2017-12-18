@@ -66,5 +66,10 @@
                 onDrag: resize
             })
         })
+
+        function resize() {
+            const $fp = $('.fp-cont')
+            $fp.height($(window).height() - $fp.position().top - 5)
+        }
     </script>
 {% endblock %}
