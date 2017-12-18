@@ -1,6 +1,5 @@
 <template>
-  <select v-selectpicker class="selectpicker" data-width="100%" :multiple="multiple" :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
-          data-deselect-all-text="Отменить весь выбор">
+  <select v-selectpicker class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор">
     <option :value="option.value" v-for="option in options" :selected="option.value === value">{{ option.label }}</option>
   </select>
 </template>
@@ -14,14 +13,6 @@
         required: true
       },
       value: {},
-      multiple: {
-        type: Boolean,
-        default: false
-      },
-      actions_box: {
-        type: Boolean,
-        default: false
-      }
     },
     methods: {
       update_val(v) {
@@ -49,7 +40,7 @@
           } else if (!vnode.context.multiple && typeof v !== 'string' && !(v instanceof String)) {
             v = v.toString()
           }
-          $el.selectpicker('val', v)
+          $el.selectpicker().selectpicker('val', v)
           vnode.context.update_val(v)
           $(el).change(function () {
             let lval = $(this).selectpicker('val')
