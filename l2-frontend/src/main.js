@@ -1,6 +1,7 @@
 import Vue from 'vue'
-import JournalGetMaterialModal from './JournalGetMaterialModal.vue'
-import DepartmentsForm from './DepartmentsForm.vue'
+import JournalGetMaterialModal from './JournalGetMaterialModal'
+import DepartmentsForm from './DepartmentsForm'
+import ResearchesPicker from './ResearchesPicker'
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
@@ -8,7 +9,7 @@ import * as mutation_types from './store/mutation-types'
 new Vue({
   el: '#app',
   store,
-  components: {JournalGetMaterialModal, DepartmentsForm},
+  components: {JournalGetMaterialModal, DepartmentsForm, ResearchesPicker},
   data: {
     timeouts: {},
   },
