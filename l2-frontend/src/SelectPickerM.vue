@@ -1,5 +1,5 @@
 <template>
-  <select v-selectpicker ref="self" class="select-b" data-width="100%" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор">
+  <select v-selectpicker ref="self" class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор">
     <option :value="option.value" v-for="option in options" :selected="option.value === value">{{ option.label }}</option>
   </select>
 </template>
@@ -46,6 +46,9 @@
             let lval = $(this).selectpicker('val')
             vnode.context.update_val(lval)
           })
+        },
+        inserted(el) {
+          $(el).selectpicker()
         }
       }
     }
