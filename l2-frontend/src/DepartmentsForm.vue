@@ -6,9 +6,9 @@
       <col v-if="can_edit" width="300">
     </colgroup>
     <tbody>
-    <tr v-for="department in departments">
+    <tr v-for="department in departments" :class="{'has-success': department.updated}">
       <td>{{ department.pk }}</td>
-      <td :class="{'has-success': department.updated}"><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
+      <td><input class="form-control" v-model="department.title" :disabled="!can_edit"/></td>
       <td v-if="can_edit">
         <select-picker-m v-model="department.type" :options="types_options"></select-picker-m>
       </td>

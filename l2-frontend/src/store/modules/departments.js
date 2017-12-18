@@ -19,7 +19,7 @@ const getters = {
     for (let row of departments) {
       for (let in_row of state.old_all) {
         if (in_row.pk === row.pk) {
-          if (in_row.title !== row.title) {
+          if (in_row.title !== row.title || in_row.type !== row.type) {
             diff.push(row)
           }
           break
