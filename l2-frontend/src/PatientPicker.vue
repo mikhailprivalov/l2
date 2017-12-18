@@ -33,5 +33,6 @@
     border: 1px solid #aab2bd;
     margin-top: 0;
     margin-bottom: 0;
+    border-radius: 0;
   }
 </style>
