@@ -280,3 +280,9 @@ def departments(request):
         finally:
             return JsonResponse({"ok": ok, "message": message})
     return JsonResponse(0)
+
+
+@login_required
+def bases(request):
+    from clients.models import CardBase
+    return JsonResponse({"bases": [{"pk": x.pk, "title": x.title, "code": x.short_title, "hide": x.hide, "history_number": x.history_number} for x in CardBase.objects.all()]})

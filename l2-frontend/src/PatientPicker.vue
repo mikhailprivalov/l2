@@ -1,24 +1,30 @@
 <template>
   <div>
-
     <div class="input-group">
       <input type="text" class="form-control" id="search-field" name="search-field" placeholder="Введите запрос">
       <span class="input-group-btn">
-        <select class="btn">
-          <option>A</option>
-          <option>B</option>
-          <option>C</option>
+        <select class="btn" v-model.number="base">
+          <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
         </select>
       </span>
       <span class="input-group-btn"><button class="btn btn-blue-nb" type="button">Поиск</button></span>
     </div>
-    // TODO: Patient Picker
   </div>
 </template>
 
 <script>
   export default {
-    name: 'patient-picker'
+    name: 'patient-picker',
+    data() {
+      return {
+        base: JSON.parse(JSON.stringify(this.$store.cards.getters.bases()[0].pk))
+      }
+    },
+    computed: {
+      bases() {
+        return this.$store.cards.getters.bases()
+      }
+    }
   }
 </script>
 
