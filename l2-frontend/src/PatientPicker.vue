@@ -48,7 +48,7 @@
     margin-bottom: 0;
     border-left-width: 0;
 
-    .last {
+    &.last {
       border-radius: 0 4px 4px 0;
     }
   }
