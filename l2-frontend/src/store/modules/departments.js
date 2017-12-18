@@ -1,6 +1,5 @@
 import departments_directory from '../../api/departments-directory'
 import * as mutation_types from '../mutation-types'
-import _ from 'lodash'
 import * as action_types from '../action-types'
 
 const state = {
