@@ -34,7 +34,7 @@
         })
       } else {
         if (vm.base === null) {
-          vm.base = JSON.parse(JSON.stringify(newValue[0].pk))
+          vm.base = JSON.parse(JSON.stringify(vm.bases[0].pk))
         }
       }
     },
