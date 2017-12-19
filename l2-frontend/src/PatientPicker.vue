@@ -3,7 +3,7 @@
     <div class="input-group">
       <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <span class="input-group-btn">
-        <select class="btn" v-model.number="base">
+        <select class="btn btn" v-model.number="base">
           <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
         </select>
       </span>
@@ -44,7 +44,7 @@
       text-align: left;
     }
 
-    .input-group .btn {
+    .btn {
       height: 34px;
       padding: 6px 12px;
       font-size: 14px;
@@ -58,7 +58,7 @@
     }
   }
 
-  .input-group .btn-blue-nb {
+  .btn-blue-nb {
     color: #fff;
 
     &.last {
