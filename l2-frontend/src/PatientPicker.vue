@@ -49,21 +49,18 @@
       padding: 6px 12px;
       font-size: 14px;
       line-height: 1.42857143;
-      background: #fff none;
-      border: 1px solid #aab2bd;
       margin-top: 0;
       margin-bottom: 0;
-      border-left-width: 0;
       border-radius: 0;
+      background-color: #AAB2BD !important;
+      border-color: #AAB2BD !important;
+      border-left-width: 0;
     }
-  }
 
-  .btn-blue-nb {
-    color: #fff;
-
-    &.last {
+    .btn-blue-nb.last {
       border-radius: 0 4px 4px 0;
       margin-right: -2px;
     }
   }
+
 </style>
