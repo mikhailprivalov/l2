@@ -2,7 +2,7 @@
   <div>
     <div class="input-group">
       <div class="input-group-btn">
-        <button class="btn btn-blue-nb btn-ell text-left dropdown-toggle" type="button" data-toggle="dropdown" style="width: 200px"><span class="caret"></span> {{selected_base.title}}</button>
+        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown" style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}</button>
         <ul class="dropdown-menu">
           <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a></li>
         </ul>
