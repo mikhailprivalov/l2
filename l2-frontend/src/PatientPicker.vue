@@ -23,10 +23,18 @@
         query: ''
       }
     },
-    watch: {
-      bases(newVal) {
-        if (newVal.length > 0) {
-          this.base = JSON.parse(JSON.stringify(newVal[0].pk))
+    created() {
+      let vm = this
+
+      if (vm.bases.length === 0) {
+        vm.$store.watch(state => state.bases, (oldValue, newValue) => {
+          if (vm.base === null && newValue.length > 0) {
+            vm.base = JSON.parse(JSON.stringify(newValue[0].pk))
+          }
+        })
+      } else {
+        if (vm.base === null) {
+          vm.base = JSON.parse(JSON.stringify(newValue[0].pk))
         }
       }
     },
