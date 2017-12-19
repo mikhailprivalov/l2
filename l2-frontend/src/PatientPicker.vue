@@ -19,7 +19,7 @@
     name: 'patient-picker',
     data() {
       return {
-        base: null,
+        base: -1,
         query: ''
       }
     },
@@ -28,12 +28,12 @@
 
       if (vm.bases.length === 0) {
         vm.$store.watch(state => state.bases, (oldValue, newValue) => {
-          if (vm.base === null && newValue.length > 0) {
+          if (vm.base === -1 && newValue.length > 0) {
             vm.base = JSON.parse(JSON.stringify(newValue[0].pk))
           }
         })
       } else {
-        if (vm.base === null) {
+        if (vm.base === -1) {
           vm.base = JSON.parse(JSON.stringify(vm.bases[0].pk))
         }
       }
@@ -48,7 +48,7 @@
             return b
           }
         }
-        return {title: '', pk: -1, hide: false}
+        return {title: 'Не выбрана база', pk: -1, hide: false}
       }
     },
     methods: {
