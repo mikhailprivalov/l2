@@ -24,18 +24,17 @@
       }
     },
     created() {
-      let vm = this
-
-      if (vm.bases.length === 0) {
-        vm.$store.watch(state => state.bases, (oldValue, newValue) => {
-          if (vm.base === -1 && newValue.length > 0) {
-            vm.base = JSON.parse(JSON.stringify(newValue[0].pk))
-          }
+      if (this.bases.length === 0) {
+        this.$store.watch(state => state.bases, (oldValue, newValue) => {
+          this.check_base()
         })
-      } else {
-        if (vm.base === -1) {
-          vm.base = JSON.parse(JSON.stringify(vm.bases[0].pk))
-        }
+      }
+
+      this.check_base()
+    },
+    watch: {
+      bases() {
+        this.check_base()
       }
     },
     computed: {
@@ -54,6 +53,11 @@
     methods: {
       select_base(pk) {
         this.base = pk
+      },
+      check_base() {
+        if (this.base === -1 && this.bases.length > 0) {
+          this.base = JSON.parse(JSON.stringify(this.bases[0].pk))
+        }
       }
     }
   }
