@@ -44,22 +44,26 @@
       text-align: left;
     }
 
-    .btn {
+    .input-group.btn {
       height: 34px;
       padding: 6px 12px;
       font-size: 14px;
       line-height: 1.42857143;
       background: #fff none;
-      color: #434a54;
       border: 1px solid #aab2bd;
       margin-top: 0;
       margin-bottom: 0;
       border-left-width: 0;
       border-radius: 0;
+
+      &.last {
+        border-radius: 0 4px 4px 0;
+        margin-right: -2px;
+      }
     }
   }
 
-  .btn-blue-nb {
+  .input-group.btn-blue-nb {
     color: #fff;
   }
 </style>
