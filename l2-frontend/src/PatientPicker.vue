@@ -1,13 +1,13 @@
 <template>
   <div>
     <div class="input-group">
-      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <div class="dropdown">
         <button class="btn btn-blue-nb dropdown-toggle" type="button" data-toggle="dropdown">{{selected_base.title}} <span class="caret"></span></button>
         <ul class="dropdown-menu">
           <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a></li>
         </ul>
       </div>
+      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button">Поиск</button></span>
     </div>
 
