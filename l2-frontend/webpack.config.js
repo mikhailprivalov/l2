@@ -1,13 +1,12 @@
 const path = require('path')
 const webpack = require('webpack')
 const BundleTracker = require('webpack-bundle-tracker')
-//const glob = require('glob')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
   entry: {
     main: './src/main',
-  }, //glob.sync('./src/*'),
+  },
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
@@ -55,11 +54,6 @@ module.exports = {
           }
         }
       },
-      /*{
-        test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/
-      },*/
       {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
@@ -88,7 +82,6 @@ module.exports = {
 
 if (process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map'
-  // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
