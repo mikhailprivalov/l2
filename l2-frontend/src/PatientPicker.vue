@@ -7,7 +7,7 @@
           <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
         </select>
       </span>
-      <span class="input-group-btn"><button class="btn last" type="button">Поиск</button></span>
+      <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button">Поиск</button></span>
     </div>
 
   </div>
@@ -56,17 +56,10 @@
       margin-bottom: 0;
       border-left-width: 0;
       border-radius: 0;
-
-      &.last {
-        border-radius: 0 4px 4px 0;
-        border-left: 1px solid #aab2bd;
-        margin-right: -2px;
-
-        &:hover {
-          background-color: #434A54;
-          color: #fff;
-        }
-      }
     }
+  }
+
+  .btn-blue-nb {
+    color: #fff;
   }
 </style>
