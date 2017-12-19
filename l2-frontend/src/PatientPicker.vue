@@ -2,11 +2,12 @@
   <div>
     <div class="input-group">
       <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
-      <span class="input-group-btn">
-        <select class="btn btn" v-model.number="base">
-          <option v-for="row in bases" :value="row.pk" v-if="!row.hide">{{row.title}}</option>
-        </select>
-      </span>
+      <div class="dropdown">
+        <button class="btn btn-blue-nb dropdown-toggle" type="button" data-toggle="dropdown">{{selected_base.title}} <span class="caret"></span></button>
+        <ul class="dropdown-menu">
+          <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a></li>
+        </ul>
+      </div>
       <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button">Поиск</button></span>
     </div>
 
@@ -32,35 +33,23 @@
     computed: {
       bases() {
         return this.$store.getters.bases
+      },
+      selected_base() {
+        for (let b of this.bases) {
+          if (b.pk === this.base) {
+            return b
+          }
+        }
+        return {title: '', pk: -1, hide: false}
+      }
+    },
+    methods: {
+      select_base(pk) {
+        this.base = pk
       }
     }
   }
 </script>
 
 <style scoped lang="scss">
-  .input-group-btn {
-
-    select.btn {
-      text-align: left;
-    }
-
-    .btn {
-      height: 34px;
-      padding: 6px 12px;
-      font-size: 14px;
-      line-height: 1.42857143;
-      margin-top: 0;
-      margin-bottom: 0;
-      border-radius: 0;
-      background-color: #AAB2BD !important;
-      border-color: #AAB2BD !important;
-      border-left-width: 0;
-    }
-
-    .btn-blue-nb.last {
-      border-radius: 0 4px 4px 0;
-      margin-right: -2px;
-    }
-  }
-
 </style>
