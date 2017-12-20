@@ -57,7 +57,9 @@
       color: #393939;
     }
   }
+</style>
 
+<style lang="scss">
   .popover {
     background: #fff;
   }
