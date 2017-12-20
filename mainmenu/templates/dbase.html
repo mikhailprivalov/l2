@@ -1966,11 +1966,12 @@
         window.open('/results/preview?pk=' + pk_param, '_blank')
     }
 
-    function vue_cb() {
-        let $t = $(this)
+    function vue_cb(t) {
+        let $t = $(t)
         let instance_id = $t.attr('instance_id')
         let func = $t.attr('func')
         let val = $t.attr('val')
+        console.log(instance_id, func, val)
         instances[instance_id][func](val)
     }
 
