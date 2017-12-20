@@ -39,7 +39,8 @@
       let $popover_content = $('.popover_content', this.$el)
       $link.popover({
         html: true,
-        title: 'Выберите вариант'
+        title: 'Выберите вариант',
+        placement: 'bottom'
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
       })
@@ -55,5 +56,9 @@
       text-decoration: underline solid;
       color: #393939;
     }
+  }
+
+  .popover {
+    background: #fff;
   }
 </style>
