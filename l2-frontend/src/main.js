@@ -2,6 +2,7 @@ import Vue from 'vue'
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
+import LinkSelector from './ui-components/LinkSelector'
 
 new Vue({
   el: '#app',
@@ -11,7 +12,7 @@ new Vue({
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'ResearchesPicker': () => import('./ResearchesPicker'),
     'PatientPicker': () => import('./PatientPicker'),
-    'LinkSelector': () => import('./ui-components/LinkSelector'),
+    'LinkSelector': LinkSelector,
   },
   data: {
     timeouts: {},
