@@ -50,10 +50,10 @@
 <style scoped lang="scss">
   a {
     text-decoration: underline dotted;
-    color: #737373;
+    color: #666;
     &:hover {
       text-decoration: underline solid;
-      color: #393939;
+      color: #444;
     }
   }
 </style>
