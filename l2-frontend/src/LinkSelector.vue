@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a href="#" class="link">{{selected.title}}</a>
+    <a href="#" class="link" :title="selected.about">{{selected.title}}</a>
     <div class="hidden popover_content">
       <table class="table table-responsive">
         <tr v-for="row_option in options">
