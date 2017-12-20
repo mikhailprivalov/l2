@@ -25,11 +25,8 @@
     methods: {
       update_val(v) {
         this.value = v
-      }
-    },
-    watch: {
-      value() {
         this.$emit('input', v)
+        console.log(v)
       }
     },
     computed: {
