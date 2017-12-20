@@ -61,4 +61,8 @@
   .popover {
     background: #fff;
   }
+
+  .arrow {
+    border-right-color: #fff !important;
+  }
 </style>
