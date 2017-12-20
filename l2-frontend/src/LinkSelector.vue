@@ -24,9 +24,9 @@
     },
     methods: {
       update_val(v) {
+        console.log(v)
         this.value = v
         this.$emit('input', v)
-        console.log(v)
       }
     },
     computed: {
