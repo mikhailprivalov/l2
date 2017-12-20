@@ -51,12 +51,20 @@
       let $link = $('.link', this.$el)
       let $popover_content = $('.popover_content', this.$el)
       $link.popover({
+        animation: false,
         html: true,
         title: 'Выберите вариант',
         placement: 'auto',
         trigger: 'focus',
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
+        let currentTop = parseInt($(this).css('top'))
+        let currentLeft = parseInt($(this).css('left'))
+
+        $(this).css({
+          top: (currentTop + 100) + 'px',
+          left: (currentLeft + 100) + 'px'
+        })
       })
     }
   }
