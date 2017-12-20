@@ -63,6 +63,7 @@
   .popover {
     background: #fff;
     color: #000;
+    max-width: 100%;
 
     .arrow {
       border-bottom-color: #fff !important;
