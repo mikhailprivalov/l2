@@ -2,13 +2,12 @@
   <div>
     <a href="#" class="link">{{selected.title}}</a>
     <div class="hidden popover_content">
-      <div v-for="row_option in options" class="row">
-        <div class="col-xs-6"><a href="#">{{row_option.title}}</a></div>
-        <div class="col-xs-6 text-right" v-html="row_option.about"></div>
-        <div class="col-xs-12">
-          <hr/>
-        </div>
-      </div>
+      <table class="table table-responsive">
+        <tr v-for="row_option in options">
+          <td><a href="#">{{row_option.title}}</a></td>
+          <td v-html="row_option.about"></td>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
