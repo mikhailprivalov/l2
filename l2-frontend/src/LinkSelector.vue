@@ -4,7 +4,7 @@
     <div class="hidden popover_content">
       <table class="table table-responsive">
         <tr v-for="row_option in options">
-          <td><a href="#" @click.prevent="update_val(row.key)">{{row_option.title}}</a></td>
+          <td><a href="#" :instance_id="uuid" func="update_val" :val="row_option.key" onclick="vue_cb(); return false">{{row_option.title}}</a></td>
           <td v-html="row_option.about"></td>
         </tr>
       </table>
@@ -21,6 +21,11 @@
         required: true
       },
       value: {}
+    },
+    data() {
+      return {
+        uuid: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))
+      }
     },
     methods: {
       update_val(v) {
@@ -43,6 +48,7 @@
     },
     mounted() {
       let vm = this
+      set_instance(vm.uuid, vm)
       let $link = $('.link', this.$el)
       let $popover_content = $('.popover_content', this.$el)
       $link.popover({

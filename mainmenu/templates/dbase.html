@@ -1966,6 +1966,19 @@
         window.open('/results/preview?pk=' + pk_param, '_blank')
     }
 
+    function vue_cb() {
+        let $t = $(this)
+        let instance_id = $t.attr('instance_id')
+        let func = $t.attr('func')
+        let val = $t.attr('val')
+        instances[instance_id][func](val)
+    }
+
+    let instances = {}
+
+    function set_instance(key, vm) {
+        instances[key] = vm
+    }
 </script>
 {% render_bundle 'main' 'js' %}
 {% block scripts %}{% endblock %}
