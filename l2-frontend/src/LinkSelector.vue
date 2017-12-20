@@ -46,9 +46,10 @@
         return {key: '', title: 'не выбрано', about: ''}
       }
     },
+    created() {
+      set_instance(vm.uuid, this)
+    },
     mounted() {
-      let vm = this
-      set_instance(vm.uuid, vm)
       let $link = $('.link', this.$el)
       let $popover_content = $('.popover_content', this.$el)
       $link.popover({
