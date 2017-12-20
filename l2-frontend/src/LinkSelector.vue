@@ -30,7 +30,7 @@
     text-decoration: underline dotted;
     color: #737373;
     &:hover {
-      text-decoration: none;
+      text-decoration: underline solid;
       color: #393939;
     }
   }
