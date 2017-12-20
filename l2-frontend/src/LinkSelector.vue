@@ -53,7 +53,8 @@
       $link.popover({
         html: true,
         title: 'Выберите вариант',
-        placement: 'bottom'
+        placement: 'auto',
+        trigger: 'focus',
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
       })
@@ -79,7 +80,7 @@
     max-width: 100%;
 
     .arrow {
-      border-bottom-color: #fff !important;
+      border-color: #fff !important;
     }
 
     hr {
