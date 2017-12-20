@@ -27,7 +27,7 @@
 
 <style scoped lang="scss">
   a {
-    text-decoration: underline dashed;
+    text-decoration: underline dotted;
     &:hover {
       text-decoration: none;
     }
