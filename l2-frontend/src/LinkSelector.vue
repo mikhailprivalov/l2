@@ -57,7 +57,7 @@
         placement: 'auto',
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
-      })
+      }).click((e) => e.preventDefault())
     }
   }
 </script>
