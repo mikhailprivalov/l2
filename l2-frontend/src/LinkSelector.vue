@@ -28,8 +28,10 @@
 <style scoped lang="scss">
   a {
     text-decoration: underline dotted;
+    color: #737373;
     &:hover {
       text-decoration: none;
+      color: #393939;
     }
   }
 </style>
