@@ -4,7 +4,7 @@
     <div class="hidden popover_content">
       <table class="table table-responsive">
         <tr v-for="row_option in options">
-          <td><a href="#" @click.prevent="update_val(row_option.key)">{{row_option.title}}</a></td>
+          <td><a href="#" @click="update_val(row_option.key)">{{row_option.title}}</a></td>
           <td v-html="row_option.about"></td>
         </tr>
       </table>
