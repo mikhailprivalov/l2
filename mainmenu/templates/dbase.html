@@ -1976,9 +1976,9 @@
 
     let instances = {}
 
-    function set_instance(key, vm) {
-        instances[key] = vm
-        console.log(key, vm)
+    function set_instance(vm) {
+        instances[vm.uuid] = vm
+        console.log(vm.uuid, vm)
     }
 </script>
 {% render_bundle 'main' 'js' %}

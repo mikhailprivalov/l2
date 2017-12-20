@@ -47,7 +47,7 @@
       }
     },
     created() {
-      set_instance(vm.uuid, this)
+      set_instance(this)
     },
     mounted() {
       let $link = $('.link', this.$el)
