@@ -29,8 +29,6 @@
     },
     methods: {
       update_val(v) {
-        alert(v)
-        console.log(v)
         this.value = v
         this.$emit('input', v)
         $('.link', this.$el).popover('hide')

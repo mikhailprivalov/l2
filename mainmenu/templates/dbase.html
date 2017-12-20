@@ -1971,7 +1971,6 @@
         let instance_id = $t.attr('instance_id')
         let func = $t.attr('func')
         let val = $t.attr('val')
-        console.log(instance_id, func, val)
         instances[instance_id][func](val)
     }
 
@@ -1979,7 +1978,6 @@
 
     function set_instance(vm) {
         instances[vm.uuid] = vm
-        console.log(vm.uuid, vm)
     }
 </script>
 {% render_bundle 'main' 'js' %}
