@@ -38,7 +38,8 @@
       let $link = $('.link', this.$el)
       let $popover_content = $('.popover_content', this.$el)
       $link.popover({
-        html: true
+        html: true,
+        title: 'Выберите вариант'
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
       })
