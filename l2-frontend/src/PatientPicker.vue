@@ -19,6 +19,9 @@
 <script>
   export default {
     name: 'patient-picker',
+    components: {
+      'link-selector': () => import('./link-selector'),
+    },
     data() {
       return {
         base: -1,
