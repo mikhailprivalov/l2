@@ -17,13 +17,11 @@
 </template>
 
 <script>
-  import LinkSelector from './ui-components/LinkSelector'
+  import LinkSelector from './LinkSelector'
 
   export default {
     name: 'patient-picker',
-    components: {
-      'link-selector': () => LinkSelector,
-    },
+    components: {LinkSelector},
     data() {
       return {
         base: -1,
