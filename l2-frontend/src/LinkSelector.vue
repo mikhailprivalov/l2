@@ -1,7 +1,7 @@
 <template>
   <div>
-    <a href="#" ref="link">{{selected.title}}</a>
-    <div class="hidden" ref="popover_content">
+    <a href="#" class="link">{{selected.title}}</a>
+    <div class="hidden" class="popover_content">
       <div v-for="row_option in options" class="row">
         <div class="col-xs-6"><a href="#">{{row_option.title}}</a></div>
         <div class="col-xs-6 text-right" v-html="row_option.about"></div>
@@ -35,11 +35,12 @@
     },
     mounted() {
       let vm = this
-      console.log(vm.$refs.link)
-      $(vm.$refs.link).popover({
+      let $link = $('.link', this.$el)
+      let $popover_content = $('.popover_content', this.$el)
+      $link.popover({
         html: true
       }).on('show.bs.popover', () => {
-        $(vm.$refs.link).data('content', $(vm.$refs.popover_content).html())
+        $link.attr('data-content', $popover_content.html())
       })
     }
   }
