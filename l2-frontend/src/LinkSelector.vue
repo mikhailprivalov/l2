@@ -55,7 +55,6 @@
         html: true,
         title: 'Выберите вариант',
         placement: 'auto',
-        trigger: 'focus',
       }).on('show.bs.popover', () => {
         $link.attr('data-content', $popover_content.html())
       })
