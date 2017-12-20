@@ -3,8 +3,8 @@
     <a href="#" class="link">{{selected.title}}</a>
     <div class="hidden popover_content">
       <table class="table table-responsive">
-        <tr v-for="row_option in options" @click.prevent="update_val(row_option.key)">
-          <td><a href="#">{{row_option.title}}</a></td>
+        <tr v-for="row_option in options">
+          <td><a href="#" @click.prevent="update_val(row.key)">{{row_option.title}}</a></td>
           <td v-html="row_option.about"></td>
         </tr>
       </table>
@@ -24,9 +24,11 @@
     },
     methods: {
       update_val(v) {
+        alert(v)
         console.log(v)
         this.value = v
         this.$emit('input', v)
+        $('.link', this.$el).popover('hide')
       }
     },
     computed: {
