@@ -10,7 +10,9 @@
       <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb" type="button">Поиск</button></span>
     </div>
-
+    <div class="text-right">
+      <link-selector v-model="search_type" :options="search_types"></link-selector>
+    </div>
   </div>
 </template>
 
@@ -20,7 +22,14 @@
     data() {
       return {
         base: -1,
-        query: ''
+        query: '',
+        search_type: 'auto',
+        search_types: [
+          {key: 'auto', title: 'авто', about: 'Автоматическое определение типа запроса'},
+          {key: 'full_fio', title: 'полное фио и дата рождения', about: 'Введите ФИО и дату раждения. Возможен ввод частями, например: Иванов Иван Иванович 01.01.1990 или Петров Пётр'},
+          {key: 'short_fio', title: 'краткое фио и дата рождения', about: 'Введите инициалы и дату рождения, например: иии01011990'},
+          {key: 'polis', title: 'номер полиса ОМС', about: 'Введите серию (при необходимости через пробел) и номер полиса, например: 1234АБВ 123456789 или 3876543213213413'},
+        ]
       }
     },
     created() {
