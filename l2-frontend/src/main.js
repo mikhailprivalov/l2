@@ -11,7 +11,7 @@ new Vue({
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'ResearchesPicker': () => import('./ResearchesPicker'),
     'PatientPicker': () => import('./PatientPicker'),
-    'link-selector': () => import('./ui-components/link-selector'),
+    'link-selector': () => import('./link-selector'),
   },
   data: {
     timeouts: {},
