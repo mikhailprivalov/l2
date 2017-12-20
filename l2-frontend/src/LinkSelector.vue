@@ -33,7 +33,7 @@
         return {key: '', title: 'не выбрано', about: ''}
       }
     },
-    created() {
+    mounted() {
       let vm = this
       console.log(vm.$refs.link)
       $(vm.$refs.link).popover({
