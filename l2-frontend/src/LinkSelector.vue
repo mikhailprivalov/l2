@@ -62,9 +62,21 @@
 <style lang="scss">
   .popover {
     background: #fff;
+    color: #000;
+
+    .arrow {
+      border-bottom-color: #fff !important;
+    }
+
+    hr {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border: 0;
+      border-top: 1px solid #aaa;
+    }
   }
 
-  .arrow {
-    border-right-color: #fff !important;
+  .popover-title {
+    color: #000
   }
 </style>
