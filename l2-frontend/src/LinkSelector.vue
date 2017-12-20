@@ -25,6 +25,11 @@
   }
 </script>
 
-<style scoped>
-
+<style scoped lang="scss">
+  a {
+    text-decoration: underline dashed;
+    &:hover {
+      text-decoration: none;
+    }
+  }
 </style>
