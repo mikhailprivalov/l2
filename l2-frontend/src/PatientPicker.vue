@@ -10,7 +10,7 @@
       <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
       <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb" type="button">Поиск</button></span>
     </div>
-    <div class="text-center">
+    <div class="text-right">
       <link-selector v-model="search_type" :options="search_types"></link-selector>
     </div>
   </div>
