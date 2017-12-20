@@ -1,5 +1,5 @@
 <template>
-  <div>A {{value}}</div>
+  <div><a href="#" @click.prevent="">{{selected.title}}</a></div>
 </template>
 
 <script>
@@ -11,6 +11,16 @@
         required: true
       },
       value: {}
+    },
+    computed: {
+      selected() {
+        for (let b of this.options) {
+          if (b.key === this.value) {
+            return b
+          }
+        }
+        return {key: '', title: 'не выбрано', about: ''}
+      }
     }
   }
 </script>
