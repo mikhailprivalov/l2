@@ -35,6 +35,7 @@
     },
     created() {
       let vm = this
+      console.log(vm.$refs.link)
       $(vm.$refs.link).popover({
         html: true
       }).on('show.bs.popover', () => {
