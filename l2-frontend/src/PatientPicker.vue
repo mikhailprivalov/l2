@@ -13,15 +13,17 @@
     <div class="text-right">
       <link-selector v-model="search_type" :options="search_types"></link-selector>
     </div>
+    <patient-card></patient-card>
   </div>
 </template>
 
 <script>
   import LinkSelector from './LinkSelector'
+  import PatientCard from './ui-cards/PatientCard'
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector},
+    components: {LinkSelector, PatientCard},
     data() {
       return {
         base: -1,
