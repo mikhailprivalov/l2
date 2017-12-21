@@ -159,6 +159,7 @@ def receive_db(request):
         return s.strip().title()
 
     from rmis_integration.client import Client
+    from slog.models import Log
     c = None
     try:
         c = Client()
@@ -219,8 +220,16 @@ def receive_db(request):
         if c is not None:
             individual.sync_with_rmis(c=c)
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(individual=individual)
-        cards.update(is_archive=True)
-        cards.filter(napravleniya__isnull=True).delete()
+        todelete = []
+        for acard in cards:
+            directions = [x.pk for x in acard.napravleniya_set.all()]
+            Log(key=str(acard.pk), type=2004, body=json.dumps({"individual": str(acard.individual), "directions": directions}), user=None).save()
+            acard.is_archive = True
+            acard.save()
+            if len(directions) == 0:
+                todelete.append(acard.pk)
+                Log(key=str(acard.pk), type=2005, body="", user=None).save()
+        Clients.Card.objects.filter(pk__in=todelete).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
             polis = list(polis)
             bulk_cards.append(Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0]))
