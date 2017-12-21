@@ -223,7 +223,7 @@ def receive_db(request):
         todelete = []
         for acard in cards:
             directions = [x.pk for x in acard.napravleniya_set.all()]
-            Log(key=str(acard.pk), type=2004, body=json.dumps({"individual": str(acard.individual), "directions": directions}), user=None).save()
+            Log(key=str(acard.pk), type=2004, body=json.dumps({"individual": str(acard.individual), "directions": directions, "number": acard.number_with_type()}), user=None).save()
             acard.is_archive = True
             acard.save()
             if len(directions) == 0:
