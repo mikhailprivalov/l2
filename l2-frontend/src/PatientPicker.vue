@@ -84,7 +84,7 @@
       },
       query_valid() {
         let re = new RegExp(this.selected_pattern, 'g')
-        return re.match(this.query)
+        return this.query.match(re)
       }
     },
     methods: {
