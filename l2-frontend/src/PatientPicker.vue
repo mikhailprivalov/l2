@@ -11,7 +11,7 @@
       <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb" type="button" :disabled="!query_valid">Поиск</button></span>
     </div>
     <div class="text-right">
-      <link-selector v-model="search_type" :options="search_types"></link-selector>
+      <link-selector v-model="search_type" :options="search_types" style="display: inline-block"></link-selector>
       <span v-if="search_type === 'auto' && normalized_query !== ''">({{active_type.title}})</span>
     </div>
     <patient-card></patient-card>
