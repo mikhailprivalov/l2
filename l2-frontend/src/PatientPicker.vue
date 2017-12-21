@@ -12,6 +12,7 @@
     </div>
     <div class="text-right">
       <link-selector v-model="search_type" :options="search_types"></link-selector>
+      <span v-if="search_type === 'auto' && normalized_query !== ''">({{active_type.title}})</span>
     </div>
     <patient-card></patient-card>
   </div>
@@ -95,6 +96,15 @@
         let re = new RegExp(this.selected_pattern)
         return this.normalized_query.match(re)
       },
+      active_type() {
+        for (let b of this.search_types) {
+          let re = new RegExp(b.pattern)
+          if (b.key !== 'auto' && this.normalized_query.match(re)) {
+            return b
+          }
+        }
+        return {key: '', title: 'тип запроса не распознан', about: ''}
+      }
     },
     methods: {
       select_base(pk) {
