@@ -165,40 +165,41 @@ def receive_db(request):
     except ConnectionError:
         pass
     for x in d:
-        individual = Clients.Individual.objects.filter(family=x["Family"],
-                                                       name=x["Name"],
-                                                       patronymic=x["Twoname"],
-                                                       birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()).order_by("-pk")
-        polis = [None]
-        if not individual.exists():
-            polis = Clients.Document.objects.filter(
-                document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"),
-                serial=x["Polisser"],
-                number=x["Polisnum"])
-            snils = Clients.Document.objects.filter(
-                document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
-                number=x.get("Snils", ""))
-            if snils.exists() or polis.exists():
-                individual = (snils if snils.exists() else polis)[0].individual
-                if not Clients.Card.objects.filter(individual=individual, base__is_rmis=True).exists():
-                    individual.family = fix(x["Family"])
-                    individual.name = fix(x["Name"])
-                    individual.patronymic = fix(x["Twoname"])
-                    individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()
-                    individual.sex = x["Sex"].lower().strip()
-                    individual.save()
-            else:
+        polis = Clients.Document.objects.filter(
+            document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"),
+            serial=x["Polisser"],
+            number=x["Polisnum"])
+        snils = Clients.Document.objects.filter(
+            document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
+            number=x.get("Snils", ""))
+
+        if snils.exists() or polis.exists():
+            individual = (snils if snils.exists() else polis)[0].individual
+            if not Clients.Card.objects.filter(individual=individual, base__is_rmis=True).exists():
+                individual.family = fix(x["Family"])
+                individual.name = fix(x["Name"])
+                individual.patronymic = fix(x["Twoname"])
+                individual.birthday = datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()
+                individual.sex = x["Sex"].lower().strip()
+                individual.save()
+        else:
+            individual = Clients.Individual.objects.filter(family=x["Family"],
+                                                           name=x["Name"],
+                                                           patronymic=x["Twoname"],
+                                                           birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()).order_by("-pk")
+            if not individual.exists():
                 individual = Clients.Individual(family=fix(x["Family"]),
                                                 name=fix(x["Name"]),
                                                 patronymic=fix(x["Twoname"]),
                                                 birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date(),
                                                 sex=x["Sex"])
                 individual.save()
-        else:
-            individual = individual[0]
-            if individual.sex != x["Sex"]:
-                individual.sex = x["Sex"]
-                individual.save()
+            else:
+                individual = individual[0]
+                if individual.sex != x["Sex"]:
+                    individual.sex = x["Sex"]
+                    individual.save()
+
         if x["Polisnum"] != "":
             polis = Clients.Document.objects.filter(
                 document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"), serial=x["Polisser"],
