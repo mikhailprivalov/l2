@@ -7,7 +7,7 @@
           <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a></li>
         </ul>
       </div>
-      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus>
+      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus :maxlength="query_limit">
       <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb" type="button" :disabled="!query_valid">Поиск</button></span>
     </div>
     <div class="text-right">
@@ -37,7 +37,7 @@
             about: 'Введите ФИО и дату раждения. Возможен ввод частями, например: Иванов Иван Иванович 01.01.1990 или Петров Пётр',
             pattern: '^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\\.[0-9]{2}\\.[0-9]{4}))?)?)?$'
           },
-          {key: 'short_fio', title: 'краткое фио и дата рождения', about: 'Введите инициалы и дату рождения, например: иии01011990', pattern: '^[а-яА-ЯёЁ]{3}[0-9]{8}$'},
+          {key: 'short_fio', title: 'краткое фио и дата рождения', about: 'Введите инициалы и дату рождения, например: иии01011990', pattern: '^[а-яА-ЯёЁ]{3}[0-9]{8}$', limit: 11},
           {key: 'polis', title: 'номер полиса ОМС', about: 'Введите серию (при необходимости через пробел) и номер полиса, например: 1234АБВ 123456789 или 3876543213213413', pattern: '.+'},
         ]
       }
@@ -75,6 +75,12 @@
           }
         }
         return {key: '', title: 'не выбрано', about: ''}
+      },
+      query_limit() {
+        if (this.selected_type.limit !== undefined) {
+          return this.selected_type.limit
+        }
+        return 255
       },
       selected_pattern() {
         if (this.selected_type.pattern !== undefined) {
