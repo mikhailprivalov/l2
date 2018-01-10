@@ -15,7 +15,7 @@
                 <div class="row dash-buttons" style="padding: 0;margin-right: 0;margin-left: 0">
                     {% for v in request.user.groups.all %}
                         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb5">
-                            <div class="label label-default bw100">{{ v }}</div>
+                            <div class="label label-default bw100 btn-ell" title="{{ v }}">{{ v }}</div>
                         </div>{% endfor %}</div>
             </li>
         </ul>
@@ -32,6 +32,30 @@
             {% endfor %}
         {% endfor %}
     </div>
+    <hr/>
+    <div class="row dash-buttons text-center">
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info">
+            <div class="panel-body">
+                <span>
+                    <span>L2</span><br/>
+                    <span>{{ version }}</span>
+                </span>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info">
+            <div class="panel-body">
+                <span>
+                    <span>РМИС: <input style="vertical-align: middle;margin-bottom: 8px;" type="checkbox" {% if rmis %}checked{% endif %} disabled></span><br/>
+{#                    <span>L2 МИС: <input style="vertical-align: middle;margin-bottom: 8px;" type="checkbox" {% if mis_module %}checked{% endif %} disabled></span>#}
+                </span>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 mb10 dash-btn dash-info">
+            <a href="http://l2-irk.ru" target="_blank" class="panel-body">
+                <span>l2-irk.ru</span>
+            </a>
+        </div>
+    </div>
 {% endblock %}
 {% block head_cn %}
     <style>
@@ -42,7 +66,8 @@
         .mb5 {
             margin-bottom: 5px;
         }
-        .mb10{
+
+        .mb10 {
             margin-bottom: 5px;
         }
     </style>

@@ -8,7 +8,7 @@ async function getBases() {
     }
   } catch (e) {
   }
-  return {can_edit: false, departments: [], types: []}
+  return {bases: []}
 }
 
 export default {getBases}

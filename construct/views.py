@@ -19,7 +19,7 @@ def menu(request):
 @group_required("Оператор")
 def researches(request):
     """ Конструктор исследований """
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'construct_researches.html', {"labs": labs, "variants": directory.ResultVariants.objects.all()})
 
 
@@ -42,7 +42,7 @@ def tubes(request):
 @group_required("Оператор")
 def directions_group(request):
     """ Группировка по направлениям """
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'construct_directions_group.html', {"labs": labs})
 
 
@@ -50,7 +50,7 @@ def directions_group(request):
 @group_required("Оператор")
 def uets(request):
     """ Настройка УЕТов """
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'uets.html', {"labs": labs})
 
 
@@ -60,7 +60,7 @@ def uets(request):
 def onlywith(request):
     """ Настройка назначения анализов вместе """
     if request.method == "GET":
-        labs = Podrazdeleniya.objects.filter(isLab=True, hide=False)
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
         return render(request, 'onlywith.html', {"labs": labs})
     elif request.method == "POST":
         pk = int(request.POST["pk"])

@@ -39,5 +39,6 @@ new Vue({
     }, {deep: true})
     this.$store.dispatch(action_types.GET_ALL_DEPARTMENTS).then()
     this.$store.dispatch(action_types.GET_BASES).then()
+    this.$store.dispatch(action_types.GET_USER_DATA).then()
   }
 })

@@ -79,7 +79,7 @@
             animation-duration: .3s;
         }
 
-        a.panel-body {
+        .dash-btn .panel-body {
             font-size: 16pt;
             border: #ddd 1px solid;
             border-radius: 5px;
@@ -457,6 +457,12 @@
             align-items: center;
         }
 
+        .dash-info .panel-body {
+            background-color: #fff;
+            color: #434A54;
+            border: none;
+        }
+
         .dash-buttons .panel-body span {
             display: inline-block;
             text-align: center;
@@ -470,7 +476,7 @@
             width: 100%;
         }
 
-        .dash-buttons .panel-body:hover {
+        .dash-buttons :not(.dash-info) .panel-body:hover {
             background-color: #049372;
             border: 1px solid #049372;
             color: #fff;
@@ -1178,12 +1184,12 @@
             float: left;
         }
 
-        .dash-buttons .col-md-3 a, .dash-btn a {
+        .dash-buttons .panel-body {
             height: 100px;
             position: relative;
         }
 
-        .dash-buttons a .badge {
+        .dash-buttons .panel-body .badge {
             position: absolute;
             bottom: 10px;
             right: 100px;

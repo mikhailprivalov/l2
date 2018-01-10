@@ -3,7 +3,6 @@ from collections import defaultdict
 import datetime
 import re
 
-from django.db.models import Func
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -63,6 +62,9 @@ def dashboard(request):  # Представление панели управл�
                 {"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
                  "nt": True, "access": ["*"]})
 
+        if SettingManager.get("mis_module", default='false', default_type='b'):
+            pages.append({"url": '/mainmenu/cards', "title": "Управление картами L2", "nt": True, "access": ["Добавление и редактирование пациентов в базе L2"]})
+
         groups_set = set(groups)
         for page in pages:
             if not request.user.is_superuser and "*" not in page["access"] and len(
@@ -71,7 +73,8 @@ def dashboard(request):  # Представление панели управл�
             menu.append(page)
 
         menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
-        return render(request, 'dashboard.html', {"menu": menu_st})
+        from laboratory import VERSION
+        return render(request, 'dashboard.html', {"menu": menu_st, "version": VERSION, "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'), "mis_module": SettingManager.get("mis_module", default='false', default_type='b')})
     return HttpResponse("OK")
 
 
@@ -201,11 +204,11 @@ def researches_control(request):
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
-    if not lab.isLab:
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
+    if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     return render(request, 'dashboard/receive_journal.html',
                   {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
@@ -358,13 +361,13 @@ def directions(request):
     """ Страница создания направлений """
     from users.models import AssignmentTemplates, AssignmentResearches
     from django.db.models import Q
-    podr = Podrazdeleniya.objects.filter(isLab=True)
+    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     oper = "Оператор лечащего врача" in request.user.groups.values_list('name', flat=True)
     docs = list()
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     if oper:
         p = podrazdeleniya.first()
-        if not request.user.doctorprofile.podrazdeleniye.isLab and not request.user.doctorprofile.podrazdeleniye.hide:
+        if request.user.doctorprofile.podrazdeleniye.p_type == Podrazdeleniya.DEPARTMENT:
             p = request.user.doctorprofile.podrazdeleniye
         docs = DoctorProfile.objects.filter(podrazdeleniye=p,
                                             user__groups__name="Лечащий врач").order_by("fio")
@@ -399,9 +402,9 @@ def directions(request):
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант")
 def results_history(request):
-    podr = Podrazdeleniya.objects.filter(isLab=True)
+    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
 
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
@@ -418,9 +421,9 @@ def results_history(request):
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок", "Поиск выписок")
 def discharge(request):
-    podr = Podrazdeleniya.objects.filter(isLab=True)
+    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
 
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
@@ -614,9 +617,8 @@ def dashboard_from(request):
         date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(isLab=True, hide=False):
-                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__hide=False,
-                                                              doc_get__podrazdeleniye__isLab=False,
+            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY):
+                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)
                 if filter_type == "not_received":
@@ -628,7 +630,7 @@ def dashboard_from(request):
                 tubes = tubes_list.distinct().count()
                 result[lab.pk] = tubes
             return JsonResponse(result)
-        podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
         for podr in podrazdeleniya:
@@ -797,3 +799,20 @@ def get_userdata(doc: DoctorProfile):
 
 def ratelimited(request, e):
     return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
+
+
+def cards(request):
+    if not SettingManager.get("mis_module", default='false', default_type='b'):
+        from django.http import Http404
+        raise Http404()
+    return render(request, 'dashboard/cards.html')
+
+
+def v404(request, exception=None):
+    return render(request, 'dashboard/error.html', {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
+
+
+def v500(request, exception=None):
+    return render(request, 'dashboard/error.html',
+                  {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее",
+                   "update": True, "no_nt": True}, status=500)

@@ -61,7 +61,7 @@ def results_search(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     from podrazdeleniya.models import Podrazdeleniya
-    labs = Podrazdeleniya.objects.filter(isLab=True)
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
     return render(request, 'dashboard/results_search.html', {"labs": labs})
 
 
@@ -71,10 +71,10 @@ def enter(request):
     """ Представление для страницы ввода результатов """
     from podrazdeleniya.models import Podrazdeleniya
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).order_by("title")
-    if not lab.isLab:
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
+    if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
-    podrazdeleniya = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
                                                            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
                                                            "groups": directory.ResearchGroup.objects.filter(lab=lab),
@@ -87,7 +87,7 @@ def enter(request):
 def result_conformation(request):
     """ Представление для страницы подтверждения и печати результатов """
     if "Зав. Лаб." in request.user.groups.values_list('name', flat=True):  # Если пользователь "Зав.Лаб."
-        labs = users.Podrazdeleniya.objects.filter(isLab=True)  # Загрузка всех подразделений
+        labs = users.Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Загрузка всех подразделений
     else:
         labs = [request.user.doctorprofile.podrazdeleniye, request.user.doctorprofile.podrazdeleniye]
     researches = directory.Researches.objects.filter(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов

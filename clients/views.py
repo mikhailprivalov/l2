@@ -58,6 +58,7 @@ def ajax_search(request):
                 objects = []
         elif re.search(p2, query):  # Если это полный запрос
             split = str(query).split()
+            n = p = ""
             f = split[0]
             rmis_req = {"surname": f + "%"}
             if len(split) > 1:

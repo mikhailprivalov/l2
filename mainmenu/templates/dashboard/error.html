@@ -9,8 +9,17 @@
         <h1 class="text-center">{{ message }}</h1>
         {% if update %}
             <br/>
-            <button class="btn btn-lg btn-primary-nb" href="#" onclick="window.open(window.location.href, '_blank');window.close();return false;">Попробовать снова</button>
+            {% if not no_nt %}
+                <button class="btn btn-lg btn-primary-nb" href="#" onclick="window.open(window.location.href, '_blank');window.close();return false;">Попробовать снова</button>
+            {% else %}
+                <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.reload();return false;">Попробовать снова</button>
+            {% endif %}
         {% endif %}
+    {% if to_home %}
+        <br/>
+        <button class="btn btn-lg btn-primary-nb" href="#" onclick="location.href = '/';return false;">Вернуться в меню</button>
+    {% endif %}
+    <div style="font-weight: 200;font-size: 40px;text-align: center;margin-top: 60px;"><i>L<sup style="font-size: 24px;top: -.3em;">2</sup></i></div>
     </div>
 {% endblock %}
 

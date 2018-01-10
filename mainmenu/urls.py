@@ -31,4 +31,5 @@ urlpatterns = [
     path('discharge/send', views.discharge_add),
     path('discharge/search', views.discharge_search),
     path('researches_from_directions', views.researches_from_directions),
+    path('cards', views.cards),
 ]

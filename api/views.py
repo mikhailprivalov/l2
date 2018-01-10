@@ -1,8 +1,12 @@
+from collections import defaultdict
+
 import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 import api.models as models
@@ -10,6 +14,8 @@ import directions.models as directions
 import users.models as users
 from api.to_astm import get_iss_astm
 from barcodes.views import tubes
+from directory.models import AutoAdd
+from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 
 
@@ -89,13 +95,16 @@ def send(request):
                 dpk -= 4600000000000
                 dpk //= 10
             tubes(request, direction_implict_id=dpk)
-            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).exists():
+            if directions.TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=dpk,
+                                                           issledovaniya__doc_confirmation__isnull=True).exists():
                 resdict["pk"] = directions.TubesRegistration.objects.filter(
-                    issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by("pk").first().pk
+                    issledovaniya__napravleniye__pk=dpk, issledovaniya__doc_confirmation__isnull=True).order_by(
+                    "pk").first().pk
             else:
                 resdict["pk"] = False
         result["A"] = appkey
-        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(
+                key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
             direction = tubei.issledovaniya_set.first().napravleniye
             for key in resdict["result"].keys():
@@ -104,9 +113,12 @@ def send(request):
                     for fractionRel in fractionRels:
                         fraction = fractionRel.fraction
                         if directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                   research=fraction.research, doc_confirmation__isnull=True).exists():
+                                                                   research=fraction.research,
+                                                                   doc_confirmation__isnull=True).exists():
                             issled = directions.Issledovaniya.objects.filter(napravleniye=direction,
-                                                                             research=fraction.research, doc_confirmation__isnull=True).order_by("pk")[0]
+                                                                             research=fraction.research,
+                                                                             doc_confirmation__isnull=True).order_by(
+                                "pk")[0]
                             if directions.Result.objects.filter(issledovaniye=issled,
                                                                 fraction=fraction).exists():  # Если результат для фракции существует
                                 fraction_result = directions.Result.objects.get(issledovaniye=issled,
@@ -193,11 +205,16 @@ def endpoint(request):
                                 for fraction_rel in q:
                                     save_state = []
                                     issleds = []
-                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction, research=fraction_rel.fraction.research, doc_confirmation__isnull=True):
-                                        if directions.Result.objects.filter(issledovaniye=issled, fraction=fraction_rel.fraction).exists():
-                                            fraction_result = directions.Result.objects.get(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                    for issled in directions.Issledovaniya.objects.filter(napravleniye=direction,
+                                                                                          research=fraction_rel.fraction.research,
+                                                                                          doc_confirmation__isnull=True):
+                                        if directions.Result.objects.filter(issledovaniye=issled,
+                                                                            fraction=fraction_rel.fraction).exists():
+                                            fraction_result = directions.Result.objects.get(issledovaniye=issled,
+                                                                                            fraction=fraction_rel.fraction)
                                         else:
-                                            fraction_result = directions.Result(issledovaniye=issled, fraction=fraction_rel.fraction)
+                                            fraction_result = directions.Result(issledovaniye=issled,
+                                                                                fraction=fraction_rel.fraction)
                                         fraction_result.value = str(results[key]).strip()
                                         import re
                                         find = re.findall("\d+.\d+", fraction_result.value)
@@ -222,9 +239,11 @@ def endpoint(request):
                                         fraction_result.issledovaniye.doc_save = astm_user
                                         fraction_result.issledovaniye.time_save = timezone.now()
                                         fraction_result.issledovaniye.save()
-                                        save_state.append({"fraction": fraction_result.fraction.title, "value": fraction_result.value})
+                                        save_state.append({"fraction": fraction_result.fraction.title,
+                                                           "value": fraction_result.value})
                                         issleds.append({"pk": issled.pk, "title": issled.research.title})
-                                    slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}), type=22, body=json.dumps(save_state), user=None).save()
+                                    slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}),
+                                             type=22, body=json.dumps(save_state), user=None).save()
                             oks.append(ok)
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
                 else:
@@ -247,9 +266,11 @@ def endpoint(request):
 @login_required
 def departments(request):
     from podrazdeleniya.models import Podrazdeleniya
-    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group('Создание и редактирование пользователей')
+    can_edit = request.user.is_superuser or request.user.doctorprofile.has_group(
+        'Создание и редактирование пользователей')
     if request.method == "GET":
-        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": str(x.p_type), "updated": False} for x in Podrazdeleniya.objects.all().order_by("pk")],
+        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": str(x.p_type), "updated": False} for
+                                             x in Podrazdeleniya.objects.all().order_by("pk")],
                              "can_edit": can_edit,
                              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
     elif can_edit:
@@ -285,4 +306,67 @@ def departments(request):
 @login_required
 def bases(request):
     from clients.models import CardBase
-    return JsonResponse({"bases": [{"pk": x.pk, "title": x.title, "code": x.short_title, "hide": x.hide, "history_number": x.history_number} for x in CardBase.objects.all()]})
+    return JsonResponse({"bases": [
+        {"pk": x.pk, "title": x.title, "code": x.short_title, "hide": x.hide, "history_number": x.history_number} for x
+        in CardBase.objects.all()]})
+
+
+class ResearchesTemplates(View):
+    def get(self, request):
+        from django.db.models import Q
+
+        templates = []
+        for t in users.AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                                                          Q(doc=request.user.doctorprofile) |
+                                                          Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+            templates.append({"values": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=t)],
+                              "pk": t.pk,
+                              "title": t.title,
+                              "for_current_user": t.doc is not None,
+                              "for_users_department": t.podrazdeleniye is not None})
+        return JsonResponse({"templates": templates})
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(self.__class__, self).dispatch(request, *args, **kwargs)
+
+
+from directory.models import Researches as DResearches
+
+
+class Researches(View):
+    def get(self, request):
+        deps = defaultdict(list)
+        labs_pks = [x.pk for x in Podrazdeleniya.objects.exclude(p_type=Podrazdeleniya.HIDDEN).exclude(
+            p_type=Podrazdeleniya.DEPARTMENT)]
+
+        for r in DResearches.objects.filter(hide=False).order_by("title"):
+            autoadd = [x.b.pk for x in AutoAdd.objects.filter(a=r)]
+            addto = [x.a.pk for x in AutoAdd.objects.filter(b=r)]
+
+            deps[r.podrazdeleniye.pk].append(
+                {"pk": r.pk,
+                 "onlywith": -1 if not r.onlywith else r.onlywith.pk,
+                 "department_pk": r.podrazdeleniye.pk,
+                 "title": r.title,
+                 "comment_template": "-1" if not r.comment_variants else r.comment_variants.pk,
+                 "autoadd": autoadd,
+                 "addto": addto,
+                 "type": str(r.podrazdeleniye.p_type)
+                 })
+        return JsonResponse({"researches": deps})
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(self.__class__, self).dispatch(request, *args, **kwargs)
+
+
+def current_user_info(request):
+    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "", "department": {"pk": -1, "title": ""}, "groups": []}
+    if ret["auth"]:
+        ret["username"] = request.user.username
+        ret["fio"] = request.user.doctorprofile.fio
+        ret["groups"] = list(request.user.groups.values_list('name', flat=True))
+        ret["doc_pk"] = request.user.doctorprofile.pk
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk, "title": request.user.doctorprofile.podrazdeleniye.title}
+    return JsonResponse(ret)

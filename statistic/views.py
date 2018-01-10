@@ -22,9 +22,9 @@ from users.models import Podrazdeleniya
 @login_required
 def statistic_page(request):
     """ Страница статистики """
-    labs = Podrazdeleniya.objects.filter(isLab=True)  # Лаборатории
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Лаборатории
     tubes = directory.Tubes.objects.all()  # Пробирки
-    podrs = Podrazdeleniya.objects.filter(isLab=False, hide=False)  # Подлазделения
+    podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
 
@@ -394,7 +394,7 @@ def statistic_xls(request):
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(
             directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
-        pods = list(Podrazdeleniya.objects.filter(hide=False, isLab=False).order_by("title"))
+        pods = list(Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title"))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
                 lab.title.replace(" ", "_"),
@@ -421,7 +421,7 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazdeleniye__isLab=True).order_by("fio").distinct():
+        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -604,7 +604,7 @@ def statistic_xls(request):
 
         replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
         n = len(row) - 1
-        pods = Podrazdeleniya.objects.filter(isLab=False, hide=False).order_by("title")
+        pods = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
         for pod in pods:
             n += 1
             title = pod.title
@@ -647,7 +647,7 @@ def statistic_xls(request):
             row_num += 1
 
     elif tp == "all-labs":
-        labs = Podrazdeleniya.objects.filter(isLab=True)
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Все_Лаборатории_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
         ws = wb.add_sheet("Выполненых анализов")
@@ -784,7 +784,7 @@ def statistic_xls(request):
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
 
-        labs = Podrazdeleniya.objects.filter(isLab=True)
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
         for lab in labs:
             ws = wb.add_sheet(lab.title)
             font_style = xlwt.XFStyle()
@@ -857,7 +857,7 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "uets":
-        usrs = DoctorProfile.objects.filter(podrazdeleniye__isLab=True).order_by("podrazdeleniye__title")
+        usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("podrazdeleniye__title")
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
 

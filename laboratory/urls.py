@@ -31,6 +31,11 @@ from django.contrib.auth.views import logout
 
 admin.site.site_header = 'Администрирование L2'
 
+from mainmenu.views import v404, v500
+
+handler404 = v404
+handler500 = v500
+
 urlpatterns = [
                   path('favicon\.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
                   path('', home, name='home'),

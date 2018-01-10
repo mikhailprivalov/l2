@@ -115,7 +115,7 @@ def directory_researches_list(request):
                                                                                                            "title",
                                                                                                            "comment_variants",
                                                                                                            "comment_variants__pk")
-    labs = Podrazdeleniya.objects.filter(isLab=True, hide=False).values("pk")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values("pk")
     for r in researches:
         autoadd = {l["pk"]: [x["b__pk"] for x in direct.AutoAdd.objects.filter(a__pk=r["pk"], b__podrazdeleniye__pk=l["pk"]).values("b__pk")] for l in labs}
         addto = {l["pk"]: [x["a__pk"] for x in direct.AutoAdd.objects.filter(b__pk=r["pk"], a__podrazdeleniye__pk=l["pk"]).values("a__pk")] for l in labs}
