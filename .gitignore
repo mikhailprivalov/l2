@@ -210,3 +210,17 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+/api/migrations/0001_initial.py
+/appconf/migrations/0001_initial.py
+/clients/migrations/0003_documenttype_check_priority.py
+/clients/migrations/0001_initial.py
+/clients/migrations/0002_card_polis.py
+/directions/migrations/0001_initial.py
+/directory/migrations/0001_initial.py
+/discharge/migrations/0001_initial.py
+/podrazdeleniya/migrations/0004_remove_podrazdeleniya_islab.py
+/podrazdeleniya/migrations/0003_auto_20180105_0112.py
+/podrazdeleniya/migrations/0002_podrazdeleniya_p_type.py
+/podrazdeleniya/migrations/0001_initial.py
+/researches/migrations/0001_initial.py
+/slog/migrations/0001_initial.py
