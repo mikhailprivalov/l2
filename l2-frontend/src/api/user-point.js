@@ -11,4 +11,15 @@ async function getCurrentUserInfo() {
   return {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}}
 }
 
-export default {getCurrentUserInfo}
+async function getDirectiveFrom() {
+  try {
+    const response = await HTTP.get('directive-from')
+    if (response.statusText === 'OK') {
+      return response.data.data
+    }
+  } catch (e) {
+  }
+  return []
+}
+
+export default {getCurrentUserInfo, getDirectiveFrom}

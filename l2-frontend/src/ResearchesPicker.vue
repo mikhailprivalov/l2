@@ -12,12 +12,13 @@
       </ul>
       <div class="top-inner">
         <a href="#" @click.prevent="select_dep(row.pk)" class="top-inner-select" :class="{ active: row.pk === dep}"
-           v-for="row in departments_of_type"><span>{{ row.title }}</span></a>
+           v-for="row in departments_of_type"><span>{{ row.title }}<span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span></a>
       </div>
     </div>
     <div class="content-picker" v-if="researches_display.length > 0">
-        <a href="#" @click.prevent="select_research(row.pk)" class="research-select" :class="{ active: research_selected(row.pk) }"
-           v-for="row in researches_display" :title="row.title"><span>{{ row.title }}</span></a>
+      <a href="#" @click.prevent="select_research(row.pk)" class="research-select"
+         :class="{ active: research_selected(row.pk) }"
+         v-for="row in researches_display" :title="row.title"><span>{{ row.title }}</span></a>
     </div>
     <div class="content-none" v-else>
       Нет данных
@@ -26,18 +27,14 @@
       <div class="dropup" style="display: inline-block">
         <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
                 style="text-align: left!important;border-radius: 0"><span class="caret"></span>
-          {{selected_template.title}}
+          Загрузить шаблон
         </button>
         <ul class="dropdown-menu">
-          <li v-for="row in templates" :value="row.pk" v-if="row.pk !== selected_template.pk">
-            <a href="#" @click.prevent="select_template(row.pk)">{{row.title}}</a>
+          <li v-for="row in templates" :value="row.pk">
+            <a href="#" @click.prevent="load_template(row.pk)">{{row.title}}</a>
           </li>
         </ul>
       </div>
-      <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-              style="text-align: left!important;border-radius: 0" @click="load_template">
-        Загрузить шаблон
-      </button>
     </div>
   </div>
 </template>
@@ -47,6 +44,7 @@
 
   export default {
     name: 'researches-picker',
+    props: ['value'],
     data() {
       return {
         type: '-1',
@@ -73,6 +71,10 @@
 
       this.checkType()
       this.check_template()
+
+      this.$root.$on('researches-picker:deselect', this.deselect_research_ignore)
+      this.$root.$on('researches-picker:deselect_department', this.deselect_department)
+      this.$root.$on('researches-picker:deselect_all', this.clear)
     },
     watch: {
       types() {
@@ -80,6 +82,9 @@
       },
       templates() {
         this.check_template()
+      },
+      checked_researches() {
+        this.$emit('input', this.checked_researches)
       }
     },
     computed: {
@@ -112,32 +117,12 @@
       templates() {
         return this.$store.getters.templates
       },
-      selected_template() {
-        for (let t of this.templates) {
-          if (t.pk === this.template) {
-            return t
-          }
-        }
-        return {title: 'Не выбран шаблон', pk: '-1', for_current_user: false, for_users_department: false, values: []}
-      },
       researches_display() {
-        if(this.dep in this.$store.getters.researches){
+        if (this.dep in this.$store.getters.researches) {
           return this.$store.getters.researches[this.dep]
         }
         return []
       },
-      researches_obj() {
-        let o = {}
-        let researches = this.$store.getters.researches
-        for(let k in researches){
-          if(researches.hasOwnProperty(k)) {
-            for(let r of researches[k]){
-              o[r.pk] = r
-            }
-          }
-        }
-        return o
-      }
     },
     methods: {
       select_type(pk) {
@@ -163,32 +148,11 @@
           this.template = JSON.parse(JSON.stringify(this.templates[0].pk))
         }
       },
-      select_template(pk) {
-        this.template = pk
-      },
-      select_research(pk) {
-        if(this.research_selected(pk)){
-          this.checked_researches = this.checked_researches.filter(item => item !== pk)
-        } else {
-          this.checked_researches.push(pk)
-        }
-      },
-      research_selected(pk) {
-        return this.checked_researches.indexOf(pk) !== -1
-      },
-      research_data(pk) {
-        if(pk in this.researches_obj){
-          return this.researches_obj[pk]
-        }
-        return {}
-      },
-      load_template() {
+      load_template(pk) {
         let last_dep = -1
         let last_type = -1
-        for(let v of this.selected_template.values) {
-          if(!this.research_selected(v)) {
-            this.select_research(v)
-          }
+        for (let v of this.get_template(pk).values) {
+          this.select_research_ignore(v)
           let d = this.research_data(v)
           last_dep = d.department_pk
           last_type = d.type
@@ -196,6 +160,66 @@
         this.select_type(last_type)
         this.select_dep(last_dep)
       },
+      get_template(pk) {
+        for (let t of this.templates) {
+          if (t.pk === pk) {
+            return t
+          }
+        }
+        return {title: 'Не выбран шаблон', pk: '-1', for_current_user: false, for_users_department: false, values: []}
+      },
+      select_research(pk) {
+        if (this.research_selected(pk)) {
+          this.deselect_research_ignore(pk)
+        } else {
+          this.select_research_ignore(pk)
+        }
+      },
+      select_research_ignore(pk) {
+        if (!this.research_selected(pk)) {
+          this.checked_researches.push(pk)
+          let research = this.research_data(pk)
+          for (let autoadd_pk of research.autoadd) {
+            this.select_research_ignore(autoadd_pk)
+          }
+        }
+      },
+      deselect_research_ignore(pk) {
+        if (this.research_selected(pk)) {
+          this.checked_researches = this.checked_researches.filter(item => item !== pk)
+          let research = this.research_data(pk)
+          for (let addto_pk of research.addto) {
+            this.deselect_research_ignore(addto_pk)
+          }
+        }
+      },
+      deselect_department(pk) {
+        for (let rpk of this.researches_selected_in_department(pk)) {
+          this.deselect_research_ignore(rpk)
+        }
+      },
+      clear() {
+        this.checked_researches = []
+      },
+      research_selected(pk) {
+        return this.checked_researches.indexOf(pk) !== -1
+      },
+      research_data(pk) {
+        if (pk in this.$store.getters.researches_obj) {
+          return this.$store.getters.researches_obj[pk]
+        }
+        return {}
+      },
+      researches_selected_in_department(pk) {
+        let r = []
+        for (let rpk of this.checked_researches) {
+          let res = this.research_data(rpk)
+          if (res.department_pk === pk) {
+            r.push(rpk)
+          }
+        }
+        return r
+      }
     }
   }
 </script>
@@ -269,11 +293,11 @@
   }
 
   .top-inner-select.active, .research-select.active {
-    background: #049372;
+    background: #049372 !important;
     color: #fff;
   }
 
-  .top-inner-select span, .research-select span {
+  .top-inner-select > span, .research-select span {
     display: block;
     text-overflow: ellipsis;
     overflow: hidden;

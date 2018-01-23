@@ -52,6 +52,7 @@ class Researches(models.Model):
     """
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
+    short_title = models.CharField(max_length=50, default='', blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
@@ -72,6 +73,9 @@ class Researches(models.Model):
 
     def get_podrazdeleniye(self):
         return self.podrazdeleniye
+
+    def get_title(self):
+        return self.short_title if self.short_title != '' else self.title
 
     class Meta:
         verbose_name = 'Вид исследования'

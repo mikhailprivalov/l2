@@ -65,6 +65,9 @@ def dashboard(request):  # Представление панели управл�
         if SettingManager.get("mis_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/cards', "title": "Управление картами L2", "nt": True, "access": ["Добавление и редактирование пациентов в базе L2"]})
 
+        if SettingManager.get("hosp_module", default='false', default_type='b'):
+            pages.append({"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"]})
+
         groups_set = set(groups)
         for page in pages:
             if not request.user.is_superuser and "*" not in page["access"] and len(
@@ -816,3 +819,9 @@ def v500(request, exception=None):
     return render(request, 'dashboard/error.html',
                   {"message": "Ошибка 500 - проблемы на сервере. Сообщите администратору или попробуйте позднее",
                    "update": True, "no_nt": True}, status=500)
+
+
+@login_required
+@group_required("Госпитализация")
+def hosp(request):
+    return render(request, 'dashboard/hosp.html')

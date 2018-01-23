@@ -14,6 +14,7 @@
     "es-cookie": "^1.1.1",
     "style-loader": "^0.19.1",
     "vue": "^2.5.11",
+    "vue-full-loading": "^1.0.3",
     "vuex": "^3.0.1",
     "webpack-bundle-tracker": "^0.2.0"
   },

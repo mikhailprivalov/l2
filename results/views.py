@@ -2867,7 +2867,7 @@ def results_search_directions(request):
 
     if query.isdigit() or bool(re.compile(r'^([a-zA-Z0-9]{14,17})$').match(query)):
         filter_type = "card_number"
-    elif bool(re.compile(r'^([a-zA-Zа-яА-Я]+)( [a-zA-Zа-яА-Я]+)?( [a-zA-Zа-яА-Я]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
+    elif bool(re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
             query)):
         filter_type = "fio"
         split = query.split()
@@ -2918,12 +2918,7 @@ def results_search_directions(request):
     client_base = None
     if type_patient != -1:
         client_base = CardBase.objects.get(pk=type_patient)
-    if filter_type == "fio":
-        collection = collection.filter(client__individual__family__contains=family,
-                                       client__individual__name__contains=name,
-                                       client__individual__patronymic__contains=twoname,
-                                       client__individual__birthday__contains=bdate)
-    if filter_type == "fio_short":
+    if filter_type == "fio" or filter_type == "fio_short":
         collection = collection.filter(client__individual__family__istartswith=family,
                                        client__individual__name__istartswith=name,
                                        client__individual__patronymic__istartswith=twoname,

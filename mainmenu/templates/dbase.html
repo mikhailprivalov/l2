@@ -1374,7 +1374,9 @@
                         <div class="sk-circle11 sk-circle"></div>
                         <div class="sk-circle12 sk-circle"></div>
                     </div>
-                    <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">ЗАГРУЗКА...</span>
+                    {% verbatim %}
+                    <span style="color: #fff; font-size: 14pt;font-weight: 200;margin-left: 10px;vertical-align: middle;display: inline-block">{{ loadingLabel.toUpperCase() }}</span>
+                    {% endverbatim %}
                 </div>
             </div>
         </nav>
@@ -1387,6 +1389,7 @@
             {{ org_title }} | ЛИС | <span class='version'>{{ VERSION }}</span>
         </div>
     {% endblock %}
+{#    <loading :show="inLoading" :label="loadingLabel" :overlay="false"></loading>#}
 </div>
 <ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none;z-index: 100000">
     <li class="context-st"><a class="noclick" onclick="return false"><label>Число:<input type="number" value="10"

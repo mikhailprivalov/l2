@@ -1,8 +1,11 @@
+import datetime
+import re
 from collections import defaultdict
 
 import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -14,8 +17,11 @@ import directions.models as directions
 import users.models as users
 from api.to_astm import get_iss_astm
 from barcodes.views import tubes
+from clients.models import CardBase, Individual, Card
 from directory.models import AutoAdd
+from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from rmis_integration.client import Client
 from slog import models as slog
 
 
@@ -269,10 +275,11 @@ def departments(request):
     can_edit = request.user.is_superuser or request.user.doctorprofile.has_group(
         'Создание и редактирование пользователей')
     if request.method == "GET":
-        return JsonResponse({"departments": [{"pk": x.pk, "title": x.title, "type": str(x.p_type), "updated": False} for
-                                             x in Podrazdeleniya.objects.all().order_by("pk")],
-                             "can_edit": can_edit,
-                             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
+        return JsonResponse(
+            {"departments": [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
+                             x in Podrazdeleniya.objects.all().order_by("pk")],
+             "can_edit": can_edit,
+             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
     elif can_edit:
         ok = False
         message = ""
@@ -307,8 +314,14 @@ def departments(request):
 def bases(request):
     from clients.models import CardBase
     return JsonResponse({"bases": [
-        {"pk": x.pk, "title": x.title, "code": x.short_title, "hide": x.hide, "history_number": x.history_number} for x
-        in CardBase.objects.all()]})
+        {"pk": x.pk,
+         "title": x.title,
+         "code": x.short_title,
+         "hide": x.hide,
+         "history_number": x.history_number,
+         "fin_sources": [{"pk": y.pk, "title": y.title} for y in
+                         directions.IstochnikiFinansirovaniya.objects.filter(base=x)]
+         } for x in CardBase.objects.all()]})
 
 
 class ResearchesTemplates(View):
@@ -348,7 +361,7 @@ class Researches(View):
                 {"pk": r.pk,
                  "onlywith": -1 if not r.onlywith else r.onlywith.pk,
                  "department_pk": r.podrazdeleniye.pk,
-                 "title": r.title,
+                 "title": r.get_title(),
                  "comment_template": "-1" if not r.comment_variants else r.comment_variants.pk,
                  "autoadd": autoadd,
                  "addto": addto,
@@ -362,11 +375,140 @@ class Researches(View):
 
 
 def current_user_info(request):
-    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "", "department": {"pk": -1, "title": ""}, "groups": []}
+    ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
+           "department": {"pk": -1, "title": ""}, "groups": []}
     if ret["auth"]:
         ret["username"] = request.user.username
         ret["fio"] = request.user.doctorprofile.fio
         ret["groups"] = list(request.user.groups.values_list('name', flat=True))
         ret["doc_pk"] = request.user.doctorprofile.pk
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk, "title": request.user.doctorprofile.podrazdeleniye.title}
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
+                             "title": request.user.doctorprofile.podrazdeleniye.title}
     return JsonResponse(ret)
+
+
+@login_required
+def directive_from(request):
+    from users.models import DoctorProfile
+    data = []
+    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
+        d = {"pk": dep.pk,
+             "title": dep.title,
+             "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep,
+                                                                                       user__groups__name="Лечащий врач").order_by(
+                 "fio")]
+             }
+        data.append(d)
+
+    return JsonResponse({"data": data})
+
+
+@login_required
+def patients_search_card(request):
+    objects = []
+    data = []
+    d = json.loads(request.body)
+    card_type = CardBase.objects.get(pk=d['type'])
+    query = d['query'].strip()
+    p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
+    p2 = re.compile(r'^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p3 = re.compile(r'[0-9]{1,15}')
+    pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
+    if re.search(p, query.lower()):
+        initials = query[0:3].upper()
+        btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
+        if not pat_bd.match(btday):
+            return JsonResponse([], safe=False)
+        try:
+            objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
+                                                patronymic__startswith=initials[2], birthday=btday,
+                                                card__base=card_type)
+            if card_type.is_rmis and len(objects) == 0:
+                c = Client()
+                objects = c.patients.import_individual_to_base(
+                    {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday},
+                    fio=True)
+        except ValidationError:
+            objects = []
+    elif re.search(p2, query):
+        split = str(query).split()
+        n = p = ""
+        f = split[0]
+        rmis_req = {"surname": f + "%"}
+        if len(split) > 1:
+            n = split[1]
+            rmis_req["name"] = n + "%"
+        if len(split) > 2:
+            p = split[2]
+            rmis_req["patrName"] = p + "%"
+        if len(split) > 3:
+            btday = split[3].split(".")
+            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+            rmis_req["birthDate"] = btday
+        objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
+                                            patronymic__istartswith=p, card__base=card_type)[:10]
+        if len(split) > 3:
+            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
+                                                patronymic__istartswith=p, card__base=card_type,
+                                                birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
+
+        if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
+            objects = list(objects)
+            try:
+                c = Client()
+                objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
+            except ConnectionError:
+                pass
+
+    if re.search(p3, query) or card_type.is_rmis:
+        resync = True
+        if len(list(objects)) == 0:
+            resync = False
+            try:
+                objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
+                                                    card__base=card_type)
+            except ValueError:
+                pass
+            if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
+                c = Client()
+                objects = c.patients.import_individual_to_base(query)
+            else:
+                resync = True
+        if resync and card_type.is_rmis:
+            c = Client()
+            for o in objects:
+                o.sync_with_rmis(c=c)
+
+    for row in Card.objects.filter(base=card_type, individual__in=objects, is_archive=False).prefetch_related(
+            "individual").distinct():
+        data.append({"type_title": card_type.title,
+                     "num": row.number,
+                     "family": row.individual.family,
+                     "name": row.individual.name,
+                     "twoname": row.individual.patronymic,
+                     "birthday": row.individual.bd(),
+                     "sex": row.individual.sex,
+                     "individual_pk": row.individual.pk,
+                     "pk": row.pk})
+    return JsonResponse({"results": data})
+
+
+@login_required
+@group_required("Лечащий врач", "Оператор лечащего врача")
+def directions_generate(request):
+    result = {"ok": False, "directions": [], "message": ""}
+    if request.method == "POST":
+        p = json.loads(request.body)
+        rc = directions.Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
+                                                                       p.get("diagnos"),
+                                                                       p.get("fin_source"),
+                                                                       p.get("history_num"),
+                                                                       p.get("ofname_pk"),
+                                                                       request.user.doctorprofile,
+                                                                       p.get("researches"),
+                                                                       p.get("comments"))
+        result["ok"] = rc["r"]
+        result["directions"] = json.loads(rc["list_id"])
+        if "message" in rc:
+            result["message"] = rc["message"]
+    return JsonResponse(result)

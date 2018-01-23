@@ -4,10 +4,12 @@ import * as action_types from '../action-types'
 
 const state = {
   data: {},
+  directive_from: []
 }
 
 const getters = {
   user_data: state => state.data,
+  directive_from: state => state.directive_from,
 }
 
 const actions = {
@@ -15,11 +17,18 @@ const actions = {
     const data = await user_point.getCurrentUserInfo()
     commit(mutation_types.SET_USER_DATA, {data})
   },
+  async [action_types.GET_DIRECTIVE_FROM]({commit}) {
+    const directive_from = await user_point.getDirectiveFrom()
+    commit(mutation_types.SET_DIRECTIVE_FROM, {directive_from})
+  },
 }
 
 const mutations = {
   [mutation_types.SET_USER_DATA](state, {data}) {
     state.data = data
+  },
+  [mutation_types.SET_DIRECTIVE_FROM](state, {directive_from}) {
+    state.directive_from = directive_from
   },
 }
 

@@ -12,6 +12,17 @@ const state = {
 const getters = {
   templates: state => state.templates,
   researches: state => state.researches,
+  researches_obj: function (state) {
+    let o = {}
+    for (let k in state.researches) {
+      if (state.researches.hasOwnProperty(k)) {
+        for (let r of state.researches[k]) {
+          o[r.pk] = r
+        }
+      }
+    }
+    return o
+  }
 }
 
 const actions = {

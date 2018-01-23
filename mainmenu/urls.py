@@ -15,6 +15,7 @@ urlpatterns = [
     path('ldap_sync', views.ldap_sync),
     path('directions', views.directions),
     path('directions_ng', login_required(TemplateView.as_view(template_name="dashboard/directions_ng.html"))),
+    path('hosp', views.hosp),
     path('receive/journal_form', views.receive_journal_form),
     path('view_log', views.view_log),
     path('confirm_reset', views.confirm_reset),
