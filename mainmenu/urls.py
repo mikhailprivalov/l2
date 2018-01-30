@@ -13,8 +13,8 @@ urlpatterns = [
     path('from', views.dashboard_from),
     path('create_podr', views.create_pod),
     path('ldap_sync', views.ldap_sync),
-    path('directions', views.directions),
-    path('directions_ng', login_required(TemplateView.as_view(template_name="dashboard/directions_ng.html"))),
+    path('directions_old', views.directions),
+    path('directions', login_required(TemplateView.as_view(template_name="dashboard/directions_ng.html"))),
     path('hosp', views.hosp),
     path('receive/journal_form', views.receive_journal_form),
     path('view_log', views.view_log),
@@ -33,4 +33,5 @@ urlpatterns = [
     path('discharge/search', views.discharge_search),
     path('researches_from_directions', views.researches_from_directions),
     path('cards', views.cards),
+    path('results/paraclinic', views.results_paraclinic),
 ]

@@ -75,6 +75,7 @@
       this.$root.$on('researches-picker:deselect', this.deselect_research_ignore)
       this.$root.$on('researches-picker:deselect_department', this.deselect_department)
       this.$root.$on('researches-picker:deselect_all', this.clear)
+      this.$root.$on('researches-picker:add_research', this.select_research_ignore)
     },
     watch: {
       types() {

@@ -1,10 +1,10 @@
 <template>
   <div class="input-daterange input-group">
     <input type="text" class="input-sm form-control no-context" style="height: 34px;padding: 5px;width: 80px"
-           v-model="dfrom" ref="from" readonly/>
+           ref="from" v-model="dfrom" maxlength="10"/>
     <span class="input-group-addon" style="background-color: #fff;color: #000; height: 34px">&mdash;</span>
     <input type="text" class="input-sm form-control no-context" style="height: 34px;padding: 5px;width: 80px"
-           v-model="dto" ref="to" readonly/>
+           ref="to" v-model="dto" maxlength="10"/>
   </div>
 </template>
 
@@ -20,7 +20,7 @@
     data() {
       return {
         dfrom: '',
-        dto: ''
+        dto: '',
       }
     },
     created() {
@@ -36,8 +36,8 @@
         autoclose: true,
         todayHighlight: true
       }).on('changeDate', () => {
-        vm.dfrom = $(vm.$refs.from).val()
-        vm.to = $(vm.$refs.to).val()
+        vm.$refs.from.dispatchEvent(new Event('input'))
+        vm.$refs.to.dispatchEvent(new Event('input'))
       })
     },
     watch: {
@@ -51,7 +51,7 @@
     methods: {
       emit() {
         this.$emit('input', [this.dfrom, this.dto])
-      }
+      },
     }
   }
 </script>

@@ -1,3 +1,4 @@
+import collections
 import datetime
 import re
 from collections import defaultdict
@@ -6,8 +7,9 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import JsonResponse
-from django.utils import timezone
+from django.utils import timezone, dateformat
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -18,9 +20,11 @@ import users.models as users
 from api.to_astm import get_iss_astm
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card
-from directory.models import AutoAdd
+from directory.models import AutoAdd, Fractions
+from laboratory import settings
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
 
@@ -362,7 +366,8 @@ class Researches(View):
                  "onlywith": -1 if not r.onlywith else r.onlywith.pk,
                  "department_pk": r.podrazdeleniye.pk,
                  "title": r.get_title(),
-                 "comment_template": "-1" if not r.comment_variants else r.comment_variants.pk,
+                 "full_title": r.title,
+                 "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
                  "autoadd": autoadd,
                  "addto": addto,
                  "type": str(r.podrazdeleniye.p_type)
@@ -511,4 +516,324 @@ def directions_generate(request):
         result["directions"] = json.loads(rc["list_id"])
         if "message" in rc:
             result["message"] = rc["message"]
+    return JsonResponse(result)
+
+
+@login_required
+def directions_history(request):
+    import datetime
+    res = {"directions": []}
+    request_data = json.loads(request.body)
+
+    pk = request_data.get("patient", -1)
+    req_status = request_data.get("type", 4)
+    date_start = request_data["date_from"].split(".")
+    date_end = request_data["date_to"].split(".")
+
+    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
+    date_end = datetime.date(int(date_end[2]), int(date_end[1]), int(date_end[0])) + datetime.timedelta(days=1)
+    try:
+        if pk >= 0 or req_status == 4:
+            if req_status != 4:
+                rows = directions.Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
+                                                              client__pk=pk).order_by(
+                    "-data_sozdaniya").prefetch_related()
+            else:
+                rows = directions.Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end),
+                                                                doc_who_create=request.user.doctorprofile)
+                                                              | Q(data_sozdaniya__range=(date_start, date_end),
+                                                                  doc=request.user.doctorprofile)).order_by(
+                    "-data_sozdaniya")
+
+            for napr in rows.values("pk", "data_sozdaniya", "cancel"):
+                iss_list = directions.Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related(
+                    "tubes", "research", "research__podrazdeleniye")
+                if not iss_list.exists():
+                    continue
+                status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
+                has_conf = False
+                researches_list = []
+                researches_pks = []
+                for v in iss_list:
+                    researches_list.append(v.research.title)
+                    researches_pks.append(v.research.pk)
+                    iss_status = 1
+                    if not v.doc_confirmation and not v.doc_save and not v.deferred:
+                        iss_status = 1
+                        if v.tubes.count() == 0:
+                            iss_status = 0
+                        else:
+                            for t in v.tubes.all():
+                                if not t.time_recive:
+                                    iss_status = 0
+                    elif v.doc_confirmation or v.deferred:
+                        iss_status = 2
+                    if v.doc_confirmation and not has_conf:
+                        has_conf = True
+                    status = min(iss_status, status)
+                if status == 2 and not has_conf:
+                    status = 1
+                if req_status in [3, 4] or req_status == status:
+                    res["directions"].append(
+                        {"pk": napr["pk"], "status": -1 if status == 0 and napr["cancel"] else status,
+                         "researches": ' | '.join(researches_list),
+                         "researches_pks": researches_pks,
+                         "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT_SHORT)),
+                         "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
+                         "checked": False})
+    except (ValueError, IndexError) as e:
+        res["message"] = str(e)
+    return JsonResponse(res)
+
+
+@login_required
+def directions_cancel(request):
+    response = {"cancel": False}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    if directions.Napravleniya.objects.filter(pk=pk).exists():
+        direction = directions.Napravleniya.objects.get(pk=pk)
+        direction.cancel = not direction.cancel
+        direction.save()
+        response["cancel"] = direction.cancel
+    return JsonResponse(response)
+
+
+@login_required
+@group_required("Оператор")
+def researches_by_department(request):
+    response = {"researches": []}
+    request_data = json.loads(request.body)
+    department_pk = int(request_data["department"])
+    if department_pk != -1:
+        for research in DResearches.objects.filter(podrazdeleniye__pk=department_pk):
+            response["researches"].append({
+                "pk": research.pk,
+                "title": research.title,
+                "short_title": research.short_title,
+                "preparation": research.preparation,
+                "hide": research.hide,
+                "code": research.code,
+            })
+    return JsonResponse(response)
+
+
+@login_required
+@group_required("Оператор")
+def researches_update(request):
+    response = {"ok": False}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -2)
+    if pk > -2:
+        department_pk = request_data.get("department")
+        title = request_data.get("title").strip()
+        short_title = request_data.get("short_title").strip()
+        code = request_data.get("code").strip()
+        info = request_data.get("info").strip()
+        hide = request_data.get("hide")
+        if len(title) > 0 and Podrazdeleniya.objects.filter(pk=department_pk).exists():
+            department = Podrazdeleniya.objects.filter(pk=department_pk)[0]
+            res = None
+            if pk == -1:
+                res = DResearches(title=title, short_title=short_title, podrazdeleniye=department, code=code,
+                                  is_paraclinic=department.p_type == 3, paraclinic_info=info, hide=hide)
+            elif DResearches.objects.filter(pk=pk).exists():
+                res = DResearches.objects.filter(pk=pk)[0]
+                res.title = title
+                res.short_title = short_title
+                res.podrazdeleniye = department
+                res.code = code
+                res.is_paraclinic = department.p_type == 3
+                res.paraclinic_info = info
+                res.hide = hide
+            if res:
+                res.save()
+                response["ok"] = True
+    return JsonResponse(response)
+
+
+@login_required
+@group_required("Оператор")
+def researches_details(request):
+    response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk")
+    if DResearches.objects.filter(pk=pk).exists():
+        res = DResearches.objects.filter(pk=pk)[0]
+        response["pk"] = res.pk
+        response["department"] = res.podrazdeleniye.pk
+        response["title"] = res.title
+        response["short_title"] = res.short_title
+        response["code"] = res.code
+        response["info"] = res.paraclinic_info or ""
+        response["hide"] = res.hide
+    return JsonResponse(response)
+
+
+@login_required
+def directions_results(request):
+    result = {"ok": False,
+              "direction": {"pk": -1, "doc": "", "date": ""},
+              "client": {},
+              "full": False}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    if directions.Napravleniya.objects.filter(pk=pk).exists():
+        napr = directions.Napravleniya.objects.get(pk=pk)
+        dates = {}
+        for iss in directions.Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
+            if iss.time_save:
+                dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                if dt not in dates.keys():
+                    dates[dt] = 0
+                dates[dt] += 1
+
+        import operator
+        maxdate = ""
+        if dates != {}:
+            maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+
+        iss_list = directions.Issledovaniya.objects.filter(napravleniye=napr)
+        t = 0
+        if not iss_list.filter(doc_confirmation__isnull=True).exists() or iss_list.filter(deferred=False).exists():
+            result["direction"]["pk"] = napr.pk
+            result["full"] = False
+            result["ok"] = True
+            if iss_list.filter(doc_confirmation__isnull=False).exists():
+                result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
+                    0].doc_confirmation.get_fio()
+                if iss_list.filter(doc_confirmation__isnull=True, deferred=False).exists():
+                    result["direction"]["doc"] = result["direction"]["doc"] + " (выполнено не полностью)"
+                else:
+                    result["full"] = True
+            else:
+                result["direction"]["doc"] = "Не подтверждено"
+            result["direction"]["date"] = maxdate
+
+            result["client"]["sex"] = napr.client.individual.sex
+            result["client"]["fio"] = napr.client.individual.fio()
+            result["client"]["age"] = napr.client.individual.age_s(direction=napr)
+            result["client"]["cardnum"] = napr.client.number_with_type()
+            result["client"]["dr"] = napr.client.individual.bd()
+
+            result["results"] = collections.OrderedDict()
+            isses = []
+            for issledovaniye in iss_list.order_by("tubes__id", "research__sort_weight"):
+                if issledovaniye.pk in isses:
+                    continue
+                isses.append(issledovaniye.pk)
+                t += 1
+                kint = "%s_%s_%s_%s" % (t,
+                                        "-1" if not issledovaniye.research.direction else issledovaniye.research.direction.pk,
+                                        issledovaniye.research.sort_weight,
+                                        issledovaniye.research.pk)
+                result["results"][kint] = {"title": issledovaniye.research.title,
+                                           "fractions": collections.OrderedDict(),
+                                           "sort": issledovaniye.research.sort_weight,
+                                           "tube_time_get": ""}
+                if not issledovaniye.deferred or issledovaniye.doc_confirmation:
+                    for isstube in issledovaniye.tubes.all():
+                        if isstube.time_get:
+                            result["results"][kint]["tube_time_get"] = str(
+                                dateformat.format(isstube.time_get, settings.DATE_FORMAT))
+                            break
+
+                    results = directions.Result.objects.filter(issledovaniye=issledovaniye).order_by(
+                        "fraction__sort_weight")  # Выборка результатов из базы
+
+                    n = 0
+                    for res in results:  # Перебор результатов
+                        pk = res.fraction.sort_weight
+                        if not pk or pk <= 0:
+                            pk = res.fraction.pk
+                        if res.fraction.render_type == 0:
+                            if pk not in result["results"][kint]["fractions"].keys():
+                                result["results"][kint]["fractions"][pk] = {}
+
+                            result["results"][kint]["fractions"][pk]["result"] = result_normal(res.value)
+                            result["results"][kint]["fractions"][pk]["title"] = res.fraction.title
+                            result["results"][kint]["fractions"][pk]["units"] = res.fraction.units
+                            refs = res.get_ref(full=True)
+                            ref_m = refs["m"]
+                            ref_f = refs["f"]
+                            if isinstance(ref_m, str):
+                                ref_m = json.loads(ref_m)
+                            if isinstance(ref_f, str):
+                                ref_f = json.loads(ref_f)
+                            result["results"][kint]["fractions"][pk]["ref_m"] = ref_m
+                            result["results"][kint]["fractions"][pk]["ref_f"] = ref_f
+                        else:
+                            try:
+                                tmp_results = json.loads("{}" if not res.value else res.value).get("rows", {})
+                            except Exception:
+                                tmp_results = {}
+
+                            n = 0
+                            for row in tmp_results.values():
+                                n += 1
+                                tmp_pk = "%d_%d" % (pk, n)
+                                if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                    result["results"][kint]["fractions"][tmp_pk] = {}
+                                result["results"][kint]["fractions"][tmp_pk]["title"] = "Выделенная культура"
+                                result["results"][kint]["fractions"][tmp_pk]["result"] = row["title"]
+                                result["results"][kint]["fractions"][tmp_pk]["ref_m"] = {}
+                                result["results"][kint]["fractions"][tmp_pk]["ref_f"] = {}
+                                result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                                for subrow in row["rows"].values():
+                                    if "null" in subrow["value"]:
+                                        continue
+                                    n += 1
+                                    tmp_pk = "%d_%d" % (pk, n)
+                                    if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                        result["results"][kint]["fractions"][tmp_pk] = {}
+                                    result["results"][kint]["fractions"][tmp_pk]["title"] = subrow["title"]
+                                    result["results"][kint]["fractions"][tmp_pk]["result"] = subrow["value"]
+                                    result["results"][kint]["fractions"][tmp_pk]["ref_m"] = {}
+                                    result["results"][kint]["fractions"][tmp_pk]["ref_f"] = {}
+                                    result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+
+                            n += 1
+                            tmp_pk = "%d_%d" % (pk, n)
+                            if tmp_pk not in result["results"][kint]["fractions"].keys():
+                                result["results"][kint]["fractions"][tmp_pk] = {}
+                            result["results"][kint]["fractions"][tmp_pk][
+                                "title"] = "S - чувствителен; R - резистентен; I - промежуточная чувствительность;"
+                            result["results"][kint]["fractions"][tmp_pk]["result"] = ""
+                            result["results"][kint]["fractions"][tmp_pk]["ref_m"] = {}
+                            result["results"][kint]["fractions"][tmp_pk]["ref_f"] = {}
+                            result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                    if issledovaniye.lab_comment and issledovaniye.lab_comment != "":
+                        n += 1
+                        tmp_pk = "%d_%d" % (pk, n)
+                        if tmp_pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][tmp_pk] = {}
+                        result["results"][kint]["fractions"][tmp_pk]["title"] = "Комментарий"
+                        result["results"][kint]["fractions"][tmp_pk]["result"] = issledovaniye.lab_comment.replace("\n",
+                                                                                                                   "<br/>")
+                        result["results"][kint]["fractions"][tmp_pk]["ref_m"] = {}
+                        result["results"][kint]["fractions"][tmp_pk]["ref_f"] = {}
+                        result["results"][kint]["fractions"][tmp_pk]["units"] = ""
+                else:
+                    fr_list = Fractions.objects.filter(research=issledovaniye.research)
+                    for fr in fr_list:
+                        pk = fr.sort_weight
+                        if not pk or pk <= 0:
+                            pk = fr.pk
+                        if pk not in result["results"][kint]["fractions"].keys():
+                            result["results"][kint]["fractions"][pk] = {}
+
+                        result["results"][kint]["fractions"][pk]["result"] = "отложен"  # Значение
+                        result["results"][kint]["fractions"][pk][
+                            "title"] = fr.title  # Название фракции
+                        result["results"][kint]["fractions"][pk][
+                            "units"] = fr.units  # Еденицы измерения
+                        ref_m = {"": ""}  # fr.ref_m
+                        ref_f = {"": ""}  # fr.ref_f
+                        if not isinstance(ref_m, str):
+                            ref_m = json.loads(ref_m)
+                        if not isinstance(ref_f, str):
+                            ref_f = json.loads(ref_f)
+                        result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
+                        result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
+
     return JsonResponse(result)

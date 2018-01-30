@@ -1210,7 +1210,7 @@
                 $results_modal__ct.find('*').css({
                     "lineHeight": 1.15,
                     "fontSize": "12pt",
-                    "fontFamily": "'Times New Roman', 'Liberation Serifs', Times, serif",
+                    "fontFamily": "'Times New Roman', 'Liberation Serif', Times, serif",
                     margin: 0,
                     paddingTop: 2,
                     paddingBottom: 2
@@ -1223,18 +1223,6 @@
                 lock_show_results = false;
                 hl();
             });
-        }
-
-        function clearselection() {
-            if (window.getSelection) {
-                if (window.getSelection().empty) {  // Chrome
-                    window.getSelection().empty();
-                } else if (window.getSelection().removeAllRanges) {  // Firefox
-                    window.getSelection().removeAllRanges();
-                }
-            } else if (document.selection) {  // IE?
-                document.selection.empty();
-            }
         }
 
         function sync(notfull) {

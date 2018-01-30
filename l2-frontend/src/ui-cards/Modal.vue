@@ -1,7 +1,7 @@
 <template>
   <transition name="modal">
     <div class="modal-mask">
-      <div class="panel panel-flt" style="min-width: 30%;">
+      <div class="panel panel-flt" style="align-self: flex-start;margin-top: 15px;min-width: 30%;">
         <div class="panel-heading">
           <h3 class="panel-title">
             <slot name="header">
@@ -10,7 +10,7 @@
             <button type="button" class="close" @click="$emit('close')">&times;</button>
           </h3>
         </div>
-        <div class="panel-body">
+        <div class="panel-body" :class="{white_bg: whiteBg === 'true'}">
           <slot name="body">
             default body
           </slot>
@@ -31,11 +31,21 @@
     props: {
       'show-footer': {
         required: false,
-        default: "false"
+        default: 'false'
+      },
+      'white-bg': {
+        required: false,
+        default: 'false'
       }
     }
   }
 </script>
+
+<style scoped>
+  .white_bg {
+    background-color: #fff;
+  }
+</style>
 
 <style>
   .modal-mask {
@@ -50,6 +60,7 @@
     align-items: center;
     justify-content: center;
     transition: opacity .3s ease;
+    overflow: auto;
   }
 
   .page-header {

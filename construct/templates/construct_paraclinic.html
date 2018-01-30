@@ -1,11 +1,12 @@
 {% extends "dbase.html" %}
-{% block title %}Направления{% endblock %}
+{% block title %}Конструктор параклинических исследований{% endblock %}
+
 {% block container %}container-fluid{% endblock %}
 
 {% load static %}
 
 {% block content %}
-    <directions/>
+    <construct-paraclinic style="position: absolute;top: 36px; right: 0; bottom: 0; left: 0;"/>
 {% endblock %}
 
 {% block head_cn %}
@@ -22,10 +23,12 @@
         .container-fluid {
             height: 100%;
             width: 100%;
+            position: relative;
         }
 
         .navbar {
-            margin-bottom: 3px;
+            margin-bottom: 0;
+            box-shadow: none;
         }
     </style>
 {% endblock %}

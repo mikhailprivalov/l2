@@ -1,32 +1,107 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <date-range style="width: 186px;" v-model="date_range"/>
+      <div style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
+      flex: 1;margin: 0;font-size: 12px;width: 87px;color:#fff">
+        <span
+          style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br/>направления:</span>
+      </div>
+      <div style="width: 186px;display: inline-block;vertical-align: top">
+        <date-range v-model="date_range"/>
+      </div>
       <div class="top-inner">
-        <a href="#" @click.prevent="select_type(row.pk)" class="top-inner-select"
-           :class="{ active: row.pk === active_type}"
-           v-for="row in types" :title="row.title"><span>{{ row.title }}</span></a>
+        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+                style="text-align: left!important;border-radius: 0;width: 100%">
+          <span class="caret"></span> {{active_type_obj.title}}
+        </button>
+        <ul class="dropdown-menu">
+          <li><a v-if="row.pk !== active_type" href="#" @click.prevent="select_type(row.pk)" v-for="row in types"
+                 :title="row.title">{{ row.title }}</a></li>
+        </ul>
+        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;" title="Обновить"
+                @click="load_history">
+          <i class="glyphicon glyphicon-refresh"></i>
+        </button>
       </div>
     </div>
     <div class="content-picker">
+      <table class="table table-responsive table-bordered"
+             style="table-layout: fixed;margin-bottom: 0;position:sticky;top:0;background-color: #fff">
+        <colgroup>
+          <col width="70">
+          <col width="66">
+          <col>
+          <col width="65">
+          <col width="150">
+          <col width="28">
+        </colgroup>
+        <thead>
+        <tr>
+          <th class="text-center">Дата</th>
+          <th>№ напр.</th>
+          <th>Исследования</th>
+          <th class="text-center">Статус</th>
+          <th></th>
+          <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
+        </tr>
+        </thead>
+      </table>
+      <table class="table table-responsive table-bordered no-first-border-top"
+             style="table-layout: fixed;margin-bottom: 0">
+        <colgroup>
+          <col width="66">
+          <col width="70">
+          <col>
+          <col width="65">
+          <col width="150">
+          <col width="28">
+        </colgroup>
+        <tbody>
+        <tr v-if="directions.length === 0 && is_created">
+          <td class="text-center" colspan="6">Не найдено</td>
+        </tr>
+        <tr v-if="directions.length === 0 && !is_created">
+          <td class="text-center" colspan="6">Загрузка...</td>
+        </tr>
+        <tr v-for="row in directions">
+          <td class="text-center">{{row.date}}</td>
+          <td>{{row.pk}}</td>
+          <td class="researches" :title="row.researches">{{row.researches}}</td>
+          <td class="text-center" :title="statuses[row.status]" :class="['status-' + row.status]">
+            <strong>{{row.status}}</strong></td>
+          <td class="button-td">
+            <div class="button-td-inner">
+              <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
+              <button class="btn btn-blue-nb" v-else @click="show_results(row.pk)">Результаты</button>
+              <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
+            </div>
+          </td>
+          <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
+        </tr>
+        </tbody>
+      </table>
     </div>
     <div class="bottom-picker">
-      <div class="dropup" style="display: inline-block;width: 215px">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="text-align: right!important;border-radius: 0">
-          <span class="caret"></span> Действие с отмеченными
-        </button>
-        <ul class="dropdown-menu">
-          <li><a href="#" @click.prevent>Повтор отправки результатов в РМИС</a></li>
-          <li><a href="#" @click.prevent>Повтор отправки направлений в РМИС</a></li>
-          <li><a href="#" @click.prevent>Скопировать исследования для назначения</a></li>
-          <li><a href="#" @click.prevent>Печать результатов</a></li>
-          <li><a href="#" @click.prevent>Печать штрих-кодов</a></li>
-          <li><a href="#" @click.prevent>Печать направлений</a></li>
-        </ul>
+      <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
       </div>
       <div class="bottom-inner">
-        <div>Направлений отмечено: {{checked.length}}</div>
+        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+                  style="text-align: right!important;border-radius: 0;width: 100%">
+            Действие с отмеченными <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <!--<li><a href="#" @click.prevent="selected_do('resend_results_rmis')">Повтор отправки результатов в РМИС</a>
+            </li>
+            <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
+              РМИС</a></li>-->
+            <li><a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
+            </li>
+            <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
+            <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
+            <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -34,10 +109,18 @@
 
 <script>
   import DateRange from './ui-cards/DateRange'
+  import directions_point from './api/directions-point'
+  import * as action_types from './store/action-types'
 
   export default {
     components: {DateRange},
     name: 'directions-history',
+    props: {
+      patient_pk: {
+        type: Number,
+        default: -1
+      }
+    },
     data() {
       return {
         date_range: [getFormattedDate(today), getFormattedDate(today)],
@@ -49,18 +132,151 @@
           {pk: 4, title: 'Созданы пользователем'}
         ],
         active_type: 3,
-        checked: []
+        checked_obj: {},
+        is_created: false,
+        directions: [],
+        checked: [],
+        all_checked: false,
+        statuses: {
+          '-1': 'Направление отменено',
+          '0': 'Направление только выписано',
+          '1': 'Материал в лаборатории',
+          '2': 'Результаты подтверждены',
+        }
       }
     },
+    computed: {
+      active_type_obj() {
+        for (let row of this.types) {
+          if (row.pk === this.active_type) {
+            return row
+          }
+        }
+        return {}
+      },
+    },
+    mounted() {
+      this.is_created = true
+      this.load_history()
+    },
+    created() {
+      this.$root.$on('researches-picker:directions_created', this.load_history)
+    },
     methods: {
+      show_results(pk) {
+        this.$root.$emit('show_results', pk)
+      },
+      print_direction(pk) {
+        this.$root.$emit('print:directions', [pk])
+      },
+      cancel_direction(pk) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.cancelDirection(pk).then((data) => {
+          for (let dir of vm.directions) {
+            if (dir.pk === pk) {
+              dir.cancel = data.cancel
+              if (dir.status === -1 && !dir.cancel) {
+                dir.status = 0
+              } else if (dir.status === 0 && dir.cancel) {
+                dir.status = -1
+              }
+              break
+            }
+          }
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+
+      },
+      selected_do(type) {
+        switch (type) {
+          case 'resend_results_rmis':
+            break
+          case 'resend_directions_rmis':
+            break
+          case 'copy_researches':
+            for (let dir of this.directions) {
+              if (this.in_checked(dir.pk)) {
+                for (let pk of dir.researches_pks) {
+                  this.$root.$emit('researches-picker:add_research', pk)
+                }
+              }
+            }
+            break
+          case 'print_results':
+            this.$root.$emit('print:results', this.checked)
+            break
+          case 'print_barcodes':
+            this.$root.$emit('print:barcodes', this.checked)
+            break
+          default:
+            this.$root.$emit('print:directions', this.checked)
+            break
+        }
+      },
       select_type(pk) {
         this.active_type = pk
+      },
+      load_history() {
+        if (!this.is_created)
+          return
+        this.is_created = false
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        vm.directions = []
+        vm.all_checked = false
+        directions_point.getHistory(this.active_type, this.patient_pk, this.date_range[0], this.date_range[1]).then((data) => {
+          vm.directions = data.directions
+        }).finally(() => {
+          vm.is_created = true
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      in_checked(pk) {
+        return this.checked.indexOf(pk) !== -1
+      },
+      sync_check(pk, e) {
+        let v = e.target.checked
+        if (!v) {
+          this.checked = this.checked.filter(e => e !== pk)
+        }
+        else if (!this.in_checked(pk)) {
+          this.checked.push(pk)
+        }
+      }
+    },
+    watch: {
+      active_type() {
+        this.load_history()
+      },
+      patient_pk() {
+        this.load_history()
+      },
+      date_range() {
+        this.load_history()
+      },
+      all_checked() {
+        for (let row of this.directions) {
+          row.checked = this.all_checked
+        }
+      },
+      directions: {
+        handler() {
+          this.checked = []
+          for (let row of this.directions) {
+            if (row.checked) {
+              this.checked.push(row.pk)
+            }
+          }
+        },
+        deep: true
       }
     }
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 
   .top-picker, .bottom-picker {
     height: 34px;
@@ -72,21 +288,24 @@
 
   .top-picker {
     top: 0;
+    white-space: nowrap;
+
+    /deep/ {
+      input {
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid #AAB2BD;
+        background: #fff;
+      }
+
+      .input-group-addon {
+        border: 1px solid #AAB2BD;
+        border-top: none;
+      }
+    }
   }
 
-  .top-picker /deep/ input {
-    border-radius: 0;
-    border: none;
-    border-bottom: 1px solid #AAB2BD;
-    background: #fff;
-  }
-
-  .top-picker /deep/ .input-group-addon {
-    border: 1px solid #AAB2BD;
-    border-top: none;
-  }
-
-  .top-inner, .content-picker, .content-none, .bottom-inner {
+  .content-picker, .content-none, .bottom-inner {
     display: flex;
     flex-wrap: wrap;
     justify-content: stretch;
@@ -107,60 +326,16 @@
 
   .top-inner {
     position: absolute;
-    left: 186px;
+    left: 278px;
     top: 0;
     right: 0;
     height: 34px;
-  }
-
-  .top-inner-select, .research-select {
-    align-self: stretch;
+    overflow: visible;
     display: flex;
-    align-items: center;
-    padding: 1px 2px 1px;
-    color: #000;
-    background-color: #fff;
-    text-decoration: none;
-    transition: .15s linear all;
-    cursor: pointer;
-    flex: 1;
-    margin: 0;
-    font-size: 12px;
-    min-width: 0;
-  }
-
-  .top-inner-select {
-    background-color: #AAB2BD;
-    color: #fff
-  }
-
-  .research-select {
-    flex: 0 1 auto;
-    width: 25%;
-    height: 34px;
-    border: 1px solid #6C7A89 !important;
-  }
-
-  .top-inner-select.active, .research-select.active {
-    background: #049372 !important;
-    color: #fff;
-  }
-
-  .top-inner-select > span, .research-select span {
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: keep-all;
-    max-height: 2.2em;
-    line-height: 1.1em;
-  }
-
-  .top-inner-select:hover {
-    background-color: #434a54;
-  }
-
-  .research-select:hover {
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: space-between;
   }
 
   .content-picker, .content-none {
@@ -174,6 +349,8 @@
 
   .bottom-picker {
     bottom: 0;
+    display: flex;
+    align-items: center;
   }
 
   .bottom-inner {
@@ -181,11 +358,96 @@
     color: #fff;
     height: 34px;
     right: 0;
-    left: 215px;
+    left: 155px;
     top: 0;
     justify-content: flex-end;
     align-content: center;
     align-items: center;
-    padding-right: 5px;
+    overflow: visible;
+  }
+
+  th {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  td:not(.nopd):not(.button-td), th:not(.nopd):not(.button-td) {
+    padding: 2px !important;
+  }
+
+  .nopd {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .no-first-border-top {
+    border-top: none;
+    border-bottom: none;
+
+    tr {
+      &:first-child {
+        border-top: none;
+
+        td {
+          border-top: none;
+        }
+      }
+
+      td:first-child {
+        border-left: none;
+      }
+
+      td:last-child {
+        border-right: none;
+      }
+    }
+  }
+
+  .status--1 {
+    color: #F4D03F
+  }
+
+  .status-0 {
+    color: #CF3A24
+  }
+
+  .status-1 {
+    color: #4B77BE
+  }
+
+  .status-2 {
+    color: #049372
+  }
+
+  .researches {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+  }
+
+  .button-td {
+    padding: 0 !important;
+    text-align: right;
+
+    .button-td-inner {
+      display: flex;
+      height: 100%;
+      min-height: 24px;
+      width: 100%;
+      justify-content: flex-end;
+      align-items: stretch;
+    }
+
+    .btn {
+      margin: 0;
+      border-radius: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      padding: 2px;
+      border: none !important;
+      flex: 0 0 50%;
+    }
   }
 </style>

@@ -33,7 +33,7 @@ def dashboard(request):  # Представление панели управл�
         groups = [str(x) for x in request.user.groups.all()]
         pages = [
             {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/directions_ng", "title": "Направления NG", "nt": False, "access": []},
+            {"url": "/mainmenu/directions_old", "title": "Направления (OLD)", "nt": False, "access": []},
             {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
             {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
@@ -41,6 +41,7 @@ def dashboard(request):  # Представление панели управл�
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/mainmenu/results/paraclinic", "title": "Ввод результатов параклиники", "nt": False, "access": ["Врач параклиники"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": []},
             {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
             {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
@@ -825,3 +826,9 @@ def v500(request, exception=None):
 @group_required("Госпитализация")
 def hosp(request):
     return render(request, 'dashboard/hosp.html')
+
+
+@login_required
+@group_required("Врач параклиники")
+def results_paraclinic(request):
+    return render(request, 'dashboard/results_paraclinic.html')

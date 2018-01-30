@@ -22,4 +22,15 @@ async function getResearches() {
   return {researches: {}}
 }
 
-export default {getTemplates, getResearches}
+async function getResearchesByDepartment(department) {
+  try {
+    const response = await HTTP.post('researches/by-department', {department})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {researches: []}
+}
+
+export default {getTemplates, getResearches, getResearchesByDepartment}

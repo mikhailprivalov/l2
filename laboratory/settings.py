@@ -122,6 +122,7 @@ CACHES = {
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
+DATE_FORMAT_SHORT = 'd.m.y'
 TIME_FORMAT = 'd.m.Y'
 USE_TZ = True
 TIME_ZONE = 'Asia/Irkutsk'

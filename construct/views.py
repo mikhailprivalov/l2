@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -42,7 +43,7 @@ def tubes(request):
 @group_required("Оператор")
 def directions_group(request):
     """ Группировка по направлениям """
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+    labs = Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.LABORATORY) | Q(p_type=Podrazdeleniya.PARACLINIC))
     return render(request, 'construct_directions_group.html', {"labs": labs})
 
 
@@ -112,3 +113,10 @@ def refs(request):
             fraction.default_ref = None if default == -1 else directory.References.objects.get(pk=default)
             fraction.save()
         return JsonResponse({"ok": True})
+
+
+@login_required
+@group_required("Оператор")
+def researches_paraclinic(request):
+    return render(request, 'construct_paraclinic.html')
+

@@ -1,11 +1,11 @@
 {% extends "dbase.html" %}
-{% block title %}Группировка анализов по направлениям{% endblock %}
+{% block title %}Группировка исследований по направлениям{% endblock %}
 
 {% block content %}
     <ol class="breadcrumb breadcrumb-arrow">
         <li><a href="/mainmenu/">Панель управления</a></li>
         <li><a href="/construct/menu">Конструктор</a></li>
-        <li class="active"><span>Группировка анализов по направлениям</span></li>
+        <li class="active"><span>Группировка исследований по направлениям</span></li>
     </ol>
     <div class="row" style="padding: 0;margin: 0">
         <div class="col-xs-4" style="padding: 5px">
@@ -267,8 +267,8 @@
                     selected["researches"][values] = false;
                     console.log(selected);
                 },
-                selectableHeader: "<div class='custom-header'>Доступные для группировки анализы</div>",
-                selectionHeader: "<div class='custom-header'>Анализы, выбраные для группировки</div>"
+                selectableHeader: "<div class='custom-header'>Доступные для группировки исследования</div>",
+                selectionHeader: "<div class='custom-header'>Исследования, выбраные для группировки</div>"
             });
             resize();
             loadreslist();

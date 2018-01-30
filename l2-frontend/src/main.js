@@ -11,6 +11,8 @@ new Vue({
     'JournalGetMaterialModal': () => import('./JournalGetMaterialModal'),
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'Directions': () => import('./Directions'),
+    'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
+    'ResultsParaclinic': () => import('./ResultsParaclinic'),
     // loading,
   },
   data: {
@@ -72,7 +74,19 @@ new Vue({
       vm.$store.dispatch(action_types.DEC_LOADING).then()
     })
 
-    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num}) => {
+    this.$root.$on('print:directions', (pks) => {
+      window.open('/directions/pdf?napr_id=' + JSON.stringify(pks), '_blank')
+    })
+
+    this.$root.$on('print:barcodes', (pks) => {
+      window.open('/barcodes/tubes?napr_id=' + JSON.stringify(pks), '_blank')
+    })
+
+    this.$root.$on('print:results', (pks) => {
+      window.open('/results/preview?pk=' + JSON.stringify(pks), '_blank')
+    })
+
+    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments}) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
         return
@@ -92,20 +106,21 @@ new Vue({
       if (!operator && history_num !== '')
         history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches, {}).then(data => {
+      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches, comments).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 
         if (data.ok) {
           if (type === 'direction') {
-            window.open('/directions/pdf?napr_id=' + JSON.stringify(data.directions), '_blank')
+            this.$root.$emit('print:directions', data.directions)
           }
           if (type === 'barcode') {
-            window.open('/barcodes/tubes?napr_id=' + JSON.stringify(data.directions), '_blank')
+            this.$root.$emit('print:barcodes', data.directions)
           }
           if (type === 'just-save' || type === 'barcode') {
             okmessage('Направления созданы', 'Номера: ' + data.directions.join(', '))
           }
           this.$root.$emit('researches-picker:clear_all')
+          this.$root.$emit('researches-picker:directions_created')
         } else {
           errmessage('Направления не созданы', data.message)
         }

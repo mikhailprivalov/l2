@@ -61,9 +61,9 @@
       </tr>
       </tbody>
     </table>
-    <div v-if="search_results === 'true' && loaded" style="text-align: right;margin-top: 5px;"><a
-      class="btn btn-blue-nb btn-sm" href="#">Поиск результатов по видам исследований</a></div>
-    <modal v-if="showModal" @close="showModal = false" show-footer="true">
+    <!--<div v-if="search_results === 'true' && loaded" style="text-align: right;margin-top: 5px;"><a
+      class="btn btn-blue-nb btn-sm" href="#">Поиск результатов по видам исследований</a></div>-->
+    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
         <table class="table table-responsive table-bordered table-hover"
@@ -156,7 +156,8 @@
         founded_cards: [],
         selected_card: {},
         loaded: false,
-        history_num: ''
+        history_num: '',
+        search_after_loading: false
       }
     },
     created() {
@@ -180,6 +181,7 @@
           vm.directive_department = vm.local_directive_departments[0].pk.toString()
         }
 
+        this.check_base()
       }).finally(() => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
       })
@@ -189,8 +191,9 @@
           this.check_base()
         })
       }
-
-      this.check_base()
+      this.$root.$on('search', () => {
+        vm.search()
+      })
     },
     watch: {
       bases() {
@@ -219,6 +222,11 @@
       },
       history_num() {
         this.emit_input()
+      },
+      inLoading() {
+        if (!this.inLoading && this.search_after_loading) {
+          this.search()
+        }
       }
     },
     computed: {
@@ -300,20 +308,38 @@
       }
     },
     methods: {
+      hide_modal() {
+        this.showModal = false
+        this.$refs.modal.$el.style.display = 'none'
+      },
       select_base(pk) {
         this.base = pk
         this.emit_input()
         this.search()
       },
       select_card(index) {
-        this.showModal = false
+        this.hide_modal()
         this.selected_card = this.founded_cards[index]
         this.emit_input()
         this.loaded = true
       },
       check_base() {
         if (this.base === -1 && this.bases.length > 0) {
-          this.base = this.bases[0].pk
+          let params = new URLSearchParams(window.location.search)
+          let rmis_uid = params.get('rmis_uid')
+          if (rmis_uid) {
+            window.history.pushState('', '', window.location.href.split('?')[0])
+            for (let row of this.bases) {
+              if (row.code === 'Р') {
+                this.base = row.pk
+                this.query = rmis_uid
+                this.search_after_loading = true
+                break
+              }
+            }
+          } else {
+            this.base = this.bases[0].pk
+          }
           this.emit_input()
         }
       },
@@ -321,29 +347,47 @@
         let pk = -1
         if ('pk' in this.selected_card)
           pk = this.selected_card.pk
-        this.$emit('input', {pk: pk, base: this.selected_base, ofname: parseInt(this.directive_doc), operator: this.is_operator, history_num: this.history_num})
+        this.$emit('input', {
+          pk: pk,
+          base: this.selected_base,
+          ofname: parseInt(this.directive_doc),
+          operator: this.is_operator,
+          history_num: this.history_num
+        })
       },
       clear() {
-        this.emit_input()
         this.loaded = false
         this.selected_card = {}
         this.history_num = ''
+        this.founded_cards = []
+        this.emit_input()
       },
       search() {
+        this.search_after_loading = false
         if (!this.query_valid || this.inLoading)
           return
+        $('input').each(function () {
+          $(this).trigger('blur')
+        })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
         patients_point.searchCard(this.base, this.query).then((result) => {
-          vm.founded_cards = result.results
           vm.clear()
-          if (vm.founded_cards.length > 1) {
-            vm.showModal = true
-          } else if (vm.founded_cards.length === 1) {
-            vm.select_card(0)
+          if (result.results) {
+            vm.founded_cards = result.results
+            if (vm.founded_cards.length > 1) {
+              vm.$refs.modal.$el.style.display = 'flex'
+              vm.showModal = true
+            } else if (vm.founded_cards.length === 1) {
+              vm.select_card(0)
+            } else {
+              errmessage('Не найдено', 'Карт по такому запросу не найдено')
+            }
           } else {
-            errmessage('Не найдено', 'Карт по такому запросу не найдено')
+            errmessage('Ошибка на сервере')
           }
+        }).catch((error) => {
+          errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
           vm.$store.dispatch(action_types.DISABLE_LOADING).then()
         })

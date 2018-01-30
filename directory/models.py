@@ -54,8 +54,8 @@ class Researches(models.Model):
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
     short_title = models.CharField(max_length=50, default='', blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС')
-    preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию')
+    quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС', blank=True)
+    preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию', blank=True)
     edit_mode = models.IntegerField(default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
     no_attach = models.IntegerField(default=0, null=True, blank=True,
@@ -67,6 +67,8 @@ class Researches(models.Model):
     onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
+    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
+    paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

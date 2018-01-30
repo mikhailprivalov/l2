@@ -5,6 +5,7 @@ from directory import views as d_views
 urlpatterns = [
     path('menu', views.menu),
     path('researches', views.researches),
+    path('researches-paraclinic', views.researches_paraclinic),
     path('researches/tune', views.researches_tune),
     path('researches/get_details', d_views.researches_get_details),
     path('tubes', views.tubes),

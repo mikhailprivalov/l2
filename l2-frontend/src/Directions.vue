@@ -10,7 +10,7 @@
     </div>
     <div id="cont_right" class="split split-horizontal">
       <div id="right_top" class="split content" style="padding: 0;">
-        <directions-history/>
+        <directions-history :patient_pk="selected_card.pk"/>
       </div>
       <div id="right_bottom" class="split content" style="padding: 0;">
         <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
@@ -18,6 +18,7 @@
                              :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
       </div>
     </div>
+    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" />
   </div>
 </template>
 
@@ -26,20 +27,34 @@
   import PatientPicker from './PatientPicker'
   import SelectedResearches from './SelectedResearches'
   import DirectionsHistory from './DirectionsHistory'
+  import ResultsViewer from './ResultsViewer'
 
   export default {
     components: {
       PatientPicker,
       ResearchesPicker,
       SelectedResearches,
-      DirectionsHistory
+      DirectionsHistory,
+      ResultsViewer,
     },
     name: 'directions',
     data() {
       return {
         selected_card: {pk: -1, base: {}, ofname: -1, operator: false, history_num: ''},
-        selected_researches: []
+        selected_researches: [],
+        show_results_pk: -1,
       }
+    },
+    created() {
+      let vm = this
+
+      this.$root.$on('show_results', (pk) => {
+        vm.show_results_pk = pk
+      })
+
+      this.$root.$on('hide_results', () => {
+        vm.show_results_pk = -1
+      })
     },
     mounted() {
       let vm = this
@@ -87,5 +102,7 @@
 </script>
 
 <style scoped>
-
+  #right_top {
+    overflow: visible !important;
+  }
 </style>

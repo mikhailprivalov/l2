@@ -409,7 +409,7 @@
             ).done(function (data) {
                 hl()
                 com = false
-                if (data && data.direction && data.direction.pk) {
+                if (data && data.direction && data.direction.pk && data.direction.type === 2) {
 
                     dnum = data.direction.pk
                     $('#success-b').show()
@@ -472,7 +472,10 @@
                     $('input[name=complete-res]').first().focus()
                 }
                 else {
-                    $('#dir-num').html('Не найдено')
+                    if(data.direction && data.direction.type === 3)
+                        $('#dir-num').html(`Направление ${q} не в лабораторию`)
+                    else
+                        $('#dir-num').html('Не найдено')
                     $('#date').html('')
                     $('#fio').html('')
                     $('#sx').html('')
