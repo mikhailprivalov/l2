@@ -2,7 +2,7 @@
   <div ref="root">
     <div id="cont_left" class="split split-horizontal">
       <div id="left_top" class="split content">
-        <patient-picker v-model.int="selected_card" directive_from_need="true" search_results="true"/>
+        <patient-picker v-model="selected_card" directive_from_need="true" search_results="true"/>
       </div>
       <div id="left_bottom" class="split content" style="padding: 0;">
         <researches-picker v-model="selected_researches"/>

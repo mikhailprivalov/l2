@@ -39,7 +39,7 @@
         <td class="table-header-row">Пол:</td>
         <td class="table-content-row">{{selected_card.sex}}</td>
       </tr>
-      <tr>
+      <tr v-if="history_n === 'true'">
         <td class="table-header-row">
           <span class="hospital" style="display: block;line-height: 1.2;">Номер истории:</span>
         </td>
@@ -117,6 +117,10 @@
       },
       search_results: {
         default: 'false',
+        type: String
+      },
+      history_n: {
+        default: 'true',
         type: String
       },
       value: {}
