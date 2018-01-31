@@ -2921,8 +2921,9 @@ def results_search_directions(request):
     if filter_type == "fio" or filter_type == "fio_short":
         collection = collection.filter(client__individual__family__istartswith=family,
                                        client__individual__name__istartswith=name,
-                                       client__individual__patronymic__istartswith=twoname,
-                                       client__individual__birthday=bdate)
+                                       client__individual__patronymic__istartswith=twoname)
+        if bdate != "":
+            collection = collection.filter(client__individual__birthday=bdate)
 
     if filter_type == "card_number":
         if type_patient != -1:
