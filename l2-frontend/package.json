@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.17.1",
     "es-cookie": "^1.1.1",
+    "promise.prototype.finally": "^3.1.0",
     "style-loader": "^0.19.1",
     "vue": "^2.5.11",
     "vue-full-loading": "^1.0.3",

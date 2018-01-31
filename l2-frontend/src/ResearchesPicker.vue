@@ -263,6 +263,7 @@
     top: 0;
     right: 0;
     height: 34px;
+    align-content: stretch;
   }
 
   .top-inner-select, .research-select {
