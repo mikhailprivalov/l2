@@ -27,6 +27,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment
 
 
 def translit(locallangstring):
@@ -836,4 +837,10 @@ def directions_results(request):
                         result["results"][kint]["fractions"][pk]["ref_m"] = ref_m  # Референсы М
                         result["results"][kint]["fractions"][pk]["ref_f"] = ref_f  # Референсы Ж
 
+    return JsonResponse(result)
+
+
+@group_required("Оформление статталонов")
+def statistics_tickets_types(request):
+    result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")], "result": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")]}
     return JsonResponse(result)

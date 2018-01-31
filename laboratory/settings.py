@@ -47,6 +47,7 @@ INSTALLED_APPS = (
     # 'silk',
     'oauth2_provider',
     'corsheaders',
+    'statistics_tickets',
     'webpack_loader',
 )
 MIDDLEWARE = [

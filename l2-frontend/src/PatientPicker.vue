@@ -185,7 +185,7 @@
           vm.directive_department = vm.local_directive_departments[0].pk.toString()
         }
 
-        this.check_base()
+        vm.check_base()
       }).finally(() => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
       })
