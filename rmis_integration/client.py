@@ -738,7 +738,7 @@ class Directions(BaseRequester):
             thread.start()
         [t.join() for t in threads]
         threads = []
-        to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).distinct()
+        to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date, rmis_resend_services=True).exclude(rmis_number='NONERMIS').distinct()
         for d in to_upload:
             thread = threading.Thread(target=upload_services, args=(self, d, stdout))
             threads.append(thread)
