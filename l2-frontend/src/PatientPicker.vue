@@ -179,6 +179,7 @@
           for (let dep of vm.local_directive_departments) {
             if (dep.pk === vm.$store.getters.user_data.department.pk) {
               vm.directive_department = dep.pk + ''
+              vm.check_base()
               return
             }
           }
