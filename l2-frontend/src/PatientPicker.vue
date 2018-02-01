@@ -341,6 +341,9 @@
                 break
               }
             }
+            if (this.base === -1) {
+              this.base = this.bases[0].pk
+            }
           } else {
             this.base = this.bases[0].pk
           }
@@ -370,6 +373,7 @@
         this.search_after_loading = false
         if (!this.query_valid || this.inLoading)
           return
+        this.check_base()
         $('input').each(function () {
           $(this).trigger('blur')
         })

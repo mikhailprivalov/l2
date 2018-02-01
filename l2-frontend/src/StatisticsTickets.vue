@@ -4,7 +4,7 @@
       <div ref="tl" class="split content">
         <patient-picker v-model="selected_card" directive_from_need="false" search_results="false" history_n="false"/>
       </div>
-      <div ref="tr" class="split content">
+      <div ref="tr" class="split content" style="overflow: visible;display: flex;padding-bottom: 0">
         <statistics-ticket-creator :base="selected_card.base" :card_pk="selected_card.pk" />
       </div>
     </div>
@@ -43,7 +43,7 @@
           gutterSize: 5,
           cursor: 'row-resize',
           minSize: 200,
-          sizes: [40, 60],
+          sizes: [45, 55],
           onDrag: vm.resize
         })
 
