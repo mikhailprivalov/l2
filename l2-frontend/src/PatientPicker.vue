@@ -53,10 +53,10 @@
       <tr v-if="is_operator && directive_from_need === 'true'">
         <td class="table-header-row">Направлять от:</td>
         <td class="table-content-row select-td">
-          <select-picker-b v-model="directive_department" :options="directive_departments_select"></select-picker-b>
+          <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
         </td>
         <td class="table-content-row select-td" colspan="2">
-          <select-picker-b v-model="directive_doc" :options="directive_docs_select"></select-picker-b>
+          <select-picker-b v-model="directive_doc" :options="directive_docs_select"/>
         </td>
       </tr>
       </tbody>
@@ -191,11 +191,9 @@
         vm.$store.dispatch(action_types.DEC_LOADING).then()
       })
 
-      if (this.bases.length === 0) {
-        this.$store.watch(state => state.bases, (oldValue, newValue) => {
-          this.check_base()
-        })
-      }
+      this.$store.watch(state => state.bases, (oldValue, newValue) => {
+        this.check_base()
+      })
       this.$root.$on('search', () => {
         vm.search()
       })

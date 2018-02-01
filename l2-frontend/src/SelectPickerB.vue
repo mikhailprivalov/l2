@@ -1,7 +1,9 @@
 <template>
-  <select class="selectpicker" data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
-    <option :value="option.value" v-for="option in options">{{ option.label }}</option>
-  </select>
+  <div>
+    <select v-model="lv" ref="sel" class="selectpicker" data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
+      <option :value="option.value" v-for="option in options">{{ option.label }}</option>
+    </select>
+  </div>
 </template>
 
 <script>
@@ -16,7 +18,8 @@
     },
     data() {
       return {
-        inited: false
+        inited: false,
+        lv: '-1'
       }
     },
     watch: {
@@ -31,9 +34,12 @@
           this.inited = true
         }
         if (this.inited) {
-          this.jel.selectpicker('val', this.value)
+          this.lv = this.value
         }
       },
+      lv() {
+        this.update_val(this.lv)
+      }
     },
     methods: {
       update_val(v) {
@@ -64,7 +70,7 @@
         $el.selectpicker('val', v)
         this.update_val(v)
         let vm = this
-        $(this.$el).change(function () {
+        $($el).change(function () {
           let lval = $(this).selectpicker('val')
           vm.update_val(lval)
         })
@@ -76,7 +82,7 @@
     },
     computed: {
       jel() {
-        return $(this.$el).parent().children('select')
+        return $(this.$refs.sel)
       }
     }
   }
