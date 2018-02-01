@@ -1547,28 +1547,34 @@ def result_print(request):
 
             tw = pw
 
+            no_units_and_ref = any(
+                [x.research.no_units_and_ref for x in Issledovaniya.objects.filter(napravleniye=direction)])
+
             data = []
             tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                    Paragraph(
                        '<font face="OpenSansBold" size="8">Результат</font><br/><font face="OpenSans" size="8">(# - не норма)</font>',
                        styleSheet["BodyText"])]
-
-            if direction.client.individual.sex.lower() == "м":
+            if not no_units_and_ref:
+                if direction.client.individual.sex.lower() == "м":
+                    tmp.append(
+                        Paragraph('<font face="OpenSansBold" size="8">Референсные значения (М)</font>',
+                                  styleSheet["BodyText"]))
+                else:
+                    tmp.append(
+                        Paragraph('<font face="OpenSansBold" size="8">Референсные значения (Ж)</font>',
+                                  styleSheet["BodyText"]))
                 tmp.append(
-                    Paragraph('<font face="OpenSansBold" size="8">Референсные значения (М)</font>',
-                              styleSheet["BodyText"]))
-            else:
-                tmp.append(
-                    Paragraph('<font face="OpenSansBold" size="8">Референсные значения (Ж)</font>',
-                              styleSheet["BodyText"]))
+                    Paragraph('<font face="OpenSansBold" size="8">Единицы<br/>измерения</font>', styleSheet["BodyText"]))
 
-            tmp.append(
-                Paragraph('<font face="OpenSansBold" size="8">Единицы<br/>измерения</font>', styleSheet["BodyText"]))
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>', styleSheet["BodyText"]))
             # tmp.append(Paragraph('<font face="OpenSans" size="8">Дата заб.</font>', styleSheet["BodyText"]))
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Дата</font>', styleSheet["BodyText"]))
             data.append(tmp)
-            cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
+            if no_units_and_ref:
+                cw = [int(tw * 0.26), int(tw * 0.482), int(tw * 0.178)]
+            else:
+                cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
             cw = cw + [tw - sum(cw)]
             t = Table(data, colWidths=cw)
             style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -1600,7 +1606,7 @@ def result_print(request):
                 fwb.append(t)
 
             iss_list = Issledovaniya.objects.filter(napravleniye=direction)
-
+            result_style = styleSheet["BodyText"] if no_units_and_ref else stl
             pks = []
             for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__id",
                                          "research__sort_weight"):
@@ -1643,18 +1649,18 @@ def result_print(request):
 
                         if f.render_type == 0:
                             if norm in ["none", "normal"]:
-                                tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", stl))
+                                tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                             elif norm == "maybe":
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", stl))
+                                tmp.append(Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                             else:
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
+                                tmp.append(Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
+                            if not no_units_and_ref:
+                                tmp.append(
+                                    Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                              stl))
 
-                            tmp.append(
-                                Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
-                                          stl))
-
-                            tmp.append(
-                                Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
+                                tmp.append(
+                                    Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
 
                             if iss.doc_confirmation:
                                 if prev_conf != iss.doc_confirmation.get_fio():
@@ -1714,7 +1720,10 @@ def result_print(request):
                         tmp = [Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + '</font>' +
                                          (
                                              "" if iss.comment == "" or True else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
-                                         styleSheet["BodyText"]), '', '', '']
+                                         styleSheet["BodyText"]), '']
+                        if not no_units_and_ref:
+                            tmp.append("")
+                            tmp.append("")
 
                         if iss.doc_confirmation:
                             if prev_conf != iss.doc_confirmation.get_fio():
@@ -1771,18 +1780,18 @@ def result_print(request):
                                 # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                                 #    result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                                 if norm in ["none", "normal"]:
-                                    tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", stl))
+                                    tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                                 elif norm == "maybe":
                                     tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", stl))
+                                        Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                                 else:
                                     tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
+                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
+                                if not no_units_and_ref:
+                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
+                                                         stl))
 
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
-                                                     stl))
-
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", stl))
+                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", stl))
                                 tmp.append("")
                                 tmp.append("")
                                 data.append(tmp)

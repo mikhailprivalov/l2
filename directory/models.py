@@ -58,6 +58,8 @@ class Researches(models.Model):
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию', blank=True)
     edit_mode = models.IntegerField(default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
+    no_units_and_ref = models.BooleanField(default=False, blank=True,
+                                           help_text='На бланке результата скрытие единиц измерения и референсов')
     no_attach = models.IntegerField(default=0, null=True, blank=True,
                                     help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
