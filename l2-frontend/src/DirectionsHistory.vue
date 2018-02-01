@@ -111,6 +111,7 @@
   import DateRange from './ui-cards/DateRange'
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
+  import moment from 'moment'
 
   export default {
     components: {DateRange},
@@ -123,7 +124,7 @@
     },
     data() {
       return {
-        date_range: [getFormattedDate(today), getFormattedDate(today)],
+        date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
         types: [
           {pk: 3, title: 'Направления пациента'},
           {pk: 0, title: 'Только выписанные'},
@@ -221,6 +222,7 @@
       load_history() {
         if (!this.is_created)
           return
+        this.$root.$emit('validate-datepickers')
         this.is_created = false
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
