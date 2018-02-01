@@ -1553,7 +1553,7 @@ def result_print(request):
             data = []
             tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                    Paragraph(
-                       '<font face="OpenSansBold" size="8">Результат</font><br/><font face="OpenSans" size="8">(# - не норма)</font>',
+                       '<font face="OpenSansBold" size="8">Результат</font>' + ('' if no_units_and_ref else '<br/><font face="OpenSans" size="8">(# - не норма)</font>'),
                        styleSheet["BodyText"])]
             if not no_units_and_ref:
                 if direction.client.individual.sex.lower() == "м":
