@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{'no-border-left': noBorderLeft === 'true'}">
     <select v-model="lv" ref="sel" class="selectpicker" data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
       <option :value="option.value" v-for="option in options">{{ option.label }}</option>
     </select>
@@ -15,6 +15,10 @@
         required: true
       },
       value: {},
+      noBorderLeft: {
+        type: String,
+        default: 'false'
+      }
     },
     data() {
       return {
@@ -87,3 +91,10 @@
     }
   }
 </script>
+
+<style>
+  .no-border-left .bootstrap-select .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+</style>

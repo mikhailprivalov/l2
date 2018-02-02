@@ -27,7 +27,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket
 
 
 def translit(locallangstring):
@@ -844,3 +844,19 @@ def directions_results(request):
 def statistics_tickets_types(request):
     result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")], "result": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")]}
     return JsonResponse(result)
+
+
+@group_required("Оформление статталонов")
+def statistics_tickets_send(request):
+    response = {"ok": True}
+    rd = json.loads(request.body)
+    t = StatisticsTicket(card=Card.objects.get(pk=rd["card_pk"]),
+                         purpose=VisitPurpose.objects.get(pk=rd["visit"]),
+                         result=ResultOfTreatment.objects.get(pk=rd["result"]),
+                         info=rd["info"].strip(),
+                         first_time=rd["first_time"],
+                         primary_visit=rd["primary_visit"],
+                         dispensary_registration=int(rd["disp"]),
+                         doctor=request.user.doctorprofile)
+    t.save()
+    return JsonResponse(response)

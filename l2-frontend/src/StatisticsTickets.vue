@@ -8,8 +8,8 @@
         <statistics-ticket-creator :base="selected_card.base" :card_pk="selected_card.pk" />
       </div>
     </div>
-    <div ref="cb" class="split content">
-
+    <div ref="cb" class="split content" style="padding: 0;">
+      <statistics-tickets-viewer />
     </div>
   </div>
 </template>
@@ -18,12 +18,14 @@
   import Split from 'split.js'
   import PatientPicker from './PatientPicker'
   import StatisticsTicketCreator from './StatisticsTicketCreator'
+  import StatisticsTicketsViewer from './StatisticsTicketsViewer'
 
   export default {
     name: 'statistics-tickets',
     components: {
       PatientPicker,
-      StatisticsTicketCreator
+      StatisticsTicketCreator,
+      StatisticsTicketsViewer
     },
     data() {
       return {

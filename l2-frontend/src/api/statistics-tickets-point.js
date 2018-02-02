@@ -11,5 +11,16 @@ async function getTicketsTypes() {
   return {visit: [], result: []}
 }
 
+async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp, result) {
+  try {
+    const response = await HTTP.post('statistics-tickets/send', {card_pk, visit, info, first_time, primary_visit, disp, result})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {pk: false}
+}
 
-export default {getTicketsTypes}
+
+export default {getTicketsTypes, sendTicket}

@@ -1,15 +1,16 @@
 <template>
   <div class="row">
     <div class="col-xs-4" style="padding-right: 3px;">
-      <select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"></select-picker>
+      <select-picker :val="date_type" :options="date_types" :func="change_type" :multiple="false" :actions_box="false"/>
     </div>
     <div class="col-xs-8">
       <div :class="[{hidden: date_type !== 'd'}]">
-        <date-field :val.sync="values.date" :def="values.date"></date-field>
+        <date-field :val.sync="values.date" :def="values.date"/>
       </div>
       <div class="row" :class="[{hidden: date_type !== 'm'}]">
         <div class="col-xs-6" style="padding-right: 3px;">
-          <select-picker :val="values.month" :options="monthes" :func="change_month" :multiple="false" :actions_box="false"></select-picker>
+          <select-picker :val="values.month" :options="monthes" :func="change_month" :multiple="false"
+                         :actions_box="false"/>
         </div>
         <div class="col-xs-6">
           <input type="number" class="form-control year" v-model="values.year" min="2015" max="2100"/>
@@ -20,8 +21,8 @@
 </template>
 
 <script>
-  import SelectPicker from './SelectPicker.vue'
-  import DateField from './DateField.vue'
+  import SelectPicker from './SelectPicker'
+  import DateField from './DateField'
 
   export default {
     name: 'date-selector',

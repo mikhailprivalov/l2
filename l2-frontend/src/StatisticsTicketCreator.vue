@@ -1,77 +1,54 @@
 <template>
-  <div style="align-self: stretch;display: flex;flex-direction: column">
-    <div class="input-group" style="height: 34px">
+  <div style="align-self: stretch;overflow-y: auto">
+    <div class="input-group">
       <span class="input-group-addon">Цель посещения</span>
       <div class="input-group-btn" style="width: 100%;">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="width: 100%;text-align: left;">
-          {{selected_visit.title}} <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu">
-          <li v-for="row in types.visit" :value="row.pk" v-if="row.pk !== visit">
-            <a href="#" @click.prevent="select_visit(row.pk)">{{row.title}}</a>
-          </li>
-        </ul>
+        <select-picker-b no-border-left="true" :options="visit_select" v-model="visit"/>
       </div>
     </div>
-    <div style="height: 100%;overflow-y: auto">
-      <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
-        <label style="width: 100%;font-weight: normal;">Диагноз, виды услуг, виды травм:
-          <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
-        </label>
-      </div>
-      <div class="row" style="margin-top: 5px;">
-        <div class="col-xs-6">
-          <label style="display: block;font-weight: normal;">Первый раз: <input v-model="first_time" type="checkbox"/>
-            {{first_time? 'да': 'нет'}}</label>
-        </div>
-        <div class="col-xs-6">
-          <label style="display: block;font-weight: normal;">Первичный приём: <input v-model="primary_visit"
-                                                                                     type="checkbox"/> {{primary_visit?
-            'да': 'нет'}}</label>
-        </div>
-      </div>
-
-      <div class="input-group flex-group">
-        <span class="input-group-addon">Диспансерный учёт</span>
-        <div class="input-group-btn">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                  style="width: 100%;text-align: left;">
-            {{selected_disp.title}} <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="row in types.disp" :value="row.pk" v-if="row.pk !== disp">
-              <a href="#" @click.prevent="select_disp(row.pk)">{{row.title}}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="input-group flex-group">
-        <span class="input-group-addon">Результат обращения</span>
-        <div class="input-group-btn">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                  style="width: 100%;text-align: left;">
-            {{selected_result.title}} <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="row in types.result" :value="row.pk" v-if="row.pk !== result">
-              <a href="#" @click.prevent="select_result(row.pk)">{{row.title}}</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <button @click="create" class="btn btn-blue-nb" style="margin-top: 10px;width: 100%">Сохранить</button>
+    <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
+      <label style="width: 100%;font-weight: normal;">Диагноз, виды услуг, виды травм:
+        <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
+      </label>
     </div>
+    <div class="row" style="margin-top: 5px;">
+      <div class="col-xs-6">
+        <label style="display: block;font-weight: normal;">Первый раз: <input v-model="first_time" type="checkbox"/>
+          {{first_time? 'да': 'нет'}}</label>
+      </div>
+      <div class="col-xs-6">
+        <label style="display: block;font-weight: normal;">
+          Первичный приём: <input v-model="primary_visit" type="checkbox"/> {{primary_visit? 'да': 'нет'}}</label>
+      </div>
+    </div>
+
+    <div class="input-group flex-group">
+      <span class="input-group-addon">Диспансерный учёт</span>
+      <div class="input-group-btn">
+        <select-picker-b no-border-left="true" :options="disp_select" v-model="disp"/>
+      </div>
+    </div>
+
+    <div class="input-group flex-group">
+      <span class="input-group-addon">Результат обращения</span>
+      <div class="input-group-btn">
+        <select-picker-b no-border-left="true" :options="result_select" v-model="result"/>
+      </div>
+    </div>
+
+    <button @click="create" class="btn btn-blue-nb" :disabled="card_pk === -1" style="margin-top: 10px;width: 100%">
+      Сохранить
+    </button>
   </div>
 </template>
 
 <script>
   import * as action_types from './store/action-types'
   import statistics_tickets_point from './api/statistics-tickets-point'
+  import SelectPickerB from './SelectPickerB'
 
   export default {
+    components: {SelectPickerB},
     name: 'statistics-ticket-creator',
     props: {
       base: {
@@ -96,7 +73,7 @@
         },
         visit: -1,
         result: -1,
-        disp: 0,
+        disp: -1,
         info: '',
         first_time: false,
         primary_visit: true,
@@ -112,11 +89,33 @@
         vm.types.result = data.result
         if (data.result.length > 0)
           vm.result = data.result[0].pk
+        vm.disp = vm.types.disp[0].pk
       }).finally(() => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
       })
     },
     computed: {
+      visit_select() {
+        let r = []
+        for (let row of this.types.visit) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
+      disp_select() {
+        let r = []
+        for (let row of this.types.disp) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
+      result_select() {
+        let r = []
+        for (let row of this.types.result) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
       selected_visit() {
         for (let row of this.types.visit) {
           if (row.pk === this.visit) {
@@ -143,17 +142,15 @@
       },
     },
     methods: {
-      select_visit(pk) {
-        this.visit = pk
-      },
-      select_result(pk) {
-        this.result = pk
-      },
-      select_disp(pk) {
-        this.visit = pk
-      },
       create() {
-        this.clear()
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        statistics_tickets_point.sendTicket(vm.card_pk, vm.visit, vm.info, vm.first_time, vm.primary_visit, vm.disp, vm.result).then(() => {
+          vm.clear()
+          okmessage("Статталон добавлен")
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
       },
       clear() {
         this.info = ''

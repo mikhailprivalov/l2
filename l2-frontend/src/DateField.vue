@@ -1,5 +1,5 @@
 <template>
-  <input v-datepicker type="text" class="form-control no-context" v-model="val"/>
+  <input v-datepicker type="text" class="form-control no-context" v-model="val" maxlength="10"/>
 </template>
 
 <script>
@@ -37,3 +37,11 @@
     }
   }
 </script>
+
+<style scoped>
+  .form-control {
+    padding-left: 2px;
+    padding-right: 2px;
+    text-align: center;
+  }
+</style>

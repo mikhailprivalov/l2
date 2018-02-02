@@ -2037,7 +2037,10 @@ def result_print(request):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
-    slog.Log(key=request.GET["pk"], type=15, body="", user=request.user.doctorprofile).save()
+    slog.Log(key=request.GET["pk"],
+             type=15,
+             body=json.dumps({"leftnone": request.GET.get("leftnone", "0"), "split": request.GET.get("split", "1")}),
+             user=request.user.doctorprofile).save()
 
     return response
 
@@ -2850,7 +2853,7 @@ def results_search_directions(request):
     period = json.loads(data.get("period", "{}"))
     type = period.get("type", "d")
     type_patient = int(data.get("type_patient", "-1"))
-    query = data.get("query", "").strip()
+    query = ' '.join(data.get("query", "").strip().split())
     perform_norms = data.get("perform_norms", "false").lower() == "true"
     archive = data.get("archive", "false").lower() == "true"
     grouping = data.get("grouping", "patient")
