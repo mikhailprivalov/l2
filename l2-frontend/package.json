@@ -32,16 +32,16 @@
     "babel-loader": "^7.1.2",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-3": "^6.24.1",
-    "clean-webpack-plugin": "^0.1.17",
+    "clean-webpack-plugin": "^0.1.18",
     "cross-env": "^5.0.5",
-    "css-loader": "^0.28.7",
+    "css-loader": "^0.28.9",
     "file-loader": "^1.1.6",
     "glob": "^7.1.2",
     "node-sass": "^4.7.2",
     "sass-loader": "^6.0.6",
-    "vue-loader": "^13.6.0",
+    "vue-loader": "^13.7.1",
     "vue-template-compiler": "^2.5.11",
     "webpack": "^3.10.0",
-    "webpack-dev-server": "^2.9.7"
+    "webpack-dev-server": "^2.11.1"
   }
 }
