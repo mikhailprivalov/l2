@@ -201,6 +201,7 @@ def results_save(request):
         if issledovaniye:  # Если исследование найдено
 
             for key in fractions.keys():  # Перебор фракций из запроса
+                created = False
                 if Result.objects.filter(issledovaniye=issledovaniye,
                                          fraction__pk=key).exists():  # Если результат для фракции существует
                     fraction_result = Result.objects.get(issledovaniye=issledovaniye,
@@ -209,22 +210,29 @@ def results_save(request):
                     fraction_result = Result(issledovaniye=issledovaniye,
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
+                    created = True
                 fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")  # Установка значения
-                fraction_result.iteration = 1  # Установка итерации
-                if key in fractions_ref:
-                    r = fractions_ref[key]
-                    fraction_result.ref_title = r["title"]
-                    fraction_result.ref_about = r["about"]
-                    fraction_result.ref_m = r["m"]
-                    fraction_result.ref_f = r["f"]
-                    fraction_result.save()
-                else:
-                    fraction_result.ref_title = "Default"
-                    fraction_result.ref_about = ""
-                    fraction_result.ref_m = None
-                    fraction_result.ref_f = None
-                    fraction_result.save()
-                    fraction_result.get_ref(re_save=True)
+                need_save = True
+                if fraction_result.value == "":
+                    need_save = False
+                    if not created:
+                        fraction_result.delete()
+                if need_save:
+                    fraction_result.iteration = 1  # Установка итерации
+                    if key in fractions_ref:
+                        r = fractions_ref[key]
+                        fraction_result.ref_title = r["title"]
+                        fraction_result.ref_about = r["about"]
+                        fraction_result.ref_m = r["m"]
+                        fraction_result.ref_f = r["f"]
+                        fraction_result.save()
+                    else:
+                        fraction_result.ref_title = "Default"
+                        fraction_result.ref_about = ""
+                        fraction_result.ref_m = None
+                        fraction_result.ref_f = None
+                        fraction_result.save()
+                        fraction_result.get_ref(re_save=True)
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
             from django.utils import timezone
 
