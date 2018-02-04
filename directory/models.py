@@ -60,7 +60,6 @@ class Researches(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
     no_units_and_ref = models.BooleanField(default=False, blank=True,
                                            help_text='На бланке результата скрытие единиц измерения и референсов')
-    hide_empty = models.BooleanField(default=False, blank=True, help_text='Скрытие пустых значений')
     no_attach = models.IntegerField(default=0, null=True, blank=True,
                                     help_text='Группа исследований, которые не могут быть назначены вместе')
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')

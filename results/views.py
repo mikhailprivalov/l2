@@ -213,7 +213,7 @@ def results_save(request):
                     created = True
                 fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")  # Установка значения
                 need_save = True
-                if fraction_result.value == "" and issledovaniye.research.hide_empty:
+                if fraction_result.value == "":
                     need_save = False
                     if not created:
                         fraction_result.delete()
@@ -1637,7 +1637,8 @@ def result_print(request):
                             if show_norm:
                                 norm = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
-
+                        else:
+                            continue
                         if not iss.doc_confirmation and iss.deferred:
                             result = "отложен"
                         elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
@@ -1783,6 +1784,8 @@ def result_print(request):
                                         norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
+                                else:
+                                    continue
                                 if not iss.doc_confirmation and iss.deferred:
                                     result = "отложен"
                                 # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
