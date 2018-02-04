@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import TemplateView
 
+import receivematerial.views
 from . import views
 
 urlpatterns = [
@@ -34,4 +35,10 @@ urlpatterns = [
     path('cards', views.cards),
     path('results/paraclinic', views.results_paraclinic),
     path('statistics-tickets', TemplateView.as_view(template_name="dashboard/statistics_tickets.html")),
+    path('receive', receivematerial.views.receive),
+    path('receive/one_by_one', receivematerial.views.receive_obo),
+    path('receive/execlist', receivematerial.views.receive_execlist),
+    path('receive/last_received', receivematerial.views.last_received),
+    path('receive/history', receivematerial.views.receive_history),
+    path('receive/journal', receivematerial.views.receive_journal),
 ]

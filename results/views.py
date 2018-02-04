@@ -2601,6 +2601,7 @@ def result_journal_print(request):
     j = 0
     # clientresults = collections.OrderedDict(sorted(clientresults.items()))
     for otd in otds.keys():
+        data = []
         if not codes:
             data = [[Paragraph('<font face="OpenSans" size="12">' + otd + "</font>", styles["Normal"])]]
             data_header = ["№", "ФИО", "Направление: Результаты"]

@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.utils import dateformat
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
 from reportlab.graphics.barcode import eanbc
@@ -23,135 +24,7 @@ from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
 
-# from silk.profiling.profiler import silk_profile
-
 w, h = A4
-
-
-@csrf_exempt
-@login_required
-def dir_save(request):
-    """Сохранение направления
-    :param request: запрос
-    """
-    result = {"r": False, "list_id": []}
-    """
-        r - флаг успешной вставки направлений
-        list_id - список сохраненных направлений
-    """
-    if request.method == 'POST':
-        dict_post = json.loads(request.POST['dict'])  # json парсинг принятых данных
-        comments = json.loads(request.POST['comments'])  # json парсинг принятых комментариев
-        client_id = dict_post["client_id"]  # установка принятого идентификатора пациента
-        diagnos = dict_post["diagnos"]  # диагноз
-        finsource = dict_post["fin_source"]  # источник финансирования
-        researches = dict_post["researches"]  # исследования
-        ofname_id = int(request.POST['ofname'])  # Идентификатор врача для выписывания от его имени
-        history_num = request.POST['history_num']  # Номер истории болезни
-        # is_hospital = request.POST.get('is_hospital', 'false') == "true"
-        result = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id,
-                                                                request.user.doctorprofile,
-                                                                researches, comments)
-
-    return JsonResponse(result)
-
-
-@login_required
-def get_xls_dir(request):
-    """
-    Сводная таблица направлений
-    :param request:
-    :return:
-    """
-    import xlwt
-    response = HttpResponse(content_type='application/ms-excel')
-    direction_id = json.loads(request.GET["napr_id"])
-    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
-               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
-    tr = {ord(a): ord(b) for a, b in zip(*symbols)}
-    response['Content-Disposition'] = str.translate(
-        "attachment; filename='Направления_сводная_таблица_{0}.xls'".format(request.user.doctorprofile.get_fio()), tr)
-    wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet("Направления")
-    first_color = "light_yellow"
-    second_color = "light_green"
-    head_color = "ice_blue"
-    font_style = xlwt.XFStyle()
-    font_style.font.bold = True
-    pattern = xlwt.Pattern()
-    pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-    pattern.pattern_fore_colour = xlwt.Style.colour_map[head_color]
-    font_style.pattern = pattern
-    columns = [
-        (u"ФИО", 10000),
-        (u"Лаборатория", 8000),
-        (u"№ напр.", 2500),
-        (u"Пробирка", 8000),
-        (u"Исследования", 65535),
-    ]
-    for col_num in range(len(columns)):
-        ws.write(0, col_num, columns[col_num][0], font_style)
-        ws.col(col_num).width = columns[col_num][1]
-    font_style = xlwt.XFStyle()
-    i = 1
-    lastfio = ""
-    nn = 0
-
-    for dir in Napravleniya.objects.filter(pk__in=direction_id).order_by("client__individual__family"):
-        fresearches = set()
-        fuppers = set()
-        flowers = set()
-        for iss in Issledovaniya.objects.filter(napravleniye=dir):
-            for fr in iss.research.fractions_set.all():
-                absor = directory.Absorption.objects.filter(fupper=fr)
-                if absor.exists():
-                    fuppers.add(fr.pk)
-                    fresearches.add(fr.research.pk)
-                    for absor_obj in absor:
-                        flowers.add(absor_obj.flower.pk)
-                        fresearches.add(absor_obj.flower.research.pk)
-        iss = Issledovaniya.objects.filter(napravleniye=dir)
-        if lastfio != dir.client.individual.fio():
-            nn += 1
-            ncolor = first_color
-            if nn % 2 == 0:
-                ncolor = second_color
-            pattern = xlwt.Pattern()
-            pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-            pattern.pattern_fore_colour = xlwt.Style.colour_map[ncolor]
-            font_style.pattern = pattern
-            lastfio = dir.client.individual.fio()
-            ws.write(i, 0, lastfio, font_style)
-        else:
-            ws.write(i, 0, "", font_style)
-        ws.write(i, 1, iss.first().research.get_podrazdeleniye().title, font_style)
-        ws.write(i, 2, dir.pk, font_style)
-        fractiontubes = {}
-        for isobj in iss:
-            for fraction in directory.Fractions.objects.filter(research=isobj.research).order_by("sort_weight"):
-                rpk = fraction.relation.pk
-                if fraction.research.pk in fresearches and fraction.pk in flowers:
-                    absor = directory.Absorption.objects.filter(flower__pk=fraction.pk).first()
-                    if absor.fupper.pk in fuppers:
-                        rpk = absor.fupper.relation.pk
-                        if rpk not in fractiontubes.keys():
-                            fractiontubes[rpk] = {"tt": absor.fupper.relation.tube.title, "researches": set()}
-                elif rpk not in fractiontubes.keys():
-                    fractiontubes[rpk] = {"tt": fraction.relation.tube.title, "researches": set()}
-                fractiontubes[rpk]["researches"].add(isobj.research.title)
-        prei = i
-        for key in fractiontubes.keys():
-            if i - prei > 0:
-                ws.write(i, 0, "", font_style)
-            if i - prei > 0:
-                ws.write(i, 1, "", font_style)
-                ws.write(i, 2, "", font_style)
-            ws.write(i, 3, fractiontubes[key]["tt"], font_style)
-            ws.write(i, 4, ", ".join(fractiontubes[key]["researches"]), font_style)
-            i += 1
-    wb.save(response)
-    return response
-
 
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
@@ -1056,7 +929,7 @@ def get_issledovaniya(request):
                                                      "doc_save_id": doc_save_id,
                                                      "current_doc_save": current_doc_save,
                                                      "allow_disable_confirm": ((
-                                                                                           ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                                                       ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                                                    str(x) for x in
                                                                                    request.user.groups.all()]) and confirmed,
                                                      "ctp": ctp,
@@ -1111,75 +984,6 @@ def get_issledovaniya(request):
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
 
-    return JsonResponse(res)
-
-
-from django.db.models import Q
-
-
-@login_required
-def get_client_directions(request):
-    """ Получение направлений для пациента """
-    import datetime
-    res = {"directions": [], "ok": False}
-    if request.method == "GET":
-        try:
-            pk = int(request.GET["pk"])
-            req_status = int(request.GET["status"])
-            date_start = request.GET["date[start]"]  # начальная дата назначения
-            date_end = request.GET["date[end]"]  # конечная дата назначения
-
-            date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                       int(date_start.split(".")[0]))
-            date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                     int(date_end.split(".")[0])) + datetime.timedelta(days=1)
-            if pk >= 0 or req_status == 4:
-                if req_status != 4:
-                    rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
-                                                       client__pk=pk).order_by("-data_sozdaniya").prefetch_related()
-                else:
-                    rows = Napravleniya.objects.filter(Q(data_sozdaniya__range=(date_start, date_end),
-                                                         doc_who_create=request.user.doctorprofile)
-                                                       | Q(data_sozdaniya__range=(date_start, date_end),
-                                                           doc=request.user.doctorprofile)).order_by(
-                        "-data_sozdaniya")
-
-                for napr in rows.values("pk", "data_sozdaniya", "cancel"):
-                    iss_list = Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related("tubes",
-                                                                                                          "research",
-                                                                                                          "research__podrazdeleniye")
-                    if not iss_list.exists():
-                        continue
-                    status = 2  # 0 - выписано. 1 - Материал получен лабораторией. 2 - результат подтвержден. -1 - отменено
-                    has_conf = False
-                    researches_list = []
-                    for v in iss_list:
-                        researches_list.append(v.research.title)
-                        iss_status = 1
-                        if not v.doc_confirmation and not v.doc_save and not v.deferred:
-                            iss_status = 1
-                            if v.tubes.count() == 0:
-                                iss_status = 0
-                            else:
-                                for t in v.tubes.all():
-                                    if not t.time_recive:
-                                        iss_status = 0
-                        elif v.doc_confirmation or v.deferred:
-                            iss_status = 2
-                        if v.doc_confirmation and not has_conf:
-                            has_conf = True
-                        status = min(iss_status, status)
-                    if status == 2 and not has_conf:
-                        status = 1
-                    if req_status in [3, 4] or req_status == status:
-                        res["directions"].append(
-                            {"pk": napr["pk"], "status": status,
-                             "researches": ' | '.join(researches_list),
-                             "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT)),
-                             "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"]})
-                res["ok"] = True
-        except (ValueError, IndexError):
-            pass
     return JsonResponse(res)
 
 
