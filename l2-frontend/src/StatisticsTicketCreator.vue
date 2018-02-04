@@ -147,7 +147,8 @@
         vm.$store.dispatch(action_types.INC_LOADING).then()
         statistics_tickets_point.sendTicket(vm.card_pk, vm.visit, vm.info, vm.first_time, vm.primary_visit, vm.disp, vm.result).then(() => {
           vm.clear()
-          okmessage("Статталон добавлен")
+          okmessage('Статталон добавлен')
+          this.$root.$emit('create-ticket')
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })

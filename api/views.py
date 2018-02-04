@@ -285,7 +285,8 @@ def departments(request):
             {"departments": [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
                              x in Podrazdeleniya.objects.all().order_by("pk")],
              "can_edit": can_edit,
-             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if SettingManager.get("paraclinic_module", default='false', default_type='b') or x[0] != 3]})
+             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if
+                       SettingManager.get("paraclinic_module", default='false', default_type='b') or x[0] != 3]})
     elif can_edit:
         ok = False
         message = ""
@@ -841,7 +842,9 @@ def directions_results(request):
 
 @group_required("Оформление статталонов")
 def statistics_tickets_types(request):
-    result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")], "result": [{"pk": x.pk, "title": x.title} for x in ResultOfTreatment.objects.filter(hide=False).order_by("pk")]}
+    result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
+              "result": [{"pk": x.pk, "title": x.title} for x in
+                         ResultOfTreatment.objects.filter(hide=False).order_by("pk")]}
     return JsonResponse(result)
 
 
@@ -858,4 +861,28 @@ def statistics_tickets_send(request):
                          dispensary_registration=int(rd["disp"]),
                          doctor=request.user.doctorprofile)
     t.save()
+    return JsonResponse(response)
+
+
+@group_required("Оформление статталонов")
+def statistics_tickets_get(request):
+    response = {"data": []}
+    request_data = json.loads(request.body)
+    date_start = request_data["date"].split(".")
+    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
+    date_end = date_start + datetime.timedelta(1)
+    n = 0
+    for row in StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, date__range=(date_start, date_end,)):
+        n += 1
+        response["data"].append({
+            "n": n,
+            "patinet": row.card.individual.fio(full=True),
+            "card": row.card.number_with_type(),
+            "purpose": row.purpose.title,
+            "first_time": row.first_time,
+            "primary": row.primary_visit,
+            "info": row.info,
+            "disp": row.get_dispensary_registration_display(),
+            "result": row.result.title
+        })
     return JsonResponse(response)

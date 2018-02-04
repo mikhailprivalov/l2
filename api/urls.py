@@ -21,4 +21,5 @@ urlpatterns = [
     path('directions/results', views.directions_results),
     path('statistics-tickets/types', views.statistics_tickets_types),
     path('statistics-tickets/send', views.statistics_tickets_send),
+    path('statistics-tickets/get', views.statistics_tickets_get),
 ]
