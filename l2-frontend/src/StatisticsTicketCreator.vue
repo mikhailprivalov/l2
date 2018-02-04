@@ -1,5 +1,5 @@
 <template>
-  <div style="align-self: stretch;overflow-y: auto">
+  <div style="align-self: stretch;overflow-y: auto;width: 100%;overflow-x: hidden;">
     <div class="input-group">
       <span class="input-group-addon">Цель посещения</span>
       <div class="input-group-btn" style="width: 100%;">

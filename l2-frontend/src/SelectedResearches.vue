@@ -303,6 +303,7 @@
     right: 0;
     height: 34px;
     align-content: stretch;
+    overflow: hidden;
   }
 
   .top-picker .form-control {
@@ -381,6 +382,7 @@
   .bottom-picker {
     bottom: 0;
     align-content: stretch;
+    overflow: hidden;
   }
 
   .bottom-picker .top-inner-select span {

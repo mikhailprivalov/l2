@@ -942,9 +942,9 @@
         }
 
         #page-preloader {
-            display: none;
             opacity: 0;
             cursor: progress;
+            text-align: center;
         }
 
         .txt-r {
@@ -1640,24 +1640,28 @@
 
     let stopped = true
     let inload = false
+    let callback_loader = null
 
-    function sl(no_sloader) {
+    function sl(no_sloader, cb) {
         if (!inload) {
             document.title = lang.loading + document.title
         }
         inload = true
-        const $preloader = $('#page-preloader')
-        $preloader.css({opacity: 0})
-        if (!no_sloader) {
-            $('.navbar').addClass('sloader')
-            stopped = false
-            setTimeout(function () {
-                if (stopped) return
-                $preloader.animate({opacity: 1}, 7000)
-            }, 1500)
-        }
-        $preloader.show()
-        //$loader.init();
+        $(() => {
+            const $preloader = $('#page-preloader')
+            $preloader.css({opacity: 0})
+            if (!no_sloader) {
+                $('.navbar').addClass('sloader')
+                stopped = false
+                setTimeout(function () {
+                    if (stopped) return
+                    $preloader.animate({opacity: 1}, 7000)
+                }, 1500)
+            }
+            $preloader.show()
+        })
+
+        callback_loader = cb
     }
 
     function hl() {
@@ -1669,6 +1673,9 @@
         exitLoop = true
         stopped = true
         $preloader.stop(true, true)
+        if(_.isFunction(callback_loader)) {
+            callback_loader()
+        }
     }
 
     function update_select(base) {
@@ -1719,9 +1726,9 @@
     }
 
     $(document).ready(function () {
+        $('#page-preloader').hide()
         update_select()
         //startTime();
-        $('#page-preloader').hide()
         $body.addClass('showloader')
         alive()
         $('.context-st').hide()
@@ -2023,8 +2030,8 @@
         instances[vm.uuid] = vm
     }
 </script>
+<div id="page-preloader"></div>
 {% render_bundle 'main' 'js' %}
 {% block scripts %}{% endblock %}
-<div id="page-preloader" style="text-align: center"></div>
 </body>
 </html>

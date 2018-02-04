@@ -33,7 +33,6 @@ def dashboard(request):  # Представление панели управл�
         groups = [str(x) for x in request.user.groups.all()]
         pages = [
             {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/directions_old", "title": "Направления (OLD)", "nt": False, "access": []},
             {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
             {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
@@ -357,51 +356,6 @@ def get_fin():
             o["sources"].append({"pk": f.pk, "title": f.title})
         fin.append(o)
     return fin
-
-
-# @cache_page(60 * 15)
-@login_required
-@group_required("Лечащий врач", "Оператор лечащего врача")
-def directions(request):
-    """ Страница создания направлений """
-    from users.models import AssignmentTemplates, AssignmentResearches
-    from django.db.models import Q
-    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
-    oper = "Оператор лечащего врача" in request.user.groups.values_list('name', flat=True)
-    docs = list()
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-    if oper:
-        p = podrazdeleniya.first()
-        if request.user.doctorprofile.podrazdeleniye.p_type == Podrazdeleniya.DEPARTMENT:
-            p = request.user.doctorprofile.podrazdeleniye
-        docs = DoctorProfile.objects.filter(podrazdeleniye=p,
-                                            user__groups__name="Лечащий врач").order_by("fio")
-    users = []
-    for p in podrazdeleniya:
-        pd = {"pk": p.pk, "title": p.title, "docs": []}
-        for d in DoctorProfile.objects.filter(podrazdeleniye=p,
-                                              user__groups__name="Лечащий врач").order_by("fio"):
-            pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
-        users.append(pd)
-    rmis_base = CardBase.objects.filter(is_rmis=True, hide=False)
-    rid = -1 if not rmis_base.exists() else rmis_base[0].pk
-    templates = {}
-    for t in AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                                                Q(doc=request.user.doctorprofile) |
-                                                Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
-        tmp_template = defaultdict(list)
-        for r in AssignmentResearches.objects.filter(template=t):
-            tmp_template[r.research.get_podrazdeleniye().pk].append(r.research.pk)
-        templates[t.pk] = {"values": tmp_template, "title": t.title, "for_doc": t.doc is not None,
-                           "for_podr": t.podrazdeleniye is not None}
-    return render(request, 'dashboard/directions.html', {'labs': podr,
-                                                         'fin': get_fin(),
-                                                         "operator": oper, "docs": docs, "notlabs": podrazdeleniya,
-                                                         "rmis_uid": request.GET.get("rmis_uid", ""),
-                                                         "rmis_base_id": rid,
-                                                         "users": json.dumps(users),
-                                                         "templates": json.dumps(templates),
-                                                         "material_types": directory.MaterialVariants.objects.all()})
 
 
 @login_required

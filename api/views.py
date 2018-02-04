@@ -355,8 +355,6 @@ from directory.models import Researches as DResearches
 class Researches(View):
     def get(self, request):
         deps = defaultdict(list)
-        labs_pks = [x.pk for x in Podrazdeleniya.objects.exclude(p_type=Podrazdeleniya.HIDDEN).exclude(
-            p_type=Podrazdeleniya.DEPARTMENT)]
 
         for r in DResearches.objects.filter(hide=False).order_by("title"):
             autoadd = [x.b.pk for x in AutoAdd.objects.filter(a=r)]

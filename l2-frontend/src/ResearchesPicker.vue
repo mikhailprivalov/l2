@@ -54,8 +54,17 @@
       }
     },
     created() {
-      this.$store.dispatch(action_types.GET_TEMPLATES).then()
-      this.$store.dispatch(action_types.GET_RESEARCHES).then()
+      let vm = this
+      vm.$store.dispatch(action_types.INC_LOADING).then()
+
+      this.$store.dispatch(action_types.GET_TEMPLATES).then().finally(() => {
+        vm.$store.dispatch(action_types.DEC_LOADING).then()
+      })
+
+      vm.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.GET_RESEARCHES).then().finally(() => {
+        vm.$store.dispatch(action_types.DEC_LOADING).then()
+      })
 
       if (this.types.length === 0) {
         this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
@@ -264,6 +273,7 @@
     right: 0;
     height: 34px;
     align-content: stretch;
+    overflow: hidden;
   }
 
   .top-inner-select, .research-select {

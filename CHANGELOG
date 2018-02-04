@@ -1,3 +1,11 @@
+2.5
+    ~ полностью удалена страница старых направлений
+    !fix показ загрузочного экрана при вызове из vue
+    fix overflow x ticket creator
+    fix width ticket creator on firefox
+    fix overflow top and bottom pickers
+    fix загрузочный экран при получении видов исследований
+
 2.4.4.4
     fix Поиск с лишними пробелами
     ~ Интерфейс создания статталона
