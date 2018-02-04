@@ -213,7 +213,7 @@ def results_save(request):
                     created = True
                 fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")  # Установка значения
                 need_save = True
-                if fraction_result.value == "":
+                if fraction_result.value == "" and issledovaniye.research.hide_empty:
                     need_save = False
                     if not created:
                         fraction_result.delete()
