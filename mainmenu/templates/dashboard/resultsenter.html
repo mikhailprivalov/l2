@@ -1013,6 +1013,7 @@
         .ref table {
             width: 100%;
             background: transparent !important;
+            table-layout: fixed;
         }
 
         .ref table td, .ref table th {
@@ -1027,6 +1028,8 @@
         .ref table td {
             width: 50%;
             font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .ref table tr:first-child th {
