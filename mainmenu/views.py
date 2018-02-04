@@ -41,7 +41,6 @@ def dashboard(request):  # Представление панели управл�
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-            {"url": "/mainmenu/results/paraclinic", "title": "Ввод результатов параклиники", "nt": False, "access": ["Врач параклиники"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": []},
             {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
             {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
@@ -66,6 +65,9 @@ def dashboard(request):  # Представление панели управл�
         if SettingManager.get("mis_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/cards', "title": "Управление картами L2", "nt": True, "access": ["Добавление и редактирование пациентов в базе L2"]})
 
+        if SettingManager.get("paraclinic_module", default='false', default_type='b'):
+            pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод результатов параклиники", "nt": False, "access": ["Врач параклиники"]})
+
         if SettingManager.get("hosp_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"]})
 
@@ -78,7 +80,12 @@ def dashboard(request):  # Представление панели управл�
 
         menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
         from laboratory import VERSION
-        return render(request, 'dashboard.html', {"menu": menu_st, "version": VERSION, "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'), "mis_module": SettingManager.get("mis_module", default='false', default_type='b')})
+        return render(request, 'dashboard.html',
+                      {"menu": menu_st,
+                       "version": VERSION,
+                       "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
+                       "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
+                       "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')})
     return HttpResponse("OK")
 
 

@@ -18,6 +18,7 @@ import api.models as models
 import directions.models as directions
 import users.models as users
 from api.to_astm import get_iss_astm
+from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card
 from directory.models import AutoAdd, Fractions
@@ -284,7 +285,7 @@ def departments(request):
             {"departments": [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
                              x in Podrazdeleniya.objects.all().order_by("pk")],
              "can_edit": can_edit,
-             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES]})
+             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if SettingManager.get("paraclinic_module", default='false', default_type='b') or x[0] != 3]})
     elif can_edit:
         ok = False
         message = ""

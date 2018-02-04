@@ -1,9 +1,10 @@
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
+from appconf.manager import SettingManager
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 import directory.models as directory
@@ -13,7 +14,9 @@ import simplejson as json
 @group_required("Оператор")
 def menu(request):
     """ Меню конструктора """
-    return render(request, 'construct_menu.html')
+    return render(request, 'construct_menu.html', {
+        "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')
+    })
 
 
 @login_required
@@ -118,5 +121,8 @@ def refs(request):
 @login_required
 @group_required("Оператор")
 def researches_paraclinic(request):
-    return render(request, 'construct_paraclinic.html')
+    if SettingManager.get("paraclinic_module", default='false', default_type='b'):
+        return render(request, 'construct_paraclinic.html')
+    else:
+        return redirect('/')
 

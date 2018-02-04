@@ -1,15 +1,19 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+      <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
               style="width: 135px;text-align: left!important;border-radius: 0"><span class="caret"></span>
         {{selected_type.title}}
       </button>
-      <ul class="dropdown-menu">
+      <ul v-if="types.length > 1" class="dropdown-menu">
         <li v-for="row in types" :value="row.pk" v-if="row.pk !== selected_type.pk">
           <a href="#" @click.prevent="select_type(row.pk)">{{row.title}}</a>
         </li>
       </ul>
+      <button v-if="types.length === 1" class="btn btn-blue-nb btn-ell" type="button"
+              style="width: 135px;border-radius: 0">
+        {{selected_type.title}}
+      </button>
       <div class="top-inner">
         <a href="#" @click.prevent="select_dep(row.pk)" class="top-inner-select" :class="{ active: row.pk === dep}"
            v-for="row in departments_of_type"><span>{{ row.title }}<span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span></a>

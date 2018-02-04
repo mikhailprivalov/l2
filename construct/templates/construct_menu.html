@@ -1,5 +1,5 @@
 {% extends "dbase.html" %}
-{% block title %}Меню коструктора{% endblock %}
+{% block title %}Меню конструктора{% endblock %}
 
 {% block content %}
     <ol class="breadcrumb breadcrumb-arrow">
@@ -18,11 +18,13 @@
                 <span>Конструктор лабораторных исследований</span>
             </a>
         </div>
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/researches-paraclinic" class="panel-body">
-                <span>Конструктор параклинических исследований</span>
-            </a>
-        </div>
+        {% if paraclinic %}
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
+                <a href="/construct/researches-paraclinic" class="panel-body">
+                    <span>Конструктор параклинических исследований</span>
+                </a>
+            </div>
+        {% endif %}
         <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
             <a href="/construct/directions_group" class="panel-body">
                 <span>Группировка исследований по направлениям</span>
