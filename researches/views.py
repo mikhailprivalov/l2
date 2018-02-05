@@ -124,7 +124,9 @@ def tubes_control(request):
         new_tube = Tubes(title=title, color=color, short_title=request.PUT.get("short_title", ""))
         new_tube.save()
         slog.Log(key=str(new_tube.pk), user=request.user.doctorprofile, type=1,
-                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
+                 body=json.dumps({"data": {"title": request.POST["title"],
+                                           "color": request.POST["color"],
+                                           "code": request.POST.get("code", "")}})).save()
     if request.method == "POST":
         id = int(request.POST["id"])
         title = request.POST["title"]
@@ -135,7 +137,9 @@ def tubes_control(request):
         tube.short_title = request.POST.get("code", "")
         tube.save()
         slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
-                 body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
+                 body=json.dumps({"data": {"title": request.POST["title"],
+                                           "color": request.POST["color"],
+                                           "code": request.POST.get("code", "")}})).save()
     return JsonResponse({})
 
 
