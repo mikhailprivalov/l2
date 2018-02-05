@@ -1,6 +1,5 @@
 # coding=utf-8
 import os.path
-import re
 from io import BytesIO
 
 import simplejson as json
@@ -51,7 +50,7 @@ def tubes(request, direction_implict_id=None):
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
     doctitle = "Штрих-коды (%s)" % (("направления " + ", ".join(str(v) for v in direction_id)) if not istubes else (
-        "пробирки " + ", ".join(str(v) for v in tubes_id)))
+            "пробирки " + ", ".join(str(v) for v in tubes_id)))
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'
@@ -103,7 +102,8 @@ def tubes(request, direction_implict_id=None):
                     else:
                         ntube = v.tubes.get(type=rel)
                     v.tubes.add(ntube)
-                    tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(), "title": ntube.type.tube.title}
+                    tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(), "title": ntube.type.tube.title,
+                                          "short_title": ntube.type.tube.get_short_title()}
                     if not istubes:
                         tubes_id.add(ntube.pk)
                 else:
@@ -126,21 +126,11 @@ def tubes(request, direction_implict_id=None):
                     st = otd[0][:3] + "/" + otd[1][:1]
             elif len(otd) == 1:
                 st = otd[0][:3]
-            st = (
-            st + "=>" + Issledovaniya.objects.filter(tubes__pk=tube).first().research.get_podrazdeleniye().title[
-                        :3]).lower()
-            types = ["фиолет", "красн", "стекло", "черн", "белая", "серая", "фильтро", "чашка", "голубая", "зеленая", "желтая", "жёлтая",
-                     "зелёная", "контейнер", "зонд", "п ф", "л ф", "синяя"]
-            tb_t = tubes_buffer[tube_k]["title"].lower()
-            pr = ""
-            for s in types:
-                if s in tb_t:
-                    pr = s[0]
-            pr = pr.upper()
-            r = re.search(u"(\d+\.\d|\d+,\d+|\d+)\s(мл)", tb_t)
-            if r:
-                pr += r.group(1) + r.group(2)
-            pr += " " + Issledovaniya.objects.filter(tubes__pk=tube).first().comment[:9]
+            st = (st + "=>" + Issledovaniya.objects.filter(
+                tubes__pk=tube).first().research.get_podrazdeleniye().title[:3]).lower()
+
+            pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
+                tubes__pk=tube).first().comment[:9]
 
             nm = "№" + str(d) + "," + tmp2.client.base.short_title
 

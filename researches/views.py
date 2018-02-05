@@ -96,7 +96,7 @@ def get_all_tubes(request):
     res = []
     tubes = Tubes.objects.all().order_by('title')
     for v in tubes:
-        res.append({"id": v.id, "title": v.title, "color": v.color})
+        res.append({"id": v.id, "title": v.title, "short_title": v.short_title, "color": v.color})
     return JsonResponse(res, safe=False)
 
 
@@ -121,7 +121,7 @@ def tubes_control(request):
         request.PUT = request.POST
         title = request.PUT["title"]
         color = "#" + request.PUT["color"]
-        new_tube = Tubes(title=title, color=color)
+        new_tube = Tubes(title=title, color=color, short_title=request.PUT.get("short_title", ""))
         new_tube.save()
         slog.Log(key=str(new_tube.pk), user=request.user.doctorprofile, type=1,
                  body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
@@ -132,6 +132,7 @@ def tubes_control(request):
         tube = Tubes.objects.get(id=id)
         tube.color = color
         tube.title = title
+        tube.short_title = request.POST.get("code", "")
         tube.save()
         slog.Log(key=str(tube.pk), user=request.user.doctorprofile, type=2,
                  body=json.dumps({"data": {"title": request.POST["title"], "color": request.POST["color"]}})).save()
