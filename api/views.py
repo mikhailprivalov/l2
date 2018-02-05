@@ -889,17 +889,21 @@ def statistics_tickets_get(request):
             "info": row.info,
             "disp": row.get_dispensary_registration_display(),
             "result": row.result.title,
-            "invalid": row.invalid_ticket
+            "invalid": row.invalid_ticket,
+            "can_invalidate": row.can_invalidate()
         })
     return JsonResponse(response)
 
 
 @group_required("Оформление статталонов")
 def statistics_tickets_invalidate(request):
-    response = {"ok": False}
+    response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     if StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, pk=request_data.get("pk", -1)).exists():
-        StatisticsTicket.objects.filter(pk=request_data["pk"]).update(invalid_ticket=request_data.get("invalid", False))
-        response["ok"] = True
-        Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)), user=request.user.doctorprofile).save()
+        if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
+            StatisticsTicket.objects.filter(pk=request_data["pk"]).update(invalid_ticket=request_data.get("invalid", False))
+            response["ok"] = True
+            Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)), user=request.user.doctorprofile).save()
+        else:
+            response["message"] = "Время на отмену или возврат истекло"
     return JsonResponse(response)

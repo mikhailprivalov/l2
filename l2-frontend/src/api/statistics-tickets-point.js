@@ -41,7 +41,7 @@ async function invalidateTicket(pk, invalid) {
     }
   } catch (e) {
   }
-  return {ok: false}
+  return {ok: false, message: 'Ошибка запроса'}
 }
 
 

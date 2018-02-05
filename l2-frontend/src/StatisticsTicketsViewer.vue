@@ -65,7 +65,7 @@
             <td>{{row.disp}}</td>
             <td>{{row.result}}</td>
             <td class="control-buttons">
-              <div class="flex-wrap">
+              <div class="flex-wrap" v-if="row.can_invalidate">
                 <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть</button>
                 <button class="btn btn-sm btn-blue-nb" v-else @click="invalidate(row.pk, true)">Отменить</button>
               </div>
@@ -125,7 +125,10 @@
       invalidate(pk, invalid) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        statistics_tickets_point.invalidateTicket(pk, invalid).then(() => {
+        statistics_tickets_point.invalidateTicket(pk, invalid).then(data => {
+          if(!data.ok) {
+            errmessage(data.message)
+          }
           vm.load()
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
