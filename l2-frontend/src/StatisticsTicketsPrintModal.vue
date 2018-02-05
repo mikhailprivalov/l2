@@ -1,17 +1,17 @@
 <template>
   <div class="modal fade" tabindex="-1">
-    <div class="modal-dialog" style="width: 40%;min-width: 680px">
+    <div class="modal-dialog" style="width: 680px">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Печать отчёта забора биоматериала</h4>
+          <h4 class="modal-title">Печать статталонов</h4>
         </div>
         <div class="modal-body">
           <div class="row">
-            <div class="col-xs-6">
-              <date-selector :date_type.sync="date_type" :values.sync="values"/>
+            <div class="col-xs-5 text-right">
+              <date-range style="width: auto" v-model="date_range"/>
             </div>
-            <div class="col-xs-6" style="padding-left: 0">
+            <div class="col-xs-7">
               <select-picker :val="user" :options="users_list" :func="change_user" :multiple="users.length > 1"
                              :actions_box="users.length > 1"/>
             </div>
@@ -21,7 +21,9 @@
           <div class="row">
             <div class="col-xs-3"></div>
             <div class="col-xs-6">
-              <button type="button" @click="make_report" class="btn btn-primary-nb btn-blue-nb2">Сформировать отчёт</button>
+              <button type="button" @click="make_report" class="btn btn-primary-nb btn-blue-nb2">
+                Печать
+              </button>
             </div>
             <div class="col-xs-3" style="padding-left: 0">
               <button type="button" class="btn btn-primary-nb btn-blue-nb" data-dismiss="modal">Закрыть</button>
@@ -34,11 +36,16 @@
 </template>
 
 <script>
-  import DateSelector from './DateSelector.vue'
-  import SelectPicker from './SelectPicker.vue'
+  import moment from 'moment'
+  import DateRange from './ui-cards/DateRange'
+  import SelectPicker from './SelectPicker'
 
   export default {
-    name: 'journal-get-material-modal',
+    name: 'statistics-tickets-print-modal',
+    components: {
+      DateRange,
+      SelectPicker
+    },
     props: {
       users: {
         type: Array
@@ -46,13 +53,8 @@
     },
     data() {
       return {
+        date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
         user: '-1',
-        date_type: 'd',
-        values: {
-          date: '',
-          month: '',
-          year: ''
-        }
       }
     },
     computed: {
@@ -78,9 +80,8 @@
         this.user = v
       },
       make_report() {
-        window.open(`/statistic/xls?type=journal-get-material&users=${encodeURIComponent(JSON.stringify(this.selected_users))}&date_type=${this.date_type}&values=${encodeURIComponent(JSON.stringify(this.values))}`, '_blank')
+        window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify(this.selected_users))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}`, '_blank')
       }
     },
-    components: {DateSelector, SelectPicker}
   }
 </script>

@@ -7,15 +7,18 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-# from ratelimit.decorators import ratelimit
 
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result
 from researches.models import Tubes
+from statistics_tickets.models import StatisticsTicket
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
+
+
+# from ratelimit.decorators import ratelimit
 
 
 @csrf_exempt
@@ -26,7 +29,13 @@ def statistic_page(request):
     tubes = directory.Tubes.objects.all()  # Пробирки
     podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
-    return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs, "getters_material": json.dumps([{"pk": str(x.pk), "fio": str(x)} for x in getters_material])})
+    statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name='Оформление статталонов').distinct()
+    return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
+                                              "getters_material": json.dumps(
+                                                  [{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
+                                              "statistics_tickets_users": json.dumps(
+                                                  [{"pk": str(x.pk), "fio": str(x)} for x in
+                                                   statistics_tickets_users])})
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -70,10 +79,78 @@ def statistic_xls(request):
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
-    if tp == "journal-get-material":
+    if tp == "statistics-tickets-print":
+        import datetime
+
+        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
+                                   int(date_start_o.split(".")[0]))
+        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
+                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+
+        access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
+        users = [x for x in json.loads(users_o) if
+                 (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
+                     pk=x).exists()]
+
+        response['Content-Disposition'] = str.translate("attachment; filename='Статталоны.xls'", tr)
+        font_style = xlwt.XFStyle()
+        font_style.alignment.wrap = 1
+        font_style.borders = borders
+
+        font_style_b = xlwt.XFStyle()
+        font_style_b.alignment.wrap = 1
+        font_style_b.font.bold = True
+        font_style_b.borders = borders
+
+        ws = wb.add_sheet("Статталоны")
+        row_num = 0
+        row = [
+            ("№", 1200),
+            ("Дата, время", 3500),
+            ("Подразделение", 7200),
+            ("Врач", 7000),
+            ("Цель посещения", 4000),
+            ("Пациент", 7200),
+            ("Карта", 3200),
+            ("Диагнозы, виды услуг, виды травм", 7200),
+            ("Первый раз", 2000),
+            ("Первичный приём", 2800),
+            ("Результат обращения", 4500),
+            ("Диспансерный учёт", 4200),
+        ]
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style_b)
+            ws.col(col_num).width = row[col_num][1]
+        row_num += 1
+
+        for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False,
+                                                      doctor__pk__in=users).order_by("card__individual__family",
+                                                                                     "doctor__fio",
+                                                                                     "doctor__podrazdeleniye__title",
+                                                                                     "date"):
+            row = [
+                str(row_num),
+                ticket.date.strftime("%m.%d.%Y %X"),
+                ticket.doctor.podrazdeleniye.title,
+                ticket.doctor.fio,
+                ticket.purpose.title,
+                ticket.card.individual.fio(full=True),
+                ticket.card.number_with_type(),
+                ticket.info,
+                "первый раз" if ticket.first_time else "",
+                "первич." if ticket.primary_visit else "повторн.",
+                ticket.result.title,
+                ticket.get_dispensary_registration_display(),
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+            row_num += 1
+    elif tp == "journal-get-material":
         import datetime
         access_to_all = 'Статистика' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
-        users = [x for x in json.loads(users_o) if (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(pk=x).exists()]
+        users = [x for x in json.loads(users_o) if
+                 (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
+                     pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
             "0": "Январь",
@@ -158,15 +235,19 @@ def statistic_xls(request):
             else:
                 day1 = day2 = timezone.now()
 
-            iss_list = Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False, tubes__time_get__range=(day1, day2)).order_by("napravleniye__client__individual__patronymic",
-                                                                                                                                                          "napravleniye__client__individual__name",
-                                                                                                                                                          "napravleniye__client__individual__family").distinct()
+            iss_list = Issledovaniya.objects.filter(tubes__doc_get=user_row, tubes__time_get__isnull=False,
+                                                    tubes__time_get__range=(day1, day2)).order_by(
+                "napravleniye__client__individual__patronymic",
+                "napravleniye__client__individual__name",
+                "napravleniye__client__individual__family").distinct()
             patients = {}
             for iss in iss_list:
                 k = iss.napravleniye.client.individual.pk
                 if k not in patients:
                     client = iss.napravleniye.client.individual
-                    patients[k] = {"fio": client.fio(short=True, dots=True), "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [], "cards": []}
+                    patients[k] = {"fio": client.fio(short=True, dots=True),
+                                   "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [],
+                                   "cards": []}
                 if iss.napravleniye.pk not in patients[k]["directions"]:
                     patients[k]["directions"].append(iss.napravleniye.pk)
                 kn = iss.napravleniye.client.number_with_type()
@@ -200,7 +281,9 @@ def statistic_xls(request):
 
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
-        response['Content-Disposition'] = str.translate("attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"), date_start_o, date_end_o), tr)
+        response['Content-Disposition'] = str.translate(
+            "attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"),
+                                                                                date_start_o, date_end_o), tr)
 
         import datetime
         import directions.models as d
@@ -393,7 +476,8 @@ def statistic_xls(request):
     elif tp == "lab-staff":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         researches = list(
-            directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by("sort_weight").order_by("direction_id"))
+            directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by(
+                "sort_weight").order_by("direction_id"))
         pods = list(Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title"))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
@@ -421,7 +505,9 @@ def statistic_xls(request):
         def nl(v):
             return v + ("" if len(v) > 19 else "\n")
 
-        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"), podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("fio").distinct():
+        for executor in DoctorProfile.objects.filter(user__groups__name__in=("Врач-лаборант", "Лаборант"),
+                                                     podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
+            "fio").distinct():
 
             cnt_itogo = {}
             ws = wb.add_sheet(executor.get_fio(dots=False) + " " + str(executor.pk))
@@ -857,7 +943,8 @@ def statistic_xls(request):
                     ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "uets":
-        usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by("podrazdeleniye__title")
+        usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
+            "podrazdeleniye__title")
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_УЕТс_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
 

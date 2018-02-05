@@ -4,7 +4,7 @@
       <date-field style="width: 94px;display: inline-block;align-self: stretch" :val.sync="date" :def="date"/>
       <button class="btn btn-blue-nb" @click="load" style="width: 42px;display: inline-block;align-self: stretch"><i
         class="glyphicon glyphicon-refresh"></i></button>
-      <button class="btn btn-blue-nb" style="width: 94px;display: inline-block;align-self: stretch"><i
+      <button class="btn btn-blue-nb" style="width: 94px;display: inline-block;align-self: stretch" @click="print"><i
         class="glyphicon glyphicon-print"></i> Печать
       </button>
     </div>
@@ -113,6 +113,9 @@
       }
     },
     methods: {
+      print() {
+        window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date}&date-end=${this.date}`, '_blank')
+      },
       load() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()

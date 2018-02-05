@@ -43,6 +43,7 @@ urlpatterns = [
                   path('api/', include('api.urls')),
                   path('barcodes/', include('barcodes.urls')),
                   path('health/', include('health.urls')),
+                  path('reports/', include('reports.urls')),
                   path('logout/', logout, {'next_page': '/'}),
                   path('o/', include('oauth2_provider.urls', namespace='oauth2_provider'))
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

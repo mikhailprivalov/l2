@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'statistics_tickets',
     'webpack_loader',
+    'reports',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',

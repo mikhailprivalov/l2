@@ -25,6 +25,7 @@
         <option value="$MODULE_DIR$/users/templates" />
         <option value="$MODULE_DIR$/mainmenu/templates" />
         <option value="$MODULE_DIR$/construct/templates" />
+        <option value="$MODULE_DIR$/reports/templates" />
       </list>
     </option>
   </component>

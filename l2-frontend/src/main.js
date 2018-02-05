@@ -12,6 +12,7 @@ new Vue({
   store,
   components: {
     'JournalGetMaterialModal': () => import('./JournalGetMaterialModal'),
+    'StatisticsTicketsPrintModal': () => import('./StatisticsTicketsPrintModal'),
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'Directions': () => import('./Directions'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
