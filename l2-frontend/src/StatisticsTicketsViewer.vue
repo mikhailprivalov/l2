@@ -14,11 +14,12 @@
           <col width="35">
           <col width="300">
           <col width="170">
-          <col width="90">
-          <col width="100">
+          <col width="75">
+          <col width="75">
           <col>
-          <col width="125">
-          <col width="200">
+          <col width="100">
+          <col width="180">
+          <col width="75">
         </colgroup>
         <thead>
         <tr>
@@ -26,27 +27,30 @@
           <th>Пациент, карта</th>
           <th>Цель посещения</th>
           <th>Первый раз</th>
-          <th>Первичный приём</th>
+          <th>Первич. приём</th>
           <th>Диагнозы, виды услуг, травм</th>
-          <th>Диспансерный учёт</th>
+          <th>Дисп. учёт</th>
           <th>Результат обращения</th>
+          <th></th>
         </tr>
         </thead>
       </table>
       <div style="align-self: stretch;flex: 0 0 calc(100% - 53px);overflow: auto">
-        <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;margin-bottom: 0">
+        <table class="table table-responsive table-bordered table-condensed"
+               style="table-layout: fixed;margin-bottom: 0">
           <colgroup>
             <col width="35">
             <col width="300">
             <col width="170">
-            <col width="90">
-            <col width="100">
+            <col width="75">
+            <col width="75">
             <col>
-            <col width="125">
-            <col width="200">
+            <col width="100">
+            <col width="180">
+            <col width="75">
           </colgroup>
           <tbody>
-          <tr v-for="row in data">
+          <tr v-for="row in data" :class="{invalid: row.invalid}">
             <td>{{row.n}}</td>
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
             <td>{{row.purpose}}</td>
@@ -60,9 +64,15 @@
             <td v-html="row.info"></td>
             <td>{{row.disp}}</td>
             <td>{{row.result}}</td>
+            <td class="control-buttons">
+              <div class="flex-wrap">
+                <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть</button>
+                <button class="btn btn-sm btn-blue-nb" v-else @click="invalidate(row.pk, true)">Отменить</button>
+              </div>
+            </td>
           </tr>
           <tr v-if="data.length === 0">
-            <td class="text-center" colspan="8">За выбранную дату нет статталонов</td>
+            <td class="text-center" colspan="9">За выбранную дату нет статталонов</td>
           </tr>
           </tbody>
         </table>
@@ -111,6 +121,15 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      invalidate(pk, invalid) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        statistics_tickets_point.invalidateTicket(pk, invalid).then(() => {
+          vm.load()
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
       }
     }
   }
@@ -148,5 +167,35 @@
 
   .top-picker .form-control {
     border-bottom: 1px solid #AAB2BD;
+  }
+
+  .invalid td:not(:hover):not(.control-buttons) {
+    text-decoration: line-through;
+    color: #bcbcbc;
+  }
+
+  .control-buttons {
+    padding: 0;
+    position: relative;
+
+    .flex-wrap {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      align-items: stretch;
+      justify-content: stretch;
+
+      .btn {
+        white-space: normal;
+        text-overflow: ellipsis;
+        border-radius: 0;
+        align-self: stretch;
+        width: 100%;
+        padding: 2px;
+      }
+    }
   }
 </style>

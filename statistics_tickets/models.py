@@ -44,3 +44,4 @@ class StatisticsTicket(models.Model):
     dispensary_registration = models.IntegerField(choices=DISPENSARY_REGISTRATIONS, default=DISPENSARY_NO, blank=True, help_text="Диспансерный учёт")
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, help_text="Врач")
     date = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
+    invalid_ticket = models.BooleanField(default=False, blank=True, help_text='Статталон недействителен')

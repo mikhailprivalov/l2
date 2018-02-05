@@ -28,6 +28,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
+from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket
 
 
@@ -861,6 +862,7 @@ def statistics_tickets_send(request):
                          dispensary_registration=int(rd["disp"]),
                          doctor=request.user.doctorprofile)
     t.save()
+    Log(key="", type=7000, body=json.dumps(rd), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
@@ -872,10 +874,13 @@ def statistics_tickets_get(request):
     date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
     date_end = date_start + datetime.timedelta(1)
     n = 0
-    for row in StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, date__range=(date_start, date_end,)):
-        n += 1
+    for row in StatisticsTicket.objects.filter(doctor=request.user.doctorprofile,
+                                               date__range=(date_start, date_end,)).order_by('pk'):
+        if not row.invalid_ticket:
+            n += 1
         response["data"].append({
-            "n": n,
+            "pk": row.pk,
+            "n": n if not row.invalid_ticket else '',
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),
             "purpose": row.purpose.title,
@@ -883,6 +888,18 @@ def statistics_tickets_get(request):
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display(),
-            "result": row.result.title
+            "result": row.result.title,
+            "invalid": row.invalid_ticket
         })
+    return JsonResponse(response)
+
+
+@group_required("Оформление статталонов")
+def statistics_tickets_invalidate(request):
+    response = {"ok": False}
+    request_data = json.loads(request.body)
+    if StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, pk=request_data.get("pk", -1)).exists():
+        StatisticsTicket.objects.filter(pk=request_data["pk"]).update(invalid_ticket=request_data.get("invalid", False))
+        response["ok"] = True
+        Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)), user=request.user.doctorprofile).save()
     return JsonResponse(response)
