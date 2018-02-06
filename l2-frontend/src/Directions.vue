@@ -2,7 +2,11 @@
   <div ref="root">
     <div id="cont_left" class="split split-horizontal">
       <div id="left_top" class="split content">
-        <patient-picker v-model="selected_card" directive_from_need="true" search_results="true"/>
+        <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
+          <div slot="for_card" class="text-right">
+            <a :href="ticket_url">Создать статталон</a>
+          </div>
+        </patient-picker>
       </div>
       <div id="left_bottom" class="split content" style="padding: 0;">
         <researches-picker v-model="selected_researches"/>
@@ -96,6 +100,9 @@
     computed: {
       patient_valid() {
         return this.selected_card.pk !== -1
+      },
+      ticket_url() {
+        return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
       }
     }
   }

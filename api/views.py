@@ -420,6 +420,7 @@ def patients_search_card(request):
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
+    p4 = re.compile(r'card_pk:\d+')
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     if re.search(p, query.lower()):
         initials = query[0:3].upper()
@@ -486,8 +487,12 @@ def patients_search_card(request):
             for o in objects:
                 o.sync_with_rmis(c=c)
 
-    for row in Card.objects.filter(base=card_type, individual__in=objects, is_archive=False).prefetch_related(
-            "individual").distinct():
+    if re.search(p4, query):
+        cards = Card.objects.filter(pk=int(query.split(":")[1]))
+    else:
+        cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
+
+    for row in cards.prefetch_related("individual").distinct():
         data.append({"type_title": card_type.title,
                      "num": row.number,
                      "family": row.individual.family,

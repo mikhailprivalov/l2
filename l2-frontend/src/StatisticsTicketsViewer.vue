@@ -5,7 +5,7 @@
       <button class="btn btn-blue-nb" @click="load" style="width: 42px;display: inline-block;align-self: stretch"><i
         class="glyphicon glyphicon-refresh"></i></button>
       <button class="btn btn-blue-nb" style="width: 94px;display: inline-block;align-self: stretch" @click="print"><i
-        class="glyphicon glyphicon-print"></i> Печать
+        class="glyphicon glyphicon-th-list"></i> Экспорт
       </button>
     </div>
     <div class="content-picker">

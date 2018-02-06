@@ -2,14 +2,18 @@
   <div ref="root" class="split content">
     <div ref="ct" style="display: flex">
       <div ref="tl" class="split content">
-        <patient-picker v-model="selected_card" directive_from_need="false" search_results="false" history_n="false"/>
+        <patient-picker v-model="selected_card" directive_from_need="false" search_results="false" history_n="false">
+          <div slot="for_card" class="text-right">
+            <a :href="directions_url">Создать направления</a>
+          </div>
+        </patient-picker>
       </div>
       <div ref="tr" class="split content" style="overflow: visible;display: flex;padding-bottom: 0">
-        <statistics-ticket-creator :base="selected_card.base" :card_pk="selected_card.pk" />
+        <statistics-ticket-creator :base="selected_card.base" :card_pk="selected_card.pk"/>
       </div>
     </div>
     <div ref="cb" class="split content" style="padding: 0;">
-      <statistics-tickets-viewer />
+      <statistics-tickets-viewer/>
     </div>
   </div>
 </template>
@@ -30,6 +34,11 @@
     data() {
       return {
         selected_card: {pk: -1, base: {}, ofname: -1, operator: false, history_num: ''},
+      }
+    },
+    computed: {
+      directions_url() {
+        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
       }
     },
     mounted() {

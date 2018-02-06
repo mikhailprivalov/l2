@@ -61,6 +61,8 @@
       </tr>
       </tbody>
     </table>
+    <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
+    <slot name="for_all" style="margin-top: 5px"/>
     <!--<div v-if="search_results === 'true' && loaded" style="text-align: right;margin-top: 5px;"><a
       class="btn btn-blue-nb btn-sm" href="#">Поиск результатов по видам исследований</a></div>-->
     <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
@@ -330,6 +332,8 @@
         if (this.base === -1 && this.bases.length > 0) {
           let params = new URLSearchParams(window.location.search)
           let rmis_uid = params.get('rmis_uid')
+          let base_pk = params.get('base_pk')
+          let card_pk = params.get('card_pk')
           if (rmis_uid) {
             window.history.pushState('', '', window.location.href.split('?')[0])
             for (let row of this.bases) {
@@ -343,7 +347,23 @@
             if (this.base === -1) {
               this.base = this.bases[0].pk
             }
-          } else {
+          } else if (base_pk) {
+            window.history.pushState('', '', window.location.href.split('?')[0])
+            for (let row of this.bases) {
+              if (row.pk === parseInt(base_pk)) {
+                this.base = row.pk
+                break
+              }
+            }
+            if (this.base === -1) {
+              this.base = this.bases[0].pk
+            }
+            if (card_pk) {
+              this.query = `card_pk:${card_pk}`
+              this.search_after_loading = true
+            }
+          }
+          else {
             this.base = this.bases[0].pk
           }
           this.emit_input()
@@ -366,6 +386,9 @@
         this.selected_card = {}
         this.history_num = ''
         this.founded_cards = []
+        if (this.query.includes('card_pk:')) {
+          this.query = ''
+        }
         this.emit_input()
       },
       search() {
