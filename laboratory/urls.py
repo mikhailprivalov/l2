@@ -31,6 +31,7 @@ urlpatterns = [
                   path('direction/researches/update/history/print', directions.views.print_history),
                   path('directory/', include('directory.urls')),
                   path('researches/get/one', researches.views.researches_get_one),
+                  path('dashboard/', include('mainmenu.urls')),
                   path('mainmenu/', include('mainmenu.urls')),
                   path('tubes/get', receivematerial.views.tubes_get),
                   path('results/', include('results.urls')),
