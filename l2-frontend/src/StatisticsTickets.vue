@@ -3,7 +3,7 @@
     <div ref="ct" style="display: flex">
       <div ref="tl" class="split content">
         <patient-picker v-model="selected_card" directive_from_need="false" search_results="false" history_n="false">
-          <div slot="for_card" class="text-right">
+          <div v-if="can_create_directions" slot="for_card" class="text-right">
             <a :href="directions_url">Создать направления</a>
           </div>
         </patient-picker>
@@ -39,6 +39,16 @@
     computed: {
       directions_url() {
         return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
+      },
+      can_create_directions() {
+        if('groups' in this.$store.getters.user_data) {
+          for (let g of this.$store.getters.user_data.groups) {
+            if (g === "Лечащий врач" || g === "Оператор лечащего врача") {
+              return true
+            }
+          }
+        }
+        return false
       }
     },
     mounted() {
