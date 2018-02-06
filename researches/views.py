@@ -45,6 +45,7 @@ def researches_get_one(request):
                 res["title"] = research.title
                 res["i"] = i
                 res["can_comment"] = research.can_lab_result_comment
+                res["no_units_and_ref"] = research.no_units_and_ref
                 for val in fractions:
                     ref_m = val.ref_m
                     ref_f = val.ref_f

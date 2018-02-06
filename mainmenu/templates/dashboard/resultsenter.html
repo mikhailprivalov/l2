@@ -1091,6 +1091,20 @@
             margin-top: 5px;
         }
 
+        .no_units_and_ref #ref-settings-btn {
+            display: none;
+        }
+
+        .no_units_and_ref #save-btn {
+           border-top-left-radius: 3px!important;
+           border-bottom-left-radius: 3px!important;
+        }
+
+        .no_units_and_ref table tr > th:nth-child(3), .no_units_and_ref table tr > th:nth-child(4),
+        .no_units_and_ref table tr > td:nth-child(3), .no_units_and_ref table tr > td:nth-child(4) {
+            display: none;
+        }
+
     </style>
 {% endblock %}
 
@@ -1188,7 +1202,8 @@
                         researches_cache[v.i] = {
                             "title": v.title,
                             "fractions": v.fractions,
-                            "can_comment": v.can_comment
+                            "can_comment": v.can_comment,
+                            "no_units_and_ref": v.no_units_and_ref
                         };
                     }
                 }).always(dechl);
@@ -1540,12 +1555,14 @@
                         researches_cache[research_pk] = {
                             "title": data2.title,
                             "fractions": data2.fractions,
-                            "can_comment": data2.can_comment
+                            "can_comment": data2.can_comment,
+                            "no_units_and_ref": data2.no_units_and_ref
                         }
                     } else {
                         data2.title = researches_cache[research_pk].title;
                         data2.fractions = researches_cache[research_pk].fractions;
                         data2.can_comment = researches_cache[research_pk].can_comment;
+                        data2.no_units_and_ref = researches_cache[research_pk].no_units_and_ref;
                     }
                     data2.sex = dir_data.client_sex;
                     data2.age = dir_data.client_vozrast;
@@ -1563,6 +1580,10 @@
                     if (!rendered)
                         rendered_form_cache[research_pk] = jade.compile(template)(data2);
                     $("#result-form").html(rendered_form_cache[research_pk]);
+                    $("#result-form").removeClass("no_units_and_ref");
+                    if(data2.no_units_and_ref) {
+                        $("#result-form").addClass("no_units_and_ref");
+                    }
                     if (rendered)
                         $("#issledovaniye_id").val(data2.res_id);
                     $(`#issledovaniya [num='${data2.res_id}']`).addClass("active");
