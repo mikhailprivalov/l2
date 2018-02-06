@@ -8,12 +8,24 @@ async function getTicketsTypes() {
     }
   } catch (e) {
   }
-  return {visit: [], result: []}
+  return {visit: [], result: [], cause: [], outcome: [], exclude: []}
 }
 
-async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp, result) {
+async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp, result, cause, outcome, disp_diagnos, exclude) {
   try {
-    const response = await HTTP.post('statistics-tickets/send', {card_pk, visit, info, first_time, primary_visit, disp, result})
+    const response = await HTTP.post('statistics-tickets/send', {
+      card_pk,
+      visit,
+      info,
+      first_time,
+      primary_visit,
+      disp,
+      result,
+      cause,
+      outcome,
+      disp_diagnos,
+      exclude
+    })
     if (response.statusText === 'OK') {
       return response.data
     }

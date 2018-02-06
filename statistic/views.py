@@ -110,12 +110,14 @@ def statistic_xls(request):
             ("Подразделение", 7200),
             ("Врач", 7000),
             ("Цель посещения", 4000),
+            ("Причина", 4000),
             ("Пациент", 7200),
             ("Карта", 3200),
             ("Диагнозы, виды услуг, виды травм", 7200),
             ("Первый раз", 2000),
             ("Первичный приём", 2800),
             ("Результат обращения", 4500),
+            ("Исход", 4500),
             ("Диспансерный учёт", 4200),
         ]
         for col_num in range(len(row)):
@@ -133,14 +135,18 @@ def statistic_xls(request):
                 ticket.date.strftime("%m.%d.%Y %X"),
                 ticket.doctor.podrazdeleniye.title,
                 ticket.doctor.fio,
-                ticket.purpose.title,
+                "" if not ticket.purpose else ticket.purpose.title,
+                "" if not ticket.cause else ticket.cause.title,
                 ticket.card.individual.fio(full=True),
                 ticket.card.number_with_type(),
                 ticket.info,
                 "первый раз" if ticket.first_time else "",
                 "первич." if ticket.primary_visit else "повторн.",
-                ticket.result.title,
-                ticket.get_dispensary_registration_display(),
+                "" if not ticket.result else ticket.result.title,
+                "" if not ticket.outcome else ticket.outcome.title,
+                ticket.get_dispensary_registration_display()
+                + (" (" + ticket.dispensary_diagnos + ")" if ticket.dispensary_diagnos != "" else "")
+                + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)

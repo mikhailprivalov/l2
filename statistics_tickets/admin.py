@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from statistics_tickets.models import ResultOfTreatment, VisitPurpose, StatisticsTicket
+from statistics_tickets.models import ResultOfTreatment, VisitPurpose, StatisticsTicket, Causes, Outcomes, \
+    ExcludePurposes
 
 
 class StatisticsTicketAdmin(admin.ModelAdmin):
@@ -21,4 +22,7 @@ class StatisticsTicketAdmin(admin.ModelAdmin):
 
 admin.site.register(VisitPurpose)
 admin.site.register(ResultOfTreatment)
+admin.site.register(Causes)
+admin.site.register(Outcomes)
+admin.site.register(ExcludePurposes)
 admin.site.register(StatisticsTicket, StatisticsTicketAdmin)

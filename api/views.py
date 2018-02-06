@@ -29,7 +29,8 @@ from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
 from slog.models import Log
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Causes, Outcomes, \
+    ExcludePurposes
 
 
 def translit(locallangstring):
@@ -850,7 +851,13 @@ def directions_results(request):
 def statistics_tickets_types(request):
     result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
               "result": [{"pk": x.pk, "title": x.title} for x in
-                         ResultOfTreatment.objects.filter(hide=False).order_by("pk")]}
+                         ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
+              "cause": [{"pk": x.pk, "title": x.title} for x in
+                        Causes.objects.filter(hide=False).order_by("pk")],
+              "outcome": [{"pk": x.pk, "title": x.title} for x in
+                          Outcomes.objects.filter(hide=False).order_by("pk")],
+              "exclude": [{"pk": x.pk, "title": x.title} for x in
+                          ExcludePurposes.objects.filter(hide=False).order_by("pk")]}
     return JsonResponse(result)
 
 
@@ -865,7 +872,11 @@ def statistics_tickets_send(request):
                          first_time=rd["first_time"],
                          primary_visit=rd["primary_visit"],
                          dispensary_registration=int(rd["disp"]),
-                         doctor=request.user.doctorprofile)
+                         doctor=request.user.doctorprofile,
+                         cause=Causes.objects.filter(pk=rd["cause"]).first(),
+                         outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
+                         dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
+                         dispensary_diagnos=rd["disp_diagnos"])
     t.save()
     Log(key="", type=7000, body=json.dumps(rd), user=request.user.doctorprofile).save()
     return JsonResponse(response)
@@ -889,11 +900,15 @@ def statistics_tickets_get(request):
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),
             "purpose": row.purpose.title,
+            "cause": row.cause.title,
             "first_time": row.first_time,
             "primary": row.primary_visit,
             "info": row.info,
-            "disp": row.get_dispensary_registration_display(),
+            "disp": row.get_dispensary_registration_display()
+                    + (" (" + row.dispensary_diagnos + ")"  if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title,
+            "outcome": row.outcome.title,
             "invalid": row.invalid_ticket,
             "can_invalidate": row.can_invalidate()
         })
@@ -906,9 +921,11 @@ def statistics_tickets_invalidate(request):
     request_data = json.loads(request.body)
     if StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
-            StatisticsTicket.objects.filter(pk=request_data["pk"]).update(invalid_ticket=request_data.get("invalid", False))
+            StatisticsTicket.objects.filter(pk=request_data["pk"]).update(
+                invalid_ticket=request_data.get("invalid", False))
             response["ok"] = True
-            Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)), user=request.user.doctorprofile).save()
+            Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)),
+                user=request.user.doctorprofile).save()
         else:
             response["message"] = "Время на отмену или возврат истекло"
     return JsonResponse(response)

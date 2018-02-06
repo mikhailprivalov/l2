@@ -12,13 +12,15 @@
       <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;margin-bottom: 0">
         <colgroup>
           <col width="35">
-          <col width="300">
-          <col width="170">
+          <col width="230">
+          <col width="130">
+          <col width="130">
           <col width="75">
           <col width="75">
           <col>
           <col width="100">
-          <col width="180">
+          <col width="140">
+          <col width="140">
           <col width="75">
         </colgroup>
         <thead>
@@ -26,11 +28,13 @@
           <th>№</th>
           <th>Пациент, карта</th>
           <th>Цель посещения</th>
+          <th>Причина обращения</th>
           <th>Первый раз</th>
           <th>Первич. приём</th>
           <th>Диагнозы, виды услуг, травм</th>
           <th>Дисп. учёт</th>
           <th>Результат обращения</th>
+          <th>Исход</th>
           <th></th>
         </tr>
         </thead>
@@ -40,13 +44,15 @@
                style="table-layout: fixed;margin-bottom: 0">
           <colgroup>
             <col width="35">
-            <col width="300">
-            <col width="170">
+            <col width="230">
+            <col width="130">
+            <col width="130">
             <col width="75">
             <col width="75">
             <col>
             <col width="100">
-            <col width="180">
+            <col width="140">
+            <col width="140">
             <col width="75">
           </colgroup>
           <tbody>
@@ -54,6 +60,7 @@
             <td>{{row.n}}</td>
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
             <td>{{row.purpose}}</td>
+            <td>{{row.cause}}</td>
 
             <td v-if="row.first_time">да</td>
             <td v-else>нет</td>
@@ -64,9 +71,11 @@
             <td v-html="row.info"></td>
             <td>{{row.disp}}</td>
             <td>{{row.result}}</td>
+            <td>{{row.outcome}}</td>
             <td class="control-buttons">
               <div class="flex-wrap" v-if="row.can_invalidate">
-                <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть</button>
+                <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть
+                </button>
                 <button class="btn btn-sm btn-blue-nb" v-else @click="invalidate(row.pk, true)">Отменить</button>
               </div>
             </td>
@@ -129,7 +138,7 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         statistics_tickets_point.invalidateTicket(pk, invalid).then(data => {
-          if(!data.ok) {
+          if (!data.ok) {
             errmessage(data.message)
           }
           vm.load()

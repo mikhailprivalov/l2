@@ -6,6 +6,12 @@
         <select-picker-b no-border-left="true" :options="visit_select" v-model="visit"/>
       </div>
     </div>
+    <div class="input-group" style="margin-top: 5px;margin-bottom: 0">
+      <span class="input-group-addon">Причина обращения</span>
+      <div class="input-group-btn" style="width: 100%;">
+        <select-picker-b no-border-left="true" :options="cause_select" v-model="cause"/>
+      </div>
+    </div>
     <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
       <label style="width: 100%;font-weight: normal;">Диагноз, виды услуг, виды травм:
         <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
@@ -29,10 +35,29 @@
       </div>
     </div>
 
+    <div class="input-group flex-group" v-show="disp === '1' || disp === '2'">
+      <span class="input-group-addon">Диагноз учёта</span>
+      <input type="text" class="form-control" v-model="disp_diagnos"/>
+    </div>
+
+    <div class="input-group flex-group" v-show="disp === '3'">
+      <span class="input-group-addon">Причина снятия</span>
+      <div class="input-group-btn">
+        <select-picker-b no-border-left="true" :options="exclude_select" v-model="exclude"/>
+      </div>
+    </div>
+
     <div class="input-group flex-group">
       <span class="input-group-addon">Результат обращения</span>
       <div class="input-group-btn">
         <select-picker-b no-border-left="true" :options="result_select" v-model="result"/>
+      </div>
+    </div>
+
+    <div class="input-group flex-group">
+      <span class="input-group-addon">Исход</span>
+      <div class="input-group-btn">
+        <select-picker-b no-border-left="true" :options="outcome_select" v-model="outcome"/>
       </div>
     </div>
 
@@ -64,6 +89,9 @@
         types: {
           visit: [],
           result: [],
+          cause: [],
+          outcome: [],
+          exclude: [],
           disp: [
             {pk: 0, title: 'Не состоит'},
             {pk: 1, title: 'Состоит'},
@@ -73,7 +101,11 @@
         },
         visit: -1,
         result: -1,
+        cause: -1,
+        outcome: -1,
+        exclude: -1,
         disp: -1,
+        disp_diagnos: '',
         info: '',
         first_time: false,
         primary_visit: true,
@@ -90,11 +122,54 @@
         if (data.result.length > 0)
           vm.result = data.result[0].pk
         vm.disp = vm.types.disp[0].pk
+
+        vm.types.cause = data.cause
+        if (data.cause.length > 0)
+          vm.cause = data.cause[0].pk
+        vm.types.outcome = data.outcome
+        if (data.outcome.length > 0)
+          vm.outcome = data.outcome[0].pk
+        vm.types.exclude = data.exclude
+        if (data.exclude.length > 0)
+          vm.exclude = data.exclude[0].pk
       }).finally(() => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
       })
     },
     computed: {
+      exclude_val() {
+        if (this.disp === '3') {
+          return this.exclude
+        }
+        return -1
+      },
+      disp_diagnos_val() {
+        if (this.disp === '1' || this.disp === '2') {
+          return this.disp_diagnos
+        }
+        return ""
+      },
+      cause_select() {
+        let r = []
+        for (let row of this.types.cause) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
+      outcome_select() {
+        let r = []
+        for (let row of this.types.outcome) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
+      exclude_select() {
+        let r = []
+        for (let row of this.types.exclude) {
+          r.push({value: row.pk, label: row.title})
+        }
+        return r
+      },
       visit_select() {
         let r = []
         for (let row of this.types.visit) {
@@ -145,16 +220,29 @@
       create() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        statistics_tickets_point.sendTicket(vm.card_pk, vm.visit, vm.info, vm.first_time, vm.primary_visit, vm.disp, vm.result).then(() => {
-          vm.clear()
-          okmessage('Статталон добавлен')
-          this.$root.$emit('create-ticket')
-        }).finally(() => {
+        statistics_tickets_point.sendTicket(vm.card_pk,
+          vm.visit,
+          vm.info,
+          vm.first_time,
+          vm.primary_visit,
+          vm.disp,
+          vm.result,
+          vm.cause,
+          vm.outcome,
+          vm.disp_diagnos_val,
+          vm.exclude_val,
+        )
+          .then(() => {
+            vm.clear()
+            okmessage('Статталон добавлен')
+            this.$root.$emit('create-ticket')
+          }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       clear() {
         this.info = ''
+        this.disp_diagnos = ''
       }
     },
     mounted() {
