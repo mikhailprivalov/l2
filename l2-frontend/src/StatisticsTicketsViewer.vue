@@ -81,7 +81,7 @@
             </td>
           </tr>
           <tr v-if="data.length === 0">
-            <td class="text-center" colspan="9">За выбранную дату нет статталонов</td>
+            <td class="text-center" colspan="11">За выбранную дату нет статталонов</td>
           </tr>
           </tbody>
         </table>
