@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+import pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -12,6 +13,7 @@ import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result
+from laboratory import settings
 from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
 from users.models import DoctorProfile
@@ -131,7 +133,7 @@ def statistic_xls(request):
                                                                                      "date"):
             row = [
                 str(row_num),
-                ticket.date.strftime("%m.%d.%Y %X"),
+                ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
                 ticket.doctor.podrazdeleniye.title,
                 ticket.doctor.fio,
                 "" if not ticket.purpose else ticket.purpose.title,
