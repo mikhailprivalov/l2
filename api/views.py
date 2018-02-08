@@ -468,7 +468,7 @@ def patients_search_card(request):
                 objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
             except ConnectionError:
                 pass
-
+    pp3 = False
     if re.search(p3, query) or card_type.is_rmis:
         resync = True
         if len(list(objects)) == 0:
@@ -476,6 +476,8 @@ def patients_search_card(request):
             try:
                 objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
                                                     card__base=card_type)
+                if objects.count() > 0:
+                    pp3 = True
             except ValueError:
                 pass
             if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
@@ -492,7 +494,7 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-        if re.search(p3, query):
+        if pp3:
             cards = cards.filter(pk=int(query))
 
     for row in cards.prefetch_related("individual").distinct():
