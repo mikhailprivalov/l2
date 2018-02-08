@@ -14,10 +14,10 @@ class StatisticsTicketAdmin(admin.ModelAdmin):
     readonly_fields = ('card',)
 
     def purpose__title(self, obj: StatisticsTicket):
-        return obj.purpose.title if obj else ""
+        return obj.purpose.title if obj.purpose else ""
 
     def result__title(self, obj: StatisticsTicket):
-        return obj.result.title if obj else ""
+        return obj.result.title if obj.result else ""
 
 
 admin.site.register(VisitPurpose)

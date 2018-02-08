@@ -896,14 +896,14 @@ def statistics_tickets_get(request):
             "n": n if not row.invalid_ticket else '',
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),
-            "purpose": row.purpose.title,
+            "purpose": row.purpose.title if row.purpose else "",
             "first_time": row.first_time,
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display()
                     + (" (" + row.dispensary_diagnos + ")"  if row.dispensary_diagnos != "" else "")
                     + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
-            "result": row.result.title,
+            "result": row.result.title if row.result else "",
             "outcome": row.outcome.title,
             "invalid": row.invalid_ticket,
             "can_invalidate": row.can_invalidate()
