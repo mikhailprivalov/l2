@@ -494,7 +494,7 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-        if pp3:
+        if pp3 and query.isdigit():
             cards = cards.filter(pk=int(query))
 
     for row in cards.prefetch_related("individual").distinct():
