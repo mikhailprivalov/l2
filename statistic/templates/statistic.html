@@ -21,7 +21,7 @@
     </div>
     <br/>
     <div class="row">
-        {% if request.user|has_group:"Статистика" or request.user|has_group:"Врач-лаборант" or request.user.is_superuser %}
+        {% if request.user|has_group:"Просмотр статистики" or request.user|has_group:"Врач-лаборант" or request.user.is_superuser %}
             <div class="col-xs-6">
                 <div class="panel panel-default panel-flt">
                     <div class="panel-heading">
@@ -62,7 +62,7 @@
                 </div>
             </div>
         {% endif %}
-        {% if request.user|has_group:"Статистика" or request.user.is_superuser %}
+        {% if request.user|has_group:"Просмотр статистики" or request.user.is_superuser %}
             <div class="col-xs-6">
                 <div class="panel panel-default panel-flt">
                     <div class="panel-heading">
