@@ -492,7 +492,7 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
-        if re.search(p3, query):
+        if re.match(p3, query):
             cards = cards.filter(number=query)
 
     for row in cards.prefetch_related("individual").distinct():
