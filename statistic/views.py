@@ -87,7 +87,7 @@ def statistic_xls(request):
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
 
-        access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
+        access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name', flat=True)) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
                  (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
                      pk=x).exists()]
