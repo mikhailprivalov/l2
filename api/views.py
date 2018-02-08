@@ -476,7 +476,7 @@ def patients_search_card(request):
             try:
                 objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
                                                     card__base=card_type)
-                if objects.count() > 0:
+                if objects.count() > 0 and not card_type.is_rmis:
                     pp3 = True
             except ValueError:
                 pass
