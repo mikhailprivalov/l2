@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
-      <label style="width: 100%;font-weight: normal;">Код диагноза (МКБ 10):
+      <label style="width: 100%;font-weight: normal;">Код диагноза (МКБ 10), виды услуг, виды травм:
         <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
       </label>
     </div>
