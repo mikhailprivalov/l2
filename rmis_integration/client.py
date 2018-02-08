@@ -709,27 +709,33 @@ class Directions(BaseRequester):
         def upload_dir(self, direct, out, i):
             sema.acquire()
             update_lock()
-            uploaded.append(self.check_send(direct, out))
-            if out:
-                out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk, i, cnt, uploaded[-1]))
-            sema.release()
+            try:
+                uploaded.append(self.check_send(direct, out))
+                if out:
+                    out.write("Upload direction {} ({}/{}); RMIS number={}".format(direct.pk, i, cnt, uploaded[-1]))
+            finally:
+                sema.release()
 
         def upload_services(self, direct, out):
             sema.acquire()
             update_lock()
-            self.check_service(direct, out)
-            if out:
-                out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
-            sema.release()
+            try:
+                self.check_service(direct, out)
+                if out:
+                    out.write("Check services for direction {}; RMIS number={}".format(direct.pk, direct.rmis_number))
+            finally:
+                sema.release()
 
         def upload_results(self, direct, out, i):
             sema.acquire()
             update_lock()
-            if direct.is_all_confirm():
-                uploaded_results.append(self.check_send_results(direct))
-                if out:
-                    out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
-            sema.release()
+            try:
+                if direct.is_all_confirm():
+                    uploaded_results.append(self.check_send_results(direct))
+                    if out:
+                        out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
+            finally:
+                sema.release()
 
         for d in to_upload:
             i += 1
