@@ -21,7 +21,6 @@ async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp,
       primary_visit,
       disp,
       result,
-      cause,
       outcome,
       disp_diagnos,
       exclude
