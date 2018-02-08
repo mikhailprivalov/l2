@@ -89,7 +89,8 @@ def statistic_xls(request):
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
 
-        access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name', flat=True)) or request.user.is_superuser
+        access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
+                                                                                  flat=True)) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
                  (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
                      pk=x).exists()]
@@ -130,8 +131,7 @@ def statistic_xls(request):
         for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False,
                                                       doctor__pk__in=users).order_by("card__individual__family",
                                                                                      "doctor__fio",
-                                                                                     "doctor__podrazdeleniye__title",
-                                                                                     "date"):
+                                                                                     "doctor__podrazdeleniye__title").order_by("date"):
             row = [
                 str(row_num),
                 ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
@@ -154,7 +154,8 @@ def statistic_xls(request):
             row_num += 1
     elif tp == "journal-get-material":
         import datetime
-        access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser
+        access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',
+                                                                                 flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
                  (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
                      pk=x).exists()]
