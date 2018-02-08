@@ -1,3 +1,3 @@
-__version__ = (2, 7, 4)
+__version__ = (2, 7, 4, 2)
 __version_type__ = "beta"
 VERSION = ".".join(map(str, __version__)) + " " + __version_type__
