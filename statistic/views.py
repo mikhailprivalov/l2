@@ -120,6 +120,7 @@ def statistic_xls(request):
             ("Результат обращения", 4500),
             ("Исход", 4500),
             ("Диспансерный учёт", 4200),
+            ("Диагноз диспансерного учёта", 4200),
         ]
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_b)
@@ -145,8 +146,8 @@ def statistic_xls(request):
                 "" if not ticket.result else ticket.result.title,
                 "" if not ticket.outcome else ticket.outcome.title,
                 ticket.get_dispensary_registration_display()
-                + (" (" + ticket.dispensary_diagnos + ")" if ticket.dispensary_diagnos != "" else "")
                 + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
+                ticket.dispensary_diagnos
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
