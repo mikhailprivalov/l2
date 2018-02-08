@@ -11,6 +11,9 @@ class VisitPurpose(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = 'Цель посещения'
         verbose_name_plural = 'Цели посещений'
@@ -19,6 +22,9 @@ class VisitPurpose(models.Model):
 class ResultOfTreatment(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Результат обращения'
@@ -29,6 +35,9 @@ class Outcomes(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name = 'Исход'
         verbose_name_plural = 'Исходы'
@@ -37,6 +46,9 @@ class Outcomes(models.Model):
 class ExcludePurposes(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Причина снятия с учёта'
