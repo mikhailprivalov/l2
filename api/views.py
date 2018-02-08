@@ -904,7 +904,7 @@ def statistics_tickets_get(request):
                     + (" (" + row.dispensary_diagnos + ")"  if row.dispensary_diagnos != "" else "")
                     + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title if row.result else "",
-            "outcome": row.outcome.title,
+            "outcome": row.outcome.title if row.outcome else "",
             "invalid": row.invalid_ticket,
             "can_invalidate": row.can_invalidate()
         })
