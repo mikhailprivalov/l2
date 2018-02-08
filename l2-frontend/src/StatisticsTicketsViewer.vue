@@ -14,7 +14,6 @@
           <col width="35">
           <col width="230">
           <col width="130">
-          <col width="130">
           <col width="75">
           <col width="75">
           <col>
@@ -28,7 +27,6 @@
           <th>№</th>
           <th>Пациент, карта</th>
           <th>Цель посещения</th>
-          <th>Причина обращения</th>
           <th>Первый раз</th>
           <th>Первич. приём</th>
           <th>Диагнозы, виды услуг, травм</th>
@@ -46,7 +44,6 @@
             <col width="35">
             <col width="230">
             <col width="130">
-            <col width="130">
             <col width="75">
             <col width="75">
             <col>
@@ -60,7 +57,6 @@
             <td>{{row.n}}</td>
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
             <td>{{row.purpose}}</td>
-            <td>{{row.cause}}</td>
 
             <td v-if="row.first_time">да</td>
             <td v-else>нет</td>

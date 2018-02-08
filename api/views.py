@@ -29,7 +29,7 @@ from results.views import result_normal
 from rmis_integration.client import Client
 from slog import models as slog
 from slog.models import Log
-from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Causes, Outcomes, \
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 
 
@@ -852,8 +852,6 @@ def statistics_tickets_types(request):
     result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
               "result": [{"pk": x.pk, "title": x.title} for x in
                          ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
-              "cause": [{"pk": x.pk, "title": x.title} for x in
-                        Causes.objects.filter(hide=False).order_by("pk")],
               "outcome": [{"pk": x.pk, "title": x.title} for x in
                           Outcomes.objects.filter(hide=False).order_by("pk")],
               "exclude": [{"pk": x.pk, "title": x.title} for x in
@@ -873,7 +871,6 @@ def statistics_tickets_send(request):
                          primary_visit=rd["primary_visit"],
                          dispensary_registration=int(rd["disp"]),
                          doctor=request.user.doctorprofile,
-                         cause=Causes.objects.filter(pk=rd["cause"]).first(),
                          outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
                          dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
                          dispensary_diagnos=rd["disp_diagnos"])
@@ -900,7 +897,6 @@ def statistics_tickets_get(request):
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),
             "purpose": row.purpose.title,
-            "cause": row.cause.title,
             "first_time": row.first_time,
             "primary": row.primary_visit,
             "info": row.info,

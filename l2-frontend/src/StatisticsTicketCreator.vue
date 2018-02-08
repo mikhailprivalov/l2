@@ -6,12 +6,6 @@
         <select-picker-b no-border-left="true" :options="visit_select" v-model="visit"/>
       </div>
     </div>
-    <div class="input-group" style="margin-top: 5px;margin-bottom: 0">
-      <span class="input-group-addon">Причина обращения</span>
-      <div class="input-group-btn" style="width: 100%;">
-        <select-picker-b no-border-left="true" :options="cause_select" v-model="cause"/>
-      </div>
-    </div>
     <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
       <label style="width: 100%;font-weight: normal;">Диагноз, виды услуг, виды травм:
         <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
@@ -89,7 +83,6 @@
         types: {
           visit: [],
           result: [],
-          cause: [],
           outcome: [],
           exclude: [],
           disp: [
@@ -101,7 +94,6 @@
         },
         visit: -1,
         result: -1,
-        cause: -1,
         outcome: -1,
         exclude: -1,
         disp: -1,
@@ -123,9 +115,6 @@
           vm.result = data.result[0].pk
         vm.disp = vm.types.disp[0].pk
 
-        vm.types.cause = data.cause
-        if (data.cause.length > 0)
-          vm.cause = data.cause[0].pk
         vm.types.outcome = data.outcome
         if (data.outcome.length > 0)
           vm.outcome = data.outcome[0].pk
@@ -148,13 +137,6 @@
           return this.disp_diagnos
         }
         return ""
-      },
-      cause_select() {
-        let r = []
-        for (let row of this.types.cause) {
-          r.push({value: row.pk, label: row.title})
-        }
-        return r
       },
       outcome_select() {
         let r = []
@@ -227,7 +209,6 @@
           vm.primary_visit,
           vm.disp,
           vm.result,
-          vm.cause,
           vm.outcome,
           vm.disp_diagnos_val,
           vm.exclude_val,

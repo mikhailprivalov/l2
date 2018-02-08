@@ -34,15 +34,6 @@ class Outcomes(models.Model):
         verbose_name_plural = 'Исходы'
 
 
-class Causes(models.Model):
-    title = models.CharField(max_length=255)
-    hide = models.BooleanField()
-
-    class Meta:
-        verbose_name = 'Причина обращения'
-        verbose_name_plural = 'Причины обращений'
-
-
 class ExcludePurposes(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField()
@@ -68,8 +59,6 @@ class StatisticsTicket(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE, help_text="Карта")
     purpose = models.ForeignKey(VisitPurpose, blank=True, null=True, on_delete=models.SET_NULL,
                                 help_text="Цель посещения")
-    cause = models.ForeignKey(Causes, blank=True, null=True, on_delete=models.SET_NULL,
-                              help_text="Цель посещения")
     result = models.ForeignKey(ResultOfTreatment, blank=True, null=True, on_delete=models.SET_NULL,
                                help_text="Результат обращения")
     info = models.TextField(blank=True, help_text="Диагнозы, виды услуг, виды травм")
