@@ -7,13 +7,13 @@
       </div>
     </div>
     <div class="form-group basic-textarea" style="margin-top: 5px;margin-bottom: 0">
-      <label style="width: 100%;font-weight: normal;">Диагноз, виды услуг, виды травм:
+      <label style="width: 100%;font-weight: normal;">Код диагноза (МКБ 10):
         <textarea class="form-control" v-model="info" rows="2" style="resize: none;width: 100%"></textarea>
       </label>
     </div>
     <div class="row" style="margin-top: 5px;">
       <div class="col-xs-6">
-        <label style="display: block;font-weight: normal;">Первый раз: <input v-model="first_time" type="checkbox"/>
+        <label style="display: block;font-weight: normal;">Впервые: <input v-model="first_time" type="checkbox"/>
           {{first_time? 'да': 'нет'}}</label>
       </div>
       <div class="col-xs-6">
@@ -29,7 +29,7 @@
       </div>
     </div>
 
-    <div class="input-group flex-group" v-show="disp === '1' || disp === '2'">
+    <div class="input-group flex-group" v-show="disp === '1' || disp === '2' || disp === '3'">
       <span class="input-group-addon">Диагноз учёта</span>
       <input type="text" class="form-control" v-model="disp_diagnos"/>
     </div>
@@ -133,7 +133,7 @@
         return -1
       },
       disp_diagnos_val() {
-        if (this.disp === '1' || this.disp === '2') {
+        if (this.disp === '1' || this.disp === '2' || this.disp === '3') {
           return this.disp_diagnos
         }
         return ""

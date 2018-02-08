@@ -28,6 +28,34 @@
         <span class="input-group-addon">Подготовка, кабинет</span>
         <input type="text" class="form-control" v-model="info">
       </div>
+      <div>
+        <strong>Поля ввода</strong>
+      </div>
+      <div v-for="row in ordered_fields" class="field">
+        <div class="field-inner">
+          <div>
+            <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(row)" @click="dec_order(row)">
+              <i class="glyphicon glyphicon-arrow-up"></i>
+            </button>
+            <button class="btn btn-default btn-sm btn-block" :disabled="is_last_field(row)" @click="inc_order(row)">
+              <i class="glyphicon glyphicon-arrow-down"></i>
+            </button>
+          </div>
+          <div>
+            <div class="input-group">
+              <span class="input-group-addon">Название поля</span>
+              <input type="text" class="form-control" v-model="row.title">
+            </div>
+            <div>
+              <strong>Значение по умолчанию:</strong>
+              <textarea v-model="row.default" rows="2" class="form-control"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-blue-nb" @click="add_field">Добавить поле</button>
+      </div>
     </div>
     <div class="footer-editor">
       <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
@@ -63,7 +91,8 @@
         info: '',
         hide: false,
         cancel_do: false,
-        loaded_pk: -2
+        loaded_pk: -2,
+        fields: []
       }
     },
     watch: {
@@ -77,15 +106,73 @@
       },
       norm_title() {
         return this.title.trim()
-      }
+      },
+      ordered_fields() {
+        return this.fields.sort(function (a, b) {
+          return a.order === b.order ? 0 : +(a.order > b.order) || -1
+        })
+      },
+      min_max_order() {
+        let min = 0
+        let max = 0
+        for (let row of this.fields) {
+          if (min === 0) {
+            min = row.order
+          } else {
+            min = Math.min(min, row.order)
+          }
+          max = Math.max(max, row.order)
+        }
+        return {min, max}
+      },
     },
     methods: {
+      inc_order(row) {
+        if (row.order === this.min_max_order.max)
+          return
+        let next_row = this.find_by_order(row.order + 1)
+        if (next_row) {
+          next_row.order--
+        }
+        row.order++
+      },
+      dec_order(row) {
+        if (row.order === this.min_max_order.min)
+          return
+        let prev_row = this.find_by_order(row.order - 1)
+        if (prev_row) {
+          prev_row.order++
+        }
+        row.order--
+      },
+      find_by_order(order) {
+        for (let row of this.fields) {
+          if (row.order === order) {
+            return row
+          }
+        }
+        return false
+      },
+      is_first_field(row) {
+        return row.order === this.min_max_order.min
+      },
+      is_last_field(row) {
+        return row.order === this.min_max_order.max
+      },
+      add_field() {
+        let order = 0
+        for (let row of this.fields) {
+          order = Math.max(order, row.order)
+        }
+        this.fields.push({pk: -1, order: order + 1, title: '', default: ''})
+      },
       load() {
         this.title = ''
         this.short_title = ''
         this.code = ''
         this.info = ''
         this.hide = false
+        this.fields = []
         if (this.pk >= 0) {
           let vm = this
           vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -99,6 +186,8 @@
           }).finally(() => {
             vm.$store.dispatch(action_types.DEC_LOADING).then()
           })
+        } else {
+          this.add_field()
         }
       },
       cancel() {
@@ -177,5 +266,30 @@
   .content-editor {
     padding: 5px;
     overflow-y: auto;
+  }
+
+  .field {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid #dedede;
+    border-radius: 5px;
+  }
+
+  .field-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .field-inner > div {
+    align-self: stretch;
+
+    &:nth-child(1) {
+      flex: 0 0 35px;
+      padding-right: 5px;
+    }
+    &:nth-child(2) {
+      width: 100%;
+    }
   }
 </style>

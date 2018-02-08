@@ -15,11 +15,11 @@
           <col width="230">
           <col width="130">
           <col width="75">
-          <col width="75">
           <col>
+          <col width="75">
+          <col width="140">
+          <col width="140">
           <col width="100">
-          <col width="140">
-          <col width="140">
           <col width="75">
         </colgroup>
         <thead>
@@ -27,12 +27,12 @@
           <th>№</th>
           <th>Пациент, карта</th>
           <th>Цель посещения</th>
-          <th>Первый раз</th>
           <th>Первич. приём</th>
-          <th>Диагнозы, виды услуг, травм</th>
-          <th>Дисп. учёт</th>
+          <th>Код диагноза (МКБ 10)</th>
+          <th>Впервые</th>
           <th>Результат обращения</th>
           <th>Исход</th>
+          <th>Дисп. учёт</th>
           <th></th>
         </tr>
         </thead>
@@ -45,11 +45,11 @@
             <col width="230">
             <col width="130">
             <col width="75">
-            <col width="75">
             <col>
+            <col width="75">
+            <col width="140">
+            <col width="140">
             <col width="100">
-            <col width="140">
-            <col width="140">
             <col width="75">
           </colgroup>
           <tbody>
@@ -58,16 +58,18 @@
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
             <td>{{row.purpose}}</td>
 
-            <td v-if="row.first_time">да</td>
-            <td v-else>нет</td>
-
             <td v-if="row.primary">да</td>
             <td v-else>нет</td>
 
             <td v-html="row.info"></td>
-            <td>{{row.disp}}</td>
+
+            <td v-if="row.first_time">да</td>
+            <td v-else>нет</td>
+
             <td>{{row.result}}</td>
             <td>{{row.outcome}}</td>
+            <td>{{row.disp}}</td>
+
             <td class="control-buttons">
               <div class="flex-wrap" v-if="row.can_invalidate">
                 <button class="btn btn-sm btn-blue-nb" v-if="row.invalid" @click="invalidate(row.pk, false)">Вернуть
