@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <button @click="create" class="btn btn-blue-nb" :disabled="card_pk === -1" style="margin-top: 10px;width: 100%">
+    <button @click="create" class="btn btn-blue-nb" :disabled="card_pk === -1" style="margin-top: 10px;margin-bottom: 5px;width: 100%">
       Сохранить
     </button>
   </div>
