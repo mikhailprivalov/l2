@@ -124,6 +124,10 @@ class TubesRegistration(models.Model):
         :return:
         """
         from django.utils import timezone
+
+        if not self.getstatus():
+            self.set_get(doc_r)
+
         self.time_recive = timezone.now()
         self.doc_recive = doc_r
         self.save()

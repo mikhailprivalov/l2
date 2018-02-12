@@ -200,6 +200,10 @@ def results_save(request):
             pk=int(request.POST["issledovaniye"]))  # Загрузка исследования из запроса и выборка из базы данных
         if issledovaniye:  # Если исследование найдено
 
+            for t in TubesRegistration.objects.filter(issledovaniya=issledovaniye):
+                if not t.rstatus():
+                    t.set_r(request.user.doctorprofile)
+
             for key in fractions.keys():  # Перебор фракций из запроса
                 created = False
                 if Result.objects.filter(issledovaniye=issledovaniye,

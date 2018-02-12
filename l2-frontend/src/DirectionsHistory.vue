@@ -28,8 +28,8 @@
       <table class="table table-responsive table-bordered"
              style="table-layout: fixed;margin-bottom: 0;position:sticky;top:0;background-color: #fff">
         <colgroup>
-          <col width="70">
           <col width="66">
+          <col width="70">
           <col>
           <col width="65">
           <col width="150">

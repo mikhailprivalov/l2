@@ -28,33 +28,61 @@
         <span class="input-group-addon">Подготовка, кабинет</span>
         <input type="text" class="form-control" v-model="info">
       </div>
-      <div>
-        <strong>Поля ввода</strong>
-      </div>
-      <div v-for="row in ordered_fields" class="field">
-        <div class="field-inner">
-          <div>
-            <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(row)" @click="dec_order(row)">
+      <div v-for="group in ordered_groups" class="group">
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
               <i class="glyphicon glyphicon-arrow-up"></i>
             </button>
-            <button class="btn btn-default btn-sm btn-block" :disabled="is_last_field(row)" @click="inc_order(row)">
+          </span>
+          <span class="input-group-btn">
+            <button class="btn btn-blue-nb nob" :disabled="is_last_group(group)" @click="inc_group_order(group)">
               <i class="glyphicon glyphicon-arrow-down"></i>
             </button>
-          </div>
-          <div>
-            <div class="input-group">
-              <span class="input-group-addon">Название поля</span>
-              <input type="text" class="form-control" v-model="row.title">
+          </span>
+          <span class="input-group-addon">Название группы</span>
+          <input type="text" class="form-control" v-model="group.title">
+        </div>
+        <label>Отображать название <input v-model="group.show_title" type="checkbox"/></label>
+        <div>
+          <strong>Поля ввода</strong>
+        </div>
+        <div v-for="row in ordered_fields(group)" class="field">
+          <div class="field-inner">
+            <div>
+              <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
+                      @click="dec_order(group, row)">
+                <i class="glyphicon glyphicon-arrow-up"></i>
+              </button>
+              <button class="btn btn-default btn-sm btn-block" :disabled="is_last_field(group, row)"
+                      @click="inc_order(group, row)">
+                <i class="glyphicon glyphicon-arrow-down"></i>
+              </button>
             </div>
             <div>
-              <strong>Значение по умолчанию:</strong>
-              <textarea v-model="row.default" rows="2" class="form-control"></textarea>
+              <div class="input-group">
+                <span class="input-group-addon">Название поля</span>
+                <input type="text" class="form-control" v-model="row.title">
+              </div>
+              <div>
+                <strong>Значение по умолчанию:</strong>
+                <textarea v-model="row.default" rows="2" class="form-control"></textarea>
+              </div>
+              <input-tag placeholder="Шаблоны быстр. ввода" :tags.sync="row.values_to_input" :addTagOnKeys="[13]"/>
+            </div>
+            <div>
+              <label>
+                <input type="checkbox" v-model="row.required"/> обязательное
+              </label>
             </div>
           </div>
         </div>
+        <div>
+          <button class="btn btn-blue-nb" @click="add_field(group)">Добавить поле</button>
+        </div>
       </div>
       <div>
-        <button class="btn btn-blue-nb" @click="add_field">Добавить поле</button>
+        <button class="btn btn-blue-nb" @click="add_group">Добавить группу</button>
       </div>
     </div>
     <div class="footer-editor">
@@ -67,8 +95,12 @@
 <script>
   import construct_point from '../api/construct-point'
   import * as action_types from '../store/action-types'
+  import InputTag from 'vue-input-tag'
 
   export default {
+    components: {
+      InputTag
+    },
     name: 'paraclinic-research-editor',
     props: {
       pk: {
@@ -92,7 +124,7 @@
         hide: false,
         cancel_do: false,
         loaded_pk: -2,
-        fields: []
+        groups: [],
       }
     },
     watch: {
@@ -107,15 +139,15 @@
       norm_title() {
         return this.title.trim()
       },
-      ordered_fields() {
-        return this.fields.sort(function (a, b) {
+      ordered_groups() {
+        return this.groups.slice().sort(function (a, b) {
           return a.order === b.order ? 0 : +(a.order > b.order) || -1
         })
       },
-      min_max_order() {
+      min_max_order_groups() {
         let min = 0
         let max = 0
-        for (let row of this.fields) {
+        for (let row of this.groups) {
           if (min === 0) {
             min = row.order
           } else {
@@ -127,44 +159,103 @@
       },
     },
     methods: {
-      inc_order(row) {
-        if (row.order === this.min_max_order.max)
+      min_max_order(group) {
+        let min = 0
+        let max = 0
+        for (let row of group.fields) {
+          if (min === 0) {
+            min = row.order
+          } else {
+            min = Math.min(min, row.order)
+          }
+          max = Math.max(max, row.order)
+        }
+        return {min, max}
+      },
+      ordered_fields(group) {
+        return group.fields.slice().sort(function (a, b) {
+          return a.order === b.order ? 0 : +(a.order > b.order) || -1
+        })
+      },
+      inc_group_order(row) {
+        if (row.order === this.min_max_order_groups.max)
           return
-        let next_row = this.find_by_order(row.order + 1)
+        let next_row = this.find_group_by_order(row.order + 1)
         if (next_row) {
           next_row.order--
         }
         row.order++
       },
-      dec_order(row) {
-        if (row.order === this.min_max_order.min)
+      dec_group_order(row) {
+        if (row.order === this.min_max_order_groups.min)
           return
-        let prev_row = this.find_by_order(row.order - 1)
+        let prev_row = this.find_group_by_order(row.order - 1)
         if (prev_row) {
           prev_row.order++
         }
         row.order--
       },
-      find_by_order(order) {
-        for (let row of this.fields) {
+      inc_order(group, row) {
+        if (row.order === this.min_max_order(group).max)
+          return
+        let next_row = this.find_by_order(group, row.order + 1)
+        if (next_row) {
+          next_row.order--
+        }
+        row.order++
+      },
+      dec_order(group, row) {
+        if (row.order === this.min_max_order(group).min)
+          return
+        let prev_row = this.find_by_order(group, row.order - 1)
+        if (prev_row) {
+          prev_row.order++
+        }
+        row.order--
+      },
+      find_by_order(group, order) {
+        for (let row of group.fields) {
           if (row.order === order) {
             return row
           }
         }
         return false
       },
-      is_first_field(row) {
-        return row.order === this.min_max_order.min
+      find_group_by_order(order) {
+        for (let row of this.groups) {
+          if (row.order === order) {
+            return row
+          }
+        }
+        return false
       },
-      is_last_field(row) {
-        return row.order === this.min_max_order.max
+      is_first_group(group) {
+        return group.order === this.min_max_order_groups.min
       },
-      add_field() {
+      is_last_group(group) {
+        return group.order === this.min_max_order_groups.max
+      },
+      is_first_field(group, row) {
+        return row.order === this.min_max_order(group).min
+      },
+      is_last_field(group, row) {
+        return row.order === this.min_max_order(group).max
+      },
+      add_field(group) {
         let order = 0
-        for (let row of this.fields) {
+        for (let row of group.fields) {
           order = Math.max(order, row.order)
         }
-        this.fields.push({pk: -1, order: order + 1, title: '', default: ''})
+        group.fields.push({pk: -1, order: order + 1, title: '', default: '', required: true, values_to_input: []})
+      },
+      add_group() {
+        let order = 0
+        for (let row of this.groups) {
+          order = Math.max(order, row.order)
+        }
+        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true}
+        this.add_field(g)
+        this.groups.push(g)
       },
       load() {
         this.title = ''
@@ -172,7 +263,7 @@
         this.code = ''
         this.info = ''
         this.hide = false
-        this.fields = []
+        this.groups = []
         if (this.pk >= 0) {
           let vm = this
           vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -183,11 +274,12 @@
             vm.info = data.info
             vm.hide = data.hide
             vm.loaded_pk = vm.pk
+            vm.add_group()
           }).finally(() => {
             vm.$store.dispatch(action_types.DEC_LOADING).then()
           })
         } else {
-          this.add_field()
+          this.add_group()
         }
       },
       cancel() {
@@ -268,11 +360,19 @@
     overflow-y: auto;
   }
 
+  .group {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    background: #f0f0f0;
+  }
+
   .field {
     padding: 5px;
     margin: 5px;
-    border: 1px solid #dedede;
     border-radius: 5px;
+    background: #fff;
+    color: #000;
   }
 
   .field-inner {
@@ -283,6 +383,9 @@
 
   .field-inner > div {
     align-self: stretch;
+    textarea {
+      resize: none;
+    }
 
     &:nth-child(1) {
       flex: 0 0 35px;
@@ -291,5 +394,19 @@
     &:nth-child(2) {
       width: 100%;
     }
+    &:nth-child(3) {
+      width: 125px;
+      padding-left: 5px;
+      white-space: nowrap;
+    }
+  }
+
+  .lob {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .nob {
+    border-radius: 0;
   }
 </style>
