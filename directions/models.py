@@ -243,7 +243,7 @@ class Napravleniya(models.Model):
         return dir
 
     @staticmethod
-    def set_of_name(dir, doc_current, ofname_id, ofname):
+    def set_of_name(dir, doc_current, ofname_id, ofname: DoctorProfile):
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
         :rtype: Null
@@ -432,6 +432,17 @@ class Issledovaniya(models.Model):
         verbose_name_plural = 'Назначения на исследования'
 
 
+class ParaclinicResult(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
+                                      help_text='Направление на исследование, для которого сохранен результат',
+                                      on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True,
+                              help_text='Поле результата',
+                              on_delete=models.CASCADE)
+
+    value = models.TextField()
+
+
 class RmisServices(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     code = models.TextField(help_text='Код выгруженной услуги', db_index=True)
@@ -517,7 +528,12 @@ class Result(models.Model):
         signs = {">": [">", "&gt;", "более", "старше"], "<": ["<", "&lt;", "до", "младше", "менее"]}
 
         value = self.value
-        age = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye)
+        days, monthes, years = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye, days_monthes_years=True)
+        age = days
+        if years > 0:
+            age = years
+        elif monthes > 0:
+            age = monthes
 
         ref = self.get_ref(fromsave=fromsave)
 
@@ -563,8 +579,18 @@ class Result(models.Model):
                 if r.isdigit():
                     return int(r), 200
 
+            if "после" in r.lower():
+                r = r.replace("после", "").strip()
+                if r.isdigit():
+                    return int(r), 200
+
             if "младше" in r.lower():
                 r = r.replace("младше", "").strip()
+                if r.isdigit():
+                    return 0, int(r)
+
+            if "до" in r.lower():
+                r = r.replace("до", "").strip()
                 if r.isdigit():
                     return 0, int(r)
 
@@ -642,12 +668,43 @@ class Result(models.Model):
                 return value in right
             return False
 
-        def clc(r, val):
+        def has_days(s: str):
+            return any([x in s for x in ["дней", "день", "дн.", "дня"]])
+
+        def has_monthes(s: str):
+            return any([x in s for x in ["месяцев", "месяц", "мес.", "м.", "месяца"]])
+
+        def not_days_and_m(s: str):
+            return not has_days(s) and not has_monthes(s)
+
+        def has_years(s: str):
+            return any([x in s for x in ["лет", "год", "л.", "года"]] + [not has_days(s) and not has_monthes(s)])
+
+        def clc(r, val, age):
             result = "normal"
             if val.strip() != "":
                 for k in r.keys():
                     tmp_result = "normal"
+                    kk = re.sub("[^0-9\-]", "", k)
                     rigth = rigths(k.strip().lower())
+                    rigthkk = rigths(kk)
+
+                    if years == 0 and rigthkk and not has_years(k):
+                        print(days, monthes, years, k)
+                        if monthes == 0:
+                            if has_days(k):
+                                rigth = rigthkk
+                                age = days
+                            else:
+                                rigth = [-1, -1]
+                        else:
+                            if has_monthes(k):
+                                rigth = rigthkk
+                                age = monthes
+                            else:
+                                rigth = [-1, -1]
+                    elif not not_days_and_m(k):
+                        rigth = [-1, -1]
 
                     if not rigth:
                         tmp_result = "maybe"
@@ -669,7 +726,7 @@ class Result(models.Model):
                         result = tmp_result
             return result
 
-        calc = clc(ref, value)
+        calc = clc(ref, value, years)
         return calc
 
     class Meta:

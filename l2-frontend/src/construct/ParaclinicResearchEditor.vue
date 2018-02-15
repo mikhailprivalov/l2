@@ -43,7 +43,8 @@
           <span class="input-group-addon">Название группы</span>
           <input type="text" class="form-control" v-model="group.title">
         </div>
-        <label>Отображать название <input v-model="group.show_title" type="checkbox"/></label>
+        <label>Отображать название <input v-model="group.show_title" type="checkbox"/></label><br/>
+        <label>Скрыть группу <input v-model="group.hide" type="checkbox"/></label>
         <div>
           <strong>Поля ввода</strong>
         </div>
@@ -66,13 +67,18 @@
               </div>
               <div>
                 <strong>Значение по умолчанию:</strong>
-                <textarea v-model="row.default" rows="2" class="form-control"></textarea>
+                <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
+                <input v-model="row.default" class="form-control" v-else/>
               </div>
               <input-tag placeholder="Шаблоны быстр. ввода" :tags.sync="row.values_to_input" :addTagOnKeys="[13]"/>
             </div>
             <div>
               <label>
-                <input type="checkbox" v-model="row.required"/> обязательное
+                <input type="checkbox" v-model="row.hide"/> скрыть поле
+              </label>
+              <label>
+                 Число строк<br/>для ввода:<br/>
+                <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
               </label>
             </div>
           </div>
@@ -246,14 +252,14 @@
         for (let row of group.fields) {
           order = Math.max(order, row.order)
         }
-        group.fields.push({pk: -1, order: order + 1, title: '', default: '', required: true, values_to_input: []})
+        group.fields.push({pk: -1, order: order + 1, title: '', default: '', values_to_input: [], hide: false, lines: 3})
       },
       add_group() {
         let order = 0
         for (let row of this.groups) {
           order = Math.max(order, row.order)
         }
-        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true}
+        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
         this.add_field(g)
         this.groups.push(g)
       },
@@ -274,7 +280,10 @@
             vm.info = data.info
             vm.hide = data.hide
             vm.loaded_pk = vm.pk
-            vm.add_group()
+            vm.groups = data.groups
+            if(vm.groups.length === 0) {
+              vm.add_group()
+            }
           }).finally(() => {
             vm.$store.dispatch(action_types.DEC_LOADING).then()
           })
@@ -289,7 +298,7 @@
       save() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info, vm.hide).then(() => {
+        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info, vm.hide, vm.groups).then(() => {
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
@@ -395,9 +404,18 @@
       width: 100%;
     }
     &:nth-child(3) {
-      width: 125px;
+      width: 140px;
       padding-left: 5px;
+      padding-right: 5px;
       white-space: nowrap;
+      label {
+        display: block;
+        margin-bottom: 2px;
+        width: 100%;
+        input[type="number"] {
+          width: 100%;
+        }
+      }
     }
   }
 

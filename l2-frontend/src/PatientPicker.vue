@@ -35,7 +35,7 @@
       </tr>
       <tr>
         <td class="table-header-row">Дата рождения:</td>
-        <td class="table-content-row">{{selected_card.birthday}}</td>
+        <td class="table-content-row">{{selected_card.birthday}}<span v-if="loaded"> ({{selected_card.age}})</span></td>
         <td class="table-header-row">Пол:</td>
         <td class="table-content-row">{{selected_card.sex}}</td>
       </tr>

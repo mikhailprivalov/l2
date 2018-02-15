@@ -58,7 +58,7 @@ def get_astm(directions_list, analyzer: api.Analyzer, full=False, out=None) -> s
     return encode(m)
 
 
-def get_iss_astm(issledovaniya: list, app: api.Application):
+def get_iss_astm(issledovaniya: list, app: api.Application, need_astm=False):
     m = [get_astm_header(), get_patient()]
     n = 0
 

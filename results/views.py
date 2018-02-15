@@ -11,14 +11,15 @@ from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
-from reportlab.platypus import PageBreak
+from reportlab.platypus import PageBreak, Spacer
 
 import directory.models as directory
 import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya
+from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
+    ParaclinicResult
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
@@ -76,7 +77,8 @@ def enter(request):
         lab = labs[0]
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
-                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by("pk").order_by("base"),
+                                                           "ist_f": IstochnikiFinansirovaniya.objects.all().order_by(
+                                                               "pk").order_by("base"),
                                                            "groups": directory.ResearchGroup.objects.filter(lab=lab),
                                                            "lab": lab,
                                                            "labs": labs})
@@ -90,7 +92,8 @@ def result_conformation(request):
         labs = users.Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Загрузка всех подразделений
     else:
         labs = [request.user.doctorprofile.podrazdeleniye, request.user.doctorprofile.podrazdeleniye]
-    researches = directory.Researches.objects.filter(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
+    researches = directory.Researches.objects.filter(
+        podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
     return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
 
 
@@ -215,7 +218,10 @@ def results_save(request):
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
                     created = True
-                fraction_result.value = bleach.clean(fractions[key], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")  # Установка значения
+                fraction_result.value = bleach.clean(fractions[key],
+                                                     tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font',
+                                                           'p', 'span', 'div']).replace("<br>",
+                                                                                        "<br/>")  # Установка значения
                 need_save = True
                 if fraction_result.value == "":
                     need_save = False
@@ -701,7 +707,6 @@ def result_print(request):
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
 
     from io import BytesIO
-    from django.core.paginator import Paginator
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib.units import mm
@@ -727,836 +732,197 @@ def result_print(request):
 
     buffer = BytesIO()
 
-    type = request.GET.get("format", "ng")
     split = request.GET.get("split", "1") == "1"
 
-    if type == "a4":
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
+    from reportlab.platypus.flowables import HRFlowable
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.lib import colors
+    # c = canvas.Canvas(buffer, pagesize=A4)
+    # w, h = A4
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
+                            rightMargin=5 * mm, topMargin=5 * mm,
+                            bottomMargin=5 * mm, allowSplitting=1 if split else 0)
+
+    naprs = []
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "OpenSans"
+    style.fontSize = 9
+    style_ml = deepcopy(style)
+    style_ml.leftIndent = 5*mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "OpenSansBold"
+    styleTable = deepcopy(style)
+    styleTableMono = deepcopy(styleTable)
+    styleTableMono.fontName = "Consolas"
+    styleTableMono.fontSize = 10
+    styleAb = deepcopy(styleTable)
+    styleAb.fontSize = 7
+    styleAb.leading = 7
+    styleAb.spaceBefore = 0
+    styleAb.spaceAfter = 0
+    styleAb.leftIndent = 0
+    styleAb.rightIndent = 0
+    styleAb.alignment = TA_CENTER
+    styleTableMonoBold = deepcopy(styleTable)
+    styleTableMonoBold.fontName = "Consolas-Bold"
+    styleTableSm = deepcopy(styleTable)
+    styleTableSm.fontSize = 4
+
+    styleSheet["BodyText"].wordWrap = 'CJK'
+    stl = deepcopy(styleSheet["BodyText"])
+    from reportlab.lib.enums import TA_CENTER
+    stl.alignment = TA_CENTER
+
+    import base64
+    img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
+    if not os.path.exists(img_path):
+        os.makedirs(img_path)
+    logo_path = os.path.join(img_path, 'logo.jpg')
+    if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
+        with open(logo_path, "wb") as fh:
+            fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
+
+    i = Image(logo_path)
+    nw = 158
+    i.drawHeight = i.drawHeight * (nw / i.drawWidth)
+    i.drawWidth = nw
+    logo_col = [i, '', '', '', '', Paragraph(
+        '%s<br/>%s<br/>%s' % (
+            SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
+        styleAb), '', '', '']
+    pw = doc.width
+    import operator
+
+    def print_vtype(data, f, iss, j, style, styleSheet):
 
-        c = canvas.Canvas(buffer, pagesize=A4)
-        w, h = A4
-        lmargin = 55 * mm
-        marginx = 5 * mm
-        marginy = 10 * mm
-
-        pw = w - marginx - lmargin
-
-        def py(y=0.0):
-            y *= mm
-            return h - y - marginy
-
-        def px(x=0.0):
-            x *= mm
-            return x + lmargin
-
-        def pxr(x=0.0):
-            x *= mm
-            return pw - x + marginx
-
-        def lj(s, ln=13):
-            return s.ljust(ln)
-
-        for dpk in pk:
-            if not Napravleniya.objects.filter(pk=dpk).exists():
-                continue
-            direction = Napravleniya.objects.get(pk=dpk)
-            if not direction.has_confirm(): continue
-            dates = {}
-            date_t = ""
-            for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
-                if iss.time_save:
-                    dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
-                    if dt not in dates.keys():
-                        dates[dt] = 0
-                    dates[dt] += 1
-                if iss.tubes.exists() and iss.tubes.first().time_get:
-                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
-
-            import operator
-            maxdate = ""
-            if dates != {}:
-                maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
-
-            iss_list = Issledovaniya.objects.filter(napravleniye=direction)
-
-            c.drawImage(os.path.join(FONTS_FOLDER, '..', 'static', 'img', 'cliches.jpg'), pxr(3.5), py(18), preserveAspectRatio=True, height=20 * mm, anchor="nw")
-
-            c.setFont('OpenSans', 7)
-            c.drawString(pxr(5.5), py(21), SettingManager.get("org_title"))
-            c.drawString(pxr(-5.5), py(23.7), SettingManager.get("org_www"))
-            c.drawString(pxr(-8.5), py(26.4), SettingManager.get("org_phones"))
-
-            c.setFont('Consolas', 10)
-
-            c.drawString(px(), py(), lj('Номер:') + str(direction.pk))
-
-            c.drawString(px(), py(4), lj('Пациент:'))
-            c.setFont('Consolas-Bold', 10)
-            c.drawString(px(25), py(4), direction.client.fio())
-            c.setFont('Consolas', 10)
-
-            c.drawString(px(), py(8), lj('Пол:') + direction.client.sex)
-            c.drawString(px(), py(12), lj('Возраст:') + direction.client.age_s(direction=direction))
-            c.drawString(px(), py(16), lj('Дата забора:') + date_t)
-
-            c.drawString(px(), py(24), lj('Карта:') + str(direction.client.number_with_type()))
-            c.drawString(px(), py(28), lj('Врач:') + direction.doc.get_fio())
-            c.drawString(px(), py(32), lj(' ') + direction.doc.podrazdeleniye.title)
-
-            '''
-            c.setFont('OpenSans', 18)
-            c.drawRightString(pxr(), py(2), "Результаты анализов")
-            c.setFont('OpenSans', 12)
-            c.drawRightString(pxr(), py(6), "Направление № " + str(dir.pk))
-            c.drawRightString(pxr(), py(10), "Пациент: %s" % dir.client.fio())
-            c.drawRightString(pxr(), py(15), "Пол: %s" % dir.client.sex + ", " + dir.client.age_s() + " " + "(д.р. " + str(
-                              dateformat.format(dir.client.bd(), settings.DATE_FORMAT)) + ")")
-            c.drawRightString(pxr(), py(20), "Номер карты: %d" % dir.client.num)
-            c.drawRightString(pxr(), py(25), "Лечащий врач: " + dir.doc.get_fio())
-            c.drawRightString(pxr(), py(30), "Отделение: " + dir.doc.podrazdeleniye.title)
-
-            c.setFont('OpenSans', 8)
-            c.drawString(px(), py(25), SettingManager.get("org_title"))
-            c.drawString(px(), py(28), "г. Иркутск, б-р. Гагарина, 18. тел: 280-808, 280-809")
-            c.drawString(px(), py(31), SettingManager.get("org_www"))
-            '''
-            # iss_list = Issledovaniya.objects.filter(napravleniye=dir).order_by("research__pk", "research__sort_weight")
-
-            # c.setFont('OpenSans', 9)
-            # c.drawString(px(), py(35), iss_list.first().research.get_podrazdeleniye().title)
-
-            c.setFont('OpenSans', 8)
-            from reportlab.platypus import Table, TableStyle
-            from reportlab.lib import colors
-            from reportlab.platypus import Paragraph
-            from reportlab.lib.styles import getSampleStyleSheet
-
-            styleSheet = getSampleStyleSheet()
-            styleSheet["BodyText"].wordWrap = 'CJK'
-            stl = deepcopy(styleSheet["BodyText"])
-            from reportlab.lib.enums import TA_CENTER
-            stl.alignment = TA_CENTER
-            tw = pw
-
-            data = []
-            tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
-                   Paragraph(
-                       '<font face="OpenSansBold" size="8">Результат</font><br/><font face="OpenSans" size="8">(# - не норма)</font>',
-                       styleSheet["BodyText"])]
-
-            if direction.client.sex.lower() == "м":
-                tmp.append(
-                    Paragraph('<font face="OpenSansBold" size="8">Референсные значения (М)</font>',
-                              styleSheet["BodyText"]))
-            else:
-                tmp.append(
-                    Paragraph('<font face="OpenSansBold" size="8">Референсные значения (Ж)</font>',
-                              styleSheet["BodyText"]))
-
-            tmp.append(
-                Paragraph('<font face="OpenSansBold" size="8">Единицы<br/>измерения</font>', styleSheet["BodyText"]))
-            tmp.append(Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>', styleSheet["BodyText"]))
-            # tmp.append(Paragraph('<font face="OpenSans" size="8">Дата заб.</font>', styleSheet["BodyText"]))
-            tmp.append(Paragraph('<font face="OpenSansBold" size="8">Дата</font>', styleSheet["BodyText"]))
-            data.append(tmp)
-            cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178), int(tw * 0.08)]
-            t = Table(data, colWidths=cw)
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                ])
-            style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-            style.add('TOPPADDING', (0, 0), (-1, 0), 0)
-
-            t.setStyle(style)
-
-            t.canv = c
-            pos = py(38)
-            has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research.pk for x in Issledovaniya.objects.filter(napravleniye=direction)],
-                hide=False,
-                render_type=0).exists()
-            if has0:
-                t.drawOn(c, px(), py(45))
-                pos = py(45)
-
-            prev_conf = ""
-            prev_date_conf = ""
-
-            def print_vtype(data, f, iss, j, style, styleSheet):
-
-                import operator
-                if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                    result = Result.objects.get(issledovaniye=iss, fraction=f).value
-                    # try:
-                    jo = json.loads(result)["rows"]
-                    style.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
-                    for key, val in jo.items():
-                        style.add('SPAN', (0, j), (-1, j))
-                        j += 1
-
-                        norm_vals = []
-                        for rowk, rowv in val["rows"].items():
-                            if rowv["value"] not in ["", "null"]:
-                                norm_vals.insert(0, {"title": rowv["title"], "value": rowv["value"], "k": int(rowk)})
-                        if len(norm_vals) > 0:
-                            style.add('SPAN', (0, j), (-1, j))
-                            j += 1
-                            tmp = ["", "", "", "", "", ""]
-                            data.append(tmp)
-
-                        tmp = [Paragraph(
-                            '&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + (
-                                "" if len(norm_vals) == 0 else f.title + ": ") + val["title"] + "</font>",
-                            styleSheet["BodyText"]), "", "", "", "", ""]
-                        data.append(tmp)
-                        if len(norm_vals) > 0:
-                            li = 0
-                            norm_vals.sort(key=operator.itemgetter('k'))
-                            for idx, rowv in enumerate(norm_vals):
-                                li = idx
-                                if li % 2 == 0:
-                                    tmp = [Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
-                                                     styleSheet["BodyText"]),
-                                           Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
-                                                     styleSheet["BodyText"]), ""]
-                                else:
-                                    tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
-                                                         styleSheet["BodyText"]))
-                                    tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
-                                                         styleSheet["BodyText"]))
-                                    tmp.append("")
-                                    tmp.append("")
-                                    data.append(tmp)
-                                    j += 1
-
-                            if li % 2 == 0:
-                                tmp.append("")
-                                tmp.append("")
-                                tmp.append("")
-                                tmp.append("")
-                                data.append(tmp)
-                                j += 1
-                return j
-
-            pks = []
-            for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__id",
-                                         "research__sort_weight"):
-                if iss.pk in pks:
-                    continue
-                pks.append(iss.pk)
-                data = []
-                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
-                                                               render_type=0).order_by("pk").order_by("sort_weight")
-                if fractions.count() > 0:
-                    if fractions.count() == 1:
-                        tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
-                                         styleSheet["BodyText"])]
-                        result = "не завершено"
-                        norm = "none"
-                        ref = {"": ""}
-                        if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
-                            r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
-                            ref = r.get_ref()
-                            if show_norm:
-                                norm = r.get_is_norm(recalc=True)
-                            result = result_normal(r.value)
-
-                        if not iss.doc_confirmation and iss.deferred:
-                            result = "отложен"
-                        elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
-                            pass  # result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
-                        f = fractions[0]
-                        st = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                         ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                         ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                         ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-
-                                         ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                         ('TOPPADDING', (0, 0), (-1, -1), 3),
-                                         ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                         ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
-                                         ])
-
-                        if f.render_type == 0:
-                            if norm in ["none", "normal"]:
-                                tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", stl))
-                            elif norm == "maybe":
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", stl))
-                            else:
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
-
-                            tmp.append(
-                                Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
-                                          stl))
-
-                            tmp.append(
-                                Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
-
-                            if iss.doc_confirmation:
-                                if prev_conf != iss.doc_confirmation.get_fio():
-                                    prev_conf = iss.doc_confirmation.get_fio()
-                                    prev_date_conf = ""
-                                    tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_conf,
-                                                         styleSheet["BodyText"]))
-                                else:
-                                    tmp.append("")
-                                if prev_date_conf != iss.time_confirmation.strftime('%d.%m.%y'):
-                                    prev_date_conf = iss.time_confirmation.strftime('%d.%m.%y')
-                                    tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_date_conf,
-                                                         styleSheet["BodyText"]))
-                                else:
-                                    tmp.append("")
-                            else:
-                                tmp.append("")
-                                tmp.append("")
-
-                            data.append(tmp)
-                        elif f.render_type == 1:
-                            tmp.append("")
-                            tmp.append("")
-                            tmp.append("")
-
-                            if iss.doc_confirmation:
-                                tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(),
-                                    styleSheet["BodyText"]))
-                                tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % (
-                                    "" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime(
-                                        '%d.%m.%Y')), styleSheet["BodyText"]))
-                                tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % iss.time_confirmation.strftime(
-                                        '%d.%m.%Y'), styleSheet["BodyText"]))
-                            else:
-                                tmp.append("")
-                                tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % timezone.localtime(
-                                        iss.tubes.first().time_get).strftime(
-                                        '%d.%m.%Y'), styleSheet["BodyText"]))
-                                tmp.append("")
-                            data.append(tmp)
-
-                            j = print_vtype(data, f, iss, 1, st, styleSheet)
-                            data.append([Paragraph(
-                                '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
-                                styleSheet["BodyText"])])
-                            st.add('SPAN', (0, j), (-1, j))
-                            st.add('BOX', (0, j), (-1, j), 1, colors.white)
-                            st.add('BOX', (0, j - 1), (-1, j - 1), 1, colors.black)
-
-                        t = Table(data, colWidths=cw)
-                        t.setStyle(st)
-                    else:
-                        tmp = [Paragraph('<font face="OpenSansBold" size="8">' + iss.research.title + '</font>' +
-                                         (
-                                             "" if iss.comment == "" or True else '<font face="OpenSans" size="8"><br/>Материал - ' + iss.comment + '</font>'),
-                                         styleSheet["BodyText"]), '', '', '']
-
-                        if iss.doc_confirmation:
-                            if prev_conf != iss.doc_confirmation.get_fio():
-                                prev_conf = iss.doc_confirmation.get_fio()
-                                prev_date_conf = ""
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_conf,
-                                                     styleSheet["BodyText"]))
-                            else:
-                                tmp.append("")
-                            if prev_date_conf != iss.time_confirmation.strftime('%d.%m.%y'):
-                                prev_date_conf = iss.time_confirmation.strftime('%d.%m.%y')
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">%s</font>' % prev_date_conf,
-                                                     styleSheet["BodyText"]))
-                            else:
-                                tmp.append("")
-                        else:
-                            tmp.append("")
-                            tmp.append("")
-
-                        data.append(tmp)
-                        ts = [('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                              # ('SPAN',(0,0),(-1,0)),
-                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                              ('INNERGRID', (0, 0), (-1, -1), 0.1, colors.white),
-                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                              ('TOPPADDING', (0, 0), (-1, -1), 3),
-                              ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                              ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
-                              ]
-
-                        style = TableStyle(ts)
-                        j = 0
-
-                        for f in fractions:
-                            j += 1
-
-                            tmp = []
-                            if f.render_type == 0:
-                                tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.title + "</font>",
-                                                     styleSheet["BodyText"]))
-                                result = "не завершено"
-                                norm = "none"
-                                ref = {"": ""}
-                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                                    r = Result.objects.get(issledovaniye=iss, fraction=f)
-                                    if show_norm:
-                                        norm = r.get_is_norm(recalc=True)
-                                    result = result_normal(r.value)
-                                    ref = r.get_ref()
-                                if not iss.doc_confirmation and iss.deferred:
-                                    result = "отложен"
-                                # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
-                                #    result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
-                                if norm in ["none", "normal"]:
-                                    tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", stl))
-                                elif norm == "maybe":
-                                    tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", stl))
-                                else:
-                                    tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", stl))
-
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
-                                                     stl))
-
-                                tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", stl))
-                                tmp.append("")
-                                tmp.append("")
-                                data.append(tmp)
-                            elif f.render_type == 1:
-                                jp = j
-                                j = print_vtype(data, f, iss, j, style, styleSheet)
-
-                                if j - jp > 2:
-                                    data.append([Paragraph(
-                                        '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
-                                        styleSheet["BodyText"])])
-                                    style.add('SPAN', (0, j), (-1, j))
-                                    style.add('BOX', (0, j), (-1, j), 1, colors.white)
-                                    j -= 1
-
-                        for k in range(0, 6):
-                            style.add('INNERGRID', (k, 0),
-                                      (k, j), 0.1, colors.black)
-                            style.add('BOX', (k, 0), (k, j),
-                                      0.8, colors.black)
-
-                        style.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
-                        style.add('TOPPADDING', (0, 0), (0, -1), 0)
-
-                        t = Table(data, colWidths=cw)
-                        t.setStyle(style)
-                    t.canv = c
-                    wt, ht = t.wrap(0, 0)
-                    t.drawOn(c, px(), pos - ht)
-                    pos = pos - ht
-
-                fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
-                                                               render_type=1).order_by("pk").order_by("sort_weight")
-                if fractions.count() > 0:
-                    pos = pos - 3 * mm
-                    data = []
-                    if not has0:
-                        tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>',
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSansBold" size="8">Дата сбора материала</font>',
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSansBold" size="8">Дата исполнения</font>',
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>',
-                                         styleSheet["BodyText"])]
-                        data.append(tmp)
-
-                        tmp = [Paragraph('<font face="OpenSansBold" size="8">%s</font>' % iss.research.title,
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSans" size="8">%s%s</font>' % (
-                                   "" if not iss.tubes.exists() or not iss.tubes.first().time_get else iss.tubes.first().time_get.strftime(
-                                       '%d.%m.%Y'), "" if not iss.comment else "<br/>" + iss.comment,),
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSans" size="8">%s</font>' % (
-                                   "Не подтверждено" if not iss.time_confirmation else iss.time_confirmation.strftime(
-                                       '%d.%m.%Y')),
-                                         styleSheet["BodyText"]),
-                               Paragraph('<font face="OpenSans" size="8">%s</font>' % (
-                                   "Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
-                                         styleSheet["BodyText"])]
-                        data.append(tmp)
-
-                        cw = [int(tw * 0.332), int(tw * 0.24), int(tw * 0.2), int(tw * 0.22)]
-                        t = Table(data, colWidths=cw)
-                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                            ('TOPPADDING', (0, 0), (-1, -1), 0),
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                                            ])
-
-                        style.add('LINEBELOW', (0, -1), (-1, -1), 2, colors.black)
-                        t.setStyle(style)
-                        t.canv = c
-                        wt, ht = t.wrap(0, 0)
-                        t.drawOn(c, px(), pos - ht)
-                        pos = pos - ht
-
-                    has_anti = False
-                    for f in fractions:
-                        j = 0
-                        if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                            result = Result.objects.get(issledovaniye=iss, fraction=f).value
-                            if result == "":
-                                continue
-                            jo = json.loads(result)["rows"]
-                            for key, val in jo.items():
-                                if val["title"] != "":
-                                    data = []
-                                    style.add('SPAN', (0, j), (-1, j))
-                                    j += 1
-
-                                    norm_vals = []
-                                    for rowk, rowv in val["rows"].items():
-                                        if rowv["value"] not in ["", "null"]:
-                                            norm_vals.insert(0, {"title": rowv["title"], "value": rowv["value"],
-                                                                 "k": int(rowk)})
-                                    tmp = [Paragraph(
-                                        '<font face="OpenSansBold" size="8">' + (
-                                            val["title"] if len(norm_vals) == 0 else "Выделенная культура: " + val[
-                                                "title"]) + "</font>",
-                                        styleSheet["BodyText"]), "", "", "", "", ""]
-                                    data.append(tmp)
-
-                                    if len(norm_vals) > 0:
-                                        has_anti = True
-
-                                        tmp = [Paragraph(
-                                            '<font face="OpenSansBold" size="8">%s</font>' % f.title,
-                                            styleSheet["BodyText"]), "", "", "", "", ""]
-                                        data.append(tmp)
-                                        j += 1
-
-                                        li = 0
-                                        norm_vals.sort(key=operator.itemgetter('k'))
-                                        for idx, rowv in enumerate(norm_vals):
-                                            li = idx
-                                            if li % 3 == 0:
-                                                tmp = []
-
-                                            tmp.append(
-                                                Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
-                                                          styleSheet["BodyText"]))
-                                            tmp.append(
-                                                Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
-                                                          styleSheet["BodyText"]))
-                                            if li % 3 == 2:
-                                                data.append(tmp)
-                                                j += 1
-
-                                        if li % 3 == 0:
-                                            tmp.append("")
-                                            tmp.append("")
-                                            tmp.append("")
-                                            tmp.append("")
-                                        if li % 3 == 1:
-                                            tmp.append("")
-                                            tmp.append("")
-                                        if li % 3 < 2:
-                                            data.append(tmp)
-                                            j += 1
-                                    cw = [int(tw * 0.28), int(tw * 0.06),
-                                          int(tw * 0.27), int(tw * 0.06),
-                                          int(tw * 0.27), int(tw * 0.06)]
-                                    t = Table(data, colWidths=cw)
-
-                                    style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                                        ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                                        ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                                        ])
-
-                                    style.add('BOTTOMPADDING', (0, 0), (-1, -1), 1)
-                                    style.add('TOPPADDING', (0, 0), (-1, -1), 2)
-
-                                    style.add('SPAN', (0, 0), (-1, 0))
-                                    style.add('SPAN', (0, 1), (-1, 1))
-
-                                    t.setStyle(style)
-                                    t.canv = c
-                                    wt, ht = t.wrap(0, 0)
-                                    t.drawOn(c, px(), pos - ht)
-                                    pos = pos - ht
-                    if has_anti:
-                        data = []
-                        tmp = [[Paragraph(
-                            '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
-                            styleSheet["BodyText"])], "", "", "", "", ""]
-                        data.append(tmp)
-                        cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22),
-                              int(tw * 0.112)]
-                        t = Table(data, colWidths=cw)
-                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                            ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                            ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                            ])
-                        style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-                        style.add('TOPPADDING', (0, 0), (-1, 0), 0)
-                        style.add('SPAN', (0, 0), (-1, 0))
-
-                        t.setStyle(style)
-                        t.canv = c
-                        wt, ht = t.wrap(0, 0)
-                        t.drawOn(c, px(), pos - ht - 1 * mm)
-                        pos = pos - ht
-                    pos -= 2 * mm
-                if iss.lab_comment and iss.lab_comment != "":
-                    data = []
-                    tmp = [[Paragraph(
-                        '<font face="OpenSans" size="8">Комментарий</font>',
-                        styleSheet["BodyText"])], [Paragraph(
-                        '<font face="OpenSans" size="8">%s</font>' % (iss.lab_comment.replace("\n", "<br/>")),
-                        styleSheet["BodyText"])], "", "", "", ""]
-                    data.append(tmp)
-                    cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178),
-                          int(tw * 0.08)]
-                    t = Table(data, colWidths=cw)
-                    style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                        ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                        ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                        ])
-                    style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-                    style.add('TOPPADDING', (0, 0), (-1, 0), 0)
-                    style.add('SPAN', (1, 0), (-1, 0))
-
-                    t.setStyle(style)
-                    t.canv = c
-                    wt, ht = t.wrap(0, 0)
-                    t.drawOn(c, px(), pos - ht)
-                    pos = pos - ht
-            if not direction.is_printed:
-                direction.is_printed = True
-                from datetime import datetime
-
-                direction.time_print = datetime.now()
-                direction.doc_print = request.user.doctorprofile
-                direction.save()
-
-            dp = request.user.doctorprofile
-            if not request.user.is_superuser and dp.podrazdeleniye != \
-                    Issledovaniya.objects.filter(napravleniye=direction)[
-                        0].research.get_podrazdeleniye() and dp != direction.doc and dp.podrazdeleniye != direction.doc.podrazdeleniye:
-                slog.Log(key=dpk, type=998, body=json.dumps(
-                    {"lab": str(
-                        Issledovaniya.objects.filter(napravleniye=direction)[0].research.get_podrazdeleniye()),
-                        "doc": str(direction.doc), "print_otd": str(dp.podrazdeleniye),
-                        "patient": str(direction.client.fio())}),
-                         user=request.user.doctorprofile).save()
-
-            c.showPage()
-
-        c.save()
-    elif type == "ng":
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
-        from reportlab.platypus.flowables import HRFlowable
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.lib.enums import TA_CENTER
-        from reportlab.lib import colors
-        # c = canvas.Canvas(buffer, pagesize=A4)
-        # w, h = A4
-
-        doc = SimpleDocTemplate(buffer, pagesize=A4,
-                                leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
-                                rightMargin=5 * mm, topMargin=5 * mm,
-                                bottomMargin=5 * mm, allowSplitting=1 if split else 0)
-
-        naprs = []
-        styleSheet = getSampleStyleSheet()
-        style = styleSheet["Normal"]
-        style.fontName = "OpenSans"
-        style.fontSize = 9
-        styleTable = deepcopy(style)
-        styleTableMono = deepcopy(styleTable)
-        styleTableMono.fontName = "Consolas"
-        styleTableMono.fontSize = 10
-        styleAb = deepcopy(styleTable)
-        styleAb.fontSize = 7
-        styleAb.leading = 7
-        styleAb.spaceBefore = 0
-        styleAb.spaceAfter = 0
-        styleAb.leftIndent = 0
-        styleAb.rightIndent = 0
-        styleAb.alignment = TA_CENTER
-        styleTableMonoBold = deepcopy(styleTable)
-        styleTableMonoBold.fontName = "Consolas-Bold"
-        styleTableSm = deepcopy(styleTable)
-        styleTableSm.fontSize = 4
-
-        styleSheet["BodyText"].wordWrap = 'CJK'
-        stl = deepcopy(styleSheet["BodyText"])
-        from reportlab.lib.enums import TA_CENTER
-        stl.alignment = TA_CENTER
-
-        import base64
-        img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
-        if not os.path.exists(img_path):
-            os.makedirs(img_path)
-        logo_path = os.path.join(img_path, 'logo.jpg')
-        if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
-            with open(logo_path, "wb") as fh:
-                fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
-
-        i = Image(logo_path)
-        nw = 158
-        i.drawHeight = i.drawHeight * (nw / i.drawWidth)
-        i.drawWidth = nw
-        logo_col = [i, '', '', '', '', Paragraph(
-            '%s<br/>%s<br/>%s' % (
-                SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
-            styleAb), '', '', '']
-        pw = doc.width
         import operator
-        def print_vtype(data, f, iss, j, style, styleSheet):
+        if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+            result = Result.objects.get(issledovaniye=iss, fraction=f).value.replace("<br>", "<br/>")
+            # try:
+            jo = json.loads(result)["rows"]
+            style.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
+            for key, val in jo.items():
+                style.add('SPAN', (0, j), (-1, j))
+                j += 1
 
-            import operator
-            if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                result = Result.objects.get(issledovaniye=iss, fraction=f).value.replace("<br>", "<br/>")
-                # try:
-                jo = json.loads(result)["rows"]
-                style.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
-                for key, val in jo.items():
+                norm_vals = []
+                for rowk, rowv in val["rows"].items():
+                    if rowv["value"] not in ["", "null"]:
+                        norm_vals.insert(0, {"title": rowv["title"], "value": rowv["value"], "k": int(rowk)})
+                if len(norm_vals) > 0:
                     style.add('SPAN', (0, j), (-1, j))
                     j += 1
-
-                    norm_vals = []
-                    for rowk, rowv in val["rows"].items():
-                        if rowv["value"] not in ["", "null"]:
-                            norm_vals.insert(0, {"title": rowv["title"], "value": rowv["value"], "k": int(rowk)})
-                    if len(norm_vals) > 0:
-                        style.add('SPAN', (0, j), (-1, j))
-                        j += 1
-                        tmp = ["", "", "", "", "", ""]
-                        data.append(tmp)
-
-                    tmp = [Paragraph(
-                        '&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + (
-                            "" if len(norm_vals) == 0 else f.title + ": ") + val["title"] + "</font>",
-                        styleSheet["BodyText"]), "", "", "", "", ""]
+                    tmp = ["", "", "", "", "", ""]
                     data.append(tmp)
-                    if len(norm_vals) > 0:
-                        li = 0
-                        norm_vals.sort(key=operator.itemgetter('k'))
-                        for idx, rowv in enumerate(norm_vals):
-                            li = idx
-                            if li % 2 == 0:
-                                tmp = [Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
-                                                 styleSheet["BodyText"]),
-                                       Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
-                                                 styleSheet["BodyText"]), ""]
-                            else:
-                                tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
-                                                     styleSheet["BodyText"]))
-                                tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
-                                                     styleSheet["BodyText"]))
-                                tmp.append("")
-                                tmp.append("")
-                                data.append(tmp)
-                                j += 1
 
+                tmp = [Paragraph(
+                    '&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSans" size="8">' + (
+                        "" if len(norm_vals) == 0 else f.title + ": ") + val["title"] + "</font>",
+                    styleSheet["BodyText"]), "", "", "", "", ""]
+                data.append(tmp)
+                if len(norm_vals) > 0:
+                    li = 0
+                    norm_vals.sort(key=operator.itemgetter('k'))
+                    for idx, rowv in enumerate(norm_vals):
+                        li = idx
                         if li % 2 == 0:
-                            tmp.append("")
-                            tmp.append("")
+                            tmp = [Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
+                                             styleSheet["BodyText"]),
+                                   Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
+                                             styleSheet["BodyText"]), ""]
+                        else:
+                            tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["title"] + "</font>",
+                                                 styleSheet["BodyText"]))
+                            tmp.append(Paragraph('<font face="OpenSans" size="8">' + rowv["value"] + "</font>",
+                                                 styleSheet["BodyText"]))
                             tmp.append("")
                             tmp.append("")
                             data.append(tmp)
                             j += 1
-            return j
 
-        client_prev = -1
-        #cl = Client()
-        for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(), key=lambda dir: dir.client.individual.pk*100000000 + Result.objects.filter(issledovaniye__napravleniye=dir).count()*10000000 + dir.pk):
-            dpk = direction.pk
-            if not direction.is_all_confirm():
-                continue
-            #if not normis:
-            #    cl.directions.check_send_results(direction)
-            dates = {}
-            date_t = ""
-            for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
-                if iss.time_save:
-                    dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
-                    if dt not in dates.keys():
-                        dates[dt] = 0
-                    dates[dt] += 1
-                if iss.tubes.exists() and iss.tubes.first().time_get:
-                    date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
+                    if li % 2 == 0:
+                        tmp.append("")
+                        tmp.append("")
+                        tmp.append("")
+                        tmp.append("")
+                        data.append(tmp)
+                        j += 1
+        return j
 
-            maxdate = ""
-            if dates != {}:
-                maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+    client_prev = -1
+    # cl = Client()
+    for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
+                            key=lambda dir: dir.client.individual.pk * 100000000 + Result.objects.filter(
+                                    issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
+        dpk = direction.pk
+        if not direction.is_all_confirm():
+            continue
+        # if not normis:
+        #    cl.directions.check_send_results(direction)
+        dates = {}
+        date_t = ""
+        has_paraclinic = False
+        for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
+            if iss.time_save:
+                dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
+                if dt not in dates.keys():
+                    dates[dt] = 0
+                dates[dt] += 1
+            if iss.tubes.exists() and iss.tubes.first().time_get:
+                date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
+            if iss.research.is_paraclinic:
+                has_paraclinic = True
 
-            fwb = []
-            data = [
-                ["Номер:", str(dpk)],
-                ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
-                ["Пол:", direction.client.individual.sex],
-                ["Возраст:", direction.client.individual.age_s(direction=direction)],
-                ["Дата забора:", date_t],
-                [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-                ["№ карты:", str(direction.client.number) + (" - архив" if direction.client.is_archive else "")],
-                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)]
-            ]
+        maxdate = ""
+        if dates != {}:
+            maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
 
-            data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for
-                    xi in
-                    range(len(data))]
+        fwb = []
+        data = [
+            ["Номер:", str(dpk)],
+            ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
+            ["Пол:", direction.client.individual.sex],
+            ["Возраст:", direction.client.individual.age_s(direction=direction)],
+        ]
+        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+        data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+                 ["№ карты:",
+                  direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "")],
+                 ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)]]
 
-            t = Table(data, colWidths=[doc.width * 0.16, doc.width - 158 - doc.width * 0.16, 158])
-            t.setStyle(TableStyle([
-                ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
-                ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 0),
-                ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 5), (-1, 5), 3),
-                ('TOPPADDING', (0, 5), (1, 5), 0),
-                ('TOPPADDING', (0, 6), (1, 6), -6),
-                ('BOTTOMPADDING', (0, 5), (1, 5), 0),
-                ('LEFTPADDING', (0, 5), (1, 5), 0),
-                ('RIGHTPADDING', (0, 5), (1, 5), 0),
-                ('SPAN', (-1, 0), (-1, 4)),
-                ('SPAN', (-1, 5), (-1, -1))
+        data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for
+                xi in
+                range(len(data))]
 
-            ]))
-            fwb.append(t)
+        t = Table(data, colWidths=[doc.width * 0.16, doc.width - 158 - doc.width * 0.16, 158])
+        t.setStyle(TableStyle([
+            ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (-1, 0), (-1, 0), 'BOTTOM'),
+            ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
+            ('TOPPADDING', (-1, 0), (-1, -1), 0),
+            ('TOPPADDING', (-1, 5), (-1, 5), 3),
+            ('TOPPADDING', (0, 5), (1, 5), 0),
+            ('TOPPADDING', (0, 6), (1, 6), -6),
+            ('BOTTOMPADDING', (0, 5), (1, 5), 0),
+            ('LEFTPADDING', (0, 5), (1, 5), 0),
+            ('RIGHTPADDING', (0, 5), (1, 5), 0),
+            ('SPAN', (-1, 0), (-1, 4)),
+            ('SPAN', (-1, 5), (-1, -1))
 
+        ]))
+        fwb.append(t)
+        if not has_paraclinic:
             tw = pw
 
             no_units_and_ref = any(
@@ -1565,7 +931,8 @@ def result_print(request):
             data = []
             tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                    Paragraph(
-                       '<font face="OpenSansBold" size="8">Результат</font>' + ('' if no_units_and_ref else '<br/><font face="OpenSans" size="8">(# - не норма)</font>'),
+                       '<font face="OpenSansBold" size="8">Результат</font>' + (
+                           '' if no_units_and_ref else '<br/><font face="OpenSans" size="8">(# - не норма)</font>'),
                        styleSheet["BodyText"])]
             if not no_units_and_ref:
                 if direction.client.individual.sex.lower() == "м":
@@ -1664,9 +1031,11 @@ def result_print(request):
                             if norm in ["none", "normal"]:
                                 tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                             elif norm == "maybe":
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
+                                tmp.append(
+                                    Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                             else:
-                                tmp.append(Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
+                                tmp.append(
+                                    Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
                             if not no_units_and_ref:
                                 tmp.append(
                                     Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
@@ -1795,13 +1164,15 @@ def result_print(request):
                                 # elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                                 #    result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                                 if norm in ["none", "normal"]:
-                                    tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
+                                    tmp.append(
+                                        Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                                 elif norm == "maybe":
                                     tmp.append(
                                         Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                                 else:
                                     tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
+                                        Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>",
+                                                  result_style))
                                 if not no_units_and_ref:
                                     tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
                                                          stl))
@@ -2025,30 +1396,41 @@ def result_print(request):
 
                     t.setStyle(style)
                     fwb.append(t)
-            if client_prev == direction.client.individual.pk and not split:
-                naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
-            elif client_prev > -1:
-                naprs.append(PageBreak())
+        else:
+            for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
+                fwb.append(Spacer(1, 5*mm))
+                fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
+                for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+                    results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+                    group_title = False
+                    if results.exists():
+                        fwb.append(Spacer(1, 2.5 * mm))
+                        if group.show_title:
+                            fwb.append(Paragraph(group.title, styleBold))
+                            fwb.append(Spacer(1, 1 * mm))
+                            group_title = True
+                        for r in results:
+                            if r.field.title != "":
+                                fwb.append(Paragraph("<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, r.value.replace("\n", "<br/>")), style_ml if group_title else style))
+                            else:
+                                fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
+                fwb.append(Spacer(1, 2.5 * mm))
+                fwb.append(Paragraph("Дата: {}".format(timezone.localtime(iss.time_confirmation).strftime('%d.%m.%Y')), styleBold))
+                fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                fwb.append(Spacer(1, 2.5 * mm))
+
+        if client_prev == direction.client.individual.pk and not split and not has_paraclinic:
+            naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
+        elif client_prev > -1:
+            naprs.append(PageBreak())
+        if not has_paraclinic:
             naprs.append(PTOContainer(fwb))
-            client_prev = direction.client.individual.pk
+        else:
+            naprs += fwb
+        client_prev = direction.client.individual.pk if not has_paraclinic else -2
 
-        doc.build(naprs)
-    elif type == "a5":
-        c = canvas.Canvas(buffer, pagesize=landscape(A4))
-        pages = Paginator(pk, 2)
-        w, h = landscape(A4)
-        for pg_num in pages.page_range:
+    doc.build(naprs)
 
-            c.setLineWidth(1)
-            c.line(w / 2 - 0.5, 0, w / 2 - 0.5, h)
-            pg = pages.page(pg_num)
-            i = 0
-            for obj in pg.object_list:
-                i += 1
-                draw_obj(c, obj, i, request.user.doctorprofile)
-            if pg.has_next():
-                c.showPage()
-        c.save()
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
@@ -2268,9 +1650,9 @@ def result_journal_table_print(request):
     patients = {}
     researches_pks = set()
     for iss in iss_list.order_by("napravleniye__client__individual__family").order_by("research__direction_id",
-                                                                          "research__pk",
-                                                                          "tubes__id",
-                                                                          "research__sort_weight"):
+                                                                                      "research__pk",
+                                                                                      "tubes__id",
+                                                                                      "research__sort_weight"):
         d = iss.napravleniye
         otd = d.doc.podrazdeleniye
         k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.title)
@@ -2581,9 +1963,10 @@ def result_journal_print(request):
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
                                   "ist_f": iss.napravleniye.istochnik_f.title,
-                                  "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
+                                  "fio": iss.napravleniye.client.individual.fio(short=True,
+                                                                                dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                                          ((
-                                              "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
+                                                  "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
         if iss.napravleniye.pk not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
@@ -2895,8 +2278,9 @@ def results_search_directions(request):
 
     if query.isdigit() or bool(re.compile(r'^([a-zA-Z0-9]{14,17})$').match(query)):
         filter_type = "card_number"
-    elif bool(re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
-            query)):
+    elif bool(
+            re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
+                    query)):
         filter_type = "fio"
         split = query.split()
         if len(split) > 0:
@@ -2933,7 +2317,8 @@ def results_search_directions(request):
             day1 = datetime.date(year, 1, 1)
             day2 = datetime.date(year + 1, 1, 1)
     except ValueError:
-        return JsonResponse({"rows": [], "grouping": grouping, "len": 0, "next_offset": 0, "all_rows": 0, "error_message": "Некорректная дата"})
+        return JsonResponse({"rows": [], "grouping": grouping, "len": 0, "next_offset": 0, "all_rows": 0,
+                             "error_message": "Некорректная дата"})
     collection = Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                              issledovaniya__time_confirmation__isnull=False,
                                              client__is_archive=archive)
@@ -2970,10 +2355,14 @@ def results_search_directions(request):
     directions_pks = []
     if sorting_direction == "up":
         sort_types = {"confirm-date": ("issledovaniya__time_confirmation",),
-                      "patient": ("issledovaniya__time_confirmation", "client__individual__family", "client__individual__name", "client__individual__patronymic",)}
+                      "patient": (
+                      "issledovaniya__time_confirmation", "client__individual__family", "client__individual__name",
+                      "client__individual__patronymic",)}
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
-                      "patient": ("-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name", "-client__individual__patronymic",)}
+                      "patient": (
+                      "-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name",
+                      "-client__individual__patronymic",)}
     filtered = []
     cnt = 0
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
@@ -3007,29 +2396,35 @@ def results_search_directions(request):
 
         row_normal = "none"
         for r in direction.issledovaniya_set.all():
-            if not Result.objects.filter(issledovaniye=r).exists():
-                continue
-            tmp_r = {"title": r.research.title}
-            is_normal = "none"
-            if perform_norms:
-                for res_row in Result.objects.filter(issledovaniye=r):
-                    tmp_normal = res_row.get_is_norm(recalc=True)
-                    if is_normal != "not_normal":
-                        if is_normal == "maybe":
-                            if tmp_normal == "not_normal":
+            if not r.research.is_paraclinic:
+                if not Result.objects.filter(issledovaniye=r).exists():
+                    continue
+                tmp_r = {"title": r.research.title}
+                is_normal = "none"
+                if perform_norms:
+                    for res_row in Result.objects.filter(issledovaniye=r):
+                        tmp_normal = res_row.get_is_norm(recalc=True)
+                        if is_normal != "not_normal":
+                            if is_normal == "maybe":
+                                if tmp_normal == "not_normal":
+                                    is_normal = tmp_normal
+                            else:
                                 is_normal = tmp_normal
-                        else:
-                            is_normal = tmp_normal
-                    if row_normal != "not_normal":
-                        if row_normal == "maybe":
-                            if tmp_normal == "not_normal":
+                        if row_normal != "not_normal":
+                            if row_normal == "maybe":
+                                if tmp_normal == "not_normal":
+                                    row_normal = tmp_normal
+                            else:
                                 row_normal = tmp_normal
-                        else:
-                            row_normal = tmp_normal
-                    if is_normal == "not_normal":
-                        break
-            tmp_r["is_normal"] = is_normal
-            researches.append(tmp_r)
+                        if is_normal == "not_normal":
+                            break
+                tmp_r["is_normal"] = is_normal
+                researches.append(tmp_r)
+            else:
+                if not ParaclinicResult.objects.filter(issledovaniye=r).exists():
+                    continue
+                tmp_r = {"title": r.research.title, "is_normal": "none"}
+                researches.append(tmp_r)
 
         tmp_dir = {"pk": direction.pk,
                    "laboratory": direction.issledovaniya_set.first().research.get_podrazdeleniye().title,
@@ -3047,11 +2442,12 @@ def results_search_directions(request):
         directions_pks.append(direction.pk)
     if offset == 0:
         slog.Log(key="", type=27, body=json.dumps({"query": query,
-                                               "period": period,
-                                               "type_patient": type_patient,
-                                               "perform_norms": perform_norms,
-                                               "grouping": grouping,
-                                               "otd_search": otd_search,
-                                               "doc_search": doc_search}), user=request.user.doctorprofile).save()
+                                                   "period": period,
+                                                   "type_patient": type_patient,
+                                                   "perform_norms": perform_norms,
+                                                   "grouping": grouping,
+                                                   "otd_search": otd_search,
+                                                   "doc_search": doc_search}), user=request.user.doctorprofile).save()
 
-    return JsonResponse({"rows": rows, "grouping": grouping, "len": n-offset, "next_offset": n, "all_rows": cnt, "error_message": ""})
+    return JsonResponse(
+        {"rows": rows, "grouping": grouping, "len": n - offset, "next_offset": n, "all_rows": cnt, "error_message": ""})

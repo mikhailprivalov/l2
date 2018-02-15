@@ -21,7 +21,7 @@ from api.to_astm import get_iss_astm
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card
-from directory.models import AutoAdd, Fractions
+from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -177,10 +177,12 @@ def send(request):
     return JsonResponse(result)
 
 
+@csrf_exempt
 def endpoint(request):
     result = {"answer": False, "body": ""}
     data = json.loads(request.POST.get("data", request.GET.get("data", "{}")))
     api_key = data.get("api_key", "")
+    work_type = data.get("work_type", "astm-1394")
     message_type = data.get("message_type", "C")
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
@@ -265,7 +267,24 @@ def endpoint(request):
             elif message_type == "Q":
                 result["answer"] = True
                 pks = [int(x) for x in data.get("query", [])]
-                result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
+                if work_type == "astm-1394":
+                    result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
+                elif work_type == "hl7":
+                    researches = defaultdict(list)
+                    for row in app.get_issledovaniya(pks):
+                        k = row["pk"]
+                        i = row["iss"]
+                        for fraction in Fractions.objects.filter(research=i.research,
+                                                                 relationfractionastm__application_api=app,
+                                                                 hide=False):
+                            rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
+                            if not rel.exists():
+                                continue
+                            rel = rel[0]
+                            researches[k].append(rel.astm_field)
+                    result["body"] = researches
+                else:
+                    pass
             else:
                 pass
         else:
@@ -502,6 +521,7 @@ def patients_search_card(request):
                      "name": row.individual.name,
                      "twoname": row.individual.patronymic,
                      "birthday": row.individual.bd(),
+                     "age": row.individual.age_s(),
                      "sex": row.individual.sex,
                      "individual_pk": row.individual.pk,
                      "pk": row.pk})
@@ -641,6 +661,7 @@ def researches_update(request):
         code = request_data.get("code").strip()
         info = request_data.get("info").strip()
         hide = request_data.get("hide")
+        groups = request_data.get("groups")
         if len(title) > 0 and Podrazdeleniya.objects.filter(pk=department_pk).exists():
             department = Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -658,6 +679,47 @@ def researches_update(request):
                 res.hide = hide
             if res:
                 res.save()
+                for group in groups:
+                    g = None
+                    pk = group["pk"]
+                    if pk == -1:
+                        g = ParaclinicInputGroups(title=group["title"],
+                                                  show_title=group["show_title"],
+                                                  research=res,
+                                                  order=group["order"],
+                                                  hide=group["hide"])
+                    elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
+                        g = ParaclinicInputGroups.objects.get(pk=pk)
+                        g.title = group["title"]
+                        g.show_title = group["show_title"]
+                        g.research = res
+                        g.order = group["order"]
+                        g.hide = group["hide"]
+                    if g:
+                        g.save()
+                        for field in group["fields"]:
+                            f = None
+                            pk = field["pk"]
+                            if pk == -1:
+                                f = ParaclinicInputField(title=field["title"],
+                                                         group=g,
+                                                         order=field["order"],
+                                                         lines=field["lines"],
+                                                         hide=field["hide"],
+                                                         default_value=field["default"],
+                                                         input_templates=json.dumps(field["values_to_input"]))
+                            elif ParaclinicInputField.objects.filter(pk=pk).exists():
+                                f = ParaclinicInputField.objects.get(pk=pk)
+                                f.title = field["title"]
+                                f.group = g
+                                f.order = field["order"]
+                                f.lines = field["lines"]
+                                f.hide = field["hide"]
+                                f.default_value = field["default"]
+                                f.input_templates = json.dumps(field["values_to_input"])
+                            if f:
+                                f.save()
+
                 response["ok"] = True
     return JsonResponse(response)
 
@@ -665,7 +727,8 @@ def researches_update(request):
 @login_required
 @group_required("Оператор")
 def researches_details(request):
-    response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False}
+    response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False,
+                "groups": []}
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
     if DResearches.objects.filter(pk=pk).exists():
@@ -677,6 +740,43 @@ def researches_details(request):
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide
+        for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
+            g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
+                 "hide": group.hide, "fields": []}
+            for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
+                g["fields"].append({
+                    "pk": field.pk,
+                    "order": field.order,
+                    "lines": field.lines,
+                    "title": field.title,
+                    "default": field.default_value,
+                    "hide": field.hide,
+                    "values_to_input": json.loads(field.input_templates)
+                })
+            response["groups"].append(g)
+    return JsonResponse(response)
+
+
+@login_required
+@group_required("Оператор")
+def paraclinic_details(request):
+    response = {"groups": []}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk")
+    for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
+        g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
+             "hide": group.hide, "fields": []}
+        for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
+            g["fields"].append({
+                "pk": field.pk,
+                "order": field.order,
+                "lines": field.lines,
+                "title": field.title,
+                "default": field.default_value,
+                "hide": field.hide,
+                "values_to_input": json.loads(field.input_templates)
+            })
+        response["groups"].append(g)
     return JsonResponse(response)
 
 
@@ -903,7 +1003,7 @@ def statistics_tickets_get(request):
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display()
-                    + (" (" + row.dispensary_diagnos + ")"  if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
                     + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title if row.result else "",
             "outcome": row.outcome.title if row.outcome else "",
@@ -926,4 +1026,188 @@ def statistics_tickets_invalidate(request):
                 user=request.user.doctorprofile).save()
         else:
             response["message"] = "Время на отмену или возврат истекло"
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники")
+def directions_paraclinic_form(request):
+    import time
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    add_f = {}
+    add_fr = {}
+    if not request.user.is_superuser:
+        add_f = dict(issledovaniya__research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+        add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+
+    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).exists():
+        response["ok"] = True
+        d = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).distinct()[0]
+        response["patient"] = {
+            "fio_age": d.client.individual.fio(full=True),
+            "card": d.client.number_with_type(),
+            "doc": d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title
+        }
+        response["direction"] = {
+            "pk": d.pk,
+            "date": timezone.localtime(d.data_sozdaniya).strftime('%d.%m.%Y'),
+            "diagnos": d.diagnos,
+            "fin_source": d.istochnik_f.title
+        }
+        response["researches"] = []
+        for i in directions.Issledovaniya.objects.filter(napravleniye=d, research__is_paraclinic=True, **add_fr):
+            ctp = int(0 if not i.time_confirmation else int(
+                time.mktime(i.time_confirmation.timetuple()))) + 8 * 60 * 60
+            ctime = int(time.time())
+            cdid = -1 if not i.doc_confirmation else i.doc_confirmation.pk
+            rt = SettingManager.get("lab_reset_confirm_time_min") * 60
+            iss = {
+                "pk": i.pk,
+                "research": {
+                    "title": i.research.title,
+                    "groups": []
+                },
+                "saved": i.time_save is not None,
+                "confirmed": i.time_confirmation is not None,
+                "allow_reset_confirm": ((
+                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                            str(x) for x in
+                                            request.user.groups.all()]) and i.time_confirmation is not None,
+            }
+            for group in ParaclinicInputGroups.objects.filter(research=i.research).order_by("order"):
+                g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
+                     "hide": group.hide, "fields": []}
+                for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
+                    g["fields"].append({
+                        "pk": field.pk,
+                        "order": field.order,
+                        "lines": field.lines,
+                        "title": field.title,
+                        "hide": field.hide,
+                        "values_to_input": json.loads(field.input_templates),
+                        "value": field.default_value if not directions.ParaclinicResult.objects.filter(
+                            issledovaniye=i, field=field).exists() else
+                        directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
+                    })
+                iss["research"]["groups"].append(g)
+            response["researches"].append(iss)
+    else:
+        response["message"] = "Направление не найдено"
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники")
+def directions_paraclinic_result(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body).get("data", {})
+    pk = request_data.get("pk", -1)
+    with_confirm = json.loads(request.body).get("with_confirm", False)
+    if directions.Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True,
+                                               research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye).exists():
+        iss = directions.Issledovaniya.objects.get(pk=pk)
+        for group in request_data["research"]["groups"]:
+            for field in group["fields"]:
+                if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
+                    continue
+                f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if not directions.ParaclinicResult.objects.filter(issledovaniye=iss, field=f).exists():
+                    f_result = directions.ParaclinicResult(issledovaniye=iss, field=f, value="")
+                else:
+                    f_result = directions.ParaclinicResult.objects.filter(issledovaniye=iss, field=f)[0]
+                f_result.value = field["value"]
+                f_result.save()
+        iss.doc_save = request.user.doctorprofile
+        iss.time_save = timezone.now()
+        if with_confirm:
+            iss.doc_confirmation = request.user.doctorprofile
+            iss.time_confirmation = timezone.now()
+        iss.save()
+        response["ok"] = True
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники")
+def directions_paraclinic_confirm(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("iss_pk", -1)
+    if directions.Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True,
+                                               research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye).exists():
+        iss = directions.Issledovaniya.objects.get(pk=pk)
+        iss.doc_confirmation = request.user.doctorprofile
+        iss.time_confirmation = timezone.now()
+        iss.save()
+        response["ok"] = True
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Сброс подтверждений результатов")
+def directions_paraclinic_confirm_reset(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("iss_pk", -1)
+
+    if directions.Issledovaniya.objects.filter(pk=pk).exists():
+        iss = directions.Issledovaniya.objects.get(pk=pk)
+
+        import time
+        ctp = int(
+            0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
+        ctime = int(time.time())
+        cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
+        if (ctime - ctp < SettingManager.get(
+                "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+            str(x) for x in request.user.groups.all()]:
+            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk,
+                      "direction": iss.napravleniye.pk}
+            iss.doc_confirmation = iss.time_confirmation = None
+            iss.save()
+            if iss.napravleniye.result_rmis_send:
+                c = Client()
+                c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
+            response["ok"] = True
+            slog.Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
+        else:
+            response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
+                str(SettingManager.get("lab_reset_confirm_time_min")))
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники")
+def directions_paraclinic_history(request):
+    response = {"directions": []}
+    request_data = json.loads(request.body)
+    date_start = request_data["date"].split(".")
+    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
+    date_end = date_start + datetime.timedelta(1)
+    has_dirs = []
+    for direction in directions.\
+            Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) |
+                                        Q(issledovaniya__doc_confirmation=request.user.doctorprofile)) \
+            .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) |
+                    Q(issledovaniya__time_save__range=(date_start, date_end)))\
+            .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation"):
+        if direction.pk in has_dirs:
+            continue
+        has_dirs.append(direction.pk)
+        d = {
+            "pk": direction.pk,
+            "date": timezone.localtime(direction.data_sozdaniya).strftime('%d.%m.%Y'),
+            "patient": direction.client.individual.fio(full=True, direction=direction),
+            "card": direction.client.number_with_type(),
+            "iss": [],
+            "all_confirmed": True,
+            "all_saved": True
+        }
+        for i in directions.Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
+            iss = {"title": i.research.title,
+                   "saved": i.time_save is not None,
+                   "confirmed": i.time_confirmation is not None}
+            d["iss"].append(iss)
+            if not iss["saved"]:
+                d["all_saved"] = False
+            if not iss["confirmed"]:
+                d["all_confirmed"] = False
+        response["directions"].append(d)
     return JsonResponse(response)

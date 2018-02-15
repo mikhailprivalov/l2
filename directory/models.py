@@ -86,6 +86,24 @@ class Researches(models.Model):
         verbose_name_plural = 'Виды исследований'
 
 
+class ParaclinicInputGroups(models.Model):
+    title = models.CharField(max_length=255, help_text='Название группы')
+    show_title = models.BooleanField()
+    research = models.ForeignKey(Researches, on_delete=models.CASCADE)
+    order = models.IntegerField()
+    hide = models.BooleanField()
+
+
+class ParaclinicInputField(models.Model):
+    title = models.CharField(max_length=255, help_text='Название поля ввода')
+    group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
+    order = models.IntegerField()
+    default_value = models.TextField()
+    input_templates = models.TextField()
+    hide = models.BooleanField()
+    lines = models.IntegerField(default=3)
+
+
 class AutoAdd(models.Model):
     """
     Перечисление связей исследований, которые могут быть назначены только вместе (A только с B)

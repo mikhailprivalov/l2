@@ -1,11 +1,12 @@
+import sys
+from datetime import datetime, date
+
 import simplejson
 from django.core.management.base import OutputWrapper
 from django.db import models
-from datetime import date
-import sys
+from django.utils import timezone
 
 import slog.models as slog
-from users.models import DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -20,7 +21,9 @@ class Individual(models.Model):
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
             out.write("Карт для переноса: %s" % Card.objects.filter(individual=b).count())
-        slog.Log(key=str(self.pk), type=2002, body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}), user=None).save()
+        slog.Log(key=str(self.pk), type=2002,
+                 body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}),
+                 user=None).save()
         Card.objects.filter(individual=b).update(individual=self)
         b.delete()
 
@@ -40,7 +43,8 @@ class Individual(models.Model):
                 out.write("Есть РМИС запись: %s" % rmis_uid)
 
         if not ok:
-            docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by("-document_type__check_priority")
+            docs = Document.objects.filter(individual=self).exclude(document_type__check_priority=0).order_by(
+                "-document_type__check_priority")
             for document in docs:
                 s = c.patients.search_by_document(document)
                 if len(s) > 0:
@@ -52,7 +56,8 @@ class Individual(models.Model):
 
         if ok:
             data = c.patients.get_data(rmis_uid)
-            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data["patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
+            upd = self.family != data["family"] or self.name != data["name"] or self.patronymic != data[
+                "patronymic"] or (self.birthday != data["birthday"] and data["birthday"] is not None)
 
             if upd:
                 prev = str(self)
@@ -65,10 +70,13 @@ class Individual(models.Model):
                 self.save()
                 if out:
                     out.write("Обновление данных: %s" % self.fio(full=True))
-                slog.Log(key=str(self.pk), type=2003, body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}), user=None).save()
+                slog.Log(key=str(self.pk), type=2003,
+                         body=simplejson.dumps({"Новые данные": str(self), "Не актуальные данные": prev}),
+                         user=None).save()
 
         if not ok:
-            query = {"surname": self.family, "name": self.name, "patrName": self.patronymic, "birthDate": self.birthday.strftime("%Y-%m-%d")}
+            query = {"surname": self.family, "name": self.name, "patrName": self.patronymic,
+                     "birthDate": self.birthday.strftime("%Y-%m-%d")}
             rows = c.patients.client.searchIndividual(**query)
             if len(query) == 1:
                 rmis_uid = rows[0]
@@ -105,7 +113,8 @@ class Individual(models.Model):
                                 individual=self,
                                 is_active=True)
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self)
-                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(card__isnull=True).exists():
+                    if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
+                            card__isnull=True).exists():
                         Document.objects.filter(document_type=data['document_type'], individual=self).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
@@ -156,12 +165,14 @@ class Individual(models.Model):
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
 
-    def age(self, iss=None):
+    def age(self, iss=None, days_monthes_years=False):
         """
         Функция подсчета возраста
         """
-        if iss is None or not iss.tubes.filter(time_recive__isnull=False).exists():
+        if iss is None or (not iss.tubes.filter(time_recive__isnull=False).exists() and not iss.research.is_paraclinic):
             today = date.today()
+        elif iss.time_confirmation and iss.research.is_paraclinic:
+            today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
         born = self.birthday
@@ -169,9 +180,18 @@ class Individual(models.Model):
             birthday = born.replace(year=today.year)
         except ValueError:
             birthday = born.replace(year=today.year, month=born.month + 1, day=1)
+
         if birthday > today:
+            if days_monthes_years:
+                import time
+                rd = datetime.fromtimestamp(time.mktime(today.timetuple()) - time.mktime(born.timetuple()))
+                return rd.day - 1, rd.month - 1, today.year - born.year - 1
             return today.year - born.year - 1
         else:
+            if days_monthes_years:
+                import time
+                rd = datetime.fromtimestamp(time.mktime(today.timetuple()) - time.mktime(born.timetuple()))
+                return rd.day - 1, rd.month - 1, today.year - born.year
             return today.year - born.year
 
     def age_s(self, iss=None, direction=None) -> str:
@@ -185,28 +205,60 @@ class Individual(models.Model):
         if direction is not None:
             from directions.models import Issledovaniya
             iss = None
-            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False).order_by("-tubes__time_recive")
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False, napravleniye=direction)\
+                .order_by("-tubes__time_recive")
             if i.exists():
                 iss = i[0]
-        age = self.age(iss=iss)
-        if age == 0:
-            _let = morph.parse("лет ")[0]
-        elif age < 5:
-            _let = morph.parse("год")[0]
-        elif age <= 20:
-            _let = morph.parse("лет ")[0]
-        elif 5 > age % 10 > 0:
-            _let = morph.parse("год")[0]
+            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False):
+                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False)\
+                    .order_by("-time_confirmation")[0]
+
+        days, monthes, years = self.age(iss=iss, days_monthes_years=True)
+        if years > 0:
+            age = years
+            if age == 0:
+                _let = morph.parse("лет ")[0]
+            elif age < 5:
+                _let = morph.parse("год")[0]
+            elif age <= 20:
+                _let = morph.parse("лет ")[0]
+            elif 5 > age % 10 > 0:
+                _let = morph.parse("год")[0]
+            else:
+                _let = morph.parse("лет ")[0]
+        elif monthes > 0:
+            age = monthes
+            if age == 0:
+                _let = morph.parse("месяцев ")[0]
+            elif age == 1:
+                _let = morph.parse("месяц ")[0]
+            elif age < 5:
+                _let = morph.parse("месяца")[0]
+            else:
+                _let = morph.parse("месяцев ")[0]
         else:
-            _let = morph.parse("лет ")[0]
+            age = days
+            if age == 0:
+                _let = morph.parse("дней ")[0]
+            elif age == 1:
+                _let = morph.parse("день ")[0]
+            elif age < 5:
+                _let = morph.parse("дня ")[0]
+            elif age <= 20:
+                _let = morph.parse("дней ")[0]
+            elif 5 > age % 10 > 0:
+                _let = morph.parse("день")[0]
+            else:
+                _let = morph.parse("дней ")[0]
+
         return "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
 
-    def fio(self, short=False, dots=False, full=False):
+    def fio(self, short=False, dots=False, full=False, direction=None):
 
         if not short:
             if full:
                 r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic,
-                                                                  self.birthday, self.age_s(), self.sex)
+                                                                  self.birthday, self.age_s(direction=direction), self.sex)
             else:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
         else:
@@ -241,7 +293,8 @@ class Individual(models.Model):
 
 class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
-    check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
+    check_priority = models.IntegerField(default=0,
+                                         help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
 
     def __str__(self):
         return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
@@ -275,7 +328,9 @@ class CardBase(models.Model):
     is_rmis = models.BooleanField(help_text="Это РМИС?", default=False)
     hide = models.BooleanField(help_text="Скрыть базу", default=False)
     history_number = models.BooleanField(help_text="Ввод номера истории", default=False)
-    assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base", help_text="Показывать результаты в поиске вместе с этой базой", null=True, blank=True, default=None,
+    assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base",
+                                         help_text="Показывать результаты в поиске вместе с этой базой", null=True,
+                                         blank=True, default=None,
                                          on_delete=models.SET_NULL)
 
     def __str__(self):
@@ -291,7 +346,8 @@ class Card(models.Model):
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
-    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None,
+                              on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
