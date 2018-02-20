@@ -344,7 +344,7 @@ class Napravleniya(models.Model):
                                                       # Установка направления для группы этого исследования
                                                       research=research,
                                                       deferred=False)  # Создание направления на исследование
-                        issledovaniye.comment = comments.get(str(research.pk), "")[:10]
+                        issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                         issledovaniye.save()  # Сохранение направления на исследование
                         FrequencyOfUseResearches.inc(research, doc_current)
                 #c = Client()
