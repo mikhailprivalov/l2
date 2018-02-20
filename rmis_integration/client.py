@@ -157,7 +157,7 @@ class Client(object):
         except IndexError:
             id = None
             if def_q != query:
-                id = self.get_directory("pim_department").get_first("ID", "NAME", def_q)
+                id = self.search_dep_id(q=def_q)
         return id
 
     def get_fin_dict(self):
