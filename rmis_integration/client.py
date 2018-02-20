@@ -465,11 +465,10 @@ class Directions(BaseRequester):
                                                                                                search_data=direction.rmis_direction_type()),
                                                              referralDate=ndate(direction.data_sozdaniya),
                                                              referralOrganizationId=self.main_client.search_organization_id(),
-                                                             referringDepartmentId=self.main_client.search_dep_id(),
+                                                             referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title()),
                                                              receivingOrganizationId=self.main_client.search_organization_id(),
-                                                             receivingDepartmentId=self.main_client.search_dep_id(),
-                                                             refServiceId=self.main_client.services.get_service_ids(
-                                                                 direction),
+                                                             receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title()),
+                                                             refServiceId=self.main_client.services.get_service_ids(direction),
                                                              fundingSourceTypeId=Utils.get_fin_src_id(
                                                                  direction.istochnik_f.title,
                                                                  self.main_client.get_fin_dict()),

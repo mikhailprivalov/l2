@@ -20,6 +20,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     p_type = models.PositiveSmallIntegerField(choices=TYPES, default=HIDDEN, blank=True)
     rmis_id = models.CharField(max_length=15, default=None, blank=True, null=True)
     rmis_direction_type = models.CharField(max_length=255, default="Направление в лабораторию", blank=True)
+    rmis_department_title = models.CharField(max_length=255, default="Клинико-диагностическая лаборатория (КДЛ)", blank=True)
 
     def get_title(self):
         return self.short_title if self.short_title != '' else self.title

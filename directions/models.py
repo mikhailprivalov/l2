@@ -398,6 +398,16 @@ class Napravleniya(models.Model):
         from rmis_integration.client import Settings
         return Settings.get("direction_type_title", default="Направление в лабораторию")
 
+    def rmis_department_title(self) -> str:
+        dep = self.department()
+        if dep:
+            return dep.rmis_department_title
+        from rmis_integration.client import Settings
+        return Settings.get("depname")
+
+    def rmis_referral_title(self) -> str:
+        return self.doc.podrazdeleniye.rmis_department_title
+
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
