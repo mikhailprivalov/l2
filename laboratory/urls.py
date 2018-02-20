@@ -16,8 +16,9 @@ from users.views import home
 
 admin.site.site_header = 'Администрирование L2'
 
-handler404 = mainmenu.views.v404
-handler500 = mainmenu.views.v500
+if not settings.DEBUG:
+    handler404 = mainmenu.views.v404
+    handler500 = mainmenu.views.v500
 
 urlpatterns = [
                   path('favicon\.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
