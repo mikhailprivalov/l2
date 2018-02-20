@@ -231,7 +231,10 @@ class Directory(BaseRequester):
                 return Utils.get_column_value(row, value_column)
 
     def get_first(self, column, search_name="NAME", search_data=""):
-        return Utils.get_column_value(self.get_values_by_data(search_name, search_data)[0], column)
+        values = self.get_values_by_data(search_name, search_data)
+        if len(values) > 0:
+            return Utils.get_column_value([0], column)
+        return None
 
 
 class Patients(BaseRequester):
