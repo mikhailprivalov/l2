@@ -501,6 +501,7 @@ class Directions(BaseRequester):
                 direction.rmis_number = self.client.sendReferral(**ref_data)
             except:
                 stdout.write(json.dumps(ref_data))
+                return
             if direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",
                                                                                                                      None]:
                 case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
