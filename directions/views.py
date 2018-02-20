@@ -253,7 +253,7 @@ def printDirection(c, n, dir):
                  "Номер карты: " + dir.client.number_with_type())
 
     if dir.diagnos.strip() != "":
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз: " + dir.diagnos)
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + dir.diagnos)
 
     if dir.istochnik_f:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
