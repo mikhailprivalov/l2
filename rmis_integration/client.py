@@ -144,14 +144,20 @@ class Client(object):
         return id
 
     def search_dep_id(self, q=None, check=False):
-        query = q or Settings.get("depname")
-        key = 'rmis_dep_id_' + get_md5(query)
-        id = cache.get(key)
-        if check and id is not None:
-            cache.delete(key)
-        if id is None:
-            id = self.get_directory("pim_department").get_first("ID", "NAME", query)
-            cache.set(key, id, 24 * 60 * 60)
+        def_q = Settings.get("depname")
+        query = q or def_q
+        try:
+            key = 'rmis_dep_id_' + get_md5(query)
+            id = cache.get(key)
+            if check and id is not None:
+                cache.delete(key)
+            if id is None:
+                id = self.get_directory("pim_department").get_first("ID", "NAME", query)
+                cache.set(key, id, 24 * 60 * 60)
+        except IndexError:
+            id = None
+            if def_q != query:
+                id = self.get_directory("pim_department").get_first("ID", "NAME", def_q)
         return id
 
     def get_fin_dict(self):
