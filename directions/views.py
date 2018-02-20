@@ -265,8 +265,7 @@ def printDirection(c, n, dir):
 
     vid = issledovaniya[0].research.get_podrazdeleniye()
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn,
-                 "Вид: " + vid.title + " (" + vid.get_p_type_display().lower() + ")")
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + vid.title)
 
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
