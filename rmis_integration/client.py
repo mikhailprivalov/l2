@@ -500,7 +500,7 @@ class Directions(BaseRequester):
             try:
                 direction.rmis_number = self.client.sendReferral(**ref_data)
             except:
-                stdout.write(json.dumps(ref_data))
+                stdout.write(direction.rmis_referral_title())
                 return
             if direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",
                                                                                                                      None]:
