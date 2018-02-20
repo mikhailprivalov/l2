@@ -233,7 +233,7 @@ class Directory(BaseRequester):
     def get_first(self, column, search_name="NAME", search_data=""):
         values = self.get_values_by_data(search_name, search_data)
         if len(values) > 0:
-            return Utils.get_column_value([0], column)
+            return Utils.get_column_value(values[0], column)
         return None
 
 
