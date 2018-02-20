@@ -247,7 +247,7 @@ def printDirection(c, n, dir):
                       "Пол: " + dir.client.individual.sex)
 
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
-                      "Возраст: " + dir.client.individual.age_s(direction=dir))
+                      "Дата рождения: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn,
                  "Номер карты: " + dir.client.number_with_type())
