@@ -462,9 +462,7 @@ class Directions(BaseRequester):
                                                              number=str(direction.pk),
                                                              typeId=self.main_client.get_directory(
                                                                  "md_referral_type").get_first("ID",
-                                                                                               search_data=Settings.get(
-                                                                                                   "direction_type_title",
-                                                                                                   default="Направление в лабораторию")),
+                                                                                               search_data=direction.rmis_direction_type()),
                                                              referralDate=ndate(direction.data_sozdaniya),
                                                              referralOrganizationId=self.main_client.search_organization_id(),
                                                              referringDepartmentId=self.main_client.search_dep_id(),
