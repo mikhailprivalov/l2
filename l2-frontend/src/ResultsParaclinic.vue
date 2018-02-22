@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top">Результаты за
         <date-field style="width: 94px;display: inline-block;height: 34px" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto">
+      <div style="overflow-y: auto;overflow-x:hidden;">
         <div class="direction" v-for="direction in directions_history">
           <div>
             Направление №<a href="#" @click.prevent="print_direction(direction.pk)">{{direction.pk}}</a> от
