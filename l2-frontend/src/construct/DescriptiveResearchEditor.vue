@@ -107,7 +107,7 @@
     components: {
       InputTag
     },
-    name: 'paraclinic-research-editor',
+    name: 'descriptive-research-editor',
     props: {
       pk: {
         type: Number,

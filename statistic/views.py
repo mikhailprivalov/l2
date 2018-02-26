@@ -29,7 +29,7 @@ def statistic_page(request):
     """ Страница статистики """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Лаборатории
     tubes = directory.Tubes.objects.all()  # Пробирки
-    podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
+    podrs = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW))  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name='Оформление статталонов').distinct()
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
@@ -486,7 +486,7 @@ def statistic_xls(request):
         researches = list(
             directory.Researches.objects.filter(podrazdeleniye=lab, hide=False).order_by('title').order_by(
                 "sort_weight").order_by("direction_id"))
-        pods = list(Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title"))
+        pods = list(Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title"))
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls'".format(
                 lab.title.replace(" ", "_"),
@@ -698,7 +698,7 @@ def statistic_xls(request):
 
         replace = [{"from": "-", "to": " "}, {"from": ".", "to": " "}, {"from": " и ", "to": " "}]
         n = len(row) - 1
-        pods = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        pods = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
         for pod in pods:
             n += 1
             title = pod.title

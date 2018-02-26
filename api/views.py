@@ -307,7 +307,7 @@ def departments(request):
                              x in Podrazdeleniya.objects.all().order_by("pk")],
              "can_edit": can_edit,
              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if
-                       SettingManager.get("paraclinic_module", default='false', default_type='b') or x[0] != 3]})
+                       SettingManager.get("descriptive_module", default='false', default_type='b') or x[0] != 3]})
     elif can_edit:
         ok = False
         message = ""
@@ -418,7 +418,7 @@ def current_user_info(request):
 def directive_from(request):
     from users.models import DoctorProfile
     data = []
-    for dep in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by('title'):
+    for dep in Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by('title'):
         d = {"pk": dep.pk,
              "title": dep.title,
              "docs": [{"pk": x.pk, "fio": x.fio} for x in DoctorProfile.objects.filter(podrazdeleniye=dep,
@@ -667,15 +667,15 @@ def researches_update(request):
             res = None
             if pk == -1:
                 res = DResearches(title=title, short_title=short_title, podrazdeleniye=department, code=code,
-                                  is_paraclinic=department.p_type == 3, paraclinic_info=info, hide=hide)
+                                  is_descriptive=department.p_type >= 3, descriptive_info=info, hide=hide)
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
                 res.title = title
                 res.short_title = short_title
                 res.podrazdeleniye = department
                 res.code = code
-                res.is_paraclinic = department.p_type == 3
-                res.paraclinic_info = info
+                res.is_descriptive = department.p_type >= 3
+                res.descriptive_info = info
                 res.hide = hide
             if res:
                 res.save()
@@ -738,7 +738,7 @@ def researches_details(request):
         response["title"] = res.title
         response["short_title"] = res.short_title
         response["code"] = res.code
-        response["info"] = res.paraclinic_info or ""
+        response["info"] = res.descriptive_info or ""
         response["hide"] = res.hide
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
@@ -759,7 +759,7 @@ def researches_details(request):
 
 @login_required
 @group_required("Оператор")
-def paraclinic_details(request):
+def descriptive_details(request):
     response = {"groups": []}
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
@@ -1029,8 +1029,8 @@ def statistics_tickets_invalidate(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники")
-def directions_paraclinic_form(request):
+@group_required("Ввод и подтверждение описательных результатов")
+def directions_descriptive_form(request):
     import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1041,9 +1041,9 @@ def directions_paraclinic_form(request):
         add_f = dict(issledovaniya__research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
-    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).exists():
+    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_descriptive=True, **add_f).exists():
         response["ok"] = True
-        d = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).distinct()[0]
+        d = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_descriptive=True, **add_f).distinct()[0]
         response["patient"] = {
             "fio_age": d.client.individual.fio(full=True),
             "card": d.client.number_with_type(),
@@ -1056,7 +1056,7 @@ def directions_paraclinic_form(request):
             "fin_source": d.istochnik_f.title
         }
         response["researches"] = []
-        for i in directions.Issledovaniya.objects.filter(napravleniye=d, research__is_paraclinic=True, **add_fr):
+        for i in directions.Issledovaniya.objects.filter(napravleniye=d, research__is_descriptive=True, **add_fr):
             ctp = int(0 if not i.time_confirmation else int(
                 time.mktime(i.time_confirmation.timetuple()))) + 8 * 60 * 60
             ctime = int(time.time())
@@ -1098,7 +1098,7 @@ def directions_paraclinic_form(request):
 
 
 @group_required("Врач параклиники")
-def directions_paraclinic_result(request):
+def directions_descriptive_result(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body).get("data", {})
     pk = request_data.get("pk", -1)
@@ -1128,7 +1128,7 @@ def directions_paraclinic_result(request):
 
 
 @group_required("Врач параклиники")
-def directions_paraclinic_confirm(request):
+def directions_descriptive_confirm(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1143,7 +1143,7 @@ def directions_paraclinic_confirm(request):
 
 
 @group_required("Врач параклиники", "Сброс подтверждений результатов")
-def directions_paraclinic_confirm_reset(request):
+def directions_descriptive_confirm_reset(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("iss_pk", -1)
@@ -1175,7 +1175,7 @@ def directions_paraclinic_confirm_reset(request):
 
 
 @group_required("Врач параклиники")
-def directions_paraclinic_history(request):
+def directions_descriptive_history(request):
     response = {"directions": []}
     request_data = json.loads(request.body)
     date_start = request_data["date"].split(".")

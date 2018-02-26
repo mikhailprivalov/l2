@@ -6,11 +6,14 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     DEPARTMENT = 1
     LABORATORY = 2
     PARACLINIC = 3
+    NARROW = 4
     TYPES = (
         (HIDDEN, "Скрыто"),
         (DEPARTMENT, "Направляющее отделение"),
         (LABORATORY, "Лаборатория"),
         (PARACLINIC, "Параклиника"),
+        (PARACLINIC, "Параклиника"),
+        (NARROW, "Узкие специалисты"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения

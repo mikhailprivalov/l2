@@ -16,7 +16,7 @@
       </button>
     </div>
     <div class="construct-content">
-      <paraclinic-research-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2"
+      <descriptive-research-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2"
                                   :pk="opened_id" :department="department_int"/>
     </div>
   </div>
@@ -24,16 +24,16 @@
 
 <script>
   import SelectPickerB from '../SelectPickerB'
-  import ParaclinicResearchEditor from './ParaclinicResearchEditor'
+  import DescriptiveResearchEditor from './DescriptiveResearchEditor'
   import researches_point from '../api/researches-point'
   import * as action_types from '../store/action-types'
 
   export default {
     components: {
       SelectPickerB,
-      ParaclinicResearchEditor,
+      DescriptiveResearchEditor,
     },
-    name: 'construct-paraclinic',
+    name: 'construct-descriptive',
     data() {
       return {
         department: '-1',

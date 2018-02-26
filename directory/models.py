@@ -69,8 +69,8 @@ class Researches(models.Model):
     onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
-    is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
-    paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
+    is_descriptive = models.BooleanField(default=False, blank=True, help_text="Это описательное исследование?")
+    descriptive_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

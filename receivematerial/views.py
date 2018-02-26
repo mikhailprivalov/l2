@@ -28,8 +28,8 @@ def receive(request):
     """Представление для приемщика материала в лаборатории"""
 
     if request.method == "GET":
-        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
+        podrazdeleniya = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
+        labs = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
         return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])

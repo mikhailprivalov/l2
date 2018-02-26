@@ -129,7 +129,7 @@
   import DateField from './DateField.vue'
 
   export default {
-    name: 'results-paraclinic',
+    name: 'results-descriptive',
     components: {DateField},
     data() {
       return {
@@ -152,7 +152,7 @@
         let vm = this
         vm.directions_history = []
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultUserHistory(vm.date).then(data => {
+        directions_point.descriptiveResultUserHistory(vm.date).then(data => {
           vm.directions_history = data.directions
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
@@ -186,7 +186,7 @@
       save(iss) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave(iss, false).then(data => {
+        directions_point.descriptiveResultSave(iss, false).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             iss.saved = true
@@ -202,7 +202,7 @@
       save_and_confirm(iss) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave(iss, true).then(data => {
+        directions_point.descriptiveResultSave(iss, true).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             okmessage('Подтверждено')
@@ -221,7 +221,7 @@
       confirm(iss) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultConfirm(iss.pk).then(data => {
+        directions_point.descriptiveResultConfirm(iss.pk).then(data => {
           if (data.ok) {
             okmessage('Подтверждено')
             iss.confirmed = true
@@ -243,7 +243,7 @@
           return
         }
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultConfirmReset(iss.pk).then(data => {
+        directions_point.descriptiveResultConfirmReset(iss.pk).then(data => {
           if (data.ok) {
             okmessage('Подтверждение сброшено')
             iss.confirmed = false

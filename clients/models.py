@@ -169,9 +169,9 @@ class Individual(models.Model):
         """
         Функция подсчета возраста
         """
-        if iss is None or (not iss.tubes.filter(time_recive__isnull=False).exists() and not iss.research.is_paraclinic):
+        if iss is None or (not iss.tubes.filter(time_recive__isnull=False).exists() and not iss.research.is_descriptive):
             today = date.today()
-        elif iss.time_confirmation and iss.research.is_paraclinic:
+        elif iss.time_confirmation and iss.research.is_descriptive:
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
@@ -209,8 +209,8 @@ class Individual(models.Model):
                 .order_by("-tubes__time_recive")
             if i.exists():
                 iss = i[0]
-            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False):
-                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False)\
+            elif Issledovaniya.objects.filter(research__is_descriptive=True, napravleniye=direction, time_confirmation__isnull=False):
+                iss = Issledovaniya.objects.filter(research__is_descriptive=True, napravleniye=direction, time_confirmation__isnull=False)\
                     .order_by("-time_confirmation")[0]
 
         days, monthes, years = self.age(iss=iss, days_monthes_years=True)

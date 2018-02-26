@@ -75,7 +75,7 @@ def enter(request):
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
     return render(request, 'dashboard/resultsenter.html', {"podrazdeleniya": podrazdeleniya,
                                                            "ist_f": IstochnikiFinansirovaniya.objects.all().order_by(
                                                                "pk").order_by("base"),
@@ -866,7 +866,7 @@ def result_print(request):
         #    cl.directions.check_send_results(direction)
         dates = {}
         date_t = ""
-        has_paraclinic = False
+        has_descriptive = False
         for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -875,8 +875,8 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = timezone.localtime(iss.tubes.first().time_get).strftime('%d.%m.%Y')
-            if iss.research.is_paraclinic:
-                has_paraclinic = True
+            if iss.research.is_descriptive:
+                has_descriptive = True
 
         maxdate = ""
         if dates != {}:
@@ -889,7 +889,7 @@ def result_print(request):
             ["Пол:", direction.client.individual.sex],
             ["Возраст:", direction.client.individual.age_s(direction=direction)],
         ]
-        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+        data += [["Дата забора:", date_t]] if not has_descriptive else [["Диагноз:", direction.diagnos]]
         data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                  ["№ карты:",
                   direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "")],
@@ -922,7 +922,7 @@ def result_print(request):
 
         ]))
         fwb.append(t)
-        if not has_paraclinic:
+        if not has_descriptive:
             tw = pw
 
             no_units_and_ref = any(
@@ -1419,15 +1419,15 @@ def result_print(request):
                 fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 
-        if client_prev == direction.client.individual.pk and not split and not has_paraclinic:
+        if client_prev == direction.client.individual.pk and not split and not has_descriptive:
             naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-        if not has_paraclinic:
+        if not has_descriptive:
             naprs.append(PTOContainer(fwb))
         else:
             naprs += fwb
-        client_prev = direction.client.individual.pk if not has_paraclinic else -2
+        client_prev = direction.client.individual.pk if not has_descriptive else -2
 
     doc.build(naprs)
 
@@ -2396,7 +2396,7 @@ def results_search_directions(request):
 
         row_normal = "none"
         for r in direction.issledovaniya_set.all():
-            if not r.research.is_paraclinic:
+            if not r.research.is_descriptive:
                 if not Result.objects.filter(issledovaniye=r).exists():
                     continue
                 tmp_r = {"title": r.research.title}

@@ -24,7 +24,7 @@ async function researchDetails(pk) {
 
 async function researchParaclinicDetails(pk) {
   try {
-    const response = await HTTP.post('researches/paraclinic_details', {pk})
+    const response = await HTTP.post('researches/descriptive_details', {pk})
     if (response.statusText === 'OK') {
       return response.data
     }

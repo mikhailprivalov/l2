@@ -15,7 +15,7 @@ import simplejson as json
 def menu(request):
     """ Меню конструктора """
     return render(request, 'construct_menu.html', {
-        "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')
+        "descriptive": SettingManager.get("descriptive_module", default='false', default_type='b')
     })
 
 
@@ -120,9 +120,9 @@ def refs(request):
 
 @login_required
 @group_required("Оператор")
-def researches_paraclinic(request):
-    if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-        return render(request, 'construct_paraclinic.html')
+def researches_descriptive(request):
+    if SettingManager.get("descriptive_module", default='false', default_type='b'):
+        return render(request, 'construct_descriptive.html')
     else:
         return redirect('/')
 

@@ -40,7 +40,7 @@ def dashboard(request):  # Представление панели управл�
             {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": ["Оформление статталонов"]},
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/results/enter", "title": "Ввод лабораторных результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False, "access": []},
             {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
             {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант"]},
@@ -66,8 +66,8 @@ def dashboard(request):  # Представление панели управл�
         if SettingManager.get("mis_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/cards', "title": "Управление картами L2", "nt": True, "access": ["Добавление и редактирование пациентов в базе L2"]})
 
-        if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-            pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод результатов параклиники", "nt": False, "access": ["Врач параклиники"]})
+        if SettingManager.get("descriptive_module", default='false', default_type='b'):
+            pages.append({"url": "/mainmenu/results/descriptive", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Узкий специалист"]})
 
         if SettingManager.get("hosp_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"]})
@@ -86,7 +86,7 @@ def dashboard(request):  # Представление панели управл�
                        "version": VERSION,
                        "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
                        "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
-                       "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')})
+                       "descriptive": SettingManager.get("descriptive_module", default='false', default_type='b')})
     return HttpResponse("OK")
 
 
@@ -220,7 +220,7 @@ def receive_journal_form(request):
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
     return render(request, 'dashboard/receive_journal.html',
                   {"groups": groups, "podrazdeleniya": podrazdeleniya, "labs": labs, "lab": lab})
 
@@ -371,7 +371,7 @@ def get_fin():
 def results_history(request):
     podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
 
-    podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+    podrazdeleniya = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
     users = []
     for p in podrazdeleniya:
         pd = {"pk": p.pk, "title": p.title, "docs": []}
@@ -585,7 +585,7 @@ def dashboard_from(request):
                                  int(date_end.split(".")[0])) + datetime.timedelta(1)
         if request.GET.get("get_labs", "false") == "true":
             for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY):
-                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
+                tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW),
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)
                 if filter_type == "not_received":
@@ -597,7 +597,7 @@ def dashboard_from(request):
                 tubes = tubes_list.distinct().count()
                 result[lab.pk] = tubes
             return JsonResponse(result)
-        podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
+        podrazdeleniya = Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.NARROW)).order_by("title")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
         for podr in podrazdeleniya:
@@ -793,5 +793,5 @@ def hosp(request):
 
 @login_required
 @group_required("Врач параклиники")
-def results_paraclinic(request):
-    return render(request, 'dashboard/results_paraclinic.html')
+def results_descriptive(request):
+    return render(request, 'dashboard/results_descriptive.html')

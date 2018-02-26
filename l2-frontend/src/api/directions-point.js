@@ -59,7 +59,7 @@ async function getResults(pk) {
 
 async function getParaclinicForm(pk) {
   try {
-    const response = await HTTP.post('directions/paraclinic_form', {pk})
+    const response = await HTTP.post('directions/descriptive_form', {pk})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -68,9 +68,9 @@ async function getParaclinicForm(pk) {
   return {ok: false, message: ''}
 }
 
-async function paraclinicResultSave(data, with_confirm) {
+async function descriptiveResultSave(data, with_confirm) {
   try {
-    const response = await HTTP.post('directions/paraclinic_result', {data, with_confirm})
+    const response = await HTTP.post('directions/descriptive_result', {data, with_confirm})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -79,9 +79,9 @@ async function paraclinicResultSave(data, with_confirm) {
   return {ok: false, message: ''}
 }
 
-async function paraclinicResultConfirm(iss_pk) {
+async function descriptiveResultConfirm(iss_pk) {
   try {
-    const response = await HTTP.post('directions/paraclinic_result_confirm', {iss_pk})
+    const response = await HTTP.post('directions/descriptive_result_confirm', {iss_pk})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -90,9 +90,9 @@ async function paraclinicResultConfirm(iss_pk) {
   return {ok: false, message: ''}
 }
 
-async function paraclinicResultConfirmReset(iss_pk) {
+async function descriptiveResultConfirmReset(iss_pk) {
   try {
-    const response = await HTTP.post('directions/paraclinic_result_confirm_reset', {iss_pk})
+    const response = await HTTP.post('directions/descriptive_result_confirm_reset', {iss_pk})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -101,9 +101,9 @@ async function paraclinicResultConfirmReset(iss_pk) {
   return {ok: false, message: ''}
 }
 
-async function paraclinicResultUserHistory(date) {
+async function descriptiveResultUserHistory(date) {
   try {
-    const response = await HTTP.post('directions/paraclinic_result_history', {date})
+    const response = await HTTP.post('directions/descriptive_result_history', {date})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -119,8 +119,8 @@ export default {
   cancelDirection,
   getResults,
   getParaclinicForm,
-  paraclinicResultSave,
-  paraclinicResultConfirm,
-  paraclinicResultConfirmReset,
-  paraclinicResultUserHistory
+  descriptiveResultSave,
+  descriptiveResultConfirm,
+  descriptiveResultConfirmReset,
+  descriptiveResultUserHistory
 }

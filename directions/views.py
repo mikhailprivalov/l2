@@ -290,11 +290,23 @@ def printDirection(c, n, dir):
     for v in issledovaniya:
         values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
                        "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation.pk,
-                       "info": v.research.paraclinic_info})
+                       "info": v.research.descriptive_info})
     tw = w / 2 - paddingx * 2
     m = 0
     if vid.p_type == Podrazdeleniya.PARACLINIC:
         tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
+               Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
+        data.append(tmp)
+        colWidths = [int(tw * 0.5), int(tw * 0.5)]
+        values.sort(key=lambda l: l["full_title"])
+
+        for v in values:
+            tmp = [Paragraph('<font face="OpenSans" size="8">' + v["full_title"] + "</font>", styleSheet["BodyText"]),
+                   Paragraph('<font face="OpenSans" size="8">' + v["info"] + "</font>", styleSheet["BodyText"])]
+            data.append(tmp)
+        m = 8
+    elif vid.p_type == Podrazdeleniya.NARROW:
+        tmp = [Paragraph('<font face="OpenSansBold" size="8">Специалист</font>', styleSheet["BodyText"]),
                Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
@@ -354,7 +366,7 @@ def printDirection(c, n, dir):
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
     c.setFont('OpenSans', 8)
-    if vid.p_type != Podrazdeleniya.PARACLINIC:
+    if vid.p_type == Podrazdeleniya.LABORATORY:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10,
                      "Всего назначено: " + str(len(issledovaniya)))
 
