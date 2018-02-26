@@ -488,14 +488,14 @@ class Directions(BaseRequester):
                                                               search_data=direction.rmis_direction_type()),
                             referralDate=ndate(direction.data_sozdaniya),
                             referralOrganizationId=self.main_client.search_organization_id(),
-                            referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title()),
+                            referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
                             receivingOrganizationId=self.main_client.search_organization_id(),
-                            receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title()),
+                            receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
                             refServiceId=self.main_client.services.get_service_ids(direction),
                             fundingSourceTypeId=Utils.get_fin_src_id(
                                 direction.istochnik_f.title,
                                 self.main_client.get_fin_dict()),
-                            note='Автоматический вывод из Лабораторной Информационной Системы L2',
+                            note='Автоматический вывод из Информационной Системы L2',
                             goalId=self.main_client.get_directory(
                                 "md_referral_goal").get_first("ID",
                                                               search_data=Settings.get(
