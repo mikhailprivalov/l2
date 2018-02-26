@@ -220,3 +220,5 @@ fabric.properties
 /researches/migrations/0001_initial.py
 /slog/migrations/0001_initial.py
 webpack-stats.json
+assets/webpack_bundles/*
+assets/static/img/logo*

@@ -143,7 +143,7 @@ class Client(object):
             cache.set(key, id, 24 * 60 * 60)
         return id
 
-    def search_dep_id(self, q=None, check=False):
+    def search_dep_id(self, q=None, check=False, org_id=None):
         def_q = Settings.get("depname")
         query = q or def_q
         try:
@@ -152,7 +152,7 @@ class Client(object):
             if check and id is not None:
                 cache.delete(key)
             if id is None:
-                id = self.get_directory("pim_department").get_first("ID", "NAME", query)
+                id = self.get_directory("pim_department").get_first("ID", "NAME", query, org_id=org_id)
                 cache.set(key, id, 24 * 60 * 60)
         except IndexError:
             id = None
@@ -230,10 +230,15 @@ class Directory(BaseRequester):
             if Utils.get_column_value(row, filter_column) == filter_data:
                 return Utils.get_column_value(row, value_column)
 
-    def get_first(self, column, search_name="NAME", search_data=""):
+    def get_first(self, column, search_name="NAME", search_data="", org_id=None):
         values = self.get_values_by_data(search_name, search_data)
         if len(values) > 0:
-            return Utils.get_column_value(values[0], column)
+            if not org_id:
+                return Utils.get_column_value(values[0], column)
+            for row in values:
+                OID = Utils.get_column_value(row, "ORG_ID")
+                if OID == org_id:
+                    return Utils.get_column_value(row, column)
         return None
 
 
@@ -531,7 +536,7 @@ class Directions(BaseRequester):
             return ""
         send_data = dict(referralId=refferal_id, serviceId=service_id, isRendered="false", patientUid=patient_uid,
                          orgId=self.main_client.search_organization_id(),
-                         note='Результаты в направлении или в протоколе.\nАвтоматический вывод из ЛИС L2',
+                         note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
                          fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title,
                                                                   self.main_client.get_fin_dict()),
                          quantity=1)
