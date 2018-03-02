@@ -555,7 +555,7 @@
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
   }
 
-  .btn-field {
+  .btn-field, .btn-field:focus {
     align-self: stretch;
     border-radius: 0;
     border-left: 0;
@@ -563,9 +563,10 @@
     background: rgba(0, 0, 0, .03);
     border: none;
     margin-right: 10px;
+    color: #000
   }
 
   .btn-field:hover {
-    background: rgba(0, 0, 0, .1);
+    background: rgba(0, 0, 0, .15);
   }
 </style>
