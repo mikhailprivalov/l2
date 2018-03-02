@@ -81,9 +81,7 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <button class="btn btn-default" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
-                        title="Очистить">×
-                </button>
+                <button class="btn btn-default btn-field" @click="clear_val(field)"title="Очистить">×</button>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -555,5 +553,19 @@
     margin-bottom: 3px;
     padding: 3px;
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+  }
+
+  .btn-field {
+    align-self: stretch;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    background: rgba(0, 0, 0, .03);
+    border: none;
+    margin-right: 10px;
+  }
+
+  .btn-field:hover {
+    background: rgba(0, 0, 0, .1);
   }
 </style>
