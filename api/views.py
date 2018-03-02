@@ -721,7 +721,7 @@ def researches_update(request):
                                 f.save()
 
                 response["ok"] = True
-        slog.Log(key=pk, type=10000, body=request.body, user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
@@ -1126,7 +1126,7 @@ def directions_paraclinic_result(request):
             iss.time_confirmation = timezone.now()
         iss.save()
         response["ok"] = True
-        slog.Log(key=pk, type=13, body=request.body, user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=13, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
@@ -1142,7 +1142,7 @@ def directions_paraclinic_confirm(request):
         iss.time_confirmation = timezone.now()
         iss.save()
         response["ok"] = True
-        slog.Log(key=pk, type=14, body=request.body, user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
