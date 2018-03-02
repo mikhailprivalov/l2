@@ -560,13 +560,14 @@
     border-radius: 0;
     border-left: 0;
     border-right: 0;
-    background: rgba(0, 0, 0, .03);
+    background: rgba(0, 0, 0, .06);
     border: none;
     margin-right: 10px;
-    color: #000
+    color: #000;
   }
 
   .btn-field:hover {
-    background: rgba(0, 0, 0, .15);
+    background: rgba(0, 0, 0, .2);
+    color: #fff;
   }
 </style>
