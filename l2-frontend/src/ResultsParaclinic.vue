@@ -92,6 +92,9 @@
                     </div>
                   </div>
                 </div>
+                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
+                        title="Очистить">×
+                </button>
                 <div class="field-value">
                   <textarea v-model="field.value" :rows="field.lines" class="form-control"
                             v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
@@ -264,6 +267,9 @@
       },
       print_results(pk) {
         this.$root.$emit('print:results', [pk])
+      },
+      clear_val(field) {
+        field.value = ''
       },
       append_value(field, value) {
         let add_val = value
