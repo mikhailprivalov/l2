@@ -273,7 +273,7 @@
         let add_val = value
         if(add_val !== ',' && add_val !== '.') {
           if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
-            if (field.value[field.value.length - 1] === '.' && field.title === '') {
+            if (field.value[field.value.length - 1] === '.') {
               add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
             }
             add_val = ' ' + add_val
