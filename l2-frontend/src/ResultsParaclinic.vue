@@ -81,7 +81,7 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <button class="btn btn-default btn-field" @click="clear_val(field)"title="Очистить">×</button>
+                <longpress class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -128,10 +128,11 @@
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
   import DateField from './DateField.vue'
+  import Longpress from 'vue-longpress';
 
   export default {
     name: 'results-paraclinic',
-    components: {DateField},
+    components: {DateField, Longpress},
     data() {
       return {
         pk: '',

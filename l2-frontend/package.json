@@ -19,6 +19,7 @@
     "vue": "^2.5.11",
     "vue-full-loading": "^1.0.3",
     "vue-input-tag": "^1.0.1",
+    "vue-longpress": "git+https://github.com/moodpulse/vuelongpress.git",
     "vue-select": "^2.4.0",
     "vue2-collapse": "^1.0.11",
     "vuex": "^3.0.1",
