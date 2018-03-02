@@ -267,13 +267,15 @@
       },
       append_value(field, value) {
         let add_val = value
-        if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
-          if (field.value[field.value.length - 1] === '.' && field.title === '') {
+        if(add_val !== ',' && add_val !== '.') {
+          if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
+            if (field.value[field.value.length - 1] === '.' && field.title === '') {
+              add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+            }
+            add_val = ' ' + add_val
+          } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
             add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
           }
-          add_val = ' ' + add_val
-        } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
-          add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
         }
         field.value += add_val
       }
