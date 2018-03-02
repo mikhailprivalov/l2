@@ -1099,6 +1099,19 @@ def directions_paraclinic_form(request):
     return JsonResponse(response)
 
 
+def delete_keys_from_dict(dict_del, lst_keys):
+    for k in lst_keys:
+        try:
+            del dict_del[k]
+        except KeyError:
+            pass
+    for v in dict_del.values():
+        if isinstance(v, dict):
+            delete_keys_from_dict(v, lst_keys)
+
+    return dict_del
+
+
 @group_required("Врач параклиники")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
@@ -1126,7 +1139,11 @@ def directions_paraclinic_result(request):
             iss.time_confirmation = timezone.now()
         iss.save()
         response["ok"] = True
-        slog.Log(key=pk, type=13, body=json.dumps(request_data), user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=13, body=json.dumps(delete_keys_from_dict(request_data,
+                                                                        ["hide", "confirmed", "allow_reset_confirm",
+                                                                         "values_to_input", "show_title", "order",
+                                                                         "show_title", "lines"])),
+                 user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
