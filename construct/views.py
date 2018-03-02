@@ -152,7 +152,7 @@ def refs(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def researches_paraclinic(request):
     if SettingManager.get("paraclinic_module", default='false', default_type='b'):
         return render(request, 'construct_paraclinic.html')

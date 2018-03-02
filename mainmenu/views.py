@@ -64,10 +64,11 @@ def dashboard(request):  # Представление панели управл�
                  "nt": True, "access": ["*"]})
 
         if SettingManager.get("mis_module", default='false', default_type='b'):
-            pages.append({"url": '/mainmenu/cards', "title": "Управление картами L2", "nt": True, "access": ["Добавление и редактирование пациентов в базе L2"]})
+            pages.append({"url": '/mainmenu/cards', "title": "Картотека L2", "nt": True, "access": ["Картотека L2"]})
 
         if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-            pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод результатов параклиники", "nt": False, "access": ["Врач параклиники"]})
+            # pages.append({"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники"]})
+            pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники"]})
 
         if SettingManager.get("hosp_module", default='false', default_type='b'):
             pages.append({"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"]})

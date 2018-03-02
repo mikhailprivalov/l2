@@ -630,7 +630,7 @@ def directions_cancel(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def researches_by_department(request):
     response = {"researches": []}
     request_data = json.loads(request.body)
@@ -649,7 +649,7 @@ def researches_by_department(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
@@ -721,11 +721,12 @@ def researches_update(request):
                                 f.save()
 
                 response["ok"] = True
+        slog.Log(key=pk, type=10000, body=request.body, user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def researches_details(request):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False,
                 "groups": []}
@@ -759,7 +760,7 @@ def researches_details(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def paraclinic_details(request):
     response = {"groups": []}
     request_data = json.loads(request.body)
@@ -1125,6 +1126,7 @@ def directions_paraclinic_result(request):
             iss.time_confirmation = timezone.now()
         iss.save()
         response["ok"] = True
+        slog.Log(key=pk, type=13, body=request.body, user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
@@ -1140,6 +1142,7 @@ def directions_paraclinic_confirm(request):
         iss.time_confirmation = timezone.now()
         iss.save()
         response["ok"] = True
+        slog.Log(key=pk, type=14, body=request.body, user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 

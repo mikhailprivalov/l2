@@ -65,6 +65,8 @@ class Log(models.Model):
 
         (7000, 'Статталоны: создание'),
         (7001, 'Статталоны: отмена/возврат'),
+
+        (10000, 'Конструктор: создание или редактирование исследования')
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
