@@ -78,12 +78,12 @@
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
               <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}">
-                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
-                        title="Очистить">×
-                </button>
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
+                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
+                        title="Очистить">×
+                </button>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
