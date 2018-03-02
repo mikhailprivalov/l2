@@ -636,7 +636,7 @@ def researches_by_department(request):
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
     if department_pk != -1:
-        for research in DResearches.objects.filter(podrazdeleniye__pk=department_pk):
+        for research in DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title"):
             response["researches"].append({
                 "pk": research.pk,
                 "title": research.title,
@@ -751,7 +751,8 @@ def researches_details(request):
                     "title": field.title,
                     "default": field.default_value,
                     "hide": field.hide,
-                    "values_to_input": json.loads(field.input_templates)
+                    "values_to_input": json.loads(field.input_templates),
+                    "new_value": ""
                 })
             response["groups"].append(g)
     return JsonResponse(response)

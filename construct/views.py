@@ -1,21 +1,48 @@
+import simplejson as json
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
+import directory.models as directory
 from appconf.manager import SettingManager
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
-import directory.models as directory
-import simplejson as json
+
 
 @login_required
-@group_required("Оператор")
 def menu(request):
     """ Меню конструктора """
+    menu = []
+    groups = [str(x) for x in request.user.groups.all()]
+    pages = [
+        {"url": "/construct/tubes", "title": "Ёмкости для биоматериала",
+         "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
+        {"url": "/construct/researches", "title": "Лабораторные исследования",
+         "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {"url": "/construct/researches-paraclinic", "title": "Параклинические (описательные) исследования",
+         "access": ["Конструктор: Параклинические (описательные) исследования"], "module": "paraclinic"},
+        {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям",
+         "access": ["Конструктор: Лабораторные исследования",
+                    "Конструктор: Параклинические (описательные) исследования"], "module": None},
+        {"url": "/construct/uets", "title": "Настройка УЕТов",
+         "access": ["Конструктор: Настройка УЕТов"], "module": None},
+    ]
+
+    groups_set = set(groups)
+    for page in pages:
+        if (not request.user.is_superuser and "*" not in page["access"] and len(
+                groups_set & set(page["access"])) == 0) or (
+                page["module"] and not SettingManager.get(page["module"] + "_module", default='false',
+                                                          default_type='b')):
+            continue
+        menu.append(page)
+
+    menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
+
     return render(request, 'construct_menu.html', {
-        "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')
+        "menu": menu_st,
     })
 
 
@@ -24,7 +51,8 @@ def menu(request):
 def researches(request):
     """ Конструктор исследований """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
-    return render(request, 'construct_researches.html', {"labs": labs, "variants": directory.ResultVariants.objects.all()})
+    return render(request, 'construct_researches.html',
+                  {"labs": labs, "variants": directory.ResultVariants.objects.all()})
 
 
 @login_required
@@ -32,7 +60,8 @@ def researches(request):
 def researches_tune(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
-    return render(request, 'construct_researches_tune.html', {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
+    return render(request, 'construct_researches_tune.html',
+                  {"pk": pk, "material_types": directory.MaterialVariants.objects.all()})
 
 
 @login_required
@@ -87,7 +116,10 @@ def refs(request):
         rows = []
         fraction = directory.Fractions.objects.get(pk=int(request.GET["pk"]))
         for r in directory.References.objects.filter(fraction=fraction).order_by("pk"):
-            rows.append({'pk': r.pk, 'title': r.title, 'about': r.about, 'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m, 'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False, 'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
+            rows.append({'pk': r.pk, 'title': r.title, 'about': r.about,
+                         'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m,
+                         'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False,
+                         'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
         return JsonResponse(rows, safe=False)
     elif request.method == "POST":
         pk = int(request.POST["pk"])
@@ -102,7 +134,8 @@ def refs(request):
                     if r["pk"] == default:
                         default = -1
                 elif not r["del"] and r["pk"] == -1:
-                    nrf = directory.References(title=r["title"], about=r["about"], ref_m=r["ref_m"], ref_f=r["ref_f"], fraction=fraction)
+                    nrf = directory.References(title=r["title"], about=r["about"], ref_m=r["ref_m"], ref_f=r["ref_f"],
+                                               fraction=fraction)
                     nrf.save()
                     if r["isdefault"]:
                         default = nrf.pk
@@ -125,4 +158,3 @@ def researches_paraclinic(request):
         return render(request, 'construct_paraclinic.html')
     else:
         return redirect('/')
-

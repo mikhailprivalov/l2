@@ -177,8 +177,8 @@
                     <br/>
                     <hr/>
                     <div class="row" style="text-align: center;width: 100%">
-                        <div class="col-xs-3"></div>
-                        <div class="col-xs-6" style="margin: 0 auto">
+                        <div class="col-xs-2"></div>
+                        <div class="col-xs-8" style="margin: 0 auto">
                             <div class="row">
                                 <div class="col-xs-6">
                                     <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
@@ -194,13 +194,17 @@
                                 </div>
                             </div>
                             <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
+                                    onclick="createlist(3);return false;">
+                                Создать таблицу исполнения (по не подтверждённым)
+                            </button>
+                            <button type="button" class="btn btn-primary-nb" style="margin-bottom: 10px"
                                     onclick="createlist(1);return false;">Создать лист по выбранному периоду
                             </button>
                             <button type="button" class="btn btn-primary-nb" onclick="createlist(2);return false;">
                                 Создать лист по отложенным
                             </button>
                         </div>
-                        <div class="col-xs-3"></div>
+                        <div class="col-xs-2"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2359,8 +2363,16 @@
                     dateend = $("[name=date-end]").val();
                     break;
             }
-            window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
+            switch (type) {
+                case 3:
+                    window.open(`/mainmenu/receive/execlist?type=nonconfirmed&datestart=${datestart}&dateend=${dateend}&researches=${JSON.stringify(researches)}`, '_blank');
+                    break;
+                default:
+                    window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
+                    break;
+            }
         }
+
         function load_researches(cont) {
             let $o = $("#table-researches");
             if (cont !== undefined)

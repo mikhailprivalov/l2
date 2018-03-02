@@ -14,7 +14,7 @@ import slog.models as slog
 import users.models as users
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from directions.models import Issledovaniya, TubesRegistration
+from directions.models import Issledovaniya, TubesRegistration, Result
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
@@ -162,9 +162,7 @@ def receive_execlist(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="execlist.pdf"'
     pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-
-    date = request.GET["date"]
-    date = datetime.date(int(date.split(".")[2]), int(date.split(".")[1]), int(date.split(".")[0]))
+    t = request.GET.get("type", "received")
     researches = json.loads(request.GET["researches"])
     buffer = BytesIO()
 
@@ -176,8 +174,22 @@ def receive_execlist(request):
     pw = w - marginx * 2
 
     from datetime import timedelta
-    date1 = date
-    date2 = date1 + timedelta(days=1)
+
+    if t == "received":
+        date = request.GET["date"].split(".")
+        date = datetime.date(int(date[2]), int(date[1]), int(date[0]))
+        date1 = date
+        date2 = date1 + timedelta(days=1)
+        dates = request.GET["date"]
+    else:
+        date1 = request.GET["datestart"].split(".")
+        date1 = datetime.date(int(date1[2]), int(date1[1]), int(date1[0]))
+        date2 = request.GET["dateend"].split(".")
+        date2 = datetime.date(int(date2[2]), int(date2[1]), int(date2[0])) + timedelta(days=1)
+        if request.GET["datestart"] != request.GET["dateend"]:
+            dates = "{} - {}".format(request.GET["datestart"], request.GET["dateend"])
+        else:
+            dates = request.GET["datestart"]
 
     def py(y=0):
         y *= mm
@@ -193,18 +205,24 @@ def receive_execlist(request):
 
     for pk in researches:
         if directory.Researches.objects.filter(pk=pk).exists() and Issledovaniya.objects.filter(research__pk=pk,
-                                                                                                tubes__time_recive__range=(
-                                                                                                date1, date2)).exists():
+                                                                                                tubes__time_recive__range=(date1, date2),
+                                                                                                doc_confirmation__isnull=True).exists():
             research = directory.Researches.objects.get(pk=pk)
-            fractions = [x.title for x in directory.Fractions.objects.filter(research=research, hide=False).order_by("sort_weight")]
-            tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
-                                                                    doc_recive=request.user.doctorprofile,
-                                                                    issledovaniya__research=research).order_by(
-                "daynum")]
+            fractions_o = directory.Fractions.objects.filter(research=research, hide=False).order_by("sort_weight")
+            fractions = [x.title for x in fractions_o]
+            if t == "received":
+                tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
+                                                                        doc_recive=request.user.doctorprofile,
+                                                                        issledovaniya__research=research).order_by("daynum")]
+            else:
+                tubes = [x.pk for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
+                                                                        issledovaniya__doc_confirmation__isnull=True,
+                                                                        issledovaniya__research=research).order_by("issledovaniya__napravleniye__client__individual__family", "issledovaniya__napravleniye__client__individual__name")]
             pages = Paginator(tubes, 16)
+            nn = 0
             for pg_num in pages.page_range:
                 c.setFont('OpenSans', 12)
-                c.drawString(px(), py(), "Лист исполнения - %s за %s" % (research.title, date1.strftime("%d.%m.%Y")))
+                c.drawString(px(), py(), "Лист исполнения - %s за %s" % (research.title, dates))
                 c.drawRightString(pxr(), py(), research.get_podrazdeleniye().title)
                 c.drawString(px(), 6 * mm, "Страница %d из %d" % (pg_num, pages.num_pages))
 
@@ -225,16 +243,18 @@ def receive_execlist(request):
 
                 pg = pages.page(pg_num)
                 for tube_pk in pg.object_list:
+                    nn += 1
                     tube = TubesRegistration.objects.get(pk=tube_pk)
                     napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk)[0].napravleniye
                     tmp = [
-                        Paragraph('<font face="OpenSans" size="8">%d</font>' % tube.daynum, styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum if t == "received" else nn), styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
                             "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazdeleniye.title),
                                   styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
-                    for _ in fractions:
-                        tmp.append(Paragraph('<font face="OpenSans" size="8"></font>', styleSheet["BodyText"]))
+                    for f in fractions_o:
+                        res = Result.objects.filter(fraction=f, issledovaniye__napravleniye=napravleniye)
+                        tmp.append(Paragraph('<font face="OpenSans" size="8">{}</font>'.format("" if t == "received" or not res.exists() else res[0].value), styleSheet["BodyText"]))
                     data.append(tmp)
 
                 cw = [int(tw * 0.07), int(tw * 0.245), int(tw * 0.045)]

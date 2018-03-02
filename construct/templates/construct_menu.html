@@ -2,45 +2,18 @@
 {% block title %}Меню конструктора{% endblock %}
 
 {% block content %}
-    <ol class="breadcrumb breadcrumb-arrow">
-        <li><a href="/mainmenu/">Панель управления</a></li>
-        <li><a href="/construct/menu">Конструктор</a></li>
-        <li class="active"><span>Меню</span></li>
-    </ol>
-    <div class="row dash-buttons">
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/tubes" class="panel-body">
-                <span>Ёмкости для биоматериала</span>
-            </a>
-        </div>
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/researches" class="panel-body">
-                <span>Лабораторные исследования</span>
-            </a>
-        </div>
-        {% if paraclinic %}
-            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-                <a href="/construct/researches-paraclinic" class="panel-body">
-                    <span>Параклинические (описательные) исследования</span>
-                </a>
-            </div>
-        {% endif %}
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/directions_group" class="panel-body">
-                <span>Группировка исследований по направлениям</span>
-            </a>
-        </div>
-        {% comment %}<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/with" class="panel-body">
-                <span>Настройка назначения исследований вместе</span>
-            </a>
-        </div>{% endcomment %}
-        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-            <a href="/construct/uets" class="panel-body">
-                <span>Настройка УЕТов</span>
-            </a>
-        </div>
-    </div><br/>
+    <h4 class='f-h' style="text-align: center;">Конструктор</h4>
+    <div class="row dash-buttons text-center">
+        {% for line in menu %}
+            {% for item in line %}
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
+                    <a href="{{ item.url }}" class="panel-body">
+                        <span>{{ item.title }}</span>
+                    </a>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
 {% endblock %}
 {% block head_cn %}
     <style>

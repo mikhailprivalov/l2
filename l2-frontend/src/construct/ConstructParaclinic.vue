@@ -1,16 +1,19 @@
 <template>
   <div ref="root" class="construct-root">
-    <div class="construct-sidebar">
+    <div class="construct-sidebar" v-show="opened_id === -2">
       <div class="sidebar-select">
         <select-picker-b style="height: 34px;" :options="departments_of_type" v-model="department"/>
       </div>
-      <input class="form-control" style="padding-top: 7px;padding-bottom: 7px"
+      <input class="form-control" v-model="title_filter" style="padding-top: 7px;padding-bottom: 7px"
              placeholder="Фильтр по названию"/>
-      <div class="sidebar-content" :class="{fcenter: researches_list.length === 0}">
-        <div v-if="researches_list.length === 0">Ничего не найдено</div>
-        <div class="research" v-for="row in researches_list" @click="open_editor(row.pk)">{{row.title}}</div>
+      <div class="sidebar-content" :class="{fcenter: researches_list_filtered.length === 0}">
+        <div v-if="researches_list_filtered.length === 0">Не найдено</div>
+        <div class="research" :class="{rhide: row.hide}"
+             v-for="row in researches_list_filtered"
+             @click="open_editor(row.pk)">{{row.title}}
+        </div>
       </div>
-      <button class="btn btn-blue-nb sidebar-footer" :disabled="opened_id === -1" @click="open_editor(-1)"><i
+      <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)"><i
         class="glyphicon glyphicon-plus"></i>
         Добавить
       </button>
@@ -39,7 +42,8 @@
         department: '-1',
         departments: [],
         researches_list: [],
-        opened_id: -2
+        opened_id: -2,
+        title_filter: ''
       }
     },
     methods: {
@@ -94,6 +98,9 @@
       },
       department_int() {
         return parseInt(this.department)
+      },
+      researches_list_filtered() {
+        return this.researches_list.filter(row => row.title.trim().toLowerCase().indexOf(this.title_filter.trim().toLowerCase()) >= 0)
       }
     }
   }
@@ -112,7 +119,7 @@
   }
 
   .construct-sidebar {
-    width: 300px;
+    width: 350px;
     border-right: 1px solid #b1b1b1;
     display: flex;
     flex-direction: column;
@@ -144,6 +151,12 @@
 
   .sidebar-content {
     height: 100%;
+    overflow-y: auto;
+    background-color: hsla(30, 3%, 97%, 1);
+  }
+
+  .sidebar-content:not(.fcenter) {
+    padding-bottom: 10px;
   }
 
   .sidebar-footer {
@@ -158,19 +171,28 @@
   }
 
   .research {
-    background-image: linear-gradient(#1ad6fd, #1d62f0);
-    color: #fff;
+    background-color: #fff;
     padding: 5px;
-    margin: 5px;
-    border-radius: 5px;
+    margin: 10px;
+    border-radius: 4px;
     cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    position: relative;
+
+    &.rhide {
+      background-image: linear-gradient(#6C7A89, #56616c);
+      color: #fff;
+    }
 
     hr {
 
     }
 
     &:hover {
-      box-shadow: 0 0 3px #1ad6fd;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+      transform: scale(1.008);
     }
   }
 

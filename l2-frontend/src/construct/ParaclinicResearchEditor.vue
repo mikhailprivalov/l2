@@ -7,7 +7,7 @@
           <input type="text" class="form-control" v-model="title">
         </div>
         <div class="input-group">
-          <span class="input-group-addon">Краткое <small>(при необходимости)</small></span>
+          <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
         </div>
       </div>
@@ -70,14 +70,51 @@
                 <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                 <input v-model="row.default" class="form-control" v-else/>
               </div>
-              <input-tag placeholder="Шаблоны быстр. ввода" :tags.sync="row.values_to_input" :addTagOnKeys="[13]"/>
+              <v-collapse-wrapper>
+                <div class="header" v-collapse-toggle>
+                  <a href="#" @click.prevent>
+                    Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
+                  </a>
+                </div>
+                <div class="my-content" v-collapse-content>
+                  <div class="input-group" style="margin-bottom: 5px">
+                    <input type="text" v-model="row.new_value" class="form-control"
+                           @keyup.enter="add_template_value(row)"
+                           placeholder="Новый шаблон быстрого ввода"/>
+                    <span class="input-group-btn"><button class="btn last btn-blue-nb" type="button"
+                                                          :disabled="row.new_value === ''"
+                                                          @click="add_template_value(row)">Добавить</button></span>
+                  </div>
+                  <div>
+                    <div class="input-group" v-for="(v, i) in row.values_to_input" style="margin-bottom: 1px">
+                  <span class="input-group-btn">
+                  <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)" @click="up_template(row, i)">
+                    <i class="glyphicon glyphicon-arrow-up"></i>
+                  </button>
+                  </span>
+                      <span class="input-group-btn">
+                  <button class="btn btn-blue-nb nob" :disabled="is_last_in_template(row, i)"
+                          @click="down_template(row, i)">
+                    <i class="glyphicon glyphicon-arrow-down"></i>
+                  </button>
+                  </span>
+                      <input class="form-control" type="text" v-model="row.values_to_input[i]"/>
+                      <span class="input-group-btn">
+                  <button class="btn btn-blue-nb" @click="remove_template(row, i)">
+                    <i class="glyphicon glyphicon-remove"></i>
+                  </button>
+                  </span>
+                    </div>
+                  </div>
+                </div>
+              </v-collapse-wrapper>
             </div>
             <div>
               <label>
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
               <label>
-                 Число строк<br/>для ввода:<br/>
+                Число строк<br/>для ввода:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
               </label>
             </div>
@@ -101,12 +138,13 @@
 <script>
   import construct_point from '../api/construct-point'
   import * as action_types from '../store/action-types'
-  import InputTag from 'vue-input-tag'
+  import VueCollapse from 'vue2-collapse'
+
+  import Vue from 'vue'
+
+  Vue.use(VueCollapse)
 
   export default {
-    components: {
-      InputTag
-    },
     name: 'paraclinic-research-editor',
     props: {
       pk: {
@@ -131,12 +169,38 @@
         cancel_do: false,
         loaded_pk: -2,
         groups: [],
+        template_add_types: [
+          {sep: ' ', title: 'Пробел'},
+          {sep: ', ', title: 'Запятая и пробел'},
+          {sep: '; ', title: 'Точка с запятой (;) и пробел'},
+          {sep: '. ', title: 'Точка и пробел'},
+          {sep: '\n', title: 'Перенос строки'},
+        ],
+        has_unsaved: false
       }
     },
     watch: {
       pk() {
         this.load()
+      },
+      loaded_pk(n) {
+        this.has_unsaved = false
+      },
+      groups: {
+        handler(n, o) {
+          if (o && o.length > 0) {
+            this.has_unsaved = true
+          }
+        },
+        deep: true
       }
+    },
+    mounted() {
+      let vm = this
+      $(window).on('beforeunload', function () {
+        if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
+          return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
+      })
     },
     computed: {
       valid() {
@@ -165,6 +229,40 @@
       },
     },
     methods: {
+      is_first_in_template(i) {
+        return i === 0
+      },
+      is_last_in_template(row, i) {
+        return i === row.values_to_input.length - 1
+      },
+      up_template(row, i) {
+        if (this.is_first_in_template(i))
+          return
+        let values = JSON.parse(JSON.stringify(row.values_to_input));
+        [values[i - 1], values[i]] = [values[i], values[i - 1]]
+        row.values_to_input = values
+      },
+      down_template(row, i) {
+        if (this.is_last_in_template(row, i))
+          return
+        let values = JSON.parse(JSON.stringify(row.values_to_input));
+        [values[i + 1], values[i]] = [values[i], values[i + 1]]
+        row.values_to_input = values
+      },
+      remove_template(row, i) {
+        if (row.values_to_input.length - 1 < i)
+          return
+        row.values_to_input.splice(i, 1)
+      },
+      add_template_value(row) {
+        if (row.new_value === '')
+          return
+        row.values_to_input.push(row.new_value)
+        row.new_value = ''
+      },
+      drag(row, ev) {
+        console.log(row, ev)
+      },
       min_max_order(group) {
         let min = 0
         let max = 0
@@ -252,7 +350,16 @@
         for (let row of group.fields) {
           order = Math.max(order, row.order)
         }
-        group.fields.push({pk: -1, order: order + 1, title: '', default: '', values_to_input: [], hide: false, lines: 3})
+        group.fields.push({
+          pk: -1,
+          order: order + 1,
+          title: '',
+          default: '',
+          values_to_input: [],
+          new_value: '',
+          hide: false,
+          lines: 3
+        })
       },
       add_group() {
         let order = 0
@@ -281,7 +388,7 @@
             vm.hide = data.hide
             vm.loaded_pk = vm.pk
             vm.groups = data.groups
-            if(vm.groups.length === 0) {
+            if (vm.groups.length === 0) {
               vm.add_group()
             }
           }).finally(() => {
@@ -292,6 +399,9 @@
         }
       },
       cancel() {
+        if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
+          return
+        }
         this.cancel_do = true
         this.$root.$emit('research-editor:cancel')
       },
@@ -299,6 +409,7 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info, vm.hide, vm.groups).then(() => {
+          vm.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
