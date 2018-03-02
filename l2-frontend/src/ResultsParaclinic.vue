@@ -78,6 +78,9 @@
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
               <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}">
+                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
+                        title="Очистить">×
+                </button>
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
@@ -92,9 +95,6 @@
                     </div>
                   </div>
                 </div>
-                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
-                        title="Очистить">×
-                </button>
                 <div class="field-value">
                   <textarea v-model="field.value" :rows="field.lines" class="form-control"
                             v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
