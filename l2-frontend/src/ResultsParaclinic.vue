@@ -81,7 +81,7 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <button class="btn btn-blue-nb" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
+                <button class="btn btn-default" style="align-self: stretch;border-radius: 0;" @click="clear_val(field)"
                         title="Очистить">×
                 </button>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
