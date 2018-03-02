@@ -564,7 +564,7 @@
     border-right: 0;
     background: rgba(0, 0, 0, .06);
     border: none;
-    margin-right: 10px;
+    margin-right: 5px;
     color: #000;
   }
 
