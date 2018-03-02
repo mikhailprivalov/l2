@@ -487,6 +487,8 @@
     margin-bottom: 4px;
     margin-right: 4px;
     cursor: pointer;
+    min-width: 20px;
+    text-align: center;
   }
 
   .input-value:hover {
