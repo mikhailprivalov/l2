@@ -1108,7 +1108,9 @@ def delete_keys_from_dict(dict_del, lst_keys):
     for v in dict_del.values():
         if isinstance(v, dict):
             delete_keys_from_dict(v, lst_keys)
-
+        if isinstance(v, list):
+            for ll in v:
+                delete_keys_from_dict(ll, lst_keys)
     return dict_del
 
 
@@ -1142,7 +1144,7 @@ def directions_paraclinic_result(request):
         slog.Log(key=pk, type=13, body=json.dumps(delete_keys_from_dict(request_data,
                                                                         ["hide", "confirmed", "allow_reset_confirm",
                                                                          "values_to_input", "show_title", "order",
-                                                                         "show_title", "lines"])),
+                                                                         "show_title", "lines", "saved"])),
                  user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
