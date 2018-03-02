@@ -78,6 +78,12 @@
       departments() {
         if (this.department !== '-1' || this.departments_of_type.length === 0)
           return
+        for(let row of this.departments_of_type) {
+          if(row.pk === this.$store.getters.user_data.department.pk) {
+            this.department = row.pk.toString()
+            return
+          }
+        }
         this.department = this.departments_of_type[0].value.toString()
       },
       department() {
