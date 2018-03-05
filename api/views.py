@@ -1037,6 +1037,9 @@ def directions_paraclinic_form(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
+    if pk >= 4600000000000:
+        pk -= 4600000000000
+        pk //= 10
     add_f = {}
     add_fr = {}
     if not request.user.is_superuser:
