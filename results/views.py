@@ -2471,7 +2471,8 @@ def results_search_directions(request):
                                                    "perform_norms": perform_norms,
                                                    "grouping": grouping,
                                                    "otd_search": otd_search,
-                                                   "doc_search": doc_search}), user=request.user.doctorprofile).save()
+                                                   "doc_search": doc_search,
+                                                   "researches": rq_researches}), user=request.user.doctorprofile).save()
 
     return JsonResponse(
         {"rows": rows, "grouping": grouping, "len": n - offset, "next_offset": n, "all_rows": cnt, "error_message": ""})
