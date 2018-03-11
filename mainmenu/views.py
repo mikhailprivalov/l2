@@ -375,7 +375,8 @@ def get_fin():
 @login_required
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант")
 def results_history(request):
-    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+    podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by(
+        "title")
 
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     users = []
@@ -385,10 +386,24 @@ def results_history(request):
                                               user__groups__name="Лечащий врач"):
             pd["docs"].append({"pk": d.pk, "fio": d.get_fio()})
         users.append(pd)
-    return render(request, 'dashboard/results_history.html', {'labs': podr,
-                                                              'fin': get_fin(),
+    return render(request, 'dashboard/results_history.html', {'fin': get_fin(),
                                                               "notlabs": podrazdeleniya,
-                                                              "users": json.dumps(users)})
+                                                              "users": json.dumps(users),
+                                                              "labs":
+                                                                  [
+                                                                      {
+                                                                          "title": x.get_title(),
+                                                                          "researches": [
+                                                                              {"pk": y.pk,
+                                                                               "title": y.get_full_short_title()}
+                                                                              for y in
+                                                                              directory.Researches.objects.filter(
+                                                                                  hide=False,
+                                                                                  podrazdeleniye=x).order_by("title")
+                                                                          ]
+                                                                      }
+                                                                      for x in podr]
+                                                              })
 
 
 @login_required

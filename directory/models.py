@@ -81,6 +81,9 @@ class Researches(models.Model):
     def get_title(self):
         return self.short_title if self.short_title != '' else self.title
 
+    def get_full_short_title(self):
+        return self.title if self.get_title() == self.title else "{} ({})".format(self.title, self.get_title())
+
     class Meta:
         verbose_name = 'Вид исследования'
         verbose_name_plural = 'Виды исследований'

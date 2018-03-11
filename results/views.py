@@ -733,6 +733,7 @@ def result_print(request):
     buffer = BytesIO()
 
     split = request.GET.get("split", "1") == "1"
+    protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
 
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
     from reportlab.platypus.flowables import HRFlowable
@@ -798,16 +799,16 @@ def result_print(request):
     pw = doc.width
     import operator
 
-    def print_vtype(data, f, iss, j, style, styleSheet):
+    def print_vtype(data, f, iss, j, style_t, styleSheet):
 
         import operator
         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
             result = Result.objects.get(issledovaniye=iss, fraction=f).value.replace("<br>", "<br/>")
             # try:
             jo = json.loads(result)["rows"]
-            style.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
+            style_t.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
             for key, val in jo.items():
-                style.add('SPAN', (0, j), (-1, j))
+                style_t.add('SPAN', (0, j), (-1, j))
                 j += 1
 
                 norm_vals = []
@@ -815,7 +816,7 @@ def result_print(request):
                     if rowv["value"] not in ["", "null"]:
                         norm_vals.insert(0, {"title": rowv["title"], "value": rowv["value"], "k": int(rowk)})
                 if len(norm_vals) > 0:
-                    style.add('SPAN', (0, j), (-1, j))
+                    style_t.add('SPAN', (0, j), (-1, j))
                     j += 1
                     tmp = ["", "", "", "", "", ""]
                     data.append(tmp)
@@ -956,7 +957,7 @@ def result_print(request):
                 cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
             cw = cw + [tw - sum(cw)]
             t = Table(data, colWidths=cw)
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                 ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                                 ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
@@ -966,10 +967,10 @@ def result_print(request):
                                 ('RIGHTPADDING', (0, 0), (-1, -1), 2),
                                 ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
                                 ])
-            style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-            style.add('TOPPADDING', (0, 0), (-1, 0), 0)
+            style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+            style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
 
-            t.setStyle(style)
+            t.setStyle(style_t)
             t.spaceBefore = 3 * mm
             t.spaceAfter = 0
 
@@ -1138,7 +1139,7 @@ def result_print(request):
                               ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
                               ]
 
-                        style = TableStyle(ts)
+                        style_t = TableStyle(ts)
                         j = 0
 
                         for f in fractions:
@@ -1183,27 +1184,27 @@ def result_print(request):
                                 data.append(tmp)
                             elif f.render_type == 1:
                                 jp = j
-                                j = print_vtype(data, f, iss, j, style, styleSheet)
+                                j = print_vtype(data, f, iss, j, style_t, styleSheet)
 
                                 if j - jp > 2:
                                     data.append([Paragraph(
                                         '<font face="OpenSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>',
                                         styleSheet["BodyText"])])
-                                    style.add('SPAN', (0, j), (-1, j))
-                                    style.add('BOX', (0, j), (-1, j), 1, colors.white)
+                                    style_t.add('SPAN', (0, j), (-1, j))
+                                    style_t.add('BOX', (0, j), (-1, j), 1, colors.white)
                                     j -= 1
 
                         for k in range(0, 6):
-                            style.add('INNERGRID', (k, 0),
+                            style_t.add('INNERGRID', (k, 0),
                                       (k, j), 0.1, colors.black)
-                            style.add('BOX', (k, 0), (k, j),
+                            style_t.add('BOX', (k, 0), (k, j),
                                       0.8, colors.black)
 
-                        style.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
-                        style.add('TOPPADDING', (0, 0), (0, -1), 0)
+                            style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
+                            style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
 
                         t = Table(data, colWidths=cw)
-                        t.setStyle(style)
+                        t.setStyle(style_t)
                     fwb.append(t)
 
                 fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
@@ -1239,7 +1240,7 @@ def result_print(request):
                         cw = [int(tw * 0.34), int(tw * 0.24), int(tw * 0.2)]
                         cw = cw + [tw - sum(cw)]
                         t = Table(data, colWidths=cw)
-                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                             ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                                             ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
@@ -1250,8 +1251,8 @@ def result_print(request):
                                             ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
                                             ])
 
-                        style.add('LINEBELOW', (0, -1), (-1, -1), 2, colors.black)
-                        t.setStyle(style)
+                        style_t.add('LINEBELOW', (0, -1), (-1, -1), 2, colors.black)
+                        t.setStyle(style_t)
                         t.spaceBefore = 3 * mm
                         t.spaceAfter = 0
                         fwb.append(t)
@@ -1267,7 +1268,7 @@ def result_print(request):
                             for key, val in jo.items():
                                 if val["title"] != "":
                                     data = []
-                                    style.add('SPAN', (0, j), (-1, j))
+                                    style_t.add('SPAN', (0, j), (-1, j))
                                     j += 1
 
                                     norm_vals = []
@@ -1325,7 +1326,7 @@ def result_print(request):
                                     cw = cw + [tw - sum(cw)]
                                     t = Table(data, colWidths=cw)
 
-                                    style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                    style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                                         ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                                                         ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
@@ -1336,13 +1337,13 @@ def result_print(request):
                                                         ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
                                                         ])
 
-                                    style.add('BOTTOMPADDING', (0, 0), (-1, -1), 1)
-                                    style.add('TOPPADDING', (0, 0), (-1, -1), 2)
+                                    style_t.add('BOTTOMPADDING', (0, 0), (-1, -1), 1)
+                                    style_t.add('TOPPADDING', (0, 0), (-1, -1), 2)
 
-                                    style.add('SPAN', (0, 0), (-1, 0))
-                                    style.add('SPAN', (0, 1), (-1, 1))
+                                    style_t.add('SPAN', (0, 0), (-1, 0))
+                                    style_t.add('SPAN', (0, 1), (-1, 1))
 
-                                    t.setStyle(style)
+                                    t.setStyle(style_t)
                                     fwb.append(t)
                     if has_anti:
                         data = []
@@ -1353,7 +1354,7 @@ def result_print(request):
                         cw = [int(tw * 0.23), int(tw * 0.11), int(tw * 0.22), int(tw * 0.11), int(tw * 0.22)]
                         cw = cw + [tw - sum(cw)]
                         t = Table(data, colWidths=cw)
-                        style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                             ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                                             ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
@@ -1363,11 +1364,11 @@ def result_print(request):
                                             ('RIGHTPADDING', (0, 0), (-1, -1), 2),
                                             ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
                                             ])
-                        style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-                        style.add('TOPPADDING', (0, 0), (-1, 0), 0)
-                        style.add('SPAN', (0, 0), (-1, 0))
+                        style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+                        style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
+                        style_t.add('SPAN', (0, 0), (-1, 0))
 
-                        t.setStyle(style)
+                        t.setStyle(style_t)
                         fwb.append(t)
                 if iss.lab_comment and iss.lab_comment != "":
                     data = []
@@ -1380,7 +1381,7 @@ def result_print(request):
                     cw = [int(tw * 0.26), int(tw * 0.178), int(tw * 0.17), int(tw * 0.134), int(tw * 0.178)]
                     cw = cw + [tw - sum(cw)]
                     t = Table(data, colWidths=cw)
-                    style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                         ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                                         ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
@@ -1390,44 +1391,58 @@ def result_print(request):
                                         ('RIGHTPADDING', (0, 0), (-1, -1), 2),
                                         ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
                                         ])
-                    style.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
-                    style.add('TOPPADDING', (0, 0), (-1, 0), 0)
-                    style.add('SPAN', (1, 0), (-1, 0))
+                    style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
+                    style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
+                    style_t.add('SPAN', (1, 0), (-1, 0))
 
-                    t.setStyle(style)
+                    t.setStyle(style_t)
                     fwb.append(t)
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5*mm))
                 fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
-                for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
-                    results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
-                    group_title = False
-                    if results.exists():
-                        fwb.append(Spacer(1, 2.5 * mm))
-                        if group.show_title:
-                            fwb.append(Paragraph(group.title, styleBold))
+                if not protocol_plain_text:
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+                        group_title = False
+                        if results.exists():
                             fwb.append(Spacer(1, 1 * mm))
-                            group_title = True
-                        for r in results:
-                            if r.field.title != "":
-                                fwb.append(Paragraph("<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, r.value.replace("\n", "<br/>")), style_ml if group_title else style))
-                            else:
-                                fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
+                            if group.show_title and group.show_title != "":
+                                fwb.append(Paragraph(group.title, styleBold))
+                                fwb.append(Spacer(1, 0.25 * mm))
+                                group_title = True
+                            for r in results:
+                                if r.field.title != "":
+                                    fwb.append(Paragraph("<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, r.value.replace("\n", "<br/>")), style_ml if group_title else style))
+                                else:
+                                    fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
+                else:
+                    txt = ""
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
+                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+                        if results.exists():
+                            if group.show_title and group.title != "":
+                                txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title)
+                            vals = []
+                            for r in results:
+                                if r.field.title != "":
+                                    vals.append("{}:&nbsp;{}".format(r.field.title, r.value))
+                                else:
+                                    vals.append(r.value)
+                            txt += "; ".join(vals) + ".<br/>"
+
+                    fwb.append(Paragraph(txt, style))
                 fwb.append(Spacer(1, 2.5 * mm))
                 fwb.append(Paragraph("Дата: {}".format(timezone.localtime(iss.time_confirmation).strftime('%d.%m.%Y')), styleBold))
                 fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 
-        if client_prev == direction.client.individual.pk and not split and not has_paraclinic:
-            naprs.append(HRFlowable(width=pw, spaceAfter=2.5 * mm, spaceBefore=1.5 * mm, color=colors.lightgrey))
+        if client_prev == direction.client.individual.pk and not split:
+            naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-        if not has_paraclinic:
-            naprs.append(PTOContainer(fwb))
-        else:
-            naprs += fwb
-        client_prev = direction.client.individual.pk if not has_paraclinic else -2
+        naprs.append(PTOContainer(fwb))
+        client_prev = direction.client.individual.pk
 
     doc.build(naprs)
 
@@ -1577,7 +1592,7 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                                  "" if not iss.comment else "<br/>" + iss.comment) + "</font>",
                              styleSheet["BodyText"]), '', '', '']
             data.append(tmp)
-            style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                 # ('SPAN',(0,0),(-1,0)),
                                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                                 ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
@@ -1613,13 +1628,13 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                 data.append(tmp)
 
             for k in range(0, 4):
-                style.add('INNERGRID', (k, 0),
+                style_t.add('INNERGRID', (k, 0),
                           (k, j), 0.01, colors.black)
-                style.add('BOX', (k, 0), (k, j),
+                style_t.add('BOX', (k, 0), (k, j),
                           0.8, colors.black)
 
             t = Table(data, colWidths=cw)
-            t.setStyle(style)
+            t.setStyle(style_t)
         t.canv = c
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, paddingx + s, pos - ht)
@@ -2250,6 +2265,7 @@ def results_search_directions(request):
         data = request.GET
 
     period = json.loads(data.get("period", "{}"))
+    rq_researches = json.loads(data.get("researches", "[]"))
     type = period.get("type", "d")
     type_patient = int(data.get("type_patient", "-1"))
     query = ' '.join(data.get("query", "").strip().split())
@@ -2322,6 +2338,9 @@ def results_search_directions(request):
     collection = Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
                                              issledovaniya__time_confirmation__isnull=False,
                                              client__is_archive=archive)
+    if len(rq_researches) > 0:
+        collection = collection.filter(issledovaniya__research__pk__in=rq_researches)
+
     if otd_search != -1:
         collection = collection.filter(doc__podrazdeleniye__pk=otd_search)
 
@@ -2395,7 +2414,11 @@ def results_search_directions(request):
         researches = []
 
         row_normal = "none"
-        for r in direction.issledovaniya_set.all():
+        iss_dir = direction.issledovaniya_set.all()
+        if len(rq_researches) > 0:
+            iss_dir = iss_dir.filter(research__pk__in=rq_researches)
+
+        for r in iss_dir:
             if not r.research.is_paraclinic:
                 if not Result.objects.filter(issledovaniye=r).exists():
                     continue
@@ -2425,7 +2448,8 @@ def results_search_directions(request):
                     continue
                 tmp_r = {"title": r.research.title, "is_normal": "none"}
                 researches.append(tmp_r)
-
+        if len(researches) == 0:
+            continue
         tmp_dir = {"pk": direction.pk,
                    "laboratory": direction.issledovaniya_set.first().research.get_podrazdeleniye().title,
                    "otd": direction.doc.podrazdeleniye.title,

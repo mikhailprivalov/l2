@@ -101,22 +101,20 @@
                             </label>
                         </div>
                     </div>
-                    {% comment %}<div class="row" style="margin-top: 10px">
-                        <div class="col-xs-6">
-                            <label>
-                                <input type="checkbox" name="perform_norms" id="perform_norms"/>
-                                Обработка норм
-                            </label>
-                        </div>
-                        <div class="col-xs-6">
-                            <label>
-                                <input type="checkbox" name="otd_search" id="otd_search"/>
-                                Поиск всех результатов для отделения
-                            </label>
-                        </div>
-                    </div>{% endcomment %}
                     <div class="row" style="margin-top: 17px">
-                        <div class="col-xs-6">
+                        <div class="col-xs-6" style="padding-right: 3px;">
+                            <select class="selectpicker" data-width="100%" id="search-researches" multiple
+                                    data-actions-box="true" data-container="body" data-live-search="true"
+                                    data-none-selected-text="Исследования не выбраны" data-select-all-text="Выбрать всё"
+                                    data-deselect-all-text="Отменить весь выбор">
+                                {% for lab in labs %}
+                                    <optgroup label="{{ lab.title }}">
+                                        {% for res in lab.researches %}
+                                            <option value="{{ res.pk }}">{{ res.title }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-xs-6">
                             <button class="btn btn-blue-nb" style="width: 100%"
@@ -502,6 +500,7 @@
                         sorting: $("#sort-type").val(),
                         sorting_direction: $("#sort-dir").val(),
                         archive: $("#archive-search").is(":checked"),
+                        researches: JSON.stringify($("#search-researches").val() || [])
                     }
                 };
                 show_norms = 0;
@@ -639,7 +638,7 @@
             for (let i = 0; i < row.directions.length; i++) {
                 let dir = row.directions[i];
                 $dl.append(`<div class='direction isnormal-${dir.is_normal}' id='direction-${dir.pk}'>
-<a style='float: right' href='/results/preview?pk=[${dir.pk}]&show_norms=${show_norms}' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
+<a style='float: right' href='/results/preview?pk=[${dir.pk}]' target='_blank'>печать результатов</a><span>Направление ${dir.pk}. ${dir.laboratory}</span><br/>
 <ul class='direction-researches'></ul>
 </div>`);
 

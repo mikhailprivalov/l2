@@ -12,10 +12,13 @@
             <div style="text-align: center;flex-basis: 25%">
                 <label><input id="split" type="checkbox"> Результаты на отдельных страницах</label>
             </div>
-            <div style="text-align: center;flex-basis: 25%">
+            <div style="text-align: center;flex-basis: 20%">
                 <label><input id="margin" type="checkbox"> Большой отступ слева</label>
             </div>
-            <div style="text-align: right;flex-basis: 25%">
+            <div style="text-align: center;flex-basis: 20%">
+                <label><input id="protocol_plain_text" type="checkbox"> Описание сплошным текстом</label>
+            </div>
+            <div style="text-align: right;flex-basis: 20%">
                 <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
             </div>
         </div>
@@ -53,6 +56,12 @@
             } else {
                 $("#margin").prop("checked", JSON.parse(localStorage.getItem("print_results_margin")));
             }
+            if(!localStorage.getItem("print_results_protocol_plain_text")){
+                $("#protocol_plain_text").prop("checked", false);
+                localStorage.setItem("print_results_protocol_plain_text", "false");
+            } else {
+                $("#protocol_plain_text").prop("checked", JSON.parse(localStorage.getItem("print_results_protocol_plain_text")));
+            }
             updatePreview();
         });
         function get_url(inline){
@@ -60,7 +69,9 @@
             localStorage.setItem("print_results_split", split + "");
             let margin = $("#margin").is(":checked");
             localStorage.setItem("print_results_margin", margin + "");
-            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}`;
+            let protocol_plain_text = $("#protocol_plain_text").is(":checked");
+            localStorage.setItem("print_results_protocol_plain_text", protocol_plain_text + "");
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}`;
         }
         function updatePreview(){
             PDFObject.embed(get_url(true), "#previewContainer");
@@ -82,7 +93,7 @@
             font-weight: 500;
             font-style: italic;
             font-size: 32px;
-            flex-basis: 25%
+            flex-basis: 15%
         }
         .logo sup{
             font-size: 17px;
