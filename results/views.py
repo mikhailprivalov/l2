@@ -1429,7 +1429,12 @@ def result_print(request):
                                     vals.append("{}:&nbsp;{}".format(r.field.title, r.value))
                                 else:
                                     vals.append(r.value)
-                            txt += "; ".join(vals) + ".<br/>"
+                            txt += "; ".join(vals)
+                            txt = txt.strip()
+                            if len(txt) > 0 and txt.strip()[-1] != ".":
+                                txt += ". "
+                            elif len(txt) > 0:
+                                txt += " "
 
                     fwb.append(Paragraph(txt, style))
                 fwb.append(Spacer(1, 2.5 * mm))
