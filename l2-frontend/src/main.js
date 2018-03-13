@@ -18,6 +18,7 @@ new Vue({
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
     'ResultsParaclinic': () => import('./ResultsParaclinic'),
     'StatisticsTickets': () => import('./StatisticsTickets'),
+    'DirectionVisit': () => import('./DirectionVisit'),
     // loading,
   },
   data: {

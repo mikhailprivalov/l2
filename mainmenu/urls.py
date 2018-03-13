@@ -33,6 +33,7 @@ urlpatterns = [
     path('discharge/search', views.discharge_search),
     path('researches_from_directions', views.researches_from_directions),
     path('cards', views.cards),
+    path('direction_visit', views.direction_visit),
     path('results/paraclinic', views.results_paraclinic),
     path('statistics-tickets', TemplateView.as_view(template_name="dashboard/statistics_tickets.html")),
     path('receive', receivematerial.views.receive),

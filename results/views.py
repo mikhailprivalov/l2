@@ -1438,7 +1438,13 @@ def result_print(request):
 
                     fwb.append(Paragraph(txt, style))
                 fwb.append(Spacer(1, 2.5 * mm))
-                fwb.append(Paragraph("Дата: {}".format(timezone.localtime(iss.time_confirmation).strftime('%d.%m.%Y')), styleBold))
+                t1 = iss.get_visit_date()
+                t2 = timezone.localtime(iss.time_confirmation).strftime('%d.%m.%Y')
+                if t1 != t2:
+                    fwb.append(Paragraph("Дата посещения пациентом: {}".format(t1), styleBold))
+                    fwb.append(Paragraph("Дата подтверждения результата: {}".format(t2), styleBold))
+                else:
+                    fwb.append(Paragraph("Дата исполнения: {}".format(t2), styleBold))
                 fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 

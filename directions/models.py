@@ -198,6 +198,8 @@ class Napravleniya(models.Model):
     Таблица направлений
     """
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
+    visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None, blank=True, null=True)
+    visit_who_mark = models.ForeignKey(DoctorProfile, related_name="visit_who_mark", default=None, blank=True, null=True, help_text='Профиль, который отметил посещение', on_delete=models.SET_NULL)
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач', on_delete=models.CASCADE)
@@ -438,6 +440,15 @@ class Issledovaniya(models.Model):
         :return: True, если весь материал взят
         """
         return self.tubes.filter().exists() and all([x.doc_get is not None for x in self.tubes.filter()])
+
+    def get_visit_date(self):
+        if not self.time_confirmation:
+            return ""
+        if not self.napravleniye.visit_date or not self.napravleniye.visit_who_mark:
+            self.napravleniye.visit_date = timezone.now()
+            self.napravleniye.visit_who_mark = self.doc_confirmation
+            self.napravleniye.save()
+        return timezone.localtime(self.napravleniye.visit_date).strftime('%d.%m.%Y')
 
     def is_receive_material(self):
         """

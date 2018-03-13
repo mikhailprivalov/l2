@@ -112,6 +112,39 @@ async function paraclinicResultUserHistory(date) {
   return {directions: []}
 }
 
+async function getDirectionsServices(pk) {
+  try {
+    const response = await HTTP.post('directions/services', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {ok: false, message: "Ошибка запроса"}
+}
+
+async function getMarkDirectionVisit(pk) {
+  try {
+    const response = await HTTP.post('directions/mark-visit', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {ok: false, message: "Ошибка запроса"}
+}
+
+async function visitJournal(date) {
+  try {
+    const response = await HTTP.post('directions/visit-journal', {date})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {data: []}
+}
+
 
 export default {
   sendDirections,
@@ -122,5 +155,8 @@ export default {
   paraclinicResultSave,
   paraclinicResultConfirm,
   paraclinicResultConfirmReset,
-  paraclinicResultUserHistory
+  paraclinicResultUserHistory,
+  getDirectionsServices,
+  getMarkDirectionVisit,
+  visitJournal,
 }

@@ -1160,8 +1160,13 @@ def directions_paraclinic_confirm(request):
     if directions.Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True,
                                                research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye).exists():
         iss = directions.Issledovaniya.objects.get(pk=pk)
+        t = timezone.now()
+        if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
+            iss.napravleniye.visit_who_mark = request.user.doctorprofile
+            iss.napravleniye.visit_date = t
+            iss.napravleniye.save()
         iss.doc_confirmation = request.user.doctorprofile
-        iss.time_confirmation = timezone.now()
+        iss.time_confirmation = t
         iss.save()
         response["ok"] = True
         slog.Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
@@ -1236,4 +1241,73 @@ def directions_paraclinic_history(request):
             if not iss["confirmed"]:
                 d["all_confirmed"] = False
         response["directions"].append(d)
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Посещения по направлениям")
+def directions_services(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    if pk >= 4600000000000:
+        pk -= 4600000000000
+        pk //= 10
+    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True).exists():
+        n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
+        response["ok"] = True
+        researches = []
+        for i in directions.Issledovaniya.objects.filter(napravleniye=n):
+            researches.append({"title": i.research.title,
+                               "department": i.research.podrazdeleniye.get_title()})
+        response["direction_data"] = {
+            "date": n.data_sozdaniya.strftime('%d.%m.%Y'),
+            "client": n.client.individual.fio(full=True),
+            "card": n.client.number_with_type(),
+            "diagnos": n.diagnos,
+            "doc": "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
+            "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(), n.visit_who_mark.podrazdeleniye.title),
+            "fin_source": "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title)
+        }
+        response["researches"] = researches
+        response["loaded_pk"] = pk
+        response["visit_status"] = n.visit_date is not None
+        response["visit_date"] = "" if not n.visit_date else timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+    else:
+        response["message"] = "Направление не найдено"
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Посещения по направлениям")
+def directions_mark_visit(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, visit_date__isnull=True).exists():
+        n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
+        response["ok"] = True
+        n.visit_date = timezone.now()
+        n.visit_who_mark = request.user.doctorprofile
+        n.save()
+        response["visit_status"] = n.visit_date is not None
+        response["visit_date"] = timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+        slog.Log(key=pk, type=5001, body=json.dumps({"Посещение": "да", "Дата и время": response["visit_date"]}), user=request.user.doctorprofile).save()
+    else:
+        response["message"] = "Направление не найдено"
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Посещения по направлениям")
+def directions_visit_journal(request):
+    response = {"data": []}
+    request_data = json.loads(request.body)
+    date_start = request_data["date"].split(".")
+    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
+    date_end = date_start + datetime.timedelta(1)
+    for v in directions.Napravleniya.objects.filter(visit_date__range=(date_start, date_end,), visit_who_mark=request.user.doctorprofile).order_by("-visit_date"):
+        response["data"].append({
+            "pk": v.pk,
+            "client": v.client.individual.fio(full=True),
+            "card": v.client.number_with_type(),
+            "datetime": timezone.localtime(v.visit_date).strftime('%d.%m.%Y %X')
+        })
     return JsonResponse(response)

@@ -72,7 +72,8 @@ def dashboard(request):  # Представление панели управл�
             pages.append({"url": '/mainmenu/cards', "title": "Картотека L2", "nt": True, "access": ["Картотека L2"]})
 
         if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-            # pages.append({"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники"]})
+            pages.append({"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False,
+                          "access": ["Посещения по направлениям", "Врач параклиники"]})
             pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники"]})
 
         if SettingManager.get("hosp_module", default='false', default_type='b'):
@@ -753,6 +754,12 @@ def direction_info(request):
                     ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
                 ]
             ]})
+            if dir.visit_date and dir.visit_who_mark:
+                d = {"type": "Посещение по направлению", "events": [
+                    [["title", timezone.localtime(dir.visit_date).strftime("%d.%m.%Y %X") + " Регистрация посещения"],
+                     ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title], ]
+                ]}
+                data.append(d)
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Пробирка №%s" % tube.pk, "events": []}
                 if tube.time_get is not None:
@@ -816,3 +823,9 @@ def hosp(request):
 @group_required("Врач параклиники")
 def results_paraclinic(request):
     return render(request, 'dashboard/results_paraclinic.html')
+
+
+@login_required
+@group_required("Врач параклиники", "Посещения по направлениям")
+def direction_visit(request):
+    return render(request, 'dashboard/direction_visit.html')
