@@ -347,6 +347,7 @@ def researches_get_details(request):
         pk = request.GET["pk"]
         research_obj = Researches.objects.get(pk=pk)
         return_result["title"] = research_obj.title
+        return_result["instructions"] = research_obj.instructions
         return_result["comment_template"] = "-1" if research_obj.comment_variants is None else research_obj.comment_variants.pk
         return_result["edit_mode"] = research_obj.edit_mode
         return_result["fractions"] = []
@@ -379,9 +380,10 @@ def researches_update_template(request):
         pk = request.POST["pk"]
         research_obj = Researches.objects.get(pk=pk)
         research_obj.template = int(request.POST["template"])
+        research_obj.instructions = request.POST.get("instructions", "")
         research_obj.comment_variants = None if request.POST["comment_template"] == "-1" else direct.MaterialVariants.objects.get(pk=request.POST["comment_template"])
         research_obj.save()
         return_result["ok"] = True
-        return_result["comment_template_saved"] = research_obj.comment_template
-        return_result["comment_template"] = request.POST["comment_template"]
+        # return_result["comment_template_saved"] = research_obj.comment_template
+        # return_result["comment_template"] = request.POST["comment_template"]
     return JsonResponse(return_result)

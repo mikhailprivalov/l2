@@ -220,6 +220,12 @@ class Napravleniya(models.Model):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
             self.pk, self.client.individual.fio(), self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
 
+    def get_instructions(self):
+        r = []
+        for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
+            r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
+        return r
+
     @staticmethod
     def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, issledovaniya=None):
         """

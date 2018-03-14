@@ -173,18 +173,50 @@ def gen_pdf_dir(request):
         TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
 
     p = Paginator(direction_id, 4)  # Деление списка направлений по 4
-
+    instructions = []
     for pg_num in p.page_range:  # Перебор страниц
         pg = p.page(pg_num)  # Выбор страницы по номеру
         i = 4  # Номер позиции направления на странице (4..1)
         for obj in pg.object_list:  # Перебор номеров направлений на странице
-            printDirection(c, i,
-                           Napravleniya.objects.get(
-                               pk=int(obj)))  # Вызов функции печати направления на указанную позицию
+            n_ob = Napravleniya.objects.get(pk=int(obj))
+            printDirection(c, i, n_ob)  # Вызов функции печати направления на указанную позицию
+            instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
             c.showPage()  # Создание новой страницы
             framePage(c)  # Рисование разделительных линий для страницы
+    instructions_pks = []
+    instructions_filtered = []
+    for i in instructions:
+        if i["pk"] in instructions_pks:
+            continue
+        instructions_pks.append(i["pk"])
+        instructions_filtered.append(i)
+    if len(instructions_filtered) > 0:
+        s = getSampleStyleSheet()
+        s = s["BodyText"]
+        s.wordWrap = 'LTR'
+        c.showPage()
+        tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
+        for i in instructions_filtered:
+            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(i["title"], i["text"])
+        data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
+
+        t = Table(data, colWidths=[w - 30*mm])
+        t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                               ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                               ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+                               ('BOX', (0, 0), (-1, -1), 0.25, colors.white),
+                               ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                               ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+                               ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                               ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                               ]))
+        t.canv = c
+        wt, ht = t.wrap(0, 0)
+        t.drawOn(c, 15*mm, h - 15*mm - ht)
+        c.showPage()
     c.save()  # Сохранение отрисованного на PDF
 
     pdf = buffer.getvalue()  # Получение данных из буфера

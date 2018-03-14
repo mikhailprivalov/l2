@@ -71,6 +71,7 @@ class Researches(models.Model):
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
+    instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

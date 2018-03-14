@@ -13,6 +13,14 @@
         </p>
         <div class="row">
             <div class="col-xs-3">
+                Памятка:
+            </div>
+            <div class="col-xs-6">
+                <textarea class="form-control" id="instructions" style="width: 100%" rows="4"></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3">
                 Варианты комментариев:
             </div>
             <div class="col-xs-6">
@@ -183,6 +191,7 @@
             sl();
             $.ajax({url: "/construct/researches/get_details", method: "GET", data: {pk: pk}}).done(function (data) {
                 $("#research_title").html(data.title + " (id " + pk + ")");
+                $("#instructions").val(data.instructions);
                 $("[type='radio'][value='" + data.edit_mode + "']").attr('checked', 'checked');
                 $("#select-template").val(data.template);
                 $("#select-template").removeProp("disabled");
@@ -220,7 +229,7 @@
             $.ajax({
                 url: "/directory/researches/update_template",
                 method: "POST",
-                data: {pk: pk, template: $("#select-template").val(), comment_template: $comments.val()}
+                data: {pk: pk, template: $("#select-template").val(), instructions: $("#instructions").val(), comment_template: $comments.val()}
             }).done(function () {
                 update_data();
             });
