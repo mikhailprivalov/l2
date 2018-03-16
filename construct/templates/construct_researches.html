@@ -71,8 +71,24 @@
 {% endblock %}
 {% block scripts %}
     <style>
-        .research-obj {
+        .research-obj, .fad {
             display: flex;
+            justify-content: stretch;
+        }
+
+        .fad .btn {
+            text-align: left;
+        }
+
+        .research-title, .fad button {
+            flex: 0 100%;
+            margin: 0;
+        }
+
+        .research-title {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .footer-float {
@@ -233,10 +249,6 @@
             text-align: left;
         }
 
-        .right .btn {
-            margin-right: 10px !important;
-        }
-
         #directory-select, .drophere {
             width: 300px;
             padding: 6px 2px;
@@ -362,6 +374,45 @@
             font-size: 8pt;
             padding: 6px 6px 5px;
         }
+
+        .hidden-l2 {
+            opacity: .6;
+        }
+
+        .hidden-l2:hover {
+            opacity: .9;
+        }
+
+        .trow {
+            display: flex;
+            justify-content: stretch;
+        }
+
+        .trow select {
+            flex: 0 100px;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            height: 24px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+
+        .trow .btn {
+            flex: 0 120px;
+            border-radius: 0;
+            height: 24px;
+            margin-top: 3px;
+            margin-bottom: 3px;
+            padding-top: 1px;
+        }
+
+        .trow .tube {
+            width: 100%;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            box-shadow: none;
+            cursor: default;
+        }
     </style>
     {% load static %}
     <script src="{% static 'js/jquery.clearsearch.js' %}"></script>
@@ -381,9 +432,6 @@
         let scrollto = "";
 
         $(document).ready(function () {
-            loadreslist();
-            resize();
-            clear_form();
             $(window).resize(function () {
                 resize();
             });
@@ -430,6 +478,9 @@
                 });
             });
             $(".context-st").show();
+            loadreslist()
+            clear_form()
+            resize()
             //loadform(-1);
         });
         /**
@@ -450,7 +501,7 @@
             tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
             $("#research-form").html("");
             const form = $("<form></form>").appendTo($("#research-form"));
-            $("<h4></h4>").text("Редактор анализа").appendTo($(form));
+            $("<h4></h4>").html("Редактор исследования &mdash; <span id='lab_r'>...</span>").appendTo($(form));
             const row = $("<div class='row'></div>").appendTo($(form));
             const cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
             let group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
@@ -470,7 +521,7 @@
             $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             const p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
-            $(form).append('<span style="float: right"><div onclick="save();" class="btn btn-default save-btn">Сохранить</div></span>');
+            $(form).append('<span style="float: right"><div onclick="clear_form();" class="btn btn-default save-btn">Отмена</div> <div onclick="save();" class="btn btn-default save-btn">Сохранить</div></span>');
 
             const div2 = $("<div id='select-div'></div>");
             $(form).append(div2);
@@ -492,11 +543,13 @@
             showtubes();
             hideref();
             resize();
+            let lab_r = $("#select-lab option:selected").text()
             $("#tunebtn").attr("disabled", 1);
             rdl = false;
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
                     $("#research_title").val(data.title);
+                    lab_r = data.lab;
                     $("#quota").val(data.quota);
                     $("#preparation").val(data.preparation);
                     fractiontubes = data.fractiontubes;
@@ -504,13 +557,12 @@
                     showtubes();
                     if (data.readonly === true) {
                         rdl = true;
-                        //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", true);
-                        //$("#research-form .remove, #select-div, #research-form .add, .save-btn").remove();
-                        $("#research-form .remove, #select-div").remove();
-                        $(".drophere").remove();
+                        $("#research-form .remove").remove();
                     }
+                    $("#lab_r").text(lab_r);
                 });
             }
+            $("#lab_r").text(lab_r);
         }
         /** Открытие окна выбора пробирки из справочника */
         function selectfromdirectory() {
@@ -521,13 +573,6 @@
         function droptube(event, ui) {
             $(this).text("Перетащите пробирку сюда");
             const id = $(ui.draggable).attr("id");
-            //console.log(id)
-            let ok = true;
-            $.each(fractiontubes, function (k, v) {
-                if (!$(".tubes-list #" + v.sel).parent().is($(ui.draggable).parent())) ok = false;
-            });
-            if (!ok) return;
-            //addtube(id, rgb2hex($(".tubes-list #" + id + " .color-sq").css("background-color")), $(".tubes-list #" + id + " div").text().replace(new RegExp('\r?\n', 'g'), "").trim());
             addtube_obj(".tubes-list #" + id);
         }
 
@@ -564,7 +609,6 @@
                 };
                 showtubes();
                 $("#tubes").scrollTo($("#tubes #{0}".f(id)));
-                $("#select-div").hide();
             }
         }
 
@@ -678,14 +722,22 @@
                     $(div).append(v.title);
                 }
                 $(tube).addClass("active");
-                $(s).append($("<div class='well wellfractions' id=\"group-" + v.sel + "\"></div>").append($(tube).clone()).append(fractions));
+                let $trow = $('<div class=\'trow\'></div>')
+                $trow.append($(tube).eq(0).clone())
+                $trow.append(`<button onclick='alert("В разработке")' class='btn btn-blue-nb'>Настройка</button>`)
+                $trow.append(`<select>
+<option value='-1'>-</option>
+{#<option value='0'>Сыворотка</option>#}
+{#<option value='1'>Плазма</option>#}
+</select>`)
+                $(s).append($('<div class=\'well wellfractions\' id="group-' + v.sel + '"></div>').append($trow).append(fractions))
 
                 $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>');
                 if (!rdl || resid < 1) {
                     $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>');
                 }
                 else {
-                    $("#research-form .remove, #select-div").remove();
+                    $("#research-form .remove").remove();
                 }
                 //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", false);
             });
@@ -902,8 +954,6 @@
                 method: "GET",
                 data: {lab: $("#select-lab option:selected").val()}
             }).done(function (data) {
-                hl();
-                clear_form();
                 $("#researches-container").html("");
                 //data.researches.sort(SortByTubes);
                 $.each(data.researches, function (k, v) {
@@ -920,11 +970,11 @@
                     let g;
                     if (v.tubes_c > 1) {
                         $.each(v.tubes, function (key, val) {
-                            let obj = $('<div class="well tube" id="tube-{0}"></div>'.f(val.id)).appendTo(tubes_list);
+                            let obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(val.id)).appendTo(tubes_list);
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: val.color});
-                            $(obj).append(val.title);
+                            $(obj).append(`${val.title} (${val.id})`);
                         });
                     }
                     else if (v.tubes_c === 1) {
@@ -936,7 +986,7 @@
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: v.tubes[Object.keys(v.tubes)[0]].color});
-                            $(obj).append(v.tubes[Object.keys(v.tubes)[0]].title);
+                            $(obj).append(`${v.tubes[Object.keys(v.tubes)[0]].title} (${v.tubes[Object.keys(v.tubes)[0]].id})`);
                         }
                         else {
                             $(row).remove();
@@ -949,15 +999,12 @@
                     }
                     g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
                     $(g).attr("pk", v.pk);
-                    let add_txt = "";
-                    if (v.readonly) add_txt = "rdly ";
-                    add_txt += "<span class='hidden-d' id='hd-{0}'>скрыт</span>".f(v.pk);
-                    $(g).append('<div class="btn btn-default col-md-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk));
-                    $(g).append('<div class="btn btn-default col-md-05 down" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></div>'.f(v.pk));
-                    $(g).append('<div class="btn btn-default research-title col-md-9" style="z-index:0;"><div class="row" style="z-index:0;margin-bottom:0;margin-left:0"><div class="col-md-9 col-nopd" style="white-space: nowrap;overflow: hidden"><span>{0}</span></div><div class="col-xs-3"><span style="color: #757575;font-size: 8pt">{1}</span></div></div>'.f(v.title, add_txt));
+                    $(g).append('<div class="btn btn-default flex-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk))
+                    $(g).append('<div class="btn btn-default flex-05 down" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></div>'.f(v.pk))
+                    $(g).append('<div class="btn btn-default research-title" style="z-index:0;" class="{1}">{0}</div>'.f(v.title))
                     //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
-                    $(g).append('<div class="btn btn-default col-md-1" onclick="toggle_hide({0});" title="Скрыть/показать">Скр.</div>'.f(v.pk));
-                    $(g).append('<div class="btn btn-default col-md-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk));
+                    $(g).append(`<div class="btn btn-default flex-1" id='hide-bth-${v.pk}' onclick="toggle_hide(${v.pk});" title="Скрыть/показать">${v.hide ? 'Пок.' : 'Скр.'}</div>`)
+                    $(g).append('<div class="btn btn-default flex-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk))
                     if (!v.hide) $(".hidden-d", g).hide();
 
                 });
@@ -965,10 +1012,10 @@
                 $(".up", $(g)).addClass("disabled");
                 //$(".readonly .tube-drag").removeClass("tube-drag");
                 $.each($(".one-tube"), function (k, v) {
-                    $(".researches-list", v).append('<div class="btn-group right"><button onclick="save_sort(this);" class="btn btn-default col-md-12 left"><i class="glyphicon glyphicon-floppy-disk"></i> Сохранить порядок</button></div>'.f($('.tube', v).attr('id')));
+                    $('.researches-list', v).append('<div class="btn-group fad"><button onclick="save_sort(this);" class="btn btn-default"><i class="glyphicon glyphicon-floppy-disk"></i> Сохранить порядок</button></div>'.f($('.tube', v).attr('id')))
                 });
                 $.each($(".one-tube"), function (k, v) {
-                    $(".researches-list", v).append('<div class="btn-group right"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default col-md-12 right"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')));
+                    $('.researches-list', v).append('<div class="btn-group fad"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')))
                 });
 
                 $('.tubes-list .tube-drag').draggable({
@@ -999,14 +1046,16 @@
                     snapTolerance: 100,
                     scroll: false,
                 });
+                showtubes()
+                hl()
             });
         }
         function toggle_hide(pk) {
             $.ajax({url: "/directory/researches/hide/toggle", data: {pk: pk}}).done(function (data) {
                 if (data.status_hide)
-                    $("#hd-" + pk).show();
+                    $('#hide-bth-' + pk).text('Пок.')
                 else
-                    $("#hd-" + pk).hide();
+                    $('#hide-bth-' + pk).text('Скр.')
             });
         }
         function copy(pk) {

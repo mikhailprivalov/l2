@@ -79,7 +79,10 @@ def researches_get_one(request):
                            "num": val.sort_weight,
                            "formula": val.formula}
                     if val.sort_weight and val.sort_weight > 0:
-                        res["fractions"][val.sort_weight] = tmp
+                        vsr = val.sort_weight
+                        if vsr in res["fractions"]:
+                            vsr = max(res["fractions"].keys()) + 1
+                        res["fractions"][vsr] = tmp
                     else:
                         res["fractions"][val.pk] = tmp
             a.append(res)

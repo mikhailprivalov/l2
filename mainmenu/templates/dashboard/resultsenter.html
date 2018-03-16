@@ -1453,8 +1453,17 @@
 
                     const tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {
-                        if (pks.indexOf(vt) !== -1)
+                        if (pks.indexOf(vt) !== -1) {
+                            if(tubessplit.length === 1) {
+                                for (let i = 0; i < tubes_active.length; i++) {
+                                    if (tubes_active[i].pk === vt) {
+                                        tubes_active[i].group = "tb-group-" + v.group
+                                        return
+                                    }
+                                }
+                            }
                             return;
+                        }
                         pks.push(vt);
                         tubes_active.push({pk: vt, group: "tb-group-" + v.group});
                     });

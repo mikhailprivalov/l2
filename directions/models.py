@@ -132,7 +132,7 @@ class TubesRegistration(models.Model):
         self.doc_recive = doc_r
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=11,
-                 body=json.dumps({"Замечание не приёма": self.notice})).save()
+                 body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
 
     def set_notice(self, doc_r, notice):
         """
@@ -151,6 +151,8 @@ class TubesRegistration(models.Model):
 
     def clear_notice(self, doc_r):
         old_notice = self.notice
+        if old_notice == "":
+            return
         self.notice = ""
         self.save()
         slog.Log(key=str(self.pk), user=doc_r, type=4000,

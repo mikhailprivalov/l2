@@ -234,6 +234,7 @@ def directory_research(request):
         id = int(request.GET["id"])
         research = Researches.objects.get(pk=id)
         return_result["title"] = research.title
+        return_result["lab"] = research.podrazdeleniye.get_title()
         return_result["quota"] = research.quota_oms
         return_result["preparation"] = research.preparation
         return_result["edit_mode"] = research.edit_mode

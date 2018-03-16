@@ -182,7 +182,6 @@ def endpoint(request):
     result = {"answer": False, "body": ""}
     data = json.loads(request.POST.get("data", request.GET.get("data", "{}")))
     api_key = data.get("api_key", "")
-    work_type = data.get("work_type", "astm-1394")
     message_type = data.get("message_type", "C")
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
@@ -267,24 +266,19 @@ def endpoint(request):
             elif message_type == "Q":
                 result["answer"] = True
                 pks = [int(x) for x in data.get("query", [])]
-                if work_type == "astm-1394":
-                    result["body"] = [x.decode('ascii') for x in get_iss_astm(app.get_issledovaniya(pks), app)]
-                elif work_type == "hl7":
-                    researches = defaultdict(list)
-                    for row in app.get_issledovaniya(pks):
-                        k = row["pk"]
-                        i = row["iss"]
-                        for fraction in Fractions.objects.filter(research=i.research,
-                                                                 relationfractionastm__application_api=app,
-                                                                 hide=False):
-                            rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
-                            if not rel.exists():
-                                continue
-                            rel = rel[0]
-                            researches[k].append(rel.astm_field)
-                    result["body"] = researches
-                else:
-                    pass
+                researches = defaultdict(list)
+                for row in app.get_issledovaniya(pks):
+                    k = row["pk"]
+                    i = row["iss"]
+                    for fraction in Fractions.objects.filter(research=i.research,
+                                                             relationfractionastm__application_api=app,
+                                                             hide=False):
+                        rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
+                        if not rel.exists():
+                            continue
+                        rel = rel[0]
+                        researches[k].append(rel.astm_field)
+                result["body"] = researches
             else:
                 pass
         else:
