@@ -180,8 +180,8 @@ def send(request):
 @csrf_exempt
 def endpoint(request):
     result = {"answer": False, "body": ""}
-    data = json.loads(request.POST.get("data", request.GET.get("data", "{}")))
-    api_key = json.loads(request.POST.get("key", request.GET.get("key", "")))
+    data = json.loads(request.POST.get("result", request.GET.get("result", "{}")))
+    api_key = request.POST.get("key", request.GET.get("key", ""))
     message_type = data.get("message_type", "C")
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
