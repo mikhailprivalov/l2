@@ -14,6 +14,7 @@
                 {% for v in labs %}
                     <option value="{{ v.pk }}">{{ v }}</option>
                 {% endfor %}
+                <option value="-1">Все</option>
             </select>
 
             <div id="researches-list" style="margin-top: 10px">
@@ -286,6 +287,7 @@
 
         /** Загрузка списка исследований, сгруппированых по направлениям */
         function loadreslist() {
+            sl()
             $.ajax({
                 url: "/directory/researches/directions",
                 method: "GET",
@@ -306,6 +308,8 @@
                 $("#cangroup").html("");
                 $('#cangroup').multiSelect('refresh');
                 resize();
+            }).always(function () {
+                hl()
             });
         }
 
@@ -323,6 +327,7 @@
             selected["dgroup"] = group_id;
             selected["researches"] = {};
             if (group_id < 0) {
+                sl()
                 $.ajax({
                     url: "/directory/researches/group",
                     method: "GET",
@@ -337,9 +342,12 @@
                     $('#cangroup').multiSelect('refresh');
                     $('#cangroup').multiSelect('deselect_all');
                     resize();
+                }).always(function () {
+                    hl()
                 });
             }
             else {
+                sl()
                 $("[group='{0}']".f(group_id)).addClass("active");
                 $.ajax({
                     url: "/directory/researches/group",
@@ -368,6 +376,8 @@
                         });
                         resize();
                     });
+                }).always(function () {
+                    hl()
                 });
 
             }

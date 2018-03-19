@@ -1,7 +1,7 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <input class="form-control" placeholder="Диагноз" v-model="diagnos"/>
+      <input class="form-control" placeholder="Диагноз" v-model="diagnos" maxlength="36"/>
       <div class="top-inner">
         <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select" :class="{ active: row.pk === fin}"
            v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
@@ -202,8 +202,19 @@
         }
         return r
       },
+      get_fin_obj(pk) {
+        for(let f of this.base.fin_sources) {
+          if(f.pk === pk)
+            return f
+        }
+        return {pk: -1, title: "", default_diagnos: ""}
+      },
       select_fin(pk) {
+        const cfin = this.get_fin_obj(this.fin)
         this.fin = pk
+        if(cfin.default_diagnos === this.diagnos || this.diagnos.trim() === ""){
+          this.diagnos = this.get_fin_obj(this.fin).default_diagnos
+        }
       },
       clear_department(pk) {
         this.$root.$emit('researches-picker:deselect_department', pk)

@@ -282,10 +282,12 @@ def directory_researches_group(request):
     if request.method == "GET":
         return_result = {"researches": []}
         gid = int(request.GET["gid"])
-        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"])
+        researches = Researches.objects.all()
+        if request.GET["lab"] != "-1":
+            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title", "podrazdeleniye", "hide")
 
         for research in researches:
-            resdict = {"pk": research.pk, "title": research.title}
+            resdict = {"pk": research.pk, "title": "{}{} | {}".format({True: "Скрыто | "}.get(research.hide, ""), research.get_title(), research.podrazdeleniye.get_title())}
             if gid < 0:
                 if not research.direction:
                     return_result["researches"].append(resdict)
@@ -329,9 +331,12 @@ def directory_get_directions(request):
     return_result = {}
     if request.method == "GET":
         return_result = {"directions": {}}
-        researches = Researches.objects.filter(podrazdeleniye__pk=request.GET["lab"])
+        researches = Researches.objects.all()
+        if request.GET["lab"] != "-1":
+            researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title")
         for research in researches:
-            if not research.direction: continue
+            if not research.direction:
+                continue
             if research.direction.pk not in return_result["directions"].keys():
                 return_result["directions"][research.direction.pk] = []
             return_result["directions"][research.direction.pk].append(research.title)

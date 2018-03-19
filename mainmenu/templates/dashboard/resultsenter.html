@@ -1341,7 +1341,7 @@
                 url: "/directions/get/issledovaniya",
                 type: "json",
                 method: "GET",
-                data: {id: id, type: type}
+                data: {id: id, type: type, lab_pk: lab_pk}
             }).done(function (data) {
                 hl();
                 if (!data.ok) {

@@ -295,9 +295,16 @@ def printDirection(c, n, dir):
 
     issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
-    vid = issledovaniya[0].research.get_podrazdeleniye()
+    vid = []
+    has_descriptive = False
+    for i in issledovaniya:
+        rt = i.research.podrazdeleniye.get_title()
+        if rt not in vid:
+            vid.append(rt)
+            if i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+                has_descriptive = True
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + vid.title)
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
     from reportlab.platypus import Table, TableStyle
     from reportlab.lib import colors
@@ -325,7 +332,7 @@ def printDirection(c, n, dir):
                        "info": v.research.paraclinic_info})
     tw = w / 2 - paddingx * 2
     m = 0
-    if vid.p_type == Podrazdeleniya.PARACLINIC:
+    if has_descriptive:
         tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
                Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
         data.append(tmp)
@@ -386,7 +393,7 @@ def printDirection(c, n, dir):
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
     c.setFont('OpenSans', 8)
-    if vid.p_type != Podrazdeleniya.PARACLINIC:
+    if not has_descriptive:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10,
                      "Всего назначено: " + str(len(issledovaniya)))
 
@@ -845,20 +852,21 @@ def get_issledovaniya(request):
         iss = []
         napr = None
         id = request.GET["id"]
+        lab_pk = request.GET.get("lab_pk", "-1")
         res["all_confirmed"] = True
         if id.isnumeric():
             if request.GET["type"] == "0":
                 if TubesRegistration.objects.filter(pk=id).count() == 1:
                     tube = TubesRegistration.objects.get(pk=id)
                     if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id)
+                        iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
                         if iss:
                             napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id)
                     for tube in tubes:
                         if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id)
+                            lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
                             if lit.count() != 0:
                                 iss = []
                             for i in lit:
@@ -868,14 +876,14 @@ def get_issledovaniya(request):
             elif request.GET["type"] == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__podrazdeleniye__pk=lab_pk)
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
             else:
                 try:
                     napr = Napravleniya.objects.get(pk=id)
-                    iss = Issledovaniya.objects.filter(napravleniye__pk=id)
+                    iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__podrazdeleniye__pk=lab_pk)
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []

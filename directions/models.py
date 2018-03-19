@@ -1,5 +1,6 @@
 import re
 import unicodedata
+from collections import defaultdict
 
 import simplejson as json
 from django.db import models
@@ -189,6 +190,10 @@ class IstochnikiFinansirovaniya(models.Model):
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
+    default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
+
+    def __str__(self):
+        return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
     class Meta:
         verbose_name = 'Источник финансирования'
@@ -271,7 +276,6 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments):
-        res = {}  # Словарь с направлениями, сгруппированными по лабораториям
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
@@ -286,9 +290,9 @@ class Napravleniya(models.Model):
             no_attach = False
             conflict_list = []
             conflict_keys = []
+            transfer_researches = []
             for v in researches:  # нормализация исследований
-                researches_grouped_by_lab.append(
-                    {v: researches[v]})
+                researches_grouped_by_lab.append({v: researches[v]})
 
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
@@ -302,9 +306,10 @@ class Napravleniya(models.Model):
                             conflict_list.append(research_tmp.title)
                 i += 1
 
+            res = []
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
-                    res[key] = v[key]
+                    res += v[key]
                     # {5:[0,2,5,7],6:[8]}
 
             if not no_attach:
@@ -313,50 +318,42 @@ class Napravleniya(models.Model):
 
                 finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
 
-                for key in res:  # перебор лабораторий
-                    for v in res[key]:  # перебор выбраных исследований в лаборатории
-                        research = directory.Researches.objects.get(pk=v)  # получение объекта исследования по id
+                for v in res:
+                    research = directory.Researches.objects.get(pk=v)
 
-                        dir_group = -1
-                        if research.direction:
-                            dir_group = research.direction.pk  # получение группы исследования
-                        # Если группа == 0, исследование не группируется с другими в одно направление
-                        if dir_group >= 0 and dir_group not in directions_for_researches.keys():
-                            # Если исследование может группироваться и направление для группы не создано
+                    dir_group = -1
+                    if research.direction:
+                        dir_group = research.direction.pk
 
-                            # Создание направления для группы
-                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                                 doc_current,
-                                                                                                 finsource,
-                                                                                                 diagnos,
-                                                                                                 history_num)
-                            Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
-                                                     ofname_id, ofname)
+                    if dir_group > -1 and dir_group not in directions_for_researches.keys():
+                        directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
+                                                                                             doc_current,
+                                                                                             finsource,
+                                                                                             diagnos,
+                                                                                             history_num)
+                        Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
+                                                 ofname_id, ofname)
 
-                            result["list_id"].append(
-                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        if dir_group < 0:  # если исследование не должно группироваться
-                            dir_group = "id" + str(
-                                research.pk)  # формирование ключа (группы) для негруппируемого исследования
+                        result["list_id"].append(directions_for_researches[dir_group].pk)
+                    if dir_group == -1:
+                        dir_group = "id" + str(research.pk)
+                        directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
+                                                                                             doc_current,
+                                                                                             finsource,
+                                                                                             diagnos,
+                                                                                             history_num)
+                        Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
+                                                 ofname_id, ofname)
 
-                            # Создание направления для исследования
-                            directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                                 doc_current,
-                                                                                                 finsource,
-                                                                                                 diagnos,
-                                                                                                 history_num)
-                            Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
-                                                     ofname_id, ofname)
-
-                            result["list_id"].append(
-                                directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
-                        issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                      # Установка направления для группы этого исследования
-                                                      research=research,
-                                                      deferred=False)  # Создание направления на исследование
-                        issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
-                        issledovaniye.save()  # Сохранение направления на исследование
-                        FrequencyOfUseResearches.inc(research, doc_current)
+                        result["list_id"].append(
+                            directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
+                    issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
+                                                  # Установка направления для группы этого исследования
+                                                  research=research,
+                                                  deferred=False)  # Создание направления на исследование
+                    issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
+                    issledovaniye.save()  # Сохранение направления на исследование
+                    FrequencyOfUseResearches.inc(research, doc_current)
                 #c = Client()
                 #for dk in directions_for_researches:
                 #    c.directions.check_send(directions_for_researches[dk])

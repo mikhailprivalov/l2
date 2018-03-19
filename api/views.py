@@ -271,11 +271,12 @@ def endpoint(request):
                     k = row["pk"]
                     i = row["iss"]
                     for fraction in Fractions.objects.filter(research=i.research,
-                                                             relationfractionastm__application_api=app,
                                                              hide=False):
                         rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
                         if not rel.exists():
-                            continue
+                            rel = models.RelationFractionASTM.objects.filter(fraction=fraction)
+                            if not rel.exists():
+                                continue
                         rel = rel[0]
                         researches[k].append(rel.astm_field)
                 result["body"] = researches
@@ -341,7 +342,7 @@ def bases(request):
          "code": x.short_title,
          "hide": x.hide,
          "history_number": x.history_number,
-         "fin_sources": [{"pk": y.pk, "title": y.title} for y in
+         "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in
                          directions.IstochnikiFinansirovaniya.objects.filter(base=x)]
          } for x in CardBase.objects.all()]})
 

@@ -1433,6 +1433,7 @@
     <li><a action="clear" onclick="return false" tabindex="-1" href="#">Очистка</a></li>
 </ul>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
+{% block base_s %}
 <script src="{% static 'js/jquery.hotkeys.js' %}"></script>
 <script src="{% static 'js/typeahead.bundle.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-select.js' %}"></script>
@@ -2032,6 +2033,7 @@
 </script>
 <div id="page-preloader"></div>
 {% render_bundle 'main' 'js' %}
+{% endblock %}
 {% block scripts %}{% endblock %}
 </body>
 </html>
