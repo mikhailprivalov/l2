@@ -19,7 +19,7 @@
            v-for="row in departments_of_type"><span>{{ row.title }}<span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span></a>
       </div>
     </div>
-    <div class="content-picker" v-if="researches_display.length > 0">
+    <div class="content-picker" :class="{hidetemplates: hidetemplates}" v-if="researches_display.length > 0">
       <a href="#" @click.prevent="select_research(row.pk)" class="research-select"
          :class="{ active: research_selected(row.pk) }"
          v-for="row in researches_display" :title="row.title"><span>{{ row.title }}</span></a>
@@ -27,7 +27,7 @@
     <div class="content-none" v-else>
       Нет данных
     </div>
-    <div class="bottom-picker" style="white-space: nowrap;">
+    <div class="bottom-picker" v-if="!hidetemplates" style="white-space: nowrap;">
       <div class="dropup" style="display: inline-block">
         <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
                 style="text-align: left!important;border-radius: 0"><span class="caret"></span>
@@ -48,7 +48,16 @@
 
   export default {
     name: 'researches-picker',
-    props: ['value'],
+    props: {
+      value: {},
+      autoselect: {
+        default: 'directions'
+      },
+      hidetemplates: {
+        default: false,
+        type: Boolean
+      }
+    },
     data() {
       return {
         type: '-1',
@@ -193,8 +202,10 @@
         if (!this.research_selected(pk)) {
           this.checked_researches.push(pk)
           let research = this.research_data(pk)
-          for (let autoadd_pk of research.autoadd) {
-            this.select_research_ignore(autoadd_pk)
+          if (this.autoselect === 'directions') {
+            for (let autoadd_pk of research.autoadd) {
+              this.select_research_ignore(autoadd_pk)
+            }
           }
         }
       },
@@ -202,8 +213,10 @@
         if (this.research_selected(pk)) {
           this.checked_researches = this.checked_researches.filter(item => item !== pk)
           let research = this.research_data(pk)
-          for (let addto_pk of research.addto) {
-            this.deselect_research_ignore(addto_pk)
+          if (this.autoselect === 'directions') {
+            for (let addto_pk of research.addto) {
+              this.deselect_research_ignore(addto_pk)
+            }
           }
         }
       },
@@ -238,7 +251,7 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .top-picker, .bottom-picker {
     height: 34px;
     background-color: #AAB2BD;
@@ -333,7 +346,12 @@
   .content-picker, .content-none {
     position: absolute;
     top: 34px;
-    bottom: 34px;
+    &:not(.hidetemplates) {
+      bottom: 34px;
+    }
+    &.hidetemplates {
+      bottom: 0;
+    }
     left: 0;
     right: 0;
     overflow-y: auto;

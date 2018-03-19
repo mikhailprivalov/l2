@@ -524,6 +524,64 @@ def patients_search_card(request):
 
 
 @login_required
+def patients_search_individual(request):
+    objects = []
+    data = []
+    d = json.loads(request.body)
+    query = d['query'].strip()
+    p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
+    p2 = re.compile(r'^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p4 = re.compile(r'individual_pk:\d+')
+    pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
+    if re.search(p, query.lower()):
+        initials = query[0:3].upper()
+        btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
+        if not pat_bd.match(btday):
+            return JsonResponse([], safe=False)
+        try:
+            objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
+                                                patronymic__startswith=initials[2], birthday=btday)
+        except ValidationError:
+            objects = []
+    elif re.search(p2, query):
+        split = str(query).split()
+        n = p = ""
+        f = split[0]
+        rmis_req = {"surname": f + "%"}
+        if len(split) > 1:
+            n = split[1]
+            rmis_req["name"] = n + "%"
+        if len(split) > 2:
+            p = split[2]
+            rmis_req["patrName"] = p + "%"
+        if len(split) > 3:
+            btday = split[3].split(".")
+            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+            rmis_req["birthDate"] = btday
+        objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, patronymic__istartswith=p)
+        if len(split) > 3:
+            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
+                                                patronymic__istartswith=p,
+                                                birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())
+
+    if re.search(p4, query):
+        objects = Individual.objects.filter(pk=int(query.split(":")[1]))
+    n = 0
+    for row in objects.distinct().order_by("family", "name", "patronymic", "birthday"):
+        n += 1
+        data.append({"family": row.family,
+                     "name": row.name,
+                     "patronymic": row.patronymic,
+                     "birthday": row.bd(),
+                     "age": row.age_s(),
+                     "sex": row.sex,
+                     "pk": row.pk})
+        if n == 25:
+            break
+    return JsonResponse({"results": data})
+
+
+@login_required
 @group_required("Лечащий врач", "Оператор лечащего врача")
 def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
@@ -621,6 +679,25 @@ def directions_cancel(request):
         direction.cancel = not direction.cancel
         direction.save()
         response["cancel"] = direction.cancel
+    return JsonResponse(response)
+
+
+@login_required
+def researches_params(request):
+    response = {"researches": []}
+    request_data = json.loads(request.body)
+    pks = request_data.get("pks", [])
+    for research in DResearches.objects.filter(pk__in=pks):
+        params = []
+        if research.is_paraclinic:
+            for g in ParaclinicInputGroups.objects.filter(research=research).exclude(title="").order_by("order"):
+                params.append({"pk": g.pk, "title": g.title})
+        else:
+            for f in Fractions.objects.filter(research=research).order_by("sort_weight"):
+                params.append({"pk": f.pk, "title": f.title})
+        response["researches"].append({"pk": research.pk, "title": research.title,
+                                       "params": params, "is_paraclinic": research.is_paraclinic,
+                                       "selected_params": []})
     return JsonResponse(response)
 
 

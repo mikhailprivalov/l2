@@ -19,6 +19,7 @@ new Vue({
     'ResultsParaclinic': () => import('./ResultsParaclinic'),
     'StatisticsTickets': () => import('./StatisticsTickets'),
     'DirectionVisit': () => import('./DirectionVisit'),
+    'ResultsReport': () => import('./ResultsReport'),
     // loading,
   },
   data: {

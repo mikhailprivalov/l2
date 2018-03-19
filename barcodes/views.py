@@ -126,7 +126,7 @@ def tubes(request, direction_implict_id=None):
                     st = otd[0][:3] + "/" + otd[1][:1]
             elif len(otd) == 1:
                 st = otd[0][:3]
-            st = (st + "=>" + ",".join([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)])).lower()
+            st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
 
             pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
                 tubes__pk=tube).first().comment[:9]

@@ -11,4 +11,15 @@ async function searchCard(t, query) {
   return []
 }
 
-export default {searchCard}
+async function searchIndividual(query) {
+  try {
+    const response = await HTTP.post('patients/search-individual', {query: query})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return []
+}
+
+export default {searchCard, searchIndividual}

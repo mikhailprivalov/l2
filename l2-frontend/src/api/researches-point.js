@@ -33,4 +33,15 @@ async function getResearchesByDepartment(department) {
   return {researches: []}
 }
 
-export default {getTemplates, getResearches, getResearchesByDepartment}
+async function getResearchesParams(pks) {
+  try {
+    const response = await HTTP.post('researches/params', {pks})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {researches: []}
+}
+
+export default {getTemplates, getResearches, getResearchesByDepartment, getResearchesParams}
