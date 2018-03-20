@@ -1,10 +1,9 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker">
-    </div>
     <div class="content-picker" style="overflow: auto">
       <div style="width: 100%;display: contents">
-        <research-params-select v-for="r in params_researches" v-model="r.selected_params" :research="r"/>
+        <research-params-select v-for="r in params_researches" v-model="r.selected_params" :research="r" :key="r.pk"/>
+        <div class="text-center" v-if="params_researches.length === 0" style="width: 100%;display: flex;align-items: center;justify-content: center;">Ничего не выбрано</div>
       </div>
     </div>
   </div>
@@ -31,7 +30,6 @@
     data() {
       return {
         params_researches: [],
-        selected_params: []
       }
     },
     created() {
@@ -57,6 +55,11 @@
           }
         }
         this.params_researches = r
+        for (let rpk of Object.keys(this.params_directory)) {
+          if (!(rpk in this.researches)) {
+            this.params_directory[rpk].selected_params = []
+          }
+        }
       }
     },
     watch: {
@@ -68,6 +71,7 @@
       },
       researches() {
         this.params_researches_update()
+        this.$root.$emit('report-researches:update')
       },
     }
   }
@@ -175,7 +179,7 @@
 
   .content-picker, .content-none {
     position: absolute;
-    top: 34px;
+    top: 0;
     bottom: 0;
     left: 0;
     right: 0;

@@ -128,7 +128,7 @@
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
   import DateField from './DateField.vue'
-  import Longpress from 'vue-longpress';
+  import Longpress from 'vue-longpress'
 
   export default {
     name: 'results-paraclinic',

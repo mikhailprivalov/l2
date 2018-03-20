@@ -1,25 +1,37 @@
 <template>
   <div class="root">
     <div>
+      <div class="sticky-d">
+        {{research.title}}
+      </div>
       <div>
-        <span class="sticky-span">{{research.title}}</span>
+        <a href="#" @click.prevent="deselect_all">отменить весь выбор</a>
       </div>
     </div>
     <div>
-      <div v-for="p in research.params"
+      <div v-for="p in params"
            :class="{active: selected_param(p.pk), n1: params_cnt === 1, n2: params_cnt === 2, n3: params_cnt === 3, n4: params_cnt > 3}"
            @click="toggle_select(p.pk)"
-           class="param"><span>{{p.title}}</span></div>
+           class="param" :title="p.title"><span>{{p.title}}</span></div>
     </div>
     <div>
-      <button class="btn btn-blue-nb">&times;</button>
+      <longpress class="btn btn-blue-nb btn-sticky" :on-confirm="deselect" :confirm-time="0" :duration="400"
+                 pressing-text="×"
+                 action-text="×">
+        <span class="inner-sticky">×</span>
+      </longpress>
     </div>
   </div>
 </template>
 
 <script>
+  import Longpress from 'vue-longpress'
+
   export default {
     name: 'research-params-select',
+    components: {
+      Longpress
+    },
     props: {
       research: {
         reqired: true
@@ -30,34 +42,56 @@
     },
     data() {
       return {
-        selected_params: []
+        selected_params: [],
+        inited: false
       }
     },
     computed: {
       params_cnt() {
         return this.research.params.length
       },
+      params() {
+        return this.research.params
+      },
     },
     mounted() {
-      if (this.params_cnt === 1) {
-        this.selected_params.push(this.research.params[0].pk)
+      if (this.value.length === 0) {
+        if (this.params_cnt === 1) {
+          this.selected_params.push(this.research.params[0].pk)
+        }
+      } else {
+        this.selected_params = JSON.parse(JSON.stringify(this.value))
       }
+      this.inited = true
     },
     methods: {
+      deselect() {
+        this.$root.$emit('researches-picker:deselect', this.research.pk)
+      },
+      deselect_all() {
+        this.selected_params = []
+      },
       selected_param(pk) {
-        console.log(pk, this.selected_params, this.selected_params.indexOf(pk), this.selected_params.indexOf(pk) !== -1)
         return this.selected_params.indexOf(pk) !== -1
       },
       toggle_select(pk) {
-        if (this.selected_param(pk))
+        if (this.selected_param(pk)) {
           this.selected_params = this.selected_params.filter(item => item !== pk)
-        else
+        }
+        else {
           this.selected_params.push(pk)
+        }
       },
     },
     watch: {
       selected_params() {
-        this.$emit('input', this.selected_params)
+        if (this.inited)
+          this.$emit('input', JSON.parse(JSON.stringify(this.selected_params)))
+      },
+      research() {
+        if (this.selected_params.length === 0 && this.research.selected_params.length > 0) {
+          this.selected_params = JSON.parse(JSON.stringify(this.research.selected_params))
+        }
       }
     }
   }
@@ -81,7 +115,9 @@
       width: 220px;
       border-right: 1px solid #ddd;
       display: flex;
-      justify-content: stretch;
+      justify-content: space-between;
+      flex-direction: column;
+      position: relative;
 
       div {
         align-self: stretch;
@@ -89,9 +125,12 @@
         position: relative;
       }
 
-      .sticky-span {
+      .sticky-d {
         position: sticky;
         top: 0;
+        background: #fff;
+        width: 100%;
+        z-index: 1;
       }
     }
 
@@ -162,5 +201,15 @@
         border-radius: 0;
       }
     }
+  }
+
+  .btn-sticky {
+    position: relative;
+    border-radius: 0;
+  }
+
+  .inner-sticky {
+    position: sticky;
+    top: 5px;
   }
 </style>

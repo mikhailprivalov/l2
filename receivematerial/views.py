@@ -134,7 +134,7 @@ def last_received(request):
 
 @csrf_exempt
 @login_required
-@group_required("Получатель биоматериала")
+@group_required("Получатель биоматериала", "Лаборант", "Врач-лаборант")
 def receive_execlist(request):
     import datetime
     import directory.models as directory

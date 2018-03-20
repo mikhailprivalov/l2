@@ -11,7 +11,7 @@
     <div id="cont_right" class="split split-horizontal">
       <div id="right_top" class="split content" style="padding: 0;">
       </div>
-      <div id="right_bottom" class="split content" style="padding: 0;">
+      <div id="right_bottom" class="split content" style="padding: 0;box-shadow: none">
         <report-selected-researches :researches="selected_researches" :params_directory="params_directory"/>
       </div>
     </div>
