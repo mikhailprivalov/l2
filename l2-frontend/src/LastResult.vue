@@ -35,19 +35,12 @@
       }
     },
     mounted() {
-      let vm = this
-      directions_point.lastResult(this.individual, this.research).then(data => {
-        vm.in_load = false
-        vm.ok = data.ok
-        if (data.ok) {
-          vm.date = data.data.datetime
-          let m = moment(data.data.datetime, 'DD.MM.YYYY')
-          let n = moment()
-          vm.days = n.diff(m, 'days')
-          vm.direction = data.data.direction
-          $('.scrolldown').scrollDown()
-        }
-      })
+      this.load()
+    },
+    watch: {
+      individual() {
+        this.load()
+      }
     },
     computed: {
       researche_title() {
@@ -63,6 +56,21 @@
     methods: {
       show_result() {
         this.$root.$emit('show_results', this.direction)
+      },
+      load() {
+        let vm = this
+        directions_point.lastResult(this.individual, this.research).then(data => {
+          vm.in_load = false
+          vm.ok = data.ok
+          if (data.ok) {
+            vm.date = data.data.datetime
+            let m = moment(data.data.datetime, 'DD.MM.YYYY')
+            let n = moment()
+            vm.days = n.diff(m, 'days')
+            vm.direction = data.data.direction
+            $('.scrolldown').scrollDown()
+          }
+        })
       }
     },
   }

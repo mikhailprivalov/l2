@@ -327,6 +327,7 @@
         this.selected_card = this.founded_cards[index]
         this.emit_input()
         this.loaded = true
+        this.$root.$emit('patient-picker:select_card')
       },
       check_base() {
         if (this.base === -1 && this.bases.length > 0) {
