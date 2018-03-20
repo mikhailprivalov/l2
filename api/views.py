@@ -387,6 +387,7 @@ class Researches(View):
                  "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
                  "autoadd": autoadd,
                  "addto": addto,
+                 "code": r.code,
                  "type": str(r.podrazdeleniye.p_type)
                  })
         return JsonResponse({"researches": deps})

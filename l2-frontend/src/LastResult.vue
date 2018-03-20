@@ -59,7 +59,7 @@
         for (let pk of Object.keys(this.$store.getters.researches_obj)) {
           let res = this.$store.getters.researches_obj[pk]
           if (res.pk === this.research) {
-            return res.full_title
+            return res.title
           }
         }
         return ''

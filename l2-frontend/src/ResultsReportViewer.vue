@@ -10,9 +10,9 @@
         <date-range v-model="date_range"/>
       </div>
       <div class="top-inner">
-        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;" title="Обновить"
+        <button class="btn btn-blue-nb btn-ell" style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
                 @click="load_history">
-          <i class="glyphicon glyphicon-refresh"></i>
+          <i class="glyphicon glyphicon-tasks"></i> Загрузить данные
         </button>
       </div>
     </div>
@@ -130,7 +130,7 @@
 
   .top-inner {
     position: absolute;
-    left: 278px;
+    left: 290px;
     top: 0;
     right: 0;
     height: 34px;

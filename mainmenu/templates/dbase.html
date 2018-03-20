@@ -1304,8 +1304,7 @@
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                           title="L2 - Лучшая Лабораторная Информационная Система"><img
+                        <a href="/mainmenu" class="navbar-left" style="height: 36px;width: 36px;display: inline-block"><img
                                 style="height: 36px;width: 36px;"
                                 src="{% static 'img/l2logo2.png' %}"></a>
                     {% endif %}
@@ -1356,9 +1355,7 @@
             <div class="nav-loader center">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
-                        <div class="navbar-left" style="height: 36px;width: 36px;display: inline-block"
-                             title="L2 - Лучшая Лабораторная Информационная Система"><img
-                                style="height: 36px;width: 36px;"
+                        <div class="navbar-left" style="height: 36px;width: 36px;display: inline-block"><img style="height: 36px;width: 36px;"
                                 src="{% static 'img/l2logo2.png' %}"></div>
                     {% endif %}
                     <span class="navbar-brand"><small>{{ request.user.doctorprofile.get_fio }}</small></span>
@@ -1390,7 +1387,7 @@
         <div class="footer-float">
             {% load setting %}
             {% s_get "org_title" as org_title %}
-            {{ org_title }} | ЛИС | <span class='version'>{{ VERSION }}</span>
+            {{ org_title }} | <span class='version'>{{ VERSION }}</span>
         </div>
     {% endblock %}
     {#    <loading :show="inLoading" :label="loadingLabel" :overlay="false"></loading>#}

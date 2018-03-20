@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="content-picker" style="margin: 5px">
-      <table class="table table-bordered table-condensed">
+      <table class="table table-bordered table-condensed" style="table-layout: fixed">
         <colgroup>
           <col width="130">
           <col>
@@ -21,9 +21,9 @@
         <tr v-else v-for="(row, key) in researches_departments">
           <td>{{row.title}}</td>
           <td>
-            <research-display v-for="(res, idx) in row.researches"
-                              :title="res.title" :pk="res.pk" :n="idx"
-                              :nof="row.researches.length" :comment="comments[res.pk]"/>
+              <research-display v-for="(res, idx) in row.researches"
+                                :title="res.title" :pk="res.pk" :n="idx"
+                                :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
           <td>
             <a href="#" @click.prevent="clear_department(parseInt(key))">очистить</a>
@@ -259,7 +259,7 @@
                 researches: []
               }
             }
-            r[res.department_pk].researches.push({pk: pk, title: res.full_title})
+            r[res.department_pk].researches.push({pk: pk, title: res.title})
           }
         }
         return r
