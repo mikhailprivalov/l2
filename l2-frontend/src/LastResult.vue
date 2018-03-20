@@ -73,6 +73,7 @@
         this.$root.$emit('show_results', this.direction)
       },
       load() {
+        $('.scrolldown').scrollDown()
         let vm = this
         directions_point.lastResult(this.individual, this.research).then(data => {
           vm.in_load = false
@@ -85,7 +86,6 @@
             vm.days_str = moment.duration(vm.days, 'days').locale("ru").humanize()
 
             vm.direction = data.data.direction
-            $('.scrolldown').scrollDown()
           }
         })
       },
