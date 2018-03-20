@@ -373,8 +373,12 @@
         let pk = -1
         if ('pk' in this.selected_card)
           pk = this.selected_card.pk
+        let individual_pk = -1
+        if ('individual_pk' in this.selected_card)
+          individual_pk = this.selected_card.individual_pk
         this.$emit('input', {
           pk: pk,
+          individual_pk: individual_pk,
           base: this.selected_base,
           ofname: parseInt(this.directive_doc),
           operator: this.is_operator,

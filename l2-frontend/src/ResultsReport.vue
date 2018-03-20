@@ -10,6 +10,7 @@
     </div>
     <div id="cont_right" class="split split-horizontal">
       <div id="right_top" class="split content" style="padding: 0;">
+        <results-report-viewer :individual_pk="selected_individual" :params_directory="params_directory" />
       </div>
       <div id="right_bottom" class="split content" style="padding: 0;box-shadow: none">
         <report-selected-researches :researches="selected_researches" :params_directory="params_directory"/>
@@ -21,6 +22,7 @@
 <script>
   import ResearchesPicker from './ResearchesPicker'
   import IndividualPicker from './IndividualPicker'
+  import ResultsReportViewer from './ResultsReportViewer'
   import ReportSelectedResearches from './ReportSelectedResearches'
   import researches_point from './api/researches-point'
   import * as action_types from './store/action-types'
@@ -30,6 +32,7 @@
       ResearchesPicker,
       IndividualPicker,
       ReportSelectedResearches,
+      ResultsReportViewer,
     },
     name: 'results-report',
     data() {

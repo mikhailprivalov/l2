@@ -5,6 +5,13 @@
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
           <div v-if="can_create_tickets" slot="for_card" class="text-right">
             <a :href="ticket_url">Создать статталон</a>
+            <div class="panel panel-flt" v-if="selected_researches.length > 0 && false" style="margin-bottom: 5px;margin-top: 5px;text-align: left">
+              <ul class="list-group">
+                <li class="list-group-item" v-for="p in selected_researches" :key="p">
+                  <last-result :individual="selected_card.individual_pk" :research="p"/>
+                </li>
+              </ul>
+            </div>
           </div>
         </patient-picker>
       </div>
@@ -32,6 +39,7 @@
   import SelectedResearches from './SelectedResearches'
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
+  import LastResult from './LastResult'
 
   export default {
     components: {
@@ -40,11 +48,12 @@
       SelectedResearches,
       DirectionsHistory,
       ResultsViewer,
+      LastResult,
     },
     name: 'directions',
     data() {
       return {
-        selected_card: {pk: -1, base: {}, ofname: -1, operator: false, history_num: ''},
+        selected_card: {pk: -1, base: {}, ofname: -1, individual_pk: -1, operator: false, history_num: ''},
         selected_researches: [],
         show_results_pk: -1,
       }
