@@ -1,18 +1,29 @@
 <template>
-  <tr v-show="ok">
-    <th>{{researche_title}}</th>
+  <tr v-show="ok" :class="{warn: warn}">
+    <td>{{researche_title}}</td>
     <td v-if="in_load">поиск последнего результата...</td>
     <td v-else><a href="#" @click.prevent="show_result">просмотр результата</a></td>
-    <th class="text-center">{{date}}</th>
-    <th class="text-center">
-      <div v-if="!in_load && ok">{{days}} д. назад</div>
-    </th>
+    <td class="text-center">{{date}}</td>
+    <td class="text-center">
+      <div v-if="!in_load && ok">{{days_str}} назад</div>
+    </td>
   </tr>
 </template>
 
 <script>
   import directions_point from './api/directions-point'
   import moment from 'moment'
+
+  moment.updateLocale('ru', {
+    relativeTime: {
+      d: '1 д.',
+      dd: '%d д.',
+      M: '1 м.',
+      MM: '%d м.',
+      y: '1 г.',
+      yy: '%d г.'
+    }
+  })
 
   export default {
     name: 'last-result',
@@ -30,6 +41,7 @@
         ok: true,
         direction: -1,
         days: -1,
+        days_str: -1,
         date: '',
         date_orig: '',
       }
@@ -52,6 +64,9 @@
         }
         return ''
       },
+      warn() {
+        return this.days <= 10 && this.ok && !this.in_load
+      }
     },
     methods: {
       show_result() {
@@ -67,11 +82,13 @@
             let m = moment(data.data.datetime, 'DD.MM.YYYY')
             let n = moment()
             vm.days = n.diff(m, 'days')
+            vm.days_str = moment.duration(vm.days, 'days').locale("ru").humanize()
+
             vm.direction = data.data.direction
             $('.scrolldown').scrollDown()
           }
         })
-      }
+      },
     },
   }
 </script>
@@ -80,9 +97,10 @@
   td, th {
     padding: 2px !important;
     word-wrap: break-word;
+    color: #000
   }
 
-  tr:not(.warn) {
-    background-color: #fff;
+  .warn {
+    background-color: #ffa04d;
   }
 </style>

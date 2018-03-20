@@ -5,10 +5,9 @@
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
           <div v-if="can_create_tickets" slot="for_card" class="text-right">
             <a :href="ticket_url">Создать статталон</a>
-            <div class="panel panel-flt" v-if="selected_researches.length > 0"
-                 style="margin-bottom: 0;margin-top: 5px;text-align: left">
-              <div class="panel-body">
-                <table class="table table-bordered lastresults">
+            <div v-if="selected_researches.length > 0"
+                 style="margin-top: 5px;text-align: left">
+              <table class="table table-bordered lastresults">
                   <col width="200">
                   <col>
                   <col width="110">
@@ -18,7 +17,6 @@
                                :research="p"/>
                   </tbody>
                 </table>
-              </div>
             </div>
           </div>
         </patient-picker>
@@ -139,7 +137,7 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   #right_top {
     overflow: visible !important;
   }
@@ -148,5 +146,19 @@
     table-layout: fixed;
     padding: 0;
     margin: 0;
+    color: #000;
+    background-color: #ffdb4d;
+    border-color: #000;
+    /deep/ th, /deep/ td {
+      border-color: #000;
+    }
+
+    /deep/ a {
+      color: #000;
+      text-decoration: dotted underline;
+    }
+    /deep/ a:hover {
+      text-decoration: none;
+    }
   }
 </style>
