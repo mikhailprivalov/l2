@@ -1,16 +1,24 @@
 <template>
   <div ref="root">
     <div id="cont_left" class="split split-horizontal">
-      <div id="left_top" class="split content">
+      <div id="left_top" class="split content scrolldown">
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
           <div v-if="can_create_tickets" slot="for_card" class="text-right">
             <a :href="ticket_url">Создать статталон</a>
-            <div class="panel panel-flt" v-if="selected_researches.length > 0 && false" style="margin-bottom: 5px;margin-top: 5px;text-align: left">
-              <ul class="list-group">
-                <li class="list-group-item" v-for="p in selected_researches" :key="p">
-                  <last-result :individual="selected_card.individual_pk" :research="p"/>
-                </li>
-              </ul>
+            <div class="panel panel-flt" v-if="selected_researches.length > 0"
+                 style="margin-bottom: 0;margin-top: 5px;text-align: left">
+              <div class="panel-body">
+                <table class="table table-bordered lastresults">
+                  <col width="200">
+                  <col>
+                  <col width="110">
+                  <col width="110">
+                  <tbody>
+                  <last-result :individual="selected_card.individual_pk" v-for="p in selected_researches" :key="p"
+                               :research="p"/>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </patient-picker>
@@ -134,5 +142,11 @@
 <style scoped>
   #right_top {
     overflow: visible !important;
+  }
+
+  .lastresults {
+    table-layout: fixed;
+    padding: 0;
+    margin: 0;
   }
 </style>

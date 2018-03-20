@@ -145,6 +145,17 @@ async function visitJournal(date) {
   return {data: []}
 }
 
+async function lastResult(individual, research) {
+  try {
+    const response = await HTTP.post('directions/last-result', {individual, research})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {ok: false}
+}
+
 
 export default {
   sendDirections,
@@ -159,4 +170,5 @@ export default {
   getDirectionsServices,
   getMarkDirectionVisit,
   visitJournal,
+  lastResult
 }

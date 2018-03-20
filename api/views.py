@@ -1383,3 +1383,18 @@ def directions_visit_journal(request):
             "datetime": timezone.localtime(v.visit_date).strftime('%d.%m.%Y %X')
         })
     return JsonResponse(response)
+
+
+@login_required
+def directions_last_result(request):
+    response = {"ok": False, "data": {}}
+    request_data = json.loads(request.body)
+    individual = request_data.get("individual", -1)
+    research = request_data.get("research", -1)
+    i = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
+                                                research__pk=research,
+                                                time_confirmation__isnull=False).order_by("-time_confirmation")
+    if i.exists():
+        response["ok"] = True
+        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": timezone.localtime(i[0].time_confirmation).strftime('%d.%m.%Y')}
+    return JsonResponse(response)

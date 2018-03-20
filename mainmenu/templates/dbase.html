@@ -1880,6 +1880,10 @@
         this.push.apply(this, elems)
         return this
     }
+    $.fn.scrollDown = function () {
+        let el = $(this)
+        el.scrollTop(el[0].scrollHeight)
+    }
 
     function convertArrayOfObjectsToCSV(args) {
         let result, ctr, keys, columnDelimiter, lineDelimiter, data
@@ -1947,6 +1951,21 @@
             'position': mess_pos || 'bottom right',
             delay: delay || 5000
         })
+    }
+
+    function wrnmessage(title, body, delay) {
+        $.amaran({
+            'theme': 'awesome wrn',
+            'content': {
+                title: title,
+                message: body || '',
+                info: '',
+                icon: 'fa fa-exclamation'
+            },
+            'position': mess_pos || 'bottom right',
+            delay: delay || 5000
+        })
+        mess_pos = false
     }
 
     function errmessage(title, body, delay) {

@@ -25,6 +25,7 @@ urlpatterns = [
     path('directions/services', views.directions_services),
     path('directions/mark-visit', views.directions_mark_visit),
     path('directions/visit-journal', views.directions_visit_journal),
+    path('directions/last-result', views.directions_last_result),
     path('directions/paraclinic_form', views.directions_paraclinic_form),
     path('directions/paraclinic_result', views.directions_paraclinic_result),
     path('directions/paraclinic_result_confirm', views.directions_paraclinic_confirm),
