@@ -1404,6 +1404,7 @@ def directions_last_result(request):
 
 @login_required
 def directions_results_report(request):
+    import re
     data = []
     request_data = json.loads(request.body)
     individual_pk = request_data.get("individual", -1)
@@ -1413,6 +1414,7 @@ def directions_results_report(request):
 
     date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
     date_end = datetime.date(int(date_end[2]), int(date_end[1]), int(date_end[0])) + datetime.timedelta(days=1)
+    pat = re.compile(r"^\d+(.\d+)?-\d+(.\d+)?$")
 
     if Individual.objects.filter(pk=individual_pk).exists():
         i = Individual.objects.get(pk=individual_pk)
@@ -1428,14 +1430,39 @@ def directions_results_report(request):
                                                               issledovaniye__time_confirmation__range=(date_start, date_end)):
                         if r.value == "":
                             continue
+                        is_norm = r.get_is_norm()
+                        not_norm_dir = ""
+                        delta = ""
+                        active_ref = r.calc_normal(fromsave=False, only_ref=True)
+                        if "r" in active_ref and re.match(r"^\d+(\.\d+)?$", r.value.replace(",", ".").strip()):
+                            x = float(r.value.replace(",", ".").strip())
+                            spl = r.calc_normal(fromsave=False, only_ref=True, raw_ref=False)
+                            if (isinstance(spl, list) or isinstance(spl, tuple)) and len(spl) == 2:
+                                if spl[0] >= x:
+                                    not_norm_dir = "down"
+                                    nx = spl[0] - x
+                                    n10 = spl[0] * 0.1
+                                    if nx <= n10:
+                                        not_norm_dir = "n_down"
+                                    delta = nx
+                                elif spl[1] <= x:
+                                    not_norm_dir = "up"
+                                    nx = x - spl[1]
+                                    n10 = spl[1] * 0.1
+                                    if nx <= n10:
+                                        not_norm_dir = "n_up"
+                                    delta = nx
+
                         paramdata = {"research": f.research.pk,
                                      "pk": ppk,
                                      "order": f.sort_weight,
                                      "date": timezone.localtime(r.issledovaniye.time_confirmation).strftime('%d.%m.%Y'),
                                      "timestamp": int(timezone.localtime(r.issledovaniye.time_confirmation).timestamp()),
                                      "value": r.value,
-                                     "is_norm": r.get_is_norm(),
-                                     "active_ref": r.calc_normal(fromsave=False, only_ref=True),
+                                     "is_norm": is_norm,
+                                     "not_norm_dir": not_norm_dir,
+                                     "delta": delta,
+                                     "active_ref": active_ref,
                                      "direction": r.issledovaniye.napravleniye.pk}
                         data.append(paramdata)
     data.sort(key=itemgetter("timestamp"), reverse=True)

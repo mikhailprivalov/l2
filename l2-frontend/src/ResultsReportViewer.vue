@@ -12,7 +12,13 @@
       <div class="top-inner">
         <button class="btn btn-blue-nb btn-ell" style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
                 @click="load_history" v-if="individual_pk > -1 && params.length > 0">
-          <i class="glyphicon glyphicon-tasks"></i> Загрузить данные
+          <i class="glyphicon glyphicon-list-alt"></i> Загрузить данные
+        </button>
+        <button class="btn btn-blue-nb btn-ell"
+                style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;"
+                title="Построить графики"
+                v-if="rows.length > 0" @click="build_graphs">
+          <i class="glyphicon glyphicon-flash"></i> Построить графики
         </button>
       </div>
     </div>
@@ -38,7 +44,13 @@
         <tr v-for="r in rows" :class="{not_norm: r.is_norm !== 'normal'}">
           <td>{{r.date}}</td>
           <td>{{get_param_name(r.research, r.pk)}}</td>
-          <td v-if="r.active_ref.r">{{r.value}}</td>
+          <td v-if="r.active_ref.r" class="v-field">
+            <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
+            <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
+            <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
+            <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
+            {{r.value}}
+          </td>
           <td v-if="r.active_ref.r">{{r.active_ref.r}}</td>
           <td v-else colspan="2">{{r.value}}</td>
           <td><a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{r.direction}}</a>
@@ -50,17 +62,19 @@
     <div class="content-none" v-else>
       Нет данных
     </div>
+    <report-chart-viewer v-if="show_charts" :rows_data="rows"/>
   </div>
 </template>
 
 <script>
   import DateRange from './ui-cards/DateRange'
+  import ReportChartViewer from './ReportChartViewer'
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
   import moment from 'moment'
 
   export default {
-    components: {DateRange},
+    components: {DateRange, ReportChartViewer},
     name: 'results-report-viewer',
     props: {
       individual_pk: {
@@ -80,12 +94,17 @@
       return {
         date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
         is_created: false,
-        rows: []
+        rows: [],
+        show_charts: false
       }
     },
     computed: {},
     mounted() {
       this.is_created = true
+      let vm = this
+      this.$root.$on('hide_report-chart-viewer', () => {
+        vm.show_charts = false
+      })
     },
     methods: {
       get_param_name(rpk, ppk) {
@@ -97,6 +116,9 @@
           }
         }
         return ''
+      },
+      build_graphs() {
+        this.show_charts = true
       },
       show_results(pk) {
         this.$root.$emit('show_results', pk)
@@ -115,7 +137,6 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getResultsReport(this.individual_pk, this.params, this.date_range[0], this.date_range[1]).then(data => {
-          console.log(data)
           vm.rows = data.data
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
@@ -152,6 +173,14 @@
     }
     td:not(:last-child) {
       border-right-color: #ffa04d;
+    }
+
+    .v-field {
+      font-weight: bold;
+      span {
+        padding-right: 4px;
+        font-weight: normal;
+      }
     }
   }
 

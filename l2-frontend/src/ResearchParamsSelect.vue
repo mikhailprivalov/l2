@@ -220,7 +220,7 @@
     top: 5px;
   }
   .l-actions {
-    padding-right: 10px;
+    padding-right: 12px;
     padding-left: 5px;
     display: flex;
     justify-content: space-between;

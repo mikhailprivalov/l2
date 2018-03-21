@@ -558,7 +558,7 @@ class Result(models.Model):
         self.is_normal = self.calc_normal(True)
         super(Result, self).save(*args, **kw)
 
-    def calc_normal(self, fromsave=False, only_ref=False):
+    def calc_normal(self, fromsave=False, only_ref=False, raw_ref=True):
         import operator
         from functools import reduce
         trues = {True: ["полож.", "положительно", "да", "положительный", "обнаружено"],
@@ -763,7 +763,10 @@ class Result(models.Model):
                                 if not test_v:
                                     tmp_result = "not_normal"
                         else:
-                            active_ref = {"k": k, "r": r[k]}
+                            if raw_ref:
+                                active_ref = {"k": k, "r": r[k]}
+                            else:
+                                active_ref = rigths_v(r[k].strip().lower())
                     if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
                         result = tmp_result
             if only_ref:
