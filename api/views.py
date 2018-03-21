@@ -1426,12 +1426,20 @@ def directions_results_report(request):
                     for r in directions.Result.objects.filter(issledovaniye__napravleniye__client__individual=i,
                                                               fraction=f,
                                                               issledovaniye__time_confirmation__range=(date_start, date_end)):
+                        if r.value == "":
+                            continue
                         paramdata = {"research": f.research.pk,
                                      "pk": ppk,
+                                     "order": f.sort_weight,
                                      "date": timezone.localtime(r.issledovaniye.time_confirmation).strftime('%d.%m.%Y'),
                                      "timestamp": int(timezone.localtime(r.issledovaniye.time_confirmation).timestamp()),
                                      "value": r.value,
+                                     "is_norm": r.get_is_norm(),
+                                     "active_ref": r.calc_normal(fromsave=False, only_ref=True),
                                      "direction": r.issledovaniye.napravleniye.pk}
                         data.append(paramdata)
     data.sort(key=itemgetter("timestamp"), reverse=True)
+    data.sort(key=itemgetter("pk"))
+    data.sort(key=itemgetter("order"))
+    data.sort(key=itemgetter("research"))
     return JsonResponse({"data": data})

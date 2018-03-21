@@ -19,9 +19,10 @@
     <div class="content-picker" v-if="rows.length > 0">
       <table class="table table-bordered table-smm">
         <colgroup>
-          <col width="110">
+          <col width="90">
           <col>
           <col>
+          <col width="120">
           <col width="110">
         </colgroup>
         <thead>
@@ -29,15 +30,19 @@
           <th>Дата</th>
           <th>Параметр</th>
           <th>Значение</th>
+          <th>Референс</th>
           <th>Направление</th>
         </tr>
         </thead>
         <tbody>
-        <tr v-for="r in rows">
+        <tr v-for="r in rows" :class="{not_norm: r.is_norm !== 'normal'}">
           <td>{{r.date}}</td>
           <td>{{get_param_name(r.research, r.pk)}}</td>
-          <td>{{r.value}}</td>
-          <td>{{r.direction}}</td>
+          <td v-if="r.active_ref.r">{{r.value}}</td>
+          <td v-if="r.active_ref.r">{{r.active_ref.r}}</td>
+          <td v-else colspan="2">{{r.value}}</td>
+          <td><a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{r.direction}}</a>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -99,6 +104,9 @@
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
       },
+      print_results(pk) {
+        this.$root.$emit('print:results', [pk])
+      },
       load_history() {
         if (!this.is_created)
           return
@@ -129,8 +137,21 @@
 <style scoped lang="scss">
 
   .table-smm {
+    table-layout: fixed;
+
     td, th {
       padding: 2px;
+    }
+  }
+
+  .not_norm {
+    background-color: #f1f1f1;
+
+    td:not(:first-child) {
+      border-left-color: #ffa04d;
+    }
+    td:not(:last-child) {
+      border-right-color: #ffa04d;
     }
   }
 

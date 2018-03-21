@@ -558,7 +558,7 @@ class Result(models.Model):
         self.is_normal = self.calc_normal(True)
         super(Result, self).save(*args, **kw)
 
-    def calc_normal(self, fromsave=False):
+    def calc_normal(self, fromsave=False, only_ref=False):
         import operator
         from functools import reduce
         trues = {True: ["полож.", "положительно", "да", "положительный", "обнаружено"],
@@ -718,8 +718,9 @@ class Result(models.Model):
         def has_years(s: str):
             return any([x in s for x in ["лет", "год", "л.", "года"]] + [not has_days(s) and not has_monthes(s)])
 
-        def clc(r, val, age):
+        def clc(r, val, age, only_ref):
             result = "normal"
+            active_ref = {}
             if val.strip() != "":
                 for k in r.keys():
                     tmp_result = "normal"
@@ -747,24 +748,29 @@ class Result(models.Model):
                     if not rigth:
                         tmp_result = "maybe"
                     elif rigth[0] <= age <= rigth[1]:
-                        rigth_v = rigths_v(r[k].strip().lower())
-                        pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
-                        if pattern.match(r[k]):
-                            if self.compare(r[k], val):
-                                tmp_result = "normal"
+                        if not only_ref:
+                            rigth_v = rigths_v(r[k].strip().lower())
+                            pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
+                            if pattern.match(r[k]):
+                                if self.compare(r[k], val):
+                                    tmp_result = "normal"
+                                else:
+                                    tmp_result = "not_normal"
+                            elif rigth_v == "":
+                                tmp_result = "maybe"
                             else:
-                                tmp_result = "not_normal"
-                        elif rigth_v == "":
-                            tmp_result = "maybe"
+                                test_v = test_value(rigth_v, val)
+                                if not test_v:
+                                    tmp_result = "not_normal"
                         else:
-                            test_v = test_value(rigth_v, val)
-                            if not test_v:
-                                tmp_result = "not_normal"
+                            active_ref = {"k": k, "r": r[k]}
                     if result not in ["maybe", "not_normal"] or tmp_result == "maybe":
                         result = tmp_result
+            if only_ref:
+                return active_ref
             return result
 
-        calc = clc(ref, value, years)
+        calc = clc(ref, value, years, only_ref)
         return calc
 
     class Meta:

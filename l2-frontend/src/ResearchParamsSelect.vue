@@ -4,8 +4,8 @@
       <div class="sticky-d">
         {{research.title}}
       </div>
-      <div>
-        <a href="#" @click.prevent="deselect_all">отменить весь выбор</a>
+      <div class="l-actions" v-if="params.length > 1">
+        <a href="#" @click.prevent="select_all">выбрать всё</a> <a href="#" @click.prevent="deselect_all">снять всё</a>
       </div>
     </div>
     <div>
@@ -70,6 +70,13 @@
       },
       deselect_all() {
         this.selected_params = []
+      },
+      select_all() {
+        for (let p of this.params) {
+          if (!this.selected_param(p.pk)) {
+            this.toggle_select(p.pk)
+          }
+        }
       },
       selected_param(pk) {
         return this.selected_params.filter(item => item.pk === pk).length > 0
@@ -211,5 +218,22 @@
   .inner-sticky {
     position: sticky;
     top: 5px;
+  }
+  .l-actions {
+    padding-right: 10px;
+    padding-left: 5px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    a {
+      color: #000;
+      text-decoration: dotted underline;
+    }
+
+    a:hover {
+      text-decoration: none;
+    }
   }
 </style>
