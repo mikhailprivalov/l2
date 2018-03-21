@@ -10,10 +10,12 @@
     </div>
     <div id="cont_right" class="split split-horizontal">
       <div id="right_top" class="split content" style="padding: 0;">
-        <results-report-viewer :individual_pk="selected_individual" :params_directory="params_directory" />
+        <results-report-viewer :individual_pk="selected_individual" :params="selected_params"
+                               :params_directory="params_directory"/>
       </div>
       <div id="right_bottom" class="split content" style="padding: 0;box-shadow: none">
-        <report-selected-researches :researches="selected_researches" :params_directory="params_directory"/>
+        <report-selected-researches :researches="selected_researches" v-model="selected_params"
+                                    :params_directory="params_directory"/>
       </div>
     </div>
   </div>
@@ -39,6 +41,7 @@
       return {
         selected_individual: -1,
         selected_researches: [],
+        selected_params: [],
         inLoad: false,
         params_directory: {}
       }

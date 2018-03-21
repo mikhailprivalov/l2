@@ -2,6 +2,7 @@ import collections
 import datetime
 import re
 from collections import defaultdict
+from operator import itemgetter
 
 import simplejson as json
 import yaml
@@ -1399,3 +1400,38 @@ def directions_last_result(request):
         response["ok"] = True
         response["data"] = {"direction": i[0].napravleniye.pk, "datetime": timezone.localtime(i[0].time_confirmation).strftime('%d.%m.%Y')}
     return JsonResponse(response)
+
+
+@login_required
+def directions_results_report(request):
+    data = []
+    request_data = json.loads(request.body)
+    individual_pk = request_data.get("individual", -1)
+    params = request_data.get("params", [])
+    date_start = request_data["date_start"].split(".")
+    date_end = request_data["date_end"].split(".")
+
+    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
+    date_end = datetime.date(int(date_end[2]), int(date_end[1]), int(date_end[0])) + datetime.timedelta(days=1)
+
+    if Individual.objects.filter(pk=individual_pk).exists():
+        i = Individual.objects.get(pk=individual_pk)
+        for param in params:
+            ppk = param["pk"]
+            if param["is_paraclinic"]:
+                pass  # TODO: обработка групп параклиники
+            else:
+                if Fractions.objects.filter(pk=ppk).exists():
+                    f = Fractions.objects.get(pk=ppk)
+                    for r in directions.Result.objects.filter(issledovaniye__napravleniye__client__individual=i,
+                                                              fraction=f,
+                                                              issledovaniye__time_confirmation__range=(date_start, date_end)):
+                        paramdata = {"research": f.research.pk,
+                                     "pk": ppk,
+                                     "date": timezone.localtime(r.issledovaniye.time_confirmation).strftime('%d.%m.%Y'),
+                                     "timestamp": int(timezone.localtime(r.issledovaniye.time_confirmation).timestamp()),
+                                     "value": r.value,
+                                     "direction": r.issledovaniye.napravleniye.pk}
+                        data.append(paramdata)
+    data.sort(key=itemgetter("timestamp"), reverse=True)
+    return JsonResponse({"data": data})

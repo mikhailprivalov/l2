@@ -11,12 +11,39 @@
       </div>
       <div class="top-inner">
         <button class="btn btn-blue-nb btn-ell" style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;" title="Загрузить данные"
-                @click="load_history">
+                @click="load_history" v-if="individual_pk > -1 && params.length > 0">
           <i class="glyphicon glyphicon-tasks"></i> Загрузить данные
         </button>
       </div>
     </div>
-    <div class="content-picker">
+    <div class="content-picker" v-if="rows.length > 0">
+      <table class="table table-bordered table-smm">
+        <colgroup>
+          <col width="110">
+          <col>
+          <col>
+          <col width="110">
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Параметр</th>
+          <th>Значение</th>
+          <th>Направление</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="r in rows">
+          <td>{{r.date}}</td>
+          <td>{{get_param_name(r.research, r.pk)}}</td>
+          <td>{{r.value}}</td>
+          <td>{{r.direction}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="content-none" v-else>
+      Нет данных
     </div>
   </div>
 </template>
@@ -35,6 +62,10 @@
         type: Number,
         default: -1
       },
+      params: {
+        type: Array,
+        default: []
+      },
       params_directory: {
         type: Object,
         default: {}
@@ -44,7 +75,7 @@
       return {
         date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
         is_created: false,
-        params: []
+        rows: []
       }
     },
     computed: {},
@@ -52,35 +83,56 @@
       this.is_created = true
     },
     methods: {
+      get_param_name(rpk, ppk) {
+        if (this.params_directory.hasOwnProperty(rpk)) {
+          for (let p of this.params_directory[rpk].params) {
+            if (p.pk === ppk) {
+              return p.title
+            }
+          }
+        }
+        return ''
+      },
       show_results(pk) {
         this.$root.$emit('show_results', pk)
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
       },
-      update_params() {
-        let p = []
-        for (let rpk of Object.keys(this.params_directory)) {
-          for (let par of this.params_directory[rpk].selected_params) {
-            p.push(par)
-          }
-        }
-        this.params = p
-      },
       load_history() {
         if (!this.is_created)
           return
         this.$root.$emit('validate-datepickers')
-        this.update_params()
-        // this.is_created = false
-        // let vm = this
-        // vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.is_created = false
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.getResultsReport(this.individual_pk, this.params, this.date_range[0], this.date_range[1]).then(data => {
+          console.log(data)
+          vm.rows = data.data
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          vm.is_created = true
+        })
       },
+      clear() {
+        this.rows = []
+      }
     },
+    watch: {
+      individual_pk() {
+        this.clear()
+      }
+    }
   }
 </script>
 
 <style scoped lang="scss">
+
+  .table-smm {
+    td, th {
+      padding: 2px;
+    }
+  }
 
   .top-picker, .bottom-picker {
     height: 34px;

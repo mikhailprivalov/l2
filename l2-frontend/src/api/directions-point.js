@@ -156,6 +156,17 @@ async function lastResult(individual, research) {
   return {ok: false}
 }
 
+async function getResultsReport(individual, params, date_start, date_end) {
+  try {
+    const response = await HTTP.post('directions/results-report', {individual, params, date_start, date_end})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {ok: false}
+}
+
 
 export default {
   sendDirections,
@@ -170,5 +181,6 @@ export default {
   getDirectionsServices,
   getMarkDirectionVisit,
   visitJournal,
-  lastResult
+  lastResult,
+  getResultsReport
 }

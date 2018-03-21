@@ -57,7 +57,7 @@
     mounted() {
       if (this.value.length === 0) {
         if (this.params_cnt === 1) {
-          this.selected_params.push(this.research.params[0].pk)
+          this.selected_params.push({pk: this.research.params[0].pk, is_paraclinic: this.research.is_paraclinic})
         }
       } else {
         this.selected_params = JSON.parse(JSON.stringify(this.value))
@@ -72,14 +72,14 @@
         this.selected_params = []
       },
       selected_param(pk) {
-        return this.selected_params.indexOf(pk) !== -1
+        return this.selected_params.filter(item => item.pk === pk).length > 0
       },
       toggle_select(pk) {
         if (this.selected_param(pk)) {
-          this.selected_params = this.selected_params.filter(item => item !== pk)
+          this.selected_params = this.selected_params.filter(item => item.pk !== pk)
         }
         else {
-          this.selected_params.push(pk)
+          this.selected_params.push({pk: pk, is_paraclinic: this.research.is_paraclinic})
         }
       },
     },

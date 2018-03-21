@@ -26,11 +26,21 @@
         type: Object,
         reqired: true
       },
+      value: {}
     },
     data() {
       return {
         params_researches: [],
       }
+    },
+    computed: {
+      selected_params() {
+        let p = []
+        for (let rp of this.params_researches) {
+          p = _.union(p, rp.selected_params)
+        }
+        return p
+      },
     },
     created() {
       this.$root.$on('researches-picker:clear_all', this.clear_all)
@@ -47,18 +57,14 @@
         this.$root.$emit('researches-picker:deselect_all')
       },
       params_researches_update() {
-        let r = []
-        for (let rpk of this.researches) {
-          if (rpk in this.params_directory) {
-            let p = this.params_directory[rpk]
-            r.push(p)
-          }
-        }
-        this.params_researches = r
+        this.params_researches.length = 0
+
         for (let rpk of Object.keys(this.params_directory)) {
-          if (!(rpk in this.researches)) {
-            this.params_directory[rpk].selected_params = []
+          if (this.researches.includes(parseInt(rpk))) {
+            this.params_researches.push(this.params_directory[rpk])
+            continue
           }
+          this.params_directory[rpk].selected_params = []
         }
       }
     },
@@ -73,6 +79,9 @@
         this.params_researches_update()
         this.$root.$emit('report-researches:update')
       },
+      selected_params() {
+        this.$emit('input', this.selected_params)
+      }
     }
   }
 </script>
