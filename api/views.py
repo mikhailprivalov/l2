@@ -939,7 +939,7 @@ def directions_results(request):
 
                             result["results"][kint]["fractions"][pk]["result"] = result_normal(res.value)
                             result["results"][kint]["fractions"][pk]["title"] = res.fraction.title
-                            result["results"][kint]["fractions"][pk]["units"] = res.fraction.units
+                            result["results"][kint]["fractions"][pk]["units"] = res.get_units()
                             refs = res.get_ref(full=True)
                             ref_m = refs["m"]
                             ref_f = refs["f"]
@@ -1448,6 +1448,7 @@ def directions_results_report(request):
                                      "date": timezone.localtime(i.time_confirmation).strftime('%d.%m.%Y'),
                                      "timestamp": int(timezone.localtime(i.time_confirmation).timestamp()),
                                      "value": "; ".join(res),
+                                     "units": "",
                                      "is_norm": "normal",
                                      "not_norm_dir": "",
                                      "delta": 0,
@@ -1491,6 +1492,7 @@ def directions_results_report(request):
                                      "date": timezone.localtime(r.issledovaniye.time_confirmation).strftime('%d.%m.%Y'),
                                      "timestamp": int(timezone.localtime(r.issledovaniye.time_confirmation).timestamp()),
                                      "value": r.value,
+                                     "units": r.get_units(),
                                      "is_norm": is_norm,
                                      "not_norm_dir": not_norm_dir,
                                      "delta": delta,

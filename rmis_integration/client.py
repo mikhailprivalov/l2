@@ -759,7 +759,7 @@ class Directions(BaseRequester):
                                                                fraction__research=x.fraction.research).order_by(
                                         "fraction__sort_weight"):
                                     xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace(
-                                        "{{значение}}", y.value).replace("{{едизм}}", y.fraction.units)
+                                        "{{значение}}", y.value).replace("{{едизм}}", y.get_units())
                                 xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
                                                                                                      "").replace(
                                     "</font>", "")
@@ -843,7 +843,7 @@ class Directions(BaseRequester):
                                 ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                 xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}",
                                                                                                         x.value).replace(
-                                    "{{едизм}}", x.fraction.units)
+                                    "{{едизм}}", x.get_units())
                                 xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
                                                                                                      "").replace(
                                     "</font>", "")

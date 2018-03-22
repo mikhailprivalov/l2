@@ -228,6 +228,7 @@ def results_save(request):
                     if not created:
                         fraction_result.delete()
                 if need_save:
+                    fraction_result.get_units()
                     fraction_result.iteration = 1  # Установка итерации
                     if key in fractions_ref:
                         r = fractions_ref[key]
@@ -388,8 +389,7 @@ def get_full_result(request):
                             #        dateformat.format(iss.time_save, settings.DATE_FORMAT))
                             result["results"][kint]["fractions"][pk][
                                 "title"] = res.fraction.title  # Название фракции
-                            result["results"][kint]["fractions"][pk][
-                                "units"] = res.fraction.units  # Еденицы измерения
+                            result["results"][kint]["fractions"][pk]["units"] = res.get_units()
                             refs = res.get_ref(full=True)
                             ref_m = refs["m"]
                             ref_f = refs["f"]
@@ -613,8 +613,7 @@ def result_html(request):
                         #        dateformat.format(iss.time_save, settings.DATE_FORMAT))
                         result["results"][kint]["fractions"][pk][
                             "title"] = res.fraction.title  # Название фракции
-                        result["results"][kint]["fractions"][pk][
-                            "units"] = res.fraction.units  # Еденицы измерения
+                        result["results"][kint]["fractions"][pk]["units"] = res.get_units()
                         ref_m = res.fraction.ref_m
                         ref_f = res.fraction.ref_f
                         if not isinstance(ref_m, str):
@@ -1003,12 +1002,14 @@ def result_print(request):
                         result = "не завершено"
                         norm = "none"
                         ref = {"": ""}
+                        f_units = fractions[0].units
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
                             ref = r.get_ref()
                             if show_norm:
                                 norm = r.get_is_norm(recalc=True)
                             result = result_normal(r.value)
+                            f_units = r.get_units()
                         else:
                             continue
                         if not iss.doc_confirmation and iss.deferred:
@@ -1043,7 +1044,7 @@ def result_print(request):
                                               stl))
 
                                 tmp.append(
-                                    Paragraph('<font face="OpenSans" size="7">' + fractions[0].units + "</font>", stl))
+                                    Paragraph('<font face="OpenSans" size="7">' + f_units + "</font>", stl))
 
                             if iss.doc_confirmation:
                                 if prev_conf != iss.doc_confirmation.get_fio():
@@ -1152,12 +1153,14 @@ def result_print(request):
                                 result = "не завершено"
                                 norm = "none"
                                 ref = {"": ""}
+                                f_units = f.units
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     r = Result.objects.get(issledovaniye=iss, fraction=f)
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
+                                    f_units = r.get_units()
                                 else:
                                     continue
                                 if not iss.doc_confirmation and iss.deferred:
@@ -1178,7 +1181,7 @@ def result_print(request):
                                     tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
                                                          stl))
 
-                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + f.units + "</font>", stl))
+                                    tmp.append(Paragraph('<font face="OpenSans" size="7">' + f_units + "</font>", stl))
                                 tmp.append("")
                                 tmp.append("")
                                 data.append(tmp)
@@ -1566,18 +1569,19 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                              styleSheet["BodyText"])]
             result = "не завершено"
             ref = {"": ""}
+            f_units = fractions[0].units
             if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                 r = Result.objects.get(issledovaniye=iss, fraction=fractions[0])
                 ref = r.get_ref()
                 result = r.value
-
+                f_units = r.get_units()
             if not iss.doc_confirmation and iss.deferred:
                 result = "отложен"
             elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                 result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
             tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
             tmp.append(
-                Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + fractions[0].units + "</font>",
+                Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + f_units + "</font>",
                           styleSheet["BodyText"]))
 
             tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
@@ -1619,16 +1623,18 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                                  styleSheet["BodyText"])]
                 result = "не завершено"
                 ref = {"": ""}
+                f_units = f.units
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     r = Result.objects.get(issledovaniye=iss, fraction=f)
                     ref = r.get_ref()
                     result = r.value
+                    f_units = r.get_units()
                 if not iss.doc_confirmation and iss.deferred:
                     result = "отложен"
                 elif iss.time_save and maxdate != str(dateformat.format(iss.time_save, settings.DATE_FORMAT)):
                     result += "<br/>" + str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
                 tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", styleSheet["BodyText"]))
-                tmp.append(Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + f.units + "</font>",
+                tmp.append(Paragraph('<font face="OpenSans" size="7">&nbsp;&nbsp;&nbsp;' + f_units + "</font>",
                                      styleSheet["BodyText"]))
                 tmp.append(Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
                                      styleSheet["BodyText"]))

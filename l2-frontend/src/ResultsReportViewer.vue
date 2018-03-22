@@ -52,10 +52,10 @@
             <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
             <span v-if="r.not_norm_dir === 'n_down'">&darr;</span>
             <span v-if="r.not_norm_dir === 'down'">&darr;&darr;</span>
-            {{r.value}}
+            {{r.value}} <span class="units">{{r.units}}</span>
           </td>
           <td v-if="r.active_ref.r">{{r.active_ref.r}}</td>
-          <td v-else colspan="2">{{r.value}}</td>
+          <td v-else colspan="2">{{r.value}} <span class="units">{{r.units}}</span></td>
           <td><a href="#" @click.prevent="print_results(r.direction)" title="Печать результатов направления">{{r.direction}}</a>
           </td>
         </tr>
@@ -180,6 +180,15 @@
   .research {
     font-size: 12px;
     word-break: break-word!important;
+  }
+
+  .units {
+    font-size: 12px;
+    color: #8d8d8d;
+  }
+
+  td:hover .units {
+    color: #000
   }
 
   .not_norm {

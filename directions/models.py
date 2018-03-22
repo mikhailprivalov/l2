@@ -505,11 +505,18 @@ class Result(models.Model):
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
     ref_m = JSONField(default=None, blank=True, null=True, help_text="Референсы М")
     ref_f = JSONField(default=None, blank=True, null=True, help_text="Референсы Ж")
+    units = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Единицы измерения")
     ref_title = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Референсы Название")
     ref_about = models.TextField(default=None, blank=True, null=True, help_text="Референсы Описание")
 
     def __str__(self):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
+
+    def get_units(self):
+        if not self.units:
+            self.units = self.fraction.units
+            self.save()
+        return self.units
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False):
         if (not self.ref_title and not fromsave) or re_save:
