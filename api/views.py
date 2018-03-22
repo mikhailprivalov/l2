@@ -1409,6 +1409,7 @@ def directions_results_report(request):
     data = []
     request_data = json.loads(request.body)
     individual_pk = request_data.get("individual", -1)
+    slog.Log(key=str(individual_pk), type=20000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     params = request_data.get("params", [])
     date_start = request_data["date_start"].split(".")
     date_end = request_data["date_end"].split(".")
