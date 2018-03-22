@@ -1424,8 +1424,9 @@ def directions_results_report(request):
             if param["is_paraclinic"]:
                 if ParaclinicInputGroups.objects.filter(pk=ppk).exists():
                     g = ParaclinicInputGroups.objects.get(pk=ppk)
-                    res = []
-                    for i in directions.Issledovaniya.objects.filter(research__paraclinicinputgroups=g):
+                    for i in directions.Issledovaniya.objects.filter(research__paraclinicinputgroups=g,
+                                                                     time_confirmation__isnull=False):
+                        res = []
                         for r in directions.ParaclinicResult.objects.filter(field__group=g,
                                                                             issledovaniye=i).order_by("field__order"):
                             if r.value == "":
@@ -1441,7 +1442,7 @@ def directions_results_report(request):
                                      "date": timezone.localtime(i.time_confirmation).strftime('%d.%m.%Y'),
                                      "timestamp": int(timezone.localtime(i.time_confirmation).timestamp()),
                                      "value": "; ".join(res),
-                                     "is_norm": "norm",
+                                     "is_norm": "normal",
                                      "not_norm_dir": "",
                                      "delta": 0,
                                      "active_ref": {},
