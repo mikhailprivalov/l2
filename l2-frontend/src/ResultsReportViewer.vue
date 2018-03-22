@@ -14,18 +14,19 @@
                 @click="load_history" v-if="individual_pk > -1 && params.length > 0">
           <i class="glyphicon glyphicon-list-alt"></i> Загрузить данные
         </button>
-        <button class="btn btn-blue-nb btn-ell"
+        <!--<button class="btn btn-blue-nb btn-ell"
                 style="display: inline-block;vertical-align: top;border-radius: 0;width: auto;"
                 title="Построить графики"
                 v-if="rows.length > 0" @click="build_graphs">
           <i class="glyphicon glyphicon-flash"></i> Построить графики
-        </button>
+        </button>-->
       </div>
     </div>
     <div class="content-picker" v-if="rows.length > 0">
       <table class="table table-bordered table-smm">
         <colgroup>
           <col width="90">
+          <col width="120">
           <col>
           <col>
           <col width="120">
@@ -34,16 +35,18 @@
         <thead>
         <tr>
           <th>Дата</th>
+          <th>Исследование</th>
           <th>Параметр</th>
           <th>Значение</th>
           <th>Референс</th>
-          <th>Направление</th>
+          <th>Результат</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="r in rows" :class="{not_norm: r.is_norm !== 'normal'}">
           <td>{{r.date}}</td>
-          <td>{{get_param_name(r.research, r.pk)}}</td>
+          <td class="research">{{get_param_name(r.research, r.pk).research}}</td>
+          <td>{{get_param_name(r.research, r.pk).title}}</td>
           <td v-if="r.active_ref.r" class="v-field">
             <span v-if="r.not_norm_dir === 'n_up'">&uarr;</span>
             <span v-if="r.not_norm_dir === 'up'">&uarr;&uarr;</span>
@@ -62,19 +65,19 @@
     <div class="content-none" v-else>
       Нет данных
     </div>
-    <report-chart-viewer v-if="show_charts" :rows_data="rows"/>
+    <!--<report-chart-viewer v-if="show_charts" :directory="params_titles" :rows_data="rows"/>-->
   </div>
 </template>
 
 <script>
   import DateRange from './ui-cards/DateRange'
-  import ReportChartViewer from './ReportChartViewer'
+  // import ReportChartViewer from './ReportChartViewer'
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
   import moment from 'moment'
 
   export default {
-    components: {DateRange, ReportChartViewer},
+    components: {DateRange, /*ReportChartViewer*/},
     name: 'results-report-viewer',
     props: {
       individual_pk: {
@@ -107,15 +110,23 @@
       })
     },
     methods: {
-      get_param_name(rpk, ppk) {
-        if (this.params_directory.hasOwnProperty(rpk)) {
+      params_titles() {
+        let d = {}
+        for (let rpk of Object.keys(this.params_directory)) {
+          if (!d.hasOwnProperty(rpk))
+            d[rpk] = {}
           for (let p of this.params_directory[rpk].params) {
-            if (p.pk === ppk) {
-              return p.title
-            }
+            d[rpk][p.pk] = {title: p.title, research: this.params_directory[rpk].short_title}
           }
         }
-        return ''
+        return d
+      },
+      get_param_name(rpk, ppk) {
+        let pt = this.params_titles()
+        if (pt.hasOwnProperty(rpk) && pt[rpk].hasOwnProperty(ppk)) {
+          return pt[rpk][ppk]
+        }
+        return {title: '', research: ''}
       },
       build_graphs() {
         this.show_charts = true
@@ -162,7 +173,13 @@
 
     td, th {
       padding: 2px;
+      word-break: break-all;
     }
+  }
+
+  .research {
+    font-size: 12px;
+    word-break: break-word!important;
   }
 
   .not_norm {

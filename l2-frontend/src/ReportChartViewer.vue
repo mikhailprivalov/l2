@@ -4,7 +4,7 @@
     <div slot="body" style="min-width: 800px;">
       // TODO
     </div>
-    <div slot="footer" class="text-center">
+    <div slot="footer">
       // TODO
     </div>
   </modal>
@@ -19,7 +19,10 @@
     props: {
       rows_data: {
         type: Array
-      }
+      },
+      directory: {
+        type: Object
+      },
     },
     computed: {
       params_types() {

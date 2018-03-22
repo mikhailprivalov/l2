@@ -111,6 +111,13 @@
     },
     created() {
       let vm = this
+      let params = new URLSearchParams(window.location.search)
+      let individual_pk = params.get('individual_pk')
+      if (individual_pk) {
+        window.history.pushState('', '', window.location.href.split('?')[0])
+        this.query = 'individual_pk:' + individual_pk
+        this.search_after_loading = true
+      }
 
       this.$root.$on('search', () => {
         vm.search()

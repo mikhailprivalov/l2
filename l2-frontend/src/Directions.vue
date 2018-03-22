@@ -3,8 +3,9 @@
     <div id="cont_left" class="split split-horizontal">
       <div id="left_top" class="split content scrolldown">
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
-          <div v-if="can_create_tickets" slot="for_card" class="text-right">
-            <a :href="ticket_url">Создать статталон</a>
+          <div slot="for_card" class="text-right">
+            <a :href="report_url" target="_blank" class="fli">Отчёт по результатам</a>
+            <a v-if="can_create_tickets" :href="ticket_url" class="fli">Создать статталон</a>
             <div v-if="selected_researches.length > 0"
                  style="margin-top: 5px;text-align: left">
               <table class="table table-bordered lastresults">
@@ -123,6 +124,9 @@
       ticket_url() {
         return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
       },
+      report_url() {
+        return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}`
+      },
       can_create_tickets() {
         if ('groups' in this.$store.getters.user_data) {
           for (let g of this.$store.getters.user_data.groups) {
@@ -160,5 +164,14 @@
     /deep/ a:hover {
       text-decoration: none;
     }
+  }
+
+  .fli {
+    text-decoration: underline;
+    margin-left: 5px;
+  }
+
+  .fli:hover {
+    text-decoration: none;
   }
 </style>

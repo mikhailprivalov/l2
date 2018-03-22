@@ -698,6 +698,7 @@ def researches_params(request):
             for f in Fractions.objects.filter(research=research).order_by("sort_weight"):
                 params.append({"pk": f.pk, "title": f.title})
         response["researches"].append({"pk": research.pk, "title": research.title,
+                                       "short_title": research.get_title(),
                                        "params": params, "is_paraclinic": research.is_paraclinic,
                                        "selected_params": []})
     return JsonResponse(response)
@@ -1421,7 +1422,31 @@ def directions_results_report(request):
         for param in params:
             ppk = param["pk"]
             if param["is_paraclinic"]:
-                pass  # TODO: обработка групп параклиники
+                if ParaclinicInputGroups.objects.filter(pk=ppk).exists():
+                    g = ParaclinicInputGroups.objects.get(pk=ppk)
+                    res = []
+                    for i in directions.Issledovaniya.objects.filter(research__paraclinicinputgroups=g):
+                        for r in directions.ParaclinicResult.objects.filter(field__group=g,
+                                                                            issledovaniye=i).order_by("field__order"):
+                            if r.value == "":
+                                continue
+                            res.append((r.field.title + ": " if r.field.title != "" else "") + r.value)
+
+                        if len(res) == 0:
+                            continue
+
+                        paramdata = {"research": i.research.pk,
+                                     "pk": ppk,
+                                     "order": g.order,
+                                     "date": timezone.localtime(i.time_confirmation).strftime('%d.%m.%Y'),
+                                     "timestamp": int(timezone.localtime(i.time_confirmation).timestamp()),
+                                     "value": "; ".join(res),
+                                     "is_norm": "norm",
+                                     "not_norm_dir": "",
+                                     "delta": 0,
+                                     "active_ref": {},
+                                     "direction": i.napravleniye.pk}
+                        data.append(paramdata)
             else:
                 if Fractions.objects.filter(pk=ppk).exists():
                     f = Fractions.objects.get(pk=ppk)
@@ -1441,14 +1466,14 @@ def directions_results_report(request):
                                 if spl[0] >= x:
                                     not_norm_dir = "down"
                                     nx = spl[0] - x
-                                    n10 = spl[0] * 0.1
+                                    n10 = spl[0] * 0.2
                                     if nx <= n10:
                                         not_norm_dir = "n_down"
                                     delta = nx
                                 elif spl[1] <= x:
                                     not_norm_dir = "up"
                                     nx = x - spl[1]
-                                    n10 = spl[1] * 0.1
+                                    n10 = spl[1] * 0.2
                                     if nx <= n10:
                                         not_norm_dir = "n_up"
                                     delta = nx
