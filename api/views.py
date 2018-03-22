@@ -1217,6 +1217,11 @@ def directions_paraclinic_result(request):
         if with_confirm:
             iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()
+
+        if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
+            iss.napravleniye.visit_who_mark = request.user.doctorprofile
+            iss.napravleniye.visit_date = timezone.now()
+            iss.napravleniye.save()
         iss.save()
         response["ok"] = True
         slog.Log(key=pk, type=13, body=json.dumps(delete_keys_from_dict(request_data,
