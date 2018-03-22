@@ -35,7 +35,11 @@
       </tr>
       </tbody>
     </table>
-    <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
+    <slot name="for_card" v-if="loaded" style="margin-top: 5px">
+      <div class="text-right">
+      <a :href="directions_url" class="fli" v-if="return_base && return_card">Вернуться в направления</a>
+      </div>
+    </slot>
     <slot name="for_all" style="margin-top: 5px"/>
     <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько пациентов</span>
@@ -106,17 +110,25 @@
         founded_individuals: [],
         selected_individual: {},
         loaded: false,
-        search_after_loading: false
+        search_after_loading: false,
+        return_base: null,
+        return_card: null
       }
     },
     created() {
       let vm = this
       let params = new URLSearchParams(window.location.search)
       let individual_pk = params.get('individual_pk')
+      let base_pk = params.get('base_pk')
+      let card_pk = params.get('card_pk')
       if (individual_pk) {
         window.history.pushState('', '', window.location.href.split('?')[0])
         this.query = 'individual_pk:' + individual_pk
         this.search_after_loading = true
+        if (base_pk && card_pk) {
+          this.return_base = base_pk
+          this.return_card = card_pk
+        }
       }
 
       this.$root.$on('search', () => {
@@ -131,6 +143,9 @@
       }
     },
     computed: {
+      directions_url() {
+        return `/mainmenu/directions?base_pk=${this.return_base}&card_pk=${this.return_card}`
+      },
       normalized_query() {
         return this.query.trim()
       },
@@ -175,6 +190,9 @@
           $(this).trigger('blur')
         })
         let vm = this
+        if (!this.query.includes('individual_pk:')) {
+          this.return_base = this.return_card = null
+        }
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента...'}).then()
         patients_point.searchIndividual(this.query).then((result) => {
           vm.clear()
@@ -244,5 +262,14 @@
         }
       }
     }
+  }
+
+  .fli {
+    text-decoration: underline;
+    margin-left: 5px;
+  }
+
+  .fli:hover {
+    text-decoration: none;
   }
 </style>

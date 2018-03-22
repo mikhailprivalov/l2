@@ -4,7 +4,7 @@
       <div id="left_top" class="split content scrolldown">
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
           <div slot="for_card" class="text-right">
-            <a :href="report_url" target="_blank" class="fli">Отчёт по результатам</a>
+            <a :href="report_url" class="fli">Отчёт по результатам</a>
             <a v-if="can_create_tickets" :href="ticket_url" class="fli">Создать статталон</a>
             <div v-if="selected_researches.length > 0"
                  style="margin-top: 5px;text-align: left">
@@ -125,7 +125,7 @@
         return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
       },
       report_url() {
-        return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}`
+        return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
       },
       can_create_tickets() {
         if ('groups' in this.$store.getters.user_data) {
