@@ -538,4 +538,8 @@
   .nob {
     border-radius: 0;
   }
+
+  /deep/ .v-collapse-content-end {
+    max-height: 10000px !important;
+  }
 </style>

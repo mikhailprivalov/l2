@@ -187,7 +187,7 @@
     color: #8d8d8d;
   }
 
-  td:hover .units {
+  tr:hover .units {
     color: #000
   }
 

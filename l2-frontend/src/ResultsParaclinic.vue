@@ -77,7 +77,8 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}">
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}"
+                   @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
@@ -138,7 +139,8 @@
         pk: '',
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
-        directions_history: []
+        directions_history: [],
+        prev_scroll: 0
       }
     },
     watch: {
@@ -150,6 +152,19 @@
       this.load_history()
     },
     methods: {
+      enter_field($e) {
+        this.prev_scroll = $('.results-editor').scrollTop()
+        let $elem = $($e.target)
+        $elem.addClass('open-field')
+      },
+      leave_field($e) {
+        let oh = $('.results-editor > div')[0].offsetHeight
+        let sh = $('.results-editor > div')[0].scrollHeight
+        if (sh > oh)
+          $('.results-editor').scrollTo(this.prev_scroll)
+        let $elem = $($e.target)
+        $elem.removeClass('open-field')
+      },
       load_history() {
         let vm = this
         vm.directions_history = []
@@ -416,7 +431,7 @@
 
     overflow: visible;
 
-    &:not(.disabled):hover {
+    &.open-field:not(.disabled) {
       background-color: #efefef;
       .input-values {
         overflow: visible !important;
@@ -490,6 +505,7 @@
     cursor: pointer;
     min-width: 20px;
     text-align: center;
+    word-break: break-word;
   }
 
   .input-value:hover {
