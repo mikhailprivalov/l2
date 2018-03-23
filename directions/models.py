@@ -200,6 +200,22 @@ class IstochnikiFinansirovaniya(models.Model):
         verbose_name_plural = 'Источники финансирования'
 
 
+class Diagnoses(models.Model):
+    M = (
+        (0, "Диапазон"),
+        (1, "Группа"),
+        (2, "Значение"),
+    )
+    code = models.CharField(max_length=255, db_index=True)
+    title = models.CharField(max_length=255)
+    parent = models.CharField(max_length=255, null=True, db_index=True)
+    d_type = models.CharField(max_length=255, db_index=True)
+    m_type = models.IntegerField(choices=M, db_index=True)
+
+    def __str__(self):
+        return "{} {}".format(self.code, self.title)
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений

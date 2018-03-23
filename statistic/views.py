@@ -82,7 +82,77 @@ def statistic_xls(request):
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
-    if tp == "statistics-tickets-print":
+    if tp == "statistics-visits":
+        import datetime
+        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
+                                   int(date_start_o.split(".")[0]))
+        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
+                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        t = request.GET.get("t", "sum")
+        fio = request.user.doctorprofile.fio
+        dep = request.user.doctorprofile.podrazdeleniye.get_title()
+        dirs = Napravleniya.objects.filter(visit_date__range=(date_start, date_end,),
+                                           visit_who_mark=request.user.doctorprofile).order_by("visit_date")
+
+        if t == "sum":
+            response['Content-Disposition'] = str.translate("attachment; filename='Суммарный отчёт по посещениям.xls'",
+                                                            tr)
+            font_style = xlwt.XFStyle()
+            font_style.alignment.wrap = 1
+            font_style.borders = borders
+
+            font_style_b = xlwt.XFStyle()
+            font_style_b.alignment.wrap = 1
+            font_style_b.font.bold = True
+            font_style_b.borders = borders
+
+            ws = wb.add_sheet("Посещения")
+            row_num = 0
+            row = [
+                (fio, 7000),
+                (dep, 7000)
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num][0], font_style)
+                ws.col(col_num).width = row[col_num][1]
+            row_num += 1
+            row = [
+                date_start_o + " - " + date_end_o,
+                ""
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
+            row_num += 1
+            row = [
+                "",
+                ""
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style if col_num > 0 else font_style_b)
+            row_num += 1
+            row = [
+                "Услуга",
+                "Количество"
+            ]
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style_b)
+            row_num += 1
+            iss = {}
+            for d in dirs:
+                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title"):
+                    if i.research.title not in iss:
+                        iss[i.research.title] = 0
+                    iss[i.research.title] += 1
+            for k in iss:
+                row = [
+                    k,
+                    iss[k],
+                ]
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                row_num += 1
+
+    elif tp == "statistics-tickets-print":
         import datetime
 
         date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),

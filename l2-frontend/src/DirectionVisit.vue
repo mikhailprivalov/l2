@@ -92,7 +92,9 @@
             <date-field style="width: 50%;display: inline-block;float: right;border-radius: 0 4px 0 0;margin: 0"
                         :val.sync="journal_date" :def="journal_date"/>
             <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span></div>
-          <div class="panel-body">
+          <div class="panel-body" style="padding-top: 5px">
+            <div class="text-right" style="margin-bottom: 5px"><a href="#" class="fli" @click.prevent="show_modal">создание
+              отчёта</a></div>
             <div v-if="journal_data.length === 0" class="text-center">
               нет данных
             </div>
@@ -118,13 +120,38 @@
         </div>
       </div>
     </div>
+    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
+      <span slot="header">Настройка отчёта</span>
+      <div slot="body">
+        <span>Период: </span>
+        <div style="width: 186px;display: inline-block;vertical-align: middle">
+          <date-range v-model="date_range"/>
+        </div>
+      </div>
+      <div slot="footer" class="text-center">
+        <div class="row">
+          <!--<div class="col-xs-6">
+            <button type="button" @click="report('humans')" class="btn btn-primary-nb btn-blue-nb btn-ell">
+              Отчёт по людям
+            </button>
+          </div>-->
+          <div class="col-xs-6">
+            <button type="button" @click="report('sum')" class="btn btn-primary-nb btn-blue-nb btn-ell">
+              Суммарный отчёт
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
   </div>
 </template>
 
 <script>
   import DateField from './DateField.vue'
+  import DateRange from './ui-cards/DateRange'
   import directionsPoint from './api/directions-point'
   import * as action_types from './store/action-types'
+  import Modal from './ui-cards/Modal'
   import moment from 'moment'
 
   function TryParseInt(str, defaultValue) {
@@ -142,19 +169,23 @@
   export default {
     name: 'direction-visit',
     components: {
-      DateField
+      DateField,
+      Modal,
+      DateRange
     },
     data() {
       return {
         loaded_pk: -1,
         direction: '',
         in_load: false,
+        showModal: false,
         researches: [],
         visit_status: false,
         visit_date: '',
         direction_data: {},
         journal_date: moment().format('DD.MM.YYYY'),
-        journal_data: []
+        journal_data: [],
+        date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       }
     },
     computed: {
@@ -171,6 +202,17 @@
       this.load_journal()
     },
     methods: {
+      report(t) {
+        window.open(`/statistic/xls?type=statistics-visits&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}&t=${t}`, '_blank')
+      },
+      hide_modal() {
+        this.showModal = false
+        this.$refs.modal.$el.style.display = 'none'
+      },
+      show_modal() {
+        this.$refs.modal.$el.style.display = 'flex'
+        this.showModal = true
+      },
       cancel() {
         this.loaded_pk = -1
         this.researches = []
@@ -268,5 +310,14 @@
 
   .dirtb td:first-child {
     padding-left: 10px;
+  }
+
+  .fli {
+    text-decoration: underline;
+    margin-left: 5px;
+  }
+
+  .fli:hover {
+    text-decoration: none;
   }
 </style>
