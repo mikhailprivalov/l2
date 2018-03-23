@@ -20,6 +20,7 @@
           <col width="140">
           <col width="140">
           <col width="100">
+          <col width="140">
           <col width="75">
         </colgroup>
         <thead>
@@ -33,6 +34,7 @@
           <th>Результат обращения</th>
           <th>Исход</th>
           <th>Дисп. учёт</th>
+          <th>Врач</th>
           <th></th>
         </tr>
         </thead>
@@ -50,6 +52,7 @@
             <col width="140">
             <col width="140">
             <col width="100">
+            <col width="140">
             <col width="75">
           </colgroup>
           <tbody>
@@ -69,6 +72,7 @@
             <td>{{row.result}}</td>
             <td>{{row.outcome}}</td>
             <td>{{row.disp}}</td>
+            <td class="doc">{{row.doc}}<br/>{{row.department}}</td>
 
             <td class="control-buttons">
               <div class="flex-wrap" v-if="row.can_invalidate">
@@ -210,5 +214,10 @@
         padding: 2px;
       }
     }
+  }
+
+  .doc {
+    font-size: 12px;
+    word-break: break-word;
   }
 </style>

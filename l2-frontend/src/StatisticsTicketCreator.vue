@@ -77,6 +77,9 @@
       card_pk: {
         type: Number
       },
+      ofname: {
+        type: Number
+      },
     },
     data() {
       return {
@@ -212,6 +215,7 @@
           vm.outcome,
           vm.disp_diagnos_val,
           vm.exclude_val,
+          vm.ofname,
         )
           .then(() => {
             vm.clear()

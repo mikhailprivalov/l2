@@ -398,7 +398,7 @@ def printDirection(c, n, dir):
                      "Всего назначено: " + str(len(issledovaniya)))
 
     nn = 0
-    if dir.doc_who_create:
+    if dir.doc_who_create and dir.doc_who_create != dir.doc:
         nn = 9
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
                      "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))

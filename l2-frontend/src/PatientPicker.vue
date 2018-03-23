@@ -50,8 +50,8 @@
           </div>
         </td>
       </tr>
-      <tr v-if="is_operator && directive_from_need === 'true'">
-        <td class="table-header-row">Направлять от:</td>
+      <tr v-if="directive_from_need === 'true'">
+        <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
         <td class="table-content-row select-td">
           <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
         </td>
@@ -156,6 +156,7 @@
         ],
         directive_department: '-1',
         directive_doc: '-1',
+        ofname_to_set: '-1',
         local_directive_departments: [],
         directive_departments_select: [],
         showModal: false,
@@ -177,7 +178,7 @@
           vm.directive_departments_select.push({label: dep.title, value: dep.pk})
         }
 
-        if (vm.local_directive_departments.length > 0) {
+        if (vm.local_directive_departments.length > 0 && vm.ofname_to_set === '-1') {
           for (let dep of vm.local_directive_departments) {
             if (dep.pk === vm.$store.getters.user_data.department.pk) {
               vm.directive_department = dep.pk + ''
@@ -205,19 +206,7 @@
         this.check_base()
       },
       directive_department() {
-        let dpk = -1
-        if (this.directive_department !== '-1') {
-          for (let d of this.directive_docs_select) {
-            if (d.value === this.$store.getters.user_data.doc_pk) {
-              dpk = d.value
-              break
-            }
-          }
-          if (dpk === -1 && this.directive_docs_select.length > 0) {
-            dpk = this.directive_docs_select[0].value
-          }
-        }
-        this.directive_doc = dpk.toString()
+        this.update_ofname()
       },
       directive_doc() {
         this.emit_input()
@@ -229,6 +218,9 @@
         this.emit_input()
       },
       inLoading() {
+        if (!this.inLoading) {
+          this.update_ofname()
+        }
         if (!this.inLoading && this.search_after_loading) {
           this.search()
         }
@@ -317,6 +309,42 @@
         this.showModal = false
         this.$refs.modal.$el.style.display = 'none'
       },
+      update_ofname() {
+        if (this.ofname_to_set === '-2' || this.inLoading)
+          return
+        if (this.ofname_to_set !== '-1') {
+          let dps = Object.keys(this.directive_from_departments)
+          if (dps.length > 0 && !this.inLoading) {
+            let onts = this.ofname_to_set
+            this.ofname_to_set = '-1'
+            for (let d of dps) {
+              let users = this.directive_from_departments[d].docs
+              for (let u of users) {
+                if (u.pk.toString() === onts) {
+                  this.directive_department = d.toString()
+                  this.directive_doc = onts
+                  this.ofname_to_set = '-2'
+                  return
+                }
+              }
+            }
+          }
+          return
+        }
+        let dpk = -1
+        if (this.directive_department !== '-1') {
+          for (let d of this.directive_docs_select) {
+            if (d.value === this.$store.getters.user_data.doc_pk) {
+              dpk = d.value
+              break
+            }
+          }
+          if (dpk === -1 && this.directive_docs_select.length > 0) {
+            dpk = this.directive_docs_select[0].value
+          }
+        }
+        this.directive_doc = dpk.toString()
+      },
       select_base(pk) {
         this.base = pk
         this.emit_input()
@@ -335,6 +363,7 @@
           let rmis_uid = params.get('rmis_uid')
           let base_pk = params.get('base_pk')
           let card_pk = params.get('card_pk')
+          let ofname = params.get('ofname')
           if (rmis_uid) {
             window.history.pushState('', '', window.location.href.split('?')[0])
             for (let row of this.bases) {
@@ -350,6 +379,9 @@
             }
           } else if (base_pk) {
             window.history.pushState('', '', window.location.href.split('?')[0])
+            if (ofname) {
+              this.ofname_to_set = ofname
+            }
             for (let row of this.bases) {
               if (row.pk === parseInt(base_pk)) {
                 this.base = row.pk

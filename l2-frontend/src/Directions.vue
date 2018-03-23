@@ -122,7 +122,7 @@
         return this.selected_card.pk !== -1
       },
       ticket_url() {
-        return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
+        return `/mainmenu/statistics-tickets?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}`
       },
       report_url() {
         return `/mainmenu/results_report?individual_pk=${this.selected_card.individual_pk}&base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
@@ -130,7 +130,7 @@
       can_create_tickets() {
         if ('groups' in this.$store.getters.user_data) {
           for (let g of this.$store.getters.user_data.groups) {
-            if (g === 'Оформление статталонов') {
+            if (g === 'Оформление статталонов' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
               return true
             }
           }

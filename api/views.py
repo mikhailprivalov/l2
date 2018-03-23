@@ -1026,7 +1026,7 @@ def directions_results(request):
     return JsonResponse(result)
 
 
-@group_required("Оформление статталонов")
+@group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_types(request):
     result = {"visit": [{"pk": x.pk, "title": x.title} for x in VisitPurpose.objects.filter(hide=False).order_by("pk")],
               "result": [{"pk": x.pk, "title": x.title} for x in
@@ -1038,10 +1038,14 @@ def statistics_tickets_types(request):
     return JsonResponse(result)
 
 
-@group_required("Оформление статталонов")
+@group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_send(request):
     response = {"ok": True}
     rd = json.loads(request.body)
+    ofname = rd.get("ofname", -1)
+    doc = None
+    if ofname > -1 and users.DoctorProfile.objects.filter(pk=ofname).exists():
+        doc = users.DoctorProfile.objects.get(pk=ofname)
     t = StatisticsTicket(card=Card.objects.get(pk=rd["card_pk"]),
                          purpose=VisitPurpose.objects.get(pk=rd["visit"]),
                          result=ResultOfTreatment.objects.get(pk=rd["result"]),
@@ -1049,7 +1053,8 @@ def statistics_tickets_send(request):
                          first_time=rd["first_time"],
                          primary_visit=rd["primary_visit"],
                          dispensary_registration=int(rd["disp"]),
-                         doctor=request.user.doctorprofile,
+                         doctor=doc or request.user.doctorprofile,
+                         creator=request.user.doctorprofile,
                          outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
                          dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
                          dispensary_diagnos=rd["disp_diagnos"])
@@ -1058,7 +1063,7 @@ def statistics_tickets_send(request):
     return JsonResponse(response)
 
 
-@group_required("Оформление статталонов")
+@group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_get(request):
     response = {"data": []}
     request_data = json.loads(request.body)
@@ -1066,13 +1071,14 @@ def statistics_tickets_get(request):
     date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
     date_end = date_start + datetime.timedelta(1)
     n = 0
-    for row in StatisticsTicket.objects.filter(doctor=request.user.doctorprofile,
-                                               date__range=(date_start, date_end,)).order_by('pk'):
+    for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
         response["data"].append({
             "pk": row.pk,
             "n": n if not row.invalid_ticket else '',
+            "doc": row.doctor.get_fio(),
+            "department": row.doctor.podrazdeleniye.get_title(),
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),
             "purpose": row.purpose.title if row.purpose else "",
@@ -1090,11 +1096,11 @@ def statistics_tickets_get(request):
     return JsonResponse(response)
 
 
-@group_required("Оформление статталонов")
+@group_required("Оформление статталонов", "Лечащий врач", "Оператор лечащего врача")
 def statistics_tickets_invalidate(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
-    if StatisticsTicket.objects.filter(doctor=request.user.doctorprofile, pk=request_data.get("pk", -1)).exists():
+    if StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
             StatisticsTicket.objects.filter(pk=request_data["pk"]).update(
                 invalid_ticket=request_data.get("invalid", False))

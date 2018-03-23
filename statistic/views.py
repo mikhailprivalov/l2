@@ -31,7 +31,8 @@ def statistic_page(request):
     tubes = directory.Tubes.objects.all()  # Пробирки
     podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
-    statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name='Оформление статталонов').distinct()
+    statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов',
+                                                                                    'Лечащий врач']).distinct()
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
                                               "getters_material": json.dumps(
                                                   [{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
@@ -122,16 +123,20 @@ def statistic_xls(request):
             ("Исход", 4500),
             ("Диспансерный учёт", 4200),
             ("Диагноз диспансерного учёта", 4200),
+            ("Создатель талона", 7000),
         ]
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_b)
             ws.col(col_num).width = row[col_num][1]
         row_num += 1
 
-        for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False,
-                                                      doctor__pk__in=users).order_by("card__individual__family",
+        for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
+                Q(doctor__pk__in=users) | Q(creator=request.user.doctorprofile)).order_by("card__individual__family",
                                                                                      "doctor__fio",
                                                                                      "doctor__podrazdeleniye__title").order_by("date"):
+            if not ticket.creator:
+                ticket.creator = ticket.doctor
+                ticket.save()
             row = [
                 str(row_num),
                 ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
@@ -147,7 +152,8 @@ def statistic_xls(request):
                 "" if not ticket.outcome else ticket.outcome.title,
                 ticket.get_dispensary_registration_display()
                 + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
-                ticket.dispensary_diagnos
+                ticket.dispensary_diagnos,
+                ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)

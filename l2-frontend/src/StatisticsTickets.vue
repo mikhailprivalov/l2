@@ -2,14 +2,15 @@
   <div ref="root" class="split content">
     <div ref="ct" style="display: flex">
       <div ref="tl" class="split content">
-        <patient-picker v-model="selected_card" directive_from_need="false" search_results="false" history_n="false">
+        <patient-picker v-model="selected_card" directive_from_need="true" search_results="false" history_n="false">
           <div v-if="can_create_directions" slot="for_card" class="text-right">
             <a :href="directions_url">Создать направления</a>
           </div>
         </patient-picker>
       </div>
       <div ref="tr" class="split content" style="overflow: visible;display: flex;padding-bottom: 0">
-        <statistics-ticket-creator :base="selected_card.base" :card_pk="selected_card.pk"/>
+        <statistics-ticket-creator :base="selected_card.base"
+                                   :ofname="selected_card.ofname" :card_pk="selected_card.pk"/>
       </div>
     </div>
     <div ref="cb" class="split content" style="padding: 0;">
@@ -38,7 +39,7 @@
     },
     computed: {
       directions_url() {
-        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}`
+        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}`
       },
       can_create_directions() {
         if('groups' in this.$store.getters.user_data) {

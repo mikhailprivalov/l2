@@ -83,6 +83,7 @@ class StatisticsTicket(models.Model):
     dispensary_exclude_purpose = models.ForeignKey(ExcludePurposes, on_delete=models.SET_NULL,
                                                    help_text="Причина снятия", blank=True, null=True, default=None)
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, help_text="Врач")
+    creator = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, null=True, default=None, help_text="Создатель талона", related_name="creator")
     date = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
     invalid_ticket = models.BooleanField(default=False, blank=True, help_text='Статталон недействителен')
     outcome = models.ForeignKey(Outcomes, blank=True, null=True, on_delete=models.SET_NULL,
