@@ -110,7 +110,8 @@ def statistic_xls(request):
             row_num = 0
             row = [
                 (fio, 7000),
-                (dep, 7000)
+                (dep, 7000),
+                ("", 3000),
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num][0], font_style)
@@ -118,39 +119,51 @@ def statistic_xls(request):
             row_num += 1
             row = [
                 date_start_o + " - " + date_end_o,
-                ""
+                "",
+                "",
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
             row = [
                 "",
-                ""
+                "",
+                "",
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style if col_num > 0 else font_style_b)
             row_num += 1
             row = [
                 "Услуга",
-                "Количество"
+                "Источник финансирования",
+                "Количество",
             ]
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style_b)
             row_num += 1
             iss = {}
             for d in dirs:
-                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title"):
-                    if i.research.title not in iss:
-                        iss[i.research.title] = 0
-                    iss[i.research.title] += 1
+                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by(
+                        "napravleniye__istochnik_f"):
+                    rt = i.research.title
+                    istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.istochnik_f.title
+                    if rt not in iss:
+                        iss[rt] = {}
+
+                    if istf not in iss[rt]:
+                        iss[rt][istf] = 0
+
+                    iss[rt][istf] += 1
             for k in iss:
-                row = [
-                    k,
-                    iss[k],
-                ]
-                for col_num in range(len(row)):
-                    ws.write(row_num, col_num, row[col_num], font_style)
-                row_num += 1
+                for istf in iss[k]:
+                    row = [
+                        k,
+                        istf,
+                        iss[k][istf],
+                    ]
+                    for col_num in range(len(row)):
+                        ws.write(row_num, col_num, row[col_num], font_style)
+                    row_num += 1
 
     elif tp == "statistics-tickets-print":
         import datetime
