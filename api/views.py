@@ -187,6 +187,7 @@ def endpoint(request):
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
     data["app_name"] = "API key is incorrect"
+    pid = data.get("processing_id", "P")
     if models.Application.objects.filter(key=api_key).exists():
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
         if astm_user is None:
