@@ -276,9 +276,9 @@ def endpoint(request):
                         rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
                         if not rel.exists():
                             continue
-                            rel = models.RelationFractionASTM.objects.filter(fraction=fraction)
-                            if not rel.exists():
-                                continue
+                            # rel = models.RelationFractionASTM.objects.filter(fraction=fraction)
+                            # if not rel.exists():
+                            #     continue
                         rel = rel[0]
                         researches[k].append(rel.astm_field)
                 result["body"] = researches
