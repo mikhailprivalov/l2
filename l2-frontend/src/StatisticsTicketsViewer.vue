@@ -11,17 +11,17 @@
     <div class="content-picker">
       <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;margin-bottom: 0">
         <colgroup>
-          <col width="35">
-          <col width="230">
-          <col width="130">
-          <col width="75">
+          <col width="25">
+          <col width="170">
+          <col width="95">
+          <col width="55">
           <col>
+          <col width="55">
+          <col width="110">
+          <col width="110">
           <col width="75">
-          <col width="140">
-          <col width="140">
-          <col width="100">
-          <col width="140">
-          <col width="75">
+          <col width="110">
+          <col width="55">
         </colgroup>
         <thead>
         <tr>
@@ -43,17 +43,17 @@
         <table class="table table-responsive table-bordered table-condensed"
                style="table-layout: fixed;margin-bottom: 0">
           <colgroup>
-            <col width="35">
-            <col width="230">
-            <col width="130">
-            <col width="75">
+            <col width="25">
+            <col width="170">
+            <col width="95">
+            <col width="55">
             <col>
+            <col width="55">
+            <col width="110">
+            <col width="110">
             <col width="75">
-            <col width="140">
-            <col width="140">
-            <col width="100">
-            <col width="140">
-            <col width="75">
+            <col width="110">
+            <col width="55">
           </colgroup>
           <tbody>
           <tr v-for="row in data" :class="{invalid: row.invalid}">
@@ -175,6 +175,11 @@
     bottom: 0;
     left: 0;
     right: 0;
+    font-size: 10px;
+  }
+
+  .content-picker .btn-blue-nb {
+    font-size: 10px !important;
   }
 
   .top-picker .form-control, .top-picker .btn {
