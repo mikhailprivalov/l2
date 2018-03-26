@@ -275,6 +275,7 @@ def endpoint(request):
                                                              hide=False):
                         rel = models.RelationFractionASTM.objects.filter(fraction=fraction, application_api=app)
                         if not rel.exists():
+                            continue
                             rel = models.RelationFractionASTM.objects.filter(fraction=fraction)
                             if not rel.exists():
                                 continue
