@@ -1,6 +1,7 @@
 import time
 
 from django.db import models
+from django.utils import timezone
 
 from appconf.manager import SettingManager
 from clients.models import Card
@@ -85,6 +86,7 @@ class StatisticsTicket(models.Model):
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, help_text="Врач")
     creator = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, null=True, default=None, help_text="Создатель талона", related_name="creator")
     date = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
+    date_ticket = models.CharField(max_length=10, null=True, blank=True, default=None, help_text='Дата талона')
     invalid_ticket = models.BooleanField(default=False, blank=True, help_text='Статталон недействителен')
     outcome = models.ForeignKey(Outcomes, blank=True, null=True, on_delete=models.SET_NULL,
                                 help_text="Исход", default=None)
@@ -94,6 +96,12 @@ class StatisticsTicket(models.Model):
         ctp = time.mktime(self.date.timetuple()) + 8 * 60 * 60
         ctime = int(time.time())
         return ctime - ctp < rt
+
+    def get_date(self):
+        if not self.date_ticket:
+            self.date_ticket = timezone.localtime(self.date).strftime('%d.%m.%Y')
+            self.save()
+        return self.date_ticket
 
     class Meta:
         verbose_name = 'Статталон'

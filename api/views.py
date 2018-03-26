@@ -1058,7 +1058,8 @@ def statistics_tickets_send(request):
                          creator=request.user.doctorprofile,
                          outcome=Outcomes.objects.filter(pk=rd["outcome"]).first(),
                          dispensary_exclude_purpose=ExcludePurposes.objects.filter(pk=rd["exclude"]).first(),
-                         dispensary_diagnos=rd["disp_diagnos"])
+                         dispensary_diagnos=rd["disp_diagnos"],
+                         date_ticket=rd.get("date_ticket", None))
     t.save()
     Log(key="", type=7000, body=json.dumps(rd), user=request.user.doctorprofile).save()
     return JsonResponse(response)
@@ -1079,6 +1080,7 @@ def statistics_tickets_get(request):
             "pk": row.pk,
             "n": n if not row.invalid_ticket else '',
             "doc": row.doctor.get_fio(),
+            "date_ticket": row.get_date(),
             "department": row.doctor.podrazdeleniye.get_title(),
             "patinet": row.card.individual.fio(full=True),
             "card": row.card.number_with_type(),

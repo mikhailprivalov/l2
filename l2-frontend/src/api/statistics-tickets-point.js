@@ -12,7 +12,7 @@ async function getTicketsTypes() {
 }
 
 async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp,
-                          result, outcome, disp_diagnos, exclude, ofname) {
+                          result, outcome, disp_diagnos, exclude, ofname, date_ticket) {
   try {
     const response = await HTTP.post('statistics-tickets/send', {
       card_pk,
@@ -25,7 +25,8 @@ async function sendTicket(card_pk, visit, info, first_time, primary_visit, disp,
       outcome,
       disp_diagnos,
       exclude,
-      ofname
+      ofname,
+      date_ticket,
     })
     if (response.statusText === 'OK') {
       return response.data

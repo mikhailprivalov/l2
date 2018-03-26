@@ -12,7 +12,8 @@
       <table class="table table-responsive table-bordered table-condensed" style="table-layout: fixed;margin-bottom: 0">
         <colgroup>
           <col width="25">
-          <col width="170">
+          <col width="150">
+          <col width="60">
           <col width="95">
           <col width="55">
           <col>
@@ -27,6 +28,7 @@
         <tr>
           <th>№</th>
           <th>Пациент, карта</th>
+          <th>Дата талона</th>
           <th>Цель посещения</th>
           <th>Первич. приём</th>
           <th>Код диагноза (МКБ 10), виды услуг, виды травм</th>
@@ -44,7 +46,8 @@
                style="table-layout: fixed;margin-bottom: 0">
           <colgroup>
             <col width="25">
-            <col width="170">
+            <col width="150">
+            <col width="60">
             <col width="95">
             <col width="55">
             <col>
@@ -59,6 +62,7 @@
           <tr v-for="row in data" :class="{invalid: row.invalid}">
             <td>{{row.n}}</td>
             <td>{{row.patinet}}<br/>Карта: {{row.card}}</td>
+            <td>{{row.date_ticket}}</td>
             <td>{{row.purpose}}</td>
 
             <td v-if="row.primary">да</td>

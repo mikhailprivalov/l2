@@ -193,7 +193,8 @@ def statistic_xls(request):
         row_num = 0
         row = [
             ("№", 1200),
-            ("Дата, время", 3500),
+            ("Дата и время создания", 3500),
+            ("Дата талона", 3500),
             ("Подразделение", 7200),
             ("Врач", 7000),
             ("Карта", 3200),
@@ -223,6 +224,7 @@ def statistic_xls(request):
             row = [
                 str(row_num),
                 ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+                ticket.get_date(),
                 ticket.doctor.podrazdeleniye.title,
                 ticket.doctor.fio,
                 ticket.card.number_with_type(),
