@@ -381,7 +381,7 @@
                     <div class="row">
                         <div class="col-xs-6">
                             <label style="width: 100%">
-                                Пробирка:<br/><select class="form-control" style="width: 100%"
+                                Ёмкость:<br/><select class="form-control" style="width: 100%"
                                                       id="fillform-tubes"></select>
                             </label>
                         </div>
@@ -1422,7 +1422,7 @@
                     return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
                 });
 
-                const tmp_types = {"1": "направление", "0": "пробирка"};
+                const tmp_types = {"1": "направление", "0": "ёмкость"};
                 $("#search-field").attr("placeholder", `Загружено: ${tmp_types[type + ""]} ${id}`);
 
                 dir_active = data.napr_pk;
@@ -1474,7 +1474,7 @@
                     let t = "";
                     if (v.saved && v.is_norm !== "normal")
                         t = `title='${iss_isnorm[v.is_norm]}'`;
-                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/>${v.tube.pk !== ""? `<small>Пробирка: ${v.tube.pk}</small>`: sv}</li>`);
+                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/>${v.tube.pk !== ""? `<small>Ёмкость: ${v.tube.pk}</small>`: sv}</li>`);
 
                     const tubessplit = v.tube.pk.split(',');
                     $.each(tubessplit, function (k, vt) {
@@ -2432,7 +2432,7 @@
             if(dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis) {
                 alert("Результат уже был загружен в РМИС");
             }
-            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, пробирка №${tube}?${dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis? ' Результат уже был загружен в РМИС' : ''}`;
+            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, ёмкость №${tube}?${dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis? ' Результат уже был загружен в РМИС' : ''}`;
             let doreset = confirm(msg);
             if (doreset === false || doreset === null) {
                 return;
@@ -2449,7 +2449,7 @@
                         'theme': 'awesome ok',
                         'content': {
                             title: 'Подтверждение сброшено',
-                            message: `№${id} - ${rtitle}, пробирка №${tube}`,
+                            message: `№${id} - ${rtitle}, ёмкость №${tube}`,
                             info: '',
                             icon: 'fa fa-exclamation'
                         },
