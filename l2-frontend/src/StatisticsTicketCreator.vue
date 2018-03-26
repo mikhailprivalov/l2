@@ -57,7 +57,7 @@
 
     <div class="input-group flex-group">
       <span class="input-group-addon">Дата талона</span>
-      <date-field class="text-date-left" :val.sync="date_ticket" :def="date_ticket"/>
+      <date-field-2 class="text-date-left" v-model="date_ticket"/>
     </div>
 
     <button @click="create" class="btn btn-blue-nb" :disabled="card_pk === -1" style="margin-top: 10px;margin-bottom: 5px;width: 100%">
@@ -70,11 +70,11 @@
   import * as action_types from './store/action-types'
   import statistics_tickets_point from './api/statistics-tickets-point'
   import SelectPickerB from './SelectPickerB'
-  import DateField from './DateField.vue'
+  import DateField2 from './DateField2.vue'
   import moment from 'moment'
 
   export default {
-    components: {SelectPickerB, DateField},
+    components: {SelectPickerB, DateField2},
     name: 'statistics-ticket-creator',
     props: {
       base: {
