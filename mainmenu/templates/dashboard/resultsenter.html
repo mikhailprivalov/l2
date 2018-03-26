@@ -109,35 +109,41 @@
             </div>
         </div>
         <table class="table table-bordered table-condensed table-responsive" id="dir_info">
+            <colgroup>
+                <col width="26%">
+                <col width="32%">
+                <col width="21%">
+                <col width="21%">
+            </colgroup>
             <tr>
-                <th style="width: 34%">Направление</th>
-                <td style="width: 16%"><span class="dir-datafield" id="dir_num"></span></td>
-                <th style="width: 34%">Ист.фин.</th>
-                <td style="width: 16%"><span class="dir-datafield" id="fin_source"></span></td>
+                <th>№</th>
+                <td><span class="dir-datafield" id="dir_num"></span></td>
+                <th>Финанс.</th>
+                <td><span class="dir-datafield" id="fin_source"></span></td>
             </tr>
             <tr>
-                <th style="width: 34%">ФИО Пациента</th>
-                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="dir_client_fio"></span></td>
+                <th>Пациент</th>
+                <td colspan="3"><span class="dir-datafield" id="dir_client_fio"></span></td>
             </tr>
             <tr>
-                <th style="width: 34%">Пол</th>
-                <td style="width: 16%"><span class="dir-datafield" id="client_sex"></span></td>
-                <th style="width: 34%">Возраст</th>
-                <td style="width: 16%"><span class="dir-datafield" id="client_vozrast"></span></td>
+                <th>Пол</th>
+                <td><span class="dir-datafield" id="client_sex"></span></td>
+                <th>Возраст</th>
+                <td><span class="dir-datafield" id="client_vozrast"></span></td>
             </tr>
             <tr>
-                <th style="width: 34%">Карта</th>
-                <td style="width: 16%"><span class="dir-datafield" id="client_cardnum"></span></td>
-                <th style="width: 34%">История</th>
-                <td style="width: 16%"><span class="dir-datafield" id="client_hisnum"></span></td>
+                <th>Карта</th>
+                <td><span class="dir-datafield" id="client_cardnum"></span></td>
+                <th>Истор.</th>
+                <td title="Номер истории"><span class="dir-datafield" id="client_hisnum"></span></td>
             </tr>
             <tr title="Лечащий врач">
-                <th style="width: 34%">Леч. врач</th>
-                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="directioner"></span></td>
+                <th >Леч. врач</th>
+                <td colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
             <tr>
-                <th style="width: 34%">Отделение</th>
-                <td style="width: 66%" colspan="3"><span class="dir-datafield" id="otd"></span></td>
+                <th >Отделение</th>
+                <td colspan="3"><span class="dir-datafield" id="otd"></span></td>
             </tr>
         </table>
         <div class="fastlinks" id="loaded-buttons" style="min-height: 20px">
@@ -635,9 +641,13 @@
             color: #000
         }
 
+        #dir_info {
+            table-layout: fixed;
+            font-size: 12px;
+        }
+
         #dir_info td, #dir_info th {
-            padding: 5px;
-            font-size: 14px;
+            padding: 3px;
             word-wrap: break-word
         }
 
