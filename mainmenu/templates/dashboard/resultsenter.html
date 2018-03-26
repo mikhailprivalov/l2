@@ -681,11 +681,23 @@
 
         .fastlinks a {
             cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fastlinks a:nth-child(1) {
+            min-width: 125px;
+        }
+
+        .fastlinks a:nth-child(2) {
+            min-width: 60px;
         }
 
         .fastlinks {
             margin-top: -13px;
             margin-bottom: 5px;
+            display: flex;
+            white-space: nowrap;
         }
 
         #issledovaniya .fastlinks {
