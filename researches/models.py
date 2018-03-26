@@ -34,5 +34,5 @@ class Tubes(models.Model):
         return pr
 
     class Meta:
-        verbose_name = 'Вид пробирки'
-        verbose_name_plural = 'Виды пробирок'
+        verbose_name = 'Вид ёмкости'
+        verbose_name_plural = 'Виды ёмкостей'

@@ -40,10 +40,10 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="tube_directory_Modal">Справочник пробирок</h4>
+                    <h4 class="modal-title" id="tube_directory_Modal">Справочник ёмкостей</h4>
                 </div>
                 <div class="modal-body">
-                    <h5>Выберете пробирку из списка для привязки к анализу:</h5>
+                    <h5>Выберете ёмкость из списка для привязки к анализу:</h5>
 
                     <div id="modaltubes"></div>
                 </div>
@@ -518,26 +518,26 @@
             $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Настройка дополнительных параметров</a></span>');
             $(form).append('<span style="float: right;padding-top:15px"><a href="#" onclick="showref(); return false;" class="btn btn-default btn-blue2-nb" id="refhidden">Развернуть референсы</a><a href="#" onclick="hideref(); return false;" class="btn btn-default btn-blue2-nb" id="refshowed">Свернуть референсы</a></span>');
-            $("<h5></h5>").text("Фракции, сгруппированые по пробиркам").appendTo($(form));
+            $("<h5></h5>").text("Фракции, сгруппированые по ёмкостям").appendTo($(form));
             //$("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             const p = $("<p style='padding: 5px' id='tubes'></p>").appendTo($(form));
             $(form).append('<span style="float: right"><div onclick="clear_form();" class="btn btn-default save-btn">Отмена</div> <div onclick="save();" class="btn btn-default save-btn">Сохранить</div></span>');
 
             const div2 = $("<div id='select-div'></div>");
             $(form).append(div2);
-            $(div2).append("<span>Присвоить пробирку к анализу:&nbsp;&nbsp;</span>");
+            $(div2).append("<span>Присвоить ёмкость к анализу:&nbsp;&nbsp;</span>");
             const span = $("<span class='tubeselect'></span>").appendTo($(div2));
             $("<button class='btn btn-default' onclick='selectfromdirectory(); return false;' id='directory-select'></button>").text("Выбрать из справочника").appendTo($(span));
-            $("<div class='btn btn-default drophere'></div>").text("Перетащите пробирку сюда").appendTo($(span));
+            $("<div class='btn btn-default drophere'></div>").text("Перетащите ёмкость сюда").appendTo($(span));
             $(".drophere").droppable({
                 accept: ".tube",
                 hoverClass: "hover",
                 drop: droptube,
                 over: function (event, ui) {
-                    $(this).text("Отпустите пробирку здесь");
+                    $(this).text("Отпустите ёмкость здесь");
                 },
                 out: function (event, ui) {
-                    $(this).text("Перетащите пробирку сюда");
+                    $(this).text("Перетащите ёмкость сюда");
                 }
             });
             showtubes();
@@ -571,7 +571,7 @@
 
         /** Событие перетаскивания пробирки */
         function droptube(event, ui) {
-            $(this).text("Перетащите пробирку сюда");
+            $(this).text("Перетащите ёмкость сюда");
             const id = $(ui.draggable).attr("id");
             addtube_obj(".tubes-list #" + id);
         }
@@ -734,7 +734,7 @@
 
                 $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block; margin-right: 5px" id="addfractionbutton-' + k + '"><button class="btn btn-primary add add-fr" onclick="return addfraction(\'' + k + '\')"><i class="glyphicon glyphicon-plus"></i> Добавть фракцию</button></div>');
                 if (!rdl || resid < 1) {
-                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать пробирку</button></div>');
+                    $("#group-" + v.sel).append('<div style="text-align: left;display: inline-block"><button class="btn btn-primary add remove" onclick="return removetube(\'' + k + '\')"><i class="glyphicon glyphicon-minus"></i> Отвязать ёмкость</button></div>');
                 }
                 else {
                     $("#research-form .remove").remove();
@@ -742,7 +742,7 @@
                 //$("#research-form input.fractiontitle, #research-form textarea").prop("readonly", false);
             });
             if (Object.keys(fractiontubes).length === 0) {
-                $(s).append("<div class='well'>Пробирки не привязаны</div>");
+                $(s).append("<div class='well'>Ёмкости не привязаны</div>");
                 $("#select-div").show();
                 if ($(".ui-draggable").length)
                     $(".tube-drag").draggable("enable");
@@ -964,7 +964,7 @@
                     let researches_list = $('<div class="researches-list"></div>').appendTo(researches);
 
                     const tubes = $("<div class='bw'></div>").appendTo(row);
-                    $(tubes).append('<div class="list-header">Пробирки</div>');
+                    $(tubes).append('<div class="list-header">Ёмкости</div>');
                     const tubes_list = $('<div class="tubes-list"></div>').appendTo(tubes);
                     $(row).appendTo("#researches-container");
                     let g;
@@ -995,7 +995,7 @@
 
                     }
                     else {
-                        $(tubes_list).append('<div class="well">Пробирки не приязаны</div>');
+                        $(tubes_list).append('<div class="well">Ёмкости не приязаны</div>');
                     }
                     g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
                     $(g).attr("pk", v.pk);
@@ -1015,7 +1015,7 @@
                     $('.researches-list', v).append('<div class="btn-group fad"><button onclick="save_sort(this);" class="btn btn-default"><i class="glyphicon glyphicon-floppy-disk"></i> Сохранить порядок</button></div>'.f($('.tube', v).attr('id')))
                 });
                 $.each($(".one-tube"), function (k, v) {
-                    $('.researches-list', v).append('<div class="btn-group fad"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к пробирке</button></div>'.f($('.tube', v).attr('id')))
+                    $('.researches-list', v).append('<div class="btn-group fad"><button onclick="loadform(-1, \'{0}\');addtube_obj(\'#{0}\')" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i>Добавть анализ к ёмкости</button></div>'.f($('.tube', v).attr('id')))
                 });
 
                 $('.tubes-list .tube-drag').draggable({

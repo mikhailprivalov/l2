@@ -66,7 +66,7 @@ def researches_tune(request):
 @login_required
 @group_required("Оператор")
 def tubes(request):
-    """ Создание и редактирование пробирок """
+    """ Создание и редактирование ёмкостей """
     return render(request, 'construct_tubes.html')
 
 

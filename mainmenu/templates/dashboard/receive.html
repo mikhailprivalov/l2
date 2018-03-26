@@ -4,7 +4,7 @@
 {% block content %}
     <div class="row" style="margin: 0">
         <div class="fastlinks">
-            <div style="display: inline-block;float: right;"><label>Ожидающие приёма <input type="radio" name="filter" checked value="wait"></label>&nbsp;&nbsp;&nbsp;<label class="ttp" title="Для отмены приёма введите причину в поле замечания (только для не подтверждённых направлений)">Принятые <input type="radio" name="filter" value="received"></label>&nbsp;&nbsp;&nbsp;<label class="ttp" title="Для приёма отбракованных пробирок отметьте необходимые и сохраните">Непринятые <input type="radio" name="filter" value="not_received"></label></div>
+            <div style="display: inline-block;float: right;"><label>Ожидающие приёма <input type="radio" name="filter" checked value="wait"></label>&nbsp;&nbsp;&nbsp;<label class="ttp" title="Для отмены приёма введите причину в поле замечания (только для не подтверждённых направлений)">Принятые <input type="radio" name="filter" value="received"></label>&nbsp;&nbsp;&nbsp;<label class="ttp" title="Для приёма отбракованных ёмкостей отметьте необходимые и сохраните">Непринятые <input type="radio" name="filter" value="not_received"></label></div>
             <a href="/mainmenu/receive/one_by_one">Приём матриала по одному</a>
             <a href="/mainmenu/receive/journal_form" target="_blank">Журнал приёма</a>
         </div>
@@ -66,8 +66,8 @@
                             <th style="width: 70px">№ п/п</th>
                             <th>Исследования</th>
                             <th style="width: 180px">№ направления</th>
-                            <th style="width: 280px">Тип пробирки</th>
-                            <th style="width: 180px">№ пробирки</th>
+                            <th style="width: 280px">Тип ёмкость</th>
+                            <th style="width: 180px">№ ёмкости</th>
                             <th style="width: 180px"><small style="float:right;font-weight: normal;"><a href="javascript:" onclick='save();return false;'>Сохранить</a></small>Принято</th>
                             <th style="width: 300px"><small style="float:right;font-weight: 300;color:#0d0d0d;font-size: 68%;">при заполнении ёмкость будет не принята</small>Замечания</th>
                         </tr>
@@ -380,7 +380,7 @@
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
-                        title: 'Пробирки приняты',
+                        title: 'Ёмкости приняты',
                         message: "",
                         info: '',
                         icon: 'glyphicon glyphicon-ok'
@@ -489,11 +489,11 @@
                             $("#barcode").text("Последнее просканированное: " + barcode);
                         }
                         else {
-                            $("#barcode").text('Пробирка {0} в списке не найдена'.f(barcode));
+                            $("#barcode").text('Ёмкость {0} в списке не найдена'.f(barcode));
                             $.amaran({
                                 'theme': 'awesome no',
                                 'content': {
-                                    title: 'Пробирка {0} в списке не найдена'.f(barcode),
+                                    title: 'Ёмкость {0} в списке не найдена'.f(barcode),
                                     message: "",
                                     info: '',
                                     icon: 'fa fa-exclamation'

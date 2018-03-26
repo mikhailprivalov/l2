@@ -108,7 +108,7 @@ def gen_pdf_execlist(request):
                                                                                                        dots=True) + ", " +
                                     inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(
                                         iss=inobj.issledovaniya_set.first()) + "<br/>№ напр.: " + str(
-                        inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ пробирки.: " + str(
+                        inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ ёмкости: " + str(
                         inobj.pk) + "<br/>" + Truncator(
                         inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19) + "<br/><br/>")
             if len(data) < ysize:

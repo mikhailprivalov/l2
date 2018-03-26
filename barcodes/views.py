@@ -50,7 +50,7 @@ def tubes(request, direction_implict_id=None):
     pw, ph = barcode_size[0], barcode_size[1]  # длина, ширина листа
 
     doctitle = "Штрих-коды (%s)" % (("направления " + ", ".join(str(v) for v in direction_id)) if not istubes else (
-            "пробирки " + ", ".join(str(v) for v in tubes_id)))
+            "ёмкости " + ", ".join(str(v) for v in tubes_id)))
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Type'] = 'application/pdf'

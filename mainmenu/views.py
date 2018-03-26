@@ -776,7 +776,7 @@ def direction_info(request):
                 ]}
                 data.append(d)
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
-                d = {"type": "Пробирка №%s" % tube.pk, "events": []}
+                d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
                 if tube.time_get is not None:
                     d["events"].append([
                         ["title", timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X") + " Забор"],

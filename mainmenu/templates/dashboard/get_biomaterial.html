@@ -106,8 +106,8 @@
                         <tr>
                             <th class="col-xs-4">ФИО</th>
                             <th>№ напр.</th>
-                            <th>№ пробирки</th>
-                            <th>Тип пробирки</th>
+                            <th>№ ёмкости</th>
+                            <th>Тип</th>
                             <th style='width: 20px;text-align:right'><label><input class="allprint" type='checkbox' onchange='sync_checkboxes(this);' name='allprint2' checked/></label></th>
                         </tr>
                         </thead>
@@ -318,7 +318,7 @@
             $.each($(`#work-modal`).find(`tr[pk=${pk}] .tube-pk`), function (k, v) {
                 tubes.push('№' + $(v).text())
             })
-            if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? 'Пробирка' : 'Пробирки'} ${tubes.join(', ')} из этого направления ${(tubes.length < 2) ? 'будет не доступна' : 'будут не доступны'} для подтверждения`)) {
+            if (confirm(`Отменить направление ${pk}? ${(tubes.length < 2) ? 'Ёмкость' : 'Ёмкости'} ${tubes.join(', ')} из этого направления ${(tubes.length < 2) ? 'будет не доступна' : 'будут не доступны'} для подтверждения`)) {
                 sl(true)
                 $.ajax({
                     url: '/direction/researches/cancel',
@@ -372,7 +372,7 @@
                     'theme': 'awesome ok',
                     'content': {
                         title: 'Забор материала подтвержден',
-                        message: 'Номера пробирок: ' + JSON.parse(checked).join(', '),
+                        message: 'Номера ёмкостей: ' + JSON.parse(checked).join(', '),
                         info: '',
                         icon: 'fa fa-check'
                     },
@@ -425,7 +425,7 @@
                     if (!reload)
                         $('.last').removeClass('last')
                     const $rt = $('#researches-tb')
-                    $rt.html('<tr><th>Исследования</th><th class=\'col-xs-4\'>Тип пробирки</th><th class=\'col-xs-2\'>Номер пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint3\'  checked /></label></th></tr>')
+                    $rt.html('<tr><th>Исследования</th><th class=\'col-xs-4\'>Тип ёмкости</th><th class=\'col-xs-2\'>Номер ёмкости</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint3\'  checked /></label></th></tr>')
                     let n = 0
 
                     let complete = true
@@ -462,7 +462,7 @@
                         }
                         all_cnt += v
                     })
-                    $rt.append('<tr><td style=\'text-align:right;font-size:10pt\' colspan=\'3\'>Итого пробирок: {0} шт ({1})</td><td></td></tr>'.format(all_cnt, tmpstr))
+                    $rt.append('<tr><td style=\'text-align:right;font-size:10pt\' colspan=\'3\'>Итого ёмкостей: {0} шт ({1})</td><td></td></tr>'.format(all_cnt, tmpstr))
 
                     $('#researches-tb .allprint, #print-bc-save, #success-b, #print-bc, #can-dir').prop('disabled', false)
                     if (complete) {
@@ -578,7 +578,7 @@
                     })
                     $ht.prepend('<tr id=\'story-{3}\'><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td class=\'label-c\'><label><input type=\'checkbox\' name=\'custom_print\' class=\'custom_print\' value=\'{3}\' onchange=\'checkboxes_to_array();\' /></label></td></tr>'.f(v.time, v.dir_id, v.researches, v.tube_id, v.type))
                 })
-                $ht.prepend('<tr><th class=\'btn-ell\'>Время забора</th><th>Направление</th><th class=\'btn-ell\'>Исследования</th><th>Номер пробирки</th><th class=\'btn-ell\'>Тип пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint\' checked /></label></th></tr>')
+                $ht.prepend('<tr><th class=\'btn-ell\'>Время забора</th><th>Направление</th><th class=\'btn-ell\'>Исследования</th><th>Номер ёмкости</th><th class=\'btn-ell\'>Тип пробирки</th><th style=\'width: 20px;text-align:right\'><label><input type=\'checkbox\' class=\'allprint\' onchange=\'sync_checkboxes(this);\' name=\'allprint\' checked /></label></th></tr>')
                 hl()
                 resize()
                 sync_checkboxes('[name=allprint]')

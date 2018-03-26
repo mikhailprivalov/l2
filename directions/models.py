@@ -61,17 +61,17 @@ class TubesRegistration(models.Model):
     Таблица с пробирками для исследований
     """
     id = models.AutoField(primary_key=True, db_index=True)
-    type = models.ForeignKey(directory.ReleationsFT, help_text='Тип пробирки', on_delete=models.CASCADE)
+    type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
     time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
     doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive', help_text='Кто получил материал', on_delete=models.SET_NULL)
-    barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер пробирки', db_index=True)
+    barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
 
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
 
     daynum = models.IntegerField(default=0, blank=True, null=True,
-                                 help_text='Номер принятия пробирки среди дня в лаборатории')
+                                 help_text='Номер принятия ёмкости среди дня в лаборатории')
 
     def __str__(self):
         return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
@@ -178,8 +178,8 @@ class TubesRegistration(models.Model):
         return self.id
 
     class Meta:
-        verbose_name = 'Пробирка для направления'
-        verbose_name_plural = 'Пробирки для направлений'
+        verbose_name = 'Ёмкость для направления'
+        verbose_name_plural = 'Ёмкости для направлений'
 
 
 class IstochnikiFinansirovaniya(models.Model):
@@ -442,13 +442,13 @@ class Issledovaniya(models.Model):
     """
     napravleniye = models.ForeignKey(Napravleniya, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
-    tubes = models.ManyToManyField(TubesRegistration, help_text='Пробирки, необходимые для исследования', db_index=True)
+    tubes = models.ManyToManyField(TubesRegistration, help_text='Ёмкости, необходимые для исследования', db_index=True)
     doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True, help_text='Профиль пользователя, сохранившего результат', on_delete=models.SET_NULL)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
     doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL)
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
-    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на пробирке)')
+    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
 

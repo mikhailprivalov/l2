@@ -20,7 +20,7 @@ class ReleationsFT(models.Model):
     """
     (многие-ко-многим) фракции к пробиркам
     """
-    tube = models.ForeignKey(Tubes, help_text='Пробирка', db_index=True, on_delete=models.CASCADE)
+    tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
 
     def __str__(self):
