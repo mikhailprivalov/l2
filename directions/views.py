@@ -157,10 +157,11 @@ def gen_pdf_dir(request):
     direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
 
     response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF
-    response['Content-Disposition'] = 'inline; filename="napr.pdf"'  # Включение режима вывода PDF в браузер
+    response['Content-Disposition'] = 'inline; filename="directions.pdf"'  # Включение режима вывода PDF в браузер
 
     buffer = BytesIO()  # Буфер
     c = canvas.Canvas(buffer, pagesize=A4)  # Создание холста для PDF размера А4
+    c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
     framePage(c)  # Рисование разделительных линий для страницы
 
     from reportlab.pdfbase import pdfmetrics
