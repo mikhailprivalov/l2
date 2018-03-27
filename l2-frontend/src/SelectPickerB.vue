@@ -83,6 +83,7 @@
     },
     created() {
       this.update_val(this.value)
+      this.$root.$on('resync', this.resync)
     },
     computed: {
       jel() {

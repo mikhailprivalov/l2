@@ -317,6 +317,7 @@
           if (this.ofname_to_set_dep !== '-1') {
             this.directive_department = this.ofname_to_set_dep
             this.directive_doc = this.ofname_to_set
+            this.$root.$emit('resync')
             this.emit_input()
             this.ofname_to_set = '-2'
             return
