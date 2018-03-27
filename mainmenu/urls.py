@@ -36,6 +36,7 @@ urlpatterns = [
     path('cards', views.cards),
     path('direction_visit', views.direction_visit),
     path('results/paraclinic', views.results_paraclinic),
+    path('results/paraclinic/blanks', views.results_paraclinic_blanks),
     path('statistics-tickets', TemplateView.as_view(template_name="dashboard/statistics_tickets.html")),
     path('receive', receivematerial.views.receive),
     path('receive/one_by_one', receivematerial.views.receive_obo),

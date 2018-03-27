@@ -1,0 +1,17 @@
+{% extends "dbase.html" %}
+{% block title %}Листы исполнения описательных протоколов{% endblock %}
+{% block content %}
+    <h3>Листы исполнения описательных протоколов</h3>
+    <ul>
+        {% for r in researches %}
+            <li><a target="_blank" class="fli" href="/directory/paraclinic/blank/{{ r.pk }}">{{ r.title }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+{% block head_cn %}
+    <style>
+        .fli:not(:hover) {
+            text-decoration: underline !important;
+        }
+    </style>
+{% endblock %}

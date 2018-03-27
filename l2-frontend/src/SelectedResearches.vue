@@ -253,7 +253,7 @@
       generate(type) {
         if (this.diagnos === '') {
           $(this.$refs.d).focus()
-          errmessage('Диагноз не указан')
+          errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
           return
         }
         this.$root.$emit('generate-directions', {

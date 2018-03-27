@@ -89,6 +89,7 @@ def dashboard(request):  # Представление панели управл�
         if SettingManager.get("paraclinic_module", default='false', default_type='b'):
             pages.append({"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False,
                           "access": ["Посещения по направлениям", "Врач параклиники"]})
+            pages.append({"url": "/mainmenu/results/paraclinic/blanks", "title": "Листы исполнения описательных протоколов", "nt": False, "access": []})
             pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники"]})
 
         if SettingManager.get("hosp_module", default='false', default_type='b'):
@@ -850,3 +851,10 @@ def direction_visit(request):
 @group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники")
 def results_report(request):
     return render(request, 'dashboard/results_report.html')
+
+
+@login_required
+@group_required("Врач параклиники")
+def results_paraclinic_blanks(request):
+    researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True, podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by("title")
+    return render(request, 'dashboard/results_paraclinic_blanks.html', {"researches": researches})
