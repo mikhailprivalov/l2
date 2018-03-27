@@ -34,12 +34,12 @@
     },
     data() {
       return {
-        selected_card: {pk: -1, base: {}, ofname: -1, operator: false, history_num: ''},
+        selected_card: {pk: -1, base: {}, ofname: -1, ofname_dep: -1, operator: false, history_num: ''},
       }
     },
     computed: {
       directions_url() {
-        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}`
+        return `/mainmenu/directions?base_pk=${this.selected_card.base.pk}&card_pk=${this.selected_card.pk}&ofname=${this.selected_card.ofname}&ofname_dep=${this.selected_card.ofname_dep}`
       },
       can_create_directions() {
         if('groups' in this.$store.getters.user_data) {

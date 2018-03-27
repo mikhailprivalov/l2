@@ -157,6 +157,7 @@
         directive_department: '-1',
         directive_doc: '-1',
         ofname_to_set: '-1',
+        ofname_to_set_dep: '-1',
         local_directive_departments: [],
         directive_departments_select: [],
         showModal: false,
@@ -313,6 +314,13 @@
         if (this.ofname_to_set === '-2' || this.inLoading)
           return
         if (this.ofname_to_set !== '-1') {
+          if (this.ofname_to_set_dep !== '-1') {
+            this.directive_department = this.ofname_to_set_dep
+            this.directive_doc = this.ofname_to_set
+            this.emit_input()
+            this.ofname_to_set = '-2'
+            return
+          }
           let dps = Object.keys(this.directive_from_departments)
           if (dps.length > 0 && !this.inLoading) {
             let onts = this.ofname_to_set
@@ -323,6 +331,7 @@
                 if (u.pk.toString() === onts) {
                   this.directive_department = d.toString()
                   this.directive_doc = onts
+                  this.emit_input()
                   this.ofname_to_set = '-2'
                   return
                 }
@@ -364,6 +373,7 @@
           let base_pk = params.get('base_pk')
           let card_pk = params.get('card_pk')
           let ofname = params.get('ofname')
+          let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
             window.history.pushState('', '', window.location.href.split('?')[0])
             for (let row of this.bases) {
@@ -381,6 +391,9 @@
             window.history.pushState('', '', window.location.href.split('?')[0])
             if (ofname) {
               this.ofname_to_set = ofname
+            }
+            if (ofname_dep) {
+              this.ofname_to_set_dep = ofname_dep
             }
             for (let row of this.bases) {
               if (row.pk === parseInt(base_pk)) {
@@ -413,6 +426,7 @@
           pk: pk,
           individual_pk: individual_pk,
           base: this.selected_base,
+          ofname_dep: parseInt(this.directive_department),
           ofname: parseInt(this.directive_doc),
           operator: this.is_operator,
           history_num: this.history_num
