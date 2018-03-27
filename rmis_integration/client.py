@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import pickle
 import threading
 import urllib.parse
 
@@ -210,19 +211,37 @@ class Directory(BaseRequester):
     def __init__(self, client: Client, title: str):
         super().__init__(client, "path_directory")
         self.title = title
-        refbook_list = self.main_client.get_client("path_directory").service.getRefbookList()
-        self.refbook_list = refbook_list
-        for refbook in self.refbook_list:
-            if Utils.get_column_value(refbook, "TABLE_NAME") == self.title:
-                self.code = Utils.get_column_value(refbook, "CODE")
-                break
+        key_code = "dir_code_{}".format(title)
+        self.code = cache.get(key_code)
+        if not self.code:
+            refbook_list = self.main_client.get_client("path_directory").service.getRefbookList()
+            self.refbook_list = refbook_list
+            for refbook in self.refbook_list:
+                if Utils.get_column_value(refbook, "TABLE_NAME") == self.title:
+                    self.code = Utils.get_column_value(refbook, "CODE")
+                    cache.set(key_code, self.code, 43200)
+                    break
 
     def get_values_by_data(self, search_name="NAME", search_data=""):
-        return self.client.getRefbookRowData(refbookCode=self.code, version="CURRENT",
-                                             column={"name": search_name, "data": search_data})
+        key = "dir_g_v_b_d_{}:{}-{}".format(self.code, search_name, search_data)
+        rrd_src = cache.get(key)
+        if rrd_src:
+            r = pickle.loads(rrd_src, encoding="utf8")
+        else:
+            r = self.client.getRefbookRowData(refbookCode=self.code, version="CURRENT",
+                                              column={"name": search_name, "data": search_data})
+            cache.set(key, pickle.dumps(r, protocol=4), 7200)
+        return r
 
     def get_all_values(self):
-        return self.client.getRefbook(refbookCode=self.code, version="CURRENT")
+        key = "dir_g_a_v_{}".format(self.code)
+        gav_src = cache.get(key)
+        if gav_src:
+            r = pickle.loads(gav_src, encoding="utf8")
+        else:
+            r = self.client.getRefbook(refbookCode=self.code, version="CURRENT")
+            cache.set(key, pickle.dumps(r, protocol=4), 7200)
+        return r
 
     def get_with_filter(self, value_column, filter_column, filter_data, search_name="NAME", search_data=""):
         rows = self.get_values_by_data(search_name=search_name, search_data=search_data)
