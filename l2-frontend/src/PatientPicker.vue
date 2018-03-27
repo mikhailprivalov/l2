@@ -219,7 +219,7 @@
         this.emit_input()
       },
       inLoading() {
-        if (!this.inLoading) {
+        if (!this.inLoading  && (this.directive_department === '-1' || this.directive_doc === '-1')) {
           this.update_ofname()
         }
         if (!this.inLoading && this.search_after_loading) {
