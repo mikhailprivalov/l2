@@ -745,7 +745,8 @@ def result_print(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
                             rightMargin=5 * mm, topMargin=5 * mm,
-                            bottomMargin=5 * mm, allowSplitting=1 if split else 0)
+                            bottomMargin=5 * mm, allowSplitting=1 if split else 0,
+                            title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
     naprs = []
     styleSheet = getSampleStyleSheet()
