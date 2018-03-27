@@ -127,7 +127,7 @@
         hide_window_update: false,
         delayTime: 300,
         minChars: 1,
-        limit: 4,
+        limit: 10,
         selectFirst: true,
       }
     },
