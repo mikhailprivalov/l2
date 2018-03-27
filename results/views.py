@@ -268,14 +268,12 @@ def result_confirm(request):
         if issledovaniye.doc_save:  # Если исследование сохранено
             issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
             from django.utils import timezone
-            from statistic.models import Uet
             from directions.models import Result
             for r in Result.objects.filter(issledovaniye=issledovaniye):
                 r.get_ref()
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
-            slog.Log(key=request.POST["pk"], type=14, body="", user=request.user.doctorprofile).save()
-            Uet.add(request.user.doctorprofile, issledovaniye.research, issledovaniye.napravleniye.pk)
+            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye.pk}), user=request.user.doctorprofile).save()
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
