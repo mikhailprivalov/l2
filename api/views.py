@@ -1514,3 +1514,11 @@ def directions_results_report(request):
     data.sort(key=itemgetter("order"))
     data.sort(key=itemgetter("research"))
     return JsonResponse({"data": data})
+
+
+def mkb10(request):
+    kw = request.GET.get("keyword", "")
+    data = []
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:4]:
+        data.append({"pk": d.pk, "code": d.code, "title": d.title})
+    return JsonResponse({"data": data})

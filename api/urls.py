@@ -36,4 +36,5 @@ urlpatterns = [
     path('statistics-tickets/send', views.statistics_tickets_send),
     path('statistics-tickets/get', views.statistics_tickets_get),
     path('statistics-tickets/invalidate', views.statistics_tickets_invalidate),
+    path('mkb10', views.mkb10),
 ]

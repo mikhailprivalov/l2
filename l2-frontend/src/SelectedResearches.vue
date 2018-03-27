@@ -1,7 +1,12 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <input class="form-control" placeholder="Диагноз" v-model="diagnos" maxlength="36"/>
+      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз"><span>&times;</span>
+      </button>
+      <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" ref="d" placeholder="Диагноз (МКБ 10)"
+                 v-model="diagnos" maxlength="36" :delayTime="delayTime" :minChars="minChars"
+                 :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
+      />
       <div class="top-inner">
         <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select" :class="{ active: row.pk === fin}"
            v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
@@ -78,13 +83,15 @@
   import ResearchDisplay from './ui-cards/ResearchDisplay'
   import Modal from './ui-cards/Modal'
   import vSelect from 'vue-select'
+  import TypeAhead from 'vue2-typeahead'
 
   export default {
     name: 'selected-researches',
     components: {
       ResearchDisplay,
       Modal,
-      vSelect
+      vSelect,
+      TypeAhead,
     },
     props: {
       researches: {
@@ -117,7 +124,11 @@
         fin: -1,
         comments: {},
         need_update_comment: [],
-        hide_window_update: false
+        hide_window_update: false,
+        delayTime: 300,
+        minChars: 1,
+        limit: 4,
+        selectFirst: true,
       }
     },
     watch: {
@@ -164,6 +175,7 @@
     created() {
       this.$root.$on('researches-picker:clear_all', this.clear_all)
       this.$root.$on('researches-picker:update-comment', this.update_comment)
+      this.$root.$on('patient-picker:select_card', this.clear_diagnos)
     },
     methods: {
       update_comment(pk) {
@@ -175,6 +187,22 @@
       cancel_update() {
         this.need_update_comment = []
         this.hide_window()
+      },
+      getResponse(resp) {
+        let r = []
+        for (let d of resp.data.data) {
+          r.push(d.code)
+        }
+        return r
+      },
+      clear_diagnos() {
+        this.diagnos = this.get_fin_obj(this.fin).default_diagnos
+      },
+      highlighting: function (item, vue) {
+        return item.toString().replace(vue.query, `<b>${vue.query}</b>`)
+      },
+      render: function (items, vue) {
+        return [vue.diagnos, ...items]
       },
       hide_window() {
         this.hide_window_update = true
@@ -223,11 +251,16 @@
         this.$root.$emit('researches-picker:deselect_all')
       },
       generate(type) {
+        if (this.diagnos === '') {
+          $(this.$refs.d).focus()
+          errmessage('Диагноз не указан')
+          return
+        }
         this.$root.$emit('generate-directions', {
           type,
           card_pk: this.card_pk,
           fin_source_pk: this.fin,
-          diagnos: this.diagnos,
+          diagnos: this.diagnos.substr(0, 3),
           base: this.base,
           researches: this.researches_departments_simple(),
           operator: this.operator,
@@ -307,9 +340,19 @@
     align-content: flex-start;
   }
 
-  .top-inner {
+  .top-inner-btn {
     position: absolute;
     left: 180px;
+    top: 0;
+    bottom: 0;
+    width: 35px;
+    text-align: center;
+    border-radius: 0;
+  }
+
+  .top-inner {
+    position: absolute;
+    left: 215px;
     top: 0;
     right: 0;
     height: 34px;
@@ -317,11 +360,15 @@
     overflow: hidden;
   }
 
-  .top-picker .form-control {
+  .top-picker /deep/ .form-control {
     width: 180px;
-    border-radius: 0;
+    border-radius: 0 !important;
     border: none;
     border-bottom: 1px solid #AAB2BD;
+  }
+
+  .top-picker /deep/ .input-group {
+    border-radius: 0;
   }
 
   .top-inner-select {
