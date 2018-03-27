@@ -260,7 +260,7 @@
           type,
           card_pk: this.card_pk,
           fin_source_pk: this.fin,
-          diagnos: this.diagnos.substr(0, 3),
+          diagnos: this.diagnos.substr(0, 35),
           base: this.base,
           researches: this.researches_departments_simple(),
           operator: this.operator,
