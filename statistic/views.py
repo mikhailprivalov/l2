@@ -392,14 +392,15 @@ def statistic_xls(request):
         date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
                                  int(date_end_o.split(".")[0])) + datetime.timedelta(1)
 
-        for card_base in CardBase.objects.filter(hide=False):
+        for card_base in list(CardBase.objects.filter(hide=False)) + [None]:
+            cb_title = "Все базы" if not card_base else card_base.short_title
             for finsource in list(IstochnikiFinansirovaniya.objects.filter(base=card_base)) + [False]:
                 finsource_title = "Все источники"
 
-                if finsource is not False:
+                if isinstance(finsource, IstochnikiFinansirovaniya):
                     finsource_title = finsource.title
 
-                ws = wb.add_sheet(card_base.short_title + " " + finsource_title + " выполн.")
+                ws = wb.add_sheet(cb_title + " " + finsource_title + " выполн.")
 
                 font_style = xlwt.XFStyle()
                 font_style.borders = borders
@@ -432,7 +433,7 @@ def statistic_xls(request):
                 row_num = 2
                 row = [
                     "Выполнено исследований",
-                    card_base.title + " " + finsource_title
+                    cb_title + " " + finsource_title
                 ]
 
                 for col_num in range(len(row)):
@@ -454,10 +455,13 @@ def statistic_xls(request):
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
                                                                 time_confirmation__range=(date_start, date_end),
                                                                 napravleniye__istochnik_f=finsource)
-                    else:
+                    elif card_base:
                         iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
                                                                 time_confirmation__range=(date_start, date_end),
                                                                 napravleniye__istochnik_f__base=card_base)
+                    else:
+                        iss_list = Issledovaniya.objects.filter(research__pk=obj.pk, time_confirmation__isnull=False,
+                                                                time_confirmation__range=(date_start, date_end))
 
                     for researches in iss_list:
                         n = False
@@ -509,7 +513,7 @@ def statistic_xls(request):
                         for col_num in range(len(row)):
                             ws.write(row_num, col_num, row[col_num], font_style)
 
-                ws_pat = wb.add_sheet(card_base.short_title + " " + finsource_title + " паталог.")
+                ws_pat = wb.add_sheet(cb_title + " " + finsource_title + " паталог.")
 
                 row_num = 0
                 row = [
@@ -539,7 +543,7 @@ def statistic_xls(request):
                 row_num = 2
                 row = [
                     "Паталогии",
-                    card_base.title + " " + finsource_title
+                    cb_title + " " + finsource_title
                 ]
 
                 for col_num in range(len(row)):
