@@ -65,10 +65,10 @@
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <div class="row">
-                  <div class="col-xs-12 col-sm-12 col-md-6">
+                  <div class="col-xs-5 col-sm-5 col-md-5 col-lg-6">
                     <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
                   </div>
-                  <div class="col-xs-12 col-sm-12 col-md-6 text-right">
+                  <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
                     <button class="btn btn-blue-nb" @click="make_visit()" v-if="!visit_status">
                       Зарегистрировать посещение
                     </button>
