@@ -495,7 +495,7 @@ def statistic_xls(request):
                         Podrazdeleniya.objects.filter(pk__in=[x for x in otds.keys() if x != pki])):
                     row_num += 2
                     row = [
-                        otdd.title,
+                        otdd.title if otdd.pk != pki else "Сумма по всем отделениям",
                         "" if otdd.pk != pki else "Итого",
                     ]
                     for col_num in range(len(row)):
