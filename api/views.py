@@ -1165,10 +1165,10 @@ def directions_paraclinic_form(request):
                                             str(x) for x in
                                             request.user.groups.all()]) and i.time_confirmation is not None,
             }
-            for group in ParaclinicInputGroups.objects.filter(research=i.research).order_by("order"):
+            for group in ParaclinicInputGroups.objects.filter(research=i.research, hide=False).order_by("order"):
                 g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                      "hide": group.hide, "fields": []}
-                for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
+                for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
                     g["fields"].append({
                         "pk": field.pk,
                         "order": field.order,
