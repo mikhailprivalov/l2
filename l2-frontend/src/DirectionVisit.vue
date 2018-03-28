@@ -69,12 +69,15 @@
                     <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
                   </div>
                   <div class="col-xs-12 col-sm-12 col-md-6 text-right">
-                    <button class="btn btn-blue-nb" @click="make_visit" v-if="!visit_status">
+                    <button class="btn btn-blue-nb" @click="make_visit()" v-if="!visit_status">
                       Зарегистрировать посещение
                     </button>
                     <div class="float-right" v-else>
                       Посещение {{visit_date}}<br/>
                       {{direction_data.visit_who_mark}}
+                      <div v-if="allow_reset_confirm">
+                        <a href="#" @click.prevent="cancel_visit">отменить посещение</a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -181,6 +184,7 @@
         showModal: false,
         researches: [],
         visit_status: false,
+        allow_reset_confirm: false,
         visit_date: '',
         direction_data: {},
         journal_date: moment().format('DD.MM.YYYY'),
@@ -217,6 +221,7 @@
         this.loaded_pk = -1
         this.researches = []
         this.visit_status = false
+        this.allow_reset_confirm = false
         this.visit_date = ''
         this.direction_data = {}
       },
@@ -236,7 +241,6 @@
       },
       load() {
         if (this.query_int === -1) {
-          this.clear()
           return
         }
         if (this.in_load)
@@ -252,6 +256,7 @@
             vm.direction_data = data.direction_data
             vm.visit_status = data.visit_status
             vm.visit_date = data.visit_date
+            vm.allow_reset_confirm = data.allow_reset_confirm
             vm.blur()
           } else {
             errmessage(data.message)
@@ -268,16 +273,22 @@
       blur() {
         $(this.$refs.field).blur()
       },
-      make_visit() {
+      cancel_visit() {
+        if (confirm('Вы уверены, что хотите отменить посещение?'))
+          this.make_visit(true)
+      },
+      make_visit(cancel) {
         if (this.loaded_pk === -1 || this.in_load)
           return
+        cancel = cancel || false
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         vm.in_load = true
-        directionsPoint.getMarkDirectionVisit(this.loaded_pk).then(data => {
+        directionsPoint.getMarkDirectionVisit(this.loaded_pk, cancel).then(data => {
           if (data.ok) {
             vm.visit_status = data.visit_status
             vm.visit_date = data.visit_date
+            vm.allow_reset_confirm = data.allow_reset_confirm
             vm.focus()
           } else {
             errmessage(data.message)

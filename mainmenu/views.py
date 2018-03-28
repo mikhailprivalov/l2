@@ -265,7 +265,7 @@ def confirm_reset(request):
 
             import time
             ctp = int(
-                0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
+                0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
             ctime = int(time.time())
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
             if (ctime - ctp < SettingManager.get(

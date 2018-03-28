@@ -1148,7 +1148,7 @@ def directions_paraclinic_form(request):
         response["researches"] = []
         for i in directions.Issledovaniya.objects.filter(napravleniye=d, research__is_paraclinic=True, **add_fr):
             ctp = int(0 if not i.time_confirmation else int(
-                time.mktime(i.time_confirmation.timetuple()))) + 8 * 60 * 60
+                time.mktime(timezone.localtime(i.time_confirmation).timetuple())))
             ctime = int(time.time())
             cdid = -1 if not i.doc_confirmation else i.doc_confirmation.pk
             rt = SettingManager.get("lab_reset_confirm_time_min") * 60
@@ -1274,7 +1274,7 @@ def directions_paraclinic_confirm_reset(request):
 
         import time
         ctp = int(
-            0 if not iss.time_confirmation else int(time.mktime(iss.time_confirmation.timetuple()))) + 8 * 60 * 60
+            0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
         ctime = int(time.time())
         cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
         if (ctime - ctp < SettingManager.get(
@@ -1343,7 +1343,14 @@ def directions_services(request):
         pk -= 4600000000000
         pk //= 10
     if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True).exists():
+        import time
         n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
+
+        ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
+        ctime = int(time.time())
+        cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
+        rt = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f') * 60
+
         response["ok"] = True
         researches = []
         for i in directions.Issledovaniya.objects.filter(napravleniye=n):
@@ -1356,12 +1363,15 @@ def directions_services(request):
             "diagnos": n.diagnos,
             "doc": "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
             "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(), n.visit_who_mark.podrazdeleniye.title),
-            "fin_source": "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title)
+            "fin_source": "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
         }
         response["researches"] = researches
         response["loaded_pk"] = pk
         response["visit_status"] = n.visit_date is not None
         response["visit_date"] = "" if not n.visit_date else timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+        response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                               str(x) for x in
+                                               request.user.groups.all()]) and n.visit_date)
     else:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -1372,15 +1382,45 @@ def directions_mark_visit(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1)
-    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, visit_date__isnull=True).exists():
+    cancel = request_data.get("cancel", False)
+    if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True).exists():
         n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
-        response["ok"] = True
-        n.visit_date = timezone.now()
-        n.visit_who_mark = request.user.doctorprofile
-        n.save()
-        response["visit_status"] = n.visit_date is not None
-        response["visit_date"] = timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
-        slog.Log(key=pk, type=5001, body=json.dumps({"Посещение": "да", "Дата и время": response["visit_date"]}), user=request.user.doctorprofile).save()
+        import time
+        if not cancel:
+            n.visit_date = timezone.now()
+            n.visit_who_mark = request.user.doctorprofile
+            n.save()
+            ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
+            ctime = int(time.time())
+            cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
+            rt = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f') * 60
+            allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                       str(x) for x in
+                                                       request.user.groups.all()]) and n.visit_date)
+            response["visit_status"] = n.visit_date is not None
+            response["visit_date"] = timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+            response["allow_reset_confirm"] = allow_reset_confirm
+            response["ok"] = True
+        else:
+            ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
+            ctime = int(time.time())
+            cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
+            rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
+            rt = rtm * 60
+            allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                       str(x) for x in
+                                       request.user.groups.all()]) and n.visit_date)
+            if allow_reset_confirm:
+                response["ok"] = True
+                response["visit_status"] = None
+                response["visit_date"] = ''
+                response["allow_reset_confirm"] = False
+                n.visit_date = None
+                n.visit_who_mark = None
+                n.save()
+            else:
+                response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
+        slog.Log(key=pk, type=5001, body=json.dumps({"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}), user=request.user.doctorprofile).save()
     else:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)

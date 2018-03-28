@@ -93,7 +93,7 @@ class StatisticsTicket(models.Model):
 
     def can_invalidate(self):
         rt = SettingManager.get("ticket_invalidate_time_min", default='1440.0', default_type='f') * 60
-        ctp = time.mktime(self.date.timetuple()) + 8 * 60 * 60
+        ctp = time.mktime(timezone.localtime(self.date).timetuple())
         ctime = int(time.time())
         return ctime - ctp < rt
 

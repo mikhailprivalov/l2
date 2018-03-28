@@ -26,6 +26,7 @@ from podrazdeleniya.models import Podrazdeleniya
 
 w, h = A4
 
+from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
@@ -947,7 +948,7 @@ def get_issledovaniya(request):
                             cnt += 1
                             groups[tb] = cnt
                         ctp = int(0 if not issledovaniye.time_confirmation else int(
-                            time.mktime(issledovaniye.time_confirmation.timetuple()))) + 8 * 60 * 60
+                            time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
                         ctime = int(time.time())
                         cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
                         rt = SettingManager.get("lab_reset_confirm_time_min") * 60

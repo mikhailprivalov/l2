@@ -388,7 +388,7 @@
                     'position': 'bottom right',
                     delay: 6000
                 });
-            }).always(() => { hl(); });
+            }).always(() => { hl(); $(':text,a,button,.btn').blur() });
         }
 
         function resize() {
@@ -484,6 +484,7 @@
                         pressed = false;
                         let $ch = $(`input[value='${barcode}']:checkbox`);
                         if ($ch.length) {
+                            $(':text,a,button,.btn').blur()
                             if (!$ch.prop("checked"))
                                 $ch.click();
                             $("#barcode").text("Последнее просканированное: " + barcode);

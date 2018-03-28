@@ -123,9 +123,9 @@ async function getDirectionsServices(pk) {
   return {ok: false, message: "Ошибка запроса"}
 }
 
-async function getMarkDirectionVisit(pk) {
+async function getMarkDirectionVisit(pk, cancel) {
   try {
-    const response = await HTTP.post('directions/mark-visit', {pk})
+    const response = await HTTP.post('directions/mark-visit', {pk, cancel})
     if (response.statusText === 'OK') {
       return response.data
     }
