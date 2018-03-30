@@ -108,7 +108,7 @@
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed">Подтвердить
+            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed">Подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed">Сохранить и
               подтвердить
@@ -140,16 +140,38 @@
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
         directions_history: [],
-        prev_scroll: 0
+        prev_scroll: 0,
+        changed: false,
+        inserted: false
       }
     },
     watch: {
       date() {
         this.load_history()
+      },
+      data: {
+        handler() {
+          if(this.data.ok) {
+            if (this.inserted) {
+              this.changed = true
+            } else {
+              this.inserted = true
+            }
+          } else {
+            this.changed = false
+            this.inserted = false
+          }
+        },
+        deep: true
       }
     },
     mounted() {
-      this.load_history()
+      let vm = this
+      $(window).on('beforeunload', function () {
+        if (vm.has_changed)
+          return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
+      })
+      vm.load_history()
     },
     methods: {
       enter_field($e) {
@@ -185,13 +207,17 @@
         this.load()
       },
       load() {
+        if (this.has_changed && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')) {
+          return
+        }
         let vm = this
-        vm.clear()
+        vm.clear(true)
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
             vm.pk = ''
             vm.data = data
+            vm.changed = false
           }
           else {
             errmessage(data.message)
@@ -206,6 +232,7 @@
         directions_point.paraclinicResultSave(iss, false).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
+            vm.changed = false
             iss.saved = true
             vm.reload_if_need()
           }
@@ -223,6 +250,7 @@
           if (data.ok) {
             okmessage('Сохранено')
             okmessage('Подтверждено')
+            vm.changed = false
             iss.saved = true
             iss.confirmed = true
             iss.allow_reset_confirm = true
@@ -273,7 +301,14 @@
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
-      clear() {
+      clear(ignore) {
+        ignore = ignore || false
+        if (!ignore && this.has_changed && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')) {
+          return
+        }
+
+        this.inserted = false
+        this.changed = false
         this.data = {ok: false}
       },
       print_direction(pk) {
@@ -311,6 +346,9 @@
         }
         return -1
       },
+      has_changed() {
+        return this.changed && this.data && this.data.ok && this.inserted
+      }
     }
   }
 </script>

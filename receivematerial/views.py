@@ -19,6 +19,7 @@ from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
+from utils.dates import try_parse_range
 
 
 @csrf_exempt
@@ -297,11 +298,7 @@ def tubes_get(request):
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
-        import datetime
-        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start, date_end)
         tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
                                                       time_get__range=(date_start, date_end),
                                                       issledovaniya__research__podrazdeleniye=lab)

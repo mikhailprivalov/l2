@@ -1,7 +1,5 @@
 import re
 import unicodedata
-from collections import defaultdict
-
 import simplejson as json
 from django.db import models
 from django.utils import timezone

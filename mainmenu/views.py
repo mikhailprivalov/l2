@@ -23,6 +23,7 @@ import slog.models as slog
 from django.http import HttpResponse, JsonResponse
 import simplejson as json
 import directory.models as directory
+from utils.dates import try_parse_range
 
 
 @login_required
@@ -500,10 +501,7 @@ def discharge_search(request):
         import discharge.models as discharge
         date_start = request.GET["date_start"]
         date_end = request.GET["date_end"]
-        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start, date_end)
         query = request.GET.get("q", "")
         otd_pk = int(request.GET.get("otd", "-1"))
         doc_fio = request.GET.get("doc_fio", "")
@@ -614,13 +612,9 @@ def dashboard_from(request):
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
     filter_type = request.GET.get("type", "wait")
-    import datetime
     result = {}
     try:
-        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
             for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY):
                 tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,

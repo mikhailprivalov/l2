@@ -23,6 +23,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
+from utils.dates import try_parse_range
 
 w, h = A4
 
@@ -44,11 +45,7 @@ def gen_pdf_execlist(request):
     date_start = request.GET["datestart"]
     date_end = request.GET["dateend"]
     if type != 2:
-        import datetime
-        date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                   int(date_start.split(".")[0]))
-        date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                 int(date_end.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start, date_end)
 
     researches = json.loads(request.GET["researches"])
     xsize = 8

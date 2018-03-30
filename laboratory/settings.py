@@ -39,13 +39,8 @@ INSTALLED_APPS = (
     'api',
     'discharge',
     'rmis_integration',
-    # 'debug_toolbar',
-    # 'debug_panel',
     'rest_framework',
-    # 'cachalot',
     'django_logtail',
-    # 'silk',
-    'oauth2_provider',
     'corsheaders',
     'statistics_tickets',
     'webpack_loader',
@@ -60,11 +55,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'debug_panel.middleware.DebugPanelMiddleware',
-    # ОТЛАДКА ВКЛЮЧАЕТСЯ В local_settings.py - MIDDLEWARE_ADD = ['silk.middleware.SilkyMiddleware'],
-    # 'ratelimit.middleware.RatelimitMiddleware',
-    # 'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
+INSTALLED_APPS_PRE_ADD = ()
 INSTALLED_APPS_ADD = ()
 MIDDLEWARE_ADD = []
 
@@ -113,14 +105,6 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
         'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")
     },
-    # 'debug-panel': {
-    #     'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-    #     'LOCATION': '/var/tmp/debug-panel-cache-2',
-    #     'TIMEOUT': 300,
-    #     'OPTIONS': {
-    #         'MAX_ENTRIES': 200
-    #     }
-    # }
 }
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
@@ -237,7 +221,7 @@ except ImportError:
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
-INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS))
+INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS))
 
 
 WEBPACK_LOADER = {

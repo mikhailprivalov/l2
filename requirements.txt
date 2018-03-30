@@ -6,7 +6,6 @@ selenium
 psycopg2
 django-debug-toolbar
 django-debug-panel
-django-cachalot
 jsonfield
 reportlab
 simplejson
@@ -30,9 +29,10 @@ django-filter
 django-redis
 django_logtail
 django-silk
-django-oauth-toolkit
 django-cors-middleware
 astm
 bleach
 django-webpack-loader
 django-ratelimit
+git+git://github.com/moodpulse/django-cachalot-2#egg=django-cachalot-2
+jsonpickle

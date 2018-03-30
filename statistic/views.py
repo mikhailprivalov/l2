@@ -21,6 +21,7 @@ from users.models import Podrazdeleniya
 
 
 # from ratelimit.decorators import ratelimit
+from utils.dates import try_parse_range
 
 
 @csrf_exempt
@@ -83,11 +84,7 @@ def statistic_xls(request):
     borders.bottom = xlwt.Borders.THIN
 
     if tp == "statistics-visits":
-        import datetime
-        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                   int(date_start_o.split(".")[0]))
-        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
         t = request.GET.get("t", "sum")
         fio = request.user.doctorprofile.fio
         dep = request.user.doctorprofile.podrazdeleniye.get_title()
@@ -166,12 +163,7 @@ def statistic_xls(request):
                     row_num += 1
 
     elif tp == "statistics-tickets-print":
-        import datetime
-
-        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                   int(date_start_o.split(".")[0]))
-        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
@@ -248,7 +240,7 @@ def statistic_xls(request):
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',
                                                                                  flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
-                 (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
+                 (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(
                      pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
@@ -384,13 +376,9 @@ def statistic_xls(request):
             "attachment; filename='Статистика_Лаборатория_{}_{}-{}.xls'".format(lab.title.replace(" ", "_"),
                                                                                 date_start_o, date_end_o), tr)
 
-        import datetime
         import directions.models as d
         from operator import itemgetter
-        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                   int(date_start_o.split(".")[0]))
-        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
         for card_base in list(CardBase.objects.filter(hide=False)) + [None]:
             cb_title = "Все базы" if not card_base else card_base.short_title
@@ -589,10 +577,7 @@ def statistic_xls(request):
         import datetime
         import directions.models as d
         from operator import itemgetter
-        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                   int(date_start_o.split(".")[0]))
-        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
         iss = Issledovaniya.objects.filter(research__podrazdeleniye=lab, time_confirmation__isnull=False,
                                            time_confirmation__range=(date_start, date_end))
 
@@ -698,11 +683,7 @@ def statistic_xls(request):
             "{0} - {1}".format(date_start_o, date_end_o)
         ]
 
-        import datetime
-        date_start_o = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                     int(date_start_o.split(".")[0]))
-        date_end_o = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                   int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start_o, date_end_o = try_parse_range(date_start_o, date_end_o)
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
@@ -771,13 +752,9 @@ def statistic_xls(request):
             "attachment; filename='Статистика_Принято_емкостей_{0}_{1}-{2}.xls'".format(lab.title.replace(" ", "_"),
                                                                                         date_start_o, date_end_o), tr)
 
-        import datetime
         import directions.models as d
         from operator import itemgetter
-        date_start = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                   int(date_start_o.split(".")[0]))
-        date_end = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                 int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
         ws = wb.add_sheet(lab.title)
 
         font_style_wrap = xlwt.XFStyle()
@@ -848,11 +825,7 @@ def statistic_xls(request):
             "{0} - {1}".format(date_start_o, date_end_o)
         ]
 
-        import datetime
-        date_start_o = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                     int(date_start_o.split(".")[0]))
-        date_end_o = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                   int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start_o, date_end_o = try_parse_range(date_start_o, date_end_o)
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
@@ -908,11 +881,7 @@ def statistic_xls(request):
             per
         ]
 
-        import datetime
-        date_start_o = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                     int(date_start_o.split(".")[0]))
-        date_end_o = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                   int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start_o, date_end_o = try_parse_range(date_start_o, date_end_o)
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)
@@ -1060,11 +1029,7 @@ def statistic_xls(request):
             "{0} - {1}".format(date_start_o, date_end_o)
         ]
 
-        import datetime
-        date_start_o = datetime.date(int(date_start_o.split(".")[2]), int(date_start_o.split(".")[1]),
-                                     int(date_start_o.split(".")[0]))
-        date_end_o = datetime.date(int(date_end_o.split(".")[2]), int(date_end_o.split(".")[1]),
-                                   int(date_end_o.split(".")[0])) + datetime.timedelta(1)
+        date_start_o, date_end_o = try_parse_range(date_start_o, date_end_o)
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num], font_style)

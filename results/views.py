@@ -23,6 +23,7 @@ from directions.models import TubesRegistration, Issledovaniya, Result, Napravle
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
 from podrazdeleniya.models import Podrazdeleniya
+from utils.dates import try_parse_range
 
 
 @login_required
@@ -118,10 +119,7 @@ def loadready(request):
         deff = int(request.GET["def"])
         lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazdeleniye.pk))
 
-    date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                               int(date_start.split(".")[0]))
-    date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                             int(date_end.split(".")[0])) + datetime.timedelta(1)
+    date_start, date_end = try_parse_range(date_start, date_end)
     # with connection.cursor() as cursor:
     dates_cache = {}
     tubes = set()
@@ -2215,10 +2213,7 @@ def result_filter(request):
             iss_list = Issledovaniya.objects.filter(
                 research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
             if dir_pk == "" and status != 3:
-                date_start = datetime.date(int(date_start.split(".")[2]), int(date_start.split(".")[1]),
-                                           int(date_start.split(".")[0]))
-                date_end = datetime.date(int(date_end.split(".")[2]), int(date_end.split(".")[1]),
-                                         int(date_end.split(".")[0])) + datetime.timedelta(1)
+                date_start, date_end = try_parse_range(date_start, date_end)
                 if status == 0:
                     iss_list = iss_list.filter(tubes__time_recive__range=(date_start, date_end))
                 elif status == 1:

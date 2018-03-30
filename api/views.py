@@ -32,6 +32,7 @@ from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
+from utils.dates import try_parse_range
 
 
 def translit(locallangstring):
@@ -571,17 +572,19 @@ def patients_search_individual(request):
     if re.search(p4, query):
         objects = Individual.objects.filter(pk=int(query.split(":")[1]))
     n = 0
-    for row in objects.distinct().order_by("family", "name", "patronymic", "birthday"):
-        n += 1
-        data.append({"family": row.family,
-                     "name": row.name,
-                     "patronymic": row.patronymic,
-                     "birthday": row.bd(),
-                     "age": row.age_s(),
-                     "sex": row.sex,
-                     "pk": row.pk})
-        if n == 25:
-            break
+
+    if not isinstance(objects, list):
+        for row in objects.distinct().order_by("family", "name", "patronymic", "birthday"):
+            n += 1
+            data.append({"family": row.family,
+                         "name": row.name,
+                         "patronymic": row.patronymic,
+                         "birthday": row.bd(),
+                         "age": row.age_s(),
+                         "sex": row.sex,
+                         "pk": row.pk})
+            if n == 25:
+                break
     return JsonResponse({"results": data})
 
 
@@ -614,11 +617,8 @@ def directions_history(request):
 
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
-    date_start = request_data["date_from"].split(".")
-    date_end = request_data["date_to"].split(".")
 
-    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
-    date_end = datetime.date(int(date_end[2]), int(date_end[1]), int(date_end[0])) + datetime.timedelta(days=1)
+    date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     try:
         if pk >= 0 or req_status == 4:
             if req_status != 4:
@@ -1070,9 +1070,7 @@ def statistics_tickets_send(request):
 def statistics_tickets_get(request):
     response = {"data": []}
     request_data = json.loads(request.body)
-    date_start = request_data["date"].split(".")
-    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
-    date_end = date_start + datetime.timedelta(1)
+    date_start, date_end = try_parse_range(request_data["date"])
     n = 0
     for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
@@ -1121,7 +1119,7 @@ def directions_paraclinic_form(request):
     import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
-    pk = request_data.get("pk", -1)
+    pk = request_data.get("pk", -1) or -1
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -1299,9 +1297,7 @@ def directions_paraclinic_confirm_reset(request):
 def directions_paraclinic_history(request):
     response = {"directions": []}
     request_data = json.loads(request.body)
-    date_start = request_data["date"].split(".")
-    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
-    date_end = date_start + datetime.timedelta(1)
+    date_start, date_end = try_parse_range(request_data["date"])
     has_dirs = []
     for direction in directions.\
             Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) |
@@ -1430,9 +1426,7 @@ def directions_mark_visit(request):
 def directions_visit_journal(request):
     response = {"data": []}
     request_data = json.loads(request.body)
-    date_start = request_data["date"].split(".")
-    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
-    date_end = date_start + datetime.timedelta(1)
+    date_start, date_end = try_parse_range(request_data["date"])
     for v in directions.Napravleniya.objects.filter(visit_date__range=(date_start, date_end,), visit_who_mark=request.user.doctorprofile).order_by("-visit_date"):
         response["data"].append({
             "pk": v.pk,
@@ -1466,11 +1460,8 @@ def directions_results_report(request):
     individual_pk = request_data.get("individual", -1)
     slog.Log(key=str(individual_pk), type=20000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     params = request_data.get("params", [])
-    date_start = request_data["date_start"].split(".")
-    date_end = request_data["date_end"].split(".")
 
-    date_start = datetime.date(int(date_start[2]), int(date_start[1]), int(date_start[0]))
-    date_end = datetime.date(int(date_end[2]), int(date_end[1]), int(date_end[0])) + datetime.timedelta(days=1)
+    date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     pat = re.compile(r"^\d+(.\d+)?-\d+(.\d+)?$")
 
     if Individual.objects.filter(pk=individual_pk).exists():
