@@ -721,6 +721,10 @@ def result_print(request):
     pdfmetrics.registerFont(
         TTFont('OpenSansItalic', os.path.join(FONTS_FOLDER, 'OpenSans-Italic.ttf')))
     pdfmetrics.registerFont(
+        TTFont('OpenSansBoldItalic', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-BoldItalic.ttf')))
+    pdfmetrics.registerFont(
+        TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'OpenSans', 'OpenSans-Light.ttf')))
+    pdfmetrics.registerFont(
         TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
     pdfmetrics.registerFont(
         TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
@@ -779,7 +783,7 @@ def result_print(request):
     img_path = os.path.join(FONTS_FOLDER, '..', 'static', 'img')
     if not os.path.exists(img_path):
         os.makedirs(img_path)
-    logo_path = os.path.join(img_path, 'logo.jpg')
+    logo_path = os.path.join(img_path, 'logo.png')
     if request.GET.get("update_logo", "0") == "1" or not os.path.isfile(logo_path):
         with open(logo_path, "wb") as fh:
             fh.write(base64.decodebytes(SettingManager.get("logo_base64_img").split(",")[1].encode()))
@@ -789,7 +793,7 @@ def result_print(request):
     i.drawHeight = i.drawHeight * (nw / i.drawWidth)
     i.drawWidth = nw
     logo_col = [i, '', '', '', '', Paragraph(
-        '%s<br/>%s<br/>%s' % (
+        'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSansLight">(L2-irk.ru)</font><br/><br/>%s<br/>%s<br/>%s' % (
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
