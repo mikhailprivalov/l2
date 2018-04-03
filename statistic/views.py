@@ -167,9 +167,13 @@ def statistic_xls(request):
 
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
-        users = [x for x in json.loads(users_o) if
-                 (access_to_all or int(x) == request.user.doctorprofile.pk) and DoctorProfile.objects.filter(
-                     pk=x).exists()]
+
+        users_o = json.loads(users_o)
+        if not isinstance(users_o, list):
+            users_o = []
+        users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
+
+        users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
 
         response['Content-Disposition'] = str.translate("attachment; filename='Статталоны.xls'", tr)
         font_style = xlwt.XFStyle()
