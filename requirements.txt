@@ -36,3 +36,4 @@ django-webpack-loader
 django-ratelimit
 git+git://github.com/moodpulse/django-cachalot-2#egg=django-cachalot-2
 jsonpickle
+pika

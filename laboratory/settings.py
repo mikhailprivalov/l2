@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'statistics_tickets',
     'webpack_loader',
     'reports',
+    'mq.apps.MqConfig',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -142,10 +143,20 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt',
         },
+        'pika': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs') + '/log-pika.txt',
+        },
     },
     'loggers': {
         'django.request': {
             'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'pika': {
+            'handlers': ['pika'],
             'level': 'ERROR',
             'propagate': True,
         },
@@ -212,6 +223,9 @@ DEBUG = False
 LOGTAIL_FILES = {
     'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')
 }
+
+RMQ_URL = "amqp://t:t@localhost:5672/"
+RMQ_ENABLED = False
 
 try:
     from laboratory.local_settings import *

@@ -109,7 +109,7 @@ venv.bak/
 .mypy_cache/
 ### Node template
 # Logs
-logs/log.txt
+logs/log*.txt
 npm-debug.log*
 yarn-error.log*
 # Runtime data

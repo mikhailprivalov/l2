@@ -240,8 +240,8 @@ def results_save(request):
                         fraction_result.ref_about = ""
                         fraction_result.ref_m = None
                         fraction_result.ref_f = None
+                        fraction_result.get_ref(re_save=True, needsave=False)
                         fraction_result.save()
-                        fraction_result.get_ref(re_save=True)
             issledovaniye.doc_save = request.user.doctorprofile  # Кто сохранил
             from django.utils import timezone
 

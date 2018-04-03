@@ -46,6 +46,7 @@ urlpatterns = [
                   path('barcodes/', include('barcodes.urls')),
                   path('health/', include('health.urls')),
                   path('reports/', include('reports.urls')),
+                  path('mq/', include('mq.urls')),
                   path('logout/', logout, {'next_page': '/'}),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -248,7 +248,7 @@ class Napravleniya(models.Model):
         return r
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, issledovaniya=None):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, doc_current, ofname_id, ofname, issledovaniya=None, save=True):
         """
         Генерация направления
         :param client_id: id пациента
@@ -268,7 +268,11 @@ class Napravleniya(models.Model):
 
         if historynum != "":
             dir.history_num = historynum
-        dir.save()
+        if ofname_id > -1 and ofname:
+            dir.doc = ofname
+            dir.doc_who_create = doc_current
+        if save:
+            dir.save()
         return dir
 
     @staticmethod
@@ -344,9 +348,10 @@ class Napravleniya(models.Model):
                                                                                              doc_current,
                                                                                              finsource,
                                                                                              diagnos,
-                                                                                             history_num)
-                        Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
-                                                 ofname_id, ofname)
+                                                                                             history_num,
+                                                                                             doc_current,
+                                                                                             ofname_id,
+                                                                                             ofname)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -355,9 +360,10 @@ class Napravleniya(models.Model):
                                                                                              doc_current,
                                                                                              finsource,
                                                                                              diagnos,
-                                                                                             history_num)
-                        Napravleniya.set_of_name(directions_for_researches[dir_group], doc_current,
-                                                 ofname_id, ofname)
+                                                                                             history_num,
+                                                                                             doc_current,
+                                                                                             ofname_id,
+                                                                                             ofname)
 
                         result["list_id"].append(
                             directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
@@ -527,26 +533,29 @@ class Result(models.Model):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
     def get_units(self):
-        if not self.units:
+        if not self.units and self.fraction.units and self.fraction.units != "":
             self.units = self.fraction.units
             self.save()
-        return self.units
+        return self.units or ""
 
-    def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False):
+    def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):
         if (not self.ref_title and not fromsave) or re_save:
             self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
             self.save()
             if not self.ref_m or re_save:
                 self.ref_m = self.fraction.ref_m if self.fraction.default_ref is None else self.fraction.default_ref.ref_m
-                self.save()
+                if needsave:
+                    self.save()
 
             if not self.ref_f or re_save:
                 self.ref_f = self.fraction.ref_f if self.fraction.default_ref is None else self.fraction.default_ref.ref_f
-                self.save()
+                if needsave:
+                    self.save()
 
             if not self.ref_about or re_save:
                 self.ref_about = "" if self.fraction.default_ref is None else self.fraction.default_ref.about
-                self.save()
+                if needsave:
+                    self.save()
 
         if full:
             return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
