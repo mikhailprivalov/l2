@@ -16,5 +16,5 @@ class Command(BaseCommand):
         f = int(r[0])
         t = int(r[1])
         for pk in range(f, t + 1):
-            mq_send("update", n, str(pk))
+            mq_send("updated", n, str(pk))
             self.stdout.write("{} {} -> MQ".format(n, pk))
