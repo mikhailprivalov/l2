@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         n = options['model']
-        r = options['directions_range'].split('-')
+        r = options['pk_range'].split('-')
         f = int(r[0])
         t = int(r[1])
         for pk in range(f, t + 1):
