@@ -127,7 +127,7 @@ def get_object(request):
             if users.DoctorProfile.objects.filter(pk=pk):
                 i = users.DoctorProfile.objects.get(pk=pk)
                 d["pk"] = i.pk
-                d["username"] = i.username
+                d["username"] = i.user.username
                 d["fio"] = i.fio
                 d["podrazdeleniye"] = i.podrazdeleniye_id
 
