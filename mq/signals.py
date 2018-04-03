@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 import directions.models as directions
 import clients.models as clients
 import directory.models as directory
@@ -14,8 +14,15 @@ def post_save_l2(sender, instance, created, **kwargs):
         return
     s_name = str(sender).split("'")
     s_name = s_name[1]
-    # print("Post save emited for", s_name, ":", instance, ":", created)
     mq_send("created" if created else "updated", s_name, instance.pk)
+
+
+def post_delete_l2(sender, instance, **kwargs):
+    if not RMQ_ENABLED:
+        return
+    s_name = str(sender).split("'")
+    s_name = s_name[1]
+    mq_send("deleted", s_name, instance.pk)
 
 
 for s in [
@@ -37,3 +44,4 @@ for s in [
     directory.ParaclinicInputField,
 ]:
     post_save.connect(post_save_l2, sender=s)
+    post_delete.connect(post_delete_l2, sender=s)
