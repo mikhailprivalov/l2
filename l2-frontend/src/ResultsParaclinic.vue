@@ -150,7 +150,7 @@
         this.load_history()
       },
       data: {
-        handler() {
+        handler(p, v) {
           if(this.data.ok) {
             if (this.inserted) {
               this.changed = true
@@ -228,43 +228,48 @@
       },
       save(iss) {
         let vm = this
+        vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave(iss, false).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
-            vm.changed = false
             iss.saved = true
             vm.reload_if_need()
+            vm.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
+          vm.inserted = true
         })
       },
       save_and_confirm(iss) {
         let vm = this
+        vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave(iss, true).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             okmessage('Подтверждено')
-            vm.changed = false
             iss.saved = true
-            iss.confirmed = true
             iss.allow_reset_confirm = true
+            iss.confirmed = true
             vm.reload_if_need()
+            vm.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
+          vm.inserted = true
         })
       },
       confirm(iss) {
         let vm = this
+        vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultConfirm(iss.pk).then(data => {
           if (data.ok) {
@@ -272,12 +277,14 @@
             iss.confirmed = true
             iss.allow_reset_confirm = true
             vm.reload_if_need()
+            vm.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
+          vm.inserted = true
         })
       },
       reset_confirm(iss) {
@@ -287,18 +294,21 @@
         if (doreset === false || doreset === null) {
           return
         }
+        vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultConfirmReset(iss.pk).then(data => {
           if (data.ok) {
             okmessage('Подтверждение сброшено')
             iss.confirmed = false
             vm.reload_if_need()
+            vm.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
+          vm.inserted = true
         })
       },
       clear(ignore) {
