@@ -150,7 +150,7 @@
         this.load_history()
       },
       data: {
-        handler(p, v) {
+        handler() {
           if(this.data.ok) {
             if (this.inserted) {
               this.changed = true
