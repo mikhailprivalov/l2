@@ -216,17 +216,21 @@ def results_save(request):
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
                     created = True
-                fraction_result.value = bleach.clean(fractions[key],
-                                                     tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font',
-                                                           'p', 'span', 'div']).replace("<br>",
-                                                                                        "<br/>")  # Установка значения
+                tv = bleach.clean(fractions[key],
+                                                 tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font',
+                                                       'p', 'span', 'div']).replace("<br>",
+                                                                                    "<br/>")  # Установка значения
+                fv = "" if created else fraction_result.value
+                fraction_result.value = tv
                 need_save = True
                 if fraction_result.value == "":
                     need_save = False
                     if not created:
                         fraction_result.delete()
+                elif tv == fv:
+                    need_save = False
                 if need_save:
-                    fraction_result.get_units()
+                    fraction_result.get_units(needsave=False)
                     fraction_result.iteration = 1  # Установка итерации
                     if key in fractions_ref:
                         r = fractions_ref[key]

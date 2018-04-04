@@ -532,10 +532,11 @@ class Result(models.Model):
     def __str__(self):
         return "%s | %s | %s" % (self.pk, self.fraction, self.ref_m is not None and self.ref_f is not None)
 
-    def get_units(self):
+    def get_units(self, needsave=True):
         if not self.units and self.fraction.units and self.fraction.units != "":
             self.units = self.fraction.units
-            self.save()
+            if needsave:
+                self.save()
         return self.units or ""
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):
