@@ -173,8 +173,8 @@ def get_object(request):
                 d["order"] = i.order
 
         elif mdl == "ParaclinicInputField":
-            if directory.ParaclinicInputGroups.objects.filter(pk=pk):
-                i = directory.ParaclinicInputGroups.objects.get(pk=pk)
+            if directory.ParaclinicInputField.objects.filter(pk=pk):
+                i = directory.ParaclinicInputField.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
                 d["group"] = i.group_id
