@@ -90,7 +90,7 @@ def get_object(request):
                 d["family"] = i.family
                 d["name"] = i.name
                 d["patronymic"] = i.patronymic
-                d["birthday"] = i.birthday
+                d["birthday"] = i.bd()
                 d["sex"] = i.sex
 
         elif mdl == "Card":
