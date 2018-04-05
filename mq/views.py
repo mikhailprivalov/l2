@@ -48,6 +48,7 @@ def get_object(request):
                 d["doc_recive"] = None if not t.doc_recive else t.doc_recive_id
                 d["time_recive"] = dt(t.time_recive)
                 d["notice"] = t.notice
+                d["issledovaniya"] = [x.pk for x in t.issledovaniya_set.all()]
 
         elif mdl == "Issledovaniya":
             if directions.Issledovaniya.objects.filter(pk=pk).exists():
@@ -55,7 +56,6 @@ def get_object(request):
                 d["pk"] = i.pk
                 d["direction"] = i.napravleniye_id
                 d["research"] = i.research_id
-                d["tubes"] = [x.pk for x in i.tubes.all()]
                 d["doc_save"] = None if not i.doc_save else i.doc_save_id
                 d["time_save"] = dt(i.time_save)
                 d["doc_confirmation"] = None if not i.doc_confirmation else i.doc_confirmation_id
