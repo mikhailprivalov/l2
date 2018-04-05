@@ -70,7 +70,7 @@ def get_object(request):
                 d["issledovaniye"] = r.issledovaniye_id
                 d["fraction"] = r.fraction_id
                 d["value"] = r.value
-                d["units"] = r.units
+                d["units"] = r.get_units()
                 d["is_normal"] = r.is_normal
 
         elif mdl == "ParaclinicResult":
