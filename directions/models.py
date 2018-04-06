@@ -561,10 +561,7 @@ class Result(models.Model):
         if full:
             return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
 
-        ref = self.ref_f
-        sex = self.issledovaniye.napravleniye.client.individual.sex.lower()
-        if sex == "м":
-            ref = self.ref_m
+        ref = self.ref_f if self.issledovaniye.napravleniye.client.individual.sex.lower() != "м" else self.ref_m
 
         if isinstance(ref, str):
             ref = json.loads(ref)

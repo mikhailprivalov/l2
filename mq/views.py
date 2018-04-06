@@ -62,6 +62,7 @@ def get_object(request):
                 d["doc_confirmation"] = None if not i.doc_confirmation else i.doc_confirmation_id
                 d["time_confirmation"] = dt(i.time_confirmation)
                 d["lab_comment"] = i.lab_comment
+                d["age"] = i.napravleniye.client.individual.age(iss=i, days_monthes_years=True)
 
         elif mdl == "Result":
             if directions.Result.objects.filter(pk=pk):
@@ -72,6 +73,7 @@ def get_object(request):
                 d["value"] = r.value
                 d["units"] = r.get_units()
                 d["is_normal"] = r.is_normal
+                d["ref"] = r.get_ref()
 
         elif mdl == "ParaclinicResult":
             if directions.ParaclinicResult.objects.filter(pk=pk):
