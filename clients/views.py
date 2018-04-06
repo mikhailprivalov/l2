@@ -74,11 +74,11 @@ def receive_db(request):
     for x in d:
         polis = Clients.Document.objects.filter(
             document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"),
-            serial=x["Polisser"],
-            number=x["Polisnum"])
+            serial=x.get("Polisser", ""),
+            number=x.get("Polisnum", "")).exclude(number="")
         snils = Clients.Document.objects.filter(
             document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
-            number=x.get("Snils", ""))
+            number=x.get("Snils", "")).exclude(number="")
 
         if snils.exists() or polis.exists():
             individual = (snils if snils.exists() else polis)[0].individual
@@ -107,7 +107,7 @@ def receive_db(request):
                     individual.sex = x["Sex"]
                     individual.save()
 
-        if x["Polisnum"] != "":
+        if x.get("Polisnum", "") != "":
             polis = Clients.Document.objects.filter(
                 document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"), serial=x["Polisser"],
                 number=x["Polisnum"], individual=individual).order_by("-pk")
