@@ -66,6 +66,7 @@ def receive_db(request):
 
     from rmis_integration.client import Client
     from slog.models import Log
+    Log(key="receive_db", type=0, body=data, user=None).save()
     c = None
     try:
         c = Client()
