@@ -1450,7 +1450,7 @@ def result_print(request):
                 t2 = timezone.localtime(iss.time_confirmation).strftime('%d.%m.%Y')
                 fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
-                fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                fwb.append(Paragraph("Врач-исполнитель: {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
