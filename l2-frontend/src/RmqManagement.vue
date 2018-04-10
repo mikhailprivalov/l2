@@ -93,6 +93,7 @@
           if (vm.csended + vm.from >= vm.to) {
             vm.insend = false
             vm.oksend = true
+            vm.csended--
           } else {
             vm.send()
           }
