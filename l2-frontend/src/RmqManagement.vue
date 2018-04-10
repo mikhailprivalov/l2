@@ -13,8 +13,10 @@
       <button :disabled="model === '' || insend" @click="do_send">&rAarr;</button>
     </div>
     <div v-if="insend || oksend">
-      <progress :max="to" :value="csended" style="width: 100%;"></progress>
-      <div class="text-center">Отправка {{csended}}/{{to-from}} ({{Math.round(csended/(to-from)*100)}}%)</div>
+      <progress :max="Math.max(to-from, 1)" :value="csended" style="width: 100%;"></progress>
+      <div class="text-center">Отправка {{csended}}/{{Math.max(to-from, 1)}} ({{Math.round(csended/(Math.max(to-from,
+        1))*100)}}%)
+      </div>
       <div class="text-center">Исполнение задания можно проверить в RabbitMQ Management или в приложении-интеграторе
       </div>
     </div>
@@ -87,11 +89,11 @@
       send() {
         let vm = this
         $.ajax({url: '/mainmenu/rmq/send', data: {model: vm.model, pk: vm.csended + vm.from}}).always(() => {
+          vm.csended++
           if (vm.csended + vm.from >= vm.to) {
             vm.insend = false
             vm.oksend = true
           } else {
-            vm.csended++
             vm.send()
           }
         })
