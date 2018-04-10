@@ -7,9 +7,9 @@
       </select>
     </label>
     <div>
-      Отправить в задание на синхронизацию: с <input v-model.int="from" type="number" min="0"
+      Отправить в задание на синхронизацию: с <input v-model.number="from" type="number" min="0"
                                                      :disabled="model === '' || insend"/>
-      по <input v-model.int="to" :disabled="model === '' || insend" type="number" min="0"/>
+      по <input v-model.number="to" :disabled="model === '' || insend" type="number" min="0"/>
       <button :disabled="model === '' || insend" @click="do_send">&rAarr;</button>
     </div>
     <div v-if="insend || oksend">
