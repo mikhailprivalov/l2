@@ -62,7 +62,7 @@ def get_object(request):
                 d["doc_confirmation"] = None if not i.doc_confirmation else i.doc_confirmation_id
                 d["time_confirmation"] = dt(i.time_confirmation)
                 d["lab_comment"] = i.lab_comment
-                d["age"] = [None, None, None] if not i.tubes.filter(time_recive__isnull=False).exists() else i.napravleniye.client.individual.age(iss=i, days_monthes_years=True)
+                d["age"] = i.napravleniye.client.individual.age(iss=i, days_monthes_years=True)
 
         elif mdl == "Result":
             if directions.Result.objects.filter(pk=pk):

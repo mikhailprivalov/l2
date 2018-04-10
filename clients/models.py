@@ -172,9 +172,9 @@ class Individual(models.Model):
         """
         Функция подсчета возраста
         """
-        if iss is None or (not iss.tubes.filter(time_recive__isnull=False).exists() and not iss.research.is_paraclinic):
+        if iss is None or ((not iss.tubes.exists() or not iss.tubes.filter(time_recive__isnull=False).exists()) and not iss.research.is_paraclinic):
             today = date.today()
-        elif iss.time_confirmation and iss.research.is_paraclinic:
+        elif iss.time_confirmation and iss.research.is_paraclinic or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
