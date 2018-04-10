@@ -14,7 +14,7 @@
     </div>
     <div v-if="insend || oksend">
       <progress :max="Math.max(to-from + 1, 1)" :value="csended + 1" style="width: 100%;"></progress>
-      <div class="text-center">Отправка {{csended + 1}}/{{Math.max(to-from + 1, 1)}} ({{Math.round(csended/(Math.max(to-from + 1,
+      <div class="text-center">Отправка {{csended + 1}}/{{Math.max(to-from + 1, 1)}} ({{Math.round((csended + 1)/(Math.max(to-from + 1,
         1))*100)}}%)
       </div>
       <div class="text-center">Исполнение задания можно проверить в RabbitMQ Management или в приложении-интеграторе
