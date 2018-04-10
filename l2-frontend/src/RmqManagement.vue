@@ -88,12 +88,15 @@
       },
       send() {
         let vm = this
+        if(vm.csended + vm.from >= vm.to) {
+          vm.csended = vm.to - vm.from + 1
+          return
+        }
         $.ajax({url: '/mainmenu/rmq/send', data: {model: vm.model, pk: vm.csended + vm.from}}).always(() => {
           vm.csended++
           if (vm.csended + vm.from >= vm.to) {
             vm.insend = false
             vm.oksend = true
-            vm.csended--
           } else {
             vm.send()
           }
