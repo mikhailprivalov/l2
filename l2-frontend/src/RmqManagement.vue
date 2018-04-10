@@ -13,8 +13,8 @@
       <button :disabled="model === '' || insend" @click="do_send">&rAarr;</button>
     </div>
     <div v-if="insend || oksend">
-      <progress :max="Math.max(to-from, 1)" :value="csended" style="width: 100%;"></progress>
-      <div class="text-center">Отправка {{csended}}/{{Math.max(to-from, 1)}} ({{Math.round(csended/(Math.max(to-from,
+      <progress :max="Math.max(to-from + 1, 1)" :value="csended + 1" style="width: 100%;"></progress>
+      <div class="text-center">Отправка {{csended + 1}}/{{Math.max(to-from + 1, 1)}} ({{Math.round(csended/(Math.max(to-from + 1,
         1))*100)}}%)
       </div>
       <div class="text-center">Исполнение задания можно проверить в RabbitMQ Management или в приложении-интеграторе
