@@ -371,7 +371,9 @@ class Patients(BaseRequester):
     def create_rmis_card(individual: clients_models.Individual, get_id: str):
         base = clients_models.CardBase.objects.filter(is_rmis=True, hide=False).first()
         if not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
-            clients_models.Card.objects.filter(base=base, individual=individual).update(is_archive=True)
+            for cm in clients_models.Card.objects.filter(base=base, individual=individual):
+                cm.is_archive = True
+                cm.save()
             c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False).save()
             return c
         return None

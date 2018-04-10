@@ -24,7 +24,9 @@ class Individual(models.Model):
         slog.Log(key=str(self.pk), type=2002,
                  body=simplejson.dumps({"Сохраняемая запись": str(self), "Объединяемая запись": str(b)}),
                  user=None).save()
-        Card.objects.filter(individual=b).update(individual=self)
+        for c in Card.objects.filter(individual=b):
+            c.individual = self
+            c.save()
         b.delete()
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
@@ -136,7 +138,8 @@ class Individual(models.Model):
                                 to_delete.append(d.pk)
                                 if Card.objects.filter(polis=d).exists():
                                     for c in Card.objects.filter(polis=d):
-                                        Card.objects.filter(polis=d).update(polis=ndocs[kk])
+                                        c.polis = ndocs[kk]
+                                        c.save()
                             else:
                                 has.append(kk)
                                 ndocs[kk] = d

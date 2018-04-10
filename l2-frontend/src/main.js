@@ -20,6 +20,7 @@ new Vue({
     'StatisticsTickets': () => import('./StatisticsTickets'),
     'DirectionVisit': () => import('./DirectionVisit'),
     'ResultsReport': () => import('./ResultsReport'),
+    'RmqManagement': () => import('./RmqManagement'),
     // loading,
   },
   data: {

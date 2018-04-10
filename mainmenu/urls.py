@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import TemplateView
@@ -44,4 +45,8 @@ urlpatterns = [
     path('receive/last_received', receivematerial.views.last_received),
     path('receive/history', receivematerial.views.receive_history),
     path('receive/journal', receivematerial.views.receive_journal),
+    path('rmq', staff_member_required(TemplateView.as_view(template_name="dashboard/rmq.html"))),
+    path('rmq/messages', views.rmq_messages),
+    path('rmq/count', views.rmq_count),
+    path('rmq/send', views.rmq_send),
 ]

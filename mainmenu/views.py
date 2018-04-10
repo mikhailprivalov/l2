@@ -77,6 +77,8 @@ def dashboard(request):  # Представление панели управл�
 
         if settings.LDAP and settings.LDAP["enable"]:
             pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
+        if settings.RMQ_ENABLED:
+            pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
         pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
 
         if SettingManager.get("home_page", default="http://home") != "false":
@@ -852,3 +854,27 @@ def results_report(request):
 def results_paraclinic_blanks(request):
     researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True, podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by("title")
     return render(request, 'dashboard/results_paraclinic_blanks.html', {"researches": researches})
+
+
+@staff_member_required
+def rmq_messages(request):
+    from mq.publisher import get_queue_messages_count
+    data = {"count": get_queue_messages_count()}
+    return JsonResponse(data)
+
+
+@staff_member_required
+def rmq_count(request):
+    model = request.GET["model"].split(".")
+    from django.apps import apps
+    m = apps.get_model(app_label=model[0], model_name=model[1])
+    i = m.objects.all().order_by("-pk").first()
+    return JsonResponse({"count": 0 if not i else i.pk})
+
+
+@staff_member_required
+def rmq_send(request):
+    model = request.GET["model"].split(".")
+    from mq.publisher import mq_send
+    mq_send("updated", "{}.models.{}".format(model[0], model[1]), str(request.GET["pk"]))
+    return JsonResponse({"ok": True})

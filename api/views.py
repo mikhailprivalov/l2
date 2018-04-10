@@ -1104,8 +1104,9 @@ def statistics_tickets_invalidate(request):
     request_data = json.loads(request.body)
     if StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
-            StatisticsTicket.objects.filter(pk=request_data["pk"]).update(
-                invalid_ticket=request_data.get("invalid", False))
+            for s in StatisticsTicket.objects.filter(pk=request_data["pk"]):
+                s.invalid_ticket = request_data.get("invalid", False)
+                s.save()
             response["ok"] = True
             Log(key=str(request_data["pk"]), type=7001, body=json.dumps(request_data.get("invalid", False)),
                 user=request.user.doctorprofile).save()
