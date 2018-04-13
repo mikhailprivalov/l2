@@ -24,10 +24,10 @@
           </div>
           <div v-for="i in direction.iss" class="research-row">
             <div class="row">
-              <div class="col-xs-6">
+              <div class="col-xs-8">
                 {{i.title}}
               </div>
-              <div class="col-xs-6 text-right">
+              <div class="col-xs-4 text-right">
                 <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
                 <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
                 <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
@@ -36,8 +36,8 @@
           </div>
           <hr/>
           <div class="row">
-            <div class="col-xs-6"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-            <div class="col-xs-6 text-right">
+            <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+            <div class="col-xs-7 text-right">
               <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать
                 результатов</a>
             </div>
@@ -376,7 +376,7 @@
   }
 
   .results-sidebar {
-    width: 350px;
+    width: 294px;
     border-right: 1px solid #b1b1b1;
     display: flex;
     flex-direction: column;
