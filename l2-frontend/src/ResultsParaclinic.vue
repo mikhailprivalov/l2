@@ -385,7 +385,7 @@
   .results-content {
     display: flex;
     flex-direction: column;
-    width: calc(100% - 350px);
+    width: calc(100% - 294px);
   }
 
   .results-top {
