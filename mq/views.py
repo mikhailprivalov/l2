@@ -36,7 +36,7 @@ def get_object(request):
                 d["doc_who_create"] = n.doc_who_create_id
                 d["istochnik_f"] = n.istochnik_f_id
                 d["cancel"] = n.cancel
-                d["result_rmis_send"] = n.result_rmis_send
+                d["result_rmis_send"] = n.result_rmis_send and n.rmis_number != "NONERMIS"
 
         elif mdl == "TubesRegistration":
             if directions.TubesRegistration.objects.filter(pk=pk).exists():
