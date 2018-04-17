@@ -109,8 +109,11 @@
         })
       })
       $(window).on('beforeunload', function () {
-        if (vm.selected_card.pk !== -1 && vm.selected_researches.length > 0)
+        if (vm.selected_card.pk !== -1 && vm.selected_researches.length > 0 && (!document.activeElement || !document.activeElement.href || !document.activeElement.href.startsWith("sip:")))
           return 'Исследования выбраны, но направления не созданы. Вы уверены, что хотите покинуть страницу?'
+        else if(document.activeElement) {
+          $(document.activeElement).blur()
+        }
       })
     },
     methods: {

@@ -3,7 +3,7 @@
     <div ref="ct" style="display: flex">
       <div ref="tl" class="split content">
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="false" history_n="false">
-          <div v-if="can_create_directions" slot="for_card" class="text-right">
+          <div v-if="can_create_directions" slot="for_card_top" class="text-right">
             <a :href="directions_url">Создать направления</a>
           </div>
         </patient-picker>
