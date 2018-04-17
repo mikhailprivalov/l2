@@ -3,9 +3,11 @@
     <div id="cont_left" class="split split-horizontal">
       <div id="left_top" class="split content scrolldown">
         <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
-          <div slot="for_card" class="text-right">
+          <div slot="for_card_top" class="text-right">
             <a :href="report_url" class="fli">Отчёт по результатам</a>
             <a v-if="can_create_tickets" :href="ticket_url" class="fli">Создать статталон</a>
+          </div>
+          <div slot="for_card" class="text-right">
             <div v-if="selected_researches.length > 0"
                  style="margin-top: 5px;text-align: left">
               <table class="table table-bordered lastresults">

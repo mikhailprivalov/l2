@@ -25,3 +25,8 @@ class CardBaseAdmin(admin.ModelAdmin):
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.Phones)
+class PhonesAdmin(admin.ModelAdmin):
+    pass

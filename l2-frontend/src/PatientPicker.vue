@@ -61,6 +61,18 @@
       </tr>
       </tbody>
     </table>
+    <div class="row">
+      <div class="col-xs-5 hovershow" v-if="phones.length > 0">
+        <div class="fastlinks hovershow1"><a href="#">Наведите для показа телефонов</a></div>
+        <div class="fastlinks hovershow2" style="margin-top: 1px"><a :href="'sip:' + p" v-for="p in phones"
+                                                                     style="display: inline-block"><i
+          class="glyphicon glyphicon-phone"></i> {{format_number(p)}}</a></div>
+      </div>
+      <div class="col-xs-5" v-else></div>
+      <div class="col-xs-7">
+        <slot name="for_card_top" v-if="loaded" style="margin-top: 5px"/>
+      </div>
+    </div>
     <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
     <slot name="for_all" style="margin-top: 5px"/>
     <!--<div v-if="search_results === 'true' && loaded" style="text-align: right;margin-top: 5px;"><a
@@ -303,9 +315,23 @@
       },
       inLoading() {
         return this.$store.getters.inLoading
+      },
+      phones() {
+        if ('phones' in this.selected_card) {
+          return this.selected_card.phones
+        }
+        return []
       }
     },
     methods: {
+      format_number(a) {
+        if (a.length === 6) {
+          return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
+        } else if (a.length === 11) {
+          return `${a.slice(0, 1)}-${a.slice(1, 4)}-${a.slice(4, 6)}-${a.slice(6, 8)}-${a.slice(8, 10)}-${a.slice(10, 11)}`
+        }
+        return a
+      },
       hide_modal() {
         this.showModal = false
         this.$refs.modal.$el.style.display = 'none'
@@ -519,6 +545,41 @@
         .filter-option {
           text-overflow: ellipsis;
         }
+      }
+    }
+  }
+
+  .hovershow {
+    position: relative;
+
+    a {
+      font-size: 12px;
+    }
+
+    .hovershow1 {
+      top: 1px;
+      position: absolute;
+
+      a {
+        color: grey;
+        display: inline-block;
+      }
+      color: grey;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .hovershow2 {
+      opacity: 0;
+    }
+
+    &:hover {
+      .hovershow1 {
+        display: none;
+      }
+      .hovershow2 {
+        opacity: 1;
+        transition: .5s ease-in opacity;
       }
     }
   }

@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from appconf.manager import SettingManager
+from clients.models import Phones
 from users.models import DoctorProfile
 from . import models as Clients
 
@@ -46,7 +48,8 @@ def get_db(request):
             "Number": x.number,
             "Polisser": "" if not doc else doc.serial,
             "Polisnum": "" if not doc else doc.number,
-            "Snils": snils
+            "Snils": snils,
+            "Tels": [y.number for y in Phones.objects.filter(card=x)]
         })
     return JsonResponse(data, safe=False)
 
@@ -69,7 +72,8 @@ def receive_db(request):
     # Log(key="receive_db", type=0, body=data, user=None).save()
     c = None
     try:
-        c = Client()
+        if SettingManager.get("rmis_enabled", default='false', default_type='b'):
+            c = Client()
     except ConnectionError:
         pass
     for x in d:
@@ -139,7 +143,16 @@ def receive_db(request):
         Clients.Card.objects.filter(pk__in=todelete).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
             polis = list(polis)
-            bulk_cards.append(Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0]))
+            card = Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0])
+            card.save()
+            for t in x.get("Tels", []):
+                card.add_phone(t)
+            card.clear_phones(x.get("Tels", []))
+        else:
+            for card in Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False):
+                for t in x.get("Tels", []):
+                    card.add_phone(t)
+                card.clear_phones(x.get("Tels", []))
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)
     return HttpResponse("OK", content_type="text/plain")

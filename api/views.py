@@ -438,7 +438,7 @@ def patients_search_card(request):
     card_type = CardBase.objects.get(pk=d['type'])
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
     p4 = re.compile(r'card_pk:\d+')
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -524,7 +524,8 @@ def patients_search_card(request):
                      "age": row.individual.age_s(),
                      "sex": row.individual.sex,
                      "individual_pk": row.individual.pk,
-                     "pk": row.pk})
+                     "pk": row.pk,
+                     "phones": row.get_phones()})
     return JsonResponse({"results": data})
 
 
@@ -535,7 +536,7 @@ def patients_search_individual(request):
     d = json.loads(request.body)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p4 = re.compile(r'individual_pk:\d+')
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     if re.search(p, query.lower()):

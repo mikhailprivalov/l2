@@ -358,6 +358,39 @@ class Card(models.Model):
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")
 
+    def get_phones(self):
+        return list(set([y for y in [x.normalize_number() for x in Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if y != ""]))
+
     class Meta:
         verbose_name = 'Карта'
         verbose_name_plural = 'Карты'
+
+    def clear_phones(self, ts):
+        to_delete = [x.pk for x in Phones.objects.filter(card=self) if x.number not in ts]
+        Phones.objects.filter(pk__in=to_delete).delete()
+
+    def add_phone(self, t: str):
+        Phones.objects.get_or_create(card=self, number=t)
+
+
+class Phones(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    number = models.CharField(max_length=20, help_text='Номер телефона')
+
+    def normalize_number(self):
+        n = self.number
+        from string import digits
+        n = n.replace("+7", "8")
+        n = ''.join(c for c in n if c in digits)
+        if len(n) == 10 and n[0] == "9":
+            n = "8" + n
+        if len(n) == 1 and n[0] == "7":
+            n = "8" + n[1:]
+        return n
+
+    def __str__(self):
+        return "{0}: {1}".format(self.card, self.number)
+
+    class Meta:
+        verbose_name = 'Телефон'
+        verbose_name_plural = 'Телефоны'
