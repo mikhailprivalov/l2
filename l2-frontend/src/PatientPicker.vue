@@ -63,7 +63,7 @@
     </table>
     <div class="row">
       <div class="col-xs-5 hovershow" v-if="phones.length > 0">
-        <div class="fastlinks hovershow1"><a href="#">Наведите для показа телефонов</a></div>
+        <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
         <div class="fastlinks hovershow2" style="margin-top: 1px"><a :href="'sip:' + p" v-for="p in phones"
                                                                      style="display: inline-block"><i
           class="glyphicon glyphicon-phone"></i> {{format_number(p)}}</a></div>
