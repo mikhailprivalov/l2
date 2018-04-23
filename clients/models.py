@@ -80,12 +80,11 @@ class Individual(models.Model):
             query = {"surname": self.family, "name": self.name, "patrName": self.patronymic,
                      "birthDate": self.birthday.strftime("%Y-%m-%d")}
             rows = c.patients.client.searchIndividual(**query)
-            if len(query) == 1:
+            if len(rows) == 1:
                 rmis_uid = rows[0]
                 ok = True
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
-                    out.write("Q: %s" % simplejson.dumps(query))
 
         if not has_rmis and rmis_uid and rmis_uid != '':
             s = str(c.patients.create_rmis_card(self, rmis_uid))
