@@ -497,7 +497,7 @@ def patients_search_card(request):
                                                     card__base=card_type)
             except ValueError:
                 pass
-            if card_type.is_rmis and len(objects) == 0 and len(query) == 16:
+            if card_type.is_rmis and len(list(objects)) == 0 and len(query) == 16:
                 c = Client()
                 objects = c.patients.import_individual_to_base(query)
             else:

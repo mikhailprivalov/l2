@@ -85,6 +85,7 @@ class Individual(models.Model):
                 ok = True
                 if out:
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
+                    out.write("Q: %s" % simplejson.dumps(query))
 
         if not has_rmis and rmis_uid and rmis_uid != '':
             s = str(c.patients.create_rmis_card(self, rmis_uid))

@@ -398,8 +398,8 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                    (individual_row["surname"] is not None or individual_row["name"] is not None or individual_row[
-                        "patrName"] is not None) and individual_row["birthDate"] is not None):
+                    (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
+                    and individual_row["birthDate"] is not None):
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
                           patronymic=(individual_row["patrName"] or "").title(),
