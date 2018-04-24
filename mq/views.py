@@ -65,7 +65,7 @@ def get_object(request):
                 d["age"] = i.napravleniye.client.individual.age(iss=i, days_monthes_years=True)
 
         elif mdl == "Result":
-            if directions.Result.objects.filter(pk=pk):
+            if directions.Result.objects.filter(pk=pk).exists():
                 r = directions.Result.objects.get(pk=pk)
                 d["pk"] = r.pk
                 d["issledovaniye"] = r.issledovaniye_id
@@ -76,7 +76,7 @@ def get_object(request):
                 d["ref"] = r.get_ref()
 
         elif mdl == "ParaclinicResult":
-            if directions.ParaclinicResult.objects.filter(pk=pk):
+            if directions.ParaclinicResult.objects.filter(pk=pk).exists():
                 r = directions.ParaclinicResult.objects.get(pk=pk)
                 d["pk"] = r.pk
                 d["issledovaniye"] = r.issledovaniye_id
@@ -87,7 +87,7 @@ def get_object(request):
         import clients.models as clients
 
         if mdl == "Individual":
-            if clients.Individual.objects.filter(pk=pk):
+            if clients.Individual.objects.filter(pk=pk).exists():
                 i = clients.Individual.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["family"] = i.family
@@ -97,7 +97,7 @@ def get_object(request):
                 d["sex"] = i.sex
 
         elif mdl == "Card":
-            if clients.Card.objects.filter(pk=pk):
+            if clients.Card.objects.filter(pk=pk).exists():
                 c = clients.Card.objects.get(pk=pk)
                 d["pk"] = c.pk
                 d["number"] = c.number
@@ -106,7 +106,7 @@ def get_object(request):
                 d["is_archive"] = c.is_archive
 
         elif mdl == "CardBase":
-            if clients.CardBase.objects.filter(pk=pk):
+            if clients.CardBase.objects.filter(pk=pk).exists():
                 c = clients.CardBase.objects.get(pk=pk)
                 d["pk"] = c.pk
                 d["title"] = c.title
@@ -116,7 +116,7 @@ def get_object(request):
         import podrazdeleniya.models as podrazdeleniya
 
         if mdl == "Podrazdeleniya":
-            if podrazdeleniya.Podrazdeleniya.objects.filter(pk=pk):
+            if podrazdeleniya.Podrazdeleniya.objects.filter(pk=pk).exists():
                 i = podrazdeleniya.Podrazdeleniya.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
@@ -127,7 +127,7 @@ def get_object(request):
         import users.models as users
 
         if mdl == "DoctorProfile":
-            if users.DoctorProfile.objects.filter(pk=pk):
+            if users.DoctorProfile.objects.filter(pk=pk).exists():
                 i = users.DoctorProfile.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["username"] = i.user.username
@@ -138,7 +138,7 @@ def get_object(request):
         import researches.models as researches
 
         if mdl == "Tubes":
-            if researches.Tubes.objects.filter(pk=pk):
+            if researches.Tubes.objects.filter(pk=pk).exists():
                 i = researches.Tubes.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["color"] = i.color
@@ -149,7 +149,7 @@ def get_object(request):
         import directory.models as directory
 
         if mdl == "Researches":
-            if directory.Researches.objects.filter(pk=pk):
+            if directory.Researches.objects.filter(pk=pk).exists():
                 i = directory.Researches.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
@@ -159,7 +159,7 @@ def get_object(request):
                 d["code"] = i.code
 
         elif mdl == "Fractions":
-            if directory.Fractions.objects.filter(pk=pk):
+            if directory.Fractions.objects.filter(pk=pk).exists():
                 i = directory.Fractions.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
@@ -168,7 +168,7 @@ def get_object(request):
                 d["code"] = i.code
 
         elif mdl == "ParaclinicInputGroups":
-            if directory.ParaclinicInputGroups.objects.filter(pk=pk):
+            if directory.ParaclinicInputGroups.objects.filter(pk=pk).exists():
                 i = directory.ParaclinicInputGroups.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
@@ -176,7 +176,7 @@ def get_object(request):
                 d["order"] = i.order
 
         elif mdl == "ParaclinicInputField":
-            if directory.ParaclinicInputField.objects.filter(pk=pk):
+            if directory.ParaclinicInputField.objects.filter(pk=pk).exists():
                 i = directory.ParaclinicInputField.objects.get(pk=pk)
                 d["pk"] = i.pk
                 d["title"] = i.title
