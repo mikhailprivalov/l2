@@ -1,6 +1,7 @@
 import datetime
 import re
 
+import requests
 import simplejson as json
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
@@ -74,7 +75,7 @@ def receive_db(request):
     try:
         if SettingManager.get("rmis_enabled", default='false', default_type='b'):
             c = Client()
-    except ConnectionError:
+    except requests.exceptions.ConnectionError:
         pass
     for x in d:
         polis = Clients.Document.objects.filter(
@@ -129,7 +130,10 @@ def receive_db(request):
                     document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
                     number=x["Snils"], individual=individual).save()
         if c is not None:
-            individual.sync_with_rmis(c=c)
+            try:
+                individual.sync_with_rmis(c=c)
+            except requests.exceptions.ConnectionError:
+                pass
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(individual=individual)
         todelete = []
         for acard in cards:

@@ -1463,7 +1463,7 @@ def directions_results_report(request):
     slog.Log(key=str(individual_pk), type=20000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     params = request_data.get("params", [])
 
-    date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
+    date_start, date_end = try_parse_range(request_data.get("date_start"), request_data.get("date_end"))
     pat = re.compile(r"^\d+(.\d+)?-\d+(.\d+)?$")
 
     if Individual.objects.filter(pk=individual_pk).exists():
