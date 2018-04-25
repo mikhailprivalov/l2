@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
-from reportlab.platypus import PageBreak, Spacer, KeepTogether, KeepInFrame
+from reportlab.platypus import PageBreak, Spacer, KeepInFrame
 
 import directory.models as directory
 import slog.models as slog
