@@ -1458,10 +1458,7 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-        if split:
-            naprs.append(PTOContainer(fwb))
-        else:
-            naprs.append(KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph, hAlign='RIGHT'))
+        naprs.append(KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph, hAlign='RIGHT'))
         client_prev = direction.client.individual.pk
 
     doc.build(naprs)
