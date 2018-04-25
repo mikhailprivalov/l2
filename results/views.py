@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
-from reportlab.platypus import PageBreak, Spacer
+from reportlab.platypus import PageBreak, Spacer, KeepTogether, KeepInFrame
 
 import directory.models as directory
 import slog.models as slog
@@ -749,7 +749,7 @@ def result_print(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
                             rightMargin=5 * mm, topMargin=5 * mm,
-                            bottomMargin=5 * mm, allowSplitting=1 if split else 0,
+                            bottomMargin=5 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
     naprs = []
@@ -801,6 +801,7 @@ def result_print(request):
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
+    ph = doc.height
     import operator
 
     def print_vtype(data, f, iss, j, style_t, styleSheet):
@@ -1457,7 +1458,10 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-        naprs.append(PTOContainer(fwb))
+        if split:
+            naprs.append(PTOContainer(fwb))
+        else:
+            naprs.append(KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph, hAlign='RIGHT'))
         client_prev = direction.client.individual.pk
 
     doc.build(naprs)
