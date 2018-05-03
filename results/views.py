@@ -2014,7 +2014,8 @@ def results_search_directions(request):
         if len(split) > 2:
             twoname = split[2]
         if len(split) > 3:
-            bdate = split[3]
+            spq = split[3].split(".")
+            bdate = "%s-%s-%s" % (spq[2], spq[1], spq[0])
     elif bool(re.compile(r'^(.)(.)(.)(\d{2})(\d{2})(\d{4})$').match(query)):
         filter_type = "fio_short"
         family = query[0:1]

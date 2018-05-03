@@ -445,7 +445,8 @@ def discharge_search(request):
             if len(split) > 2:
                 twoname = split[2]
             if len(split) > 3:
-                bdate = split[3]
+                spq = split[3]
+                bdate = "%s-%s-%s" % (spq[4:8], spq[2:4], spq[0:2])
 
         rows = discharge.Discharge.objects.filter(created_at__range=(date_start, date_end,),
                                                   doc_fio__icontains=doc_fio)
@@ -456,8 +457,9 @@ def discharge_search(request):
         if filter_type == "fio":
             rows = rows.filter(client_surname__contains=family,
                                client_name__contains=name,
-                               client_patronymic__contains=twoname,
-                               client_birthday__contains=bdate)
+                               client_patronymic__contains=twoname)
+            if bdate != "":
+                rows = rows.filter(client_birthday=bdate)
 
         if filter_type == "card_number":
             rows = rows.filter(client_cardnum=int(query))
