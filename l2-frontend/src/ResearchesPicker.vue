@@ -56,7 +56,11 @@
       hidetemplates: {
         default: false,
         type: Boolean
-      }
+      },
+      oneselect: {
+        default: false,
+        type: Boolean
+      },
     },
     data() {
       return {
@@ -107,6 +111,10 @@
         this.check_template()
       },
       checked_researches() {
+        if(this.oneselect) {
+          this.$emit('input', this.checked_researches.length === 0? -1 : this.checked_researches[0])
+          return;
+        }
         this.$emit('input', this.checked_researches)
       }
     },
@@ -192,6 +200,10 @@
         return {title: 'Не выбран шаблон', pk: '-1', for_current_user: false, for_users_department: false, values: []}
       },
       select_research(pk) {
+        if(this.oneselect) {
+          this.checked_researches = [pk]
+          return;
+        }
         if (this.research_selected(pk)) {
           this.deselect_research_ignore(pk)
         } else {

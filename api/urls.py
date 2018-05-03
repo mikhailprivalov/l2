@@ -19,6 +19,8 @@ urlpatterns = [
     path('patients/search-card', views.patients_search_card),
     path('patients/search-individual', views.patients_search_individual),
     path('directions/generate', views.directions_generate),
+    path('directions/rmis-directions', views.directions_rmis_directions),
+    path('directions/rmis-direction', views.directions_rmis_direction),
     path('directions/history', views.directions_history),
     path('directions/cancel', views.directions_cancel),
     path('directions/results', views.directions_results),

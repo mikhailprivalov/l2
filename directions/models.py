@@ -10,6 +10,7 @@ import directory.models as directory
 import slog.models as slog
 import users.models as umodels
 from api.models import Application
+from laboratory.utils import strdate
 from users.models import DoctorProfile
 
 
@@ -214,6 +215,11 @@ class Diagnoses(models.Model):
         return "{} {}".format(self.code, self.title)
 
 
+class RMISOrgs(models.Model):
+    rmis_id = models.IntegerField(primary_key=True, editable=False)
+    title = models.CharField(max_length=255)
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений
@@ -223,19 +229,19 @@ class Napravleniya(models.Model):
     visit_who_mark = models.ForeignKey(DoctorProfile, related_name="visit_who_mark", default=None, blank=True, null=True, help_text='Профиль, который отметил посещение', on_delete=models.SET_NULL)
     diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
-    doc = models.ForeignKey(DoctorProfile, db_index=True, help_text='Лечащий врач', on_delete=models.CASCADE)
+    doc = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования', on_delete=models.CASCADE)
-    is_printed = models.BooleanField(default=False, blank=True, help_text='Флаг - напечатано ли направление')
-    time_print = models.DateTimeField(default=None, blank=True, null=True, help_text='Время печати')
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
     rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?', db_index=True)
-    doc_print = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_print", help_text='Профиль, который был использован при печати', on_delete=models.SET_NULL)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
-    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, help_text='ID направления в РМИС')
+    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
+    imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
+    imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк')
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
@@ -248,7 +254,7 @@ class Napravleniya(models.Model):
         return r
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, doc_current, ofname_id, ofname, issledovaniya=None, save=True):
+    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, doc_current, ofname_id, ofname, issledovaniya=None, save=True, for_rmis=None, rmis_data=None):
         """
         Генерация направления
         :param client_id: id пациента
@@ -259,18 +265,26 @@ class Napravleniya(models.Model):
         :param issledovaniya: исследования (reserved)
         :return: созданое направление
         """
+        if rmis_data is None:
+            rmis_data = {}
         if issledovaniya is None:
             pass
         dir = Napravleniya(client=Clients.Card.objects.get(pk=client_id),
-                           doc=doc,
+                           doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            diagnos=diagnos, cancel=False)
-
-        if historynum != "":
-            dir.history_num = historynum
-        if ofname_id > -1 and ofname:
-            dir.doc = ofname
+        if for_rmis:
+            dir.rmis_number = rmis_data.get("rmis_number")
+            dir.imported_from_rmis = True
+            dir.imported_org = RMISOrgs.objects.filter(rmis_id=rmis_data.get("imported_org", -1)).first()
+            dir.doc = None
             dir.doc_who_create = doc_current
+        else:
+            if historynum != "":
+                dir.history_num = historynum
+            if ofname_id > -1 and ofname:
+                dir.doc = ofname
+                dir.doc_who_create = doc_current
         if save:
             dir.save()
         return dir
@@ -293,7 +307,9 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
-                                          researches, comments):
+                                          researches, comments, for_rmis=None, rmis_data=None):
+        if rmis_data is None:
+            rmis_data = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
@@ -334,7 +350,7 @@ class Napravleniya(models.Model):
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
 
-                finsource = IstochnikiFinansirovaniya.objects.get(pk=finsource)  # получение источника финансирования
+                finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
@@ -345,51 +361,52 @@ class Napravleniya(models.Model):
 
                     if dir_group > -1 and dir_group not in directions_for_researches.keys():
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                             doc_current,
+                                                                                             doc_current if not for_rmis else None,
                                                                                              finsource,
                                                                                              diagnos,
                                                                                              history_num,
                                                                                              doc_current,
                                                                                              ofname_id,
-                                                                                             ofname)
+                                                                                             ofname,
+                                                                                             for_rmis=for_rmis,
+                                                                                             rmis_data=rmis_data)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
                         dir_group = "id" + str(research.pk)
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
-                                                                                             doc_current,
+                                                                                             doc_current if not for_rmis else None,
                                                                                              finsource,
                                                                                              diagnos,
                                                                                              history_num,
                                                                                              doc_current,
                                                                                              ofname_id,
-                                                                                             ofname)
+                                                                                             ofname,
+                                                                                             for_rmis=for_rmis,
+                                                                                             rmis_data=rmis_data)
 
-                        result["list_id"].append(
-                            directions_for_researches[dir_group].pk)  # Добавление ID в список созданых направлений
+                        result["list_id"].append(directions_for_researches[dir_group].pk)
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  # Установка направления для группы этого исследования
                                                   research=research,
-                                                  deferred=False)  # Создание направления на исследование
+                                                  deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
-                    issledovaniye.save()  # Сохранение направления на исследование
+                    issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
-                #c = Client()
-                #for dk in directions_for_researches:
-                #    c.directions.check_send(directions_for_researches[dk])
-                result["r"] = True  # Флаг успешной вставки в True
-                result["list_id"] = json.dumps(result["list_id"])  # Перевод списка созданых направлений в JSON строку
+                result["r"] = True
+                result["list_id"] = json.dumps(result["list_id"])
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
                          body=json.dumps({"researches": researches,
                                           "client_num": Clients.Card.objects.get(pk=client_id).number,
                                           "client_id": client_id, "diagnos": diagnos,
-                                          "finsource": finsource.title + " " + finsource.base.title,
+                                          "finsource": "" if not finsource else finsource.title + " " + finsource.base.title,
                                           "history_num": history_num, "ofname": str(ofname),
+                                          "for_rmis": for_rmis,
+                                          "rmis_data": rmis_data,
                                           "comments": comments})).save()
 
             else:
                 result["r"] = False
-                result["message"] = "Следующие анализы не могут быть назначены вместе: " + ", ".join(conflict_list)
+                result["message"] = "Следующие исследования не могут быть назначены вместе: " + ", ".join(conflict_list)
         return result
 
     def has_confirm(self):
@@ -473,7 +490,7 @@ class Issledovaniya(models.Model):
             self.napravleniye.visit_date = timezone.now()
             self.napravleniye.visit_who_mark = self.doc_confirmation
             self.napravleniye.save()
-        return timezone.localtime(self.napravleniye.visit_date).strftime('%d.%m.%Y')
+        return strdate(self.napravleniye.visit_date)
 
     def is_receive_material(self):
         """

@@ -119,7 +119,7 @@
                 <th>№</th>
                 <td><span class="dir-datafield" id="dir_num"></span></td>
                 <th>Финанс.</th>
-                <td><span class="dir-datafield" id="fin_source"></span></td>
+                <td><span class="dir-datafield" id="fin_source"></span><span class="show-rmis">внеш.орг</span></td>
             </tr>
             <tr>
                 <th>Пациент</th>
@@ -137,13 +137,17 @@
                 <th>Истор.</th>
                 <td title="Номер истории"><span class="dir-datafield" id="client_hisnum"></span></td>
             </tr>
-            <tr title="Лечащий врач">
+            <tr title="Лечащий врач" class="show-lv">
                 <th >Леч. врач</th>
                 <td colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
-            <tr>
+            <tr class="show-lv">
                 <th >Отделение</th>
                 <td colspan="3"><span class="dir-datafield" id="otd"></span></td>
+            </tr>
+            <tr class="show-rmis">
+                <th style="font-size: 90%">Организация</th>
+                <td colspan="3"><span class="dir-datafield" id="imported_org"></span></td>
             </tr>
         </table>
         <div class="fastlinks" id="loaded-buttons" style="min-height: 20px">
@@ -1200,6 +1204,7 @@
         let request = "";
 
         $(document).ready(function () {
+            $(".show-rmis").hide()
             {% if request.user.is_superuser %}su = true;{% endif %}
             $("#result-print").prop("disabled", true);
             $("#result-confirm").prop("disabled", true);
@@ -1362,6 +1367,8 @@
 
             $("#loaded-buttons a").fadeOut(100);
             $(".dir-datafield").fadeOut(100);
+            $(".show-lv").show();
+            $(".show-rmis").hide();
             $.ajax({
                 url: "/directions/get/issledovaniya",
                 type: "json",
@@ -1415,6 +1422,12 @@
                 $("#client_hisnum").html(data.client_hisnum);
                 $("#fin_source").html(data.fin_source);
                 $("#otd").html(data.otd);
+                if(data.imported_from_rmis)
+                {
+                    $('.show-lv').hide()
+                    $('.show-rmis').show()
+                }
+                $("#imported_org").html(data.imported_org);
                 $(".dir-datafield").fadeIn(100);
                 let status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
                 has_o = false;
@@ -2042,7 +2055,11 @@
             $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 50);
             $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
         }
+        let insave = false;
         function save(noreload, fc) {
+            if(insave)
+                return
+            insave = true
             $("#confirm-btn").attr("disabled", 1);
             $("#save-btn").attr("disabled", 1);
             $("#confirm-andsave-btn").attr("disabled", 1);
@@ -2076,6 +2093,8 @@
                     'position': 'bottom right',
                     delay: 6000
                 });
+            }).always(() => {
+                insave = false
             });
         }
 

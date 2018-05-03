@@ -1,12 +1,8 @@
 <template>
   <div ref="root">
     <div id="cont_left" class="split split-horizontal">
-      <div id="left_top" class="split content scrolldown">
-        <patient-picker v-model="selected_card" directive_from_need="true" search_results="true">
-          <div slot="for_card_top" class="text-right">
-            <a :href="report_url" class="fli">Отчёт по результатам</a>
-            <a v-if="can_create_tickets" :href="ticket_url" class="fli">Создать статталон</a>
-          </div>
+      <div id="left_top" class="split content" style="padding: 0;">
+        <patient-picker v-model="selected_card" directive_from_need="true" search_results="true" bottom_picker="true">
           <div slot="for_card" class="text-right">
             <div v-if="selected_researches.length > 0"
                  style="margin-top: 5px;text-align: left">
@@ -21,6 +17,17 @@
                   </tbody>
                 </table>
             </div>
+          </div>
+          <div slot="for_card_bottom" class="bottom-inner" v-if="selected_card.pk >= 0">
+            <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
+              <span>Направления из РМИС</span>
+            </a>
+            <a :href="report_url">
+              <span>Отчёт по результатам</span>
+            </a>
+            <a v-if="can_create_tickets" :href="ticket_url">
+              <span>Создать статталон</span>
+            </a>
           </div>
         </patient-picker>
       </div>
@@ -39,6 +46,7 @@
       </div>
     </div>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
+    <rmis-directions-viewer v-if="show_rmis_directions && selected_card.is_rmis" :card="selected_card"/>
   </div>
 </template>
 
@@ -48,6 +56,7 @@
   import SelectedResearches from './SelectedResearches'
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
+  import RmisDirectionsViewer from './RmisDirectionsViewer'
   import LastResult from './LastResult'
 
   export default {
@@ -57,14 +66,30 @@
       SelectedResearches,
       DirectionsHistory,
       ResultsViewer,
+      RmisDirectionsViewer,
       LastResult,
     },
     name: 'directions',
     data() {
       return {
-        selected_card: {pk: -1, base: {}, ofname: -1, ofname_dep: -1, individual_pk: -1, operator: false, history_num: ''},
+        selected_card: {
+          pk: -1,
+          base: {},
+          ofname: -1,
+          ofname_dep: -1,
+          individual_pk: -1,
+          operator: false,
+          is_rmis: false,
+          history_num: '',
+          family: '',
+          name: '',
+          twoname: '',
+          birthday: '',
+          age: '',
+        },
         selected_researches: [],
         show_results_pk: -1,
+        show_rmis_directions: false
       }
     },
     created() {
@@ -76,6 +101,10 @@
 
       this.$root.$on('hide_results', () => {
         vm.show_results_pk = -1
+      })
+
+      this.$root.$on('hide_rmis_directions', () => {
+        vm.show_rmis_directions = false
       })
     },
     mounted() {
@@ -120,6 +149,9 @@
       resize() {
         const $fp = $(this.$refs.root)
         $fp.height($(window).height() - $fp.position().top - 5)
+      },
+      do_show_rmis_directions() {
+        this.show_rmis_directions = true
       }
     },
     computed: {

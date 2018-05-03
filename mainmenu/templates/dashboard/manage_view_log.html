@@ -1,5 +1,5 @@
 {% extends "dbase.html" %}
-{% block title %}Просмотр логов{% endblock %}
+{% block title %}Просмотр журнала{% endblock %}
 {% block container %}container-fluid{% endblock %}
 
 {% block content %}
@@ -78,7 +78,7 @@
             })
             $('#log_table').append(loadmore)
             loadlog(loaded + 1)
-            setTimeout(check_new_rows, 500)
+            setTimeout(check_new_rows, 1000)
         })
 
         function check_new_rows() {
@@ -127,7 +127,7 @@
                 })
             }).always(() => {
                 in_load = false
-                setTimeout(check_new_rows, 500)
+                setTimeout(check_new_rows, 1000)
             })
         }
 

@@ -25,14 +25,16 @@ from clients.models import CardBase, Individual, Card
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
+from laboratory.utils import strdate, strdatetime, tsdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from results.views import result_normal
-from rmis_integration.client import Client
+from rmis_integration.client import Client, get_direction_full_data_cache
 from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range
+import time
 
 
 def translit(locallangstring):
@@ -137,11 +139,11 @@ def send(request):
                                 "pk")[0]
                             if directions.Result.objects.filter(issledovaniye=issled,
                                                                 fraction=fraction).exists():  # Если результат для фракции существует
-                                fraction_result = directions.Result.objects.get(issledovaniye=issled,
-                                                                                fraction__pk=fraction.pk)  # Выборка результата из базы
+                                fraction_result = directions.Result.objects.filter(issledovaniye=issled,
+                                                                                fraction__pk=fraction.pk).order_by("-pk")[0]
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled,
-                                                                    fraction=fraction)  # Создание нового результата
+                                                                    fraction=fraction)
                             fraction_result.value = str(resdict["result"][key]).strip()  # Установка значения
                             if fraction_result.value.isdigit():
                                 fraction_result.value = "%s.0" % fraction_result.value
@@ -228,8 +230,8 @@ def endpoint(request):
                                                                                           doc_confirmation__isnull=True):
                                         if directions.Result.objects.filter(issledovaniye=issled,
                                                                             fraction=fraction_rel.fraction).exists():
-                                            fraction_result = directions.Result.objects.get(issledovaniye=issled,
-                                                                                            fraction=fraction_rel.fraction)
+                                            fraction_result = directions.Result.objects.filter(issledovaniye=issled,
+                                                                                            fraction=fraction_rel.fraction).order_by("-pk")[0]
                                         else:
                                             fraction_result = directions.Result(issledovaniye=issled,
                                                                                 fraction=fraction_rel.fraction)
@@ -441,73 +443,77 @@ def patients_search_card(request):
     p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
     p4 = re.compile(r'card_pk:\d+')
+    p4i = bool(re.search(p4, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
-    if re.search(p, query.lower()):
-        initials = query[0:3].upper()
-        btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
-        if not pat_bd.match(btday):
-            return JsonResponse([], safe=False)
-        try:
-            objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
-                                                patronymic__startswith=initials[2], birthday=btday,
-                                                card__base=card_type)
-            if card_type.is_rmis and len(objects) == 0:
-                c = Client()
-                objects = c.patients.import_individual_to_base(
-                    {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday},
-                    fio=True)
-        except ValidationError:
-            objects = []
-    elif re.search(p2, query):
-        split = str(query).split()
-        n = p = ""
-        f = split[0]
-        rmis_req = {"surname": f + "%"}
-        if len(split) > 1:
-            n = split[1]
-            rmis_req["name"] = n + "%"
-        if len(split) > 2:
-            p = split[2]
-            rmis_req["patrName"] = p + "%"
-        if len(split) > 3:
-            btday = split[3].split(".")
-            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
-            rmis_req["birthDate"] = btday
-        objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                            patronymic__istartswith=p, card__base=card_type)[:10]
-        if len(split) > 3:
-            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
-                                                patronymic__istartswith=p, card__base=card_type,
-                                                birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
-
-        if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
-            objects = list(objects)
+    if not p4i:
+        if re.search(p, query.lower()):
+            initials = query[0:3].upper()
+            btday = query[7:11] + "-" + query[5:7] + "-" + query[3:5]
+            if not pat_bd.match(btday):
+                return JsonResponse([], safe=False)
             try:
-                c = Client()
-                objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
-            except ConnectionError:
-                pass
-
-    if re.search(p3, query) or card_type.is_rmis:
-        resync = True
-        if len(list(objects)) == 0:
-            resync = False
-            try:
-                objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
+                objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
+                                                    patronymic__startswith=initials[2], birthday=btday,
                                                     card__base=card_type)
-            except ValueError:
-                pass
-            if card_type.is_rmis and len(list(objects)) == 0 and len(query) == 16:
-                c = Client()
-                objects = c.patients.import_individual_to_base(query)
-            else:
-                resync = True
-        if resync and card_type.is_rmis:
-            c = Client()
-            for o in objects:
-                o.sync_with_rmis(c=c)
+                if card_type.is_rmis and len(objects) == 0:
+                    c = Client()
+                    objects = c.patients.import_individual_to_base(
+                        {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
+                         "birthDate": btday},
+                        fio=True)
+            except ValidationError:
+                objects = []
+        elif re.search(p2, query):
+            split = str(query).split()
+            n = p = ""
+            f = split[0]
+            rmis_req = {"surname": f + "%"}
+            if len(split) > 1:
+                n = split[1]
+                rmis_req["name"] = n + "%"
+            if len(split) > 2:
+                p = split[2]
+                rmis_req["patrName"] = p + "%"
+            if len(split) > 3:
+                btday = split[3].split(".")
+                btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+                rmis_req["birthDate"] = btday
+            objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
+                                                patronymic__istartswith=p, card__base=card_type)[:10]
+            if len(split) > 3:
+                objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
+                                                    patronymic__istartswith=p, card__base=card_type,
+                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[
+                          :10]
 
-    if re.search(p4, query):
+            if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
+                objects = list(objects)
+                try:
+                    c = Client()
+                    objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
+                except ConnectionError:
+                    pass
+
+        if re.search(p3, query) or card_type.is_rmis:
+            resync = True
+            if len(list(objects)) == 0:
+                resync = False
+                try:
+                    objects = Individual.objects.filter(card__number=query.upper(), card__is_archive=False,
+                                                        card__base=card_type)
+                except ValueError:
+                    pass
+                if card_type.is_rmis and len(list(objects)) == 0 and len(query) == 16:
+                    c = Client()
+                    objects = c.patients.import_individual_to_base(query)
+                else:
+                    resync = True
+            if resync and card_type.is_rmis:
+                c = Client()
+                for o in objects:
+                    o.sync_with_rmis(c=c)
+
+    if p4i:
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects, is_archive=False)
@@ -517,6 +523,7 @@ def patients_search_card(request):
     for row in cards.prefetch_related("individual").distinct():
         data.append({"type_title": card_type.title,
                      "num": row.number,
+                     "is_rmis": row.base.is_rmis,
                      "family": row.individual.family,
                      "name": row.individual.name,
                      "twoname": row.individual.patronymic,
@@ -602,7 +609,9 @@ def directions_generate(request):
                                                                        p.get("ofname_pk"),
                                                                        request.user.doctorprofile,
                                                                        p.get("researches"),
-                                                                       p.get("comments"))
+                                                                       p.get("comments"),
+                                                                       p.get("for_rmis"),
+                                                                       p.get("rmis_data", {}))
         result["ok"] = rc["r"]
         result["directions"] = json.loads(rc["list_id"])
         if "message" in rc:
@@ -1137,13 +1146,15 @@ def directions_paraclinic_form(request):
         response["patient"] = {
             "fio_age": d.client.individual.fio(full=True),
             "card": d.client.number_with_type(),
-            "doc": d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title
+            "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
+            "imported_from_rmis": d.imported_from_rmis,
+            "imported_org": d.imported_org.title,
         }
         response["direction"] = {
             "pk": d.pk,
-            "date": timezone.localtime(d.data_sozdaniya).strftime('%d.%m.%Y'),
+            "date": strdate(d.data_sozdaniya),
             "diagnos": d.diagnos,
-            "fin_source": d.istochnik_f.title
+            "fin_source": "" if not d.istochnik_f else d.istochnik_f.title
         }
         response["researches"] = []
         for i in directions.Issledovaniya.objects.filter(napravleniye=d, research__is_paraclinic=True, **add_fr):
@@ -1312,7 +1323,7 @@ def directions_paraclinic_history(request):
         has_dirs.append(direction.pk)
         d = {
             "pk": direction.pk,
-            "date": timezone.localtime(direction.data_sozdaniya).strftime('%d.%m.%Y'),
+            "date": strdate(direction.data_sozdaniya),
             "patient": direction.client.individual.fio(full=True, direction=direction),
             "card": direction.client.number_with_type(),
             "iss": [],
@@ -1341,13 +1352,9 @@ def directions_services(request):
         pk -= 4600000000000
         pk //= 10
     if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True).exists():
-        import time
         n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
 
-        ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
-        ctime = int(time.time())
-        cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
-        rt = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f') * 60
+        cdid, ctime, ctp, rt = get_reset_time_vars(n)
 
         response["ok"] = True
         researches = []
@@ -1355,24 +1362,34 @@ def directions_services(request):
             researches.append({"title": i.research.title,
                                "department": i.research.podrazdeleniye.get_title()})
         response["direction_data"] = {
-            "date": n.data_sozdaniya.strftime('%d.%m.%Y'),
+            "date": strdate(n.data_sozdaniya),
             "client": n.client.individual.fio(full=True),
             "card": n.client.number_with_type(),
             "diagnos": n.diagnos,
-            "doc": "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
+            "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
+            "imported_from_rmis": n.imported_from_rmis,
+            "imported_org": "" if not n.imported_org else n.imported_org.title,
             "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(), n.visit_who_mark.podrazdeleniye.title),
-            "fin_source": "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
+            "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
         }
         response["researches"] = researches
         response["loaded_pk"] = pk
         response["visit_status"] = n.visit_date is not None
-        response["visit_date"] = "" if not n.visit_date else timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+        response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
         response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                str(x) for x in
                                                request.user.groups.all()]) and n.visit_date)
     else:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
+
+
+def get_reset_time_vars(n):
+    ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
+    ctime = int(time.time())
+    cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
+    rt = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f') * 60
+    return cdid, ctime, ctp, rt
 
 
 @group_required("Врач параклиники", "Посещения по направлениям")
@@ -1383,20 +1400,16 @@ def directions_mark_visit(request):
     cancel = request_data.get("cancel", False)
     if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True).exists():
         n = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True)[0]
-        import time
         if not cancel:
             n.visit_date = timezone.now()
             n.visit_who_mark = request.user.doctorprofile
             n.save()
-            ctp = int(0 if not n.visit_date else int(time.mktime(timezone.localtime(n.visit_date).timetuple())))
-            ctime = int(time.time())
-            cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
-            rt = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f') * 60
+            cdid, ctime, ctp, rt = get_reset_time_vars(n)
             allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                        str(x) for x in
                                                        request.user.groups.all()]) and n.visit_date)
             response["visit_status"] = n.visit_date is not None
-            response["visit_date"] = timezone.localtime(n.visit_date).strftime('%d.%m.%Y %X')
+            response["visit_date"] = strdatetime(n.visit_date)
             response["allow_reset_confirm"] = allow_reset_confirm
             response["ok"] = True
         else:
@@ -1434,7 +1447,7 @@ def directions_visit_journal(request):
             "pk": v.pk,
             "client": v.client.individual.fio(full=True),
             "card": v.client.number_with_type(),
-            "datetime": timezone.localtime(v.visit_date).strftime('%d.%m.%Y %X')
+            "datetime": strdatetime(v.visit_date)
         })
     return JsonResponse(response)
 
@@ -1450,7 +1463,7 @@ def directions_last_result(request):
                                                 time_confirmation__isnull=False).order_by("-time_confirmation")
     if i.exists():
         response["ok"] = True
-        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": timezone.localtime(i[0].time_confirmation).strftime('%d.%m.%Y')}
+        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": strdate(i[0].time_confirmation)}
     return JsonResponse(response)
 
 
@@ -1488,8 +1501,8 @@ def directions_results_report(request):
                         paramdata = {"research": i.research.pk,
                                      "pk": ppk,
                                      "order": g.order,
-                                     "date": timezone.localtime(i.time_confirmation).strftime('%d.%m.%Y'),
-                                     "timestamp": int(timezone.localtime(i.time_confirmation).timestamp()),
+                                     "date": strdate(i.time_confirmation),
+                                     "timestamp": tsdatetime(i.time_confirmation),
                                      "value": "; ".join(res),
                                      "units": "",
                                      "is_norm": "normal",
@@ -1532,8 +1545,8 @@ def directions_results_report(request):
                         paramdata = {"research": f.research.pk,
                                      "pk": ppk,
                                      "order": f.sort_weight,
-                                     "date": timezone.localtime(r.issledovaniye.time_confirmation).strftime('%d.%m.%Y'),
-                                     "timestamp": int(timezone.localtime(r.issledovaniye.time_confirmation).timestamp()),
+                                     "date": strdate(r.issledovaniye.time_confirmation),
+                                     "timestamp": tsdatetime(r.issledovaniye.time_confirmation),
                                      "value": r.value,
                                      "units": r.get_units(),
                                      "is_norm": is_norm,
@@ -1555,3 +1568,30 @@ def mkb10(request):
     for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:10]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
+
+
+@login_required
+def directions_rmis_directions(request):
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk")
+    rows = []
+    if pk and Card.objects.filter(pk=pk, base__is_rmis=True).exists():
+        c = Client()
+        sd = c.directions.get_individual_active_directions(Card.objects.get(pk=pk).number)
+        dirs_data = [c.directions.get_direction_full_data(x) for x in sd if
+                     not directions.Napravleniya.objects.filter(rmis_number=x).exists()]
+        rows = [x for x in dirs_data if x]
+    return JsonResponse({"rows": rows})
+
+
+@login_required
+def directions_rmis_direction(request):
+    request_data = json.loads(request.body)
+    data = {}
+    pk = request_data.get("pk")
+    if pk and not directions.Napravleniya.objects.filter(rmis_number=pk).exists():
+        data = get_direction_full_data_cache(pk)
+        if not data:
+            c = Client()
+            data = c.directions.get_direction_full_data(pk)
+    return JsonResponse(data)

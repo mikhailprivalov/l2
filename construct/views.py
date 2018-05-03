@@ -14,7 +14,6 @@ from podrazdeleniya.models import Podrazdeleniya
 @login_required
 def menu(request):
     """ Меню конструктора """
-    menu = []
     groups = [str(x) for x in request.user.groups.all()]
     pages = [
         {"url": "/construct/tubes", "title": "Ёмкости для биоматериала",
@@ -22,21 +21,15 @@ def menu(request):
         {"url": "/construct/researches", "title": "Лабораторные исследования",
          "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {"url": "/construct/researches-paraclinic", "title": "Параклинические (описательные) исследования",
-         "access": ["Конструктор: Параклинические (описательные) исследования"], "module": "paraclinic"},
+         "access": ["Конструктор: Параклинические (описательные) исследования"], "module": "paraclinic_module"},
         {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям",
          "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
         {"url": "/construct/uets", "title": "Настройка УЕТов",
          "access": ["Конструктор: Настройка УЕТов"], "module": None},
     ]
 
-    groups_set = set(groups)
-    for page in pages:
-        if (not request.user.is_superuser and "*" not in page["access"] and len(
-                groups_set & set(page["access"])) == 0) or (
-                page["module"] and not SettingManager.get(page["module"] + "_module", default='false',
-                                                          default_type='b')):
-            continue
-        menu.append(page)
+    from context_processors.utils import make_menu
+    menu = make_menu(pages, groups, request.user.is_superuser)
 
     menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
 

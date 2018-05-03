@@ -6,8 +6,8 @@
                placeholder="Номер направления"/>
         <button class="btn btn-blue-nb" @click="load">Загрузить</button>
       </div>
-      <div class="sidebar-bottom-top">Результаты за
-        <date-field style="width: 94px;display: inline-block;height: 34px" :val.sync="date" :def="date"/>
+      <div class="sidebar-bottom-top"><span>Результаты за</span>
+        <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
       <div style="overflow-y: auto;overflow-x:hidden;">
         <div class="direction" v-for="direction in directions_history">
@@ -57,12 +57,17 @@
               {{data.direction.date}}
             </div>
             <div>{{data.patient.fio_age}}</div>
-            <div class="text-ell" :title="data.direction.diagnos">Диагноз: {{data.direction.diagnos}}</div>
+            <div class="text-ell" :title="data.direction.diagnos" v-if="data.direction.diagnos !== ''">Диагноз:
+              {{data.direction.diagnos}}
+            </div>
           </div>
           <div class="col-xs-5">
-            <div>Источник финансирования: {{data.direction.fin_source}}</div>
+            <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
             <div>Карта: {{data.patient.card}}</div>
-            <div class="text-ell" :title="data.patient.doc">Лечащий врач: {{data.patient.doc}}</div>
+            <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
+              {{data.patient.doc}}
+            </div>
+            <div v-else>Организация: {{data.patient.imported_org}}</div>
           </div>
           <div class="col-xs-1">
             <button type="button" class="close" @click="clear()">
@@ -128,12 +133,12 @@
   import moment from 'moment'
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
-  import DateField from './DateField.vue'
+  import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateField, Longpress},
+    components: {DateFieldNav, Longpress},
     data() {
       return {
         pk: '',
@@ -412,10 +417,13 @@
     }
     input {
       border-bottom: 1px solid #b1b1b1;
+      width: 199px !important;
+      flex: 2 199px;
     }
 
     button {
-      flex: 0 0 68px
+      flex: 3 94px;
+      width: 94px
     }
   }
 
@@ -451,13 +459,23 @@
 
   .sidebar-bottom-top {
     background-color: #eaeaea;
-    padding-left: 5px;
     flex: 0 0 34px;
-    .form-control {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    /deep/ .form-control {
       border-radius: 0;
       border-top: none;
       border-left: none;
       border-right: none;
+    }
+
+    span {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 5px;
+      width: 130px;
     }
   }
 

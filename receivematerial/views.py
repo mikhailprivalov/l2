@@ -18,6 +18,7 @@ from directions.models import Issledovaniya, TubesRegistration, Result
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
+from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 
@@ -82,7 +83,7 @@ def receive_obo(request):
                         tube.clear_notice(request.user.doctorprofile)
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
-                                  "receivedate": tube.time_recive.strftime("%d.%m.%Y"),
+                                  "receivedate": strdate(tube.time_recive),
                                   "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)]}
                     else:
                         result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.get_podrazdeleniye())}
@@ -299,15 +300,8 @@ def tubes_get(request):
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
         date_start, date_end = try_parse_range(date_start, date_end)
-        tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
-                                                      time_get__range=(date_start, date_end),
-                                                      issledovaniya__research__podrazdeleniye=lab)
-        if filter_type == "not_received":
-            tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
-        elif filter_type == "received":
-            tubes_list = tubes_list.filter(doc_recive__isnull=False)
-        else:
-            tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
+        from mainmenu.views import get_tubes_list_in_receive_ui
+        tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
 
         for tube in tubes_list:
             if tube.getbc() in k or (tube.rstatus() and filter_type != "received"):
@@ -435,7 +429,7 @@ def receive_journal(request):
                         {"type": v.type.tube.title, "researches": iss_list[value],
                          "client-type": iss[0].napravleniye.client.base.short_title,
                          "lab_title": iss[0].research.get_podrazdeleniye().title,
-                         "time": "" if not v.time_recive else v.time_recive.astimezone(local_tz).strftime("%H:%M:%S"),
+                         "time": strtime(v.time_recive),
                          "dir_id": iss[0].napravleniye.pk,
                          "podr": iss[0].napravleniye.doc.podrazdeleniye.title,
                          "receive_n": str(n),

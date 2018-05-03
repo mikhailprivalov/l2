@@ -22,6 +22,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.settings import FONTS_FOLDER
+from laboratory.utils import strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 
@@ -234,13 +235,11 @@ def framePage(canvas):
 
 
 def printDirection(c, n, dir):
-    # Нанесение одного направления на документ на свою зону
     xn = 0
     if n % 2 != 0: xn = 1
     yn = 0
     if n > 2: yn = 1
-    barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0,
-                                       barHeight=17)  # Генерация штрих-кода с номером вида 460000001005
+    barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=17)
     bounds = barcode.getBounds()
     width = bounds[2] - bounds[0]
     height = bounds[3] - bounds[1]
@@ -257,7 +256,7 @@ def printDirection(c, n, dir):
                         "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
 
     c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление")
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
@@ -285,12 +284,15 @@ def printDirection(c, n, dir):
 
     if dir.diagnos.strip() != "":
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + dir.diagnos)
-
-    if dir.istochnik_f:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
-                     "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
+    if not dir.imported_from_rmis:
+        if dir.istochnik_f:
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
+                         "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
+        else:
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
     else:
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
+        if dir.imported_org:
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105) + (h / 2) * yn, "Организация: " + dir.imported_org.title)
 
     issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
@@ -397,12 +399,18 @@ def printDirection(c, n, dir):
                      "Всего назначено: " + str(len(issledovaniya)))
 
     nn = 0
-    if dir.doc_who_create and dir.doc_who_create != dir.doc:
-        nn = 9
-        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
-                     "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))
-    c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + dir.doc.podrazdeleniye.title)
-    c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
+    if not dir.imported_from_rmis:
+        if dir.doc_who_create and dir.doc_who_create != dir.doc:
+            nn = 9
+            c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
+                         "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title))
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + dir.doc.podrazdeleniye.title)
+        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
+    else:
+        c.drawString(paddingx + (w / 2 * xn), 31 + (h / 2) * yn + nn, "РМИС#" + dir.rmis_number)
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Создал направление: " + dir.doc_who_create.get_fio())
+        c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, dir.doc_who_create.podrazdeleniye.title)
+
     c.setFont('OpenSans', 7)
     c.setLineWidth(0.25)
     # c.line(w / 2 * (xn + 1) - paddingx, 21 + (h / 2) * yn + nn, w / 2 * (xn + 1) - 82, 21 + (h / 2) * yn + nn)
@@ -429,14 +437,14 @@ def get_one_dir(request):
     # logger = logging.getLogger(__name__)
 
     response = {"ok": False}
-    if request.method == 'GET':  # Проверка типа запроса
+    if request.method == 'GET':
         direction_pk = request.GET['id']
         direction_pk = ''.join(x for x in direction_pk if x.isdigit())
         try:
             direction_pk = int(direction_pk)
         except ValueError:
             direction_pk = -1
-        if Napravleniya.objects.filter(pk=direction_pk).exists():  # Проверка на существование направления
+        if Napravleniya.objects.filter(pk=direction_pk).exists():
             if "check" not in request.GET.keys():
                 tmp2 = Napravleniya.objects.get(pk=direction_pk)
                 tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
@@ -444,9 +452,12 @@ def get_one_dir(request):
                                          "cancel": tmp2.cancel,
                                          "date": str(
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                                         "doc": {"fio": tmp2.doc.get_fio(), "otd": tmp2.doc.podrazdeleniye.title},
+                                         "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(), "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
                                          "lab": tmp[0].research.get_podrazdeleniye().title,
-                                         "type": tmp[0].research.get_podrazdeleniye().p_type}  # Формирование вывода
+                                         "type": tmp[0].research.get_podrazdeleniye().p_type,
+                                         "imported_from_rmis": tmp2.imported_from_rmis,
+                                         "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title
+                                         }
                 response["tubes"] = {}
                 tubes_buffer = {}
 
@@ -618,7 +629,7 @@ def load_history(request):
         for val in iss:  # Перебор выбранных исследований
             iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
         res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
-                            "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"),
+                            "time": strtime(v.time_get),
                             "dir_id": iss[0].napravleniye.pk,
                             "tube_id": v.id})  # Добавление пробирки с исследованиями в вывод
     return JsonResponse(res)
@@ -703,7 +714,8 @@ def print_history(request):
                 {"type": v.type.tube.title, "researches": value,
                  "client-type": iss[0].napravleniye.client.base.short_title,
                  "lab_title": iss[0].research.get_podrazdeleniye().title,
-                 "time": v.time_get.astimezone(local_tz).strftime("%H:%M:%S"), "dir_id": iss[0].napravleniye.pk,
+                 "time": strtime(v.time_get),
+                 "dir_id": iss[0].napravleniye.pk,
                  "podr": v.doc_get.podrazdeleniye.title,
                  "reciver": None,
                  "tube_id": str(v.id),
@@ -1016,9 +1028,11 @@ def get_issledovaniya(request):
                 res["client_cardnum"] = napr.client.number + " " + napr.client.base.title
                 res["client_hisnum"] = napr.history_num
                 res["client_vozrast"] = napr.client.individual.age_s(direction=napr)
-                res["directioner"] = napr.doc.fio
-                res["otd"] = napr.doc.podrazdeleniye.title
-                res["fin_source"] = napr.istochnik_f.title
+                res["imported_from_rmis"] = napr.imported_from_rmis
+                res["imported_org"] = "" if not napr.imported_org else napr.imported_org.title
+                res["directioner"] = "" if napr.imported_from_rmis else napr.doc.fio
+                res["otd"] = "" if napr.imported_from_rmis else napr.doc.podrazdeleniye.title
+                res["fin_source"] = "" if napr.imported_from_rmis else napr.istochnik_f.title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
 

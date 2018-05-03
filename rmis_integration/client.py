@@ -18,10 +18,11 @@ from zeep.transports import Transport
 
 import clients.models as clients_models
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult
-from directory.models import Fractions, ParaclinicInputGroups
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs
+from directory.models import Fractions, ParaclinicInputGroups, Researches
+from laboratory.utils import strdate, strtime, localtime
 from podrazdeleniya.models import Podrazdeleniya
-
+from laboratory import settings as l2settings
 
 class Utils:
     @staticmethod
@@ -58,16 +59,18 @@ class Utils:
 
     @staticmethod
     def fix_sub(str):
-        str = str.replace("₀", "0")
-        str = str.replace("₁", "1")
-        str = str.replace("₂", "2")
-        str = str.replace("₃", "3")
-        str = str.replace("₄", "4")
-        str = str.replace("₅", "5")
-        str = str.replace("₆", "6")
-        str = str.replace("₇", "7")
-        str = str.replace("₈", "8")
-        str = str.replace("₉", "9")
+        to_replace = {"₀": "0",
+                      "₁": "1",
+                      "₂": "2",
+                      "₃": "3",
+                      "₄": "4",
+                      "₅": "5",
+                      "₆": "6",
+                      "₇": "7",
+                      "₈": "8",
+                      "₉": "9"}
+        for k in to_replace.keys():
+            str = str.replace(k, to_replace[k])
         return str
 
 
@@ -141,8 +144,24 @@ class Client(object):
             cache.delete(key)
         if id is None:
             id = self.get_directory("pim_organization").get_first("ID", "FULL_NAME", query)
-            cache.set(key, id, 24 * 60 * 60)
+            cache.set(key, id, 24 * 3600)
         return id
+
+    def get_organization_title(self, pk, full=False):
+        key = 'rmis_org_t_%s_%s' % (pk, full)
+        data = cache.get(key)
+        if not data:
+            data = self.get_directory("pim_organization").get_first("SHORT_NAME" if not full else "FULL_NAME", "ID", pk)
+            cache.set(key, data, 6 * 3600)
+            ex = RMISOrgs.objects.filter(rmis_id=pk).exists()
+            if ex and RMISOrgs.objects.get(rmis_id=pk).title != data:
+                r = RMISOrgs.objects.get(rmis_id=pk)
+                r.title = data
+                r.save()
+            elif not ex:
+                r = RMISOrgs(rmis_id=pk, title=data)
+                r.save()
+        return data
 
     def search_dep_id(self, q=None, check=False, org_id=None):
         def_q = Settings.get("depname")
@@ -211,7 +230,7 @@ class Directory(BaseRequester):
     def __init__(self, client: Client, title: str):
         super().__init__(client, "path_directory")
         self.title = title
-        key_code = "dir_code_{}".format(title)
+        key_code = "d_cd_{}".format(title)
         self.code = cache.get(key_code)
         if not self.code:
             refbook_list = self.main_client.get_client("path_directory").service.getRefbookList()
@@ -223,24 +242,26 @@ class Directory(BaseRequester):
                     break
 
     def get_values_by_data(self, search_name="NAME", search_data=""):
-        key = "dir_g_v_b_d_{}:{}-{}".format(self.code, search_name, search_data)
+        key = "d_g_v_b_d_{}:{}-{}".format(self.code, search_name, search_data).replace(" ", "^")
+        if "MemcachedCache" in l2settings.CACHES.get("default", {}).get("BACKEND", ""):
+            key = str(hashlib.sha256(key.encode()).hexdigest())
         rrd_src = cache.get(key)
         if rrd_src:
             r = pickle.loads(rrd_src, encoding="utf8")
         else:
             r = self.client.getRefbookRowData(refbookCode=self.code, version="CURRENT",
                                               column={"name": search_name, "data": search_data})
-            cache.set(key, pickle.dumps(r, protocol=4), 7200)
+            cache.set(key, pickle.dumps(r, protocol=4), 3600)
         return r
 
     def get_all_values(self):
-        key = "dir_g_a_v_{}".format(self.code)
+        key = "d_g_a_v_{}".format(self.code)
         gav_src = cache.get(key)
         if gav_src:
             r = pickle.loads(gav_src, encoding="utf8")
         else:
             r = self.client.getRefbook(refbookCode=self.code, version="CURRENT")
-            cache.set(key, pickle.dumps(r, protocol=4), 7200)
+            cache.set(key, pickle.dumps(r, protocol=4), 3600)
         return r
 
     def get_with_filter(self, value_column, filter_column, filter_data, search_name="NAME", search_data=""):
@@ -348,7 +369,7 @@ class Patients(BaseRequester):
                 ind.save()
 
             if ind.birthday != data["birthday"] and data["birthday"] is not None:
-                updated.append(["birthday", ind.birthday.strftime("%d.%m.%Y"), data["birthday"].strftime("%d.%m.%Y")])
+                updated.append(["birthday", strdate(ind.birthday), data["birthday"].strftime("%d.%m.%Y")])
                 ind.birthday = data["birthday"]
                 ind.save()
 
@@ -434,6 +455,16 @@ class Services(BaseRequester):
         for r in srv:
             self.services[r["code"]] = r["id"]
 
+    def get_service_data(self, pk):
+        key = "get_service_d{}".format(pk)
+        gav_src = cache.get(key)
+        if gav_src:
+            r = pickle.loads(gav_src, encoding="utf8")
+        else:
+            r = self.client.getService(pk)
+            cache.set(key, pickle.dumps(r, protocol=4), 180)
+        return r
+
     def get_service_id(self, s):
         s = s.replace("А", "A").replace("В", "B")
         if s in self.services:
@@ -450,7 +481,7 @@ class Services(BaseRequester):
 
 
 def ndate(d: datetime.datetime):
-    return d.strftime("%Y-%m-%d")
+    return localtime(d).strftime("%Y-%m-%d")
 
 
 import simplejson as json
@@ -458,9 +489,67 @@ from django.utils import timezone
 import slog.models as slog
 
 
+def get_direction_full_data_key(pk):
+    return "gdfd_{}".format(pk)
+
+
+def get_direction_full_data_cache(pk):
+    r = None
+    k = get_direction_full_data_key(pk)
+    d = cache.get(k)
+    if d:
+        r = pickle.loads(d, encoding="utf8")
+    return r
+
+
 class Directions(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_directions")
+
+    def search_directions(self, **kwargs):
+        return self.client.searchReferral(**kwargs)
+
+    def get_direction_data(self, pk):
+        key = "gdd_{}".format(pk)
+        gav_src = cache.get(key)
+        if gav_src:
+            r = pickle.loads(gav_src, encoding="utf8")
+        else:
+            r = self.client.getReferralById(pk)
+            cache.set(key, pickle.dumps(r, protocol=4), 180)
+        return r
+
+    def get_direction_full_data(self, pk):
+        raw = self.get_direction_data(pk)
+        data = {}
+        if raw["refServiceId"]:
+            data["pk"] = pk
+            data["referralOrganization"] = self.main_client.get_organization_title(pk=raw["referralOrganizationId"])
+            data["referralOrganizationPk"] = raw["referralOrganizationId"]
+            data["referralDate"] = strdate(raw["referralDate"])
+            data["services"] = []
+            for s in raw["refServiceId"]:
+                srv_d = self.main_client.services.get_service_data(s)
+                srv = {"pk": s, "title": srv_d["name"], "code": srv_d["code"]}
+
+                ls = [] if srv["code"] in [None, ""] else [x.pk for x in Researches.objects.filter(
+                    Q(code=srv["code"]) | Q(fractions__code=srv["code"], fractions__hide=False)).filter(
+                    hide=False).distinct()]
+                srv["local_services"] = ls
+                srv["selected_local_service"] = -1 if len(ls) != 1 else ls[0]
+                srv["exclude_direction"] = False
+
+                data["services"].append(srv)
+        cache.set(get_direction_full_data_key(pk), pickle.dumps(data, protocol=4), 600)
+        return data
+
+    def get_individual_active_directions(self, uid):
+        rows = self.search_directions(
+            receivingOrganizationId=self.main_client.search_organization_id(),
+            refStatusId=2,
+            patientUid=uid
+        )
+        return rows
 
     def delete_direction(self, user, direction: Napravleniya):
         d = False
@@ -501,45 +590,54 @@ class Directions(BaseRequester):
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
         if client_rmis and client_rmis != "NONERMIS" and (
-                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS"):
-            ref_data = dict(patientUid=client_rmis,
-                            number=str(direction.pk),
-                            typeId=self.main_client.get_directory(
-                                "md_referral_type").get_first("ID",
-                                                              search_data=direction.rmis_direction_type()),
-                            referralDate=ndate(direction.data_sozdaniya),
-                            referralOrganizationId=self.main_client.search_organization_id(),
-                            referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
-                            receivingOrganizationId=self.main_client.search_organization_id(),
-                            receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
-                            refServiceId=self.main_client.services.get_service_ids(direction),
-                            fundingSourceTypeId=Utils.get_fin_src_id(
-                                direction.istochnik_f.title,
-                                self.main_client.get_fin_dict()),
-                            note='Автоматический вывод из Информационной Системы L2',
-                            goalId=self.main_client.get_directory(
-                                "md_referral_goal").get_first("ID",
-                                                              search_data=Settings.get(
-                                                                  "cel_title",
-                                                                  default="Для коррекции лечения")))
+                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+            if not direction.imported_from_rmis:
+                ref_data = dict(patientUid=client_rmis,
+                                number=str(direction.pk),
+                                typeId=self.main_client.get_directory(
+                                    "md_referral_type").get_first("ID",
+                                                                  search_data=direction.rmis_direction_type()),
+                                referralDate=ndate(direction.data_sozdaniya),
+                                referralOrganizationId=self.main_client.search_organization_id(),
+                                referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
+                                receivingOrganizationId=self.main_client.search_organization_id(),
+                                receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
+                                refServiceId=self.main_client.services.get_service_ids(direction),
+                                fundingSourceTypeId=Utils.get_fin_src_id(
+                                    direction.istochnik_f.title,
+                                    self.main_client.get_fin_dict()),
+                                note='Автоматический вывод из Информационной Системы L2',
+                                goalId=self.main_client.get_directory(
+                                    "md_referral_goal").get_first("ID",
+                                                                  search_data=Settings.get(
+                                                                      "cel_title",
+                                                                      default="Для коррекции лечения")))
 
-            try:
-                direction.rmis_number = self.client.sendReferral(**ref_data)
-            except:
-                stdout.write("Err: " + direction.rmis_referral_title())
-                return
-            if direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",
-                                                                                                                     None]:
-                case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
-                direction.rmis_case_id = case_id
-                direction.rmis_hosp_id = h_id
+                try:
+                    direction.rmis_number = self.client.sendReferral(**ref_data)
+                except:
+                    stdout.write("Err: " + direction.rmis_referral_title())
+                    return
+                if direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",
+                                                                                                                         None]:
+                    case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
+                    direction.rmis_case_id = case_id
+                    direction.rmis_hosp_id = h_id
             self.main_client.put_content("Napravleniye.pdf",
                                          self.main_client.local_get("/directions/pdf",
                                                                     {"napr_id": json.dumps([direction.pk])}),
                                          self.main_client.get_addr(
-                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление/direction.pdf"))
+                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление-" + str(direction.pk) + "/direction.pdf"))
+            if direction.imported_from_rmis and not direction.imported_directions_rmis_send:
+                direction.imported_directions_rmis_send = True
         elif client_rmis == "NONERMIS":
             direction.rmis_number = "NONERMIS"
+        self.fill_caseid_hospid(client_rmis, direction, stdout)
+        direction.save()
+        self.check_service(direction, stdout)
+        return direction.rmis_number
+
+    def fill_caseid_hospid(self, client_rmis, direction, stdout):
         if client_rmis != "NONERMIS" and direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in [
             "", None] and direction.rmis_hosp_id in ["", None]:
             case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
@@ -547,9 +645,6 @@ class Directions(BaseRequester):
                 stdout.write("Update case_id and hosp_id %s %s" % (case_id, h_id))
             direction.rmis_case_id = case_id
             direction.rmis_hosp_id = h_id
-        direction.save()
-        self.check_service(direction, stdout)
-        return direction.rmis_number
 
     def send_service(self, code: str, patient_uid: str, refferal_id: str, direction: Napravleniya) -> str:
         service_id = self.main_client.services.get_service_id(code)
@@ -558,9 +653,9 @@ class Directions(BaseRequester):
         send_data = dict(referralId=refferal_id, serviceId=service_id, isRendered="false", patientUid=patient_uid,
                          orgId=self.main_client.search_organization_id(),
                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
-                         fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title,
-                                                                  self.main_client.get_fin_dict()),
                          quantity=1)
+        if not direction.imported_from_rmis:
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title, self.main_client.get_fin_dict())
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
             send_data["stepId"] = direction.rmis_hosp_id
@@ -579,29 +674,24 @@ class Directions(BaseRequester):
         individual_rmis_id = self.main_client.patients.get_rmis_id_for_individual(direction.client.individual)
         for row in RmisServices.objects.filter(napravleniye=direction):
             sended_researches.append(row.code)
-        if individual_rmis_id != "NONERMIS" and direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in [
-            "", None] and direction.rmis_hosp_id in ["", None]:
-            case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(individual_rmis_id)
-            if stdout is not None:
-                stdout.write("Update case_id and hosp_id %s %s" % (case_id, h_id))
-            direction.rmis_case_id = case_id
-            direction.rmis_hosp_id = h_id
+        self.fill_caseid_hospid(individual_rmis_id, direction, stdout)
         for i in issledovanya:
             code = i.research.code
-            if code not in sended_researches:
-                sended_researches.append(code)
-                sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction)
+            self.send_service_if_not_in_sended(code, direction, individual_rmis_id, sended_ids, sended_researches)
             for fraction in Fractions.objects.filter(research=i.research):
                 code = fraction.code
-                if code not in sended_researches:
-                    sended_researches.append(code)
-                    sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction)
+                self.send_service_if_not_in_sended(code, direction, individual_rmis_id, sended_ids, sended_researches)
         for k in sended_ids:
             if sended_ids[k] is None:
                 continue
             RmisServices(napravleniye=direction, code=k, rmis_id=sended_ids[k]).save()
         direction.rmis_resend_services = False
         direction.save()
+
+    def send_service_if_not_in_sended(self, code, direction, individual_rmis_id, sended_ids, sended_researches):
+        if code not in sended_researches:
+            sended_researches.append(code)
+            sended_ids[code] = self.send_service(code, individual_rmis_id, direction.rmis_number, direction)
 
     def check_send_results(self, direction: Napravleniya, stdout: OutputWrapper = None):
         protocol_template = Settings.get("protocol_template")
@@ -621,65 +711,12 @@ class Directions(BaseRequester):
                         sended_codes = []
                         for x in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction):
                             code = x.field.group.research.code
-                            service_rend_id = sended_ids.get(code, None)
                             if code in sended_codes:
                                 continue
+                            service_rend_id = sended_ids.get(code, None)
                             sended_codes.append(code)
-                            ssd = self.main_client.services.get_service_id(code)
-                            send_data = dict(referralId=rid,
-                                             serviceId=ssd,
-                                             isRendered="true",
-                                             quantity="1",
-                                             orgId=self.main_client.search_organization_id(),
-                                             dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                             timeFrom=timezone.localtime(x.issledovaniye.time_confirmation).strftime("%X"),
-                                             dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                             note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
-                                             fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title,
-                                                                                      self.main_client.get_fin_dict()),
-                                             patientUid=rindiv)
-                            if stdout:
-                                stdout.write("SR: " + str(service_rend_id))
-                            if service_rend_id:
-                                service_old_data = self.main_client.rendered_services.get_data_by_id(service_rend_id)
-                                if stdout:
-                                    stdout.write("OLD DATA: " + str(service_old_data))
-                                if service_old_data:
-                                    send_data["medicalCaseId"] = service_old_data.get("medicalCaseId",
-                                                                                      None) or send_data.get(
-                                        "medicalCaseId", None)
-                                    send_data["stepId"] = service_old_data.get("stepId", None) or send_data.get(
-                                        "stepId", None)
-                                    send_data["diagnosisId"] = service_old_data.get("diagnosisId",
-                                                                                    None) or send_data.get(
-                                        "diagnosisId", None)
-                                    send_data["referralId"] = service_old_data.get("referralId", None) or send_data.get(
-                                        "referralId", None)
-                                    send_data["serviceId"] = service_old_data.get("serviceId", None) or send_data.get(
-                                        "serviceId", None)
-                                    send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get("orgId",
-                                                                                                              None)
-                                    send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId",
-                                                                                            None) or send_data.get(
-                                        "fundingSourceTypeId", None)
-                                    send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
-                                        "dateFrom", None)
-                                    send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
-                                        "timeFrom", None)
-                                    send_data["dateTo"] = service_old_data.get("dateTo", None) or send_data.get(
-                                        "dateTo", None)
-                                    send_data["note"] = service_old_data.get("note", None) or send_data.get("note",
-                                                                                                            None)
-                                    send_data["quantity"] = service_old_data.get("quantity", None) or send_data.get(
-                                        "quantity", None)
-                                    send_data["patientUid"] = service_old_data.get("patientUid", None) or send_data.get(
-                                        "patientUid", None)
-                                    send_data["plannedDate"] = service_old_data.get("plannedDate",
-                                                                                    None) or send_data.get(
-                                        "plannedDate", None)
-                                    send_data["plannedTime"] = service_old_data.get("plannedTime",
-                                                                                    None) or send_data.get(
-                                        "plannedTime", None)
+                            send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
+                                                                          service_rend_id, stdout, x)
                             if ssd is not None and x.field.group.research.pk not in sended_researches:
                                 RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
                                 self.main_client.rendered_services.delete_service(service_rend_id)
@@ -698,76 +735,15 @@ class Directions(BaseRequester):
                                         xresult += protocol_row.replace("{{фракция}}", y.field.title).replace("{{значение}}", y.value)
                                 xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>", "")\
                                     .replace("<font>", "").replace("</font>", "")
-                                sd = self.main_client.put_content("Protocol.otg",
-                                                                  protocol_template.replace("{{исполнитель}}",
-                                                                                            x.issledovaniye.doc_confirmation.get_fio()).replace(
-                                                                      "{{результат}}", xresult),
-                                                                  self.main_client.get_addr(
-                                                                      "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
-                                                                  method="POST",
-                                                                  filetype="text/xml")
-                                RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+                                self.put_protocol(code, direction, protocol_template, ss, x, xresult)
                         for x in Result.objects.filter(issledovaniye__napravleniye=direction):
                             code = x.fraction.research.code
-                            service_rend_id = sended_ids.get(code, None)
                             if code in sended_codes:
                                 continue
+                            service_rend_id = sended_ids.get(code, None)
                             sended_codes.append(code)
-                            ssd = self.main_client.services.get_service_id(code)
-                            send_data = dict(referralId=rid,
-                                             serviceId=ssd,
-                                             isRendered="true",
-                                             quantity="1",
-                                             orgId=self.main_client.search_organization_id(),
-                                             dateFrom=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                             timeFrom=timezone.localtime(x.issledovaniye.time_confirmation).strftime("%X"),
-                                             dateTo=x.issledovaniye.time_confirmation.strftime("%Y-%m-%d"),
-                                             note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
-                                             fundingSourceTypeId=Utils.get_fin_src_id(direction.istochnik_f.title,
-                                                                                      self.main_client.get_fin_dict()),
-                                             patientUid=rindiv)
-                            if stdout:
-                                stdout.write("SR: " + str(service_rend_id))
-                            if service_rend_id:
-                                service_old_data = self.main_client.rendered_services.get_data_by_id(service_rend_id)
-                                if stdout:
-                                    stdout.write("OLD DATA: " + str(service_old_data))
-                                if service_old_data:
-                                    send_data["medicalCaseId"] = service_old_data.get("medicalCaseId",
-                                                                                      None) or send_data.get(
-                                        "medicalCaseId", None)
-                                    send_data["stepId"] = service_old_data.get("stepId", None) or send_data.get(
-                                        "stepId", None)
-                                    send_data["diagnosisId"] = service_old_data.get("diagnosisId",
-                                                                                    None) or send_data.get(
-                                        "diagnosisId", None)
-                                    send_data["referralId"] = service_old_data.get("referralId", None) or send_data.get(
-                                        "referralId", None)
-                                    send_data["serviceId"] = service_old_data.get("serviceId", None) or send_data.get(
-                                        "serviceId", None)
-                                    send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get("orgId",
-                                                                                                              None)
-                                    send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId",
-                                                                                            None) or send_data.get(
-                                        "fundingSourceTypeId", None)
-                                    send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
-                                        "dateFrom", None)
-                                    send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
-                                        "timeFrom", None)
-                                    send_data["dateTo"] = service_old_data.get("dateTo", None) or send_data.get(
-                                        "dateTo", None)
-                                    send_data["note"] = service_old_data.get("note", None) or send_data.get("note",
-                                                                                                            None)
-                                    send_data["quantity"] = service_old_data.get("quantity", None) or send_data.get(
-                                        "quantity", None)
-                                    send_data["patientUid"] = service_old_data.get("patientUid", None) or send_data.get(
-                                        "patientUid", None)
-                                    send_data["plannedDate"] = service_old_data.get("plannedDate",
-                                                                                    None) or send_data.get(
-                                        "plannedDate", None)
-                                    send_data["plannedTime"] = service_old_data.get("plannedTime",
-                                                                                    None) or send_data.get(
-                                        "plannedTime", None)
+                            send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
+                                                                          service_rend_id, stdout, x)
                             if ssd is not None and x.fraction.research.pk not in sended_researches:
                                 RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
                                 self.main_client.rendered_services.delete_service(service_rend_id)
@@ -793,15 +769,7 @@ class Directions(BaseRequester):
                                         "{{значение}}",
                                         x.issledovaniye.lab_comment).replace(
                                         "{{едизм}}", "")
-                                sd = self.main_client.put_content("Protocol.otg",
-                                                                  protocol_template.replace("{{исполнитель}}",
-                                                                                            x.issledovaniye.doc_confirmation.get_fio()).replace(
-                                                                      "{{результат}}", xresult),
-                                                                  self.main_client.get_addr(
-                                                                      "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
-                                                                  method="POST",
-                                                                  filetype="text/xml")
-                                RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+                                self.put_protocol(code, direction, protocol_template, ss, x, xresult)
                             code = x.fraction.code
                             if code in sended_codes:
                                 continue
@@ -818,44 +786,7 @@ class Directions(BaseRequester):
                                     if stdout:
                                         stdout.write("OLD DATA2: " + str(service_old_data))
                                     if service_old_data:
-                                        send_data["medicalCaseId"] = service_old_data.get("medicalCaseId",
-                                                                                          None) or send_data.get(
-                                            "medicalCaseId", None)
-                                        send_data["stepId"] = service_old_data.get("stepId", None) or send_data.get(
-                                            "stepId", None)
-                                        send_data["diagnosisId"] = service_old_data.get("diagnosisId",
-                                                                                        None) or send_data.get(
-                                            "diagnosisId", None)
-                                        send_data["referralId"] = service_old_data.get("referralId",
-                                                                                       None) or send_data.get(
-                                            "referralId", None)
-                                        send_data["serviceId"] = service_old_data.get("serviceId",
-                                                                                      None) or send_data.get(
-                                            "serviceId", None)
-                                        send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get(
-                                            "orgId", None)
-                                        send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId",
-                                                                                                None) or send_data.get(
-                                            "fundingSourceTypeId", None)
-                                        send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
-                                            "dateFrom", None)
-                                        send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
-                                            "timeFrom", None)
-                                        send_data["dateTo"] = service_old_data.get("dateTo", None) or send_data.get(
-                                            "dateTo", None)
-                                        send_data["note"] = service_old_data.get("note", None) or send_data.get("note",
-                                                                                                                None)
-                                        send_data["quantity"] = service_old_data.get("quantity", None) or send_data.get(
-                                            "quantity", None)
-                                        send_data["patientUid"] = service_old_data.get("patientUid",
-                                                                                       None) or send_data.get(
-                                            "patientUid", None)
-                                        send_data["plannedDate"] = service_old_data.get("plannedDate",
-                                                                                        None) or send_data.get(
-                                            "plannedDate", None)
-                                        send_data["plannedTime"] = service_old_data.get("plannedTime",
-                                                                                        None) or send_data.get(
-                                            "plannedTime", None)
+                                        self.fill_send_old_data(send_data, service_old_data)
                                         RmisServices.objects.filter(napravleniye=direction,
                                                                     rmis_id=service_rend_id).delete()
                                         self.main_client.rendered_services.delete_service(service_rend_id)
@@ -883,8 +814,84 @@ class Directions(BaseRequester):
                                                                                 {"pk": json.dumps([direction.pk]),
                                                                                  "normis": '1'}),
                                                      self.main_client.get_addr(
-                                                         "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат/Resultat.pdf"))
+                                                         "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"))
         return direction.result_rmis_send
+
+    def put_protocol(self, code, direction, protocol_template, ss, x, xresult):
+        sd = self.main_client.put_content("Protocol.otg",
+                                          protocol_template.replace("{{исполнитель}}",
+                                                                    x.issledovaniye.doc_confirmation.get_fio()).replace(
+                                              "{{результат}}", xresult),
+                                          self.main_client.get_addr(
+                                              "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
+                                          method="POST",
+                                          filetype="text/xml")
+        RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+
+    def fill_send_old_data(self, send_data, service_old_data):
+        send_data["medicalCaseId"] = service_old_data.get("medicalCaseId",
+                                                          None) or send_data.get(
+            "medicalCaseId", None)
+        send_data["stepId"] = service_old_data.get("stepId", None) or send_data.get(
+            "stepId", None)
+        send_data["diagnosisId"] = service_old_data.get("diagnosisId",
+                                                        None) or send_data.get(
+            "diagnosisId", None)
+        send_data["referralId"] = service_old_data.get("referralId",
+                                                       None) or send_data.get(
+            "referralId", None)
+        send_data["serviceId"] = service_old_data.get("serviceId",
+                                                      None) or send_data.get(
+            "serviceId", None)
+        send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get(
+            "orgId", None)
+        send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId",
+                                                                None) or send_data.get(
+            "fundingSourceTypeId", None)
+        send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
+            "dateFrom", None)
+        send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
+            "timeFrom", None)
+        send_data["dateTo"] = service_old_data.get("dateTo", None) or send_data.get(
+            "dateTo", None)
+        send_data["note"] = service_old_data.get("note", None) or send_data.get("note",
+                                                                                None)
+        send_data["quantity"] = service_old_data.get("quantity", None) or send_data.get(
+            "quantity", None)
+        send_data["patientUid"] = service_old_data.get("patientUid",
+                                                       None) or send_data.get(
+            "patientUid", None)
+        send_data["plannedDate"] = service_old_data.get("plannedDate",
+                                                        None) or send_data.get(
+            "plannedDate", None)
+        send_data["plannedTime"] = service_old_data.get("plannedTime",
+                                                        None) or send_data.get(
+            "plannedTime", None)
+
+    def gen_rmis_direction_data(self, code, direction, rid, rindiv, service_rend_id, stdout, x):
+        ssd = self.main_client.services.get_service_id(code)
+        send_data = dict(referralId=rid,
+                         serviceId=ssd,
+                         isRendered="true",
+                         quantity="1",
+                         orgId=self.main_client.search_organization_id(),
+                         dateFrom=ndate(x.issledovaniye.time_confirmation),
+                         timeFrom=strtime(x.issledovaniye.time_confirmation),
+                         dateTo=ndate(x.issledovaniye.time_confirmation),
+                         note='Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из МИС L2',
+                         patientUid=rindiv)
+        if not direction.imported_from_rmis:
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title,
+                                                                    self.main_client.get_fin_dict()),
+        if stdout:
+            stdout.write("SR: " + str(service_rend_id))
+        if service_rend_id:
+            service_old_data = self.main_client.rendered_services.get_data_by_id(service_rend_id)
+            if stdout:
+                stdout.write("OLD DATA: " + str(service_old_data))
+            if service_old_data:
+                self.fill_send_old_data(send_data, service_old_data)
+        return send_data, ssd
 
     def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=10):
         def check_lock():
@@ -907,7 +914,7 @@ class Directions(BaseRequester):
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
         uploaded = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
-            Q(rmis_number__isnull=True) | Q(rmis_number="")).distinct()
+            Q(rmis_number__isnull=True) | Q(rmis_number="") | Q(imported_from_rmis=True, imported_directions_rmis_send=False)).distinct()
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
@@ -968,6 +975,7 @@ class Directions(BaseRequester):
                                                     result_rmis_send=False) \
                 .exclude(rmis_number="NONERMIS") \
                 .exclude(rmis_number="") \
+                .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
                 .distinct()
             cnt = to_upload.count()
             i = 0

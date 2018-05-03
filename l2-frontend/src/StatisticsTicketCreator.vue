@@ -241,7 +241,7 @@
       }
     },
     mounted() {
-      $('.dropdown').on('show.bs.dropdown', function () {
+      $('.dropdown:not(.dropdown-large)').on('show.bs.dropdown', function () {
         var $btnDropDown = $(this).find('.dropdown-toggle')
         var $listHolder = $(this).find('.dropdown-menu')
 
@@ -253,7 +253,7 @@
         $listHolder.data('open', true)
       })
 
-      $('.dropdown').on('hidden.bs.dropdown', function () {
+      $('.dropdown:not(.dropdown-large)').on('hidden.bs.dropdown', function () {
         var $listHolder = $(this).find('.dropdown-menu')
         $listHolder.data('open', false)
       })

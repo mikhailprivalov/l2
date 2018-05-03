@@ -59,6 +59,8 @@
                                 for (let events of evs) {
                                     let key = events[0];
                                     let val = events[1];
+                                    if(val === "")
+                                        continue
 
                                     if (key !== "json_data" && key !== "title")
                                         evdata += `<div class="data-row"><span class="data-title">${key}:</span> <span class="data-value">${val}</span></div>`;

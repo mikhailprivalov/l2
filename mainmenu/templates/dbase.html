@@ -1292,6 +1292,77 @@
             height: 100%;
             width: auto;
         }
+
+        .dropdown-large {
+            position: static !important;
+            text-align: center !important;
+        }
+
+        .dropdown-menu-large {
+            margin-left: 40px;
+            margin-right: 40px;
+            padding: 0 5px 5px;
+            z-index: 9998;
+            max-height: calc(100vh - 56px);
+            overflow-y: auto;
+            max-width: 1257px;
+        }
+
+        .dropdown-menu-large .info {
+            color: #fff;
+            text-align: right;
+        }
+
+        .dropdown-menu-large .dash-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 0 !important;
+        }
+
+        .dropdown-menu-large .dash-buttons .panel-body {
+            height: 70px;
+        }
+
+        .dropdown-menu-large .dash-buttons .panel-body span {
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .dropdown-menu-large .dash-btn {
+            margin: 5px 0 0 !important;
+        }
+
+        .dropdown-menu-large .dash-btn.dash-active a {
+            background: #048493;
+            border: 1px solid #048493;
+        }
+
+        @media (max-width: 768px) {
+            .dropdown-menu-large {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .dropdown-menu-large > li {
+                margin-bottom: 30px;
+            }
+
+            .dropdown-menu-large > li:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .open:not(.dropup) .caret {
+            border-top-width: 0;
+            border-bottom: 4px solid #fff;
+        }
+
+        .open.dropup .caret {
+            border-bottom-width: 0;
+            border-top: 4px solid #fff;
+        }
+
     </style>
     {% block head_cn %}{% endblock %}
 </head>
@@ -1319,36 +1390,33 @@
                 </div>
                 <div id="navbar" class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b class="caret"></b></a>
-                            <ul class="dropdown-menu" role="menu" style="z-index: 10000">
-                                <li><a href="/mainmenu">Главная</a></li>
-                                <li><a href="/logout">Выход из профиля</a></li>
-                                <li class="divider"></li>
-                                <li><a href="/mainmenu/directions/multiprint" target="_blank">Печать направлений</a>
-                                </li>
-                                {% if request.user|has_group:"Получатель биоматериала" %}
-                                    <li class="divider"></li>
-                                    <li><a href="/mainmenu/receive/one_by_one">Приём материала по одному</a></li>
-                                {% endif %}
-                            </ul>
+                        <li class="dropdown dropdown-large">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Меню <b
+                                    class="caret"></b></a>
+                            <div class="dropdown-menu dropdown-menu-large">
+                                <div class="dash-buttons text-center">
+                                    {% for item in mainmenu %}
+                                        {% if item.hr %}
+                                            </div>
+                                            <div class="dash-buttons text-center">
+                                        {% else %}
+                                            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn{% if item.active %} dash-active{% endif %}">
+                                                <a href="{{ item.url }}"{% if item.nt %} target="_blank"{% endif %}
+                                                   class="panel-body">
+                                                    <span>{{ item.title }}</span>
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </div>
+                                <div class="info">
+                                    L2 {{ version }}
+                                </div>
+                            </div>
                         </li>
-                        {% block extended_header %}{% endblock %}
                     </ul>
-                    <ul class="nav navbar-nav navbar-right" id="right-navbar">
-                        {% if request.user|has_group:"Лечащий врач" or request.user|has_group:"Оператор лечащего врача" %}
-                            <li><a href="/mainmenu/directions">Направления</a></li>
-                        {% endif %}
-                        {% if request.user|has_group:"Заборщик биоматериала" %}
-                            <li><a href="/mainmenu/biomaterial/get">Забор биоматериала</a></li>
-                        {% endif %}
-                        {% if request.user|has_group:"Получатель биоматериала" %}
-                            <li><a href="/mainmenu/receive">Приём материала</a></li>
-                        {% endif %}
-                        {% if request.user|has_group:"Врач-лаборант" or request.user|has_group:"Лаборант" %}
-                            <li><a href="/results/enter">Ввод результатов</a></li>
-                            {#                            <li><a href="/results/conformation">Подтверждение и печать результатов</a></li>#}
-                        {% endif %}
+                    <ul class="nav navbar-nav">
+                        {% block extended_header %}{% endblock %}
                     </ul>
                 </div>
             </div>

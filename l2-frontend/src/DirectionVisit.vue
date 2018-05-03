@@ -43,17 +43,21 @@
                     <td>Карта</td>
                     <td>{{direction_data.card}}</td>
                   </tr>
-                  <tr>
+                  <tr v-if="!direction_data.imported_from_rmis">
                     <td>Л/врач</td>
                     <td>{{direction_data.doc}}</td>
                   </tr>
-                  <tr>
+                  <tr v-if="!direction_data.imported_from_rmis">
                     <td>Источник финансирования</td>
                     <td>{{direction_data.fin_source}}</td>
                   </tr>
-                  <tr>
+                  <tr v-if="!direction_data.imported_from_rmis">
                     <td>Диагноз</td>
                     <td>{{direction_data.diagnos}}</td>
+                  </tr>
+                  <tr v-else>
+                    <td>Огранизация</td>
+                    <td>{{direction_data.imported_org}}</td>
                   </tr>
                 </table>
               </li>
@@ -92,8 +96,8 @@
       <div class="col-xs-12 col-sm-12 col-md-6">
         <div class="panel panel-flt">
           <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px">
-            <date-field style="width: 50%;display: inline-block;float: right;border-radius: 0 4px 0 0;margin: 0"
-                        :val.sync="journal_date" :def="journal_date"/>
+            <date-field-nav class="btr" :brn="false" w="190px" style="float: right"
+                            :val.sync="journal_date" :def="journal_date"/>
             <span style="margin-top: 7px;display: inline-block;">Журнал посещений</span></div>
           <div class="panel-body" style="padding-top: 5px">
             <div class="text-right" style="margin-bottom: 5px"><a href="#" class="fli" @click.prevent="show_modal">создание
@@ -150,7 +154,7 @@
 </template>
 
 <script>
-  import DateField from './DateField.vue'
+  import DateFieldNav from './DateFieldNav'
   import DateRange from './ui-cards/DateRange'
   import directionsPoint from './api/directions-point'
   import * as action_types from './store/action-types'
@@ -172,7 +176,7 @@
   export default {
     name: 'direction-visit',
     components: {
-      DateField,
+      DateFieldNav,
       Modal,
       DateRange
     },
@@ -330,5 +334,9 @@
 
   .fli:hover {
     text-decoration: none;
+  }
+
+  .btr /deep/ input {
+    border-radius: 0 4px 0 0;
   }
 </style>

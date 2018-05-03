@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result
+from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs
 from laboratory import settings
 from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
@@ -52,22 +52,15 @@ def statistic_xls(request):
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
-    if request.method == "POST":
-        pk = request.POST.get("pk", "")  # Первичный ключ
-        tp = request.POST.get("type", "")  # Тип статистики
-        date_start_o = request.POST.get("date-start", "")  # Начало периода
-        date_end_o = request.POST.get("date-end", "")  # Конец периода
-        users_o = request.POST.get("users", "[]")
-        date_values_o = request.POST.get("values", "{}")
-        date_type = request.POST.get("date_type", "d")
-    else:
-        pk = request.GET.get("pk", "")
-        tp = request.GET.get("type", "")  # Тип статистики
-        date_start_o = request.GET.get("date-start", "")  # Начало периода
-        date_end_o = request.GET.get("date-end", "")  # Конец периода
-        users_o = request.GET.get("users", "[]")
-        date_values_o = request.GET.get("values", "{}")
-        date_type = request.GET.get("date_type", "d")
+
+    request_data = request.POST if request.method == "POST" else request.GET
+    pk = request_data.get("pk", "")
+    tp = request_data.get("type", "")
+    date_start_o = request_data.get("date-start", "")
+    date_end_o = request_data.get("date-end", "")
+    users_o = request_data.get("users", "[]")
+    date_values_o = request_data.get("values", "{}")
+    date_type = request_data.get("date_type", "d")
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
@@ -466,16 +459,17 @@ def statistic_xls(request):
                                 break
                         if n:
                             continue
-
-                        if researches.napravleniye.doc.podrazdeleniye.pk not in otds:
-                            otds[researches.napravleniye.doc.podrazdeleniye.pk] = defaultdict(lambda: 0)
-                        otds[researches.napravleniye.doc.podrazdeleniye.pk][obj.pk] += 1
+                        otd_pk = "external-" + str(
+                            researches.napravleniye.imported_org.pk) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
+                        if otd_pk not in otds:
+                            otds[otd_pk] = defaultdict(lambda: 0)
+                        otds[otd_pk][obj.pk] += 1
                         otds[pki][obj.pk] += 1
                         if any([x.get_is_norm() == "normal" for x in researches.result_set.all()]):
                             continue
-                        if researches.napravleniye.doc.podrazdeleniye.pk not in otds_pat:
-                            otds_pat[researches.napravleniye.doc.podrazdeleniye.pk] = defaultdict(lambda: 0)
-                        otds_pat[researches.napravleniye.doc.podrazdeleniye.pk][obj.pk] += 1
+                        if otd_pk not in otds_pat:
+                            otds_pat[otd_pk] = defaultdict(lambda: 0)
+                        otds_pat[otd_pk][obj.pk] += 1
                         otds_pat[pki][obj.pk] += 1
 
                 style = xlwt.XFStyle()
@@ -483,8 +477,12 @@ def statistic_xls(request):
                 font = xlwt.Font()
                 font.bold = True
                 style.font = font
+                otd_local_keys = [x for x in otds.keys() if isinstance(x, int)]
+                otd_external_keys = [int(x.replace("external-", "")) for x in otds.keys() if
+                                     isinstance(x, str) and "external-" in x]
                 for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                        Podrazdeleniya.objects.filter(pk__in=[x for x in otds.keys() if x != pki])):
+                        Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title if otdd.pk != pki else "Сумма по всем отделениям",
@@ -493,10 +491,11 @@ def statistic_xls(request):
                     for col_num in range(len(row)):
                         ws.write(row_num, col_num, row[col_num], style=style)
                     rows = []
-                    for obj in directory.Researches.objects.filter(pk__in=[x for x in otds[otdd.pk].keys()]):
+                    ok = otds.get(otdd.pk, otds.get("external-{}".format(otdd.pk), {}))
+                    for obj in directory.Researches.objects.filter(pk__in=[x for x in ok.keys()]):
                         row = [
                             obj.title,
-                            otds[otdd.pk][obj.pk],
+                            ok[obj.pk],
                         ]
                         rows.append(row)
                         ns += 1
@@ -544,8 +543,13 @@ def statistic_xls(request):
                     else:
                         ws_pat.write_merge(row_num, row_num, col_num, col_num + 1, row[col_num], style=font_style)
 
+                otd_local_keys = [x for x in otds_pat.keys() if isinstance(x, int)]
+                otd_external_keys = [int(x.replace("external-", "")) for x in otds_pat.keys() if
+                                     isinstance(x, str) and "external-" in x]
+
                 for otdd in list(Podrazdeleniya.objects.filter(pk=pki)) + list(
-                        Podrazdeleniya.objects.filter(pk__in=[x for x in otds_pat.keys() if x != pki])):
+                        Podrazdeleniya.objects.filter(pk__in=[x for x in otd_local_keys if x != pki])) + list(
+                    RMISOrgs.objects.filter(pk__in=otd_external_keys)):
                     row_num += 2
                     row = [
                         otdd.title,
@@ -554,10 +558,11 @@ def statistic_xls(request):
                     for col_num in range(len(row)):
                         ws_pat.write(row_num, col_num, row[col_num], style=style)
                     rows = []
-                    for obj in directory.Researches.objects.filter(pk__in=[x for x in otds_pat[otdd.pk].keys()]):
+                    ok = otds_pat.get(otdd.pk, otds_pat.get("external-{}".format(otdd.pk), {}))
+                    for obj in directory.Researches.objects.filter(pk__in=[x for x in otds_pat.get(otdd.pk, ok.keys())]):
                         row = [
                             obj.title,
-                            otds_pat[otdd.pk][obj.pk],
+                            ok[obj.pk],
                         ]
                         rows.append(row)
                     for row in sorted(rows, key=itemgetter(0)):

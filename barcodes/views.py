@@ -116,18 +116,22 @@ def tubes(request, direction_implict_id=None):
             if tube not in tubes_id:
                 continue
             # c.setFont('OpenSans', 8)
-            otd = list(tmp2.doc.podrazdeleniye.title.split(" "))
-            fam = tmp2.client.individual.fio(short=True, dots=False)
             st = ""
-            if len(otd) > 1:
-                if "отделение" in otd[0].lower():
-                    st = otd[1][:3] + "/о"
-                else:
-                    st = otd[0][:3] + "/" + otd[1][:1]
-            elif len(otd) == 1:
-                st = otd[0][:3]
+            if not tmp2.imported_from_rmis:
+                otd = list(tmp2.doc.podrazdeleniye.title.split(" "))
+                if len(otd) > 1:
+                    if "отделение" in otd[0].lower():
+                        st = otd[1][:3] + "/о"
+                    else:
+                        st = otd[0][:3] + "/" + otd[1][:1]
+                elif len(otd) == 1:
+                    st = otd[0][:3]
+            else:
+                st = "вн.орг"
+
             st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
 
+            fam = tmp2.client.individual.fio(short=True, dots=False)
             pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
                 tubes__pk=tube).first().comment[:9]
 

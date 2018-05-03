@@ -1,5 +1,6 @@
 import clients.models as Clients
 import simplejson as json
+from appconf.manager import SettingManager
 
 
 def card_bases(request):
@@ -7,3 +8,87 @@ def card_bases(request):
     for b in Clients.CardBase.objects.filter(hide=False).order_by("pk"):
         card_bases_vars.append(dict(title=b.title, code=b.short_title, pk=b.pk, history_number=b.history_number))
     return {"card_bases": json.dumps(card_bases_vars)}
+
+
+def menu(request):
+    from laboratory import VERSION
+    data = []
+    if request.user.is_authenticated and not request.is_ajax():
+        from laboratory import settings
+        groups = [str(x) for x in request.user.groups.all()]
+
+        pages = [
+            {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
+            {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
+            {"hr": True, "access": ["*"]},
+            {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
+            {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["*"]},
+            {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
+            {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": [
+                "Оформление статталонов",
+                "Лечащий врач",
+                "Оператор лечащего врача",
+            ]},
+            {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
+            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False,
+             "access": ["Конструктор: Лабораторные исследования",
+                        "Конструктор: Параклинические (описательные) исследования",
+                        "Конструктор: Ёмкости для биоматериала",
+                        "Конструктор: Настройка УЕТов",
+                        "Конструктор: Группировка исследований по направлениям"]},
+            {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
+            {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False,
+             "access": ["Лечащий врач",
+                        "Оператор лечащего врача",
+                        "Врач-лаборант",
+                        "Лаборант",
+                        "Врач параклиники"]},
+            {"url": "/mainmenu/results_report", "title": "Отчёт по результатам", "nt": False,
+             "access": ["Лечащий врач",
+                        "Оператор лечащего врача",
+                        "Врач-лаборант",
+                        "Лаборант",
+                        "Врач параклиники"]},
+            {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"], "module": "discharge_module"},
+            {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
+            {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
+            # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
+            {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
+            {"url": "/silk/", "title": "Профилирование", "nt": False, "access": []},
+            {"url": '/mainmenu/cards', "title": "Картотека L2", "nt": True, "access": ["Картотека L2"], "module": "mis_module"},
+            {"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники"], "module": "paraclinic_module"},
+            {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники"], "module": "paraclinic_module"},
+            {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
+        ]
+
+        if settings.LDAP and settings.LDAP["enable"]:
+            pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
+        if settings.RMQ_ENABLED:
+            pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
+        pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
+
+        if SettingManager.get("home_page", default="http://home") != "false":
+            pages.append(
+                {"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
+                 "nt": True, "access": ["*"]})
+        data = make_menu(pages, groups, request.user.is_superuser, request.path)
+    return {"mainmenu": data, "version": VERSION}
+
+
+def make_menu(pages, groups, superuser, current_path=None):
+    menu = []
+    groups_set = set(groups)
+    for page in pages:
+        if (not superuser and "*" not in page["access"] and len(groups_set & set(page["access"])) == 0) or (
+                page.get("module") and not SettingManager.get(page["module"], default='false', default_type='b')):
+            continue
+        page["active"] = current_path == page.get("url")
+        menu.append(page)
+    return menu

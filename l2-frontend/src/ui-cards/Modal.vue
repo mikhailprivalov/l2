@@ -1,13 +1,13 @@
 <template>
   <transition name="modal">
     <div class="modal-mask">
-      <div class="panel panel-flt" style="align-self: flex-start;margin-top: 15px;min-width: 30%;">
+      <div class="panel panel-flt" :style="{ minWidth: minWidth, alignSelf: 'flex-start', marginTop: marginTop }">
         <div class="panel-heading">
           <h3 class="panel-title">
             <slot name="header">
               default header
             </slot>
-            <button type="button" class="close" @click="$emit('close')">&times;</button>
+            <button type="button" class="close" v-show="!noClose" @click="$emit('close')">&times;</button>
           </h3>
         </div>
         <div class="panel-body" :class="{white_bg: whiteBg === 'true'}">
@@ -31,12 +31,25 @@
     props: {
       'show-footer': {
         required: false,
-        default: 'false'
+        default: 'false',
       },
       'white-bg': {
         required: false,
-        default: 'false'
-      }
+        default: 'false',
+      },
+      'min-width': {
+        required: false,
+        default: '30%',
+      },
+      'margin-top': {
+        required: false,
+        default: '15px',
+      },
+      'no-close': {
+        required: false,
+        default: false,
+        type: Boolean,
+      },
     }
   }
 </script>
@@ -44,6 +57,10 @@
 <style scoped>
   .white_bg {
     background-color: #fff;
+  }
+
+  .close {
+    line-height: 12px;
   }
 </style>
 

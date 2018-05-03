@@ -1,7 +1,7 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <date-field style="width: 94px;display: inline-block;align-self: stretch" :val.sync="date" :def="date"/>
+      <date-field-nav style="width: 166px;align-self: stretch" :val.sync="date" :def="date"/>
       <button class="btn btn-blue-nb" @click="load" style="width: 42px;display: inline-block;align-self: stretch"><i
         class="glyphicon glyphicon-refresh"></i></button>
       <button class="btn btn-blue-nb" style="width: 94px;display: inline-block;align-self: stretch" @click="print"><i
@@ -98,14 +98,14 @@
 
 <script>
   import moment from 'moment'
-  import DateField from './DateField.vue'
+  import DateFieldNav from './DateFieldNav'
   import * as action_types from './store/action-types'
   import statistics_tickets_point from './api/statistics-tickets-point'
 
   export default {
     name: 'statistics-tickets-viewer',
     components: {
-      DateField
+      DateFieldNav
     },
     data() {
       return {

@@ -46,9 +46,13 @@
                 <td>Дата рождения</td>
                 <td id="bth"></td>
             </tr>
-            <tr>
+            <tr id="lv">
                 <td>Л/врач</td>
                 <td><span id="doc-fio"></span><span id="doc-otd"></span></td>
+            </tr>
+            <tr id="imported_org">
+                <td>Организация</td>
+                <td><span id="imported_org_title"></span></td>
             </tr>
         </table>
         <div>
@@ -259,6 +263,7 @@
         let SFinFocus = false
         let checkboxed = []
         $(document).ready(function () {
+            $("#imported_org").hide()
             resize()
             $('#print-bc-save, #print-bc, #success-b, #can-dir').prop('disabled', true)
             $('#search-field').bind('keydown', 'return', function () {
@@ -400,6 +405,8 @@
             if (!q || q === '') return
             sl()
             $('#search-field').val('')
+            $("#imported_org").hide()
+            $("#lv").show()
             $('.has-error').removeClass('has-error')
             $('#researches-tb .allprint, #print-bc-save, #success-b, #print-bc').prop('disabled', true)
             $.ajax(
@@ -421,6 +428,12 @@
                     $('#doc-fio').html(data.direction.doc.fio)
                     $('#doc-otd').html(', ' + data.direction.doc.otd)
                     $('#lab').html(data.direction.lab)
+                    if(data.direction.imported_from_rmis)
+                    {
+                        $("#lv").hide()
+                        $("#imported_org").show()
+                        $("#imported_org_title").text(data.direction.imported_org)
+                    }
                     cancel_d = data.direction.cancel
                     if (!reload)
                         $('.last').removeClass('last')

@@ -214,10 +214,6 @@
       },
       researches_departments_simple() {
         let r = {}
-        let deps = {}
-        for (let dep of this.$store.getters.allDepartments) {
-          deps[dep.pk] = dep
-        }
 
         for (let pk of this.researches) {
           if (pk in this.$store.getters.researches_obj) {
@@ -246,9 +242,6 @@
       },
       clear_department(pk) {
         this.$root.$emit('researches-picker:deselect_department', pk)
-      },
-      clear_all() {
-        this.$root.$emit('researches-picker:deselect_all')
       },
       generate(type) {
         if (this.diagnos === '') {

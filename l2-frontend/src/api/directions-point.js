@@ -1,6 +1,6 @@
 import {HTTP} from '../http-common'
 
-async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_pk, researches, comments) {
+async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_pk, researches, comments, for_rmis, rmis_data) {
   try {
     const response = await HTTP.post('directions/generate', {
       card_pk,
@@ -9,7 +9,9 @@ async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_
       history_num,
       ofname_pk,
       researches,
-      comments
+      comments,
+      for_rmis,
+      rmis_data
     })
     if (response.statusText === 'OK') {
       return response.data
@@ -167,6 +169,28 @@ async function getResultsReport(individual, params, date_start, date_end) {
   return {ok: false}
 }
 
+async function getRmisDirections(pk) {
+  try {
+    const response = await HTTP.post('directions/rmis-directions', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {rows: []}
+}
+
+async function getRmisDirection(pk) {
+  try {
+    const response = await HTTP.post('directions/rmis-direction', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 
 export default {
   sendDirections,
@@ -182,5 +206,7 @@ export default {
   getMarkDirectionVisit,
   visitJournal,
   lastResult,
-  getResultsReport
+  getResultsReport,
+  getRmisDirections,
+  getRmisDirection,
 }

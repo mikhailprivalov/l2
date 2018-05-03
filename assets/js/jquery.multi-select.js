@@ -240,7 +240,7 @@
                         e.preventDefault();
                         e.stopPropagation();
                         that.selectHighlighted($list);
-                        return;
+
                     }
                 });
         },
@@ -336,7 +336,6 @@
 
             $('body').on('mouseleave', that.elemsSelector, function () {
                 $(this).parents('.ms-container').find(that.elemsSelector).removeClass('ms-hover');
-                ;
             });
         },
 

@@ -12,6 +12,7 @@ from django.utils import dateformat
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from laboratory import settings
+from laboratory.utils import strdatetime
 from rmis_integration.client import Client
 from users.models import DoctorProfile
 from podrazdeleniya.models import Podrazdeleniya
@@ -27,90 +28,10 @@ from utils.dates import try_parse_range
 
 
 @login_required
-def dashboard(request):  # Представление панели управления
+def dashboard(request):
     if not request.is_ajax():
-        from laboratory import settings
-        menu = []
-        groups = [str(x) for x in request.user.groups.all()]
-        pages = [
-            {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
-            {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
-            {"url": "/mainmenu/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
-            {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/mainmenu/statistics-tickets", "title": "Статталоны", "nt": False, "access": [
-                "Оформление статталонов",
-                "Лечащий врач",
-                "Оператор лечащего врача",
-            ]},
-            {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
-            {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
-            {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False,
-             "access": ["Конструктор: Лабораторные исследования",
-                        "Конструктор: Параклинические (описательные) исследования",
-                        "Конструктор: Ёмкости для биоматериала",
-                        "Конструктор: Настройка УЕТов",
-                        "Конструктор: Группировка исследований по направлениям"]},
-            {"url": "/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант"]},
-            {"url": "/mainmenu/results_history", "title": "Поиск", "nt": False,
-             "access": ["Лечащий врач",
-                        "Оператор лечащего врача",
-                        "Врач-лаборант",
-                        "Лаборант",
-                        "Врач параклиники"]},
-            {"url": "/mainmenu/results_report", "title": "Отчёт по результатам", "nt": False,
-             "access": ["Лечащий врач",
-                        "Оператор лечащего врача",
-                        "Врач-лаборант",
-                        "Лаборант",
-                        "Врач параклиники"]},
-            {"url": "/mainmenu/discharge", "title": "Выписки", "nt": False, "access": ["Загрузка выписок", "Поиск выписок"]},
-            {"url": "/mainmenu/create_user", "title": "Создать пользователя", "nt": False, "access": ["Создание и редактирование пользователей"]},
-            {"url": "/mainmenu/change_password", "title": "Настройка профилей пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
-            {"url": "/mainmenu/create_podr", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
-            {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
-            {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
-            {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
-            {"url": "/silk/", "title": "Профилирование", "nt": False, "access": []},
-        ]
-
-        if settings.LDAP and settings.LDAP["enable"]:
-            pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
-        if settings.RMQ_ENABLED:
-            pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
-        pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "keys": "Alt+l", "nt": False, "access": []})
-
-        if SettingManager.get("home_page", default="http://home") != "false":
-            pages.append(
-                {"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
-                 "nt": True, "access": ["*"]})
-
-        if SettingManager.get("mis_module", default='false', default_type='b'):
-            pages.append({"url": '/mainmenu/cards', "title": "Картотека L2", "nt": True, "access": ["Картотека L2"]})
-
-        if SettingManager.get("paraclinic_module", default='false', default_type='b'):
-            pages.append({"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False,
-                          "access": ["Посещения по направлениям", "Врач параклиники"]})
-            pages.append({"url": "/mainmenu/results/paraclinic/blanks", "title": "Листы исполнения описательных протоколов", "nt": False, "access": []})
-            pages.append({"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники"]})
-
-        if SettingManager.get("hosp_module", default='false', default_type='b'):
-            pages.append({"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"]})
-
-        groups_set = set(groups)
-        for page in pages:
-            if not request.user.is_superuser and "*" not in page["access"] and len(
-                    groups_set & set(page["access"])) == 0:
-                continue
-            menu.append(page)
-
-        menu_st = [menu[i:i + 4] for i in range(0, len(menu), 4)]
-        from laboratory import VERSION
         return render(request, 'dashboard.html',
-                      {"menu": menu_st,
-                       "version": VERSION,
-                       "rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
+                      {"rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
                        "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
                        "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')})
     return HttpResponse("OK")
@@ -203,28 +124,17 @@ def load_logs(request):
         obj = obj.filter(key__contains=states["pk"])
 
     if check_new == 0:
-        if request.method == "POST":
-            offset = int(request.POST["offset"])
-            size = int(request.POST["size"])
-        else:
-            offset = int(request.GET["offset"])
-            size = int(request.GET["size"])
-        for row in obj.order_by("-pk")[offset:size + offset]:
-            tmp_object = {"id": row.pk, "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-                          "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
-                          "time": timezone.localtime(row.time).strftime("%d.%m.%Y %X")}
-            result["data"].append(tmp_object)
+        offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
+        size = int(request.POST.get("size", request.GET.get("size", 0)))
+        rows = obj.order_by("-pk")[offset:size + offset]
     else:
-        if request.method == "POST":
-            pkgt = int(request.POST["last_n"])
-        else:
-            pkgt = int(request.GET["last_n"])
-
-        for row in obj.filter(pk__gt=pkgt).order_by("pk"):
-            tmp_object = {"id": row.pk, "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-                          "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
-                          "time": timezone.localtime(row.time).strftime("%d.%m.%Y %X")}
-            result["data"].append(tmp_object)
+        pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
+        rows = obj.filter(pk__gt=pkgt).order_by("pk")
+    for row in rows:
+        tmp_object = {"id": row.pk, "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
+                      "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
+                      "time": strdatetime(row.time)}
+        result["data"].append(tmp_object)
 
     result["s"] = states
     return JsonResponse(result)
@@ -634,23 +544,28 @@ def dashboard_from(request):
         podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         i = 0
-        for podr in podrazdeleniya:
+        for podrazledeniye in podrazdeleniya:
             i += 1
-            tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podr,
-                                                          time_get__range=(date_start, date_end),
-                                                          issledovaniya__research__podrazdeleniye=lab)
-            if filter_type == "not_received":
-                tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
-            elif filter_type == "received":
-                tubes_list = tubes_list.filter(doc_recive__isnull=False)
-            else:
-                tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
+            tubes_list = get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye)
             result[i] = {"tubes": tubes_list.distinct().count(),
-                         "title": podr.title, "pk": podr.pk}
+                         "title": podrazledeniye.title, "pk": podrazledeniye.pk}
     except ValueError:
         pass
 
     return JsonResponse(result)
+
+
+def get_tubes_list_in_receive_ui(date_end, date_start, filter_type, lab, podrazledeniye):
+    tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye=podrazledeniye,
+                                                  time_get__range=(date_start, date_end),
+                                                  issledovaniya__research__podrazdeleniye=lab)
+    if filter_type == "not_received":
+        tubes_list = tubes_list.filter(doc_recive__isnull=True).exclude(notice="")
+    elif filter_type == "received":
+        tubes_list = tubes_list.filter(doc_recive__isnull=False)
+    else:
+        tubes_list = tubes_list.filter(notice="", doc_recive__isnull=True)
+    return tubes_list
 
 
 @csrf_exempt
@@ -752,15 +667,18 @@ def direction_info(request):
             dir = Napravleniya.objects.get(pk=pk)
             data.append({'type': "Направление №%s" % pk, 'events': [
                 [
-                    ["title", timezone.localtime(dir.data_sozdaniya).strftime("%d.%m.%Y %X") + " Направление создано"],
+                    ["title", strdatetime(dir.data_sozdaniya) + " Направление создано"],
                     ["Создатель", get_userdata(dir.doc_who_create)],
-                    ["От имени", get_userdata(dir.doc)],
+                    ["От имени", "" if not dir.doc else get_userdata(dir.doc)],
                     ["Пациент", "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
                     ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
                     ["Архив", yesno[dir.client.is_archive]],
-                    ["Источник финансирования", dir.istochnik_f.title],
+                    ["Источник финансирования", "" if not dir.istochnik_f else dir.istochnik_f.title],
                     ["Диагноз", dir.diagnos],
-                    ["Направление отправлено в РМИС", yesno[dir.rmis_number not in ["", None, "NONERMIS"]]],
+                    ["Направление создано на основе направления из РМИС", yesno[dir.imported_from_rmis]],
+                    ["Направивляющая организация из РМИС", "" if not dir.imported_org else dir.imported_org.title],
+                    ["Направление отправлено в РМИС", yesno[dir.imported_directions_rmis_send if dir.imported_from_rmis else dir.rmis_number not in ["", None, "NONERMIS"]]],
+                    ["Номер РМИС направления", dir.rmis_number if dir.rmis_number not in [None, "NONERMIS"] else ""],
                     ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
                     ["Направление привязано к записи отделения госпитализации РМИС", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                     ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
@@ -768,7 +686,7 @@ def direction_info(request):
             ]})
             if dir.visit_date and dir.visit_who_mark:
                 d = {"type": "Посещение по направлению", "events": [
-                    [["title", timezone.localtime(dir.visit_date).strftime("%d.%m.%Y %X") + " Регистрация посещения"],
+                    [["title", strdatetime(dir.visit_date) + " Регистрация посещения"],
                      ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title], ]
                 ]}
                 data.append(d)
@@ -776,11 +694,11 @@ def direction_info(request):
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
                 if tube.time_get is not None:
                     d["events"].append([
-                        ["title", timezone.localtime(tube.time_get).strftime("%d.%m.%Y %X") + " Забор"],
+                        ["title", strdatetime(tube.time_get) + " Забор"],
                         ["Заборщик", get_userdata(tube.doc_get)]
                     ])
                 for l in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
-                    tdata = [["Приёмщик", get_userdata(l.user)], ["title", timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk]]
+                    tdata = [["Приёмщик", get_userdata(l.user)], ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
                     if l.body and l.body != "":
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
@@ -788,7 +706,7 @@ def direction_info(request):
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
                 for l in slog.Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
-                    tdata = [["Исполнитель", get_userdata(l.user)], ["title", timezone.localtime(l.time).strftime("%d.%m.%Y %X") + " " + l.get_type_display() + " (#%s)" % l.pk]]
+                    tdata = [["Исполнитель", get_userdata(l.user)], ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
                     if l.body and l.body != "" and l.type != 24:
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)

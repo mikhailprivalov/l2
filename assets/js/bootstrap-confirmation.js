@@ -60,7 +60,7 @@
                         $('body').unbind(e);
                         event_body = false;
 
-                        return;
+
                     });
                 }
             }

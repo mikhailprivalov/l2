@@ -1,90 +1,98 @@
 <template>
-  <div>
-    <div class="input-group">
-      <div class="input-group-btn">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
-        </button>
-        <ul class="dropdown-menu">
-          <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#"
-                                                                                                      @click.prevent="select_base(row.pk)">{{row.title}}</a>
-          </li>
-        </ul>
+  <div style="height: 100%;width: 100%;position: relative">
+    <div class="top-picker">
+      <div class="input-group">
+        <div class="input-group-btn">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
+                  style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
+          </button>
+          <ul class="dropdown-menu">
+            <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#"
+                                                                                                        @click.prevent="select_base(row.pk)">{{row.title}}</a>
+            </li>
+          </ul>
+        </div>
+        <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" autofocus
+               :maxlength="query_limit" @keyup.enter="search">
+        <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb nbr" type="button"
+                                              :disabled="!query_valid || inLoading"
+                                              @click="search">Поиск</button></span>
       </div>
-      <input type="text" class="form-control" v-model="query" placeholder="Введите запрос" autofocus
-             :maxlength="query_limit" @keyup.enter="search">
-      <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb" type="button"
-                                            :disabled="!query_valid || inLoading" @click="search">Поиск</button></span>
     </div>
-
-    <table class="table table-bordered">
-      <colgroup>
-        <col width="127">
-        <col>
-        <col width="127">
-        <col>
-      </colgroup>
-      <tbody>
-      <tr>
-        <td style="max-width: 127px;" class="table-header-row">ФИО:</td>
-        <td style="max-width: 99%;" class="table-content-row">{{selected_card.family}} {{selected_card.name}}
-          {{selected_card.twoname}}
-        </td>
-        <td style="max-width: 127px;" class="table-header-row">Номер карты:</td>
-        <td style="max-width: 99%;" class="table-content-row">{{selected_card.num}}</td>
-      </tr>
-      <tr>
-        <td class="table-header-row">Дата рождения:</td>
-        <td class="table-content-row">{{selected_card.birthday}}<span v-if="loaded"> ({{selected_card.age}})</span></td>
-        <td class="table-header-row">Пол:</td>
-        <td class="table-content-row">{{selected_card.sex}}</td>
-      </tr>
-      <tr v-if="history_n === 'true'">
-        <td class="table-header-row">
-          <span class="hospital" style="display: block;line-height: 1.2;">Номер истории:</span>
-        </td>
-        <td class="table-content-row" colspan="3">
-          <div style="height: 34px">
+    <div class="content-picker scrolldown">
+      <div style="padding-left: 5px;padding-right: 5px;">
+        <table class="table table-bordered">
+          <colgroup>
+            <col width="127">
+            <col>
+            <col width="127">
+            <col>
+          </colgroup>
+          <tbody>
+          <tr>
+            <td style="max-width: 127px;" class="table-header-row">ФИО:</td>
+            <td style="max-width: 99%;" class="table-content-row">{{selected_card.family}} {{selected_card.name}}
+              {{selected_card.twoname}}
+            </td>
+            <td style="max-width: 127px;" class="table-header-row">Номер карты:</td>
+            <td style="max-width: 99%;" class="table-content-row">{{selected_card.num}}</td>
+          </tr>
+          <tr>
+            <td class="table-header-row">Дата рождения:</td>
+            <td class="table-content-row">{{selected_card.birthday}}<span v-if="loaded"> ({{selected_card.age}})</span>
+            </td>
+            <td class="table-header-row">Пол:</td>
+            <td class="table-content-row">{{selected_card.sex}}</td>
+          </tr>
+          <tr v-if="history_n === 'true'">
+            <td class="table-header-row">
+              <span class="hospital" style="display: block;line-height: 1.2;">Номер истории:</span>
+            </td>
+            <td class="table-content-row" colspan="3">
+              <div style="height: 34px">
             <span class="hospital"><input type="text" class="form-control" maxlength="11" v-model="history_num"
                                           :disabled="!selected_base.history_number"/></span>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="directive_from_need === 'true'">
+            <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
+            <td class="table-content-row select-td">
+              <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
+            </td>
+            <td class="table-content-row select-td" colspan="2">
+              <select-picker-b v-model="directive_doc" :options="directive_docs_select"/>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <div class="row">
+          <div class="col-xs-5 hovershow" v-if="phones.length > 0">
+            <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
+            <div class="fastlinks hovershow2" style="margin-top: 1px"><a :href="'sip:' + p" v-for="p in phones"
+                                                                         style="display: inline-block"><i
+              class="glyphicon glyphicon-phone"></i> {{format_number(p)}}</a></div>
           </div>
-        </td>
-      </tr>
-      <tr v-if="directive_from_need === 'true'">
-        <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
-        <td class="table-content-row select-td">
-          <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
-        </td>
-        <td class="table-content-row select-td" colspan="2">
-          <select-picker-b v-model="directive_doc" :options="directive_docs_select"/>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-    <div class="row">
-      <div class="col-xs-5 hovershow" v-if="phones.length > 0">
-        <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
-        <div class="fastlinks hovershow2" style="margin-top: 1px"><a :href="'sip:' + p" v-for="p in phones"
-                                                                     style="display: inline-block"><i
-          class="glyphicon glyphicon-phone"></i> {{format_number(p)}}</a></div>
-      </div>
-      <div class="col-xs-5" v-else></div>
-      <div class="col-xs-7">
-        <slot name="for_card_top" v-if="loaded" style="margin-top: 5px"/>
+          <div class="col-xs-5" v-else></div>
+          <div class="col-xs-7">
+            <slot name="for_card_top" v-if="loaded" style="margin-top: 5px"/>
+          </div>
+        </div>
+        <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
+        <slot name="for_all" style="margin-top: 5px"/>
       </div>
     </div>
-    <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
-    <slot name="for_all" style="margin-top: 5px"/>
-    <!--<div v-if="search_results === 'true' && loaded" style="text-align: right;margin-top: 5px;"><a
-      class="btn btn-blue-nb btn-sm" href="#">Поиск результатов по видам исследований</a></div>-->
+    <div class="bottom-picker" v-if="bottom_picker === 'true'">
+      <slot name="for_card_bottom"/>
+    </div>
     <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
         <table class="table table-responsive table-bordered table-hover"
-               style="background-color: #fff;max-width: 650px">
+               style="background-color: #fff;max-width: 680px">
           <colgroup>
             <col width="95">
-            <col width="150">
+            <col width="155">
             <col>
             <col width="140">
           </colgroup>
@@ -130,6 +138,10 @@
         type: String
       },
       search_results: {
+        default: 'false',
+        type: String
+      },
+      bottom_picker: {
         default: 'false',
         type: String
       },
@@ -456,7 +468,13 @@
           ofname_dep: parseInt(this.directive_department),
           ofname: parseInt(this.directive_doc),
           operator: this.is_operator,
-          history_num: this.history_num
+          history_num: this.history_num,
+          is_rmis: this.selected_card.is_rmis,
+          family: this.selected_card.family,
+          name: this.selected_card.name,
+          twoname: this.selected_card.twoname,
+          birthday: this.selected_card.birthday,
+          age: this.selected_card.age,
         })
       },
       clear() {
@@ -530,6 +548,80 @@
   .cursor-pointer {
     cursor: pointer;
   }
+
+  .content-picker {
+    position: absolute;
+    top: 34px;
+    left: 0;
+    right: 0;
+    bottom: 34px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .top-picker, .bottom-picker {
+    height: 34px;
+    background-color: #AAB2BD;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    white-space: nowrap;
+  }
+
+  .bottom-picker {
+    bottom: 0;
+  }
+
+  .top-picker {
+    top: 0;
+  }
+
+  .bottom-inner {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: stretch;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 34px;
+    align-content: stretch;
+    overflow: hidden;
+
+    a {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      padding: 1px 2px 1px;
+      text-decoration: none;
+      transition: .15s linear all;
+      cursor: pointer;
+      flex: 1;
+      margin: 0;
+      font-size: 12px;
+      min-width: 0;
+      max-width: 140px;
+      background-color: #AAB2BD;
+      color: #fff;
+      text-align: right;
+      justify-content: center;
+      span {
+        display: block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: keep-all;
+        max-height: 2.2em;
+        line-height: 1.1em;
+      }
+
+      &:hover {
+        background-color: #434a54;
+      }
+    }
+  }
 </style>
 
 <style lang="scss">
@@ -582,5 +674,15 @@
         transition: .5s ease-in opacity;
       }
     }
+  }
+
+  .nbr {
+    border-radius: 0;
+  }
+
+  .bob {
+    border-left: none !important;
+    border-top: none !important;
+    border-right: none !important;
   }
 </style>

@@ -44,7 +44,7 @@ class OperationWriter:
                 if isinstance(_arg_value, dict):
                     ds = {}
                     for a, b in _arg_value.items():
-                        if any([isinstance(b, str), isinstance(b, list), isinstance(b, dict), isinstance(b, bool), isinstance(b, float), isinstance(b, int)]) or b == None:
+                        if any([isinstance(b, str), isinstance(b, list), isinstance(b, dict), isinstance(b, bool), isinstance(b, float), isinstance(b, int)]) or b is not None:
                             ds[a] = b
                         else:
                             ds[a] = str(b)
@@ -77,7 +77,7 @@ class OperationWriter:
                         elif any([isinstance(item, str), isinstance(item, list),
                                   isinstance(item, dict), isinstance(item, bool),
                                   isinstance(item, float),
-                                  isinstance(item, int)]) or item == None:
+                                  isinstance(item, int)]) or item is None:
                             f.append(item)
                         else:
                             f.append(str(item))
@@ -104,7 +104,7 @@ class OperationWriter:
                 }
                 d[_arg_name] = ab
                 d["related"] = True
-            elif any([isinstance(_arg_value, str), isinstance(_arg_value, list), isinstance(_arg_value, dict), isinstance(_arg_value, bool), isinstance(_arg_value, float), isinstance(_arg_value, int)]) or _arg_value == None:
+            elif any([isinstance(_arg_value, str), isinstance(_arg_value, list), isinstance(_arg_value, dict), isinstance(_arg_value, bool), isinstance(_arg_value, float), isinstance(_arg_value, int)]) or _arg_value is None:
                 d[_arg_name] = _arg_value
             else:
                 d[_arg_name] = str(_arg_value)

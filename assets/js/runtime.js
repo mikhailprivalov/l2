@@ -169,7 +169,6 @@
                         console.warn('Since Jade 2.0.0, ampersands (`&`) in data attributes ' +
                             'will be escaped to `&amp;`');
                     }
-                    ;
                     if (val && typeof val.toISOString === 'function') {
                         console.warn('Jade will eliminate the double quotes around dates in ' +
                             'ISO form after 2.0.0');
@@ -243,8 +242,7 @@
                 var result = String(html).replace(jade_match_html, jade_encode_char);
                 if (result === '' + html) return html;
                 else return result;
-            };
-
+            }
             /**
              * Re-throw the given `err` in context to the
              * the jade in `filename` at the given `lineno`.
