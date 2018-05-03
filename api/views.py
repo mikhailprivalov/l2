@@ -1148,7 +1148,7 @@ def directions_paraclinic_form(request):
             "card": d.client.number_with_type(),
             "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
             "imported_from_rmis": d.imported_from_rmis,
-            "imported_org": d.imported_org.title,
+            "imported_org": "" if not d.imported_org else d.imported_org.title,
         }
         response["direction"] = {
             "pk": d.pk,
