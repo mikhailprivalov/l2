@@ -14,6 +14,7 @@ def strfdatetime(d: [datetime, None, date], format: str):
         d = datetime(year=d.year,
                      month=d.month,
                      day=d.day)
+        return d.strftime(format)
     return timezone.localtime(d).strftime(format)
 
 
