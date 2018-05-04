@@ -1,7 +1,7 @@
 <template>
   <div class="flex">
-    <button class="btn btn-blue-nb" @click="decDate">&lAarr;</button>
-    <button class="btn btn-blue-nb" @click="incDate">&rAarr;</button>
+    <button class="btn btn-blue-nb" @click="decDate"><i class="glyphicon glyphicon-arrow-left"></i></button>
+    <button class="btn btn-blue-nb" @click="incDate"><i class="glyphicon glyphicon-arrow-right"></i></button>
     <input v-datepicker type="text" class="form-control no-context" :class="{brn: brn}" :style="{ width: w }"
            v-model="val" maxlength="10"/>
   </div>
