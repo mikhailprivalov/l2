@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from django.utils import timezone
 
@@ -7,9 +7,13 @@ def localtime(d: datetime):
     return timezone.localtime(d)
 
 
-def strfdatetime(d: [datetime, None], format: str):
+def strfdatetime(d: [datetime, None, date], format: str):
     if not d:
         return ""
+    if isinstance(d, date):
+        d = datetime(year=d.year,
+                     month=d.month,
+                     day=d.day)
     return timezone.localtime(d).strftime(format)
 
 
