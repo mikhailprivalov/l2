@@ -43,6 +43,7 @@
           'directory.Fractions',
           'directory.ParaclinicInputGroups',
           'directory.ParaclinicInputField',
+          'directory.RMISOrgs',
           'directions.Napravleniya',
           'directions.Issledovaniya',
           'directions.TubesRegistration',

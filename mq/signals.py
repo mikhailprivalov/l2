@@ -26,6 +26,7 @@ def post_delete_l2(sender, instance, **kwargs):
 
 
 for s in [
+    directions.RMISOrgs,
     directions.Napravleniya,
     directions.Issledovaniya,
     directions.TubesRegistration,

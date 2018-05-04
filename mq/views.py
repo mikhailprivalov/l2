@@ -24,6 +24,12 @@ def get_object(request):
                 d["title"] = n.title
                 d["base"] = n.base_id
 
+        if mdl == "RMISOrgs":
+            if directions.RMISOrgs.objects.filter(pk=pk).exists():
+                n = directions.RMISOrgs.objects.get(pk=pk)
+                d["pk"] = n.rmis_id
+                d["title"] = n.title
+
         elif mdl == "Napravleniya":
             if directions.Napravleniya.objects.filter(pk=pk).exists():
                 n = directions.Napravleniya.objects.get(pk=pk)
@@ -32,11 +38,13 @@ def get_object(request):
                 d["data_sozdaniya"] = dt(n.data_sozdaniya)
                 d["client"] = n.client_id
                 d["diagnos"] = n.diagnos
-                d["doc"] = n.doc_id
+                d["doc"] = None if not n.doc else n.doc_id
                 d["doc_who_create"] = n.doc_who_create_id
-                d["istochnik_f"] = n.istochnik_f_id
+                d["istochnik_f"] = None if not n.istochnik_f else n.istochnik_f_id
                 d["cancel"] = n.cancel
                 d["result_rmis_send"] = n.result_rmis_send and n.rmis_number != "NONERMIS"
+                d["imported_from_rmis"] = n.imported_from_rmis
+                d["imported_org"] = None if not n.imported_org else n.imported_org_id
 
         elif mdl == "TubesRegistration":
             if directions.TubesRegistration.objects.filter(pk=pk).exists():
