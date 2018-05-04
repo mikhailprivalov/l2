@@ -6,6 +6,7 @@ import simplejson as json
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from zeep.exceptions import Fault
 
 from appconf.manager import SettingManager
 from clients.models import Phones
@@ -75,7 +76,7 @@ def receive_db(request):
     try:
         if SettingManager.get("rmis_enabled", default='false', default_type='b'):
             c = Client()
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, Fault):
         pass
     for x in d:
         polis = Clients.Document.objects.filter(
