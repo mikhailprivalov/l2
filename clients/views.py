@@ -133,7 +133,7 @@ def receive_db(request):
         if c is not None:
             try:
                 individual.sync_with_rmis(c=c)
-            except requests.exceptions.ConnectionError:
+            except (requests.exceptions.ConnectionError, Fault):
                 pass
         cards = Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exclude(individual=individual)
         todelete = []

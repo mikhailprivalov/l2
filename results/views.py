@@ -20,7 +20,7 @@ from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
     ParaclinicResult
-from laboratory.decorators import group_required
+from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
@@ -387,7 +387,7 @@ def result_normal(s):
     return s
 
 
-@login_required
+@logged_in_or_token
 def result_print(request):
     """ Печать результатов """
     inline = request.GET.get("inline", "1") == "1"
@@ -1164,7 +1164,7 @@ def result_print(request):
     slog.Log(key=request.GET["pk"],
              type=15,
              body=json.dumps({"leftnone": request.GET.get("leftnone", "0"), "split": request.GET.get("split", "1")}),
-             user=request.user.doctorprofile).save()
+             user=request.user.doctorprofile if request.user.is_authenticated else None).save()
 
     return response
 

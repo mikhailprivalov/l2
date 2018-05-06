@@ -23,18 +23,18 @@
       <div style="padding-left: 5px;padding-right: 5px;">
         <table class="table table-bordered">
           <colgroup>
-            <col width="127">
+            <col width="124">
             <col>
-            <col width="127">
+            <col width="54">
             <col>
           </colgroup>
           <tbody>
           <tr>
-            <td style="max-width: 127px;" class="table-header-row">ФИО:</td>
-            <td style="max-width: 99%;" class="table-content-row">{{selected_card.family}} {{selected_card.name}}
-              {{selected_card.twoname}}
+            <td style="max-width: 124px;" class="table-header-row">ФИО:</td>
+            <td style="max-width: 99%;" class="table-content-row">
+              {{selected_card.family}} {{selected_card.name}} {{selected_card.twoname}}
             </td>
-            <td style="max-width: 127px;" class="table-header-row">Номер карты:</td>
+            <td style="max-width: 54px;" class="table-header-row">{{selected_card.is_rmis?'ID':'Карта'}}:</td>
             <td style="max-width: 99%;" class="table-content-row">{{selected_card.num}}</td>
           </tr>
           <tr>
@@ -66,16 +66,12 @@
           </tr>
           </tbody>
         </table>
-        <div class="row">
-          <div class="col-xs-5 hovershow" v-if="phones.length > 0">
-            <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
-            <div class="fastlinks hovershow2" style="margin-top: 1px"><a :href="'sip:' + p" v-for="p in phones"
-                                                                         style="display: inline-block"><i
-              class="glyphicon glyphicon-phone"></i> {{format_number(p)}}</a></div>
-          </div>
-          <div class="col-xs-5" v-else></div>
-          <div class="col-xs-7">
-            <slot name="for_card_top" v-if="loaded" style="margin-top: 5px"/>
+        <div v-if="phones.length > 0" class="hovershow">
+          <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
+          <div class="fastlinks hovershow2" style="margin-top: 1px">
+            <a :href="'sip:' + p" v-for="p in phones" style="display: inline-block">
+              <i class="glyphicon glyphicon-phone"></i> {{format_number(p)}}
+            </a>
           </div>
         </div>
         <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
@@ -534,7 +530,7 @@
   }
 
   .table-header-row {
-    font-weight: bolder;
+    font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: middle;
@@ -543,6 +539,7 @@
   .table-content-row {
     overflow: hidden;
     text-overflow: ellipsis;
+    vertical-align: middle;
   }
 
   .cursor-pointer {

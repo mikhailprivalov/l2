@@ -1,11 +1,11 @@
 <template>
   <tr v-show="ok" :class="{warn: warn}">
     <td>{{researche_title}}</td>
-    <td v-if="in_load">поиск последнего результата...</td>
-    <td v-else><a href="#" @click.prevent="show_result">просмотр результата</a></td>
-    <td class="text-center">{{date}}</td>
-    <td class="text-center">
-      <div v-if="!in_load && ok">{{days_str}} назад</div>
+    <td v-if="in_load" colspan="3">поиск последнего результата...</td>
+    <td v-if="!in_load"><a href="#" @click.prevent="show_result">просмотр результата</a></td>
+    <td v-if="!in_load" class="text-center">{{date}}</td>
+    <td v-if="!in_load" class="text-center">
+      {{days_str}} назад
     </td>
   </tr>
 </template>

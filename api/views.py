@@ -1245,11 +1245,7 @@ def directions_paraclinic_result(request):
             iss.napravleniye.save()
         iss.save()
         response["ok"] = True
-        slog.Log(key=pk, type=13, body=json.dumps(delete_keys_from_dict(request_data,
-                                                                        ["hide", "confirmed", "allow_reset_confirm",
-                                                                         "values_to_input", "show_title", "order",
-                                                                         "show_title", "lines", "saved", "pk"])),
-                 user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 

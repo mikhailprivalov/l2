@@ -21,6 +21,7 @@ import directory.models as directory
 import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -148,7 +149,7 @@ def gen_pdf_execlist(request):
 
 
 # @cache_page(60 * 15)
-@login_required
+@logged_in_or_token
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     if SettingManager.get("pdf_auto_print", "true", "b"):

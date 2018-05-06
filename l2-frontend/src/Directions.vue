@@ -7,10 +7,12 @@
             <div v-if="selected_researches.length > 0"
                  style="margin-top: 5px;text-align: left">
               <table class="table table-bordered lastresults">
-                  <col width="200">
+                <colgroup>
+                  <col width="180">
                   <col>
                   <col width="110">
                   <col width="110">
+                </colgroup>
                   <tbody>
                   <last-result :individual="selected_card.individual_pk" v-for="p in selected_researches" :key="p"
                                :research="p"/>

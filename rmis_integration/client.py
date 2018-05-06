@@ -111,11 +111,6 @@ class Client(object):
         self.hosp = Hosp(self)
         self.department = Department(self)
         self.localclient = TC(enforce_csrf_checks=False)
-        cstatus = self.localclient.login(username=Settings.get("local_user", default="rmis"),
-                                         password=Settings.get("local_password",
-                                                               default="clientDirections.service.sendReferral"))
-        if not cstatus:
-            raise Exception("Не могу войти в L2")
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -625,7 +620,8 @@ class Directions(BaseRequester):
                     direction.rmis_hosp_id = h_id
             self.main_client.put_content("Napravleniye.pdf",
                                          self.main_client.local_get("/directions/pdf",
-                                                                    {"napr_id": json.dumps([direction.pk])}),
+                                                                    {"napr_id": json.dumps([direction.pk]),
+                                                                     'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                          self.main_client.get_addr(
                                              "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление-" + str(direction.pk) + "/direction.pdf"))
             if direction.imported_from_rmis and not direction.imported_directions_rmis_send:
@@ -812,7 +808,8 @@ class Directions(BaseRequester):
                         self.main_client.put_content("Resultat.pdf",
                                                      self.main_client.local_get("/results/pdf",
                                                                                 {"pk": json.dumps([direction.pk]),
-                                                                                 "normis": '1'}),
+                                                                                 "normis": '1',
+                                                                                 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                                      self.main_client.get_addr(
                                                          "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"))
         return direction.result_rmis_send
