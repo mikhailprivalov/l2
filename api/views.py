@@ -1463,7 +1463,8 @@ def directions_last_result(request):
                                                 time_confirmation__isnull=False).order_by("-time_confirmation")
     if i.exists():
         response["ok"] = True
-        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": strdate(i[0].time_confirmation)}
+        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": strdate(i[0].time_confirmation),
+                            "ts": tsdatetime(i[0].time_confirmation)}
     return JsonResponse(response)
 
 

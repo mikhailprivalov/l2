@@ -80,7 +80,7 @@
           vm.ok = data.ok
           if (data.ok) {
             vm.date = data.data.datetime
-            let m = moment(data.data.datetime, 'DD.MM.YYYY')
+            let m = moment.unix(data.data.ts)
             let n = moment()
             vm.days = n.diff(m, 'days')
             vm.days_str = moment.duration(vm.days, 'days').locale("ru").humanize()
