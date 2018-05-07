@@ -37,7 +37,7 @@ def get_db(request):
     data = []
     docs_types = Clients.DocumentType.objects.filter(title__startswith="Полис ОМС")
     snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
-    for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False, pk__lt=1000). \
+    for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False). \
             values("number",
                    "pk",
                    "individual_id",
