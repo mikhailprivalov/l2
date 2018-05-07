@@ -33,25 +33,32 @@ def ignore_exception(IgnoreException=Exception, DefaultVal=None):
 
 
 def get_db(request):
-    # key = request.GET["key"]
     code = request.GET["code"]
     data = []
-    for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False).prefetch_related():
-        docs = x.individual.document_set.filter(document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"))
-        snilses = x.individual.document_set.filter(document_type__in=Clients.DocumentType.objects.filter(title__startswith="СНИЛС"))
-        doc = x.polis if x.polis is not None else (None if not docs.exists() else docs.first())
-        snils = "" if not snilses.exists() else snilses[0].number
+    docs_types = Clients.DocumentType.objects.filter(title__startswith="Полис ОМС")
+    snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
+    for x in Clients.Card.objects.filter(base__short_title=code, is_archive=False, pk__lt=1000). \
+            values("number",
+                   "pk",
+                   "individual_id",
+                   "individual__family", "individual__name", "individual__patronymic", "individual__sex",
+                   "individual__birthday",
+                   "polis"):
+        doc = Clients.Document.objects.get(pk=x["polis"]) if x["polis"] else Clients.Document.objects.filter(
+            document_type__in=docs_types, individual__pk=x["individual_id"]).first()
+        snils = Clients.Document.objects.filter(document_type__in=snils_types,
+                                                individual__pk=x["individual_id"]).first()
         data.append({
-            "Family": x.individual.family,
-            "Name": x.individual.name,
-            "Twoname": x.individual.patronymic,
-            "Sex": x.individual.sex,
-            "Bday": "{:%d.%m.%Y}".format(x.individual.birthday),
-            "Number": x.number,
+            "Family": x["individual__family"],
+            "Name": x["individual__name"],
+            "Twoname": x["individual__patronymic"],
+            "Sex": x["individual__sex"],
+            "Bday": "{:%d.%m.%Y}".format(x["individual__birthday"]),
+            "Number": x["number"],
             "Polisser": "" if not doc else doc.serial,
             "Polisnum": "" if not doc else doc.number,
-            "Snils": snils,
-            "Tels": [y.number for y in Phones.objects.filter(card=x)]
+            "Snils": snils.number if snils else None,
+            "Tels": [y["number"] for y in Phones.objects.filter(card__pk=x["pk"]).values("number")]
         })
     return JsonResponse(data, safe=False)
 
