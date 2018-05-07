@@ -5,7 +5,7 @@
     <td v-if="!in_load"><a href="#" @click.prevent="show_result">просмотр результата</a></td>
     <td v-if="!in_load" class="text-center">{{date}}</td>
     <td v-if="!in_load" class="text-center">
-      {{days_str}} назад
+      {{days_str}}
     </td>
   </tr>
 </template>
@@ -16,12 +16,17 @@
 
   moment.updateLocale('ru', {
     relativeTime: {
-      d: '1 д.',
-      dd: '%d д.',
-      M: '1 м.',
-      MM: '%d м.',
-      y: '1 г.',
-      yy: '%d г.'
+      s: 'только что',
+      m: 'только что',
+      mm: 'только что',
+      h: 'час назад',
+      hh: '%d ч. назад',
+      d: '1 д. назад',
+      dd: '%d д. назад',
+      M: '1 м. назад',
+      MM: '%d м. назад',
+      y: '1 г. назад',
+      yy: '%d г. назад'
     }
   })
 
@@ -40,6 +45,7 @@
         in_load: true,
         ok: true,
         direction: -1,
+        ms: 0,
         days: -1,
         days_str: -1,
         date: '',
@@ -82,8 +88,9 @@
             vm.date = data.data.datetime
             let m = moment.unix(data.data.ts)
             let n = moment()
+            vm.ms = n.diff(m)
             vm.days = n.diff(m, 'days')
-            vm.days_str = moment.duration(vm.days, 'days').locale("ru").humanize()
+            vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
 
             vm.direction = data.data.direction
           }
