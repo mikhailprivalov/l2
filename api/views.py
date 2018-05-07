@@ -445,6 +445,7 @@ def patients_search_card(request):
     p4 = re.compile(r'card_pk:\d+')
     p4i = bool(re.search(p4, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
+    c = None
     if not p4i:
         if re.search(p, query.lower()):
             initials = query[0:3].upper()
@@ -456,7 +457,7 @@ def patients_search_card(request):
                                                     patronymic__startswith=initials[2], birthday=btday,
                                                     card__base=card_type)
                 if card_type.is_rmis and len(objects) == 0:
-                    c = Client()
+                    c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(
                         {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
                          "birthDate": btday},
@@ -489,7 +490,8 @@ def patients_search_card(request):
             if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
                 objects = list(objects)
                 try:
-                    c = Client()
+                    if not c:
+                        c = Client(modules="patients")
                     objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
                 except ConnectionError:
                     pass
@@ -504,12 +506,14 @@ def patients_search_card(request):
                 except ValueError:
                     pass
                 if card_type.is_rmis and len(list(objects)) == 0 and len(query) == 16:
-                    c = Client()
+                    if not c:
+                        c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(query)
                 else:
                     resync = True
             if resync and card_type.is_rmis:
-                c = Client()
+                if not c:
+                    c = Client(modules="patients")
                 for o in objects:
                     o.sync_with_rmis(c=c)
 

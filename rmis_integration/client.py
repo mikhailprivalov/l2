@@ -13,6 +13,7 @@ from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
 from simplejson import JSONDecodeError
 from zeep import Client as zeepClient, helpers
+from zeep.cache import SqliteCache, Base
 from zeep.exceptions import Fault
 from zeep.transports import Transport
 
@@ -23,6 +24,7 @@ from directory.models import Fractions, ParaclinicInputGroups, Researches
 from laboratory.utils import strdate, strtime, localtime
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings as l2settings
+
 
 class Utils:
     @staticmethod
@@ -89,28 +91,63 @@ def get_md5(s):
 from django.test import Client as TC
 
 
+class DjangoCache(Base):
+    def __init__(self, timeout=3600):
+        self._timeout = timeout
+
+    def k(self, url):
+        return "zeep_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
+
+    def add(self, url, content):
+        print("Caching contents of %s", url)
+        key = self.k(url)
+        cache.set(key, pickle.dumps(content, protocol=4), self._timeout)
+
+    def get(self, url):
+        key = self.k(url)
+        r = cache.get(key)
+        if r:
+            print("Cache HIT for %s", url)
+            return pickle.loads(r, encoding="utf8")
+        print("Cache MISS for %s", url)
+        return None
+
+
 class Client(object):
-    def __init__(self, login=Settings.get("login"), password=Settings.get("password")):
+    def __init__(self,
+                 login=Settings.get("login"),
+                 password=Settings.get("password"),
+                 modules=None):
+        if modules is None:
+            modules = ["patients",
+                       "services",
+                       "directions",
+                       "rendered_services",
+                       "dirservices",
+                       "hosp",
+                       "department",
+                       "tc"]
         self.base_address = Settings.get("address")
         self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
         self.clients = {}
         self.directories = {}
-        self.load_directories(titles=["pim_organization",
-                                      "pim_department",
-                                      "pc_doc_type",
-                                      "md_referral_type",
-                                      "md_referral_goal",
-                                      "fer_se_service_type",
-                                      "fin_funding_source_type"])
-        self.patients = Patients(self)
-        self.services = Services(self)
-        self.directions = Directions(self)
-        self.rendered_services = RenderedServices(self)
-        self.dirservices = DirServices(self)
-        self.hosp = Hosp(self)
-        self.department = Department(self)
-        self.localclient = TC(enforce_csrf_checks=False)
+        if "patients" in modules:
+            self.patients = Patients(self)
+        if "services" in modules:
+            self.services = Services(self)
+        if "directions" in modules:
+            self.directions = Directions(self)
+        if "rendered_services" in modules:
+            self.rendered_services = RenderedServices(self)
+        if "dirservices" in modules:
+            self.dirservices = DirServices(self)
+        if "hosp" in modules:
+            self.hosp = Hosp(self)
+        if "department" in modules:
+            self.department = Department(self)
+        if "tc" in modules:
+            self.localclient = TC(enforce_csrf_checks=False)
 
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
@@ -119,7 +156,8 @@ class Client(object):
         address = Settings.get(address_key)
         if address not in self.clients:
             self.clients[address] = zeepClient(self.get_addr(address),
-                                               transport=Transport(session=self.session))
+                                               transport=Transport(session=self.session,
+                                                                   cache=DjangoCache(timeout=300)))
         return self.clients[address]
 
     def load_directories(self, titles: list):
@@ -280,17 +318,27 @@ class Directory(BaseRequester):
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        self.document_types_directory = client.get_directory("pc_doc_type")
-        self.polis_types_id_list = [Utils.get_column_value(x, "ID") for x in
-                                    self.document_types_directory.get_values_by_data(search_data="Полис")]
-        self.local_types = {}
-        for t in clients_models.DocumentType.objects.all():
-            tmp = [Utils.get_column_value(x, "ID") for x in
-                   self.document_types_directory.get_values_by_data(search_data=t.title)]
-            if len(tmp) > 0:
-                self.local_types[t.pk] = tmp[0]
-            elif t.title == "СНИЛС":
-                self.local_types[t.pk] = "19"
+        key = "zeep_patients"
+        r = cache.get(key)
+
+        if not r:
+            r = {}
+            document_types_directory = client.get_directory("pc_doc_type")
+            r["polis_types_id_list"] = [Utils.get_column_value(x, "ID") for x in
+                                        document_types_directory.get_values_by_data(search_data="Полис")]
+            r["local_types"] = {}
+            for t in clients_models.DocumentType.objects.all():
+                tmp = [Utils.get_column_value(x, "ID") for x in
+                       document_types_directory.get_values_by_data(search_data=t.title)]
+                if len(tmp) > 0:
+                    r["local_types"][t.pk] = tmp[0]
+                elif t.title == "СНИЛС":
+                    r["local_types"][t.pk] = Settings.get("snils_id", default="19")
+            cache.set(key, pickle.dumps(r, protocol=4), 3600)
+        else:
+            r = pickle.loads(r, encoding="utf8")
+        self.polis_types_id_list = r["polis_types_id_list"]
+        self.local_types = r["local_types"]
 
     def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "",
                            doc_number: str = ""):
@@ -445,10 +493,18 @@ class Patients(BaseRequester):
 class Services(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_services")
-        self.services = {}
-        srv = self.client.getServices(clinic=client.search_organization_id())
-        for r in srv:
-            self.services[r["code"]] = r["id"]
+
+        key = "zeep_services"
+        r = cache.get(key)
+        if not r:
+            self.services = {}
+            srv = self.client.getServices(clinic=client.search_organization_id())
+            for r in srv:
+                self.services[r["code"]] = r["id"]
+
+            cache.set(key, pickle.dumps(self.services, protocol=4), 300)
+        else:
+            self.services = pickle.loads(r, encoding="utf8")
 
     def get_service_data(self, pk):
         key = "get_service_d{}".format(pk)

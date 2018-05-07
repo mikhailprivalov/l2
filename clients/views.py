@@ -82,16 +82,18 @@ def receive_db(request):
     c = None
     try:
         if SettingManager.get("rmis_enabled", default='false', default_type='b'):
-            c = Client()
+            c = Client(modules="patients")
     except (requests.exceptions.ConnectionError, Fault):
         pass
+    docs_types = Clients.DocumentType.objects.filter(title__startswith="Полис ОМС")
+    snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
     for x in d:
         polis = Clients.Document.objects.filter(
-            document_type__in=Clients.DocumentType.objects.filter(title__startswith="Полис ОМС"),
+            document_type__in=docs_types,
             serial=x.get("Polisser", ""),
             number=x.get("Polisnum", "")).exclude(number="")
         snils = Clients.Document.objects.filter(
-            document_type=Clients.DocumentType.objects.filter(title="СНИЛС").first(),
+            document_type=snils_types.first(),
             number=x.get("Snils", "")).exclude(number="")
 
         if snils.exists() or polis.exists():
