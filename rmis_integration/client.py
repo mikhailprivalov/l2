@@ -799,7 +799,7 @@ class Directions(BaseRequester):
                                 self.main_client.rendered_services.delete_service(service_rend_id)
                                 sended_researches.append(x.fraction.research.pk)
                                 if stdout:
-                                    stdout.write("DATA: " + json.dumps(send_data))
+                                    stdout.write("DATA: " + str(send_data))
                                 ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                 xresult = ""
                                 for y in Result.objects.filter(issledovaniye__napravleniye=direction,
