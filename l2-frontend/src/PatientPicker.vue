@@ -600,7 +600,7 @@
       margin: 0;
       font-size: 12px;
       min-width: 0;
-      max-width: 140px;
+      max-width: 150px;
       background-color: #AAB2BD;
       color: #fff;
       text-align: right;

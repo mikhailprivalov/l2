@@ -16,6 +16,9 @@
             </li>
           </ol>
         </div>
+        <div v-if="rows.length === 0" class="text-center" style="padding: 10px">
+          Направлений из РМИС, не зарегистрированных в L2, не найдено
+        </div>
       </div>
       <div class="directions-content" v-if="selected_direction !== -1">
         <div class="direction-data">

@@ -14,7 +14,8 @@ module.exports = {
   },
   plugins: [
     new BundleTracker({filename: '../webpack-stats.json'}),
-    new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true})
+    new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true}),
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
   ],
   module: {
     rules: [

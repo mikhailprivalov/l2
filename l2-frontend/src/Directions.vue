@@ -21,6 +21,9 @@
             </div>
           </div>
           <div slot="for_card_bottom" class="bottom-inner" v-if="selected_card.pk >= 0">
+            <!--<a href="#" @click.prevent="do_show_rmis_send_directions" v-if="selected_card.is_rmis">
+              <span>Направить в другую МО</span>
+            </a>-->
             <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
               <span>Направления из РМИС</span>
             </a>
@@ -49,6 +52,7 @@
     </div>
     <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
     <rmis-directions-viewer v-if="show_rmis_directions && selected_card.is_rmis" :card="selected_card"/>
+    <!--<rmis-send-directions v-if="show_rmis_send_directions && selected_card.is_rmis" :card="selected_card"/>-->
   </div>
 </template>
 
@@ -59,6 +63,7 @@
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
   import RmisDirectionsViewer from './RmisDirectionsViewer'
+  // import RmisSendDirections from './RmisSendDirections'
   import LastResult from './LastResult'
 
   export default {
@@ -69,6 +74,7 @@
       DirectionsHistory,
       ResultsViewer,
       RmisDirectionsViewer,
+      // RmisSendDirections,
       LastResult,
     },
     name: 'directions',
@@ -91,7 +97,8 @@
         },
         selected_researches: [],
         show_results_pk: -1,
-        show_rmis_directions: false
+        show_rmis_directions: false,
+        show_rmis_send_directions: false,
       }
     },
     created() {
@@ -107,6 +114,7 @@
 
       this.$root.$on('hide_rmis_directions', () => {
         vm.show_rmis_directions = false
+        vm.show_rmis_send_directions = false
       })
     },
     mounted() {
@@ -154,6 +162,9 @@
       },
       do_show_rmis_directions() {
         this.show_rmis_directions = true
+      },
+      do_show_rmis_send_directions() {
+        this.show_rmis_send_directions = true
       }
     },
     computed: {
