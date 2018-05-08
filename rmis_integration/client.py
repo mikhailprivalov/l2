@@ -998,7 +998,7 @@ class Directions(BaseRequester):
             update_lock()
             try:
                 if direct.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(direct))
+                    uploaded_results.append(self.check_send_results(direct, out))
                     if out:
                         out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
