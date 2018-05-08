@@ -7,7 +7,6 @@ from django.db import models
 from django.utils import timezone
 
 import slog.models as slog
-from directions.models import Napravleniya
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -285,6 +284,7 @@ class Individual(models.Model):
             client = Client()
         rmis_id = client.patients.get_rmis_id_for_individual(individual=self)
         if rmis_id and rmis_id != 'NONERMIS':
+            from directions.models import Napravleniya
             Napravleniya.objects.filter(client__individual=self, rmis_number='NONERMIS').update(rmis_number=None)
         return rmis_id
 
