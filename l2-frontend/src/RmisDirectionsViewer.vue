@@ -121,13 +121,9 @@
 
 <script>
   import Modal from './ui-cards/Modal'
-  import VueTippy from 'vue-tippy'
-  import Vue from 'vue'
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
   import ResearchesPicker from './ResearchesPicker'
-
-  Vue.use(VueTippy)
 
   export default {
     name: 'rmis-directions-viewer',
@@ -357,19 +353,6 @@
       z-index: 1;
       transform: scale(1.008);
     }
-  }
-
-  .s-code {
-    display: inline-block;
-    padding: .2em .6em .3em;
-    font-size: 80%;
-    line-height: 1;
-    color: #fff;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 5px;
-    background: #049372;
   }
 
   .direction-service {

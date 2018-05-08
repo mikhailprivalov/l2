@@ -1,8 +1,11 @@
 import Vue from 'vue'
+import VueTippy from 'vue-tippy'
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
+
+Vue.use(VueTippy)
 
 const promiseFinally = require('promise.prototype.finally');
 promiseFinally.shim()

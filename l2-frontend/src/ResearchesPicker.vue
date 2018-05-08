@@ -20,9 +20,9 @@
       </div>
     </div>
     <div class="content-picker" :class="{hidetemplates: hidetemplates}" v-if="researches_display.length > 0">
-      <a href="#" @click.prevent="select_research(row.pk)" class="research-select"
-         :class="{ active: research_selected(row.pk) }"
-         v-for="row in researches_display" :title="row.title"><span>{{ row.title }}</span></a>
+      <research-pick @click.native="select_research(row.pk)" class="research-select"
+                     :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+                     v-for="row in researches_display" :research="row"/>
     </div>
     <div class="content-none" v-else>
       Нет данных
@@ -39,15 +39,18 @@
           </li>
         </ul>
       </div>
+      <input type="text" placeholder="Поиск" class="form-control" v-model="search"/>
     </div>
   </div>
 </template>
 
 <script>
   import * as action_types from './store/action-types'
+  import ResearchPick from './ResearchPick'
 
   export default {
     name: 'researches-picker',
+    components: {ResearchPick},
     props: {
       value: {},
       autoselect: {
@@ -67,7 +70,8 @@
         type: '-1',
         dep: -1,
         template: -1,
-        checked_researches: []
+        checked_researches: [],
+        search: ''
       }
     },
     created() {
@@ -214,7 +218,7 @@
         if (!this.research_selected(pk)) {
           this.checked_researches.push(pk)
           let research = this.research_data(pk)
-          if (this.autoselect === 'directions') {
+          if (this.autoselect === 'directions' && 'autoadd' in research) {
             for (let autoadd_pk of research.autoadd) {
               this.select_research_ignore(autoadd_pk)
             }
@@ -242,6 +246,13 @@
       },
       research_selected(pk) {
         return this.checked_researches.indexOf(pk) !== -1
+      },
+      highlight_search(row) {
+        const t = row.title.toLowerCase().trim()
+        const ft = row.full_title.toLowerCase().trim()
+        const c = row.code.toLowerCase().trim().replace('а', 'a').replace('в', 'b')
+        const s = this.search.toLowerCase().trim()
+        return s !== '' && (t.includes(s) || ft.includes(s) || c.startsWith(s.replace('а', 'a').replace('в', 'b')))
       },
       research_data(pk) {
         if (pk in this.$store.getters.researches_obj) {
@@ -331,6 +342,9 @@
     width: 25%;
     height: 34px;
     border: 1px solid #6C7A89 !important;
+    cursor: pointer;
+    text-align: left;
+    outline: transparent;
   }
 
   .top-inner-select.active, .research-select.active {
@@ -338,7 +352,7 @@
     color: #fff;
   }
 
-  .top-inner-select > span, .research-select span {
+  .top-inner-select > span {
     display: block;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -353,6 +367,11 @@
 
   .research-select:hover {
     box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+  }
+
+  .highlight_search {
+    background: #07f6bf;
+    color: #000;
   }
 
   .content-picker, .content-none {
@@ -371,5 +390,14 @@
 
   .bottom-picker {
     bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    input {
+      width: 180px;
+      border-left: none;
+      border-bottom: none;
+      border-right: none;
+      border-radius: 0;
+    }
   }
 </style>
