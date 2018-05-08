@@ -1,6 +1,7 @@
 import collections
 import datetime
 import re
+import threading
 from collections import defaultdict
 from operator import itemgetter
 
@@ -514,8 +515,21 @@ def patients_search_card(request):
             if resync and card_type.is_rmis:
                 if not c:
                     c = Client(modules="patients")
+
+                sema = threading.BoundedSemaphore(10)
+                threads = list()
+
+                def sync_i(o: Individual, client: Client):
+                    sema.acquire()
+                    try:
+                        o.sync_with_rmis(c=client)
+                    finally:
+                        sema.release()
+
                 for o in objects:
-                    o.sync_with_rmis(c=c)
+                    thread = threading.Thread(target=sync_i, args=(o, c))
+                    threads.append(thread)
+                    thread.start()
 
     if p4i:
         cards = Card.objects.filter(pk=int(query.split(":")[1]))
@@ -1577,7 +1591,7 @@ def directions_rmis_directions(request):
     pk = request_data.get("pk")
     rows = []
     if pk and Card.objects.filter(pk=pk, base__is_rmis=True).exists():
-        c = Client()
+        c = Client(modules=["directions", "services"])
         sd = c.directions.get_individual_active_directions(Card.objects.get(pk=pk).number)
         dirs_data = [c.directions.get_direction_full_data(x) for x in sd if
                      not directions.Napravleniya.objects.filter(rmis_number=x).exists()]
@@ -1593,6 +1607,6 @@ def directions_rmis_direction(request):
     if pk and not directions.Napravleniya.objects.filter(rmis_number=pk).exists():
         data = get_direction_full_data_cache(pk)
         if not data:
-            c = Client()
+            c = Client(modules=["directions", "services"])
             data = c.directions.get_direction_full_data(pk)
     return JsonResponse(data)

@@ -99,7 +99,7 @@ class DjangoCache(Base):
         return "zeep_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
 
     def add(self, url, content):
-        print("Caching contents of %s", url)
+        # print("Caching contents of %s", url)
         key = self.k(url)
         cache.set(key, pickle.dumps(content, protocol=4), self._timeout)
 
@@ -107,9 +107,9 @@ class DjangoCache(Base):
         key = self.k(url)
         r = cache.get(key)
         if r:
-            print("Cache HIT for %s", url)
+            # print("Cache HIT for %s", url)
             return pickle.loads(r, encoding="utf8")
-        print("Cache MISS for %s", url)
+        # print("Cache MISS for %s", url)
         return None
 
 
