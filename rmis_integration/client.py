@@ -749,8 +749,6 @@ class Directions(BaseRequester):
         protocol_template = Settings.get("protocol_template")
         protocol_row = Settings.get("protocol_template_row")
         if not direction.result_rmis_send:
-            direction.result_rmis_send = True
-            direction.save()
             if direction.rmis_number != "NONERMIS":
                 rid = self.check_send(direction)
                 if rid and rid != "":
@@ -868,6 +866,8 @@ class Directions(BaseRequester):
                                                                                  'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                                      self.main_client.get_addr(
                                                          "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"))
+            direction.result_rmis_send = True
+            direction.save()
         return direction.result_rmis_send
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult):
