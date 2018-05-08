@@ -634,6 +634,8 @@ class Directions(BaseRequester):
         direction.rmis_hosp_id = ""
         direction.rmis_case_id = ""
         direction.rmis_resend_services = True
+        if direction.rmis_number == "NONERMIS":
+            direction.rmis_number = ""
         direction.save()
         slog.Log(key=direction.pk, type=3000, body=json.dumps({}), user=user).save()
         return deleted
