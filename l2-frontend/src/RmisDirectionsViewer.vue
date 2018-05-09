@@ -23,7 +23,10 @@
       <div class="directions-content" v-if="selected_direction !== -1">
         <div class="direction-data">
           <h4>РМИС-направление №{{direction_data.pk}} от {{direction_data.referralDate}}</h4>
-          Организация: {{direction_data.referralOrganization}}
+          Организация: {{direction_data.referralOrganization}}<br/>
+          <div v-if="direction_data.diagnosis && direction_data.diagnosis !== ''">Диагноз: {{direction_data.diagnosis}}
+            ({{direction_data.diagnosisName}})
+          </div>
           <hr/>
           <div class="direction-service">
             <div class="service-rmis">
@@ -201,7 +204,7 @@
           type: 'direction',
           card_pk: this.card.pk,
           fin_source_pk: null,
-          diagnos: '',
+          diagnos: this.direction_data.diagnosis || '',
           base: null,
           researches: r,
           operator: false,

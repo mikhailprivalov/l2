@@ -280,20 +280,23 @@ def printDirection(c, n, dir):
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
                       "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn,
-                 "Номер карты: " + dir.client.number_with_type())
-
-    if dir.diagnos.strip() != "":
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + dir.diagnos)
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+    diagnosis = dir.diagnos.strip()
     if not dir.imported_from_rmis:
+        if diagnosis != "":
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + diagnosis)
         if dir.istochnik_f:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
                          "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
         else:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn, "Источник финансирования: ")
     else:
+        nds = 0
+        if diagnosis != "":
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + diagnosis)
+            nds = 5
         if dir.imported_org:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105) + (h / 2) * yn, "Организация: " + dir.imported_org.title)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn, "Организация: " + dir.imported_org.title)
 
     issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
@@ -859,15 +862,21 @@ def drawTituls(c, pages, page, paddingx, obj):
 def get_issledovaniya(request):
     """ Получение списка исследований и направления для ввода результатов"""
     import time
-    res = {"issledovaniya": [], "ok": False}
+    res = {"issledovaniya": [], "ok": False, "labs": [], "labs_objects": []}
     if request.method == "GET":
         iss = []
         napr = None
-        id = request.GET["id"]
+        id = request.GET["id"].strip()
         lab_pk = request.GET.get("lab_pk", "-1")
         res["all_confirmed"] = True
-        if id.isnumeric():
-            if request.GET["type"] == "0":
+        t = request.GET["type"]
+        if id.isdigit():
+            id = int(id)
+            if id >= 4600000000000:
+                id -= 4600000000000
+                id //= 10
+                t = "2"
+            if t == "0":
                 if TubesRegistration.objects.filter(pk=id).count() == 1:
                     tube = TubesRegistration.objects.get(pk=id)
                     if tube.doc_recive:
@@ -885,7 +894,7 @@ def get_issledovaniya(request):
                                 iss.append(i)
                     if len(iss) > 0:
                         napr = iss[0].napravleniye
-            elif request.GET["type"] == "2":
+            elif t == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
                     iss = Issledovaniya.objects.filter(napravleniye__pk=id, research__podrazdeleniye__pk=lab_pk)
@@ -899,6 +908,12 @@ def get_issledovaniya(request):
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
+            for i in Issledovaniya.objects.filter(napravleniye__pk=id):
+                po = i.research.podrazdeleniye
+                p = po.title
+                if p not in res["labs"]:
+                    res["labs"].append(p)
+                    res["labs_objects"].append({"pk": po.pk, "title": p})
             if len(iss) > 0:
                 groups = {}
                 cnt = 0

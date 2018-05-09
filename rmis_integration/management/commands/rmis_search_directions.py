@@ -26,6 +26,8 @@ class Command(BaseCommand):
         datas = [helpers.serialize_object(c.directions.get_direction_data(x)) for x in sd]
         datas = [x for x in datas if x.get("refServiceId")]
         self.stdout.write("datas: %s" % json.dumps(datas, default=json_serial))
+        datas2 = [c.directions.get_direction_full_data(x["id"]) for x in datas]
+        self.stdout.write("Fdatas: %s" % json.dumps(datas2, default=json_serial))
         srv = {}
         for d in datas:
             for s in d["refServiceId"]:

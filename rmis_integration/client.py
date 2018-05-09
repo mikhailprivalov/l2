@@ -577,6 +577,14 @@ class Directions(BaseRequester):
             data["pk"] = pk
             data["referralOrganization"] = self.main_client.get_organization_title(pk=raw["referralOrganizationId"])
             data["referralOrganizationPk"] = raw["referralOrganizationId"]
+            data["diagnosis"] = ""
+            data["diagnosisName"] = ""
+            if raw["diagnosisId"]:
+                v = self.main_client.get_directory("md_diagnosis").get_values_by_data(search_name="ID", search_data=raw["diagnosisId"])
+                if len(v) > 0:
+                    v = v[0]
+                    data["diagnosis"] = Utils.get_column_value(v, "CODE")
+                    data["diagnosisName"] = Utils.get_column_value(v, "NAME")
             data["referralDate"] = strdate(raw["referralDate"])
             data["services"] = []
             for s in raw["refServiceId"]:

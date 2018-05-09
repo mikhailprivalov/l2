@@ -158,6 +158,11 @@
         </div>
         <div id="issledovaniya-scroll">
             <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
+            <div id="empty-dir-for-lab" style="padding: 20px;color: #9d9d9d;text-align: left;display: none">
+                Нет исследований для выбранной лаборатории.<br/><br/>
+                Лаборатории в направлении:
+                <ul></ul>
+            </div>
             <ul id="issledovaniya"></ul>
         </div>
     </div>
@@ -1147,6 +1152,9 @@
     <script src="{% static 'js/jade.min.js' %}"></script>
     <script src="{% static 'js/ajaxq.js' %}"></script>
     <script>
+
+        $('#empty-dir-for-lab').hide()
+
         let firstrun = true;
         let first_resize = true;
         let list_reload = false;
@@ -1373,7 +1381,7 @@
                 url: "/directions/get/issledovaniya",
                 type: "json",
                 method: "GET",
-                data: {id: id, type: type, lab_pk: lab_pk}
+                data: {id: id.trim(), type: type, lab_pk: lab_pk}
             }).done(function (data) {
                 hl();
                 if (!data.ok) {
@@ -1410,6 +1418,8 @@
                 dir_data = data;
                 $("#issledovaniya").isLoading("hide");
                 $(".not-loaded").hide();
+                $('#empty-dir-for-lab').hide()
+                $('#empty-dir-for-lab ul').html('')
                 $("#issledovaniya").show();
                 $("#result-form").empty();
                 $("#issledovaniya").empty();
@@ -1440,6 +1450,14 @@
 
                 dir_active = data.napr_pk;
                 let pks = [];
+                if (data.issledovaniya.length === 0) {
+                    $('#empty-dir-for-lab').show()
+                    if ('labs_objects' in data) {
+                        for (const p of data.labs_objects) {
+                            $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}'>${p.title}</a></li>`)
+                        }
+                    }
+                }
                 $.each(data.issledovaniya, function (k, v) {
                     if (v.saved && !v.confirmed) status = "s";
                     else if (v.saved && v.confirmed) status = "c";
