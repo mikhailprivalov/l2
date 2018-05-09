@@ -29,7 +29,7 @@
 
 {% block scripts %}
     {% load static %}
-    <script src="{% static 'js/pdfobject.min.js' %}"></script>
+    <script src="{% static 'js/pdfobject.js' %}"></script>
     <script>
         const pks = {{ request.GET.pk|safe }};
         $(document).ready(function () {
