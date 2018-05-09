@@ -72,7 +72,7 @@
           <td class="button-td">
             <div class="button-td-inner">
               <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
-              <button class="btn btn-blue-nb" v-else @click="show_results(row.pk)">Результаты</button>
+              <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
@@ -164,8 +164,13 @@
       this.$root.$on('researches-picker:directions_created', this.load_history)
     },
     methods: {
-      show_results(pk) {
-        this.$root.$emit('show_results', pk)
+      show_results(row) {
+        if (row.has_descriptive) {
+          this.$root.$emit('print:results', [row.pk])
+        }
+        else {
+          this.$root.$emit('show_results', row.pk)
+        }
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
@@ -431,6 +436,7 @@
   .button-td {
     padding: 0 !important;
     text-align: right;
+    height: 1px;
 
     .button-td-inner {
       display: flex;

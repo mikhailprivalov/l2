@@ -2,6 +2,7 @@ import collections
 import datetime
 import re
 import threading
+import time
 from collections import defaultdict
 from operator import itemgetter
 
@@ -19,7 +20,6 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
-from api.to_astm import get_iss_astm
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card
@@ -35,7 +35,6 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range
-import time
 
 
 def translit(locallangstring):
@@ -639,7 +638,6 @@ def directions_generate(request):
 
 @login_required
 def directions_history(request):
-    import datetime
     res = {"directions": []}
     request_data = json.loads(request.body)
 
@@ -669,7 +667,10 @@ def directions_history(request):
                 has_conf = False
                 researches_list = []
                 researches_pks = []
+                has_descriptive = False
                 for v in iss_list:
+                    if v.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+                        has_descriptive = True
                     researches_list.append(v.research.title)
                     researches_pks.append(v.research.pk)
                     iss_status = 1
@@ -695,7 +696,8 @@ def directions_history(request):
                          "researches_pks": researches_pks,
                          "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT_SHORT)),
                          "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
-                         "checked": False})
+                         "checked": False,
+                         "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
     return JsonResponse(res)
