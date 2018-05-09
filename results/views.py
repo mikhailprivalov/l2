@@ -595,7 +595,7 @@ def result_print(request):
         ]
         data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
         data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-                 ["РМИС ID:" if direction.imported_from_rmis else "№ карты:",
+                 ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
                   direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "")]]
         if not direction.imported_from_rmis:
             data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
