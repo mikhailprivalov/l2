@@ -39,7 +39,18 @@
           </li>
         </ul>
       </div>
-      <input type="text" placeholder="Поиск" class="form-control" v-model="search"/>
+      <div style="display: flex;width: calc(100% - 164px);justify-content: flex-end;">
+        <div id="founded-n">
+          <div style="font-size: 16px" v-if="founded_n !== ''">{{founded_n}}</div>
+        </div>
+        <input type="text" placeholder="Поиск (Enter для быстрого выбора и очистки)" class="form-control"
+               v-model="search" @keyup.enter="founded_select(true)"
+               v-tippy="{html: '#founded-n', trigger: 'manual', reactive: true}" ref="ftp"/>
+        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного"><span
+          class="fa fa-circle"></span></button>
+        <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search" title="Очистить поиск">
+          <span>&times;</span></button>
+      </div>
     </div>
   </div>
 </template>
@@ -158,6 +169,21 @@
         }
         return []
       },
+      founded_n() {
+        let r = ''
+        let n = 0
+        this.$refs.ftp.$el._tippy.hide()
+        for (const row of this.researches_display) {
+          if (this.highlight_search(row)) {
+            n++
+          }
+        }
+        if (n > 0) {
+          r = `Найдено ${n}`
+          this.$refs.ftp._tippy.show()
+        }
+        return r
+      },
     },
     methods: {
       select_type(pk) {
@@ -246,6 +272,20 @@
       },
       research_selected(pk) {
         return this.checked_researches.indexOf(pk) !== -1
+      },
+      clear_search() {
+        this.search = ''
+      },
+      founded_select(clear) {
+        clear = clear || false
+        for (const row of this.researches_display) {
+          if (this.highlight_search(row)) {
+            this.select_research_ignore(row.pk)
+          }
+        }
+        if (clear) {
+          this.clear_search()
+        }
       },
       highlight_search(row) {
         const t = row.title.toLowerCase().trim()
@@ -392,12 +432,20 @@
     bottom: 0;
     display: flex;
     justify-content: space-between;
+    font-size: 11px;
     input {
-      width: 180px;
+      max-width: 350px;
+      width: 100%;
       border-left: none;
       border-bottom: none;
       border-right: none;
       border-radius: 0;
     }
+  }
+
+  .bottom-inner-btn {
+    width: auto;
+    text-align: center;
+    border-radius: 0;
   }
 </style>
