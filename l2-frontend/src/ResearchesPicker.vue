@@ -286,6 +286,7 @@
       },
       clear_search() {
         this.search = ''
+        $(this.$refs.fndsrc).focus()
       },
       founded_select(clear) {
         clear = clear || false
@@ -296,6 +297,8 @@
         }
         if (clear) {
           this.clear_search()
+        } else {
+          $(this.$refs.fndsrc).focus()
         }
       },
       highlight_search(row) {
