@@ -881,7 +881,7 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult):
-        sd = self.main_client.put_content("Protocol.otg",
+        self.main_client.put_content("Protocol.otg",
                                           protocol_template.replace("{{исполнитель}}",
                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
                                               "{{результат}}", xresult),
@@ -892,44 +892,22 @@ class Directions(BaseRequester):
         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
 
     def fill_send_old_data(self, send_data, service_old_data):
-        send_data["medicalCaseId"] = service_old_data.get("medicalCaseId",
-                                                          None) or send_data.get(
-            "medicalCaseId", None)
-        send_data["stepId"] = service_old_data.get("stepId", None) or send_data.get(
-            "stepId", None)
-        send_data["diagnosisId"] = service_old_data.get("diagnosisId",
-                                                        None) or send_data.get(
-            "diagnosisId", None)
-        send_data["referralId"] = service_old_data.get("referralId",
-                                                       None) or send_data.get(
-            "referralId", None)
-        send_data["serviceId"] = service_old_data.get("serviceId",
-                                                      None) or send_data.get(
-            "serviceId", None)
-        send_data["orgId"] = service_old_data.get("orgId", None) or send_data.get(
-            "orgId", None)
-        send_data["fundingSourceTypeId"] = service_old_data.get("fundingSourceTypeId",
-                                                                None) or send_data.get(
-            "fundingSourceTypeId", None)
-        send_data["dateFrom"] = service_old_data.get("dateFrom", None) or send_data.get(
-            "dateFrom", None)
-        send_data["timeFrom"] = service_old_data.get("timeFrom", None) or send_data.get(
-            "timeFrom", None)
-        send_data["dateTo"] = service_old_data.get("dateTo", None) or send_data.get(
-            "dateTo", None)
-        send_data["note"] = service_old_data.get("note", None) or send_data.get("note",
-                                                                                None)
-        send_data["quantity"] = service_old_data.get("quantity", None) or send_data.get(
-            "quantity", None)
-        send_data["patientUid"] = service_old_data.get("patientUid",
-                                                       None) or send_data.get(
-            "patientUid", None)
-        send_data["plannedDate"] = service_old_data.get("plannedDate",
-                                                        None) or send_data.get(
-            "plannedDate", None)
-        send_data["plannedTime"] = service_old_data.get("plannedTime",
-                                                        None) or send_data.get(
-            "plannedTime", None)
+        for p in ["medicalCaseId",
+                  "stepId",
+                  "diagnosisId",
+                  "referralId",
+                  "serviceId",
+                  "orgId",
+                  "fundingSourceTypeId",
+                  "dateFrom",
+                  "timeFrom",
+                  "dateTo",
+                  "note",
+                  "quantity",
+                  "patientUid",
+                  "plannedDate",
+                  "plannedTime"]:
+            send_data[p] = service_old_data.get(p, None) or send_data.get(p, None)
 
     def gen_rmis_direction_data(self, code, direction, rid, rindiv, service_rend_id, stdout, x):
         ssd = self.main_client.services.get_service_id(code)
@@ -941,7 +919,7 @@ class Directions(BaseRequester):
                          dateFrom=ndate(x.issledovaniye.time_confirmation),
                          timeFrom=strtime(x.issledovaniye.time_confirmation),
                          dateTo=ndate(x.issledovaniye.time_confirmation),
-                         note='Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из МИС L2',
+                         note='Результаты в направлении на фирменном бланке или в протоколе.\nАвтоматический вывод из L2',
                          patientUid=rindiv)
         if not direction.imported_from_rmis:
             send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title,

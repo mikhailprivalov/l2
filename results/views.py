@@ -1,6 +1,6 @@
 import collections
 from copy import deepcopy
-
+import datetime
 import bleach
 import simplejson as json
 from django.conf import settings
@@ -84,22 +84,6 @@ def enter(request):
                                                            "groups": directory.ResearchGroup.objects.filter(lab=lab),
                                                            "lab": lab,
                                                            "labs": labs})
-
-
-@login_required
-@group_required("Врач-лаборант", "Лаборант")
-def result_conformation(request):
-    """ Представление для страницы подтверждения и печати результатов """
-    if "Зав. Лаб." in request.user.groups.values_list('name', flat=True):  # Если пользователь "Зав.Лаб."
-        labs = users.Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Загрузка всех подразделений
-    else:
-        labs = [request.user.doctorprofile.podrazdeleniye, request.user.doctorprofile.podrazdeleniye]
-    researches = directory.Researches.objects.filter(
-        podrazdeleniye=request.user.doctorprofile.podrazdeleniye)  # Загрузка списка анализов
-    return render(request, 'dashboard/conformation.html', {"researches": researches, "labs": labs})
-
-
-import datetime
 
 
 # from django.db import connection
@@ -211,16 +195,16 @@ def results_save(request):
                 if Result.objects.filter(issledovaniye=issledovaniye,
                                          fraction__pk=key).exists():  # Если результат для фракции существует
                     fraction_result = Result.objects.filter(issledovaniye=issledovaniye,
-                                                         fraction__pk=key).order_by("-pk")[0]
+                                                            fraction__pk=key).order_by("-pk")[0]
                 else:
                     fraction_result = Result(issledovaniye=issledovaniye,
                                              fraction=directory.Fractions.objects.get(
                                                  pk=key))  # Создание нового результата
                     created = True
                 tv = bleach.clean(fractions[key],
-                                                 tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font',
-                                                       'p', 'span', 'div']).replace("<br>",
-                                                                                    "<br/>")  # Установка значения
+                                  tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font',
+                                        'p', 'span', 'div']).replace("<br>",
+                                                                     "<br/>")  # Установка значения
                 fv = "" if created else fraction_result.value
                 fraction_result.value = tv
                 need_save = True
@@ -276,7 +260,8 @@ def result_confirm(request):
                 r.get_ref()
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
-            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye.pk}), user=request.user.doctorprofile).save()
+            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye.pk}),
+                     user=request.user.doctorprofile).save()
 
     return HttpResponse(json.dumps(result), content_type="application/json")
 
@@ -456,7 +441,7 @@ def result_print(request):
     style.fontName = "OpenSans"
     style.fontSize = 9
     style_ml = deepcopy(style)
-    style_ml.leftIndent = 5*mm
+    style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
     styleBold.fontName = "OpenSansBold"
     styleTable = deepcopy(style)
@@ -506,7 +491,8 @@ def result_print(request):
 
         import operator
         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-            result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value.replace("<br>", "<br/>")
+            result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value.replace("<br>",
+                                                                                                           "<br/>")
             # try:
             jo = json.loads(result)["rows"]
             style_t.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
@@ -562,7 +548,7 @@ def result_print(request):
     # cl = Client()
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual.pk * 100000000 + Result.objects.filter(
-                                    issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
+                                issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
         if not direction.is_all_confirm():
             continue
@@ -598,7 +584,8 @@ def result_print(request):
                  ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
                   direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "")]]
         if not direction.imported_from_rmis:
-            data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
+            data.append(
+                ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
         elif direction.imported_org:
             data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
 
@@ -651,7 +638,8 @@ def result_print(request):
                         Paragraph('<font face="OpenSansBold" size="8">Референсные значения (Ж)</font>',
                                   styleSheet["BodyText"]))
                 tmp.append(
-                    Paragraph('<font face="OpenSansBold" size="8">Единицы<br/>измерения</font>', styleSheet["BodyText"]))
+                    Paragraph('<font face="OpenSansBold" size="8">Единицы<br/>измерения</font>',
+                              styleSheet["BodyText"]))
 
             tmp.append(Paragraph('<font face="OpenSansBold" size="8">Исполнитель</font>', styleSheet["BodyText"]))
             # tmp.append(Paragraph('<font face="OpenSans" size="8">Дата заб.</font>', styleSheet["BodyText"]))
@@ -664,15 +652,15 @@ def result_print(request):
             cw = cw + [tw - sum(cw)]
             t = Table(data, colWidths=cw)
             style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                ])
+                                  ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                  ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                  ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                  ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                  ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                  ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                  ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                  ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                  ])
             style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
             style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
 
@@ -706,10 +694,7 @@ def result_print(request):
                     if fractions.count() == 1:
                         tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
                                          styleSheet["BodyText"])]
-                        result = "не завершено"
                         norm = "none"
-                        ref = {"": ""}
-                        f_units = fractions[0].units
                         if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
                             r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
                             ref = r.get_ref()
@@ -738,13 +723,15 @@ def result_print(request):
 
                         if f.render_type == 0:
                             if norm in ["none", "normal"]:
-                                tmp.append(Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
+                                tmp.append(
+                                    Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                             elif norm == "maybe":
                                 tmp.append(
                                     Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
                             else:
                                 tmp.append(
-                                    Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>", result_style))
+                                    Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>",
+                                              result_style))
                             if not no_units_and_ref:
                                 tmp.append(
                                     Paragraph('<font face="OpenSans" size="7">' + get_r(ref) + "</font>",
@@ -782,13 +769,16 @@ def result_print(request):
                                     '<font face="OpenSansBold" size="7">%s</font>' % iss.doc_confirmation.get_fio(),
                                     styleSheet["BodyText"]))
                                 tmp.append(Paragraph('<font face="OpenSansBold" size="7">%s</font>' % (
-                                    "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get)), styleSheet["BodyText"]))
+                                    "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(
+                                        iss.tubes.first().time_get)), styleSheet["BodyText"]))
                                 tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % strdate(iss.time_confirmation), styleSheet["BodyText"]))
+                                    '<font face="OpenSansBold" size="7">%s</font>' % strdate(iss.time_confirmation),
+                                    styleSheet["BodyText"]))
                             else:
                                 tmp.append("")
                                 tmp.append(Paragraph(
-                                    '<font face="OpenSansBold" size="7">%s</font>' % strdate(iss.tubes.first().time_get), styleSheet["BodyText"]))
+                                    '<font face="OpenSansBold" size="7">%s</font>' % strdate(
+                                        iss.tubes.first().time_get), styleSheet["BodyText"]))
                                 tmp.append("")
                             data.append(tmp)
 
@@ -853,10 +843,7 @@ def result_print(request):
                             if f.render_type == 0:
                                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.title + "</font>",
                                                      styleSheet["BodyText"]))
-                                result = "не завершено"
                                 norm = "none"
-                                ref = {"": ""}
-                                f_units = f.units
                                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
@@ -875,7 +862,8 @@ def result_print(request):
                                         Paragraph('<font face="ChampB" size="8">' + result + "</font>", result_style))
                                 elif norm == "maybe":
                                     tmp.append(
-                                        Paragraph('<font face="CalibriBold" size="8">' + result + "</font>", result_style))
+                                        Paragraph('<font face="CalibriBold" size="8">' + result + "</font>",
+                                                  result_style))
                                 else:
                                     tmp.append(
                                         Paragraph('<font face="CalibriBold" size="8"># ' + result + "</font>",
@@ -902,9 +890,9 @@ def result_print(request):
 
                         for k in range(0, 6):
                             style_t.add('INNERGRID', (k, 0),
-                                      (k, j), 0.1, colors.black)
+                                        (k, j), 0.1, colors.black)
                             style_t.add('BOX', (k, 0), (k, j),
-                                      0.8, colors.black)
+                                        0.8, colors.black)
 
                             style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
                             style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
@@ -931,7 +919,8 @@ def result_print(request):
                         tmp = [Paragraph('<font face="OpenSansBold" size="8">%s</font>' % iss.research.title,
                                          styleSheet["BodyText"]),
                                Paragraph('<font face="OpenSans" size="8">%s%s</font>' % (
-                                   "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment,),
+                                   "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(
+                                       iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment,),
                                          styleSheet["BodyText"]),
                                Paragraph('<font face="OpenSans" size="8">%s</font>' % (
                                    "Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)),
@@ -945,15 +934,15 @@ def result_print(request):
                         cw = cw + [tw - sum(cw)]
                         t = Table(data, colWidths=cw)
                         style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                            ('TOPPADDING', (0, 0), (-1, -1), 0),
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                                            ])
+                                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                              ('TOPPADDING', (0, 0), (-1, -1), 0),
+                                              ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                              ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                                              ])
 
                         style_t.add('LINEBELOW', (0, -1), (-1, -1), 2, colors.black)
                         t.setStyle(style_t)
@@ -1031,15 +1020,15 @@ def result_print(request):
                                     t = Table(data, colWidths=cw)
 
                                     style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                                        ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                                        ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                                        ])
+                                                          ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                                          ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                                          ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                                          ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                                          ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                                          ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                                          ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                                          ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                                          ])
 
                                     style_t.add('BOTTOMPADDING', (0, 0), (-1, -1), 1)
                                     style_t.add('TOPPADDING', (0, 0), (-1, -1), 2)
@@ -1059,15 +1048,15 @@ def result_print(request):
                         cw = cw + [tw - sum(cw)]
                         t = Table(data, colWidths=cw)
                         style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                            ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                            ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                            ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                            ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                            ])
+                                              ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                              ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                              ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                              ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                              ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                              ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                              ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                              ])
                         style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
                         style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
                         style_t.add('SPAN', (0, 0), (-1, 0))
@@ -1086,15 +1075,15 @@ def result_print(request):
                     cw = cw + [tw - sum(cw)]
                     t = Table(data, colWidths=cw)
                     style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                        ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                                        ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                        ('TOPPADDING', (0, 0), (-1, -1), 2),
-                                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                        ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
-                                        ])
+                                          ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                          ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                          ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
+                                          ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                          ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                          ('TOPPADDING', (0, 0), (-1, -1), 2),
+                                          ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                          ('BOTTOMPADDING', (0, 0), (-1, -1), -2),
+                                          ])
                     style_t.add('BOTTOMPADDING', (0, 0), (-1, 0), 1)
                     style_t.add('TOPPADDING', (0, 0), (-1, 0), 0)
                     style_t.add('SPAN', (1, 0), (-1, 0))
@@ -1103,11 +1092,13 @@ def result_print(request):
                     fwb.append(t)
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
-                fwb.append(Spacer(1, 5*mm))
+                fwb.append(Spacer(1, 5 * mm))
                 fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
                 if not protocol_plain_text:
-                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
-                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
+                            "order"):
+                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
+                            value="").order_by("field__order")
                         group_title = False
                         if results.exists():
                             fwb.append(Spacer(1, 1 * mm))
@@ -1117,13 +1108,19 @@ def result_print(request):
                                 group_title = True
                             for r in results:
                                 if r.field.title != "":
-                                    fwb.append(Paragraph("<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, r.value.replace("\n", "<br/>")), style_ml if group_title else style))
+                                    fwb.append(Paragraph(
+                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title,
+                                                                                           r.value.replace("\n",
+                                                                                                           "<br/>")),
+                                        style_ml if group_title else style))
                                 else:
                                     fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
                 else:
                     txt = ""
-                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
-                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+                    for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
+                            "order"):
+                        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
+                            value="").order_by("field__order")
                         if results.exists():
                             if group.show_title and group.title != "":
                                 txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title)
@@ -1146,14 +1143,16 @@ def result_print(request):
                 t2 = strdate(iss.time_confirmation)
                 fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
-                fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio, iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
+                                                                       iss.doc_confirmation.podrazdeleniye.title),
+                                     styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
-        naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph-6*mm, hAlign='RIGHT')]))
+        naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual.pk
 
     doc.build(naprs)
@@ -1306,16 +1305,16 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
                              styleSheet["BodyText"]), '', '', '']
             data.append(tmp)
             style_t = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                # ('SPAN',(0,0),(-1,0)),
-                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                                ('INNERGRID', (0, 0), (-1, -1), 0.2, colors.black),
-                                ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                                ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                                ('TOPPADDING', (0, 0), (-1, -1), 0),
-                                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                                ])
+                                  # ('SPAN',(0,0),(-1,0)),
+                                  ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                  ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                                  ('INNERGRID', (0, 0), (-1, -1), 0.2, colors.black),
+                                  ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
+                                  ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                                  ('TOPPADDING', (0, 0), (-1, -1), 0),
+                                  ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                                  ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                                  ])
             j = 0
 
             for f in fractions:
@@ -1344,9 +1343,9 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
 
             for k in range(0, 4):
                 style_t.add('INNERGRID', (k, 0),
-                          (k, j), 0.01, colors.black)
+                            (k, j), 0.01, colors.black)
                 style_t.add('BOX', (k, 0), (k, j),
-                          0.8, colors.black)
+                            0.8, colors.black)
 
             t = Table(data, colWidths=cw)
             t.setStyle(style_t)
@@ -2002,7 +2001,7 @@ def results_search_directions(request):
         filter_type = "card_number"
     elif bool(
             re.compile(r'^([a-zA-Zа-яА-ЯёЁ]+)( [a-zA-Zа-яА-ЯёЁ]+)?( [a-zA-Zа-яА-ЯёЁ]+)?( \d{2}\.\d{2}\.\d{4})?$').match(
-                    query)):
+                query)):
         filter_type = "fio"
         split = query.split()
         if len(split) > 0:
@@ -2082,13 +2081,14 @@ def results_search_directions(request):
     if sorting_direction == "up":
         sort_types = {"confirm-date": ("issledovaniya__time_confirmation",),
                       "patient": (
-                      "issledovaniya__time_confirmation", "client__individual__family", "client__individual__name",
-                      "client__individual__patronymic",)}
+                          "issledovaniya__time_confirmation", "client__individual__family", "client__individual__name",
+                          "client__individual__patronymic",)}
     else:
         sort_types = {"confirm-date": ("-issledovaniya__time_confirmation",),
                       "patient": (
-                      "-issledovaniya__time_confirmation", "-client__individual__family", "-client__individual__name",
-                      "-client__individual__patronymic",)}
+                          "-issledovaniya__time_confirmation", "-client__individual__family",
+                          "-client__individual__name",
+                          "-client__individual__patronymic",)}
     filtered = []
     cnt = 0
     for direction in collection.order_by(*sort_types.get(sorting, ("issledovaniya__time_confirmation",))):
@@ -2179,7 +2179,8 @@ def results_search_directions(request):
                                                    "grouping": grouping,
                                                    "otd_search": otd_search,
                                                    "doc_search": doc_search,
-                                                   "researches": rq_researches}), user=request.user.doctorprofile).save()
+                                                   "researches": rq_researches}),
+                 user=request.user.doctorprofile).save()
 
     return JsonResponse(
         {"rows": rows, "grouping": grouping, "len": n - offset, "next_offset": n, "all_rows": cnt, "error_message": ""})

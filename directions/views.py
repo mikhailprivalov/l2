@@ -620,12 +620,9 @@ def group_confirm_get(request):
 @login_required
 def load_history(request):
     """Получение истории заборов материала за текущий день"""
-    import pytz
-
     res = {"rows": []}
     tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(
-        time_get__lt=datetime.now().date())  # Выборка материала за сегодня
-    local_tz = pytz.timezone(settings.TIME_ZONE)  # Формирование временной зоны
+        time_get__lt=datetime.now().date())
 
     for v in tubes:  # Перебор пробирки
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Выборка исследований по пробирке
@@ -669,7 +666,6 @@ def get_worklist(request):
 @login_required
 def print_history(request):
     """Печать истории забора материала за день"""
-    user = request.user.doctorprofile  # Профиль текущего пользователя
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import Table, TableStyle
@@ -680,7 +676,6 @@ def print_history(request):
     styleSheet = getSampleStyleSheet()
     import os.path
     import collections
-    import pytz
 
     filter = False
     filterArray = []
@@ -702,7 +697,6 @@ def print_history(request):
     else:
         for v in filterArray:
             tubes.append(TubesRegistration.objects.get(pk=v))
-    local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки

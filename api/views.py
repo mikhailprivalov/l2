@@ -190,7 +190,7 @@ def endpoint(request):
     pk_s = str(data.get("pk", ""))
     pk = -1 if not pk_s.isdigit() else int(pk_s)
     data["app_name"] = "API key is incorrect"
-    pid = data.get("processing_id", "P")
+    # pid = data.get("processing_id", "P")
     if models.Application.objects.filter(key=api_key).exists():
         astm_user = users.DoctorProfile.objects.filter(user__username="astm").first()
         if astm_user is None:
@@ -465,20 +465,7 @@ def patients_search_card(request):
             except ValidationError:
                 objects = []
         elif re.search(p2, query):
-            split = str(query).split()
-            n = p = ""
-            f = split[0]
-            rmis_req = {"surname": f + "%"}
-            if len(split) > 1:
-                n = split[1]
-                rmis_req["name"] = n + "%"
-            if len(split) > 2:
-                p = split[2]
-                rmis_req["patrName"] = p + "%"
-            if len(split) > 3:
-                btday = split[3].split(".")
-                btday = btday[2] + "-" + btday[1] + "-" + btday[0]
-                rmis_req["birthDate"] = btday
+            f, n, p, rmis_req, split = full_patient_search_data(p, query)
             objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
                                                 patronymic__istartswith=p, card__base=card_type)[:10]
             if len(split) > 3:
@@ -553,6 +540,24 @@ def patients_search_card(request):
     return JsonResponse({"results": data})
 
 
+def full_patient_search_data(p, query):
+    split = str(query).split()
+    n = p = ""
+    f = split[0]
+    rmis_req = {"surname": f + "%"}
+    if len(split) > 1:
+        n = split[1]
+        rmis_req["name"] = n + "%"
+    if len(split) > 2:
+        p = split[2]
+        rmis_req["patrName"] = p + "%"
+    if len(split) > 3:
+        btday = split[3].split(".")
+        btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+        rmis_req["birthDate"] = btday
+    return f, n, p, rmis_req, split
+
+
 @login_required
 def patients_search_individual(request):
     objects = []
@@ -574,20 +579,7 @@ def patients_search_individual(request):
         except ValidationError:
             objects = []
     elif re.search(p2, query):
-        split = str(query).split()
-        n = p = ""
-        f = split[0]
-        rmis_req = {"surname": f + "%"}
-        if len(split) > 1:
-            n = split[1]
-            rmis_req["name"] = n + "%"
-        if len(split) > 2:
-            p = split[2]
-            rmis_req["patrName"] = p + "%"
-        if len(split) > 3:
-            btday = split[3].split(".")
-            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
-            rmis_req["birthDate"] = btday
+        f, n, p, rmis_req, split = full_patient_search_data(p, query)
         objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n, patronymic__istartswith=p)
         if len(split) > 3:
             objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,

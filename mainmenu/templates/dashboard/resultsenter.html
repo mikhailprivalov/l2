@@ -2290,7 +2290,7 @@
                             results_data = results_data.results;
                             for (let fk of Object.keys(fractions_data)) {
                                 let fv = fractions_data[fk];
-                                fv.pk = fv.pk + "";
+                                fv.pk += "";
                                 if ((all || !(fv.pk in results_data) || results_data[fv.pk] === "") && fv.render_type === 0) {
                                     result.fractions[fv.pk] = text_to_fill;
                                 } else if ((fv.render_type === 1 || !all) && fv.pk in results_data) {

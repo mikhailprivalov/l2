@@ -13,7 +13,7 @@
           </ul>
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" autofocus
-               :maxlength="query_limit" @keyup.enter="search">
+               maxlength="255" @keyup.enter="search">
         <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb nbr" type="button"
                                               :disabled="!query_valid || inLoading"
                                               @click="search">Поиск</button></span>
@@ -151,29 +151,6 @@
       return {
         base: -1,
         query: '',
-        search_type: 'auto',
-        search_types: [
-          {key: 'auto', title: 'авто', about: 'Автоматическое определение типа запроса', pattern: '.+'},
-          {
-            key: 'full_fio',
-            title: 'полное фио и дата рождения',
-            about: 'Введите ФИО и дату раждения. Возможен ввод частями, например: Иванов Иван Иванович 01.01.1990 или Петров Пётр',
-            pattern: '^([А-яЕё]+)( ([А-яЕё]+)( ([А-яЕё]*)( ([0-9]{2}\\.[0-9]{2}\\.[0-9]{4}))?)?)?$'
-          },
-          {
-            key: 'short_fio',
-            title: 'краткое фио и дата рождения',
-            about: 'Введите инициалы и дату рождения, например: иии01011990',
-            pattern: '^[а-яА-ЯёЁ]{3}[0-9]{8}$',
-            limit: 11
-          },
-          {
-            key: 'polis',
-            title: 'номер полиса ОМС',
-            about: 'Введите серию (при необходимости через пробел) и номер полиса, например: 1234АБВ 123456789 или 3876543213213413',
-            pattern: '.+'
-          },
-        ],
         directive_department: '-1',
         directive_doc: '-1',
         ofname_to_set: '-1',
@@ -259,41 +236,11 @@
         }
         return {title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: []}
       },
-      selected_type() {
-        for (let b of this.search_types) {
-          if (b.key === this.search_type) {
-            return b
-          }
-        }
-        return {key: '', title: 'не выбрано', about: ''}
-      },
-      query_limit() {
-        if (this.selected_type.limit !== undefined) {
-          return this.selected_type.limit
-        }
-        return 255
-      },
-      selected_pattern() {
-        if (this.selected_type.pattern !== undefined) {
-          return this.selected_type.pattern
-        }
-        return '.*'
-      },
       normalized_query() {
         return this.query.trim()
       },
       query_valid() {
-        let re = new RegExp(this.selected_pattern)
-        return this.normalized_query.match(re)
-      },
-      active_type() {
-        for (let b of this.search_types) {
-          let re = new RegExp(b.pattern)
-          if (b.key !== 'auto' && this.normalized_query.match(re)) {
-            return b
-          }
-        }
-        return {key: '', title: 'тип запроса не распознан', about: ''}
+        return this.normalized_query.length > 0
       },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {

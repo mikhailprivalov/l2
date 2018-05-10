@@ -105,8 +105,8 @@ def get_object(request):
                 d["sex"] = i.sex
 
         elif mdl == "Card":
-            if clients.Card.objects.filter(pk=pk).exists():
-                c = clients.Card.objects.get(pk=pk)
+            c = clients.Card.objects.filter(pk=pk).first()
+            if c:
                 d["pk"] = c.pk
                 d["number"] = c.number
                 d["base"] = c.base_id

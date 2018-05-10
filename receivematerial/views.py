@@ -329,7 +329,6 @@ w, h = A4
 def receive_journal(request):
     """Печать истории принятия материала за день"""
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    user = request.user.doctorprofile  # Профиль текущего пользователя
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import Table, TableStyle
@@ -340,7 +339,6 @@ def receive_journal(request):
     styleSheet = getSampleStyleSheet()
     import os.path
     import collections
-    import pytz
     import copy
 
     start = str(request.GET.get("start", "1"))
@@ -376,7 +374,6 @@ def receive_journal(request):
             doc_recive__isnull=False).order_by(
             'issledovaniya__napravleniye__client__pk')
 
-    local_tz = pytz.timezone(settings.TIME_ZONE)  # Локальная временная зона
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     directions = []
     vids = set()

@@ -324,7 +324,6 @@ class Napravleniya(models.Model):
             no_attach = False
             conflict_list = []
             conflict_keys = []
-            transfer_researches = []
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
 
@@ -612,11 +611,6 @@ class Result(models.Model):
 
         value = self.value
         days, monthes, years = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye, days_monthes_years=True)
-        age = days
-        if years > 0:
-            age = years
-        elif monthes > 0:
-            age = monthes
 
         ref = self.get_ref(fromsave=fromsave)
 

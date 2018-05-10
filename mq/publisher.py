@@ -29,8 +29,6 @@ def get_queue_messages_count(queue='l2_models_events'):
         channel = connection.channel()
         channel.queue_declare(queue=queue)
         q = channel.queue_declare(queue=queue, passive=True)
-
-        n = q.method.message_count
         qq = str(q.method.__dict__)
         connection.close()
         return qq

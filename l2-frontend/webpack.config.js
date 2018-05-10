@@ -2,10 +2,11 @@ const path = require('path')
 const webpack = require('webpack')
 const BundleTracker = require('webpack-bundle-tracker')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 module.exports = {
   entry: {
-    main: './src/main',
+    main: ['./src/main.js', './src/main.scss'],
   },
   output: {
     path: path.resolve(__dirname, '../assets/webpack_bundles/'),
@@ -16,6 +17,7 @@ module.exports = {
     new BundleTracker({filename: '../webpack-stats.json'}),
     new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true}),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
+    new ExtractTextPlugin({filename: '[name].css', allChunks: true,}),
   ],
   module: {
     rules: [
@@ -27,20 +29,8 @@ module.exports = {
         ],
       },
       {
-        test: /\.scss$/,
-        use: [
-          'vue-style-loader',
-          'css-loader',
-          'sass-loader'
-        ],
-      },
-      {
-        test: /\.sass$/,
-        use: [
-          'vue-style-loader',
-          'css-loader',
-          'sass-loader?indentedSyntax'
-        ],
+        test: /\.(sass|scss)$/,
+        loader: ExtractTextPlugin.extract([{loader: 'css-loader', options: {minimize: true}}, 'sass-loader'])
       },
       {
         test: /\.vue$/,

@@ -51,7 +51,7 @@ class MigrationAutodetector:
                 for key, value in obj.items()
             }
         elif isinstance(obj, functools.partial):
-            return (obj.func, self.deep_deconstruct(obj.args), self.deep_deconstruct(obj.keywords))
+            return obj.func, self.deep_deconstruct(obj.args), self.deep_deconstruct(obj.keywords)
         elif isinstance(obj, COMPILED_REGEX_TYPE):
             return RegexObject(obj)
         elif isinstance(obj, type):
@@ -432,7 +432,7 @@ class MigrationAutodetector:
                 "AbstractBaseUser" in base_names or
                 settings.AUTH_USER_MODEL.lower() == string_version.lower()
             ):
-                return ("___" + item[0], "___" + item[1])
+                return "___" + item[0], "___" + item[1]
         except LookupError:
             pass
         return item

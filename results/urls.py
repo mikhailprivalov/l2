@@ -11,7 +11,6 @@ urlpatterns = [
     path('loadready', views.loadready),
     path('get', views.result_get),
     path('get/odf', views.get_odf_result),
-    path('conformation', views.result_conformation),
     path('confirm', views.result_confirm),
     path('confirm/list', views.result_confirm_list),
     path('pdf', views.result_print),

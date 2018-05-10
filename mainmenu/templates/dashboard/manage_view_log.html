@@ -140,7 +140,7 @@
             $('.loadmore').remove()
             $('.loading').remove()
             $('#log_table tbody').append(loading)
-            n = 0
+            let n = 0
             $.ajax({
                 method: 'GET',
                 url: '/mainmenu/view_logs',

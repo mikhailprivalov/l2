@@ -242,8 +242,8 @@
     },
     mounted() {
       $('.dropdown:not(.dropdown-large)').on('show.bs.dropdown', function () {
-        var $btnDropDown = $(this).find('.dropdown-toggle')
-        var $listHolder = $(this).find('.dropdown-menu')
+        const $btnDropDown = $(this).find('.dropdown-toggle')
+        const $listHolder = $(this).find('.dropdown-menu')
 
         $(this).css('position', 'static')
         $listHolder.css({
@@ -251,10 +251,8 @@
           'left': $btnDropDown.offset().left + 'px'
         })
         $listHolder.data('open', true)
-      })
-
-      $('.dropdown:not(.dropdown-large)').on('hidden.bs.dropdown', function () {
-        var $listHolder = $(this).find('.dropdown-menu')
+      }).on('hidden.bs.dropdown', function () {
+        const $listHolder = $(this).find('.dropdown-menu')
         $listHolder.data('open', false)
       })
     }
