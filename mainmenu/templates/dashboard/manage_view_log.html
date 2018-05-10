@@ -56,6 +56,7 @@
     <script>
         let loaded = -1
         let last_n = 0
+        let n = 0
         const loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>'
         const end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>'
         const loading = `<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div>
@@ -140,7 +141,7 @@
             $('.loadmore').remove()
             $('.loading').remove()
             $('#log_table tbody').append(loading)
-            let n = 0
+            n = 0
             $.ajax({
                 method: 'GET',
                 url: '/mainmenu/view_logs',
