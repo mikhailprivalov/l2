@@ -193,7 +193,6 @@
     methods: {
       check_found_tip() {
         let el = this.$refs.fndsrc
-        console.log(el._tippy)
         if (this.search === '' && '_tippy' in el && el._tippy.state.visible) {
           el._tippy.hide()
         }

@@ -1902,7 +1902,6 @@
             if(selectval === "" || selectval === undefined || selectval === "undefined"){
                 selectval = '{}';
             }
-            console.log(selectval);
             let val = sort_refs(JSON.parse(selectval));
             if ($.isEmptyObject(val)) {
                 val = {"": ""};

@@ -206,7 +206,6 @@ function hide_vals(gpk, th) {
         $(th).text("Свернуть значения");
         remove_fa(hidden_gpk, gpk);
     }
-    console.log(hidden_gpk);
 }
 
 function remove_fa(arr, item) {
@@ -297,7 +296,6 @@ function ready_formula(formula) {
     if (is_float(v)) {
         v = Math.round(parseFloat(v) * 10) / 10;
     }
-    console.log(v);
     if(!isNaN(v) && isFinite(v)) {
         $(`input[data-pk=${formula.fraction}]`).val(v);
         hl();

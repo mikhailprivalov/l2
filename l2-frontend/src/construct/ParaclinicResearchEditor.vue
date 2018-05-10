@@ -261,7 +261,7 @@
         row.new_value = ''
       },
       drag(row, ev) {
-        console.log(row, ev)
+        // console.log(row, ev)
       },
       min_max_order(group) {
         let min = 0

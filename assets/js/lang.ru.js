@@ -38,7 +38,6 @@ function age_range(str) {
 }
 
 var getN = function (key) {
-    console.log(key);
     if (normal_keys[key]) {
         return normal_keys[key];
     }
