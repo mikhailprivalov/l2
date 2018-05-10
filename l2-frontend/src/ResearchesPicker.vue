@@ -40,12 +40,13 @@
         </ul>
       </div>
       <div style="display: flex;width: calc(100% - 164px);justify-content: flex-end;">
-        <div id="founded-n">
-          <div style="font-size: 16px" v-if="founded_n !== ''">{{founded_n}}</div>
+        <div id="founded-n" v-show="founded_n !== '' && search !== ''">
+          <div style="font-size: 16px">{{founded_n}}</div>
         </div>
         <input type="text" placeholder="Поиск (Enter для быстрого выбора и очистки)" class="form-control"
-               v-model="search" @keyup.enter="founded_select(true)"
-               v-tippy="{html: '#founded-n', trigger: 'manual', reactive: true}" ref="ftp"/>
+               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc"
+               @show="check_found_tip" @shown="check_found_tip"
+               v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
         <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного"><span
           class="fa fa-circle"></span></button>
         <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search" title="Очистить поиск">
@@ -131,6 +132,9 @@
           return;
         }
         this.$emit('input', this.checked_researches)
+      },
+      search() {
+        this.check_found_tip()
       }
     },
     computed: {
@@ -170,9 +174,8 @@
         return []
       },
       founded_n() {
-        let r = ''
+        let r = 'Не найдено'
         let n = 0
-        this.$refs.ftp.$el._tippy.hide()
         for (const row of this.researches_display) {
           if (this.highlight_search(row)) {
             n++
@@ -180,12 +183,18 @@
         }
         if (n > 0) {
           r = `Найдено ${n}`
-          this.$refs.ftp._tippy.show()
         }
         return r
       },
     },
     methods: {
+      check_found_tip() {
+        let el = this.$refs.fndsrc
+        console.log(el._tippy)
+        if (this.search === '' && '_tippy' in el && el._tippy.state.visible) {
+          el._tippy.hide()
+        }
+      },
       select_type(pk) {
         this.type = pk
         this.checkType()
