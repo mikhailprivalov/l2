@@ -15,8 +15,10 @@
         {{selected_type.title}}
       </button>
       <div class="top-inner">
-        <a href="#" @click.prevent="select_dep(row.pk)" class="top-inner-select" :class="{ active: row.pk === dep}"
-           v-for="row in departments_of_type"><span>{{ row.title }}<span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span></a>
+        <div @click="select_dep(row.pk)" class="top-inner-select" :class="{ active: row.pk === dep}"
+                v-for="row in departments_of_type"><span>{{ row.title }}<span
+          v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span>
+        </div>
       </div>
     </div>
     <div class="content-picker" :class="{hidetemplates: hidetemplates}" v-if="researches_display.length > 0">
@@ -168,6 +170,7 @@
         return this.$store.getters.templates
       },
       researches_display() {
+        $(this.$refs.fndsrc).focus()
         if (this.dep in this.$store.getters.researches) {
           return this.$store.getters.researches[this.dep]
         }
@@ -383,7 +386,7 @@
 
   .top-inner-select {
     background-color: #AAB2BD;
-    color: #fff
+    color: #fff;
   }
 
   .research-select {
