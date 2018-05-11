@@ -399,7 +399,7 @@ class Phones(models.Model):
         n = ''.join(c for c in n if c in digits)
         if len(n) == 10 and n[0] == "9":
             n = "8" + n
-        if len(n) == 1 and n[0] == "7":
+        if len(n) == 11 and n[0] == "7":
             n = "8" + n[1:]
         return n
 
