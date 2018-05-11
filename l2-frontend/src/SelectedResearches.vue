@@ -116,7 +116,11 @@
       history_num: {
         type: String,
         default: ''
-      }
+      },
+      main_diagnosis: {
+        type: String,
+        default: ''
+      },
     },
     data() {
       return {
@@ -132,6 +136,9 @@
       }
     },
     watch: {
+      card_pk() {
+        this.clear_fin()
+      },
       base() {
         this.fin = -1
       },
@@ -139,9 +146,7 @@
         let c = {}
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         for (let pk of this.researches) {
-          if (Object.keys(this.comments).indexOf(pk.toString()) !== -1) {
-            c[pk] = this.comments[pk]
-          } else {
+          if (Object.keys(this.comments).indexOf(pk.toString()) === -1) {
             c[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
@@ -152,6 +157,8 @@
                 this.need_update_comment.push(pk)
               }
             }
+          } else {
+            c[pk] = this.comments[pk]
           }
         }
         this.comments = c
@@ -195,15 +202,15 @@
         }
         return r
       },
+      get_def_diagnosis(fin) {
+        fin = fin || this.fin;
+        return (this.main_diagnosis + ' ' + this.get_fin_obj(fin).default_diagnos).trim()
+      },
       clear_diagnos() {
-        this.diagnos = this.get_fin_obj(this.fin).default_diagnos
+        this.diagnos = this.get_def_diagnosis()
       },
-      highlighting: function (item, vue) {
-        return item.toString().replace(vue.query, `<b>${vue.query}</b>`)
-      },
-      render: function (items, vue) {
-        return [vue.diagnos, ...items]
-      },
+      highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
+      render: (items, vue) => [vue.diagnos, ...items],
       hide_window() {
         this.hide_window_update = true
         this.$refs.modal.$el.style.display = 'none'
@@ -227,17 +234,19 @@
         return r
       },
       get_fin_obj(pk) {
-        for(let f of this.base.fin_sources) {
-          if(f.pk === pk)
-            return f
+        if(pk !== -1) {
+          for (let f of this.base.fin_sources) {
+            if (f.pk === pk)
+              return f
+          }
         }
         return {pk: -1, title: "", default_diagnos: ""}
       },
       select_fin(pk) {
-        const cfin = this.get_fin_obj(this.fin)
+        const cfin = this.fin
         this.fin = pk
-        if(cfin.default_diagnos === this.diagnos || this.diagnos.trim() === ""){
-          this.diagnos = this.get_fin_obj(this.fin).default_diagnos
+        if(this.get_def_diagnosis(cfin) === this.diagnos || this.diagnos.trim() === ""){
+          this.diagnos = this.get_def_diagnosis()
         }
       },
       clear_department(pk) {
@@ -264,7 +273,10 @@
       },
       clear_all() {
         this.$root.$emit('researches-picker:deselect_all')
-        this.fin = -1
+        this.clear_fin()
+      },
+      clear_fin() {
+        this.select_fin(-1)
       },
     },
     computed: {

@@ -45,7 +45,7 @@
         <directions-history :patient_pk="selected_card.pk"/>
       </div>
       <div id="right_bottom" class="split content" style="padding: 0;">
-        <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname"
+        <selected-researches :operator="selected_card.operator" :ofname="selected_card.ofname" :main_diagnosis="selected_card.main_diagnosis"
                              :history_num="selected_card.history_num" :valid="patient_valid"
                              :researches="selected_researches" :base="selected_card.base" :card_pk="selected_card.pk"/>
       </div>
@@ -94,6 +94,7 @@
           twoname: '',
           birthday: '',
           age: '',
+          main_diagnosis: '',
         },
         selected_researches: [],
         show_results_pk: -1,

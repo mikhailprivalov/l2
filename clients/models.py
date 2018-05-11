@@ -357,6 +357,7 @@ class Card(models.Model):
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None,
                               on_delete=models.SET_NULL)
+    main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

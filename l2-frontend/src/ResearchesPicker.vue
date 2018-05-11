@@ -46,8 +46,12 @@
           <div style="font-size: 16px">{{founded_n}}</div>
         </div>
         <input type="text" placeholder="Поиск (Enter для быстрого выбора и очистки)" class="form-control"
-               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc"
+               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc" id="fndsrc"
                @show="check_found_tip" @shown="check_found_tip"
+               @keyup.alt.37="k('left')"
+               @keyup.alt.38="k('up')"
+               @keyup.alt.39="k('right')"
+               @keyup.alt.40="k('down')"
                v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
         <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного"><span
           class="fa fa-circle"></span></button>
@@ -157,6 +161,16 @@
         }
         return {title: 'Не выбран тип', pk: '-1'}
       },
+      selected_type_i() {
+        let i = 0
+        for (let t of this.types) {
+          if (t.pk === this.type) {
+            return i
+          }
+          i++
+        }
+        return i
+      },
       departments_of_type() {
         let r = []
         for (let row of this.$store.getters.allDepartments) {
@@ -166,11 +180,20 @@
         }
         return r
       },
+      dep_i() {
+        let i = 0
+        for (let row of this.departments_of_type) {
+          if (row.pk === this.dep) {
+            return i
+          }
+          i++
+        }
+        return i
+      },
       templates() {
         return this.$store.getters.templates
       },
       researches_display() {
-        $(this.$refs.fndsrc).focus()
         if (this.dep in this.$store.getters.researches) {
           return this.$store.getters.researches[this.dep]
         }
@@ -191,6 +214,40 @@
       },
     },
     methods: {
+      k(t) {
+        let n = 0
+        switch (t) {
+          case 'left':
+            n = this.dep_i - 1
+            if (n < 0) {
+              n = this.departments_of_type.length - 1
+            }
+            this.select_dep(this.departments_of_type[n].pk)
+            break
+          case 'right':
+            n = this.dep_i + 1
+            if (n > this.departments_of_type.length - 1) {
+              n = 0
+            }
+            this.select_dep(this.departments_of_type[n].pk)
+            break
+          case 'up':
+            n = this.selected_type_i + 1
+            if (n > this.types.length - 1) {
+              n = 0
+            }
+            this.select_type(this.types[n].pk)
+            break
+          case 'down':
+            n = this.selected_type_i - 1
+            if (n < 0) {
+              n = this.types.length - 1
+            }
+            this.select_type(this.types[n].pk)
+            break
+        }
+      },
+
       check_found_tip() {
         let el = this.$refs.fndsrc
         if (this.search === '' && '_tippy' in el && el._tippy.state.visible) {
@@ -203,6 +260,7 @@
       },
       select_dep(pk) {
         this.dep = pk
+        $(this.$refs.fndsrc).focus()
       },
       checkType() {
         if (this.type === '-1' && this.types.length > 0) {

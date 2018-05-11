@@ -12,7 +12,7 @@
             </li>
           </ul>
         </div>
-        <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" autofocus
+        <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
         <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb nbr" type="button"
                                               :disabled="!query_valid || inLoading"
@@ -394,6 +394,7 @@
           else {
             this.base = this.bases[0].pk
           }
+          $(this.$refs.q).focus()
           this.emit_input()
         }
       },
@@ -418,7 +419,11 @@
           twoname: this.selected_card.twoname,
           birthday: this.selected_card.birthday,
           age: this.selected_card.age,
+          main_diagnosis: this.selected_card.main_diagnosis,
         })
+        if(pk !== -1) {
+          $("#fndsrc").focus()
+        }
       },
       clear() {
         this.loaded = false

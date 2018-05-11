@@ -550,7 +550,8 @@ def patients_search_card(request):
                      "sex": row.individual.sex,
                      "individual_pk": row.individual.pk,
                      "pk": row.pk,
-                     "phones": row.get_phones()})
+                     "phones": row.get_phones(),
+                     "main_diagnosis": row.main_diagnosis})
     return JsonResponse({"results": data})
 
 

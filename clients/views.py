@@ -43,7 +43,8 @@ def get_db(request):
                    "individual_id",
                    "individual__family", "individual__name", "individual__patronymic", "individual__sex",
                    "individual__birthday",
-                   "polis"):
+                   "polis",
+                   "main_diagnosis"):
         doc = Clients.Document.objects.get(pk=x["polis"]) if x["polis"] else Clients.Document.objects.filter(
             document_type__in=docs_types, individual__pk=x["individual_id"]).first()
         snils = Clients.Document.objects.filter(document_type__in=snils_types,
@@ -58,7 +59,8 @@ def get_db(request):
             "Polisser": "" if not doc else doc.serial,
             "Polisnum": "" if not doc else doc.number,
             "Snils": snils.number if snils else None,
-            "Tels": [y["number"] for y in Phones.objects.filter(card__pk=x["pk"]).values("number")]
+            "Tels": [y["number"] for y in Phones.objects.filter(card__pk=x["pk"]).values("number")],
+            "MainDiagnosis": x["main_diagnosis"],
         })
     return JsonResponse(data, safe=False)
 
@@ -157,7 +159,7 @@ def receive_db(request):
         Clients.Card.objects.filter(pk__in=todelete).delete()
         if not Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False).exists():
             polis = list(polis)
-            card = Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0])
+            card = Clients.Card(number=x["Number"], base=base, individual=individual, is_archive=False, polis=None if len(polis) == 0 else polis[0], main_diagnosis=x.get("MainDiagnosis", ""))
             card.save()
             for t in x.get("Tels", []):
                 card.add_phone(t)
@@ -167,6 +169,9 @@ def receive_db(request):
                 for t in x.get("Tels", []):
                     card.add_phone(t)
                 card.clear_phones(x.get("Tels", []))
+                if card.main_diagnosis != x.get("MainDiagnosis", ""):
+                    card.main_diagnosis = x.get("MainDiagnosis", "")
+                    card.save()
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)
     return HttpResponse("OK", content_type="text/plain")
