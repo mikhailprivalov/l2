@@ -177,5 +177,5 @@ def search_phone(request):
     q = Clients.Phones.nn(request.GET.get("q", ""))
     p = Clients.Phones.objects.filter(normalized_number=q, card__is_archive=False).exclude(normalized_number="").first()
     if p:
-        r = p.card.individual.fio(npf=True)
+        r = "Пациент: {}".format(p.card.individual.fio())
     return HttpResponse(r, content_type="text/plain; charset=utf-8")
