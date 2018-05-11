@@ -496,25 +496,27 @@ def results_history_search(request):
     result = []
     type = request.GET.get("type", "otd")
     day = request.GET.get("date", datetime.datetime.today().strftime('%d.%m.%Y'))
+    try:
+        day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
+        day2 = day1 + datetime.timedelta(days=1)
 
-    day1 = datetime.date(int(day.split(".")[2]), int(day.split(".")[1]), int(day.split(".")[0]))
-    day2 = day1 + datetime.timedelta(days=1)
+        import directions.models as d
+        if type == "otd":
+            collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                                    issledovaniya__time_confirmation__range=(day1, day2),
+                                                    doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+        else:
+            collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
+                                                    issledovaniya__time_confirmation__range=(day1, day2),
+                                                    doc=request.user.doctorprofile)
 
-    import directions.models as d
-    if type == "otd":
-        collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                                issledovaniya__time_confirmation__range=(day1, day2),
-                                                doc__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-    else:
-        collect = d.Napravleniya.objects.filter(issledovaniya__doc_confirmation__isnull=False,
-                                                issledovaniya__time_confirmation__range=(day1, day2),
-                                                doc=request.user.doctorprofile)
-
-    for dir in collect.order_by("doc", "client"):
-        dpk = dir.pk
-        if all([x.doc_confirmation is not None for x in d.Issledovaniya.objects.filter(napravleniye__pk=dpk)]):
-            if dpk not in result:
-                result.append(dpk)
+        for dir in collect.order_by("doc", "client"):
+            dpk = dir.pk
+            if all([x.doc_confirmation is not None for x in d.Issledovaniya.objects.filter(napravleniye__pk=dpk)]):
+                if dpk not in result:
+                    result.append(dpk)
+    except IndexError:
+        pass
 
     return JsonResponse(result, safe=False)
 
