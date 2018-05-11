@@ -170,3 +170,12 @@ def receive_db(request):
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)
     return HttpResponse("OK", content_type="text/plain")
+
+
+def search_phone(request):
+    r = ""
+    q = Clients.Phones.nn(request.GET.get("q", ""))
+    p = Clients.Phones.objects.filter(normalized_number=q, card__is_archive=False).exclude(normalized_number="").first()
+    if p:
+        r = p.card.individual.fio(npf=True)
+    return HttpResponse(r, content_type="text/plain; charset=utf-8")

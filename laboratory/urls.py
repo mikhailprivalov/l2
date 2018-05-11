@@ -25,6 +25,7 @@ urlpatterns = [
                   path('', home, name='home'),
                   path('clients/import', clients.views.receive_db),
                   path('clients/get_db', clients.views.get_db),
+                  path('clients/search_phone', clients.views.search_phone),
                   path('directions/', include('directions.urls')),
                   path('direction/researches/update', directions.views.update_direction),
                   path('direction/researches/cancel', directions.views.cancel_direction),

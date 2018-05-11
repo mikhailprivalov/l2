@@ -256,14 +256,16 @@ class Individual(models.Model):
 
         return "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
 
-    def fio(self, short=False, dots=False, full=False, direction=None):
+    def fio(self, short=False, dots=False, full=False, direction=None, npf=False):
 
         if not short:
             if full:
                 r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic,
                                                                   self.birthday, self.age_s(direction=direction), self.sex)
-            else:
+            elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
+            else:
+                r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
             def first_letter_not_blank(s):
                 if len(s) > 0:
@@ -374,15 +376,24 @@ class Card(models.Model):
         Phones.objects.filter(pk__in=to_delete).delete()
 
     def add_phone(self, t: str):
-        Phones.objects.get_or_create(card=self, number=t)
+        p, created = Phones.objects.get_or_create(card=self, number=t)
+        p.normalize_number()
 
 
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     number = models.CharField(max_length=20, help_text='Номер телефона')
+    normalized_number = models.CharField(max_length=20, blank=True, default='', help_text='(NORMALIZED) Номер телефона')
 
     def normalize_number(self):
-        n = self.number
+        n = self.nn(self.number)
+        if self.normalized_number != n:
+            self.normalized_number = n
+            self.save()
+        return n
+
+    @staticmethod
+    def nn(n):
         from string import digits
         n = n.replace("+7", "8")
         n = ''.join(c for c in n if c in digits)
