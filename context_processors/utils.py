@@ -10,6 +10,11 @@ def card_bases(request):
     return {"card_bases": json.dumps(card_bases_vars)}
 
 
+def ws(request):
+    from laboratory import settings
+    return {"ws_url": json.dumps(settings.WS_URL), "ws_enabled": json.dumps(settings.WS_ENABLED)}
+
+
 def menu(request):
     from laboratory import VERSION
     data = []

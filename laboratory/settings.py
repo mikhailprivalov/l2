@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'context_processors.utils.card_bases',
+                'context_processors.utils.ws',
                 'context_processors.utils.menu',
             ],
         },
@@ -228,6 +229,10 @@ LOGTAIL_FILES = {
 RMQ_URL = "amqp://t:t@localhost:5672/"
 RMQ_ENABLED = False
 
+WS_BASE = "localhost"
+WS_PORT = 8822
+WS_ENABLED = False
+
 try:
     from laboratory.local_settings import *
 except ImportError:
@@ -237,6 +242,8 @@ MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
 INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS))
+
+WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 
 
 WEBPACK_LOADER = {

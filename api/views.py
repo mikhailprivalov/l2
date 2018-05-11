@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
+from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card
@@ -125,6 +126,7 @@ def send(request):
                 key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
             direction = tubei.issledovaniya_set.first().napravleniye
+            pks = []
             for key in resdict["result"].keys():
                 if models.RelationFractionASTM.objects.filter(astm_field=key).exists():
                     fractionRels = models.RelationFractionASTM.objects.filter(astm_field=key)
@@ -170,6 +172,10 @@ def send(request):
                             from datetime import datetime
                             fraction_result.issledovaniye.time_save = timezone.now()  # Время сохранения
                             fraction_result.issledovaniye.save()
+                            if issled not in pks:
+                                pks.append(issled)
+            for pk in pks:
+                emit("results_save", {"pk": pk, "user": None, "dir": direction.pk})
             slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
             result["ok"] = True
         elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
@@ -209,6 +215,8 @@ def endpoint(request):
                         direction = directions.Napravleniya.objects.filter(pk=pk).first()
                     else:
                         direction = directions.Napravleniya.objects.filter(issledovaniya__tubes__pk=pk).first()
+
+                    pks = []
                     oks = []
                     if direction:
                         results = data.get("result", {})
@@ -262,10 +270,16 @@ def endpoint(request):
                                         save_state.append({"fraction": fraction_result.fraction.title,
                                                            "value": fraction_result.value})
                                         issleds.append({"pk": issled.pk, "title": issled.research.title})
+
+                                        if issled not in pks:
+                                            pks.append(issled)
                                     # slog.Log(key=json.dumps({"direction": direction.pk, "issleds": str(issleds)}),
                                     #          type=22, body=json.dumps(save_state), user=None).save()
                             oks.append(ok)
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
+
+                    for pk in pks:
+                        emit("results_save", {"pk": pk, "user": None, "dir": direction.pk})
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":

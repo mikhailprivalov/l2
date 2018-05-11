@@ -131,11 +131,15 @@
                 <th>Возраст</th>
                 <td><span class="dir-datafield" id="client_vozrast"></span></td>
             </tr>
-            <tr>
+            <tr class="show-history" style="display: none">
                 <th>Карта</th>
                 <td><span class="dir-datafield" id="client_cardnum"></span></td>
                 <th>Истор.</th>
                 <td title="Номер истории"><span class="dir-datafield" id="client_hisnum"></span></td>
+            </tr>
+            <tr class="show-nohistory">
+                <th>Карта</th>
+                <td colspan="3"><span class="dir-datafield" id="client_cardnum_nohistory"></span></td>
             </tr>
             <tr title="Лечащий врач" class="show-lv">
                 <th >Леч. врач</th>
@@ -163,10 +167,22 @@
                 Лаборатории в направлении:
                 <ul></ul>
             </div>
+            <div class="alert alert-warning data-dir-changed" style="display: none;">
+                Некоторые результаты в направлении были изменены!<br/>
+                <a href="#" onclick="reload_fast(true);return false;" class="alert-link">Нажмите здесь для перезагрузки
+                    данных</a>
+            </div>
             <ul id="issledovaniya"></ul>
         </div>
     </div>
     <div class="col-md-4 col-lg-6" id="form-scroll" style="margin-top: -10px">
+        <div class="alert alert-warning data-research-confirmed data-research-changed" style="display: none;">
+            <div class="data-research-changed" style="display: none;">Результат изменён.</div>
+            <div class="data-research-confirmed" style="display: none;">Результат изменил статус подтверждения.</div>
+        </div>
+        <div class="alert alert-warning data-research-confirmed data-research-changed" style="display: none;">
+            <a href="#" onclick="reload_fast(true);return false;" class="alert-link">Нажмите
+                здесь для перезагрузки данных</a></div>
         <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
         <div id="result-form"></div>
     </div>
@@ -1151,6 +1167,7 @@
     <script src="{% static 'js/runtime.js' %}"></script>
     <script src="{% static 'js/jade.min.js' %}"></script>
     <script src="{% static 'js/ajaxq.js' %}"></script>
+    <script src="{% static 'js/socket.io.js' %}"></script>
     <script>
 
         $('#empty-dir-for-lab').hide()
@@ -1179,6 +1196,7 @@
 
         let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td></tr>';
         let lab_pk = {{ lab.pk }};
+        let user_pk = {{ user.doctorprofile.pk }};
 
         let statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         let statuses_titles = {
@@ -1211,7 +1229,48 @@
         let queue_fill = [];
         let request = "";
 
+        let socket = null
+
+        function emit_event(name, data) {
+            if (!socket)
+                return
+            socket.emit(name, data)
+        }
+
         $(document).ready(function () {
+            if ({{ ws_enabled }}) {
+                try {
+                    socket = io.connect({{ ws_url|safe }}, {
+                        reconnection: true,
+                        reconnectionDelay: 1000,
+                        reconnectionDelayMax: 5000,
+                        reconnectionAttempts: Infinity
+                    })
+
+                    socket.on('results_save', (data) => {
+                        if (parseInt(data.pk) === loaded_research) {
+                            $('.data-research-changed').show()
+                            resize()
+                        } else if (parseInt(data.dir) === dir_active) {
+                            $('.data-dir-changed').show()
+                        }
+                    })
+
+                    socket.on('result_confirm', (data) => {
+                        if (parseInt(data.pk) === loaded_research) {
+                            $('.data-research-confirmed').show()
+                            $('#ref-settings-btn').prop('disabled', true)
+                            $('#save-btn').prop('disabled', true)
+                            $('#confirm-btn').prop('disabled', true)
+                            $('#confirm-andsave-btn').prop('disabled', true)
+                            resize()
+                        } else if (parseInt(data.dir) === dir_active) {
+                            $('.data-dir-changed').show()
+                        }
+                    })
+                } catch (e) {
+                }
+            }
             $(".show-rmis").hide()
             {% if request.user.is_superuser %}su = true;{% endif %}
             $("#result-print").prop("disabled", true);
@@ -1427,9 +1486,19 @@
                 $("#dir_client_fio").html(data.client_fio);
                 $("#directioner").html(data.directioner);
                 $("#client_vozrast").html(data.client_vozrast);
-                $("#client_cardnum").html(data.client_cardnum);
                 $("#client_sex").html(data.client_sex);
-                $("#client_hisnum").html(data.client_hisnum);
+
+                if (data.client_hisnum === '' || !data.client_hisnum) {
+                    $(".show-history").hide();
+                    $(".show-nohistory").show();
+                    $("#client_cardnum_nohistory").html(data.client_cardnum);
+                } else {
+                    $(".show-history").show();
+                    $(".show-nohistory").hide();
+                    $("#client_cardnum").html(data.client_cardnum);
+                    $("#client_hisnum").html(data.client_hisnum);
+                }
+
                 $("#fin_source").html(data.fin_source);
                 $("#otd").html(data.otd);
                 if(data.imported_from_rmis)
@@ -1613,6 +1682,7 @@
                 templateid = 0;
             }
             sl(true);
+            $('.data-research-changed, .data-research-confirmed, .data-dir-changed').hide()
             function callback1(data) {
                 template = data;
                 if (!cached_templates[templateid])
@@ -2094,6 +2164,7 @@
             result.fractions_ref = JSON.stringify(result.fractions_ref);
             $(this).disabled = false;
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function () {
+                emit_event('results_save', {pk: result.issledovaniye, user: user_pk, dir: dir_active})
                 if (!noreload)
                     reload_fast();
                 else {
@@ -2131,6 +2202,9 @@
                 type: "json",
                 data: {list: JSON.stringify(iss_pks)}
             }).done(function (data) {
+                for (const pk of iss_pks) {
+                    emit_event('result_confirm', {pk: pk, dir: dir_active})
+                }
                 reload_fast();
                 if (data.ok) {
                     $.amaran({
@@ -2159,6 +2233,7 @@
                 method: "POST",
                 data: {pk: $("#issledovaniye_id").val()}
             }).done(function () {
+                emit_event('result_confirm', {pk: loaded_research, dir: dir_active})
                 reload_fast();
                 $.amaran({
                     'theme': 'awesome ok',
@@ -2311,6 +2386,11 @@
                                         hl();
                                         reload_fast();
                                     }
+                                    emit_event('results_save', {
+                                        pk: result.issledovaniye,
+                                        user: user_pk,
+                                        dir: dir_active
+                                    })
                                 });
                             }
                             else {
@@ -2479,6 +2559,7 @@
                 method: "POST",
                 data: {pk: id}
             }).done(function (data) {
+                emit_event('result_confirm', {pk: id, dir: dir_active})
                 if (data.ok) {
                     reload_fast();
                     $.amaran({
