@@ -108,9 +108,9 @@ def receive_db(request):
                 individual.sex = x["Sex"].lower().strip()
                 individual.save()
         else:
-            individual = Clients.Individual.objects.filter(family=x["Family"],
-                                                           name=x["Name"],
-                                                           patronymic=x["Twoname"],
+            individual = Clients.Individual.objects.filter(family=fix(x["Family"]),
+                                                           name=fix(x["Name"]),
+                                                           patronymic=fix(x["Twoname"]),
                                                            birthday=datetime.datetime.strptime(x["Bday"], "%d.%m.%Y").date()).order_by("-pk")
             if not individual.exists():
                 individual = Clients.Individual(family=fix(x["Family"]),
