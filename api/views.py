@@ -174,8 +174,8 @@ def send(request):
                             fraction_result.issledovaniye.save()
                             if issled not in pks:
                                 pks.append(issled)
-            for pk in pks:
-                emit("results_save", {"pk": pk, "user": None, "dir": direction.pk})
+            for pkk in pks:
+                emit("results_save", {"pk": pkk, "user": None, "dir": direction.pk})
             slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
             result["ok"] = True
         elif not directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
@@ -278,8 +278,8 @@ def endpoint(request):
                             oks.append(ok)
                     result["body"] = "{} {} {} {}".format(dw, pk, json.dumps(oks), direction is not None)
 
-                    for pk in pks:
-                        emit("results_save", {"pk": pk, "user": None, "dir": direction.pk})
+                    for pkk in pks:
+                        emit("results_save", {"pk": pkk, "user": None, "dir": direction.pk})
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
             elif message_type == "Q":
