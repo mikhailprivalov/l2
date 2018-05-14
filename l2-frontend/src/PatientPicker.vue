@@ -283,6 +283,9 @@
         if (a.length === 6) {
           return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
         } else if (a.length === 11) {
+          if (a.charAt(1) !== '9' && a.charAt(1) !== '8') {
+            return `${a.slice(0, 1)}-${a.slice(1, 5)}-${a.slice(5, 7)}-${a.slice(7, 9)}-${a.slice(9, 11)}`
+          }
           return `${a.slice(0, 1)}-${a.slice(1, 4)}-${a.slice(4, 6)}-${a.slice(6, 8)}-${a.slice(8, 10)}-${a.slice(10, 11)}`
         }
         return a
