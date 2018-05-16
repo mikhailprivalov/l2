@@ -258,7 +258,7 @@ class Individual(models.Model):
                 elif age == 1:
                     _let = morph.parse("месяц ")[0]
                 elif age < 5:
-                    _let = morph.parse("месяца")[0]
+                    _let = morph.parse("месяца ")[0]
                 else:
                     _let = morph.parse("месяцев ")[0]
                 r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
