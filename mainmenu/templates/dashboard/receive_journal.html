@@ -1,16 +1,18 @@
 {% extends "dbase.html" %}
 {% block title %}Печать журнала приёма{% endblock %}
 {% block extended_header %}
-    <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ lab.title }} <b class="caret"></b></a>
-        <ul class="dropdown-menu" role="menu" style="z-index: 10000">
-            {% for v in labs %}
-                {% if v.pk != lab.pk %}
-                <li><a href="/mainmenu/receive/journal_form?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </li>
+    <ul class="nav navbar-nav">
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ lab.title }} <b class="caret"></b></a>
+            <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+                {% for v in labs %}
+                    {% if v.pk != lab.pk %}
+                    <li><a href="/mainmenu/receive/journal_form?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </li>
+    </ul>
 {% endblock %}
 {% block content %}
     <h4 class='f-h' style="text-align: center;">Журнал принятых ёмкостей</h4>

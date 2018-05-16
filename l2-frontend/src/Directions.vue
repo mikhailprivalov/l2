@@ -100,6 +100,8 @@
         show_results_pk: -1,
         show_rmis_directions: false,
         show_rmis_send_directions: false,
+        diagnos: '',
+        fin: -1,
       }
     },
     created() {
@@ -116,6 +118,14 @@
       this.$root.$on('hide_rmis_directions', () => {
         vm.show_rmis_directions = false
         vm.show_rmis_send_directions = false
+      })
+
+      this.$root.$on('update_diagnos', (diagnos) => {
+        vm.diagnos = diagnos
+      })
+
+      this.$root.$on('update_fin', (fin) => {
+        vm.fin = fin
       })
     },
     mounted() {
@@ -190,6 +200,26 @@
           }
         }
         return false
+      },
+      step() {
+        if(this.patient_valid) {
+          if(this.selected_researches.length > 0) {
+            if(this.diagnos !== '') {
+              if (this.fin === -1) {
+                return 3
+              }
+              return 4
+            }
+            return 2
+          }
+          return 1
+        }
+        return 0
+      }
+    },
+    watch: {
+      step() {
+        this.$root.$emit('set-step', this.step)
       }
     }
   }

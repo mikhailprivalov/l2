@@ -23,9 +23,9 @@ module.exports = {
     rules: [
       {
         test: /\.css$/,
+        include: /node_modules/,
         use: [
-          'vue-style-loader',
-          'css-loader'
+          'style-loader', 'css-loader',
         ],
       },
       {
@@ -46,7 +46,7 @@ module.exports = {
         }
       },
       {
-        test: /\.(png|jpg|gif|svg)$/,
+        test: /\.(png|jpg|gif|svg|ttf|woff)$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]?[hash]'

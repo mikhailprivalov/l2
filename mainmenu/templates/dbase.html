@@ -34,6 +34,28 @@
     <link href="{% static 'css/tooltipster.css' %}" rel="stylesheet">
     <link href="{% static 'css/themes/tooltipster-shadow.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker3.standalone.min.css' %}" type="text/css"/>
+    <style>
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 300;
+            src: local('Open Sans Light'), local('OpenSans-Light'), url('/static/fonts/OpenSans/OpenSans-Light.ttf');
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Open Sans'), local('OpenSans'), url('/static/fonts/OpenSans/OpenSans-Regular.ttf')
+        }
+
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 700;
+            src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/static/fonts/OpenSans/OpenSans-Bold.ttf')
+        }
+    </style>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>
     {% load render_bundle from webpack_loader %}
@@ -55,7 +77,7 @@
     {% block nav %}
         {% load setting_default %}
         {% s_default "show_l2_logo" "true" "b" as show_l2_logo %}
-        <nav class="navbar navbar-inverse">
+        <nav class="navbar navbar-inverse {% block navbar_classes %}{% endblock %}">
             <div class="nav-cont">
                 <div class="navbar-header">
                     {% if show_l2_logo %}
@@ -99,10 +121,9 @@
                             </div>
                         </li>
                     </ul>
-                    <ul class="nav navbar-nav">
-                        {% block extended_header %}{% endblock %}
-                    </ul>
+                    {% block extended_header %}{% endblock %}
                 </div>
+                {% block extended_header2 %}{% endblock %}
             </div>
             <div class="nav-loader center">
                 <div class="navbar-header">

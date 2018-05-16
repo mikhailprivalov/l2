@@ -177,6 +177,12 @@
             }
           }
         }
+      },
+      diagnos() {
+        this.$root.$emit('update_diagnos', this.diagnos)
+      },
+      fin() {
+        this.$root.$emit('update_fin', this.fin)
       }
     },
     created() {

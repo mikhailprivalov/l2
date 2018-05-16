@@ -14,9 +14,12 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
-        <span class="input-group-btn"><button style="margin-right: -2px" class="btn last btn-blue-nb nbr" type="button"
-                                              :disabled="!query_valid || inLoading"
-                                              @click="search">Поиск</button></span>
+        <span class="input-group-btn">
+          <button style="margin-right: -2px"
+                  class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
+            Поиск
+          </button>
+        </span>
       </div>
     </div>
     <div class="content-picker scrolldown">

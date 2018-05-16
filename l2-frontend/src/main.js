@@ -4,8 +4,14 @@ import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
+import { Steps, Step } from 'element-ui'
+import 'element-ui/lib/theme-chalk/steps.css'
+import 'element-ui/lib/theme-chalk/step.css'
+import 'element-ui/lib/theme-chalk/icon.css'
 
 Vue.use(VueTippy)
+Vue.use(Steps)
+Vue.use(Step)
 
 const promiseFinally = require('promise.prototype.finally');
 promiseFinally.shim()
@@ -24,6 +30,7 @@ new Vue({
     'DirectionVisit': () => import('./DirectionVisit'),
     'ResultsReport': () => import('./ResultsReport'),
     'RmqManagement': () => import('./RmqManagement'),
+    'DirectionSteps': () => import('./DirectionSteps'),
     // loading,
   },
   data: {

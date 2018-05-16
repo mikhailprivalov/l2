@@ -1,6 +1,12 @@
 {% extends "dbase.html" %}
 {% block title %}Направления{% endblock %}
 {% block container %}container-fluid{% endblock %}
+{% block extended_header2 %}
+    <div class="fluid-nav">
+        <direction-steps/>
+    </div>
+{% endblock %}
+{% block navbar_classes %}fluid-nav-cont{% endblock %}
 
 {% load static %}
 
@@ -27,5 +33,32 @@
         .navbar {
             margin-bottom: 3px;
         }
+
+
+        @media (min-width: 768px) {
+            .fluid-nav-cont:not(.sloader) .nav-cont {
+                display: flex;
+                justify-content: stretch;
+            }
+
+            .fluid-nav {
+                flex: 1;
+                display: flex;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .fluid-nav {
+                display: none;
+            }
+        }
     </style>
 {% endblock %}
+<script>
+    import DirectionSteps from '../../../l2-frontend/src/DirectionSteps'
+
+    export default {
+        components: {DirectionSteps}
+    }
+</script>

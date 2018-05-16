@@ -1,24 +1,3 @@
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 300;
-  src: local('Open Sans Light'), local('OpenSans-Light'), url('/static/fonts/OpenSans/OpenSans-Light.ttf');
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Open Sans'), local('OpenSans'), url('/static/fonts/OpenSans/OpenSans-Regular.ttf')
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 700;
-  src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/static/fonts/OpenSans/OpenSans-Bold.ttf')
-}
-
 * {
   font-family: 'Open Sans', sans-serif;
 }

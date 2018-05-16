@@ -11,6 +11,15 @@ import slog.models as slog
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
+class AgeCache(models.Model):
+    n = models.IntegerField(db_index=True)
+    t = models.IntegerField(db_index=True)
+    s = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.s
+
+
 class Individual(models.Model):
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
@@ -202,9 +211,6 @@ class Individual(models.Model):
         Формирование строки возраста: 10 лет, 101 год
         :return:
         """
-        import pymorphy2
-
-        morph = pymorphy2.MorphAnalyzer()
         if direction is not None:
             from directions.models import Issledovaniya
             iss = None
@@ -217,44 +223,70 @@ class Individual(models.Model):
                     .order_by("-time_confirmation")[0]
 
         days, monthes, years = self.age(iss=iss, days_monthes_years=True)
+
         if years > 0:
             age = years
-            if age == 0:
-                _let = morph.parse("лет ")[0]
-            elif age < 5:
-                _let = morph.parse("год")[0]
-            elif age <= 20:
-                _let = morph.parse("лет ")[0]
-            elif 5 > age % 10 > 0:
-                _let = morph.parse("год")[0]
+            ages = AgeCache.objects.filter(n=age, t=0)
+            if ages.exists():
+                r = ages[0].s
             else:
-                _let = morph.parse("лет ")[0]
+                import pymorphy2
+                morph = pymorphy2.MorphAnalyzer()
+                if age == 0:
+                    _let = morph.parse("лет ")[0]
+                elif age < 5:
+                    _let = morph.parse("год")[0]
+                elif age <= 20:
+                    _let = morph.parse("лет ")[0]
+                elif 5 > age % 10 > 0:
+                    _let = morph.parse("год")[0]
+                else:
+                    _let = morph.parse("лет ")[0]
+                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                AgeCache(n=age, t=0, s=r).save()
         elif monthes > 0:
             age = monthes
-            if age == 0:
-                _let = morph.parse("месяцев ")[0]
-            elif age == 1:
-                _let = morph.parse("месяц ")[0]
-            elif age < 5:
-                _let = morph.parse("месяца")[0]
+            ages = AgeCache.objects.filter(n=age, t=1)
+
+            if ages.exists():
+                r = ages[0].s
             else:
-                _let = morph.parse("месяцев ")[0]
+                import pymorphy2
+                morph = pymorphy2.MorphAnalyzer()
+                if age == 0:
+                    _let = morph.parse("месяцев ")[0]
+                elif age == 1:
+                    _let = morph.parse("месяц ")[0]
+                elif age < 5:
+                    _let = morph.parse("месяца")[0]
+                else:
+                    _let = morph.parse("месяцев ")[0]
+                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                AgeCache(n=age, t=1, s=r).save()
         else:
             age = days
-            if age == 0:
-                _let = morph.parse("дней ")[0]
-            elif age == 1:
-                _let = morph.parse("день ")[0]
-            elif age < 5:
-                _let = morph.parse("дня ")[0]
-            elif age <= 20:
-                _let = morph.parse("дней ")[0]
-            elif 5 > age % 10 > 0:
-                _let = morph.parse("день")[0]
-            else:
-                _let = morph.parse("дней ")[0]
+            ages = AgeCache.objects.filter(n=age, t=2)
 
-        return "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+            if ages.exists():
+                r = ages[0].s
+            else:
+                import pymorphy2
+                morph = pymorphy2.MorphAnalyzer()
+                if age == 0:
+                    _let = morph.parse("дней ")[0]
+                elif age == 1:
+                    _let = morph.parse("день ")[0]
+                elif age < 5:
+                    _let = morph.parse("дня ")[0]
+                elif age <= 20:
+                    _let = morph.parse("дней ")[0]
+                elif 5 > age % 10 > 0:
+                    _let = morph.parse("день")[0]
+                else:
+                    _let = morph.parse("дней ")[0]
+                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                AgeCache(n=age, t=2, s=r).save()
+        return r
 
     def fio(self, short=False, dots=False, full=False, direction=None, npf=False):
 

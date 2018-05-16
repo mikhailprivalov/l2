@@ -30,3 +30,8 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(models.Phones)
 class PhonesAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(models.AgeCache)
+class AgeCacheAdmin(admin.ModelAdmin):
+    pass
