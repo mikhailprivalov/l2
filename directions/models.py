@@ -317,6 +317,9 @@ class Napravleniya(models.Model):
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
             result["message"] = "Недостаточно прав для создания направлений"
             return result
+        if not Clients.Card.objects.filter(pk=client_id).exists():
+            result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
+            return result
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
