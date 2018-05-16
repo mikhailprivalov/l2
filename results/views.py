@@ -2038,7 +2038,7 @@ def results_search_directions(request):
             year = int(period.get("year", "2015"))
             day1 = datetime.date(year, 1, 1)
             day2 = datetime.date(year + 1, 1, 1)
-    except (ValueError, IndexError):
+    except (ValueError, IndexError, OverflowError):
         return JsonResponse({"rows": [], "grouping": grouping, "len": 0, "next_offset": 0, "all_rows": 0,
                              "error_message": "Некорректная дата"})
     collection = Napravleniya.objects.filter(issledovaniya__time_confirmation__range=(day1, day2),
