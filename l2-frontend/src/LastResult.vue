@@ -2,15 +2,19 @@
   <tr v-show="ok" :class="{warn: warn, direction: type === 'direction'}">
     <td>{{researche_title}}</td>
     <td v-if="in_load" colspan="3">поиск результата или назначения...</td>
-    <td v-if="!in_load">
-      <a href="#" @click.prevent="show_result" v-if="type === 'result'">просмотр результата</a>
-      <div v-else>
-        Есть созданное направление без результата<br/>
-        <a href="#" @click.prevent="show_direction">просмотр направления</a>
+    <td v-if="!in_load && type === 'result'">
+      <a href="#" @click.prevent="show_result">просмотр результата</a>
+    </td>
+    <td v-if="!in_load && type === 'direction'" colspan="3">
+      <a href="#" @click.prevent="show_direction">просмотр направления ({{date}})</a><br/>
+      Направление без результата уже создано.
+      <div v-if="has_last_result">
+        <hr style="margin: 5px 0"/>
+        <a href="#" @click.prevent="show_result">последний результат ({{last_result.datetime}})</a>
       </div>
     </td>
-    <td v-if="!in_load" class="text-center">{{date}}</td>
-    <td v-if="!in_load" class="text-center">
+    <td v-if="!in_load && type === 'result'" class="text-center">{{date}}</td>
+    <td v-if="!in_load && type === 'result'" class="text-center">
       {{days_str}}
     </td>
   </tr>
@@ -56,7 +60,10 @@
         days_str: -1,
         date: '',
         date_orig: '',
-        type: 'result'
+        type: 'result',
+        last_result: {},
+        has_last_result: false,
+        is_paraclinic: false,
       }
     },
     mounted() {
@@ -83,6 +90,10 @@
     },
     methods: {
       show_result() {
+        if (this.is_paraclinic) {
+          this.$root.$emit('print:results', [this.has_last_result ? this.last_result.direction : this.direction])
+          return
+        }
         this.$root.$emit('show_results', this.direction)
       },
       show_direction() {
@@ -97,6 +108,11 @@
           if (data.ok) {
             vm.type = data.type
             vm.date = data.data.datetime
+            if (data.has_last_result) {
+              vm.last_result = data.last_result
+              vm.has_last_result = data.has_last_result
+            }
+            vm.is_paraclinic = data.data.is_paraclinic || (data.last_result ? data.last_result.is_paraclinic : false)
             let m = moment.unix(data.data.ts)
             let n = moment()
             vm.ms = n.diff(m)
@@ -131,5 +147,9 @@
         color: #fff !important;
       }
     }
+  }
+
+  :not(.warn) td hr {
+    border-top: 1px solid #000;
   }
 </style>

@@ -1477,7 +1477,7 @@ def directions_visit_journal(request):
 
 @login_required
 def directions_last_result(request):
-    response = {"ok": False, "data": {}, "type": "result"}
+    response = {"ok": False, "data": {}, "type": "result", "has_last_result": False}
     request_data = json.loads(request.body)
     individual = request_data.get("individual", -1)
     research = request_data.get("research", -1)
@@ -1492,12 +1492,15 @@ def directions_last_result(request):
         if not u or i.time_confirmation > u.napravleniye.data_sozdaniya:
             response["ok"] = True
             response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
-                                "ts": tsdatetime(i.time_confirmation)}
+                                "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
         elif u:
             response["ok"] = True
             response["type"] = "direction"
             response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
                                 "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
+            response["has_last_result"] = True
+            response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                       "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
     elif u:
         response["ok"] = True
         response["type"] = "direction"
