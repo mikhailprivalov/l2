@@ -44,7 +44,8 @@ def get_db(request):
                    "individual__family", "individual__name", "individual__patronymic", "individual__sex",
                    "individual__birthday",
                    "polis",
-                   "main_diagnosis"):
+                   "main_diagnosis",
+                   "main_address"):
         doc = Clients.Document.objects.get(pk=x["polis"]) if x["polis"] else Clients.Document.objects.filter(
             document_type__in=docs_types, individual__pk=x["individual_id"]).first()
         snils = Clients.Document.objects.filter(document_type__in=snils_types,
@@ -61,6 +62,7 @@ def get_db(request):
             "Snils": snils.number if snils else None,
             "Tels": [y["number"] for y in Phones.objects.filter(card__pk=x["pk"]).values("number")],
             "MainDiagnosis": x["main_diagnosis"],
+            "MainAddress": x["main_address"],
         })
     return JsonResponse(data, safe=False)
 
@@ -164,13 +166,15 @@ def receive_db(request):
             for t in x.get("Tels", []):
                 card.add_phone(t)
             card.clear_phones(x.get("Tels", []))
+            card.main_address = x.get("MainAddress", "")
         else:
             for card in Clients.Card.objects.filter(number=x["Number"], base=base, is_archive=False):
                 for t in x.get("Tels", []):
                     card.add_phone(t)
                 card.clear_phones(x.get("Tels", []))
-                if card.main_diagnosis != x.get("MainDiagnosis", ""):
+                if card.main_diagnosis != x.get("MainDiagnosis", "") or card.main_address != x.get("MainAddress", ""):
                     card.main_diagnosis = x.get("MainDiagnosis", "")
+                    card.main_address = x.get("MainAddress", "")
                     card.save()
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)

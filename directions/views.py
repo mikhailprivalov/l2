@@ -1,3 +1,4 @@
+import sys
 from datetime import date, datetime
 from io import BytesIO
 
@@ -16,6 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
+from reportlab.pdfgen.canvas import Canvas
 
 import directory.models as directory
 import slog.models as slog
@@ -162,7 +164,6 @@ def gen_pdf_dir(request):
     buffer = BytesIO()  # Буфер
     c = canvas.Canvas(buffer, pagesize=A4)  # Создание холста для PDF размера А4
     c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
-    framePage(c)  # Рисование разделительных линий для страницы
 
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
@@ -172,20 +173,45 @@ def gen_pdf_dir(request):
         TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
     pdfmetrics.registerFont(
         TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
-
-    p = Paginator(direction_id, 4)  # Деление списка направлений по 4
+    pdfmetrics.registerFont(
+        TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
+    dn = Napravleniya.objects.filter(pk__in=direction_id)
+    ddef = dn.filter(issledovaniya__research__direction_form=0)
+    p = Paginator(list(ddef), 4)  # Деление списка направлений по 4
     instructions = []
-    for pg_num in p.page_range:  # Перебор страниц
-        pg = p.page(pg_num)  # Выбор страницы по номеру
+    has_def = ddef.count() > 0
+    if has_def:
+        framePage(c)
+    for pg_num in p.page_range:
+        pg = p.page(pg_num)
         i = 4  # Номер позиции направления на странице (4..1)
-        for obj in pg.object_list:  # Перебор номеров направлений на странице
-            n_ob = Napravleniya.objects.get(pk=int(obj))
+        for n_ob in pg.object_list:  # Перебор номеров направлений на странице
             printDirection(c, i, n_ob)  # Вызов функции печати направления на указанную позицию
             instructions += n_ob.get_instructions()
             i -= 1
         if pg.has_next():  # Если есть следующая страница
             c.showPage()  # Создание новой страницы
             framePage(c)  # Рисование разделительных линий для страницы
+
+    donepage = dn.exclude(issledovaniya__research__direction_form=0)
+    if donepage.count() > 0 and has_def:
+        c.showPage()
+
+    thismodule = sys.modules[__name__]
+    n = 0
+    cntn = donepage.count()
+    for d in donepage:
+        n += 1
+        iss = Issledovaniya.objects.filter(napravleniye=d)
+        if not iss.exists():
+            continue
+        form = iss[0].research.direction_form
+        if hasattr(thismodule, 'form%s' % form):
+            f = getattr(thismodule, 'form%s' % form)
+            f(c, d)
+        if n != cntn:
+            c.showPage()
+
     instructions_pks = []
     instructions_filtered = []
     for i in instructions:
@@ -1079,3 +1105,91 @@ def resend(request):
         if t in ["results", "full"]:
             r.append(c.directions.delete_services(direction=direction, user=request.user.doctorprofile))
     return JsonResponse(all(d) if t == "directions" else [d, r], safe=False)
+
+
+def py(y=0.0):
+    y *= mm
+    return h - y
+
+
+def pyb(y=0.0):
+    y *= mm
+    return y
+
+
+def px(x=0.0):
+    return x * mm
+
+
+def pxr(x=0.0):
+    x *= mm
+    return w - x
+
+
+def form38001(c: Canvas, d: Napravleniya):
+
+    def printForm(offset):
+        c.setStrokeColorRGB(0,0,0)
+        c.setLineWidth(0.2*mm)
+        c.setFont('TimesNewRoman', 8)
+        topw1 = pxr(61.5)
+        c.drawString(topw1, py(19.6 + offset), "Приложение 5")
+        c.drawString(topw1, py(22.74 + offset), "к приказу министерства")
+        c.drawString(topw1, py(25.88 + offset), "здравоохранения Иркутской области")
+        c.drawString(topw1, py(29.02 + offset), "от 17.08.2009 г. № 1027-мпр.")
+
+        c.setFont('TimesNewRoman', 11)
+        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
+        c.line(px(95.5), py(35.2 + offset), pxr(18), py(35.2 + offset))
+        c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
+        c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
+        c.drawCentredString(w/2, py(53 + offset), "НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ")
+        c.drawCentredString(w/2, py(58 + offset), "НА ВИЧ № {}".format(d.pk))
+
+        c.drawString(px(18.5), py(68 + offset), "Фамилия: " + d.client.individual.family)
+        c.line(px(34.8), py(69.2 + offset), pxr(97.5), py(69.2 + offset))
+        c.drawString(pxr(97), py(68 + offset), "Имя: " + d.client.individual.name)
+        c.line(pxr(88.7), py(69.2 + offset), pxr(18), py(69.2 + offset))
+
+        c.drawString(px(18.5), py(73 + offset), "Отчество: " + d.client.individual.patronymic)
+        c.line(px(35), py(74.2 + offset), pxr(114.5), py(74.2 + offset))
+        c.drawString(pxr(114), py(73 + offset), "Дата рождения(число,месяц,год): " + d.client.individual.birthday.strftime("%d.%m.%Y"))
+        c.line(pxr(58.5), py(74.2 + offset), pxr(18), py(74.2 + offset))
+
+        c.drawString(px(18.5), py(78 + offset), "Адрес регистрации(прописки): " + d.client.main_address)
+        c.line(px(71), py(79.2 + offset), pxr(18), py(79.2 + offset))
+
+        c.drawString(px(18.5), py(83 + offset), "Адрес фактического места проживания: ")
+        c.line(px(85), py(84.2 + offset), pxr(18), py(84.2 + offset))
+
+        c.drawString(px(18.5), py(88 + offset), "Социальный статус: ")
+        c.line(px(52.3), py(89.2 + offset), pxr(18), py(89.2 + offset))
+
+        c.drawString(px(18.5), py(93 + offset), "Код: ")
+        c.line(px(26.3), py(94.2 + offset), px(52), py(94.2 + offset))
+        c.drawString(px(53), py(93 + offset), "Диагноз: ")
+        c.line(px(68), py(94.2 + offset), pxr(18), py(94.2 + offset))
+
+        c.drawString(px(18.5), py(98 + offset), "ФИО врача, направившего на обследование: {}".format(d.doc.fio))
+        c.line(pxr(117.5), py(99.2 + offset), pxr(18), py(99.2 + offset))
+
+        c.drawString(px(18.5), py(103 + offset), "ФИО процедурной м/с: ")
+        c.line(px(57.3), py(104.2 + offset), pxr(18), py(104.2 + offset))
+
+        c.drawString(px(18.5), py(108 + offset), "Дата забора крови: «_____»_________________20____г.")
+
+        c.drawString(px(18.5), py(113 + offset), "Дата доставки крови в ИОЦ СПИД: «_____»_________________20____г. (заполняется ИОЦ СПИД)")
+
+        c.drawString(px(18.5), py(123 + offset), "РЕЗУЛЬТАТ ИССЛЕДОВАНИЯ")
+
+        c.drawString(px(18.5), py(133 + offset), "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
+
+        c.setFont('TimesNewRoman', 8)
+        c.drawString(px(18.5), py(139 + offset), "ИС L2. Форма 38001")
+
+    printForm(0)
+
+    c.setStrokeColorRGB(*([0.8]*3))
+    c.line(px(0), h/2, pxr(0), h/2)
+
+    printForm(h/2/mm)

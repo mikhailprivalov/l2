@@ -50,6 +50,11 @@ class Researches(models.Model):
     """
     Вид исследования
     """
+    DIRECTION_FORMS = (
+        (0, 'По умолчанию'),
+
+        (38001, 'ИО - Направление на ВИЧ'),
+    )
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
     short_title = models.CharField(max_length=50, default='', blank=True)
@@ -72,6 +77,8 @@ class Researches(models.Model):
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
+    not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
+    direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

@@ -390,6 +390,7 @@ class Card(models.Model):
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None,
                               on_delete=models.SET_NULL)
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
+    main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

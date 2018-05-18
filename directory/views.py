@@ -331,7 +331,7 @@ def directory_get_directions(request):
     return_result = {}
     if request.method == "GET":
         return_result = {"directions": {}}
-        researches = Researches.objects.all()
+        researches = Researches.objects.filter(not_grouping=False)
         if request.GET["lab"] != "-1":
             researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title")
         for research in researches:
