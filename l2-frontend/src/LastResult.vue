@@ -1,8 +1,14 @@
 <template>
-  <tr v-show="ok" :class="{warn: warn}">
+  <tr v-show="ok" :class="{warn: warn, direction: type === 'direction'}">
     <td>{{researche_title}}</td>
-    <td v-if="in_load" colspan="3">поиск последнего результата...</td>
-    <td v-if="!in_load"><a href="#" @click.prevent="show_result">просмотр результата</a></td>
+    <td v-if="in_load" colspan="3">поиск результата или назначения...</td>
+    <td v-if="!in_load">
+      <a href="#" @click.prevent="show_result" v-if="type === 'result'">просмотр результата</a>
+      <div v-else>
+        Есть созданное направление без результата<br/>
+        <a href="#" @click.prevent="show_direction">просмотр направления</a>
+      </div>
+    </td>
     <td v-if="!in_load" class="text-center">{{date}}</td>
     <td v-if="!in_load" class="text-center">
       {{days_str}}
@@ -50,6 +56,7 @@
         days_str: -1,
         date: '',
         date_orig: '',
+        type: 'result'
       }
     },
     mounted() {
@@ -78,6 +85,9 @@
       show_result() {
         this.$root.$emit('show_results', this.direction)
       },
+      show_direction() {
+        this.$root.$emit('print:directions', [this.direction])
+      },
       load() {
         $('.scrolldown').scrollDown()
         let vm = this
@@ -85,22 +95,25 @@
           vm.in_load = false
           vm.ok = data.ok
           if (data.ok) {
+            vm.type = data.type
             vm.date = data.data.datetime
             let m = moment.unix(data.data.ts)
             let n = moment()
             vm.ms = n.diff(m)
             vm.days = n.diff(m, 'days')
             vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
-
             vm.direction = data.data.direction
           }
+          setTimeout(() => {
+            $('.scrolldown').scrollDown()
+          }, 10)
         })
       },
     },
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   td, th {
     padding: 2px !important;
     word-wrap: break-word;
@@ -109,5 +122,14 @@
 
   .warn {
     background-color: #ffa04d;
+    &.direction {
+      background-color: #ff391a;
+      td {
+        color: #fff;
+      }
+      a {
+        color: #fff !important;
+      }
+    }
   }
 </style>

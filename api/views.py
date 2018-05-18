@@ -1477,17 +1477,32 @@ def directions_visit_journal(request):
 
 @login_required
 def directions_last_result(request):
-    response = {"ok": False, "data": {}}
+    response = {"ok": False, "data": {}, "type": "result"}
     request_data = json.loads(request.body)
     individual = request_data.get("individual", -1)
     research = request_data.get("research", -1)
     i = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
                                                 research__pk=research,
-                                                time_confirmation__isnull=False).order_by("-time_confirmation")
-    if i.exists():
+                                                time_confirmation__isnull=False).order_by("-time_confirmation").first()
+    u = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
+                                                research__pk=research,
+                                                time_confirmation__isnull=True).order_by("-napravleniye__data_sozdaniya").first()
+
+    if i:
+        if not u or i.time_confirmation > u.napravleniye.data_sozdaniya:
+            response["ok"] = True
+            response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                "ts": tsdatetime(i.time_confirmation)}
+        elif u:
+            response["ok"] = True
+            response["type"] = "direction"
+            response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                                "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
+    elif u:
         response["ok"] = True
-        response["data"] = {"direction": i[0].napravleniye.pk, "datetime": strdate(i[0].time_confirmation),
-                            "ts": tsdatetime(i[0].time_confirmation)}
+        response["type"] = "direction"
+        response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                            "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
     return JsonResponse(response)
 
 
