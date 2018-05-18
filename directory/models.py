@@ -53,7 +53,7 @@ class Researches(models.Model):
     DIRECTION_FORMS = (
         (0, 'По умолчанию'),
 
-        (38001, 'ИО - Направление на ВИЧ'),
+        (38001, '38001. ИО - Направление на ВИЧ'),
     )
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
