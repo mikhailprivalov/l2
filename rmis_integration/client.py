@@ -505,7 +505,7 @@ class Services(BaseRequester):
             for r in srv:
                 if RMISServiceInactive.isInactive(r["id"]):
                     continue
-                self.services[r["code"]] = r["id"]
+                self.services[r["code"] if not r["code"] else r["code"].strip()] = r["id"]
 
             cache.set(key, pickle.dumps(self.services, protocol=4), 300)
         else:
