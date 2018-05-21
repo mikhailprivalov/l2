@@ -176,7 +176,7 @@ def gen_pdf_dir(request):
     pdfmetrics.registerFont(
         TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
     dn = Napravleniya.objects.filter(pk__in=direction_id)
-    ddef = dn.filter(issledovaniya__research__direction_form=0)
+    ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
     p = Paginator(list(ddef), 4)  # Деление списка направлений по 4
     instructions = []
     has_def = ddef.count() > 0
