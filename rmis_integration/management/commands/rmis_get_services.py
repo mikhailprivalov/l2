@@ -30,7 +30,7 @@ class Command(BaseCommand):
         self.stdout.write("!!!!!!!")
         cnt = len(srv)
 
-        def ip(self, c, cnt, start_time):
+        def ip(self, c, cnt, start_time, r):
             sema.acquire()
             try:
                 data = helpers.serialize_object(c.services.client.getService(r["id"]))
@@ -52,8 +52,7 @@ class Command(BaseCommand):
         start_time = time.time()
         threads = []
         for r in srv:
-            c.services.client.getService(r["id"])
-            thread = threading.Thread(target=ip, args=(self, c, cnt, start_time))
+            thread = threading.Thread(target=ip, args=(self, c, cnt, start_time, r))
             threads.append(thread)
             thread.start()
 
