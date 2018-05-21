@@ -228,13 +228,15 @@ class Client(object):
             fin_src[id] = val
         return fin_src
 
-    def put_content(self, filename, content, path, filetype='application/pdf', method="PUT"):
+    def put_content(self, filename, content, path, filetype='application/pdf', method="PUT", stdout: OutputWrapper = None):
         multipart_data = MultipartEncoder(
             fields={'file': (filename, content, filetype)},
         )
         resip = requests.request(method, path,
                                  data=multipart_data,
                                  headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+        if stdout:
+            stdout.write("put_content ANSWER: [{}] {}".format(resip.status_code, resip.text))
         return str(resip.status_code) == "200"
 
     def req(self, path, method="DELETE", ret="bool"):
