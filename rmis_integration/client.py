@@ -19,7 +19,8 @@ from zeep.transports import Transport
 
 import clients.models as clients_models
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs
+from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
+    RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
 from laboratory.utils import strdate, strtime, localtime
 from podrazdeleniya.models import Podrazdeleniya
@@ -502,6 +503,8 @@ class Services(BaseRequester):
             self.services = {}
             srv = self.client.getServices(clinic=client.search_organization_id())
             for r in srv:
+                if RMISServiceInactive.isInactive(r["id"]):
+                    continue
                 self.services[r["code"]] = r["id"]
 
             cache.set(key, pickle.dumps(self.services, protocol=4), 300)
@@ -991,7 +994,7 @@ class Directions(BaseRequester):
             update_lock()
             try:
                 if direct.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(direct, stdout=out))
+                    uploaded_results.append(self.check_send_results(direct))
                     if out:
                         out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:

@@ -215,9 +215,34 @@ class Diagnoses(models.Model):
         return "{} {}".format(self.code, self.title)
 
 
+class RMISServiceInactive(models.Model):
+    rmis_id = models.CharField(max_length=30, primary_key=True)
+    enabled = models.BooleanField(default=True, blank=True)
+
+    @staticmethod
+    def checkInactive(serviceId, enabled):
+        r = RMISServiceInactive.objects.filter(rmis_id=serviceId)
+        if not r.exists() and enabled:
+            RMISServiceInactive(rmis_id=serviceId, enabled=enabled).save()
+        elif r.exists() and r[0].enabled != enabled:
+            r[0].enabled = enabled
+            r[0].save()
+
+    @staticmethod
+    def isInactive(serviceId):
+        r = RMISServiceInactive.objects.filter(rmis_id=serviceId)
+        return r.exists() and r[0].enabled
+
+    def __str__(self):
+        return "{} {}".format(self.rmis_id, self.enabled)
+
+
 class RMISOrgs(models.Model):
     rmis_id = models.IntegerField(primary_key=True, editable=False)
     title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.title
 
 
 class Napravleniya(models.Model):
