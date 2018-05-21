@@ -869,8 +869,6 @@ class Directions(BaseRequester):
                                                                  "{{результат}}", xresult), self.main_client.get_addr(
                                         "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
                                 RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
-                                if stdout:
-                                    stdout.write("put_protocol_2: {} {} {} {} {}".format(code, direction, protocol_template, ss, x, xresult))
                         self.main_client.put_content("Resultat.pdf",
                                                      self.main_client.local_get("/results/pdf",
                                                                                 {"pk": json.dumps([direction.pk]),
@@ -883,17 +881,17 @@ class Directions(BaseRequester):
         return direction.result_rmis_send
 
     def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
+        protocol = protocol_template.replace("{{исполнитель}}", x.issledovaniye.doc_confirmation.get_fio()).replace(
+            "{{результат}}", xresult)
         self.main_client.put_content("Protocol.otg",
-                                          protocol_template.replace("{{исполнитель}}",
-                                                                    x.issledovaniye.doc_confirmation.get_fio()).replace(
-                                              "{{результат}}", xresult),
-                                          self.main_client.get_addr(
+                                     protocol,
+                                     self.main_client.get_addr(
                                               "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
-                                          method="POST",
-                                          filetype="text/xml")
+                                     method="POST",
+                                     filetype="text/xml")
         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
         if stdout:
-            stdout.write("put_protocol: {} {} {} {} {} {}".format(code, direction, protocol_template, ss, x, xresult))
+            stdout.write("put_protocol: {} {} {} {} {}".format(code, direction, protocol, ss, x))
 
     def fill_send_old_data(self, send_data, service_old_data):
         for p in ["medicalCaseId",
