@@ -795,7 +795,7 @@ class Directions(BaseRequester):
                                         xresult += protocol_row.replace("{{фракция}}", y.field.title).replace("{{значение}}", y.value)
                                 xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>", "")\
                                     .replace("<font>", "").replace("</font>", "")
-                                self.put_protocol(code, direction, protocol_template, ss, x, xresult)
+                                self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                         for x in Result.objects.filter(issledovaniye__napravleniye=direction):
                             code = x.fraction.research.code
                             if code in sended_codes:
@@ -829,7 +829,7 @@ class Directions(BaseRequester):
                                         "{{значение}}",
                                         x.issledovaniye.lab_comment).replace(
                                         "{{едизм}}", "")
-                                self.put_protocol(code, direction, protocol_template, ss, x, xresult)
+                                self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                             code = x.fraction.code
                             if code in sended_codes:
                                 continue
@@ -869,6 +869,8 @@ class Directions(BaseRequester):
                                                                  "{{результат}}", xresult), self.main_client.get_addr(
                                         "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
                                 RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+                                if stdout:
+                                    stdout.write("put_protocol_2: {} {} {} {} {}".format(code, direction, protocol_template, ss, x, xresult))
                         self.main_client.put_content("Resultat.pdf",
                                                      self.main_client.local_get("/results/pdf",
                                                                                 {"pk": json.dumps([direction.pk]),
@@ -880,7 +882,7 @@ class Directions(BaseRequester):
             direction.save()
         return direction.result_rmis_send
 
-    def put_protocol(self, code, direction, protocol_template, ss, x, xresult):
+    def put_protocol(self, code, direction, protocol_template, ss, x, xresult, stdout: OutputWrapper = None):
         self.main_client.put_content("Protocol.otg",
                                           protocol_template.replace("{{исполнитель}}",
                                                                     x.issledovaniye.doc_confirmation.get_fio()).replace(
@@ -890,6 +892,8 @@ class Directions(BaseRequester):
                                           method="POST",
                                           filetype="text/xml")
         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+        if stdout:
+            stdout.write("put_protocol: {} {} {} {} {} {}".format(code, direction, protocol_template, ss, x, xresult))
 
     def fill_send_old_data(self, send_data, service_old_data):
         for p in ["medicalCaseId",
@@ -986,7 +990,7 @@ class Directions(BaseRequester):
             update_lock()
             try:
                 if direct.is_all_confirm():
-                    uploaded_results.append(self.check_send_results(direct))
+                    uploaded_results.append(self.check_send_results(direct, stdout=out))
                     if out:
                         out.write("Upload result for direction {} ({}/{})".format(direct.pk, i, cnt))
             finally:
