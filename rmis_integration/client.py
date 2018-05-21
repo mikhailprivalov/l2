@@ -890,7 +890,8 @@ class Directions(BaseRequester):
                                      self.main_client.get_addr(
                                               "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
                                      method="POST",
-                                     filetype="text/xml")
+                                     filetype="text/xml",
+                                     stdout=stdout)
         RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
         if stdout:
             stdout.write("put_protocol: {} {} {} {} {}".format(code, direction, protocol, ss, x))
