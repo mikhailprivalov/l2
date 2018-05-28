@@ -139,11 +139,26 @@ AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'base': {
+            'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n'
+                      'Request: %(path)s [%(method)s] %(user)s %(data)s\n'
+                      'Body: %(body)s\n'
+                      '%(stack_info)s\n'
+        }
+    },
+    'filters': {
+        'requestdata': {
+            '()': 'utils.filters.RequestDataFilter',
+        },
+    },
     'handlers': {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
+            'filters': ['requestdata'],
             'filename': os.path.join(BASE_DIR, 'logs') + '/log.txt',
+            'formatter': 'base'
         },
         'pika': {
             'level': 'WARNING',
