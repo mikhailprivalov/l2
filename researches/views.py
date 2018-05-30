@@ -70,6 +70,7 @@ def researches_get_one(request):
                            "render_type": val.render_type,
                            "options": val.options.split(","),
                            "type": val.variants.get_variants() if val.variants else [],
+                           "type2": val.variants2.get_variants() if val.variants2 else [],
                            "references": {
                                "m": ref_m,
                                "f": ref_f,

@@ -170,7 +170,7 @@ script.
         $('.result-enter').typeahead('destroy');
 
         $.each(groups, function (k, v) {
-            let tps = fraction_types[loaded_fractions[k].type + ""];
+            let tps = loaded_fractions[k].type;
             t = Math.max(Math.floor(12 / (tps.length + 1)), 1);
             let tmp_radios = `<div class='col-md-${t} rd-cont'><input type="radio" value="null" class="subval defval" checked /><label>нич.</label></div>`;
             $.each(tps, function (k, v) {
@@ -179,7 +179,7 @@ script.
             tmp_radios = `<div class="row rd-row">${tmp_radios}</div>`;
 
             let cont = $(`[container-pk='${k}'] tbody`);
-            var ft = $.map(fraction_types[loaded_fractions[k].unit], function (item) {
+            var ft = $.map(loaded_fractions[k].type2, function (item) {
                 return {value: item};
             });
             var typeVals = new Bloodhound({
@@ -193,7 +193,7 @@ script.
 
             function typeValsDefaults(q, sync) {
                 if (q === '') {
-                    sync(typeVals.get(fraction_types[loaded_fractions[k].unit]));
+                    sync(typeVals.get(loaded_fractions[k].type2));
                 }
                 else {
                     typeVals.search(q, sync);
@@ -203,7 +203,7 @@ script.
             cont.html("");
             let vvi = 0;
             $.each(v.rows, function (kk, vv) {
-                cont.append(`<tr class="group-tr" data-group-key="${kk}"><td><input class="form-control typeahead result-enter group-title" value="${vv.title}" type="text" maxlength="63"/><br/><button style="margin: 3px;float: right;padding: 2px" class="btn btn-sm btn-blue-nb hide-vals-btn" onclick="hide_vals(${kk}, this); return false;">Свернуть значения</button><button style="margin: 3px;padding: 2px" class="btn btn-sm btn-primary-rm" onclick="remove_row(${kk}); return false;">Удалить</button></td><td><table class="group-rows table table-responsive"></table></td></tr>`);
+                cont.append(`<tr class="group-tr" data-group-key="${kk}"><td><input class="form-control typeahead result-enter group-title" value="${vv.title}" type="text" maxlength="63"/><br/><button style="margin: 3px;float: right;padding: 2px" class="btn btn-sm btn-blue-nb hide-vals-btn" onclick="hide_vals(${kk}, this); return false;">Свернуть зн.</button><button style="margin: 3px;padding: 2px" class="btn btn-sm btn-primary-rm" onclick="remove_row(${kk}); return false;">Удалить</button></td><td><table class="group-rows table table-responsive"></table></td></tr>`);
 
                 $.each(vv.rows, function (kkk, vvv) {
                     vvi++;
@@ -278,12 +278,12 @@ script.
         const $s = $(`[data-group-key='${gpk}'] .group-rows`);
         $s.toggle();
         if (!$s.is(":visible")) {
-            $(th).text("Показать значения");
+            $(th).text("Показать зн.");
             remove_fa(hidden_gpk, gpk);
             hidden_gpk.push(gpk);
         }
         else {
-            $(th).text("Свернуть значения");
+            $(th).text("Свернуть зн.");
             remove_fa(hidden_gpk, gpk);
         }
     }

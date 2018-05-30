@@ -1315,7 +1315,7 @@
                     nn++;
                     (function (i) {
                         $.ajaxq('precache', {
-                            url: `{% static 'templates' %}/${i}.jade`,
+                            url: `{% static 'templates' %}/${i}.jade?1`,
                             type: "text",
                             cache: false,
                             method: "GET"

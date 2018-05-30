@@ -2,7 +2,6 @@ from django.db import models
 from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
 from researches.models import Tubes
-from users.models import DoctorProfile
 
 
 class DirectionsGroup(models.Model):
@@ -178,6 +177,16 @@ class MaterialVariants(models.Model):
         verbose_name_plural = 'Варианты комментариев'
 
 
+# class Units(models.Model):
+#     title = models.CharField(max_length=40, help_text="Единицы измерения")
+#
+#
+#
+# class SharedParameters(models.Model):
+#     title = models.CharField(max_length=255, help_text='Название параметра')
+
+
+
 class Fractions(models.Model):
     """
     Фракции для исследований
@@ -193,6 +202,7 @@ class Fractions(models.Model):
     uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта', blank=True)
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций', blank=True)
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов', on_delete=models.SET_NULL)
+    variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, help_text='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фракции', db_index=True)
     render_type = models.IntegerField(default=0, blank=True, help_text='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
