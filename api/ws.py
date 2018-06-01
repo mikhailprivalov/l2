@@ -11,5 +11,6 @@ def emit(name, data=None):
 
         with SocketIO(WS_BASE, WS_PORT, wait_for_connection=False) as socketIO:
             socketIO.emit(name, data)
+            socketIO.disconnect()
     except:
         pass

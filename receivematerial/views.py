@@ -469,7 +469,7 @@ def receive_journal(request):
             if len(pg) == 0:
                 continue
             if pg_num >= 0:
-                drawTituls(c, p.num_pages, pg_num, paddingx, pg[0], lab=lab, group=group, otd=key.split("@")[1])
+                drawTituls(c, p.num_pages, pg_num, paddingx, lab=lab.title, group=group, otd=key.split("@")[1])
             data = []
             tmp = []
             for v in data_header:
@@ -566,7 +566,7 @@ def drawTituls(c, pages, page, paddingx, lab, otd="", group=-2):
 
     c.drawCentredString(w / 2, h - 30, SettingManager.get("org_title"))
     c.setFont('OpenSans', 12)
-    c.drawCentredString(w / 2, h - 50, "Журнал приёма материала - " + lab.title)
+    c.drawCentredString(w / 2, h - 50, "Журнал приёма материала - " + lab)
 
     if group >= 0:
         group_str = directory.ResearchGroup.objects.get(pk=group).title
