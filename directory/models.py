@@ -56,7 +56,7 @@ class Researches(models.Model):
     )
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
-    short_title = models.CharField(max_length=50, default='', blank=True)
+    short_title = models.CharField(max_length=255, default='', blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС', blank=True)
     preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию', blank=True)

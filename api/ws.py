@@ -9,8 +9,10 @@ def emit(name, data=None):
             data = {}
         from socketIO_client_nexus import SocketIO
 
-        with SocketIO(WS_BASE, WS_PORT, wait_for_connection=False) as socketIO:
-            socketIO.emit(name, data)
-            socketIO.disconnect()
+        socketIO = SocketIO(WS_BASE, WS_PORT, wait_for_connection=False)
+        socketIO.emit(name, data)
+        socketIO.disconnect()
+        del socketIO
+
     except:
         pass
