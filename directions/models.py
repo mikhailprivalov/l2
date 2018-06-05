@@ -420,7 +420,6 @@ class Napravleniya(models.Model):
                     issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
                 result["r"] = True
-                result["list_id"] = json.dumps(result["list_id"])
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
                          body=json.dumps({"researches": researches,
                                           "client_num": Clients.Card.objects.get(pk=client_id).number,
@@ -434,6 +433,7 @@ class Napravleniya(models.Model):
             else:
                 result["r"] = False
                 result["message"] = "Следующие исследования не могут быть назначены вместе: " + ", ".join(conflict_list)
+        result["list_id"] = json.dumps(result["list_id"])
         return result
 
     def has_confirm(self):
