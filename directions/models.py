@@ -433,7 +433,6 @@ class Napravleniya(models.Model):
             else:
                 result["r"] = False
                 result["message"] = "Следующие исследования не могут быть назначены вместе: " + ", ".join(conflict_list)
-        result["list_id"] = json.dumps(result["list_id"])
         return result
 
     def has_confirm(self):

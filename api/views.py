@@ -637,7 +637,7 @@ def directions_generate(request):
                                                                        p.get("for_rmis"),
                                                                        p.get("rmis_data", {}))
         result["ok"] = rc["r"]
-        result["directions"] = json.loads(rc["list_id"])
+        result["directions"] = rc["list_id"]
         if "message" in rc:
             result["message"] = rc["message"]
     return JsonResponse(result)
