@@ -13,4 +13,5 @@ urlpatterns = [
     path('uets', views.uets),
     path('with', views.onlywith),
     path('refs', views.refs),
+    path('consults', views.construct_consults),
 ]

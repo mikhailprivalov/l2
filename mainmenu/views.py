@@ -652,7 +652,7 @@ def researches_from_directions(request):
     pk = json.loads(request.GET.get("pk", "[]"))
     data = defaultdict(list)
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk, research__hide=False):
-        data[i.research.podrazdeleniye.pk].append(i.research.pk)
+        data[-2 if not i.research.podrazdeleniye else i.research.podrazdeleniye.pk].append(i.research.pk)
     return JsonResponse(data)
 
 

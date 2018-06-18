@@ -328,11 +328,16 @@ def printDirection(c, n, dir):
 
     vid = []
     has_descriptive = False
+    has_doc_refferal = False
     for i in issledovaniya:
-        rt = i.research.podrazdeleniye.get_title()
+        if i.research.is_doc_refferal:
+            has_doc_refferal = True
+            rt = "Консультации"
+        else:
+            rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
             vid.append(rt)
-            if i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+            if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                 has_descriptive = True
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
@@ -363,8 +368,8 @@ def printDirection(c, n, dir):
                        "info": v.research.paraclinic_info})
     tw = w / 2 - paddingx * 2
     m = 0
-    if has_descriptive:
-        tmp = [Paragraph('<font face="OpenSansBold" size="8">Исследование</font>', styleSheet["BodyText"]),
+    if has_descriptive or has_doc_refferal:
+        tmp = [Paragraph('<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"), styleSheet["BodyText"]),
                Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
@@ -930,7 +935,7 @@ def get_issledovaniya(request):
                     iss = []
             for i in Issledovaniya.objects.filter(napravleniye__pk=id):
                 po = i.research.podrazdeleniye
-                p = po.title
+                p = "" if not po else po.title
                 if p not in res["labs"]:
                     res["labs"].append(p)
                     res["labs_objects"].append({"pk": po.pk, "title": p})

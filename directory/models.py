@@ -74,6 +74,7 @@ class Researches(models.Model):
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
+    is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")

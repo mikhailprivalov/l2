@@ -2,6 +2,7 @@ from laboratory.settings import WS_BASE, WS_PORT, WS_ENABLED
 
 
 def emit(name, data=None):
+    return
     if not WS_ENABLED:
         return
     try:

@@ -22,6 +22,8 @@ def menu(request):
          "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {"url": "/construct/researches-paraclinic", "title": "Параклинические (описательные) исследования",
          "access": ["Конструктор: Параклинические (описательные) исследования"], "module": "paraclinic_module"},
+        {"url": "/construct/consults", "title": "Консультации",
+         "access": ["Конструктор: Консультации"], "module": "consults_module"},
         {"url": "/construct/directions_group", "title": "Группировка исследований по направлениям",
          "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
         {"url": "/construct/uets", "title": "Настройка УЕТов",
@@ -148,5 +150,14 @@ def refs(request):
 def researches_paraclinic(request):
     if SettingManager.get("paraclinic_module", default='false', default_type='b'):
         return render(request, 'construct_paraclinic.html')
+    else:
+        return redirect('/')
+
+
+@login_required
+@group_required("Оператор", "Конструктор: консультации")
+def construct_consults(request):
+    if SettingManager.get("consults_module", default='false', default_type='b'):
+        return render(request, 'construct_consults.html')
     else:
         return redirect('/')

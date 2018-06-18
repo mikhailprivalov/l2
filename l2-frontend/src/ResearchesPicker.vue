@@ -194,10 +194,19 @@
         return this.$store.getters.templates
       },
       researches_display() {
-        if (this.dep in this.$store.getters.researches) {
-          return this.$store.getters.researches[this.dep]
+        let r = [];
+        if(this.type === '4') {
+          for(const d of Object.keys(this.$store.getters.researches)) {
+            for(const row of this.$store.getters.researches[d]) {
+              if(row.doc_refferal) {
+                r.push(row);
+              }
+            }
+          }
+        } else if (this.dep in this.$store.getters.researches) {
+          r = this.$store.getters.researches[this.dep];
         }
-        return []
+        return r
       },
       founded_n() {
         let r = 'Не найдено'

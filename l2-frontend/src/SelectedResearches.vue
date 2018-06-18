@@ -288,7 +288,7 @@
     computed: {
       researches_departments() {
         let r = {}
-        let deps = {}
+        let deps = {"-2": {title: "Консультации"}}
         for (let dep of this.$store.getters.allDepartments) {
           deps[dep.pk] = dep
         }
@@ -296,14 +296,15 @@
         for (let pk of this.researches) {
           if (pk in this.$store.getters.researches_obj) {
             let res = this.$store.getters.researches_obj[pk]
-            if (!(res.department_pk in r)) {
-              r[res.department_pk] = {
-                pk: res.department_pk,
-                title: deps[res.department_pk].title,
+            let d = res.department_pk && !res.doc_refferal ? res.department_pk: -2;
+            if (!(d in r)) {
+              r[d] = {
+                pk: d,
+                title: deps[d].title,
                 researches: []
               }
             }
-            r[res.department_pk].researches.push({pk: pk, title: res.title})
+            r[d].researches.push({pk: pk, title: res.title})
           }
         }
         return r

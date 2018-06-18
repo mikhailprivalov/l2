@@ -2157,8 +2157,9 @@ def results_search_directions(request):
                 researches.append(tmp_r)
         if len(researches) == 0:
             continue
+        l = direction.issledovaniya_set.first().research.get_podrazdeleniye()
         tmp_dir = {"pk": direction.pk,
-                   "laboratory": direction.issledovaniya_set.first().research.get_podrazdeleniye().title,
+                   "laboratory": "Консультации" if not l else l.title,
                    "otd": ("" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.doc.podrazdeleniye.title,
                    "doc": "" if direction.imported_from_rmis else direction.doc.get_fio(),
                    "researches": researches, "is_normal": row_normal}

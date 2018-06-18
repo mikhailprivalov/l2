@@ -322,7 +322,9 @@ def departments(request):
                              x in Podrazdeleniya.objects.all().order_by("pk")],
              "can_edit": can_edit,
              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if
-                       SettingManager.get("paraclinic_module", default='false', default_type='b') or x[0] != 3]})
+                       (x[0] == 3 and SettingManager.get("paraclinic_module", default='false', default_type='b'))
+                       or (x[0] == 4 and SettingManager.get("consults_module", default='false', default_type='b'))
+                       or x[0] not in [3, 4]]})
     elif can_edit:
         ok = False
         message = ""
@@ -398,17 +400,18 @@ class Researches(View):
             autoadd = [x.b.pk for x in AutoAdd.objects.filter(a=r)]
             addto = [x.a.pk for x in AutoAdd.objects.filter(b=r)]
 
-            deps[r.podrazdeleniye.pk].append(
+            deps[-2 if not r.podrazdeleniye else r.podrazdeleniye.pk].append(
                 {"pk": r.pk,
                  "onlywith": -1 if not r.onlywith else r.onlywith.pk,
-                 "department_pk": r.podrazdeleniye.pk,
+                 "department_pk": -2 if not r.podrazdeleniye else r.podrazdeleniye.pk,
                  "title": r.get_title(),
                  "full_title": r.title,
+                 "doc_refferal": r.is_doc_refferal,
                  "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
                  "autoadd": autoadd,
                  "addto": addto,
                  "code": r.code,
-                 "type": str(r.podrazdeleniye.p_type)
+                 "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type)
                  })
         return JsonResponse({"researches": deps})
 
@@ -676,7 +679,7 @@ def directions_history(request):
                 researches_pks = []
                 has_descriptive = False
                 for v in iss_list:
-                    if v.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+                    if v.research.podrazdeleniye and v.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                         has_descriptive = True
                     researches_list.append(v.research.title)
                     researches_pks.append(v.research.pk)
@@ -702,7 +705,8 @@ def directions_history(request):
                          "researches": ' | '.join(researches_list),
                          "researches_pks": researches_pks,
                          "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT_SHORT)),
-                         "lab": iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
+                         "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[0].research.is_doc_refferal
+                         else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
                          "checked": False,
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
@@ -1383,7 +1387,7 @@ def directions_services(request):
         researches = []
         for i in directions.Issledovaniya.objects.filter(napravleniye=n):
             researches.append({"title": i.research.title,
-                               "department": i.research.podrazdeleniye.get_title()})
+                               "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title()})
         response["direction_data"] = {
             "date": strdate(n.data_sozdaniya),
             "client": n.client.individual.fio(full=True),
