@@ -79,9 +79,14 @@ def menu(request):
             pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
         pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
-        if SettingManager.get("home_page", default="http://home") != "false":
+        if SettingManager.get("home_page", default="false") != "false":
             pages.append(
                 {"url": SettingManager.get(key="home_page", default="http://home"), "title": "Домашняя страница",
+                 "nt": True, "access": ["*"]})
+
+        if SettingManager.get("support", default="false") != "false":
+            pages.append(
+                {"url": SettingManager.get(key="support", default="false"), "title": "Техническая поддержка",
                  "nt": True, "access": ["*"]})
         data = make_menu(pages, groups, request.user.is_superuser, request.path)
     return {"mainmenu": data, "version": VERSION}
