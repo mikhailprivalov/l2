@@ -195,7 +195,7 @@
       },
       researches_display() {
         let r = [];
-        if(this.type === '4') {
+        if(this.type.toString() === '4') {
           for(const d of Object.keys(this.$store.getters.researches)) {
             for(const row of this.$store.getters.researches[d]) {
               if(row.doc_refferal) {
