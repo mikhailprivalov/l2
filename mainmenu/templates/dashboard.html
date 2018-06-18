@@ -25,7 +25,7 @@
         {% for item in mainmenu %}
             {% if not item.not_show_home and not item.hr %}
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 mb10 dash-btn">
-                    <a href="{{ item.url }}"{% if line.nt %} target="_blank"{% endif %} class="panel-body">
+                    <a href="{{ item.url }}"{% if item.nt %} target="_blank"{% endif %} class="panel-body">
                         <span>{{ item.title }}</span>
                     </a>
                 </div>
