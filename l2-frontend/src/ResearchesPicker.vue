@@ -195,7 +195,6 @@
       },
       researches_display() {
         let r = [];
-        console.log(this.type, this.$store.getters.researches);
         if(this.type.toString() === '4') {
           for(const d of Object.keys(this.$store.getters.researches)) {
             for(const row of this.$store.getters.researches[d]) {
