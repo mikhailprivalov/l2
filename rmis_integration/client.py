@@ -777,7 +777,7 @@ class Directions(BaseRequester):
                             sended_codes = []
                             for x in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction):
                                 code = x.field.group.research.code
-                                if code in sended_codes:
+                                if code in sended_codes or code.strip() == "":
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
@@ -802,42 +802,45 @@ class Directions(BaseRequester):
                                     xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>", "")\
                                         .replace("<font>", "").replace("</font>", "")
                                     self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
-                            for x in Result.objects.filter(issledovaniye__napravleniye=direction):
+                                    RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
+                            for x in Result.objects.filter(issledovaniye__napravleniye=direction).distinct():
                                 code = x.fraction.research.code
                                 if code in sended_codes:
                                     continue
-                                service_rend_id = sended_ids.get(code, None)
-                                sended_codes.append(code)
-                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
-                                                                              service_rend_id, stdout, x)
-                                if ssd is not None and x.fraction.research.pk not in sended_researches:
-                                    RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
-                                    self.main_client.rendered_services.delete_service(service_rend_id)
-                                    sended_researches.append(x.fraction.research.pk)
-                                    if stdout:
-                                        stdout.write("DATA: " + str(send_data))
-                                    ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                    xresult = ""
-                                    for y in Result.objects.filter(issledovaniye__napravleniye=direction,
-                                                                   fraction__research=x.fraction.research).order_by(
-                                            "fraction__sort_weight"):
-                                        xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace(
-                                            "{{значение}}", y.value).replace("{{едизм}}", y.get_units())
-                                    xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
-                                                                                                         "").replace(
-                                        "</font>", "")
-                                    if x.issledovaniye.get_analyzer() != "":
-                                        xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}",
-                                                                                                             x.issledovaniye.get_analyzer()).replace(
-                                            "{{едизм}}", "")
-                                    if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
-                                        xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace(
-                                            "{{значение}}",
-                                            x.issledovaniye.lab_comment).replace(
-                                            "{{едизм}}", "")
-                                    self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
+                                if code.strip() != "":
+                                    service_rend_id = sended_ids.get(code, None)
+                                    sended_codes.append(code)
+                                    send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
+                                                                                  service_rend_id, stdout, x)
+                                    if ssd is not None and x.fraction.research.pk not in sended_researches:
+                                        RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
+                                        self.main_client.rendered_services.delete_service(service_rend_id)
+                                        sended_researches.append(x.fraction.research.pk)
+                                        if stdout:
+                                            stdout.write("DATA: " + str(send_data))
+                                        ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
+                                        xresult = ""
+                                        for y in Result.objects.filter(issledovaniye__napravleniye=direction,
+                                                                       fraction__research=x.fraction.research).order_by(
+                                                "fraction__sort_weight"):
+                                            xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace(
+                                                "{{значение}}", y.value).replace("{{едизм}}", y.get_units())
+                                        xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
+                                                                                                             "").replace(
+                                            "</font>", "")
+                                        if x.issledovaniye.get_analyzer() != "":
+                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}",
+                                                                                                                 x.issledovaniye.get_analyzer()).replace(
+                                                "{{едизм}}", "")
+                                        if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
+                                            xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace(
+                                                "{{значение}}",
+                                                x.issledovaniye.lab_comment).replace(
+                                                "{{едизм}}", "")
+                                        self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
+                                        RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                                 code = x.fraction.code
-                                if code in sended_codes:
+                                if code in sended_codes or code.strip() == "":
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
