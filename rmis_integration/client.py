@@ -807,6 +807,7 @@ class Directions(BaseRequester):
                                 code = x.fraction.research.code
                                 if code in sended_codes:
                                     continue
+
                                 if code.strip() != "":
                                     service_rend_id = sended_ids.get(code, None)
                                     sended_codes.append(code)
@@ -844,7 +845,8 @@ class Directions(BaseRequester):
                                     continue
                                 service_rend_id = sended_ids.get(code, None)
                                 sended_codes.append(code)
-                                ssd = self.main_client.services.get_service_id(code)
+                                send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
+                                                                              service_rend_id, stdout, x)
                                 if ssd is not None:
                                     if stdout:
                                         stdout.write("SR2: " + str(service_rend_id))
