@@ -1029,8 +1029,11 @@ class Directions(BaseRequester):
 
         uploaded_results = []
         if not without_results:
+            upload_lt = timezone.now() - \
+                        datetime.timedelta(hours=Settings.get("upload_hours_interval", default="8", default_type="i"))
             to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date,
                                                     issledovaniya__time_confirmation__isnull=False,
+                                                    issledovaniya__time_confirmation__lt=upload_lt,
                                                     rmis_number__isnull=False,
                                                     result_rmis_send=False) \
                 .exclude(rmis_number="NONERMIS") \
