@@ -189,6 +189,7 @@ class IstochnikiFinansirovaniya(models.Model):
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
+    rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
 
     def __str__(self):
@@ -267,6 +268,8 @@ class Napravleniya(models.Model):
     imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
     imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
     imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк')
+    force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
+    forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
@@ -338,6 +341,7 @@ class Napravleniya(models.Model):
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
+        ofname_id = ofname_id or -1
         ofname = None
         if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
             result["message"] = "Недостаточно прав для создания направлений"

@@ -801,3 +801,9 @@ def rmq_send(request):
     from mq.publisher import mq_send
     mq_send("updated", "{}.models.{}".format(model[0], model[1]), str(request.GET["pk"]))
     return JsonResponse({"ok": True})
+
+
+@login_required
+@group_required("Подтверждение отправки результатов в РМИС")
+def rmis_confirm(request):
+    return render(request, 'dashboard/rmis_confirm.html')

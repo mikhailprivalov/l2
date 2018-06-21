@@ -55,6 +55,16 @@
             font-weight: 700;
             src: local('Open Sans Bold'), local('OpenSans-Bold'), url('/static/fonts/OpenSans/OpenSans-Bold.ttf')
         }
+        body, html {
+            min-height: 100%;
+        }
+        body {
+            background: #f2f2f2;
+            background: linear-gradient(to bottom, #fff, rgba(108, 122, 137, 0.04) 75%, rgba(108, 122, 137, 0.1) 100%);
+        }
+        table {
+            background: #fff;
+        }
     </style>
 
     <script src="{% static 'js/jquery.min.js' %}"></script>

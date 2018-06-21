@@ -1641,3 +1641,24 @@ def directions_rmis_direction(request):
             c = Client(modules=["directions", "services"])
             data = c.directions.get_direction_full_data(pk)
     return JsonResponse(data)
+
+
+@login_required
+@group_required("Подтверждение отправки результатов в РМИС")
+def rmis_confirm_list(request):
+    request_data = json.loads(request.body)
+    data = {"directions": []}
+    date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
+    d = directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False,
+                                               force_rmis_send=False,
+                                               issledovaniya__time_confirmation__range=(date_start, date_end))\
+        .exclude(issledovaniya__time_confirmation__isnull=True).distinct().order_by("pk")
+    data["directions"] = [{
+        "pk": x.pk,
+        "patient": {
+            "fiodr": x.client.individual.fio(full=True),
+            "card": x.client.number_with_type()
+        },
+        "fin": x.istochnik_f.title
+    } for x in d]
+    return JsonResponse(data)

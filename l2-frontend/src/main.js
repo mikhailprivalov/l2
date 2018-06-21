@@ -31,6 +31,7 @@ new Vue({
     'ResultsReport': () => import('./ResultsReport'),
     'RmqManagement': () => import('./RmqManagement'),
     'DirectionSteps': () => import('./DirectionSteps'),
+    'RmisConfirm': () => import('./RmisConfirm'),
     // loading,
   },
   data: {

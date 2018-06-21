@@ -45,6 +45,7 @@ urlpatterns = [
     path('receive/last_received', receivematerial.views.last_received),
     path('receive/history', receivematerial.views.receive_history),
     path('receive/journal', receivematerial.views.receive_journal),
+    path('rmis_confirm', views.rmis_confirm),
     path('rmq', staff_member_required(TemplateView.as_view(template_name="dashboard/rmq.html"))),
     path('rmq/messages', views.rmq_messages),
     path('rmq/count', views.rmq_count),

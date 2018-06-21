@@ -1039,6 +1039,7 @@ class Directions(BaseRequester):
                 .exclude(rmis_number="NONERMIS") \
                 .exclude(rmis_number="") \
                 .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
+                .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False) \
                 .distinct()
             cnt = to_upload.count()
             i = 0
