@@ -1491,25 +1491,47 @@ def directions_last_result(request):
     u = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
                                                 research__pk=research,
                                                 time_confirmation__isnull=True).order_by("-napravleniye__data_sozdaniya").first()
-
+    v = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
+                                                research__pk=research,
+                                                research__is_paraclinic=True,
+                                                time_confirmation__isnull=True,
+                                                napravleniye__visit_date__isnull=False).order_by("-napravleniye__visit_date").first()
     if i:
-        if not u or i.time_confirmation > u.napravleniye.data_sozdaniya:
+        if not u or i.time_confirmation >= u.napravleniye.data_sozdaniya:
             response["ok"] = True
-            response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
-                                "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
+            if v and v.napravleniye.visit_date > i.time_confirmation:
+                response["type"] = "visit"
+                response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                    "ts": tsdatetime(v.napravleniye.visit_date)}
+                response["has_last_result"] = True
+                response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                           "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
+            else:
+                response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                    "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
         elif u:
             response["ok"] = True
-            response["type"] = "direction"
-            response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
-                                "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
+            if v and v.napravleniye.visit_date > u.napravleniye.data_sozdaniya:
+                response["type"] = "visit"
+                response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                    "ts": tsdatetime(v.napravleniye.visit_date)}
+            else:
+                response["type"] = "direction"
+                response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                                    "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
             response["has_last_result"] = True
             response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
                                        "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
     elif u:
         response["ok"] = True
-        response["type"] = "direction"
-        response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
-                            "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
+        if v and v.napravleniye.visit_date > u.napravleniye.data_sozdaniya:
+            response["type"] = "visit"
+            response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                "ts": tsdatetime(v.napravleniye.visit_date)}
+        else:
+            response["type"] = "direction"
+            response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                                "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
     return JsonResponse(response)
 
 

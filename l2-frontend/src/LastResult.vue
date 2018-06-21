@@ -1,5 +1,5 @@
 <template>
-  <tr v-show="ok" :class="{warn: warn, direction: type === 'direction'}">
+  <tr v-show="ok" :class="{warn: warn, direction: type === 'direction', visit: type === 'visit'}">
     <td>{{researche_title}}</td>
     <td v-if="in_load" colspan="3">поиск результата или назначения...</td>
     <td v-if="!in_load && type === 'result'">
@@ -7,7 +7,15 @@
     </td>
     <td v-if="!in_load && type === 'direction'" colspan="3">
       <a href="#" @click.prevent="show_direction">просмотр направления ({{date}})</a><br/>
-      Направление без результата уже создано.
+      Направление без результата.
+      <div v-if="has_last_result">
+        <hr style="margin: 5px 0"/>
+        <a href="#" @click.prevent="show_result">последний результат ({{last_result.datetime}})</a>
+      </div>
+    </td>
+    <td v-if="!in_load && type === 'visit'" colspan="3">
+      {{date}} посещение по направлению без результата.<br/>
+      <a href="#" @click.prevent="show_direction">просмотр направления</a>
       <div v-if="has_last_result">
         <hr style="margin: 5px 0"/>
         <a href="#" @click.prevent="show_result">последний результат ({{last_result.datetime}})</a>
@@ -147,6 +155,10 @@
         color: #fff !important;
       }
     }
+  }
+
+  .visit {
+    background-color: #4dacff;
   }
 
   :not(.warn) td hr {
