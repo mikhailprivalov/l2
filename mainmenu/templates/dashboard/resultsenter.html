@@ -166,7 +166,7 @@
             <div class="not-loaded" style="padding: 20px;color: #9d9d9d;text-align: center">Ничего не загружено</div>
             <div id="empty-dir-for-lab" style="padding: 20px;color: #9d9d9d;text-align: left;display: none">
                 Нет исследований для выбранной лаборатории.<br/><br/>
-                Лаборатории в направлении:
+                Назначения в направлении:
                 <ul></ul>
             </div>
             <div class="alert alert-warning data-dir-changed" style="display: none;">
@@ -1445,6 +1445,9 @@
                 data: {id: id.trim(), type: type, lab_pk: lab_pk}
             }).done(function (data) {
                 hl();
+                if(data.msg) {
+                    alert(data.msg);
+                }
                 if (!data.ok) {
                     $("#search-field").parent().addClass("has-error");
                     $('#search-field').tooltipster({
@@ -1525,7 +1528,11 @@
                     $('#empty-dir-for-lab').show()
                     if ('labs_objects' in data) {
                         for (const p of data.labs_objects) {
-                            $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}'>${p.title}</a></li>`)
+                            if(p.islab) {
+                                $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}'>${p.title}</a></li>`)
+                            } else {
+                                $('#empty-dir-for-lab ul').append(`<li>${p.title}</li>`)
+                            }
                         }
                     }
                 }

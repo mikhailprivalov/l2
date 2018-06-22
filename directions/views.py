@@ -887,7 +887,7 @@ def drawTituls(c, pages, page, paddingx, obj):
 def get_issledovaniya(request):
     """ Получение списка исследований и направления для ввода результатов"""
     import time
-    res = {"issledovaniya": [], "ok": False, "labs": [], "labs_objects": []}
+    res = {"issledovaniya": [], "ok": False, "labs": [], "labs_objects": [], "msg": None}
     if request.method == "GET":
         iss = []
         napr = None
@@ -933,13 +933,18 @@ def get_issledovaniya(request):
                 except Napravleniya.DoesNotExist:
                     napr = None
                     iss = []
+            mnext = False
             for i in Issledovaniya.objects.filter(napravleniye__pk=id):
                 po = i.research.podrazdeleniye
                 p = "" if not po else po.title
-                if p not in res["labs"]:
+                if p not in res["labs"] and po:
                     res["labs"].append(p)
-                    res["labs_objects"].append({"pk": po.pk, "title": p})
-            if len(iss) > 0:
+                    res["labs_objects"].append({"pk": po.pk, "title": p, "islab": po.p_type == 2})
+                if po and not i.research.is_paraclinic and not i.research.is_doc_refferal:
+                    mnext = True
+            if not mnext:
+                res["msg"] = "Направление %s не предназначено для лаборатории! Проверьте назначения и номер" % id
+            elif len(iss) > 0:
                 groups = {}
                 cnt = 0
                 researches_chk = []
