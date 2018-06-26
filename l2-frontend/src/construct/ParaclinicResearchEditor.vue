@@ -26,7 +26,7 @@
     <div class="content-editor">
       <div class="input-group">
         <span class="input-group-addon">Подготовка, кабинет</span>
-        <input type="text" class="form-control" v-model="info">
+        <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
       <div v-for="group in ordered_groups" class="group">
         <div class="input-group">
@@ -384,7 +384,7 @@
             vm.title = data.title
             vm.short_title = data.short_title
             vm.code = data.code
-            vm.info = data.info
+            vm.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
             vm.hide = data.hide
             vm.loaded_pk = vm.pk
             vm.groups = data.groups
@@ -408,7 +408,7 @@
       save() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info, vm.hide, vm.groups).then(() => {
+        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups).then(() => {
           vm.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()

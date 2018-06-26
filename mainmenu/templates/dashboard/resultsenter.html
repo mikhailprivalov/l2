@@ -1621,7 +1621,7 @@
         }
         function fix_signs(input) {
             if (/^([<>])\s*\d+$/g.test(input)) {
-                input = input.replace(">", "&gt;").replace("<", "&lt;");
+                input = input.replace(/>/g, "&gt;").replace(/</g, "&lt;");
             }
             return input;
         }

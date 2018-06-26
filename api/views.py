@@ -1085,7 +1085,7 @@ def statistics_tickets_types(request):
 def statistics_tickets_send(request):
     response = {"ok": True}
     rd = json.loads(request.body)
-    ofname = rd.get("ofname", -1)
+    ofname = rd.get("ofname") or -1
     doc = None
     if ofname > -1 and users.DoctorProfile.objects.filter(pk=ofname).exists():
         doc = users.DoctorProfile.objects.get(pk=ofname)

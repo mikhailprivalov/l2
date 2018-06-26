@@ -281,7 +281,7 @@
                 const sym = String.fromCharCode(e.which)
                 if (isNaN(sym)) return
                 input_buffer_scan += sym
-                input_buffer_scan = input_buffer_scan.replace('\n', '').trim()
+                input_buffer_scan = input_buffer_scan.replaceAll('\n', '').trim()
                 bar_scanner(input_buffer_scan)
                 if (input_buffer_scan.length === 13 && input_buffer_scan.substr(0, 3) === '460') {
                     //console.log("ok");

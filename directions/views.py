@@ -27,6 +27,7 @@ from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strtime
 from podrazdeleniya.models import Podrazdeleniya
+from utils import xh
 from utils.dates import try_parse_range
 
 w, h = A4
@@ -376,8 +377,8 @@ def printDirection(c, n, dir):
         values.sort(key=lambda l: l["full_title"])
 
         for v in values:
-            tmp = [Paragraph('<font face="OpenSans" size="8">' + v["full_title"] + "</font>", styleSheet["BodyText"]),
-                   Paragraph('<font face="OpenSans" size="8">' + v["info"] + "</font>", styleSheet["BodyText"])]
+            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + "</font>", styleSheet["BodyText"]),
+                   Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"])]
             data.append(tmp)
         m = 8
     else:

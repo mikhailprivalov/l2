@@ -8,7 +8,9 @@ import { Steps, Step } from 'element-ui'
 import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
+import VueAutosize from 'vue-autosize';
 
+Vue.use(VueAutosize)
 Vue.use(VueTippy)
 Vue.use(Steps)
 Vue.use(Step)
