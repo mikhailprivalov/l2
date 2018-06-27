@@ -275,7 +275,9 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     d.add(barcode)
     paddingx = 15
     ac = dir.is_all_confirm()
-    if ac or dir.cancel:
+    canc = dir.cancel
+    visit = dir.visit_date is not None
+    if ac or canc or visit:
         c.saveState()
         c.setFillColorRGB(0, 0, 0, 0.2)
         c.rotate(45)
@@ -292,10 +294,12 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             ox = w + 9.25 * mm
             oy = h / 2 - 30 * mm - h/4
         c.setFont('OpenSansBold', 50)
-        # if xn == yn == 0:
-        #     ox -= 150 * mm
-        #     oy += 75 * mm
-        c.drawString(ox, oy, 'ИСПОЛНЕНО' if ac else 'ОТМЕНЕНО')#"%s__%s_%s" % (dir.pk, xn, yn))
+        s = 'ОТМЕНЕНО'
+        if ac:
+            s = 'ИСПОЛНЕНО'
+        elif visit:
+            s = 'ПОСЕЩЕНО'
+        c.drawString(ox, oy, s)
         c.restoreState()
 
     c.setFont('OpenSans', 10)
