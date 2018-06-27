@@ -262,7 +262,7 @@ def framePage(canvas):
     canvas.line(0, h / 2, w, h / 2)
 
 
-def printDirection(c, n, dir):
+def printDirection(c: Canvas, n, dir: Napravleniya):
     xn = 0
     if n % 2 != 0: xn = 1
     yn = 0
@@ -274,6 +274,29 @@ def printDirection(c, n, dir):
     d = Drawing(width, height)
     d.add(barcode)
     paddingx = 15
+    ac = dir.is_all_confirm()
+    if ac or dir.cancel:
+        c.saveState()
+        c.setFillColorRGB(0, 0, 0, 0.2)
+        c.rotate(45)
+        if xn == 0 and yn == 1:
+            ox = w / 2 + 40 * mm
+            oy = h / 2 - 30 * mm
+        elif xn == 0 and yn == 0:
+            ox = w/2 - 65 * mm
+            oy = 13.5 * mm
+        elif xn == 1 and yn == 0:
+            ox = w - 95.75 * mm
+            oy = 13.5 * mm - h/4
+        else:
+            ox = w + 9.25 * mm
+            oy = h / 2 - 30 * mm - h/4
+        c.setFont('OpenSansBold', 50)
+        # if xn == yn == 0:
+        #     ox -= 150 * mm
+        #     oy += 75 * mm
+        c.drawString(ox, oy, 'ИСПОЛНЕНО' if ac else 'ОТМЕНЕНО')#"%s__%s_%s" % (dir.pk, xn, yn))
+        c.restoreState()
 
     c.setFont('OpenSans', 10)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 5) + (h / 2) * yn,
