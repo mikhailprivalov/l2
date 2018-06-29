@@ -962,7 +962,7 @@ def get_issledovaniya(request):
                     napr = None
                     iss = []
             mnext = False
-            for i in Issledovaniya.objects.filter(napravleniye__pk=id):
+            for i in Issledovaniya.objects.filter(napravleniye=napr):
                 po = i.research.podrazdeleniye
                 p = "" if not po else po.title
                 if p not in res["labs"] and po:
