@@ -9,6 +9,7 @@ import clients.models as Clients
 import directory.models as directory
 import slog.models as slog
 import users.models as umodels
+import cases.models as cases
 from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
@@ -270,6 +271,8 @@ class Napravleniya(models.Model):
     imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк')
     force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
     forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
+
+    case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (

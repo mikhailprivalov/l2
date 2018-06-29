@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'reports',
     'mq.apps.MqConfig',
+    'cases.apps.CasesConfig',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',

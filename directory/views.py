@@ -282,7 +282,7 @@ def directory_researches_group(request):
     if request.method == "GET":
         return_result = {"researches": []}
         gid = int(request.GET["gid"])
-        researches = Researches.objects.all()
+        researches = Researches.objects.filter(podrazdeleniye__isnull=False)
         if request.GET["lab"] != "-1":
             researches = researches.filter(podrazdeleniye__pk=request.GET["lab"]).order_by("title", "podrazdeleniye", "hide")
 

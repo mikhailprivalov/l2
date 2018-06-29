@@ -2,8 +2,14 @@ from django.contrib import admin
 from .models import IstochnikiFinansirovaniya, Napravleniya, TubesRegistration, Issledovaniya, Result, \
     FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive
 
-admin.site.register(IstochnikiFinansirovaniya)  # Активация формы добавления и изменения источников финансировнаия
-admin.site.register(Napravleniya)
+admin.site.register(IstochnikiFinansirovaniya)
+
+
+@admin.register(Napravleniya)
+class CardAdmin(admin.ModelAdmin):
+    raw_id_fields = ('client',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Issledovaniya)
 admin.site.register(Result)

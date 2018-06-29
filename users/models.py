@@ -3,6 +3,18 @@ from django.contrib.auth.models import User
 from podrazdeleniya.models import Podrazdeleniya
 
 
+class Speciality(models.Model):
+    title = models.CharField(max_length=255, help_text='Название')
+    hide = models.BooleanField(help_text='Скрытие')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Специальность'
+        verbose_name_plural = 'Специальности'
+
+
 class DoctorProfile(models.Model):
     """
     Профили врачей
@@ -13,6 +25,7 @@ class DoctorProfile(models.Model):
         (2, "Лаборант"),
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
+    specialities = models.ManyToManyField(Speciality, blank=True, default=None, help_text='Специальности пользователя')
     fio = models.CharField(max_length=255, help_text='ФИО')
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
