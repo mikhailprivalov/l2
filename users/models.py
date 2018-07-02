@@ -1,11 +1,18 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import User
 from podrazdeleniya.models import Podrazdeleniya
 
 
 class Speciality(models.Model):
+    SPEC_TYPES = (
+        (0, 'Консультации'),
+    )
+
     title = models.CharField(max_length=255, help_text='Название')
     hide = models.BooleanField(help_text='Скрытие')
+    spec_type = models.SmallIntegerField(choices=SPEC_TYPES, help_text='Тип специальности', default=0)
 
     def __str__(self):
         return self.title
@@ -30,6 +37,14 @@ class DoctorProfile(models.Model):
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
+    login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
+
+    def get_login_id(self):
+        if not self.login_id:
+            self.login_id = uuid.uuid4()
+            self.save()
+        c = '{:>5}'.format(self.pk) + self.login_id.hex[:5]
+        return c
 
     def get_fio(self, dots=True):
         """
@@ -37,6 +52,11 @@ class DoctorProfile(models.Model):
         :param dots:
         :return:
         """
+        def gfl(w: str, dots):
+            w = w.strip()
+            if not w.isdigit() and len(w) > 0:
+                w = w[0] + ("." if dots else "")
+            return w
         fio = self.fio.strip().replace("  ", " ").strip()
         fio_split = fio.split(" ")
 
@@ -48,9 +68,7 @@ class DoctorProfile(models.Model):
         if len(fio_split) > 3:
             fio_split = [fio_split[0], " ".join(fio_split[1:-2]), fio_split[-1]]
 
-        if dots:
-            return fio_split[0] + " " + fio_split[1][0] + "." + ("" if len(fio_split) == 2 else fio_split[2][0] + ".")
-        return fio_split[0] + " " + fio_split[1][0] + ("" if len(fio_split) == 2 else fio_split[2][0])
+        return fio_split[0] + " " + gfl(fio_split[1], dots) + ("" if len(fio_split) == 2 else gfl(fio_split[2], dots))
 
     def is_member(self, groups: list) -> bool:
         """

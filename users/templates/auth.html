@@ -19,14 +19,14 @@
                 <div class="panel panel-flt">
                     <div class="panel-body">
                         <input type="text" id="inputEmail" class="form-control input-lg" name='username'
-                               placeholder="Логин"
+                               placeholder="Логин или штрих-код"
                                value="{{ username }}" required autofocus style="border-bottom: none">
                         <input type="password" id="inputPassword" class="form-control input-lg" name='password'
-                               placeholder="Пароль"
-                               required>
+                               placeholder="Пароль">
                         <input name="next" type="hidden"
                                value="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% if next and next != "" %}{{ next }}{% else %}/mainmenu/{% endif %}{% endif %}"/>
                         <button class="btn btn-lg btn-primary-nb btn-block" type="submit">Вход</button>
+                        <button class="btn btn-reset btn-block" type="reset" onclick="$('#inputEmail').focus()">Очистить форму</button>
                     </div>
                 </div>
             </form>
@@ -34,6 +34,12 @@
                 <div class="alert alert-danger alert-dismissable" role="alert" style="width: 450px">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     Неверный логин или пароль
+                </div>
+            {% endif %}
+            {% if message %}
+                <div class="alert alert-default alert-dismissable" role="alert" style="width: 450px">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    {{ message }}
                 </div>
             {% endif %}
         </div>
@@ -132,6 +138,11 @@
         .logo sup {
             font-size: 17px;
             top: -.15em;
+        }
+
+        .btn-reset {
+            background: #ccc;
+            border-color: #ccc;
         }
     </style>
 {% endblock %}

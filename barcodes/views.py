@@ -15,7 +15,9 @@ from reportlab.pdfgen import canvas
 import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
+from laboratory.decorators import group_required
 from laboratory.settings import FONTS_FOLDER
+from users.models import DoctorProfile
 
 pdfmetrics.registerFont(
     TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
@@ -60,7 +62,7 @@ def tubes(request, direction_implict_id=None):
                                                     {ord(a): ord(b) for a, b in zip(*symbols)})
 
     buffer = BytesIO()
-    pdfdoc.PDFInfo.title = 'Barcodes'
+    pdfdoc.PDFInfo.title = doctitle
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm), bottomup=barcode_type == "std")
     c.setTitle(doctitle)
     if istubes:
@@ -158,6 +160,33 @@ def tubes(request, direction_implict_id=None):
             barcode.drawOn(c, -3 * mm, 4 * mm)
 
             c.showPage()
+    c.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response
+
+
+@login_required
+@group_required("Создание и редактирование пользователей")
+def login(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="login.pdf"'
+
+    barcode_size = [int(x) for x in request.GET.get("barcode_size", "43x25").strip().split("x")]
+    pw, ph = barcode_size[0], barcode_size[1]
+
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm))
+
+    pk = int(request.GET.get("pk", "-1"))
+    u = DoctorProfile.objects.filter(user__pk=pk).first()
+    if u and (not u.user.is_staff or request.user.is_staff):
+        barcode = code128.Code128(u.get_login_id(), barHeight=ph * mm - 8 * mm, barWidth=0.265 * mm)
+        barcode.drawOn(c, -4 * mm, 6.1 * mm)
+        c.setFont('clacon', 15)
+        c.drawCentredString(pw * mm / 2, 2 * mm, u.get_fio(dots=False))
+    c.showPage()
     c.save()
     pdf = buffer.getvalue()
     buffer.close()

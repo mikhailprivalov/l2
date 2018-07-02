@@ -1,3 +1,5 @@
+import re
+
 import simplejson as json
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -19,6 +21,7 @@ def home(request):
         if 'next' in request.POST.keys():
             next = request.POST['next']
         user = authenticate(username=username, password=password)  # Аутинтификация
+        f1 = re.findall(r"^([ 0-9]{5})([0-9a-fA-F]{5})$", username)
         if user:  # Проверка на правильность введенных данных
             if user.is_active:  # Проверка активности профиля
                 login(request, user)  # Установка статуса авторизации в положительный
@@ -27,6 +30,16 @@ def home(request):
                 log.save()
             else:
                 return HttpResponse("Ваш аккаунт отключен")  # Сообщение об ошибке
+        elif len(password) == 0 and len(f1) == 1 and len(f1[0]) == 2:
+            did = int(f1[0][0])
+            u = DoctorProfile.objects.filter(pk=did).first()
+            if u and u.get_login_id() == username and u.user.is_active:
+                user = u.user
+                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                slog.Log(key=username, type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
+                         user=request.user.doctorprofile).save()
+            else:
+                return render(request, 'auth.html', {'error': True, 'username': username, 'message': user.get_login_id()})
         else:
             if settings.LDAP and settings.LDAP["enable"] and False:  # Проверка на наличие и активность настройки LDAP
                 s = Server(settings.LDAP["server"]["host"], port=settings.LDAP["server"]["port"],
