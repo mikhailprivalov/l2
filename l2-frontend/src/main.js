@@ -26,6 +26,7 @@ new Vue({
     'StatisticsTicketsPrintModal': () => import('./StatisticsTicketsPrintModal'),
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'Directions': () => import('./Directions'),
+    'Cases': () => import('./pages/Cases'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
     'ResultsParaclinic': () => import('./ResultsParaclinic'),
     'StatisticsTickets': () => import('./StatisticsTickets'),

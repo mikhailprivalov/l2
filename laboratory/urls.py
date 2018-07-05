@@ -35,6 +35,7 @@ urlpatterns = [
                   path('researches/get/one', researches.views.researches_get_one),
                   path('dashboard/', include('mainmenu.urls')),
                   path('mainmenu/', include('mainmenu.urls')),
+                  path('cases/', include('cases.urls')),
                   path('tubes/get', receivematerial.views.tubes_get),
                   path('results/', include('results.urls')),
                   path('statistic', statistic.views.statistic_page),

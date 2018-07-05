@@ -1,9 +1,8 @@
 {% extends "dbase.html" %}
-{% block title %}Направления{% endblock %}
+{% block title %}Случаи обслуживания{% endblock %}
 {% block container %}container-fluid{% endblock %}
 {% block extended_header2 %}
     <div class="fluid-nav">
-        <direction-steps/>
     </div>
 {% endblock %}
 {% block navbar_classes %}fluid-nav-cont{% endblock %}
@@ -11,7 +10,7 @@
 {% load static %}
 
 {% block content %}
-    <directions/>
+    <cases/>
 {% endblock %}
 
 {% block head_cn %}
@@ -31,7 +30,7 @@
         }
 
         .navbar {
-            margin-bottom: 3px;
+            margin-bottom: 0;
         }
 
 
