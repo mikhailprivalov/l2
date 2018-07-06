@@ -1,9 +1,9 @@
 <template>
   <div class="root">
-    <SelectedPatient/>
+    <SelectedPatient :card="selected_card"/>
     <div class="flex-columns">
       <div class="fixed-column">
-        <CardSearch/>
+        <CardSearch v-model="selected_card"/>
         <div class="column-header-w-btn">
           <div class="column-header-inner">Случаи</div>
 
@@ -47,7 +47,17 @@
     components: {SelectedPatient, CardSearch},
     data() {
       return {
-        directionQ: ''
+        directionQ: '',
+        selected_card: {
+          pk: -1,
+          num: '',
+          base: '',
+          is_rmis: false,
+          fio: '',
+          sex: '',
+          bd: '',
+          age: '',
+        }
       }
     }
   }

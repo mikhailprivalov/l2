@@ -1,8 +1,8 @@
 import {HTTP} from '../http-common'
 
-async function searchCard(t, query) {
+async function searchCard(type, query, list_all_cards = false) {
   try {
-    const response = await HTTP.post('patients/search-card', {type: t, query: query})
+    const response = await HTTP.post('patients/search-card', {type, query, list_all_cards})
     if (response.statusText === 'OK') {
       return response.data
     }

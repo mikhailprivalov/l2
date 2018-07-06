@@ -143,6 +143,35 @@
         this.emit_input()
       },
       emit_input() {
+        let pk = -1
+        if ('pk' in this.selected_card) {
+          pk = this.selected_card.pk
+        }
+        if(pk === -1) {
+          this.$emit('input', {
+            pk: -1,
+            num: '',
+            base: '',
+            base_pk: -1,
+            is_rmis: false,
+            fio: '',
+            sex: '',
+            bd: '',
+            age: '',
+          })
+          return
+        }
+        this.$emit('input', {
+          pk: pk,
+          num: this.selected_card.num,
+          base: this.selected_base.title,
+          base_pk: this.selected_base.pk,
+          is_rmis: this.selected_card.is_rmis,
+          fio: [this.selected_card.family, this.selected_card.name, this.selected_card.twoname].join(' ').trim(),
+          sex: this.selected_card.sex,
+          bd: this.selected_card.birthday,
+          age: this.selected_card.age,
+        })
       },
       check_base() {
         if (this.base === -1 && this.bases.length > 0) {
@@ -203,9 +232,9 @@
           $(this).trigger('blur')
         })
         let vm = this
+        vm.clear()
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query).then((result) => {
-          vm.clear()
+        patients_point.searchCard(this.base, this.query, true).then((result) => {
           if (result.results) {
             vm.founded_cards = result.results
             if (vm.founded_cards.length > 1) {

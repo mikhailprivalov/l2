@@ -455,6 +455,7 @@ def patients_search_card(request):
     data = []
     d = json.loads(request.body)
     card_type = CardBase.objects.get(pk=d['type'])
+    list_all_cards = d.get('list_all_cards', False)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')

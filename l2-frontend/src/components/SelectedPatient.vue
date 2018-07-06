@@ -1,30 +1,29 @@
 <template>
   <div class="top-root">
-    <div class="param"><strong>Выбранный пациент:</strong></div>
-    <div class="param">{{patient.fio}}</div>
-    <div class="param">{{patient.sex}}</div>
-    <div class="param">{{patient.age}}</div>
-    <div class="param">{{patient.bd}}</div>
+    <div class="param"><strong>Пациент:</strong></div>
+    <div class="param" v-if="card.pk === -1">
+      Не выбран
+    </div>
+    <div style="display: inline-block" v-else>
+      <div class="param">{{card.fio}}</div>
+      <div class="param">{{card.sex.toUpperCase()}}</div>
+      <div class="param">{{card.age}}</div>
+      <div class="param">{{card.bd}}</div>
+      <div class="param"><strong v-if="!card.is_rmis">Карта:</strong><strong v-else>РМИС ID:</strong></div>
+      <div class="param">{{card.num}}</div>
+      <div class="param" v-if="!card.is_rmis">{{card.base}}</div>
+    </div>
   </div>
 </template>
 
 <script>
   export default {
     name: 'SelectedPatient',
-    data() {
-      return {
-        patient: {
-          fio: 'Иванов Иван Иванович',
-          sex: 'М',
-          bd: '24.01.1997',
-          age: '21 год',
-        },
-        card: {
-          category: 'Поликлиника',
-          num: '22293',
-        }
-      }
-    }
+    props: {
+      card: {
+        type: Object,
+      },
+    },
   }
 </script>
 
