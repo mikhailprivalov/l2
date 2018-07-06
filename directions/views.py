@@ -467,7 +467,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
             c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
-                         "Выписал: %s, %s" % (dir.doc_who_create.get_fio(), Truncator(dir.doc_who_create.podrazdeleniye.title).chars(39)))
+                         Truncator("Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title).chars(62)))
         c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(45))
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     else:
