@@ -36,13 +36,12 @@
         <table class="table table-bordered floatThead ct" id="log_table">
             <thead>
             <tr>
-                <th class="col-xs-1">ID записи</th>
-                <th class="col-xs-1">ФИО</th>
-                <th class="col-xs-1">ID user</th>
-                <th class="col-xs-3">Вид действия</th>
-                <th class="col-xs-2">Ключ объекта</th>
-                <th class="col-xs-2">Данные действия</th>
-                <th>Дата, время</th>
+                <th style="width: 100px">ID записи</th>
+                <th style="width: 130px">Пользователь</th>
+                <th style="width: 340px">Вид действия</th>
+                <th style="width: 180px">Ключ объекта</th>
+                <th>Данные действия</th>
+                <th style="width: 150px">Дата, время</th>
             </tr>
             </thead>
             <tbody>
@@ -57,9 +56,9 @@
         let loaded = -1
         let last_n = 0
         let n = 0
-        const loadmore = '<tr class="loadmore"><td colspan="7" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>'
-        const end = '<tr><td colspan="7" style="text-align: center">Конец</td></tr>'
-        const loading = `<tr class="loading"><td colspan="7" style="text-align: center"><div class="loading_dots"><div>Загрузка</div>
+        const loadmore = '<tr class="loadmore"><td colspan="6" style="text-align: center"><a href="#" onclick="loadlog(loaded + 1);return false;">Загрузить еще</a></td></tr>'
+        const end = '<tr><td colspan="6" style="text-align: center">Конец</td></tr>'
+        const loading = `<tr class="loading"><td colspan="6" style="text-align: center"><div class="loading_dots"><div>Загрузка</div>
   <span></span>
   <span></span>
   <span></span>
@@ -118,7 +117,6 @@
                     $('#log_table tbody').prepend('<tr>' +
                         '<td>{0}</td>'.f(v.id) +
                         '<td>{0}</td>'.f(v.user_fio) +
-                        '<td>{0}</td>'.f(v.user_pk) +
                         '<td>{0}</td>'.f(v.type) +
                         '<td><pre>{0}</pre></td>'.f(dkey) +
                         '<td><pre>{0}</pre></td>'.f(dbody) +
@@ -170,7 +168,6 @@
                     $('#log_table tbody').append('<tr>' +
                         '<td>{0}</td>'.f(v.id) +
                         '<td>{0}</td>'.f(v.user_fio) +
-                        '<td>{0}</td>'.f(v.user_pk) +
                         '<td>{0}</td>'.f(v.type) +
                         '<td class="np"><pre>{0}</pre></td>'.f(dkey) +
                         '<td class="np"><pre>{0}</pre></td>'.f(dbody) +
