@@ -39,7 +39,7 @@ def home(request):
                 slog.Log(key=username, type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
                          user=request.user.doctorprofile).save()
             else:
-                return render(request, 'auth.html', {'error': True, 'username': username, 'message': user.get_login_id()})
+                return render(request, 'auth.html', {'error': True, 'username': username, 'message': 'Ошибка'})
         else:
             if settings.LDAP and settings.LDAP["enable"] and False:  # Проверка на наличие и активность настройки LDAP
                 s = Server(settings.LDAP["server"]["host"], port=settings.LDAP["server"]["port"],
