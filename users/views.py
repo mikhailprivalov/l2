@@ -36,7 +36,7 @@ def home(request):
             if u and u.get_login_id() == username and u.user.is_active:
                 user = u.user
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-                slog.Log(key=username, type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
+                slog.Log(key='По штрих-коду', type=18, body="IP: {0}".format(slog.Log.get_client_ip(request)),
                          user=request.user.doctorprofile).save()
             else:
                 return render(request, 'auth.html', {'error': True, 'username': username, 'message': 'Ошибка'})
