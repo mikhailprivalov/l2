@@ -2,15 +2,20 @@
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
       <div class="input-group">
-        <div class="input-group-btn">
+        <div class="input-group-btn" v-if="bases.length > 1">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
                   style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
           </button>
           <ul class="dropdown-menu">
-            <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk"><a href="#"
-                                                                                                        @click.prevent="select_base(row.pk)">{{row.title}}</a>
+            <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk">
+              <a href="#" @click.prevent="select_base(row.pk)">{{row.title}}</a>
             </li>
           </ul>
+        </div>
+        <div class="input-group-btn" v-else>
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
+                  style="max-width: 200px;text-align: left!important;">{{selected_base.title}}
+          </button>
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
@@ -229,7 +234,7 @@
     },
     computed: {
       bases() {
-        return this.$store.getters.bases
+        return this.$store.getters.bases.filter(b => !b.hide)
       },
       selected_base() {
         for (let b of this.bases) {

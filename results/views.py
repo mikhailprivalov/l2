@@ -567,10 +567,12 @@ def result_print(request):
                 date_t = strdate(iss.tubes.first().time_get)
             if iss.research.is_paraclinic:
                 has_paraclinic = True
-
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
+
+        if not has_paraclinic and date_t == "":
+            date_t = maxdate
 
         fwb = []
         data = [
