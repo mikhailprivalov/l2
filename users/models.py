@@ -43,7 +43,7 @@ class DoctorProfile(models.Model):
         if not self.login_id:
             self.login_id = uuid.uuid4()
             self.save()
-        c = '{:>5}'.format(self.pk) + self.login_id.hex[:5]
+        c = '{:X>5}'.format(self.pk) + self.login_id.hex[:5]
         return c
 
     def get_fio(self, dots=True):

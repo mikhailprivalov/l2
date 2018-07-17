@@ -21,7 +21,7 @@ def home(request):
         if 'next' in request.POST.keys():
             next = request.POST['next']
         user = authenticate(username=username, password=password)  # Аутинтификация
-        f1 = re.findall(r"^([ 0-9]{5})([0-9a-fA-F]{5})$", username)
+        f1 = re.findall(r"^([ X0-9]{5})([0-9a-fA-F]{5})$", username)
         if user:  # Проверка на правильность введенных данных
             if user.is_active:  # Проверка активности профиля
                 login(request, user)  # Установка статуса авторизации в положительный
@@ -31,7 +31,7 @@ def home(request):
             else:
                 return HttpResponse("Ваш аккаунт отключен")  # Сообщение об ошибке
         elif len(password) == 0 and len(f1) == 1 and len(f1[0]) == 2:
-            did = int(f1[0][0])
+            did = int(f1[0][0].replace("X", ""))
             u = DoctorProfile.objects.filter(pk=did).first()
             if u and u.get_login_id() == username and u.user.is_active:
                 user = u.user
