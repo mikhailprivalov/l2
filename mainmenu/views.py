@@ -54,6 +54,8 @@ def view_log(request):
 def change_password(request):
     if request.method == "POST":
         doc = DoctorProfile.objects.get(pk=request.POST["pk"])
+        if not request.user.is_superuser:
+            doc = doc.filter(user__is_superuser=False)
         if request.POST.get("apply_groups") == "1":
             doc.user.groups.clear()
             for g in json.loads(request.POST.get("groups", "[]")) or []:
@@ -75,7 +77,10 @@ def change_password(request):
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
         otds[x.title] = []
-        for y in DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio'):
+        docs = DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio')
+        if not request.user.is_superuser:
+            docs = docs.filter(user__is_superuser=False)
+        for y in docs:
             otds[x.title].append(
                 {"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye.pk})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
