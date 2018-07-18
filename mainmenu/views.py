@@ -53,9 +53,10 @@ def view_log(request):
 @group_required("Создание и редактирование пользователей")
 def change_password(request):
     if request.method == "POST":
-        doc = DoctorProfile.objects.get(pk=request.POST["pk"])
         if not request.user.is_superuser:
-            doc = doc.filter(user__is_superuser=False)
+            doc = DoctorProfile.objects.get(pk=request.POST["pk"], user__is_superuser=False)
+        else:
+            doc = DoctorProfile.objects.get(pk=request.POST["pk"])
         if request.POST.get("apply_groups") == "1":
             doc.user.groups.clear()
             for g in json.loads(request.POST.get("groups", "[]")) or []:
