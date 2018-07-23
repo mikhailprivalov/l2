@@ -28,7 +28,7 @@ from utils.dates import try_parse_range
 @login_required
 def statistic_page(request):
     """ Страница статистики """
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)  # Лаборатории
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции")  # Лаборатории
     tubes = directory.Tubes.objects.all()  # Пробирки
     podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
@@ -822,7 +822,7 @@ def statistic_xls(request):
             row_num += 1
 
     elif tp == "all-labs":
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции")
         response['Content-Disposition'] = str.translate(
             "attachment; filename='Статистика_Все_Лаборатории_{0}-{1}.xls'".format(date_start_o, date_end_o), tr)
         ws = wb.add_sheet("Выполненых анализов")
@@ -951,7 +951,7 @@ def statistic_xls(request):
                     font_style.alignment.horz = 3
                 ws.write(row_num, col_num, row[col_num], font_style)
 
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции")
         for lab in labs:
             ws = wb.add_sheet(lab.title)
             font_style = xlwt.XFStyle()

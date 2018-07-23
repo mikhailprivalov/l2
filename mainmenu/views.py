@@ -158,7 +158,7 @@ def researches_control(request):
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции").order_by("title")
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
@@ -346,7 +346,7 @@ def results_history(request):
 @login_required
 @group_required("Лечащий врач", "Загрузка выписок", "Поиск выписок")
 def discharge(request):
-    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+    podr = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции")
 
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
     users = []
@@ -539,7 +539,7 @@ def dashboard_from(request):
     try:
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY):
+            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции"):
                 tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)

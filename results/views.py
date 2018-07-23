@@ -64,7 +64,7 @@ def results_search(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
     from podrazdeleniya.models import Podrazdeleniya
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции")
     return render(request, 'dashboard/results_search.html', {"labs": labs})
 
 
@@ -74,7 +74,7 @@ def enter(request):
     """ Представление для страницы ввода результатов """
     from podrazdeleniya.models import Podrazdeleniya
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).order_by("title")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции").order_by("title")
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
