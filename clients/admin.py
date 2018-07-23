@@ -24,7 +24,7 @@ class CardBaseAdmin(admin.ModelAdmin):
 
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
-    raw_id_fields = ('individual',)
+    raw_id_fields = ('individual', 'polis',)
 
 
 @admin.register(models.Phones)

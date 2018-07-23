@@ -153,8 +153,8 @@ class Client(object):
     def get_addr(self, address):
         return urllib.parse.urljoin(self.base_address, address)
 
-    def get_client(self, address_key: str) -> zeepClient:
-        address = Settings.get(address_key)
+    def get_client(self, address_key: str, default_path=None) -> zeepClient:
+        address = Settings.get(address_key, default_path)
         if address not in self.clients:
             self.clients[address] = zeepClient(self.get_addr(address),
                                                transport=Transport(session=self.session,
@@ -257,9 +257,9 @@ class Client(object):
 
 
 class BaseRequester(object):
-    def __init__(self, client: Client, client_path: str):
+    def __init__(self, client: Client, client_path: str, default_path=None):
         self.main_client = client
-        self.client = self.main_client.get_client(client_path).service
+        self.client = self.main_client.get_client(client_path, default_path).service
 
 
 class Directory(BaseRequester):
@@ -342,6 +342,42 @@ class Patients(BaseRequester):
             r = pickle.loads(r, encoding="utf8")
         self.polis_types_id_list = r["polis_types_id_list"]
         self.local_types = r["local_types"]
+        self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
+
+    def extended_data(self, uid):
+        d = self.smart_client.getPatient(uid)
+        return {} if d["error"] else d["patientCard"]
+
+    def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
+        if out:
+            out.write("Синхронизация карты. Получение данных из РМИС...")
+        data = self.extended_data(card.number)
+        if data:
+            if out:
+                out.write("Данные получены")
+            if 'contacts' in data:
+                ps = []
+                for c in data["contacts"]:
+                    if c["type"] not in ['2', '3', '6']:
+                        continue
+                    p = c["value"]
+                    card.add_phone(p)
+                    ps.append(p)
+                card.clear_phones(ps)
+            if 'addresses' in data:
+                for a in data['addresses']:
+                    if a["type"] != '3':
+                        continue
+                    addr = ', '.join([x['name'] for x in a['entries'] if x['type'] not in ['1', '2']]) + ', Дом ' + a['house']
+                    if a['apartment']:
+                        addr += ', ' + a['apartment']
+                    if card.main_address != addr:
+                        card.main_address = addr
+                        card.save()
+                    break
+        else:
+            if out:
+                out.write("Нет данных")
 
     def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "",
                            doc_number: str = ""):

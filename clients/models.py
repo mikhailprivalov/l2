@@ -4,7 +4,6 @@ from datetime import datetime, date
 import simplejson
 from django.core.management.base import OutputWrapper
 from django.db import models
-from django.utils import timezone
 
 import slog.models as slog
 
@@ -101,6 +100,8 @@ class Individual(models.Model):
                 out.write("Добавление РМИС карты -> %s" % s)
 
         if ok and rmis_uid != "":
+            card = Card.objects.filter(individual=self, base__is_rmis=True)[0]
+            c.patients.sync_card_data(card, out)
 
             def get_key(d: dict, val):
                 r = [key for key, v in d.items() if v == val]
