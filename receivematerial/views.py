@@ -31,7 +31,7 @@ def receive(request):
 
     if request.method == "GET":
         podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции").order_by("title")
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
         return render(request, 'dashboard/receive.html', {"labs": labs, "podrazdeleniya": podrazdeleniya})
     else:
         tubes = json.loads(request.POST["data"])
@@ -61,7 +61,7 @@ def receive(request):
 def receive_obo(request):
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk) if request.method == "GET" else request.POST.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     if request.method == "GET":
-        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организции").order_by("title")
+        labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
         if lab.p_type != Podrazdeleniya.LABORATORY:
             lab = labs[0]
         return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
