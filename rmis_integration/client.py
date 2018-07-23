@@ -358,7 +358,7 @@ class Patients(BaseRequester):
             if 'contacts' in data:
                 ps = []
                 for c in data["contacts"]:
-                    if c["type"] not in ['4', '3', '6']:
+                    if c["type"] not in ['2', '3', '6']:
                         continue
                     p = c["value"]
                     card.add_phone(p)
@@ -368,7 +368,7 @@ class Patients(BaseRequester):
                 for a in data['addresses']:
                     if a["type"] != '4':
                         continue
-                    addr = ', '.join([x['name'] for x in a['entries'] if x['type'] not in ['1', '2']]) + ', Дом ' + a['house']
+                    addr = ', '.join([x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53']]) + ', Дом ' + a['house']
                     if a['apartment']:
                         addr += ', ' + a['apartment']
                     if card.main_address != addr:
