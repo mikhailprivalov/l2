@@ -366,7 +366,7 @@ class Patients(BaseRequester):
                 card.clear_phones(ps)
             if 'addresses' in data:
                 for a in data['addresses']:
-                    if a["type"] != '3':
+                    if a["type"] != '4':
                         continue
                     addr = ', '.join([x['name'] for x in a['entries'] if x['type'] not in ['1', '2']]) + ', Дом ' + a['house']
                     if a['apartment']:
