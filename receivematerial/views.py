@@ -59,10 +59,14 @@ def receive(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_obo(request):
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk) if request.method == "GET" else request.POST.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    lpk = int(request.GET.get("lab_pk", -2) if request.method == "GET" else request.POST.get("lab_pk", -2))
+    if lpk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lpk)
+    else:
+        lab = {"title": "Все лаборатории", "pk": lpk}
     if request.method == "GET":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-        if lab.p_type != Podrazdeleniya.LABORATORY:
+        if lpk >= 0 and lab.p_type != Podrazdeleniya.LABORATORY:
             lab = labs[0]
         return render(request, 'dashboard/receive_one-by-one.html', {"labs": labs, "lab": lab})
     ret = []
@@ -79,7 +83,7 @@ def receive_obo(request):
             if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
                 tube = TubesRegistration.objects.get(pk=p)
                 if tube.getstatus(one_by_one=True):
-                    if tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
+                    if lpk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
                         tube.clear_notice(request.user.doctorprofile)
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
@@ -108,9 +112,20 @@ def receive_history(request):
     result = {"rows": []}
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
-    for row in TubesRegistration.objects.filter(time_recive__range=(date1, date2),
-                                                doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab).order_by("-daynum").distinct():
+    lpk = int(request.GET.get("lab_pk", -2))
+
+    if lpk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lpk)
+    else:
+        lab = {"title": "Все лаборатории", "pk": lpk}
+
+    t = TubesRegistration.objects.filter(time_recive__range=(date1, date2),
+                                         doc_recive=request.user.doctorprofile)
+
+    if lpk >= 0:
+        t = t.filter(issledovaniya__research__podrazdeleniye=lab)
+
+    for row in t.order_by("-daynum").distinct():
         result["rows"].append(
             {"pk": row.pk, "n": row.daynum or 0, "type": str(row.type.tube), "color": row.type.tube.color,
              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)]})
@@ -124,13 +139,21 @@ def last_received(request):
     from django.utils import datetime_safe
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
     last_num = 0
+
+    lpk = int(request.GET.get("lab_pk", -2))
+    f = {}
+    if lpk >= 0:
+        lab = Podrazdeleniya.objects.get(pk=lpk)
+        f = {"issledovaniya__research__podrazdeleniye": lab}
+    else:
+        lab = {"title": "Все лаборатории", "pk": lpk}
+
     if TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab).exists():
+                                        doc_recive=request.user.doctorprofile, **f).exists():
         last_num = max([x.daynum for x in
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), daynum__gt=0,
-                                        doc_recive=request.user.doctorprofile, issledovaniya__research__podrazdeleniye=lab)])
+                                        doc_recive=request.user.doctorprofile, **f)])
     return JsonResponse({"last_n": last_num})
 
 

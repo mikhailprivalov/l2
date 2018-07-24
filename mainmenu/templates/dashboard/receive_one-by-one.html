@@ -6,6 +6,7 @@
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ lab.title }} <b class="caret"></b></a>
             <ul class="dropdown-menu" role="menu" style="z-index: 10000">
+                <li><a href="/mainmenu/receive/one_by_one?lab_pk=-2">Все лаборатории</a></li>
                 {% for v in labs %}
                     {% if v.pk != lab.pk %}
                     <li><a href="/mainmenu/receive/one_by_one?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
