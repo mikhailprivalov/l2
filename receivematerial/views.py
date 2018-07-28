@@ -83,18 +83,26 @@ def receive_obo(request):
             if TubesRegistration.objects.filter(pk=p).exists() and Issledovaniya.objects.filter(tubes__id=p).exists():
                 tube = TubesRegistration.objects.get(pk=p)
                 if tube.getstatus(one_by_one=True):
+                    podrs = sorted(
+                        list(set([x.research.podrazdeleniye.get_title() for x in tube.issledovaniya_set.all()])))
                     if lpk < 0 or tube.issledovaniya_set.first().research.get_podrazdeleniye() == lab:
                         tube.clear_notice(request.user.doctorprofile)
                         status = tube.day_num(request.user.doctorprofile, int(request.POST["num"]))
                         result = {"pk": p, "r": 1, "n": status["n"], "new": status["new"],
+                                  "labs": podrs,
                                   "receivedate": strdate(tube.time_recive),
                                   "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=p)]}
                     else:
-                        result = {"pk": p, "r": 2, "lab": str(tube.issledovaniya_set.first().research.get_podrazdeleniye())}
+                        result = {"pk": p, "r": 2, "labs": podrs}
                 else:
-                    otd = tube.issledovaniya_set.first().napravleniye.doc.podrazdeleniye
-                    if tube.issledovaniya_set.first().napravleniye.doc_who_create:
-                        otd = tube.issledovaniya_set.first().napravleniye.doc_who_create.podrazdeleniye
+                    n = tube.issledovaniya_set.first().napravleniye
+                    dw = n.doc or n.doc_who_create
+                    if dw:
+                        otd = dw.podrazdeleniye
+                        if n.doc_who_create:
+                            otd = n.doc_who_create.podrazdeleniye
+                    else:
+                        otd = ''
                     result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
             else:
                 result = {"pk": p, "r": 3}
@@ -126,8 +134,10 @@ def receive_history(request):
         t = t.filter(issledovaniya__research__podrazdeleniye=lab)
 
     for row in t.order_by("-daynum").distinct():
+        podrs = sorted(list(set([x.research.podrazdeleniye.get_title() for x in row.issledovaniya_set.all()])))
         result["rows"].append(
             {"pk": row.pk, "n": row.daynum or 0, "type": str(row.type.tube), "color": row.type.tube.color,
+             "labs": podrs,
              "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__id=row.id)]})
     return JsonResponse(result)
 

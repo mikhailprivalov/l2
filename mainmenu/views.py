@@ -157,9 +157,13 @@ def researches_control(request):
 @login_required
 @group_required("Получатель биоматериала")
 def receive_journal_form(request):
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    p = request.GET.get("lab_pk")
+    if p != '-2':
+        lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye.pk)
+    else:
+        lab = None
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
-    if lab.p_type != Podrazdeleniya.LABORATORY:
+    if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")

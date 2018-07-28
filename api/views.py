@@ -1634,7 +1634,7 @@ def directions_results_report(request):
 def mkb10(request):
     kw = request.GET.get("keyword", "")
     data = []
-    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:10]:
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
 

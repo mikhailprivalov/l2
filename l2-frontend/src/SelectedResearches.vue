@@ -3,8 +3,9 @@
     <div class="top-picker">
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз"><span>&times;</span>
       </button>
-      <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" ref="d" placeholder="Диагноз (МКБ 10)"
+      <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
                  v-model="diagnos" maxlength="36" :delayTime="delayTime" :minChars="minChars"
+                 :render="renderItems"
                  :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
       />
       <div class="top-inner">
@@ -131,7 +132,7 @@
         hide_window_update: false,
         delayTime: 300,
         minChars: 1,
-        limit: 10,
+        limit: 11,
         selectFirst: true,
       }
     },
@@ -179,6 +180,23 @@
         }
       },
       diagnos() {
+        if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.diagnos)) {
+          this.diagnos = this.diagnos.toUpperCase()
+          const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
+            'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
+            'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю']
+
+          const search = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\[', '\\]',
+            'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
+            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '\\.']
+
+          for (let i = 0; i < replace.length; i++) {
+            let reg = new RegExp(replace[i], 'mig')
+            this.diagnos = this.diagnos.replace(reg, function (a) {
+              return a === a.toLowerCase() ? search[i] : search[i].toUpperCase()
+            })
+          }
+        }
         this.$root.$emit('update_diagnos', this.diagnos)
       },
       fin() {
@@ -201,13 +219,13 @@
         this.need_update_comment = []
         this.hide_window()
       },
-      getResponse(resp) {
-        let r = []
-        for (let d of resp.data.data) {
-          r.push(d.code)
-        }
-        return r
+      onHit(item) {
+        this.diagnos = item.split(' ')[0] || ''
       },
+      getResponse(resp) {
+        return [...resp.data.data];
+      },
+      renderItems: (items) => items.map(i => `${i.code} ${i.title}`),
       get_def_diagnosis(fin) {
         fin = fin || this.fin;
         return (this.main_diagnosis + ' ' + this.get_fin_obj(fin).default_diagnos).trim()
@@ -216,7 +234,6 @@
         this.diagnos = this.get_def_diagnosis()
       },
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
-      render: (items, vue) => [vue.diagnos, ...items],
       hide_window() {
         this.hide_window_update = true
         this.$refs.modal.$el.style.display = 'none'
@@ -326,7 +343,7 @@
   }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .top-picker, .bottom-picker {
     height: 34px;
     background-color: #AAB2BD;
@@ -381,6 +398,22 @@
 
   .top-picker /deep/ .input-group {
     border-radius: 0;
+  }
+
+  .top-picker /deep/ ul {
+    width: auto;
+    right: -250px;
+    font-size: 13px;
+  }
+
+  .top-picker /deep/ ul li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+    a {
+      padding: 2px 10px;
+    }
   }
 
   .top-inner-select {

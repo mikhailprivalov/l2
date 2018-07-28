@@ -71,13 +71,22 @@
     <h5><small class="fastlinks" style="display: inline-block;float: right"><a href="/mainmenu/receive/journal_form?lab_pk={{ lab.pk }}" target="_blank">Журнал приёма</a>&nbsp;<a href="#" onclick="openexeclist();return false">Лист исполнения</a></small> Принятые за сегодня </h5>
     <div id="history-container">
         <table class="table table-bordered table-responsive floatThead">
+            <colgroup>
+                <col width="110">
+                <col width="200">
+                <col width="150">
+                <col width="180">
+                <col>
+                <col width="50">
+            </colgroup>
             <thead>
                 <tr>
-                    <th class="col-xs-2">№ принятия</th>
-                    <th class="col-xs-3">Тип емкости</th>
-                    <th class="col-xs-2">№ емкости</th>
+                    <th>№ принятия</th>
+                    <th>Тип емкости</th>
+                    <th>№ емкости</th>
+                    <th>Лаборатория</th>
                     <th>Исследования</th>
-                    <th style="width: 50px">Ш/к</th>
+                    <th>Ш/к</th>
                 </tr>
             </thead>
             <tbody id="history-data">
@@ -175,6 +184,9 @@
     .btn-bc{
         padding: 2px;
         width: 100%;
+    }
+    .labs {
+        font-size: 16px;
     }
     </style>
 {% endblock %}
@@ -297,13 +309,13 @@ function do_receive(pk){
             return;
         }
         else if(data.r === 4){
-            set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
+            set_msg("Ошибка! Емкость № {0} <b>не имеет подтвержения забора материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(pk, data.otd, data.direction));
             play_warn();
             return;
         } else if(data.new){
-            set_msg("Емкость № <b>{0} принята</b><br/><br/>".f(pk));
+            set_msg("Емкость № <b>{0} принята</b><br/>Лаборатории: <b class='labs'>{1}</b><br/>".f(pk, data.labs));
         } else {
-            set_msg("Емкость № {0} была <b>принята ранее</b>. {1}<br/><br/>".f(pk, data.receivedate));
+            set_msg("Емкость № {0} была <b>принята ранее</b>. {1}<br/>Лаборатории: <b class='labs'>{2}</b><br/>".f(pk, data.receivedate, data.labs));
         }
         play_scan();
         before_num = data.n;
@@ -363,13 +375,13 @@ function do_receive_direction(pk){
                 play_warn();
             }
             else if(row.r === 4){
-                msg.push("Ошибка! Емкость № {0} <b>не имеет подтвержения взятия материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(row.pk, row.otd, row.direction));
+                msg.push("Ошибка! Емкость № {0} <b>не имеет подтвержения забора материала</b>.<br/> Отделение <b>{1}</b>, направление <b>№ {2}</b>".f(row.pk, row.otd, row.direction));
                 play_warn();
             } else if(row.new){
-                msg.push("Ёмк. <b>{0} принята</b><br/><br/>".f(row.pk));
+                msg.push("Ёмк. <b>{0} принята</b><br/>Лаборатории: <b class='labs'>{1}</b><br/>".f(row.pk, row.labs.join('<br/>')));
                 play_scan();
             } else {
-                msg.push("Ёмк. {0} была <b>принята ранее</b>. {1}".f(row.pk, row.receivedate));
+                msg.push("Ёмк. {0} была <b>принята ранее</b>. {1}<br/>Лаборатории: <b class='labs'>{2}</b>".f(row.pk, row.receivedate, row.labs.join('<br/>')));
                 play_scan();
             }
         }
@@ -413,7 +425,7 @@ function load_history(highlight){
         const $hd = $('#history-data')
         $hd.html('')
         if(data.rows.length === 0){
-            $hd.html('<tr><td colspan=\'4\' style=\'text-align: center;\'>Нет данных</td></tr>')
+            $hd.html('<tr><td colspan=\'6\' style=\'text-align: center;\'>Нет данных</td></tr>')
             return;
         }
         $.each(data.rows, function(k, v){
@@ -421,6 +433,7 @@ function load_history(highlight){
                     "<td>{0}</td>".f(v.n) +
                     "<td class='well tube'><div><div class='sq'><div class='color-sq' style='background-color: {0}'></div></div>{1}</div></td>".format(v.color, v.type) +
                     "<td>{0}</td>".f(v.pk) +
+                    "<td>{0}</td>".f(v.labs.join("<br/>")) +
                     "<td>{0}</td>".f(v.researches.join(", ")) +
                     "<td><a class=\'btn btn-sm btn-blue-nb btn-bc\' href=\'/barcodes/tubes?tubes_id=[{0}]\' target=\"_blank\"><i class=\"fa fa-barcode\"></i></a></td>".f(v.pk) +
                     "</tr>");
@@ -434,7 +447,7 @@ function load_history(highlight){
 let first_resize = true;
 function resize() {
     const $hc = $('#history-container')
-    $hc.height($(window).height() - $hc.position().top - 70)
+    $hc.height($(window).height() - $hc.position().top - 10)
 
     if (first_resize) {
         $hc.perfectScrollbar()
