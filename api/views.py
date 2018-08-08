@@ -303,8 +303,8 @@ def endpoint(request):
             else:
                 pass
         else:
-            data["app_name"] = "API app banned"
-            result["body"] = "API app banned"
+            data["app_name"] = "API app banned " + api_key
+            result["body"] = "API app banned " + api_key
     else:
         result["body"] = "API key is incorrect"
     slog.Log(key=pk, type=6000, body=json.dumps(data), user=None).save()
