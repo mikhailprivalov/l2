@@ -204,7 +204,7 @@ def endpoint(request):
         app = models.Application.objects.get(key=api_key)
         if app.active:
             data["app_name"] = app.name
-            if message_type == "R":
+            if message_type == "R" or data.get("result"):
                 if pk != -1:
                     dw = app.direction_work
                     if pk >= 4600000000000:
