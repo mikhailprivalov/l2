@@ -1534,7 +1534,7 @@
                     if ('labs_objects' in data) {
                         for (const p of data.labs_objects) {
                             if(p.islab) {
-                                $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}#q:${q}'>${p.title}</a></li>`)
+                                $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}#q:${q}'>Перейти в ${p.title}</a></li>`)
                             } else {
                                 $('#empty-dir-for-lab ul').append(`<li>${p.title}</li>`)
                             }
