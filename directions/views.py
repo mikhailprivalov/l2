@@ -932,11 +932,9 @@ def get_issledovaniya(request):
                 t = "2"
             if t == "0":
                 if TubesRegistration.objects.filter(pk=id).count() == 1:
-                    tube = TubesRegistration.objects.get(pk=id)
-                    if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                        if iss:
-                            napr = iss.first().napravleniye
+                    iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk).first()
+                    if iss:
+                        napr = iss.napravleniye
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id)
                     for tube in tubes:
