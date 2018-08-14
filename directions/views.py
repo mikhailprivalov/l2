@@ -936,14 +936,11 @@ def get_issledovaniya(request):
                     if iss:
                         napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
-                    tubes = TubesRegistration.objects.filter(pk=id)
-                    for tube in tubes:
-                        if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                            if lit.count() != 0:
-                                iss = []
-                            for i in lit:
-                                iss.append(i)
+                    lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
+                    if lit.count() != 0:
+                        iss = []
+                    for i in lit:
+                        iss.append(i)
                     if len(iss) > 0:
                         napr = iss[0].napravleniye
             elif t == "2":
