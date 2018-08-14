@@ -935,6 +935,9 @@ def get_issledovaniya(request):
                     iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk).first()
                     if iss:
                         napr = iss.napravleniye
+                        iss = [iss]
+                    else:
+                        iss = []
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
                     tubes = TubesRegistration.objects.filter(pk=id)
                     for tube in tubes:
