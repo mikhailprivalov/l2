@@ -931,18 +931,10 @@ def get_issledovaniya(request):
                 id //= 10
                 t = "2"
             if t == "0":
-                if TubesRegistration.objects.filter(pk=id).count() == 1:
-                    iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                    if iss.count() != 0:
-                        napr = iss.first().napravleniye
-                elif TubesRegistration.objects.filter(pk=id).count() > 1:
-                    lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                    if lit.count() != 0:
-                        iss = []
-                    for i in lit:
-                        iss.append(i)
-                    if len(iss) > 0:
-                        napr = iss[0].napravleniye
+                iss = Issledovaniya.objects.filter(tubes__id=id)
+                if iss.count() != 0:
+                    napr = iss.first().napravleniye
+                iss = iss.filter(research__podrazdeleniye__pk=lab_pk)
             elif t == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
@@ -1106,6 +1098,7 @@ def get_issledovaniya(request):
                 res["fin_source"] = "" if napr.imported_from_rmis else napr.istochnik_f.title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
+            res["q"] = {"text": id, "type": t}
 
     return JsonResponse(res)
 
