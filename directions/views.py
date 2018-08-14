@@ -933,7 +933,7 @@ def get_issledovaniya(request):
             if t == "0":
                 if TubesRegistration.objects.filter(pk=id).count() == 1:
                     iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                    if iss:
+                    if iss.count() != 0:
                         napr = iss.first().napravleniye
                 elif TubesRegistration.objects.filter(pk=id).count() > 1:
                     lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
@@ -966,7 +966,8 @@ def get_issledovaniya(request):
                     res["labs_objects"].append({"pk": po.pk, "title": p, "islab": po.p_type == 2})
                 if po and not i.research.is_paraclinic and not i.research.is_doc_refferal:
                     mnext = True
-            if not mnext:
+
+            if not mnext and iss.count() != 0:
                 res["msg"] = "Направление %s не предназначено для лаборатории! Проверьте назначения и номер" % id
             elif len(iss) > 0:
                 groups = {}
