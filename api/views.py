@@ -307,7 +307,7 @@ def endpoint(request):
             result["body"] = "API app banned " + api_key
     else:
         result["body"] = "API key is incorrect"
-    slog.Log(key=pk, type=6000, body=json.dumps(data), user=None).save()
+    slog.Log(key=pk, type=6000, body=json.dumps({"data": data, "answer": result}), user=None).save()
     return JsonResponse(result)
 
 
