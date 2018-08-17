@@ -39,3 +39,4 @@ django-cachalot
 jsonpickle
 pika
 socketIO-client-nexus
+python-dateutil
