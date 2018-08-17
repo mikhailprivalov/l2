@@ -3,6 +3,7 @@ from collections import defaultdict
 import datetime
 import re
 
+from django.db import IntegrityError
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -65,6 +66,15 @@ def change_password(request):
         elif request.POST.get("update_fio") == "1":
             doc.fio = request.POST.get("fio", "ФИО")
             doc.save()
+        elif request.POST.get("update_username") == "1":
+            un = request.POST.get("username", "").strip()
+            if un:
+                try:
+                    doc.user.username = un
+                    doc.user.save()
+                except IntegrityError:
+                    return JsonResponse({"ok": False, "msg": "Имя пользователя занято"})
+
         else:
             doc.podrazdeleniye = Podrazdeleniya.objects.get(pk=request.POST["podr"])
             doc.save()
@@ -72,8 +82,9 @@ def change_password(request):
     if request.is_ajax():
         doc = DoctorProfile.objects.get(pk=request.GET["pk"])
         groups = [{"pk": str(x.pk), "title": x.name} for x in doc.user.groups.all()]
-        return HttpResponse(json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username, "user_pk": doc.user_id}),
-                            content_type="application/json")
+        return HttpResponse(
+            json.dumps({"groups": groups, "fio": doc.fio, "username": doc.user.username, "user_pk": doc.user_id}),
+            content_type="application/json")
     otds = {}
     podr = Podrazdeleniya.objects.all().order_by("title")
     for x in podr:
@@ -137,8 +148,10 @@ def load_logs(request):
         pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
         rows = obj.filter(pk__gt=pkgt).order_by("pk")
     for row in rows:
-        tmp_object = {"id": row.pk, "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-                      "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body, "type": row.get_type_display(),
+        tmp_object = {"id": row.pk,
+                      "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
+                      "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body,
+                      "type": row.get_type_display(),
                       "time": strdatetime(row.time)}
         result["data"].append(tmp_object)
 
@@ -162,7 +175,8 @@ def receive_journal_form(request):
         lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye.pk)
     else:
         lab = None
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
+        title="Внешние организации").order_by("title")
     if not lab or lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     groups = directory.ResearchGroup.objects.filter(lab=lab)
@@ -188,7 +202,8 @@ def confirm_reset(request):
 
             import time
             ctp = int(
-                0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
+                0 if not iss.time_confirmation else int(
+                    time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
             ctime = int(time.time())
             cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
             if (ctime - ctp < SettingManager.get(
@@ -293,7 +308,8 @@ def create_pod(request):
             mess = "Название заполнено некорректно"
     else:
         e = False
-    return render(request, 'dashboard/create_podr.html', {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
+    return render(request, 'dashboard/create_podr.html',
+                  {'error': e, 'mess': mess, 'title': '', 'status': p, 'podr': podr, 'types': Podrazdeleniya.TYPES})
 
 
 @login_required
@@ -361,8 +377,10 @@ def discharge(request):
             pd["docs"].append({"pk": d.pk, "fio": d.fio})
         users.append(pd)
     return render(request, 'dashboard/discharge.html', {'labs': podr,
-                                                        'fin_poli': [],  # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
-                                                        'fin_stat': [],  # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
+                                                        'fin_poli': [],
+                                                        # IstochnikiFinansirovaniya.objects.filter(istype="poli"),
+                                                        'fin_stat': [],
+                                                        # IstochnikiFinansirovaniya.objects.filter(istype="stat"),
                                                         "notlabs": podrazdeleniya,
                                                         "users": json.dumps(users)})
 
@@ -543,7 +561,8 @@ def dashboard_from(request):
     try:
         date_start, date_end = try_parse_range(date_start, date_end)
         if request.GET.get("get_labs", "false") == "true":
-            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации"):
+            for lab in Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
+                    title="Внешние организации"):
                 tubes_list = TubesRegistration.objects.filter(doc_get__podrazdeleniye__p_type=Podrazdeleniya.DEPARTMENT,
                                                               time_get__range=(date_start, date_end),
                                                               issledovaniya__research__podrazdeleniye=lab)
@@ -685,17 +704,22 @@ def direction_info(request):
                     ["title", strdatetime(dir.data_sozdaniya) + " Направление создано"],
                     ["Создатель", get_userdata(dir.doc_who_create)],
                     ["От имени", "" if not dir.doc else get_userdata(dir.doc)],
-                    ["Пациент", "%s, %s, Пол: %s" % (dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
+                    ["Пациент", "%s, %s, Пол: %s" % (
+                        dir.client.individual.fio(), dir.client.individual.bd(), dir.client.individual.sex)],
                     ["Карта", "%s %s" % (dir.client.number, dir.client.base.title)],
                     ["Архив", yesno[dir.client.is_archive]],
                     ["Источник финансирования", "" if not dir.istochnik_f else dir.istochnik_f.title],
                     ["Диагноз", dir.diagnos],
                     ["Направление создано на основе направления из РМИС", yesno[dir.imported_from_rmis]],
                     ["Направивляющая организация из РМИС", "" if not dir.imported_org else dir.imported_org.title],
-                    ["Направление отправлено в РМИС", yesno[dir.imported_directions_rmis_send if dir.imported_from_rmis else dir.rmis_number not in ["", None, "NONERMIS"]]],
+                    ["Направление отправлено в РМИС", yesno[
+                        dir.imported_directions_rmis_send if dir.imported_from_rmis else dir.rmis_number not in ["",
+                                                                                                                 None,
+                                                                                                                 "NONERMIS"]]],
                     ["Номер РМИС направления", dir.rmis_number if dir.rmis_number not in [None, "NONERMIS"] else ""],
                     ["Направление привязано к случаю РМИС", yesno[dir.rmis_case_id not in ["", None, "NONERMIS"]]],
-                    ["Направление привязано к записи отделения госпитализации РМИС", yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
+                    ["Направление привязано к записи отделения госпитализации РМИС",
+                     yesno[dir.rmis_hosp_id not in ["", None, "NONERMIS"]]],
                     ["Результат отправлен в РМИС", yesno[dir.result_rmis_send]]
                 ]
             ]})
@@ -713,7 +737,8 @@ def direction_info(request):
                         ["Заборщик", get_userdata(tube.doc_get)]
                     ])
                 for l in slog.Log.objects.filter(key=str(tube.pk), type__in=(4000, 12, 11)).distinct():
-                    tdata = [["Приёмщик", get_userdata(l.user)], ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
+                    tdata = [["Приёмщик", get_userdata(l.user)],
+                             ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
                     if l.body and l.body != "":
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
@@ -721,7 +746,8 @@ def direction_info(request):
             for iss in Issledovaniya.objects.filter(napravleniye=dir):
                 d = {'type': "Исследование: %s (#%s)" % (iss.research.title, iss.pk), 'events': []}
                 for l in slog.Log.objects.filter(key=str(iss.pk), type__in=(13, 14, 24)).distinct():
-                    tdata = [["Исполнитель", get_userdata(l.user)], ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
+                    tdata = [["Исполнитель", get_userdata(l.user)],
+                             ["title", strdatetime(l.time) + " " + l.get_type_display() + " (#%s)" % l.pk]]
                     if l.body and l.body != "" and l.type != 24:
                         tdata.append(["json_data", l.body])
                     d["events"].append(tdata)
@@ -738,7 +764,8 @@ def get_userdata(doc: DoctorProfile):
 
 
 def ratelimited(request, e):
-    return render(request, 'dashboard/error.html', {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
+    return render(request, 'dashboard/error.html',
+                  {"message": "Запрос выполняется слишком часто, попробуйте позднее", "update": True})
 
 
 def cards(request):
@@ -749,7 +776,8 @@ def cards(request):
 
 
 def v404(request, exception=None):
-    return render(request, 'dashboard/error.html', {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
+    return render(request, 'dashboard/error.html',
+                  {"message": "Ошибка 404 - страница не найдена", "update": False, "to_home": True}, status=404)
 
 
 def v500(request, exception=None):
@@ -785,7 +813,9 @@ def results_report(request):
 @login_required
 @group_required("Врач параклиники")
 def results_paraclinic_blanks(request):
-    researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True, podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by("title")
+    researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True,
+                                                     podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by(
+        "title")
     return render(request, 'dashboard/results_paraclinic_blanks.html', {"researches": researches})
 
 

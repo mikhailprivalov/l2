@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 
 import simplejson
 from django.core.management.base import OutputWrapper
@@ -182,7 +183,10 @@ class Individual(models.Model):
         """
         Функция подсчета возраста
         """
-        if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or ((not iss.tubes.exists() or not iss.tubes.filter(time_recive__isnull=False).exists()) and not iss.research.is_paraclinic):
+
+        if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or \
+                ((not iss.tubes.exists() or not iss.tubes.filter(
+                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic):
             today = date.today()
         elif iss.time_confirmation and iss.research.is_paraclinic or not iss.tubes.exists():
             today = iss.time_confirmation.date()
@@ -196,15 +200,13 @@ class Individual(models.Model):
 
         if birthday > today:
             if days_monthes_years:
-                import time
-                rd = datetime.fromtimestamp(time.mktime(today.timetuple()) - time.mktime(born.timetuple()))
-                return rd.day - 1, rd.month - 1, today.year - born.year - 1
-            return today.year - born.year - 1
+                rd = relativedelta(today, born)
+                return rd.days, rd.months, rd.years
+            return today.year - born.year
         else:
             if days_monthes_years:
-                import time
-                rd = datetime.fromtimestamp(time.mktime(today.timetuple()) - time.mktime(born.timetuple()))
-                return rd.day - 1, rd.month - 1, today.year - born.year
+                rd = relativedelta(today, born)
+                return rd.days, rd.months, rd.years
             return today.year - born.year
 
     def age_s(self, iss=None, direction=None) -> str:
@@ -215,12 +217,14 @@ class Individual(models.Model):
         if direction is not None:
             from directions.models import Issledovaniya
             iss = None
-            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False, napravleniye=direction)\
+            i = Issledovaniya.objects.filter(tubes__time_recive__isnull=False, napravleniye=direction) \
                 .order_by("-tubes__time_recive")
             if i.exists():
                 iss = i[0]
-            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False):
-                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction, time_confirmation__isnull=False)\
+            elif Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction,
+                                              time_confirmation__isnull=False):
+                iss = Issledovaniya.objects.filter(research__is_paraclinic=True, napravleniye=direction,
+                                                   time_confirmation__isnull=False) \
                     .order_by("-time_confirmation")[0]
 
         days, monthes, years = self.age(iss=iss, days_monthes_years=True)
@@ -294,7 +298,8 @@ class Individual(models.Model):
         if not short:
             if full:
                 r = "{0} {1} {2}, {5}, {3:%d.%m.%Y} ({4})".format(self.family, self.name, self.patronymic,
-                                                                  self.birthday, self.age_s(direction=direction), self.sex)
+                                                                  self.birthday, self.age_s(direction=direction),
+                                                                  self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
             else:
@@ -390,8 +395,10 @@ class Card(models.Model):
     is_archive = models.BooleanField(default=False, blank=True, db_index=True)
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None,
                               on_delete=models.SET_NULL)
-    main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
+    main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз",
+                                      db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
+    fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -400,7 +407,9 @@ class Card(models.Model):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")
 
     def get_phones(self):
-        return list(set([y for y in [x.normalize_number() for x in Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if y != ""]))
+        return list(set([y for y in [x.normalize_number() for x in
+                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
+                         y != ""]))
 
     class Meta:
         verbose_name = 'Карта'

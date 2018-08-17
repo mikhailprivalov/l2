@@ -228,10 +228,11 @@ def gen_pdf_dir(request):
         c.showPage()
         tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
         for i in instructions_filtered:
-            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(i["title"], i["text"])
+            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(
+                i["title"], i["text"])
         data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
 
-        t = Table(data, colWidths=[w - 30*mm])
+        t = Table(data, colWidths=[w - 30 * mm])
         t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                                ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
@@ -244,7 +245,7 @@ def gen_pdf_dir(request):
                                ]))
         t.canv = c
         wt, ht = t.wrap(0, 0)
-        t.drawOn(c, 15*mm, h - 15*mm - ht)
+        t.drawOn(c, 15 * mm, h - 15 * mm - ht)
         c.showPage()
     c.save()  # Сохранение отрисованного на PDF
 
@@ -286,14 +287,14 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             ox = w / 2 + 40 * mm
             oy = h / 2 - 30 * mm
         elif xn == 0 and yn == 0:
-            ox = w/2 - 65 * mm
+            ox = w / 2 - 65 * mm
             oy = 13.5 * mm
         elif xn == 1 and yn == 0:
             ox = w - 95.75 * mm
-            oy = 13.5 * mm - h/4
+            oy = 13.5 * mm - h / 4
         else:
             ox = w + 9.25 * mm
-            oy = h / 2 - 30 * mm - h/4
+            oy = h / 2 - 30 * mm - h / 4
         c.setFont('OpenSansBold', 50)
         s = 'ОТМЕНЕНО'
         if ac:
@@ -312,7 +313,8 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                         "(%s. %s)" % (SettingManager.get("org_address"), SettingManager.get("org_phones"),))
 
     c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
+    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn,
+                        "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
@@ -335,11 +337,13 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn,
                       "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn,
+                 "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
     diagnosis = dir.diagnos.strip()
     if not dir.imported_from_rmis:
         if diagnosis != "":
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + diagnosis)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
+                         "Диагноз (МКБ 10): " + diagnosis)
         if dir.istochnik_f:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
                          "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
@@ -348,10 +352,12 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     else:
         nds = 0
         if diagnosis != "":
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn, "Диагноз (МКБ 10): " + diagnosis)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
+                         "Диагноз (МКБ 10): " + diagnosis)
             nds = 5
         if dir.imported_org:
-            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn, "Организация: " + dir.imported_org.title)
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 105 - nds) + (h / 2) * yn,
+                         "Организация: " + dir.imported_org.title)
 
     issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
 
@@ -398,14 +404,17 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     tw = w / 2 - paddingx * 2
     m = 0
     if has_descriptive or has_doc_refferal:
-        tmp = [Paragraph('<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"), styleSheet["BodyText"]),
+        tmp = [Paragraph(
+            '<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"),
+            styleSheet["BodyText"]),
                Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
         values.sort(key=lambda l: l["full_title"])
 
         for v in values:
-            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + "</font>", styleSheet["BodyText"]),
+            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + "</font>",
+                             styleSheet["BodyText"]),
                    Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"])]
             data.append(tmp)
         m = 8
@@ -467,12 +476,15 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
             c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn,
-                         Truncator("Выписал: %s, %s" % (dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
+                         Truncator("Выписал: %s, %s" % (
+                         dir.doc_who_create.get_fio(), dir.doc_who_create.podrazdeleniye.title)).chars(63))
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn,
+                     "Отделение: " + Truncator(dir.doc.podrazdeleniye.title).chars(50))
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, "Л/врач: " + dir.doc.get_fio())
     else:
         c.drawString(paddingx + (w / 2 * xn), 31 + (h / 2) * yn + nn, "РМИС#" + dir.rmis_number)
-        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn, "Создал направление: " + dir.doc_who_create.get_fio())
+        c.drawString(paddingx + (w / 2 * xn), 22 + (h / 2) * yn + nn,
+                     "Создал направление: " + dir.doc_who_create.get_fio())
         c.drawString(paddingx + (w / 2 * xn), 13 + (h / 2) * yn + nn, dir.doc_who_create.podrazdeleniye.title)
 
     c.setFont('OpenSans', 7)
@@ -516,7 +528,8 @@ def get_one_dir(request):
                                          "cancel": tmp2.cancel,
                                          "date": str(
                                              dateformat.format(tmp2.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                                         "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(), "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
+                                         "doc": {"fio": "" if not tmp2.doc else tmp2.doc.get_fio(),
+                                                 "otd": "" if not tmp2.doc else tmp2.doc.podrazdeleniye.title},
                                          "lab": tmp[0].research.get_podrazdeleniye().title,
                                          "type": tmp[0].research.get_podrazdeleniye().p_type,
                                          "imported_from_rmis": tmp2.imported_from_rmis,
@@ -1054,7 +1067,7 @@ def get_issledovaniya(request):
                                                      "doc_save_id": doc_save_id,
                                                      "current_doc_save": current_doc_save,
                                                      "allow_disable_confirm": ((
-                                                                                       ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                                                   ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                                                    str(x) for x in
                                                                                    request.user.groups.all()]) and confirmed,
                                                      "ctp": ctp,
@@ -1166,10 +1179,9 @@ def pxr(x=0.0):
 
 
 def form38001(c: Canvas, d: Napravleniya):
-
     def printForm(offset):
-        c.setStrokeColorRGB(0,0,0)
-        c.setLineWidth(0.2*mm)
+        c.setStrokeColorRGB(0, 0, 0)
+        c.setLineWidth(0.2 * mm)
         c.setFont('TimesNewRoman', 8)
         topw1 = pxr(61.5)
         c.drawString(topw1, py(19.6 + offset), "Приложение 5")
@@ -1178,12 +1190,13 @@ def form38001(c: Canvas, d: Napravleniya):
         c.drawString(topw1, py(29.02 + offset), "от 17.08.2009 г. № 1027-мпр.")
 
         c.setFont('TimesNewRoman', 11)
-        c.drawString(px(18.5), py(34 + offset), "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
+        c.drawString(px(18.5), py(34 + offset),
+                     "Наименование учереждения здравоохранения: " + SettingManager.get("org_title"))
         c.line(px(95.5), py(35.2 + offset), pxr(18), py(35.2 + offset))
         c.drawString(px(18.5), py(43 + offset), "Отделение, палата")
         c.line(px(50), py(44.2 + offset), pxr(18), py(44.2 + offset))
-        c.drawCentredString(w/2, py(53 + offset), "НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ")
-        c.drawCentredString(w/2, py(58 + offset), "НА ВИЧ № {}".format(d.pk))
+        c.drawCentredString(w / 2, py(53 + offset), "НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ")
+        c.drawCentredString(w / 2, py(58 + offset), "НА ВИЧ № {}".format(d.pk))
 
         c.drawString(px(18.5), py(68 + offset), "Фамилия: " + d.client.individual.family)
         c.line(px(34.8), py(69.2 + offset), pxr(97.5), py(69.2 + offset))
@@ -1192,13 +1205,14 @@ def form38001(c: Canvas, d: Napravleniya):
 
         c.drawString(px(18.5), py(73 + offset), "Отчество: " + d.client.individual.patronymic)
         c.line(px(35), py(74.2 + offset), pxr(114.5), py(74.2 + offset))
-        c.drawString(pxr(114), py(73 + offset), "Дата рождения(число,месяц,год): " + d.client.individual.birthday.strftime("%d.%m.%Y"))
+        c.drawString(pxr(114), py(73 + offset),
+                     "Дата рождения(число,месяц,год): " + d.client.individual.birthday.strftime("%d.%m.%Y"))
         c.line(pxr(58.5), py(74.2 + offset), pxr(18), py(74.2 + offset))
 
         c.drawString(px(18.5), py(78 + offset), "Адрес регистрации(прописки): " + d.client.main_address)
         c.line(px(71), py(79.2 + offset), pxr(18), py(79.2 + offset))
 
-        c.drawString(px(18.5), py(83 + offset), "Адрес фактического места проживания: ")
+        c.drawString(px(18.5), py(83 + offset), "Адрес фактического места проживания: " + d.client.fact_address)
         c.line(px(85), py(84.2 + offset), pxr(18), py(84.2 + offset))
 
         c.drawString(px(18.5), py(88 + offset), "Социальный статус: ")
@@ -1217,18 +1231,20 @@ def form38001(c: Canvas, d: Napravleniya):
 
         c.drawString(px(18.5), py(108 + offset), "Дата забора крови: «_____»_________________20____г.")
 
-        c.drawString(px(18.5), py(113 + offset), "Дата доставки крови в ИОЦ СПИД: «_____»_________________20____г. (заполняется ИОЦ СПИД)")
+        c.drawString(px(18.5), py(113 + offset),
+                     "Дата доставки крови в ИОЦ СПИД: «_____»_________________20____г. (заполняется ИОЦ СПИД)")
 
         c.drawString(px(18.5), py(123 + offset), "РЕЗУЛЬТАТ ИССЛЕДОВАНИЯ")
 
-        c.drawString(px(18.5), py(133 + offset), "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
+        c.drawString(px(18.5), py(133 + offset),
+                     "Дата выдачи результата: «_____»_________________20____г.  Подпись ____________________________")
 
         c.setFont('TimesNewRoman', 8)
         c.drawString(px(18.5), py(139 + offset), "ИС L2. Форма 38001")
 
     printForm(0)
 
-    c.setStrokeColorRGB(*([0.8]*3))
-    c.line(px(0), h/2, pxr(0), h/2)
+    c.setStrokeColorRGB(*([0.8] * 3))
+    c.line(px(0), h / 2, pxr(0), h / 2)
 
-    printForm(h/2/mm)
+    printForm(h / 2 / mm)
