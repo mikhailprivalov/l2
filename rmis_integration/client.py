@@ -370,7 +370,7 @@ class Patients(BaseRequester):
                     if a["type"] not in '43':
                         continue
                     addr = ', '.join(
-                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53']]) + ', Дом ' + a['house']
+                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + ((', Дом ' + a['house']) if a['house'] else '')
                     if a['apartment']:
                         addr += ', ' + a['apartment']
                     if a["type"] == '4' and card.main_address != addr:

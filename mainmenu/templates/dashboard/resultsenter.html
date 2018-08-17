@@ -23,22 +23,26 @@
             <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="dayprint();return false">Печать результатов за день</a></div>
         <div class="panel panel-flt m5" style="margin-bottom: 10px">
             <div class="panel-body" style="padding:10px;">
-                <div class="input-group" style="margin-bottom: 5px">
-                    <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13"/>
-                    <span class="input-group-btn">
-                        <button class="btn btn-blue-nb" onclick="load_d_fast();" type="button">Поиск</button>
+                <form autocomplete="off" onsubmit="return false;">
+                    <input autocomplete="false" name="hidden" type="text" style="display:none;">
+                    <div class="input-group" style="margin-bottom: 5px">
+                        <input type="text" class="form-control" id="search-field" name="search-field" maxlength="13"/>
+                        <span class="input-group-btn">
+                        <button class="btn btn-blue-nb" onclick="load_d_fast();return false;"
+                                type="submit">Поиск</button>
                     </span>
-                </div>
-                <div class="btn-group" data-toggle="buttons" style="display: inline-block; width: 100%">
-                    <label class="btn btn-blue-nb btn-ell active" style="width: 50%">
-                        <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
-                        Номер направления
-                    </label>
-                    <label class="btn btn-blue-nb btn-ell" style="width: 50%">
-                        <input type="radio" name="type" id="option1" value="0" autocomplete="off">
-                        Номер ёмкости
-                    </label>
-                </div>
+                    </div>
+                    <div class="btn-group" data-toggle="buttons" style="display: inline-block; width: 100%">
+                        <label class="btn btn-blue-nb btn-ell active" style="width: 50%">
+                            <input type="radio" name="type" id="option2" value="1" autocomplete="off" checked>
+                            Номер направления
+                        </label>
+                        <label class="btn btn-blue-nb btn-ell" style="width: 50%">
+                            <input type="radio" name="type" id="option1" value="0" autocomplete="off">
+                            Номер ёмкости
+                        </label>
+                    </div>
+                </form>
             </div>
         </div>
         <div class="panel panel-flt m2">
@@ -1526,10 +1530,11 @@
                 let pks = [];
                 if (data.issledovaniya.length === 0) {
                     $('#empty-dir-for-lab').show()
+                    const q = encodeURIComponent(JSON.stringify(data.q));
                     if ('labs_objects' in data) {
                         for (const p of data.labs_objects) {
                             if(p.islab) {
-                                $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}'>${p.title}</a></li>`)
+                                $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}#q:${q}'>Перейти в ${p.title}</a></li>`)
                             } else {
                                 $('#empty-dir-for-lab ul').append(`<li>${p.title}</li>`)
                             }
@@ -2120,6 +2125,31 @@
 
                 $('#tubes-list').perfectScrollbar('update');
                 $('#dirs-list').perfectScrollbar('update');
+                if(window.location.hash) {
+                    const hh = window.location.hash.split(":");
+                    if(hh.length === 2) {
+                        const h = JSON.parse(decodeURIComponent(hh[1]));
+                        history.replaceState(null, null, ' ');
+
+                        fast_search(h.text);
+
+                        if(h.type === "0") {
+                            $("#option1").attr("checked", "checked");
+                            $("#option2").removeAttr("checked");
+                            $("#option1").parent(".btn").addClass('active');
+                            $("#option2").parent(".btn").removeClass('active');
+                            type = 0;
+                        } else {
+                            $("#option1").removeAttr("checked");
+                            $("#option2").attr("checked", "checked");
+                            $("#option1").parent(".btn").removeClass('active');
+                            $("#option2").parent(".btn").addClass('active');
+                            type = 1;
+                        }
+
+                        load_d_fast();
+                    }
+                }
             }).always(dechl);
         }
 
