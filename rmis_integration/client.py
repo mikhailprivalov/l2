@@ -229,7 +229,8 @@ class Client(object):
             fin_src[id] = val
         return fin_src
 
-    def put_content(self, filename, content, path, filetype='application/pdf', method="PUT", stdout: OutputWrapper = None):
+    def put_content(self, filename, content, path, filetype='application/pdf', method="PUT",
+                    stdout: OutputWrapper = None):
         multipart_data = MultipartEncoder(
             fields={'file': (filename, content, filetype)},
         )
@@ -366,15 +367,17 @@ class Patients(BaseRequester):
                 card.clear_phones(ps)
             if 'addresses' in data:
                 for a in data['addresses']:
-                    if a["type"] != '4':
+                    if a["type"] not in '43':
                         continue
                     addr = ', '.join(
-                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + (
-                               (', Дом ' + a['house']) if a['house'] else '')
+                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + ((', Дом ' + a['house']) if a['house'] else '')
                     if a['apartment']:
                         addr += ', ' + a['apartment']
-                    if card.main_address != addr:
+                    if a["type"] == '4' and card.main_address != addr:
                         card.main_address = addr
+                        card.save()
+                    if a["type"] == '3' and card.fact_address != addr:
+                        card.fact_address = addr
                         card.save()
                     break
         else:
@@ -503,7 +506,7 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                    (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
+                        (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
                     and individual_row["birthDate"] is not None):
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
@@ -623,7 +626,8 @@ class Directions(BaseRequester):
             data["diagnosis"] = ""
             data["diagnosisName"] = ""
             if raw["diagnosisId"]:
-                v = self.main_client.get_directory("md_diagnosis").get_values_by_data(search_name="ID", search_data=raw["diagnosisId"])
+                v = self.main_client.get_directory("md_diagnosis").get_values_by_data(search_name="ID",
+                                                                                      search_data=raw["diagnosisId"])
                 if len(v) > 0:
                     v = v[0]
                     data["diagnosis"] = Utils.get_column_value(v, "CODE")
@@ -694,7 +698,8 @@ class Directions(BaseRequester):
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
         if client_rmis and client_rmis != "NONERMIS" and (
-                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+                            not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
+                            direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
             if not direction.imported_from_rmis:
                 ref_data = dict(patientUid=client_rmis,
                                 number=str(direction.pk),
@@ -703,9 +708,12 @@ class Directions(BaseRequester):
                                                                   search_data=direction.rmis_direction_type()),
                                 referralDate=ndate(direction.data_sozdaniya),
                                 referralOrganizationId=self.main_client.search_organization_id(),
-                                referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(), org_id=self.main_client.search_organization_id()),
+                                referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(),
+                                                                                     org_id=self.main_client.search_organization_id()),
                                 receivingOrganizationId=self.main_client.search_organization_id(),
-                                receivingDepartmentId=self.main_client.search_dep_id(q=direction.rmis_department_title(), org_id=self.main_client.search_organization_id()),
+                                receivingDepartmentId=self.main_client.search_dep_id(
+                                    q=direction.rmis_department_title(),
+                                    org_id=self.main_client.search_organization_id()),
                                 refServiceId=self.main_client.services.get_service_ids(direction),
                                 fundingSourceTypeId=Utils.get_fin_src_id(
                                     direction.istochnik_f.title,
@@ -722,8 +730,9 @@ class Directions(BaseRequester):
                 except:
                     stdout.write("Err: " + direction.rmis_referral_title())
                     return
-                if direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["",
-                                                                                                                         None]:
+                if direction.client.base.is_rmis and direction.rmis_case_id in ["",
+                                                                                None] and direction.rmis_hosp_id in ["",
+                                                                                                                     None]:
                     case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
                     direction.rmis_case_id = case_id
                     direction.rmis_hosp_id = h_id
@@ -732,7 +741,8 @@ class Directions(BaseRequester):
                                                                     {"napr_id": json.dumps([direction.pk]),
                                                                      'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                          self.main_client.get_addr(
-                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление-" + str(direction.pk) + "/direction.pdf"))
+                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Направление-" + str(
+                                                 direction.pk) + "/direction.pdf"))
             if direction.imported_from_rmis and not direction.imported_directions_rmis_send:
                 direction.imported_directions_rmis_send = True
         elif client_rmis == "NONERMIS":
@@ -760,7 +770,8 @@ class Directions(BaseRequester):
                          note='Результаты в направлении или в протоколе.\nАвтоматический вывод из МИС L2',
                          quantity=1)
         if not direction.imported_from_rmis:
-            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title, self.main_client.get_fin_dict())
+            send_data["fundingSourceTypeId"] = Utils.get_fin_src_id(direction.istochnik_f.title,
+                                                                    self.main_client.get_fin_dict())
         if direction.rmis_case_id not in [None, ""] and direction.rmis_hosp_id not in [None, ""]:
             send_data["medicalCaseId"] = direction.rmis_case_id
             send_data["stepId"] = direction.rmis_hosp_id
@@ -822,22 +833,30 @@ class Directions(BaseRequester):
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
                                                                               service_rend_id, stdout, x)
                                 if ssd is not None and x.field.group.research.pk not in sended_researches:
-                                    RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
+                                    RmisServices.objects.filter(napravleniye=direction,
+                                                                rmis_id=service_rend_id).delete()
                                     self.main_client.rendered_services.delete_service(service_rend_id)
                                     sended_researches.append(x.field.group.research.pk)
                                     if stdout:
                                         stdout.write("DATA: " + str(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
                                     xresult = ""
-                                    for g in ParaclinicInputGroups.objects.filter(research=x.field.group.research).order_by("order"):
-                                        if not ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction, field__group=g).exists():
+                                    for g in ParaclinicInputGroups.objects.filter(
+                                            research=x.field.group.research).order_by("order"):
+                                        if not ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
+                                                                               field__group=g).exists():
                                             continue
                                         if g.show_title and g.title != "":
-                                            xresult += protocol_row.replace("{{фракция}}", g.title).replace("{{значение}}", "")
+                                            xresult += protocol_row.replace("{{фракция}}", g.title).replace(
+                                                "{{значение}}", "")
 
-                                        for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction, field__group=g).exclude(value="").order_by("field__order"):
-                                            xresult += protocol_row.replace("{{фракция}}", y.field.title).replace("{{значение}}", y.value)
-                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>", "")\
+                                        for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
+                                                                                 field__group=g).exclude(
+                                            value="").order_by("field__order"):
+                                            xresult += protocol_row.replace("{{фракция}}", y.field.title).replace(
+                                                "{{значение}}", y.value)
+                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>",
+                                                                                                            "") \
                                         .replace("<font>", "").replace("</font>", "")
                                     self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
@@ -852,7 +871,8 @@ class Directions(BaseRequester):
                                     send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
                                                                                   service_rend_id, stdout, x)
                                     if ssd is not None and x.fraction.research.pk not in sended_researches:
-                                        RmisServices.objects.filter(napravleniye=direction, rmis_id=service_rend_id).delete()
+                                        RmisServices.objects.filter(napravleniye=direction,
+                                                                    rmis_id=service_rend_id).delete()
                                         self.main_client.rendered_services.delete_service(service_rend_id)
                                         sended_researches.append(x.fraction.research.pk)
                                         if stdout:
@@ -861,15 +881,16 @@ class Directions(BaseRequester):
                                         xresult = ""
                                         for y in Result.objects.filter(issledovaniye__napravleniye=direction,
                                                                        fraction__research=x.fraction.research).order_by(
-                                                "fraction__sort_weight"):
+                                            "fraction__sort_weight"):
                                             xresult += protocol_row.replace("{{фракция}}", y.fraction.title).replace(
                                                 "{{значение}}", y.value).replace("{{едизм}}", y.get_units())
                                         xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
                                                                                                              "").replace(
                                             "</font>", "")
                                         if x.issledovaniye.get_analyzer() != "":
-                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}",
-                                                                                                                 x.issledovaniye.get_analyzer()).replace(
+                                            xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace(
+                                                "{{значение}}",
+                                                x.issledovaniye.get_analyzer()).replace(
                                                 "{{едизм}}", "")
                                         if x.issledovaniye.lab_comment and x.issledovaniye.lab_comment != "":
                                             xresult += protocol_row.replace("{{фракция}}", "Комментарий").replace(
@@ -902,21 +923,25 @@ class Directions(BaseRequester):
                                     if stdout:
                                         stdout.write("DATA2: " + json.dumps(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
-                                    xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace("{{значение}}",
-                                                                                                            x.value).replace(
+                                    xresult = protocol_row.replace("{{фракция}}", x.fraction.title).replace(
+                                        "{{значение}}",
+                                        x.value).replace(
                                         "{{едизм}}", x.get_units())
                                     xresult = xresult.replace("<sub>", "").replace("</sub>", "").replace("<font>",
                                                                                                          "").replace(
                                         "</font>", "")
                                     if x.issledovaniye.get_analyzer() != "":
-                                        xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace("{{значение}}",
-                                                                                                             x.issledovaniye.get_analyzer()).replace(
+                                        xresult += protocol_row.replace("{{фракция}}", "Анализатор").replace(
+                                            "{{значение}}",
+                                            x.issledovaniye.get_analyzer()).replace(
                                             "{{едизм}}", "")
                                     self.main_client.put_content("Protocol.otg",
                                                                  protocol_template.replace("{{исполнитель}}",
                                                                                            x.issledovaniye.doc_confirmation.get_fio()).replace(
-                                                                     "{{результат}}", xresult), self.main_client.get_addr(
-                                            "/medservices-ws/service-rs/renderedServiceProtocols/" + ss), method="POST")
+                                                                     "{{результат}}", xresult),
+                                                                 self.main_client.get_addr(
+                                                                     "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
+                                                                 method="POST")
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                             self.main_client.put_content("Resultat.pdf",
                                                          self.main_client.local_get("/results/pdf",
@@ -924,7 +949,8 @@ class Directions(BaseRequester):
                                                                                      "normis": '1',
                                                                                      'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}),
                                                          self.main_client.get_addr(
-                                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(direction.pk) + "/Resultat.pdf"))
+                                                             "referral-attachments-ws/rs/referralAttachments/" + direction.rmis_number + "/Результат-" + str(
+                                                                 direction.pk) + "/Resultat.pdf"))
                 except Fault as e:
                     if "ата смерти пациента" in e.message:
                         direction.rmis_number = "NONERMIS"
@@ -940,7 +966,7 @@ class Directions(BaseRequester):
         self.main_client.put_content("Protocol.otg",
                                      protocol,
                                      self.main_client.get_addr(
-                                              "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
+                                         "/medservices-ws/service-rs/renderedServiceProtocols/" + ss),
                                      method="POST",
                                      filetype="text/xml",
                                      stdout=stdout)
@@ -1012,7 +1038,8 @@ class Directions(BaseRequester):
                              int(upload_after.split(".")[0])) - datetime.timedelta(minutes=20)
         uploaded = []
         to_upload = Napravleniya.objects.filter(data_sozdaniya__gte=date).filter(
-            Q(rmis_number__isnull=True) | Q(rmis_number="") | Q(imported_from_rmis=True, imported_directions_rmis_send=False)).distinct()
+            Q(rmis_number__isnull=True) | Q(rmis_number="") | Q(imported_from_rmis=True,
+                                                                imported_directions_rmis_send=False)).distinct()
         cnt = to_upload.count()
         if stdout:
             stdout.write("Directions to upload: {}".format(cnt))
