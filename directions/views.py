@@ -944,23 +944,10 @@ def get_issledovaniya(request):
                 id //= 10
                 t = "2"
             if t == "0":
-                if TubesRegistration.objects.filter(pk=id).count() == 1:
-                    tube = TubesRegistration.objects.get(pk=id)
-                    if tube.doc_recive:
-                        iss = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                        if iss:
-                            napr = iss.first().napravleniye
-                elif TubesRegistration.objects.filter(pk=id).count() > 1:
-                    tubes = TubesRegistration.objects.filter(pk=id)
-                    for tube in tubes:
-                        if tube.doc_recive:
-                            lit = Issledovaniya.objects.filter(tubes__id=id, research__podrazdeleniye__pk=lab_pk)
-                            if lit.count() != 0:
-                                iss = []
-                            for i in lit:
-                                iss.append(i)
-                    if len(iss) > 0:
-                        napr = iss[0].napravleniye
+                iss = Issledovaniya.objects.filter(tubes__id=id)
+                if iss.count() != 0:
+                    napr = iss.first().napravleniye
+                iss = iss.filter(research__podrazdeleniye__pk=lab_pk)
             elif t == "2":
                 try:
                     napr = Napravleniya.objects.get(pk=id)
@@ -984,131 +971,132 @@ def get_issledovaniya(request):
                     res["labs_objects"].append({"pk": po.pk, "title": p, "islab": po.p_type == 2})
                 if po and not i.research.is_paraclinic and not i.research.is_doc_refferal:
                     mnext = True
-            if not mnext:
-                res["msg"] = "Направление %s не предназначено для лаборатории! Проверьте назначения и номер" % id
-            elif len(iss) > 0:
-                groups = {}
-                cnt = 0
-                researches_chk = []
-                for issledovaniye in iss.order_by("deferred", "-doc_save",
-                                                  "-doc_confirmation", "tubes__pk",
-                                                  "research__sort_weight"):
-                    if True:  # issledovaniye.research.hide == 0:
-                        if issledovaniye.pk in researches_chk:
-                            continue
-                        researches_chk.append(issledovaniye.pk)
+            if len(iss) > 0:
+                if not mnext:
+                    res["msg"] = "Направление %s не предназначено для лаборатории! Проверьте назначения и номер" % id
+                else:
+                    groups = {}
+                    cnt = 0
+                    researches_chk = []
+                    for issledovaniye in iss.order_by("deferred", "-doc_save",
+                                                      "-doc_confirmation", "tubes__pk",
+                                                      "research__sort_weight"):
+                        if True:  # issledovaniye.research.hide == 0:
+                            if issledovaniye.pk in researches_chk:
+                                continue
+                            researches_chk.append(issledovaniye.pk)
 
-                        tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
-                        tubes = []
-                        titles = []
-                        for tube_o in tubes_list:
-                            tubes.append(tube_o.pk)
-                            titles.append(tube_o.type.tube.title)
+                            tubes_list = issledovaniye.tubes.exclude(doc_recive__isnull=True).all()
+                            tubes = []
+                            titles = []
+                            for tube_o in tubes_list:
+                                tubes.append(tube_o.pk)
+                                titles.append(tube_o.type.tube.title)
 
-                        not_received_tubes_list = [str(x.pk) for x in
-                                                   issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by(
-                                                       "pk")]
+                            not_received_tubes_list = [str(x.pk) for x in
+                                                       issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by(
+                                                           "pk")]
 
-                        not_received_why = [x.notice for x in
-                                            issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+                            not_received_why = [x.notice for x in
+                                                issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
 
-                        saved = True
-                        confirmed = True
-                        doc_save_fio = ""
-                        doc_save_id = -1
-                        current_doc_save = -1
-                        isnorm = "unknown"
+                            saved = True
+                            confirmed = True
+                            doc_save_fio = ""
+                            doc_save_id = -1
+                            current_doc_save = -1
+                            isnorm = "unknown"
 
-                        if not issledovaniye.doc_save:
-                            saved = False
-                        else:
-                            doc_save_id = issledovaniye.doc_save.pk
-                            doc_save_fio = issledovaniye.doc_save.get_fio()
-                            if doc_save_id == request.user.doctorprofile.pk:
-                                current_doc_save = 1
+                            if not issledovaniye.doc_save:
+                                saved = False
                             else:
-                                current_doc_save = 0
-                            isnorm = "normal"
-                            if issledovaniye.result_set.count() > 0:
-                                if any([x.get_is_norm() == "not_normal" for x in issledovaniye.result_set.all()]):
-                                    isnorm = "not_normal"
-                                elif any([x.get_is_norm() == "maybe" for x in issledovaniye.result_set.all()]):
-                                    isnorm = "maybe"
+                                doc_save_id = issledovaniye.doc_save.pk
+                                doc_save_fio = issledovaniye.doc_save.get_fio()
+                                if doc_save_id == request.user.doctorprofile.pk:
+                                    current_doc_save = 1
+                                else:
+                                    current_doc_save = 0
+                                isnorm = "normal"
+                                if issledovaniye.result_set.count() > 0:
+                                    if any([x.get_is_norm() == "not_normal" for x in issledovaniye.result_set.all()]):
+                                        isnorm = "not_normal"
+                                    elif any([x.get_is_norm() == "maybe" for x in issledovaniye.result_set.all()]):
+                                        isnorm = "maybe"
 
-                        if not issledovaniye.doc_confirmation:
-                            confirmed = False
-                            if not issledovaniye.deferred:
-                                res["all_confirmed"] = False
-                        tb = ','.join(str(v) for v in tubes)
+                            if not issledovaniye.doc_confirmation:
+                                confirmed = False
+                                if not issledovaniye.deferred:
+                                    res["all_confirmed"] = False
+                            tb = ','.join(str(v) for v in tubes)
 
-                        if tb not in groups.keys():
-                            cnt += 1
-                            groups[tb] = cnt
-                        ctp = int(0 if not issledovaniye.time_confirmation else int(
-                            time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
-                        ctime = int(time.time())
-                        cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
-                        rt = SettingManager.get("lab_reset_confirm_time_min") * 60
-                        res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
-                                                     "research_pk": issledovaniye.research.pk,
-                                                     "sort": issledovaniye.research.sort_weight,
-                                                     "saved": saved,
-                                                     "is_norm": isnorm,
-                                                     "confirmed": confirmed,
-                                                     "status_key": str(saved) + str(confirmed) + str(
-                                                         issledovaniye.deferred and not confirmed),
-                                                     "not_received_tubes": ", ".join(not_received_tubes_list),
-                                                     "not_received_why": ", ".join(not_received_why),
-                                                     "tube": {"pk": tb,
-                                                              "title": ' | '.join(titles)},
-                                                     "template": str(issledovaniye.research.template),
-                                                     "deff": issledovaniye.deferred and not confirmed,
-                                                     "doc_save_fio": doc_save_fio,
-                                                     "doc_save_id": doc_save_id,
-                                                     "current_doc_save": current_doc_save,
-                                                     "allow_disable_confirm": ((
-                                                                                   ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                                                   str(x) for x in
-                                                                                   request.user.groups.all()]) and confirmed,
-                                                     "ctp": ctp,
-                                                     "ctime": ctime,
-                                                     "ctime_ctp": ctime - ctp,
-                                                     "ctime_ctp_t": ctime - ctp < rt,
-                                                     "period_sec": rt,
-                                                     "group": groups[tb]
-                                                     })
-                import collections
-                result = collections.defaultdict(lambda: collections.defaultdict(list))
+                            if tb not in groups.keys():
+                                cnt += 1
+                                groups[tb] = cnt
+                            ctp = int(0 if not issledovaniye.time_confirmation else int(
+                                time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
+                            ctime = int(time.time())
+                            cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
+                            rt = SettingManager.get("lab_reset_confirm_time_min") * 60
+                            res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
+                                                         "research_pk": issledovaniye.research.pk,
+                                                         "sort": issledovaniye.research.sort_weight,
+                                                         "saved": saved,
+                                                         "is_norm": isnorm,
+                                                         "confirmed": confirmed,
+                                                         "status_key": str(saved) + str(confirmed) + str(
+                                                             issledovaniye.deferred and not confirmed),
+                                                         "not_received_tubes": ", ".join(not_received_tubes_list),
+                                                         "not_received_why": ", ".join(not_received_why),
+                                                         "tube": {"pk": tb,
+                                                                  "title": ' | '.join(titles)},
+                                                         "template": str(issledovaniye.research.template),
+                                                         "deff": issledovaniye.deferred and not confirmed,
+                                                         "doc_save_fio": doc_save_fio,
+                                                         "doc_save_id": doc_save_id,
+                                                         "current_doc_save": current_doc_save,
+                                                         "allow_disable_confirm": ((
+                                                                                           ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                                                       str(x) for x in
+                                                                                       request.user.groups.all()]) and confirmed,
+                                                         "ctp": ctp,
+                                                         "ctime": ctime,
+                                                         "ctime_ctp": ctime - ctp,
+                                                         "ctime_ctp_t": ctime - ctp < rt,
+                                                         "period_sec": rt,
+                                                         "group": groups[tb]
+                                                         })
+                    import collections
+                    result = collections.defaultdict(lambda: collections.defaultdict(list))
 
-                for d in res["issledovaniya"]:
-                    result[d['status_key']][d['group']].append(d)
-                    result[d['status_key']][d['group']] = sorted(result[d['status_key']][d['group']],
-                                                                 key=lambda k: k['sort'])
+                    for d in res["issledovaniya"]:
+                        result[d['status_key']][d['group']].append(d)
+                        result[d['status_key']][d['group']] = sorted(result[d['status_key']][d['group']],
+                                                                     key=lambda k: k['sort'])
 
-                res["issledovaniya"] = []
+                    res["issledovaniya"] = []
 
-                def concat(dic):
-                    t = [dic[x] for x in dic.keys()]
-                    import itertools
-                    return itertools.chain(*t)
+                    def concat(dic):
+                        t = [dic[x] for x in dic.keys()]
+                        import itertools
+                        return itertools.chain(*t)
 
-                if "FalseFalseFalse" in result.keys():
-                    res["issledovaniya"] += concat(result["FalseFalseFalse"])
+                    if "FalseFalseFalse" in result.keys():
+                        res["issledovaniya"] += concat(result["FalseFalseFalse"])
 
-                if "TrueFalseFalse" in result.keys():
-                    res["issledovaniya"] += concat(result["TrueFalseFalse"])
+                    if "TrueFalseFalse" in result.keys():
+                        res["issledovaniya"] += concat(result["TrueFalseFalse"])
 
-                if "FalseFalseTrue" in result.keys():
-                    res["issledovaniya"] += concat(result["FalseFalseTrue"])
+                    if "FalseFalseTrue" in result.keys():
+                        res["issledovaniya"] += concat(result["FalseFalseTrue"])
 
-                if "TrueFalseTrue" in result.keys():
-                    res["issledovaniya"] += concat(result["TrueFalseTrue"])
+                    if "TrueFalseTrue" in result.keys():
+                        res["issledovaniya"] += concat(result["TrueFalseTrue"])
 
-                if "FalseTrueFalse" in result.keys():
-                    res["issledovaniya"] += concat(result["FalseTrueFalse"])
+                    if "FalseTrueFalse" in result.keys():
+                        res["issledovaniya"] += concat(result["FalseTrueFalse"])
 
-                if "TrueTrueFalse" in result.keys():
-                    res["issledovaniya"] += concat(result["TrueTrueFalse"])
+                    if "TrueTrueFalse" in result.keys():
+                        res["issledovaniya"] += concat(result["TrueTrueFalse"])
             if napr:
                 res["napr_pk"] = napr.pk
                 res["client_fio"] = napr.client.individual.fio()
@@ -1123,6 +1111,7 @@ def get_issledovaniya(request):
                 res["fin_source"] = "" if napr.imported_from_rmis else napr.istochnik_f.title
                 res["ok"] = True
                 res["in_rmis"] = napr.result_rmis_send
+            res["q"] = {"text": id, "type": t}
 
     return JsonResponse(res)
 
