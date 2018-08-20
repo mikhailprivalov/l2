@@ -202,9 +202,6 @@ out/
 # JIRA plugin
 atlassian-ide-plugin.xml
 
-# Cursive Clojure plugin
-.idea/replstate.xml
-
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
 crashlytics.properties
@@ -222,3 +219,4 @@ fabric.properties
 webpack-stats.json
 assets/webpack_bundles/*
 assets/static/img/logo*
+.idea
