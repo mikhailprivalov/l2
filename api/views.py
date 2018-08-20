@@ -458,7 +458,7 @@ def patients_search_card(request):
     list_all_cards = d.get('list_all_cards', False)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)( ([А-яЁё\-]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
     p4 = re.compile(r'card_pk:\d+')
     p4i = bool(re.search(p4, query))
@@ -584,7 +584,7 @@ def patients_search_individual(request):
     d = json.loads(request.body)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё]+)( ([А-яЁё]+)( ([А-яЁё]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)( ([А-яЁё\-]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p4 = re.compile(r'individual_pk:\d+')
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     if re.search(p, query.lower()):
