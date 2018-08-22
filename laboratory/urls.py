@@ -2,7 +2,7 @@ from ajax_select import urls as ajax_select_urls
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth.views import logout
+from django.contrib.auth.views import LogoutView
 from django.urls import include, path
 from django.views.generic import RedirectView
 
@@ -49,7 +49,7 @@ urlpatterns = [
                   path('health/', include('health.urls')),
                   path('reports/', include('reports.urls')),
                   path('mq/', include('mq.urls')),
-                  path('logout/', logout, {'next_page': '/'}),
+                  path('logout/', LogoutView.as_view(), {'next_page': '/'}),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if 'silk' in settings.INSTALLED_APPS:
