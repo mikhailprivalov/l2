@@ -482,7 +482,8 @@ class Patients(BaseRequester):
             for cm in clients_models.Card.objects.filter(base=base, individual=individual):
                 cm.is_archive = True
                 cm.save()
-            c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False).save()
+            c = clients_models.Card(base=base, number=get_id, individual=individual, is_archive=False)
+            c.save()
             return c
         return None
 

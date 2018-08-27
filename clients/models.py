@@ -100,7 +100,7 @@ class Individual(models.Model):
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
 
-        if ok and rmis_uid != "":
+        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True).exists():
             card = Card.objects.filter(individual=self, base__is_rmis=True)[0]
             c.patients.sync_card_data(card, out)
 
