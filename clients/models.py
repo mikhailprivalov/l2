@@ -420,7 +420,7 @@ class Card(models.Model):
         Phones.objects.filter(pk__in=to_delete).delete()
 
     def add_phone(self, t: str):
-        if not str:
+        if not t:
             return
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
