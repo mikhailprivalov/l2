@@ -447,7 +447,7 @@
                     let d = ''
                     $.each(data.tubes, function (k, v) {
                         c = 'checked'
-                        if (v.status === true) {
+                        if (v.status === true || data.direction.full_confirm) {
                             d = 'disabled'
                         }
                         else {

@@ -533,7 +533,8 @@ def get_one_dir(request):
                                          "lab": tmp[0].research.get_podrazdeleniye().title,
                                          "type": tmp[0].research.get_podrazdeleniye().p_type,
                                          "imported_from_rmis": tmp2.imported_from_rmis,
-                                         "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title
+                                         "imported_org": "" if not tmp2.imported_org else tmp2.imported_org.title,
+                                         "full_confirm": tmp2.is_all_confirm()
                                          }
                 response["tubes"] = {}
                 tubes_buffer = {}
