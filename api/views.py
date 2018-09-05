@@ -458,7 +458,7 @@ def patients_search_card(request):
     list_all_cards = d.get('list_all_cards', False)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)( ([А-яЁё\-]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
     p4 = re.compile(r'card_pk:\d+')
     p4i = bool(re.search(p4, query))
@@ -560,7 +560,8 @@ def patients_search_card(request):
 
 
 def full_patient_search_data(p, query):
-    split = str(query).split()
+    dp = re.compile(r'^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$')
+    split = str(re.sub(' +', ' ', str(query))).split()
     n = p = ""
     f = split[0]
     rmis_req = {"surname": f + "%"}
@@ -568,8 +569,11 @@ def full_patient_search_data(p, query):
         n = split[1]
         rmis_req["name"] = n + "%"
     if len(split) > 2:
-        p = split[2]
-        rmis_req["patrName"] = p + "%"
+        if re.search(dp, split[2]):
+            split = [split[0], split[1], '', split[2]]
+        else:
+            p = split[2]
+            rmis_req["patrName"] = p + "%"
     if len(split) > 3:
         btday = split[3].split(".")
         btday = btday[2] + "-" + btday[1] + "-" + btday[0]
@@ -584,7 +588,7 @@ def patients_search_individual(request):
     d = json.loads(request.body)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)( ([А-яЁё\-]*)( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
+    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p4 = re.compile(r'individual_pk:\d+')
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     if re.search(p, query.lower()):
