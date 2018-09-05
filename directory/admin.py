@@ -22,7 +22,7 @@ class RefFractions(admin.ModelAdmin):
     def podr(self, obj):
         return obj.research.podrazdeleniye
 
-    podr.short_description = "лаборатория"
+    podr.short_description = "Лаборатория"
     podr.admin_order_fiels = 'podr'
 
 
