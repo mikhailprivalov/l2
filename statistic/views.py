@@ -204,9 +204,8 @@ def statistic_xls(request):
         row_num += 1
 
         for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
-                Q(doctor__pk__in=users) | Q(creator=request.user.doctorprofile)).order_by("card__individual__family",
-                                                                                     "doctor__fio",
-                                                                                     "doctor__podrazdeleniye__title").order_by("date"):
+                doctor__pk__in=users).order_by("card__individual__family", "doctor__fio",
+                                                                           "doctor__podrazdeleniye__title").order_by("date"):
             if not ticket.creator:
                 ticket.creator = ticket.doctor
                 ticket.save()

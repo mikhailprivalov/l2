@@ -239,6 +239,8 @@ MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
 DEBUG = False
 
+LOGOUT_REDIRECT_URL = '/'
+
 LOGTAIL_FILES = {
     'L2': os.path.join(BASE_DIR, 'logs', 'log.txt')
 }
