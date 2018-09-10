@@ -18,12 +18,12 @@ class RefFractions(admin.ModelAdmin):
     list_display = ('title', 'research', 'podr',)
     list_display_links = ('title', 'research', 'podr',)
     list_filter = ('research__podrazdeleniye',)
-
+    search_fields = ('title',)
     def podr(self, obj):
         return obj.research.podrazdeleniye
 
     podr.short_description = "Лаборатория"
-    podr.admin_order_fiels = 'podr'
+    podr.admin_order_field = 'research__podrazdeleniye'
 
 
 
