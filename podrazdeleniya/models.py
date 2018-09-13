@@ -19,6 +19,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     short_title = models.CharField(max_length=50, default='', blank=True)
     gid_n = models.IntegerField(default=None, null=True, blank=True)  # gidNumber в LDAP
     hide = models.BooleanField(default=False, blank=True, db_index=True)  # DEPRECATED. True=Скрывать подразделение
+    vaccine = models.BooleanField(default=False, blank=True)
     p_type = models.PositiveSmallIntegerField(choices=TYPES, default=HIDDEN, blank=True)
     rmis_id = models.CharField(max_length=15, default=None, blank=True, null=True)
     rmis_direction_type = models.CharField(max_length=255, default="Направление в лабораторию", blank=True)

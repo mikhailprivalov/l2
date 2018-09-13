@@ -1095,7 +1095,10 @@ def result_print(request):
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
+                if iss.doc_confirmation.podrazdeleniye.vaccine:
+                    fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
+                else:
+                    fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
                 if not protocol_plain_text:
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
                             "order"):
@@ -1145,9 +1148,14 @@ def result_print(request):
                 t2 = strdate(iss.time_confirmation)
                 fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
-                fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
+                if iss.doc_confirmation.podrazdeleniye.vaccine:
+                    fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio,
+                                                                      iss.doc_confirmation.podrazdeleniye.title),
+                                         styleBold))
+                else:
+                    fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
                                                                        iss.doc_confirmation.podrazdeleniye.title),
-                                     styleBold))
+                                         styleBold))
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
