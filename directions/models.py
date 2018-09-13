@@ -303,6 +303,7 @@ class Napravleniya(models.Model):
         dir = Napravleniya(client=Clients.Card.objects.get(pk=client_id),
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
+                           data_sozdaniya=timezone.now(),
                            diagnos=diagnos, cancel=False)
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
