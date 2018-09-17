@@ -109,8 +109,6 @@ class Individual(models.Model):
             for card_i in cards:
                 c.patients.sync_card_data(card_i, out)
 
-            card = cards[0]
-
             def get_key(d: dict, val):
                 r = [key for key, v in d.items() if v == val]
                 if len(r) > 0:
