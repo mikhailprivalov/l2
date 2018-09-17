@@ -523,12 +523,14 @@ class Patients(BaseRequester):
                 for document_id in document_ids:
                     document_object = self.client.getDocument(document_id)
                     if document_object["type"] in self.polis_types_id_list and document_object["active"]:
-                        doc = clients_models.Document(
-                            document_type=clients_models.DocumentType.objects.filter(title="Полис ОМС")[0],
+                        q = dict(document_type=clients_models.DocumentType.objects.filter(title="Полис ОМС")[0],
                             serial=document_object["series"] or "",
                             number=document_object["number"] or "",
                             individual=individual,
                             is_active=True)
+                        if clients_models.Document.objects.filter(**q).exists():
+                            continue
+                        doc = clients_models.Document(**q)
                         doc.save()
                 individual.sync_with_rmis(c=self.main_client)
                 return_rows.append(individual)

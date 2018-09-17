@@ -96,6 +96,10 @@ class Individual(models.Model):
                     out.write("Физ.лицо найдено по ФИО и д.р.: %s" % rmis_uid)
 
         if not has_rmis and rmis_uid and rmis_uid != '':
+            ex = Card.objects.filter(number=rmis_uid, is_archive=False, base__is_rmis=True)
+            if ex.exists():
+                for c in ex:
+                    self.join_individual(c, out)
             s = str(c.patients.create_rmis_card(self, rmis_uid))
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
