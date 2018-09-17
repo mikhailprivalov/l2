@@ -542,7 +542,7 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
-    for row in cards.prefetch_related("individual").distinct():
+    for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
         data.append({"type_title": card_type.title,
                      "num": row.number,
                      "is_rmis": row.base.is_rmis,
