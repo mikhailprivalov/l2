@@ -104,9 +104,12 @@ class Individual(models.Model):
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
 
-        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True).exists():
-            card = Card.objects.filter(individual=self, base__is_rmis=True)[0]
-            c.patients.sync_card_data(card, out)
+        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
+            cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
+            for card_i in cards:
+                c.patients.sync_card_data(card_i, out)
+
+            card = cards[0]
 
             def get_key(d: dict, val):
                 r = [key for key, v in d.items() if v == val]
