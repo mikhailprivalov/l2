@@ -381,6 +381,8 @@ class Patients(BaseRequester):
                         card.save()
                     break
         else:
+            card.is_archive = True
+            card.save()
             if out:
                 out.write("Нет данных")
 
