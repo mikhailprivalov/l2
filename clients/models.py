@@ -99,7 +99,7 @@ class Individual(models.Model):
             ex = Card.objects.filter(number=rmis_uid, is_archive=False, base__is_rmis=True)
             if ex.exists():
                 for c in ex:
-                    self.join_individual(c, out)
+                    self.join_individual(c.individual, out)
             s = str(c.patients.create_rmis_card(self, rmis_uid))
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
