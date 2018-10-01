@@ -269,7 +269,9 @@ def receive_execlist(request):
                 tmp = [Paragraph('<font face="OpenSansB" size="8">№</font>', styleSheet["BodyText"]),
                        Paragraph('<font face="OpenSansB" size="8">ФИО, № истории<br/>отделение</font>',
                                  styleSheet["BodyText"]),
-                       Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"])]
+                       Paragraph('<font face="OpenSansB" size="8">№ напр.</font>', styleSheet["BodyText"]),
+                       Paragraph('<font face="OpenSansB" size="8">№ мат.</font>', styleSheet["BodyText"]),
+                       ]
                 for fraction in fractions:
                     fraction = fraction[:int(100 / len(fractions))]
                     tmp.append(
@@ -286,14 +288,15 @@ def receive_execlist(request):
                         Paragraph('<font face="OpenSans" size="8">%s</font>' % (napravleniye.client.individual.fio() + (
                             "" if not napravleniye.history_num or napravleniye.history_num == "" else ", " + napravleniye.history_num) + "<br/>" + napravleniye.doc.podrazdeleniye.title),
                                   styleSheet["BodyText"]),
+                        Paragraph('<font face="OpenSans" size="8">%d</font>' % napravleniye.pk, styleSheet["BodyText"]),
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % tube_pk, styleSheet["BodyText"])]
                     for f in fractions_o:
                         res = Result.objects.filter(fraction=f, issledovaniye__napravleniye=napravleniye)
                         tmp.append(Paragraph('<font face="OpenSans" size="8">{}</font>'.format("" if t == "received" or not res.exists() else res[0].value), styleSheet["BodyText"]))
                     data.append(tmp)
 
-                cw = [int(tw * 0.07), int(tw * 0.245), int(tw * 0.045)]
-                lw = tw * 0.67
+                cw = [int(tw * 0.07), int(tw * 0.245), int(tw * 0.055), int(tw * 0.045)]
+                lw = tw * 0.615
                 for _ in range(0, len(fractions) + 1):
                     cw.append(lw / len(fractions))
                 t = Table(data, colWidths=cw)
