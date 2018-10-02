@@ -91,6 +91,18 @@
             </div>
             <statistics-tickets-print-modal id="statistics-ticket-print-modal" :users='{{ statistics_tickets_users|safe }}'></statistics-tickets-print-modal>
         {% endif %}
+        {% if request.user|has_group:"Просмотр статистики" or request.user.is_superuser %}
+            <div class="col-xs-6">
+                <div class="panel panel-default panel-flt">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Статистика по вакцинации</h3>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item" onclick="gen_stat('vac', 0)">Подтверждённые вакцинации</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
 {% block head_cn %}

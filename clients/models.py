@@ -338,6 +338,11 @@ class Individual(models.Model):
             return self.check_rmis()
         return self.check_rmis(False)
 
+    def get_rmis_uid_fast(self):
+        if Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self).exists():
+            return Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self)[0].number
+        return ""
+
     class Meta:
         verbose_name = 'Физическое лицо'
         verbose_name_plural = 'Физические лица'

@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
-from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs
+from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
 from laboratory import settings
 from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
@@ -154,7 +154,56 @@ def statistic_xls(request):
                     for col_num in range(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
                     row_num += 1
+    elif tp == "vac":
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
+        response['Content-Disposition'] = str.translate("attachment; filename='Вакцинация.xls'", tr)
+        font_style = xlwt.XFStyle()
+        font_style.alignment.wrap = 1
+        font_style.borders = borders
 
+        font_style_b = xlwt.XFStyle()
+        font_style_b.alignment.wrap = 1
+        font_style_b.font.bold = True
+        font_style_b.borders = borders
+
+        ts = [
+            "Название",
+            "Доза",
+            "Серия"
+        ]
+
+        ws = wb.add_sheet("Вакцинация")
+        row_num = 0
+        row = [
+            ("Подтверждено", 5000),
+            ("RMIS UID", 5000),
+            ("Вакцина", 5000),
+            ("Код", 4000),
+        ]
+
+        for t in ts:
+            row.append((t, 3000))
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style_b)
+            ws.col(col_num).width = row[col_num][1]
+        row_num += 1
+
+        for i in Issledovaniya.objects.filter(research__podrazdeleniye__vaccine=True, time_confirmation__range=(date_start, date_end,)).order_by("time_confirmation"):
+            row = [
+                i.time_confirmation.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+                i.napravleniye.client.individual.get_rmis_uid_fast(),
+                i.research.title,
+                i.research.code,
+            ]
+            v = {}
+            for p in ParaclinicResult.objects.filter(issledovaniye=i):
+                if p.field.title in ts:
+                    v[p.field.title] = p.value
+            for t in ts:
+                row.append(v.get(t, ""))
+            for col_num in range(len(row)):
+                ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "statistics-tickets-print":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
