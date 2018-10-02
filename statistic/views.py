@@ -170,12 +170,14 @@ def statistic_xls(request):
             "Название",
             "Доза",
             "Серия",
-            "Срок годности"
+            "Срок годности",
+            "Способ введения"
         ]
 
         ws = wb.add_sheet("Вакцинация")
         row_num = 0
         row = [
+            ("Исполнитель", 6000),
             ("Подтверждено", 5000),
             ("RMIS UID", 5000),
             ("Вакцина", 5000),
@@ -184,6 +186,7 @@ def statistic_xls(request):
 
         for t in ts:
             row.append((t, 4000))
+        row.append(("Этап", 2500))
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_b)
@@ -192,6 +195,7 @@ def statistic_xls(request):
 
         for i in Issledovaniya.objects.filter(research__podrazdeleniye__vaccine=True, time_confirmation__range=(date_start, date_end,)).order_by("time_confirmation"):
             row = [
+                i.doc_confirmation.get_fio(),
                 i.time_confirmation.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
                 i.napravleniye.client.individual.get_rmis_uid_fast(),
                 i.research.title,
@@ -203,6 +207,7 @@ def statistic_xls(request):
                     v[p.field.title] = p.value
             for t in ts:
                 row.append(v.get(t, ""))
+            row.append("V1")
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
