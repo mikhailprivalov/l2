@@ -182,7 +182,7 @@ def statistic_xls(request):
         ]
 
         for t in ts:
-            row.append((t, 3000))
+            row.append((t, 4000))
 
         for col_num in range(len(row)):
             ws.write(row_num, col_num, row[col_num][0], font_style_b)
