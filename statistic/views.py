@@ -207,7 +207,7 @@ def statistic_xls(request):
                     v[p.field.title] = p.value
             for t in ts:
                 row.append(v.get(t, ""))
-            row.append("V1")
+            row.append("V")
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
