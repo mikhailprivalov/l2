@@ -24,6 +24,19 @@
             <!--<a href="#" @click.prevent="do_show_rmis_send_directions" v-if="selected_card.is_rmis">
               <span>Направить в другую МО</span>
             </a>-->
+            <div class="dropup">
+              <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+                      style="text-align: right!important;border-radius: 0;width: 100%">
+                Печатные формы <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <!--<li><a href="#" @click.prevent="selected_do('resend_results_rmis')">Повтор отправки результатов в РМИС</a>
+                </li>
+                <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
+                  РМИС</a></li>-->
+                <li><a :href="`/forms/pdf?type=1&individual=${selected_card.individual_pk}`" target="_blank" class="ddm">Согласие на ВИЧ-исследование</a></li>
+              </ul>
+            </div>
             <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
               <span>Направления из РМИС</span>
             </a>

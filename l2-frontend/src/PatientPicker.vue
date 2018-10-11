@@ -549,9 +549,8 @@
     right: 0;
     height: 34px;
     align-content: stretch;
-    overflow: hidden;
 
-    a {
+    a:not(.ddm) {
       align-self: stretch;
       display: flex;
       align-items: center;
