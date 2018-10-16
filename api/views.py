@@ -1642,8 +1642,6 @@ def mkb10(request):
     data = []
     for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
-    if kw == "-" and len(data) == 0:
-        data.append({"pk": None, "code": "-", "title": "Диагноз не указан"})
     return JsonResponse({"data": data})
 
 
