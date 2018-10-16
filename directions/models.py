@@ -254,7 +254,8 @@ class Napravleniya(models.Model):
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
     visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None, blank=True, null=True)
     visit_who_mark = models.ForeignKey(DoctorProfile, related_name="visit_who_mark", default=None, blank=True, null=True, help_text='Профиль, который отметил посещение', on_delete=models.SET_NULL)
-    diagnos = models.CharField(max_length=511, help_text='Время взятия материала')
+    diagnos = models.CharField(max_length=511, help_text='Диагноз', default='', blank=True)
+    vich_code = models.CharField(max_length=12, help_text='Код для направления на СПИД', default='', blank=True)
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
     istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования', on_delete=models.CASCADE)
@@ -339,7 +340,7 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
-                                          researches, comments, for_rmis=None, rmis_data=None):
+                                          researches, comments, for_rmis=None, rmis_data=None, vich_code=''):
         if rmis_data is None:
             rmis_data = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -427,6 +428,10 @@ class Napravleniya(models.Model):
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
+                for k, v in directions_for_researches.items():
+                    if Issledovaniya.objects.filter(napravleniye=v, research__need_vich_code=True).exists():
+                        v.vich_code = vich_code
+                        v.save()
                 result["r"] = True
                 slog.Log(key=json.dumps(result["list_id"]), user=doc_current, type=21,
                          body=json.dumps({"researches": researches,

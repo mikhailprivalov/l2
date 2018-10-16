@@ -1208,7 +1208,7 @@ def form38001(c: Canvas, d: Napravleniya):
         c.drawString(px(18.5), py(88 + offset), "Социальный статус: ")
         c.line(px(52.3), py(89.2 + offset), pxr(18), py(89.2 + offset))
 
-        c.drawString(px(18.5), py(93 + offset), "Код: ")
+        c.drawString(px(18.5), py(93 + offset), "Код: " + d.vich_code)
         c.line(px(26.3), py(94.2 + offset), px(52), py(94.2 + offset))
         c.drawString(px(53), py(93 + offset), "Диагноз: ")
         c.line(px(68), py(94.2 + offset), pxr(18), py(94.2 + offset))

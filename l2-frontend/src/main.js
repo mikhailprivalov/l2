@@ -108,7 +108,7 @@ new Vue({
       window.open('/results/preview?pk=' + JSON.stringify(pks), '_blank')
     })
 
-    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments, for_rmis, rmis_data, callback}) => {
+    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments, for_rmis, rmis_data, callback, vich_code}) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
         return
@@ -128,7 +128,7 @@ new Vue({
       if (!operator && history_num !== '')
         history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches, comments, for_rmis, rmis_data).then(data => {
+      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches, comments, for_rmis, rmis_data, vich_code).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 
         if (data.ok) {

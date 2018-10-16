@@ -407,6 +407,7 @@ class Researches(View):
                  "title": r.get_title(),
                  "full_title": r.title,
                  "doc_refferal": r.is_doc_refferal,
+                 "need_vich_code": r.need_vich_code,
                  "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
                  "autoadd": autoadd,
                  "addto": addto,
@@ -643,7 +644,8 @@ def directions_generate(request):
                                                                        p.get("researches"),
                                                                        p.get("comments"),
                                                                        p.get("for_rmis"),
-                                                                       p.get("rmis_data", {}))
+                                                                       p.get("rmis_data", {}),
+                                                                       vich_code=p.get("vich_code", ""))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:
@@ -1639,6 +1641,16 @@ def mkb10(request):
     kw = request.GET.get("keyword", "")
     data = []
     for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:11]:
+        data.append({"pk": d.pk, "code": d.code, "title": d.title})
+    if kw == "-" and len(data) == 0:
+        data.append({"pk": None, "code": "-", "title": "Диагноз не указан"})
+    return JsonResponse({"data": data})
+
+
+def vich_code(request):
+    kw = request.GET.get("keyword", "")
+    data = []
+    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc").order_by("code")[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
 

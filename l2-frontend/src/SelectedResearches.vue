@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker">
+    <div :class="['top-picker', need_vich_code ? 'need-vich-code': '']">
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз"><span>&times;</span>
       </button>
       <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
@@ -8,6 +8,13 @@
                  :render="renderItems"
                  :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
       />
+      <div class="vich-code" v-if="need_vich_code">
+        <TypeAhead src="/api/vich_code?keyword=:keyword" :getResponse="getResponse" :onHit="onHitVich" ref="v" placeholder="Код"
+                   v-model="vich_code" maxlength="12" :delayTime="delayTime" :minChars="minChars"
+                   :render="renderItems"
+                   :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
+        />
+      </div>
       <div class="top-inner">
         <a href="#" @click.prevent="select_fin(row.pk)" class="top-inner-select" :class="{ active: row.pk === fin}"
            v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
@@ -134,6 +141,7 @@
         minChars: 1,
         limit: 11,
         selectFirst: true,
+        vich_code: '',
       }
     },
     watch: {
@@ -222,6 +230,9 @@
       onHit(item) {
         this.diagnos = item.split(' ')[0] || ''
       },
+      onHitVich(item) {
+        this.vich_code = item.split(' ')[0] || ''
+      },
       getResponse(resp) {
         return [...resp.data.data];
       },
@@ -232,6 +243,7 @@
       },
       clear_diagnos() {
         this.diagnos = this.get_def_diagnosis()
+        this.vich_code = '';
       },
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       hide_window() {
@@ -281,6 +293,11 @@
           errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
           return
         }
+        if (this.need_vich_code && this.vich_code === '') {
+          $(this.$refs.v).focus()
+          errmessage('Не указан код', 'Требуется код для направления на ВИЧ')
+          return
+        }
         this.$root.$emit('generate-directions', {
           type,
           card_pk: this.card_pk,
@@ -291,7 +308,8 @@
           operator: this.operator,
           ofname: this.ofname,
           history_num: this.history_num,
-          comments: this.comments
+          comments: this.comments,
+          vich_code: this.need_vich_code ? this.vich_code : '',
         })
       },
       clear_all() {
@@ -325,6 +343,14 @@
           }
         }
         return r
+      },
+      need_vich_code() {
+        for (let pk of this.researches) {
+          if (pk in this.$store.getters.researches_obj && this.$store.getters.researches_obj[pk].need_vich_code) {
+            return true;
+          }
+        }
+        return false;
       },
       can_save() {
         return this.fin !== -1 && this.researches.length > 0 && this.card_pk !== -1
@@ -389,11 +415,28 @@
     overflow: hidden;
   }
 
+  .need-vich-code .top-inner {
+    left: 305px;
+  }
+
   .top-picker /deep/ .form-control {
-    width: 180px;
     border-radius: 0 !important;
     border: none;
     border-bottom: 1px solid #AAB2BD;
+    &:first-child {
+      width: 180px;
+    }
+  }
+
+  .vich-code {
+    position: absolute;
+    width: 90px;
+    left: 215px;
+    top: 0;
+  }
+
+  .top-picker .vich-code /deep/ .form-control {
+    width: 90px;
   }
 
   .top-picker /deep/ .input-group {
