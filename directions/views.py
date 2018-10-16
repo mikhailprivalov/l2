@@ -343,7 +343,10 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     if not dir.imported_from_rmis:
         if diagnosis != "":
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
-                         "Диагноз (МКБ 10): " + diagnosis)
+                         ("" if dir.vich_code == "" else ("Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + ("не указан" if diagnosis == "-" else diagnosis))
+        elif dir.vich_code != "":
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 100) + (h / 2) * yn,
+                         "Код: " + dir.vich_code)
         if dir.istochnik_f:
             c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 110) + (h / 2) * yn,
                          "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
