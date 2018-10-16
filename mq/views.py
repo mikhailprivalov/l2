@@ -38,6 +38,7 @@ def get_object(request):
                 d["data_sozdaniya"] = dt(n.data_sozdaniya)
                 d["client"] = n.client_id
                 d["diagnos"] = n.diagnos
+                d["vich_code"] = n.vich_code
                 d["doc"] = None if not n.doc else n.doc_id
                 d["doc_who_create"] = n.doc_who_create_id
                 d["istochnik_f"] = None if not n.istochnik_f else n.istochnik_f_id
