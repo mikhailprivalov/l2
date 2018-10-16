@@ -1649,7 +1649,7 @@ def vich_code(request):
     kw = request.GET.get("keyword", "")
     data = []
     for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="vc").order_by("code")[:11]:
-        data.append({"pk": d.pk, "code": d.code, "title": d.title})
+        data.append({"pk": d.pk, "code": d.code, "title": {"-": ""}.get(d.title, d.title)})
     return JsonResponse({"data": data})
 
 
