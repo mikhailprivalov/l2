@@ -40,4 +40,5 @@ urlpatterns = [
     path('statistics-tickets/invalidate', views.statistics_tickets_invalidate),
     path('mkb10', views.mkb10),
     path('vich_code', views.vich_code),
+    path('flg', views.flg),
 ]

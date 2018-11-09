@@ -35,7 +35,7 @@ from slog import models as slog
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, try_strptime
 
 
 def translit(locallangstring):
@@ -1699,3 +1699,45 @@ def rmis_confirm_list(request):
         "fin": x.istochnik_f.title
     } for x in d]
     return JsonResponse(data)
+
+
+@csrf_exempt
+def flg(request):
+    request_data = json.loads(request.body)
+    ok = False
+    dpk = request_data["directionId"]
+    content = request_data["content"]
+    date = try_strptime(request_data["date"])
+    doc_f = request_data["doc"].lower()
+    ds = directions.Napravleniya.objects.filter(pk=dpk)
+    if ds.exists():
+        d = ds[0]
+        iss = directions.Issledovaniya.objects.filter(napravleniye=d, research__code="A06.09.006")
+        if iss.exists():
+            i = iss[0]
+            doc = None
+            gi = None
+            for u in users.DoctorProfile.objects.filter(podrazdeleniye=i.research.podrazdeleniye):
+                if u.get_fio().lower() == doc_f:
+                    doc = u
+                gis = ParaclinicInputField.objects.filter(group__research=i.research, group__title="Заключение")
+                if gis.exists():
+                    gi = gis[0]
+            if doc and gi:
+                if not directions.ParaclinicResult.objects.filter(issledovaniye=i, field=gi).exists():
+                    f_result = directions.ParaclinicResult(issledovaniye=i, field=gi, value="")
+                else:
+                    f_result = directions.ParaclinicResult.objects.filter(issledovaniye=i, field=gi)[0]
+                f_result.value = content
+                f_result.save()
+                i.doc_save = doc
+                i.time_save = date
+                i.doc_confirmation = doc
+                i.time_confirmation = date
+
+                if not i.napravleniye.visit_who_mark or not i.napravleniye.visit_date:
+                    i.napravleniye.visit_who_mark = doc
+                    i.napravleniye.visit_date = date
+                    i.napravleniye.save()
+
+    return JsonResponse({"ok": ok})
