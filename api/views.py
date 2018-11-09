@@ -1703,12 +1703,11 @@ def rmis_confirm_list(request):
 
 @csrf_exempt
 def flg(request):
-    request_data = json.loads(request.body)
     ok = False
-    dpk = request_data["directionId"]
-    content = request_data["content"]
-    date = try_strptime(request_data["date"])
-    doc_f = request_data["doc"].lower()
+    dpk = request.POST["directionId"]
+    content = request.POST["content"]
+    date = try_strptime(request.POST["date"])
+    doc_f = request.POST["doc"].lower()
     ds = directions.Napravleniya.objects.filter(pk=dpk)
     if ds.exists():
         d = ds[0]
