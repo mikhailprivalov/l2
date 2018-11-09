@@ -1728,13 +1728,15 @@ def flg(request):
                     f_result = directions.ParaclinicResult(issledovaniye=i, field=gi, value="")
                 else:
                     f_result = directions.ParaclinicResult.objects.filter(issledovaniye=i, field=gi)[0]
-                f_result.value = content
-                f_result.save()
-                i.doc_save = doc
-                i.time_save = date
-                i.doc_confirmation = doc
-                i.time_confirmation = date
-                i.save()
+                if f_result.value != content:
+                    f_result.value = content
+                    f_result.save()
+                if i.doc_save != doc or i.time_save != date or i.doc_confirmation != doc or i.time_confirmation != date:
+                    i.doc_save = doc
+                    i.time_save = date
+                    i.doc_confirmation = doc
+                    i.time_confirmation = date
+                    i.save()
 
                 if not i.napravleniye.visit_who_mark or not i.napravleniye.visit_date:
                     i.napravleniye.visit_who_mark = doc
