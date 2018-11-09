@@ -41,7 +41,7 @@ def menu(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Лабораторные исследования")
 def researches(request):
     """ Конструктор исследований """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
@@ -50,7 +50,7 @@ def researches(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Лабораторные исследования")
 def researches_tune(request):
     """ Настройка исследований """
     pk = request.GET["pk"]
@@ -59,14 +59,14 @@ def researches_tune(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Ёмкости для биоматериала")
 def tubes(request):
     """ Создание и редактирование ёмкостей """
     return render(request, 'construct_tubes.html')
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Группировка исследований по направлениям")
 def directions_group(request):
     """ Группировка по направлениям """
     labs = Podrazdeleniya.objects.filter(Q(p_type=Podrazdeleniya.LABORATORY) | Q(p_type=Podrazdeleniya.PARACLINIC))
@@ -74,7 +74,7 @@ def directions_group(request):
 
 
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Конструктор: Настройка УЕТов")
 def uets(request):
     """ Настройка УЕТов """
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY)
@@ -83,7 +83,7 @@ def uets(request):
 
 @csrf_exempt
 @login_required
-@group_required("Оператор")
+@group_required("Оператор", "Группировка исследований по направлениям")
 def onlywith(request):
     """ Настройка назначения анализов вместе """
     if request.method == "GET":
