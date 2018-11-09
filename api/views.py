@@ -1734,6 +1734,7 @@ def flg(request):
                 i.time_save = date
                 i.doc_confirmation = doc
                 i.time_confirmation = date
+                i.save()
 
                 if not i.napravleniye.visit_who_mark or not i.napravleniye.visit_date:
                     i.napravleniye.visit_who_mark = doc
