@@ -95,8 +95,8 @@
             </li>
             <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
               РМИС</a></li>-->
-            <li><a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
-            </li>
+            <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
+            <li><a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a></li>
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
@@ -215,6 +215,9 @@
             break
           case 'print_barcodes':
             this.$root.$emit('print:barcodes', this.checked)
+            break
+          case 'directions_list':
+            this.$root.$emit('print:directions_list', this.checked)
             break
           default:
             this.$root.$emit('print:directions', this.checked)

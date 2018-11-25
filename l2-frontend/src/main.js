@@ -96,17 +96,20 @@ new Vue({
       vm.$store.dispatch(action_types.DEC_LOADING).then()
     })
 
-    this.$root.$on('print:directions', (pks) => {
-      window.open('/directions/pdf?napr_id=' + JSON.stringify(pks), '_blank')
-    })
+    function printForm(tpl, pks) {
+      if (!pks || pks.length === 0) {
+        return;
+      }
+      window.open(tpl.replace('{pks}', JSON.stringify(pks)), '_blank')
+    }
 
-    this.$root.$on('print:barcodes', (pks) => {
-      window.open('/barcodes/tubes?napr_id=' + JSON.stringify(pks), '_blank')
-    })
+    this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
 
-    this.$root.$on('print:results', (pks) => {
-      window.open('/results/preview?pk=' + JSON.stringify(pks), '_blank')
-    })
+    this.$root.$on('print:barcodes', (pks) => printForm('/barcodes/tubes?napr_id={pks}', pks))
+
+    this.$root.$on('print:results', (pks) => printForm('/results/preview?pk={pks}', pks))
+
+    this.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks))
 
     this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments, for_rmis, rmis_data, callback, vich_code}) => {
       if (card_pk === -1) {
