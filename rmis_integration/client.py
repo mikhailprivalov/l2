@@ -208,7 +208,7 @@ class Client(object):
             if id is None:
                 id = self.get_directory("pim_department").get_first("ID", "NAME", query, org_id=org_id)
                 cache.set(key, id, 24 * 60 * 60)
-        except IndexError:
+        except:
             id = None
             if def_q != query:
                 id = self.search_dep_id(q=def_q)
