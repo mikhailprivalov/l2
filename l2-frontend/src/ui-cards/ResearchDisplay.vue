@@ -1,6 +1,6 @@
 <template>
   <div class="root-c" @click.left="remove" @click.right.prevent="update_comment">
-    <div class="root-in">{{title}}<span class="comment" v-if="comment !== ''">[{{comment}}]</span></div>
+    <div class="root-in">{{title}}<span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span></div>
     <div v-if="n + 1 < nof" class="root-div"></div>
   </div>
 </template>
@@ -24,6 +24,10 @@
       comment: {
         type: String,
         default: ''
+      },
+      simple: {
+        type: Boolean,
+        default: false,
       }
     },
     methods: {
@@ -31,6 +35,8 @@
         this.$root.$emit('researches-picker:deselect', this.pk)
       },
       update_comment() {
+        if (this.simple)
+          return
         this.$root.$emit('researches-picker:update-comment', this.pk)
       }
     }

@@ -28,6 +28,7 @@ new Vue({
     'Directions': () => import('./Directions'),
     'Cases': () => import('./pages/Cases'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
+    'ConstructTemplates': () => import('./construct/ConstructTemplates'),
     'ResultsParaclinic': () => import('./ResultsParaclinic'),
     'StatisticsTickets': () => import('./StatisticsTickets'),
     'DirectionVisit': () => import('./DirectionVisit'),

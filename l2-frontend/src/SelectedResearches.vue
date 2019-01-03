@@ -1,7 +1,8 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div :class="['top-picker', need_vich_code ? 'need-vich-code': '']">
-      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз"><span>&times;</span>
+    <div :class="['top-picker', need_vich_code ? 'need-vich-code': '']" v-if="!simple">
+      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз">
+        <span>&times;</span>
       </button>
       <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
                  v-model="diagnos" maxlength="36" :delayTime="delayTime" :minChars="minChars"
@@ -20,7 +21,7 @@
            v-for="row in base.fin_sources"><span>{{ row.title }}</span></a>
       </div>
     </div>
-    <div class="content-picker" style="margin: 5px">
+    <div :class="['content-picker', simple ? 'simple': '']" style="margin: 5px">
       <table class="table table-bordered table-condensed" style="table-layout: fixed">
         <colgroup>
           <col width="130">
@@ -34,7 +35,7 @@
         <tr v-else v-for="(row, key) in researches_departments">
           <td>{{row.title}}</td>
           <td>
-              <research-display v-for="(res, idx) in row.researches"
+              <research-display v-for="(res, idx) in row.researches" :simple="simple"
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
@@ -49,7 +50,7 @@
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker">
+    <div class="bottom-picker" v-if="!simple">
       <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('direction')"
            title="Сохранить и распечатать направления"><span>Сохранить и распечатать направления</span></div>
       <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('barcode')"
@@ -102,13 +103,16 @@
       TypeAhead,
     },
     props: {
+      simple: {
+        type: Boolean,
+        default: false,
+      },
       researches: {
         type: Array,
-        reqired: true
+        required: true
       },
       base: {
-        type: Object,
-        reqired: true
+        type: Object
       },
       card_pk: {
         type: Number
@@ -518,8 +522,12 @@
 
   .content-picker, .content-none {
     position: absolute;
-    top: 34px;
-    bottom: 34px;
+    top: 0;
+    bottom: 0;
+    &:not(.simple) {
+      top: 34px;
+      bottom: 34px;
+    }
     left: 0;
     right: 0;
     overflow-y: auto;

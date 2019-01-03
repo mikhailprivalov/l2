@@ -2,7 +2,8 @@
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
       <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-              style="width: 135px;text-align: left!important;border-radius: 0"><span class="caret"></span>
+              style="width: 135px;text-align: left!important;border-radius: 0">
+        <span class="caret"></span>
         {{selected_type.title}}
       </button>
       <ul v-if="types.length > 1" class="dropdown-menu">
@@ -45,18 +46,33 @@
         <div id="founded-n" v-show="founded_n !== '' && search !== ''">
           <div style="font-size: 16px">{{founded_n}}</div>
         </div>
-        <input type="text" placeholder="Поиск (Enter для быстрого выбора и очистки)" class="form-control"
-               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc" id="fndsrc"
+        <div style="position: relative;max-width: 335px;width: 100%;display: flex;">
+          <div id="templates-tip" v-if="founded_templates.length > 0">
+            <div class="founded-template" v-for="t in founded_templates" @click="do_select_researches(t.researches)">
+              {{t.title}}
+            </div>
+          </div>
+          <input type="text" placeholder="Поиск шаблона" id="template-search"
+                 v-model="search_template" class="form-control" style="width: calc(100% - 35px);max-width: 300px;" />
+          <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search_template"
+                  style="width: 35px" title="Очистить поиск">
+            <span>&times;</span>
+          </button>
+        </div>
+        <input type="text" placeholder="Поиск исследования (Enter для быстрого выбора и очистки)" class="form-control"
+               v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc" id="fndsrc" style="max-width: 300px"
                @show="check_found_tip" @shown="check_found_tip"
                @keyup.alt.37="k('left')"
                @keyup.alt.38="k('up')"
                @keyup.alt.39="k('right')"
                @keyup.alt.40="k('down')"
                v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
-        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного"><span
-          class="fa fa-circle"></span></button>
+        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного">
+          <span class="fa fa-circle"></span>
+        </button>
         <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search" title="Очистить поиск">
-          <span>&times;</span></button>
+          <span>&times;</span>
+        </button>
       </div>
     </div>
   </div>
@@ -65,6 +81,7 @@
 <script>
   import * as action_types from './store/action-types'
   import ResearchPick from './ResearchPick'
+  import _ from 'lodash'
 
   export default {
     name: 'researches-picker',
@@ -89,7 +106,9 @@
         dep: -1,
         template: -1,
         checked_researches: [],
-        search: ''
+        search: '',
+        search_template: '',
+        founded_templates: [],
       }
     },
     created() {
@@ -124,8 +143,17 @@
       this.$root.$on('researches-picker:deselect_department', this.deselect_department)
       this.$root.$on('researches-picker:deselect_all', this.clear)
       this.$root.$on('researches-picker:add_research', this.select_research_ignore)
+
+      if (this.value instanceof Array) {
+        this.checked_researches = this.value
+      }
     },
     watch: {
+      value(v) {
+        if (v instanceof Array) {
+          this.checked_researches = v
+        }
+      },
       types() {
         this.checkType()
       },
@@ -141,7 +169,8 @@
       },
       search() {
         this.check_found_tip()
-      }
+      },
+      search_template: _.debounce(function(nv) { this.do_search_template(nv) }, 80)
     },
     computed: {
       types() {
@@ -390,6 +419,36 @@
           }
         }
         return r
+      },
+      do_search_template(nv) {
+        this.founded_templates = []
+        const t = this
+        if (nv === "")
+          return
+        fetch('/api/search-template?q=' + encodeURIComponent(nv)).then(q => {
+          return q.json()
+        }).then(data => {
+          t.founded_templates = (data.result || []).slice().reverse()
+        })
+      },
+      do_select_researches(pks) {
+        if (pks.length === 0) {
+          return
+        }
+
+        for (const pk of pks) {
+          this.select_research_ignore(pk)
+        }
+
+        const d = this.research_data(pks[pks.length - 1])
+        this.select_type(d.type)
+        if (d.type !== "4") {
+          this.select_dep(d.department_pk)
+        }
+        this.clear_search_template()
+      },
+      clear_search_template() {
+        this.search_template = ""
       }
     }
   }
@@ -528,5 +587,26 @@
     width: auto;
     text-align: center;
     border-radius: 0;
+  }
+
+  #templates-tip {
+    position: absolute;
+    bottom: 34px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 5px 5px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -2px 2px rgba(0,0,0,.4);
+  }
+
+  .founded-template {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    &:hover {
+      background: #049372;
+      color: #fff;
+    }
   }
 </style>

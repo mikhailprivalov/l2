@@ -96,6 +96,7 @@ class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
+    global_template = models.BooleanField(default=True, blank=True)
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc))

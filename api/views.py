@@ -142,7 +142,8 @@ def send(request):
                             if directions.Result.objects.filter(issledovaniye=issled,
                                                                 fraction=fraction).exists():  # Если результат для фракции существует
                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled,
-                                                                                fraction__pk=fraction.pk).order_by("-pk")[0]
+                                                                                   fraction__pk=fraction.pk).order_by(
+                                    "-pk")[0]
                             else:
                                 fraction_result = directions.Result(issledovaniye=issled,
                                                                     fraction=fraction)
@@ -239,7 +240,8 @@ def endpoint(request):
                                         if directions.Result.objects.filter(issledovaniye=issled,
                                                                             fraction=fraction_rel.fraction).exists():
                                             fraction_result = directions.Result.objects.filter(issledovaniye=issled,
-                                                                                            fraction=fraction_rel.fraction).order_by("-pk")[0]
+                                                                                               fraction=fraction_rel.fraction).order_by(
+                                                "-pk")[0]
                                         else:
                                             fraction_result = directions.Result(issledovaniye=issled,
                                                                                 fraction=fraction_rel.fraction)
@@ -374,9 +376,10 @@ class ResearchesTemplates(View):
         from django.db.models import Q
 
         templates = []
-        for t in users.AssignmentTemplates.objects.filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
-                                                          Q(doc=request.user.doctorprofile) |
-                                                          Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
+        for t in users.AssignmentTemplates.objects.filter(global_template=True) \
+                .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
+                        Q(doc=request.user.doctorprofile) |
+                        Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
             templates.append({"values": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=t)],
                               "pk": t.pk,
                               "title": t.title,
@@ -712,7 +715,8 @@ def directions_history(request):
                          "researches": ' | '.join(researches_list),
                          "researches_pks": researches_pks,
                          "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT_SHORT)),
-                         "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[0].research.is_doc_refferal
+                         "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[
+                             0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
                          "checked": False,
                          "has_descriptive": has_descriptive})
@@ -1120,7 +1124,9 @@ def statistics_tickets_get(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     n = 0
-    for row in StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(date__range=(date_start, date_end,)).order_by('pk'):
+    for row in StatisticsTicket.objects.filter(
+            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
+            date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
         response["data"].append({
@@ -1150,7 +1156,9 @@ def statistics_tickets_get(request):
 def statistics_tickets_invalidate(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
-    if StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(pk=request_data.get("pk", -1)).exists():
+    if StatisticsTicket.objects.filter(
+            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
+            pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
             for s in StatisticsTicket.objects.filter(pk=request_data["pk"]):
                 s.invalid_ticket = request_data.get("invalid", False)
@@ -1180,7 +1188,9 @@ def directions_paraclinic_form(request):
 
     if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).exists():
         response["ok"] = True
-        d = directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).distinct()[0]
+        d = \
+        directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).distinct()[
+            0]
         response["patient"] = {
             "fio_age": d.client.individual.fio(full=True),
             "card": d.client.number_with_type(),
@@ -1210,7 +1220,7 @@ def directions_paraclinic_form(request):
                 "saved": i.time_save is not None,
                 "confirmed": i.time_confirmation is not None,
                 "allow_reset_confirm": ((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                             str(x) for x in
                                             request.user.groups.all()]) and i.time_confirmation is not None,
             }
@@ -1346,11 +1356,11 @@ def directions_paraclinic_history(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     has_dirs = []
-    for direction in directions.\
+    for direction in directions. \
             Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) |
                                         Q(issledovaniya__doc_confirmation=request.user.doctorprofile)) \
             .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) |
-                    Q(issledovaniya__time_save__range=(date_start, date_end)))\
+                    Q(issledovaniya__time_save__range=(date_start, date_end))) \
             .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation"):
         if direction.pk in has_dirs:
             continue
@@ -1403,16 +1413,18 @@ def directions_services(request):
             "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
             "imported_from_rmis": n.imported_from_rmis,
             "imported_org": "" if not n.imported_org else n.imported_org.title,
-            "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(), n.visit_who_mark.podrazdeleniye.title),
+            "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(),
+                                                                              n.visit_who_mark.podrazdeleniye.title),
             "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
         }
         response["researches"] = researches
         response["loaded_pk"] = pk
         response["visit_status"] = n.visit_date is not None
         response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
-        response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                               str(x) for x in
-                                               request.user.groups.all()]) and n.visit_date)
+        response["allow_reset_confirm"] = bool(((
+                                                            ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                    str(x) for x in
+                                                    request.user.groups.all()]) and n.visit_date)
     else:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -1439,9 +1451,10 @@ def directions_mark_visit(request):
             n.visit_who_mark = request.user.doctorprofile
             n.save()
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
-            allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                       str(x) for x in
-                                                       request.user.groups.all()]) and n.visit_date)
+            allow_reset_confirm = bool(((
+                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                            str(x) for x in
+                                            request.user.groups.all()]) and n.visit_date)
             response["visit_status"] = n.visit_date is not None
             response["visit_date"] = strdatetime(n.visit_date)
             response["allow_reset_confirm"] = allow_reset_confirm
@@ -1452,9 +1465,10 @@ def directions_mark_visit(request):
             cdid = -1 if not n.visit_who_mark else n.visit_who_mark_id
             rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
             rt = rtm * 60
-            allow_reset_confirm = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                       str(x) for x in
-                                       request.user.groups.all()]) and n.visit_date)
+            allow_reset_confirm = bool(((
+                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                            str(x) for x in
+                                            request.user.groups.all()]) and n.visit_date)
             if allow_reset_confirm:
                 response["ok"] = True
                 response["visit_status"] = None
@@ -1465,7 +1479,9 @@ def directions_mark_visit(request):
                 n.save()
             else:
                 response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
-        slog.Log(key=pk, type=5001, body=json.dumps({"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}), user=request.user.doctorprofile).save()
+        slog.Log(key=pk, type=5001,
+                 body=json.dumps({"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}),
+                 user=request.user.doctorprofile).save()
     else:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
@@ -1476,7 +1492,8 @@ def directions_visit_journal(request):
     response = {"data": []}
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
-    for v in directions.Napravleniya.objects.filter(visit_date__range=(date_start, date_end,), visit_who_mark=request.user.doctorprofile).order_by("-visit_date"):
+    for v in directions.Napravleniya.objects.filter(visit_date__range=(date_start, date_end,),
+                                                    visit_who_mark=request.user.doctorprofile).order_by("-visit_date"):
         response["data"].append({
             "pk": v.pk,
             "client": v.client.individual.fio(full=True),
@@ -1497,12 +1514,14 @@ def directions_last_result(request):
                                                 time_confirmation__isnull=False).order_by("-time_confirmation").first()
     u = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
                                                 research__pk=research,
-                                                time_confirmation__isnull=True).order_by("-napravleniye__data_sozdaniya").first()
+                                                time_confirmation__isnull=True).order_by(
+        "-napravleniye__data_sozdaniya").first()
     v = directions.Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
                                                 research__pk=research,
                                                 research__is_paraclinic=True,
                                                 time_confirmation__isnull=True,
-                                                napravleniye__visit_date__isnull=False).order_by("-napravleniye__visit_date").first()
+                                                napravleniye__visit_date__isnull=False).order_by(
+        "-napravleniye__visit_date").first()
     if i:
         if not u or i.time_confirmation >= u.napravleniye.data_sozdaniya:
             response["ok"] = True
@@ -1512,7 +1531,8 @@ def directions_last_result(request):
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
                 response["has_last_result"] = True
                 response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
-                                           "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
+                                           "ts": tsdatetime(i.time_confirmation),
+                                           "is_paraclinic": i.research.is_paraclinic}
             else:
                 response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
                                     "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
@@ -1591,7 +1611,8 @@ def directions_results_report(request):
                     f = Fractions.objects.get(pk=ppk)
                     for r in directions.Result.objects.filter(issledovaniye__napravleniye__client__individual=i,
                                                               fraction=f,
-                                                              issledovaniye__time_confirmation__range=(date_start, date_end)):
+                                                              issledovaniye__time_confirmation__range=(
+                                                              date_start, date_end)):
                         if r.value == "":
                             continue
                         is_norm = r.get_is_norm()
@@ -1688,7 +1709,7 @@ def rmis_confirm_list(request):
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     d = directions.Napravleniya.objects.filter(istochnik_f__rmis_auto_send=False,
                                                force_rmis_send=False,
-                                               issledovaniya__time_confirmation__range=(date_start, date_end))\
+                                               issledovaniya__time_confirmation__range=(date_start, date_end)) \
         .exclude(issledovaniya__time_confirmation__isnull=True).distinct().order_by("pk")
     data["directions"] = [{
         "pk": x.pk,
@@ -1744,3 +1765,63 @@ def flg(request):
                     i.napravleniye.save()
 
     return JsonResponse({"ok": ok})
+
+
+def search_template(request):
+    result = []
+    q = request.GET.get('q', '')
+    if q != '':
+        for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by('title')[:10]:
+            result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
+    return JsonResponse({"result": result, "q": q})
+
+
+def load_templates(request):
+    result = []
+    t = request.GET.get('type', '1')
+    for r in users.AssignmentTemplates.objects.filter(global_template=t == '1').order_by('title'):
+        result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
+    return JsonResponse({"result": result})
+
+
+def get_template(request):
+    title = ''
+    researches = []
+    global_template = False
+    pk = request.GET.get('pk')
+    if pk:
+        t = users.AssignmentTemplates.objects.get(pk=pk)
+        title = t.title
+        researches = [x.research.pk for x in users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
+        global_template = t.global_template
+    return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
+
+
+@login_required
+@group_required("Конструктор: Настройка шаблонов")
+def update_template(request):
+    response = {"ok": False}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -2)
+    if pk > -2:
+        title = request_data.get("title").strip()
+        researches = request_data["researches"]
+        global_template = request_data["global"]
+        if len(title) > 0 and len(researches) > 0:
+            t = None
+            if pk == -1:
+                t = users.AssignmentTemplates(title=title, global_template=global_template)
+            elif users.AssignmentTemplates.objects.filter(pk=pk).exists():
+                t = users.AssignmentTemplates.objects.get(pk=pk)
+                t.title = title
+                t.global_template = global_template
+            if t:
+                t.save()
+                users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
+                to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(research__pk=x).exists()]
+                for ta in to_add:
+                    if DResearches.objects.filter(pk=ta).exists():
+                        users.AssignmentResearches(template=t, research=DResearches.objects.get(pk=ta)).save()
+                response["ok"] = True
+    return JsonResponse(response)
+

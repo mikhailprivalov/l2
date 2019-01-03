@@ -28,6 +28,8 @@ def menu(request):
          "access": ["Конструктор: Группировка исследований по направлениям"], "module": None},
         {"url": "/construct/uets", "title": "Настройка УЕТов",
          "access": ["Конструктор: Настройка УЕТов"], "module": None},
+        {"url": "/construct/templates", "title": "Настройка шаблонов",
+         "access": ["Конструктор: Настройка шаблонов"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -161,3 +163,9 @@ def construct_consults(request):
         return render(request, 'construct_consults.html')
     else:
         return redirect('/')
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Настройка шаблонов")
+def construct_templates(request):
+    return render(request, 'construct_templates.html')

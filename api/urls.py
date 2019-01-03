@@ -41,4 +41,8 @@ urlpatterns = [
     path('mkb10', views.mkb10),
     path('vich_code', views.vich_code),
     path('flg', views.flg),
+    path('search-template', views.search_template),
+    path('load-templates', views.load_templates),
+    path('get-template', views.get_template),
+    path('templates/update', views.update_template),
 ]
