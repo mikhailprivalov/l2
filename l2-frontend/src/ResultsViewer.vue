@@ -78,7 +78,7 @@
         </table>
         <div
           style="color: #000;line-height: 1.15; font-size: 12pt; font-family: 'Times New Roman', 'Liberation Serif', Times, serif;margin: 0;">
-          Дата выполенения исследования: {{data.direction.date}}
+          Дата выполнения исследования: {{data.direction.date}}
         </div>
       </div>
     </div>
