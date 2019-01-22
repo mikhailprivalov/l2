@@ -417,7 +417,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         values.sort(key=lambda l: l["full_title"])
 
         for v in values:
-            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + "</font>",
+            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + ("" if not v["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(v["comment"])) + "</font>",
                              styleSheet["BodyText"]),
                    Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"])]
             data.append(tmp)
