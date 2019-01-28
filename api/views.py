@@ -1811,14 +1811,15 @@ def update_template(request):
             t = None
             if pk == -1:
                 t = users.AssignmentTemplates(title=title, global_template=global_template)
-            elif users.AssignmentTemplates.objects.filter(pk=pk).exists():
+                t.save()
+                pk = t.pk
+            if users.AssignmentTemplates.objects.filter(pk=pk).exists():
                 t = users.AssignmentTemplates.objects.get(pk=pk)
                 t.title = title
                 t.global_template = global_template
-            if t:
                 t.save()
-                users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
-                to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(research__pk=x).exists()]
+            if t:
+                to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
                     if DResearches.objects.filter(pk=ta).exists():
                         users.AssignmentResearches(template=t, research=DResearches.objects.get(pk=ta)).save()
