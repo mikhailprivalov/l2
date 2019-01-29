@@ -1819,6 +1819,7 @@ def update_template(request):
                 t.global_template = global_template
                 t.save()
             if t:
+                users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
                 to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
                     if DResearches.objects.filter(pk=ta).exists():
