@@ -1,5 +1,33 @@
 from django.contrib import admin
 import directory.models as models
+from django.forms import TextInput, Textarea, Select, SelectMultiple
+from django.db import models as dbmodels
+
+
+class RouteSheetInline(admin.TabularInline):
+    model = models.RouteSheet
+    extra = 0
+    formfield_overrides = {
+        dbmodels.CharField: {'widget': TextInput(attrs={'size': '10'})},
+        dbmodels.TextField: {'widget': Textarea(attrs={'rows': 2, 'cols': 55})},
+    }
+
+class ResRouteSheet(admin.ModelAdmin):
+    list_filter = ('name_route_sheet',)
+    list_display = ('name_route_sheet', 'research', 'work_time', 'cabinet', 'comment',)
+    fields = ['name_route_sheet', 'research', ('work_time', 'cabinet', 'comment')]
+    list_display_links = ('name_route_sheet',)
+
+    formfield_overrides = {
+        dbmodels.CharField: {'widget': TextInput(attrs={'size': '25'})},
+        dbmodels.TextField: {'widget': Textarea(attrs={'rows': 2, 'cols': 55})},
+    }
+
+
+class ResNameRouteSheet(admin.ModelAdmin):
+    list_display = ('title', 'static_text',)
+    list_display_links = ('title',)
+    inlines = [RouteSheetInline]
 
 
 class ResAdmin(admin.ModelAdmin):
@@ -19,13 +47,12 @@ class RefFractions(admin.ModelAdmin):
     list_display_links = ('title', 'research', 'podr',)
     list_filter = ('research__podrazdeleniye',)
     search_fields = ('title',)
+
     def podr(self, obj):
         return obj.research.podrazdeleniye
 
     podr.short_description = "Лаборатория"
     podr.admin_order_field = 'research__podrazdeleniye'
-
-
 
 
 admin.site.register(models.ResearchGroup)
@@ -39,3 +66,5 @@ admin.site.register(models.Fractions, RefFractions)
 admin.site.register(models.Absorption)
 admin.site.register(models.ReleationsFT)
 admin.site.register(models.AutoAdd)
+admin.site.register(models.RouteSheet, ResRouteSheet)
+admin.site.register(models.NameRouteSheet, ResNameRouteSheet)

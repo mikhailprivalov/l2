@@ -234,3 +234,36 @@ class Absorption(models.Model):
         verbose_name = 'Поглощение фракции'
         verbose_name_plural = 'Поглощения фракций'
 
+class NameRouteSheet(models.Model):
+    """
+    Route list for research. Маршрутный лист для исследований
+    """
+    title = models.CharField(max_length=255, unique=True, help_text='Название маршрутного листа')
+    static_text = models.TextField(default="", help_text='Текст перед списком')
+
+    def __str__(self):
+        return "{}".format(self.title)
+
+    def get_title(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Cписки маршрутов'
+        verbose_name_plural = 'Списки маршрутов'
+
+
+class RouteSheet(models.Model):
+    name_route_sheet = models.ForeignKey(NameRouteSheet, db_index=True, help_text='Наименование перечня',on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
+                                 on_delete=models.CASCADE)
+    work_time = models.CharField(max_length=55, help_text='Время работы', blank=True, default='')
+    cabinet = models.CharField(max_length=25, help_text='кабинет', blank=True, default='')
+    comment = models.TextField(max_length=255, help_text='Комментарий', blank=True, default='')
+
+    def __str__(self):
+        return "{} , - исследование {}".format(self.name_route_sheet, self.research)
+
+
+    class Meta:
+        verbose_name = 'Списки маршрутов - Услуги'
+        verbose_name_plural = 'Списки маршрутов - Услуги'
