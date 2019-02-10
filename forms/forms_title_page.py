@@ -24,9 +24,7 @@ def form_health_passport(fio,born_date):
     :param t: type form (тип формы)
     :return:
     """
-    """
-    Ниже блок переменных, заменить из реальных объектов
-    """
+
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     organization_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"

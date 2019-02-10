@@ -261,7 +261,7 @@ class RouteSheet(models.Model):
     comment = models.TextField(max_length=255, help_text='Комментарий', blank=True, default='')
 
     def __str__(self):
-        return "{} , - исследование {}".format(self.name_route_sheet, self.research)
+        return "{} , - исследование {}".format(self.title, self.research)
 
 
     class Meta:
