@@ -251,7 +251,6 @@ class NameRouteSheet(models.Model):
         verbose_name = 'Cписки маршрутов'
         verbose_name_plural = 'Списки маршрутов'
 
-
 class RouteSheet(models.Model):
     name_route_sheet = models.ForeignKey(NameRouteSheet, db_index=True, help_text='Наименование перечня',on_delete=models.CASCADE)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
@@ -265,5 +264,5 @@ class RouteSheet(models.Model):
 
 
     class Meta:
-        verbose_name = 'Списки маршрутов - Услуги'
+        verbose_name = 'Списоки маршрутов - Услуги'
         verbose_name_plural = 'Списки маршрутов - Услуги'

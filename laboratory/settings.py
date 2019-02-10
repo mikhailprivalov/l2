@@ -47,6 +47,7 @@ INSTALLED_APPS = (
     'reports',
     'mq.apps.MqConfig',
     'cases.apps.CasesConfig',
+    'forms',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
