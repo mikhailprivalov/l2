@@ -38,5 +38,6 @@ class ResFormsList(admin.ModelAdmin):
 
 
 # Register your models here.
+admin.site.register(models.FormsGroup)
 admin.site.register(models.FormsList,ResFormsList)
 admin.site.register(models.FormsTemplate,ResFormsTemplate)

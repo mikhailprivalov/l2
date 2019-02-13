@@ -13,9 +13,9 @@ def pdf(request):
     i = Individual.objects.get(pk=request.GET.get('individual'))
     if t == '2':
         out_form = form_agree_hiv(i)
-    elif t == '3':
-        out_form = form_health_passport(i.fio(),i.bd())
     elif t == '1':
+        out_form = form_health_passport(i.fio(),i.bd())
+    elif t == '3':
         out_form = form_route_sheet(t)
 
     pdf = out_form
