@@ -215,7 +215,6 @@ fabric.properties
 /directions/migrations/0001_initial.py
 /directory/migrations/0001_initial.py
 /discharge/migrations/0001_initial.py
-/forms/migrations/0001_initial.py
 /podrazdeleniya/migrations/0001_initial.py
 /researches/migrations/0001_initial.py
 /slog/migrations/0001_initial.py

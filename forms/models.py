@@ -20,7 +20,7 @@ class FormsList(models.Model):
     title_gui = models.CharField(max_length=25, default="", blank=True, help_text='GUI-название формы')
     type_number = models.PositiveIntegerField(unique=True, blank=False, help_text='Номер типа формы')
     is_hide = models.BooleanField(default=False, help_text="Скрыть форму")
-    comment = models.CharField(max_length=255, default="", help_text='Описание')
+    comment = models.CharField(max_length=255, default="", blank=True, help_text='Описание')
 
     def __str__(self):
         return self.title
