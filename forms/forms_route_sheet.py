@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from laboratory.settings import FONTS_FOLDER
 
 import datetime
 import locale
@@ -36,7 +37,6 @@ def form_route_sheet(t):
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
-    FONTS_FOLDER = 'c:\\tmp\\iq200-pyth\\fonts1\\'
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat

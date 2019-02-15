@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
-
+from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
 import sys
@@ -17,8 +17,9 @@ import pytils
 import os.path
 from io import BytesIO
 
-def form_health_passport(fio,born_date):
+def form_health_passport(ind):
     """
+    name def: form_xxx - part 'xxx' must be equivalent, such as in django admin: FormList.object.title
     generate health passport (Пасспорт здровья)
     :param ind: individual object(объекти физлицо)
     :param t: type form (тип формы)
@@ -64,15 +65,14 @@ def form_health_passport(fio,born_date):
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
-    FONTS_FOLDER = 'c:\\tmp\\iq200-pyth\\fonts1\\'
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat
     # Причина PTAstraSerif использовать
 
     buffer = BytesIO()
-    individual_fio = fio
-    individual_date_born = born_date
+    individual_fio = ind.fio()
+    individual_date_born = ind.bd()
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=10 * mm,
