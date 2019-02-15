@@ -27,16 +27,21 @@ class ResFormsTemplate(admin.ModelAdmin):
 
 
 class ResFormsList(admin.ModelAdmin):
-    list_display = ('title', 'type_number','comment',)
-    fields = [('title', 'type_number','comment')]
-    list_display_links = ('title',)
+    list_filter = ('form_group',)
+    list_display = ('title','title_gui','form_group','type_number','is_hide')
+    fields = [('form_group','type_number','is_hide',),('title',),('title_gui',),'comment']
+    list_display_links = ('title','form_group',)
 
     formfield_overrides = {
         dbmodels.CharField: {'widget': TextInput(attrs={'size': '50'})},
     }
     inlines = [FormsTemplateInline]
 
+class ResFormsGroup(admin.ModelAdmin):
+    list_display = ('title','title_gui','is_hide')
+    list_display_links = ('title',)
 
 # Register your models here.
+admin.site.register(models.FormsGroup,ResFormsGroup)
 admin.site.register(models.FormsList,ResFormsList)
 admin.site.register(models.FormsTemplate,ResFormsTemplate)
