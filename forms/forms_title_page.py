@@ -17,7 +17,8 @@ import pytils
 import os.path
 from io import BytesIO
 
-def form_health_passport(ind):
+def form_health_passport(ind=None,ind_doc=None,ind_card=None):
+
     """
     name def: form_xxx - part 'xxx' must be equivalent, such as in django admin: FormList.object.title
     generate health passport (Пасспорт здровья)
@@ -31,11 +32,26 @@ def form_health_passport(ind):
     hospital_kod_ogrn = "1033801542576"
     number_health_passport = "1"  # номер id patient из базы
     individual_sex = "М"
-    individual_address = "г.Иркутск, ул. Сибирских-Партизан д. 8 кв. 9"
-    document_passport_number = "010503"
-    document_passport_serial = "0506"
-    document_passport_issued = "УВД Октябрьского р-на г. Братска"
-    document_polis_number = "77777777"
+    individual_address = ind_card.main_address
+    document_passport_number = ""
+    document_passport_serial = ""
+    document_polis_number=""
+    document_passport_date_start=""
+
+    print(ind_doc)
+    for z in range(len(ind_doc)):
+        if ind_doc[z].get('document_type')==1:
+            document_passport_number = ind_doc[z].get('number')
+            document_passport_serial = ind_doc[z].get('serial')
+            if ind_doc[z].get('date_start'):
+                document_passport_date_start = ind_doc[z].get('date_start')
+        elif ind_doc[z].get('document_type') == 3:
+            if len(ind_doc[z].get('number'))==16:
+                document_polis_number = ind_doc[z].get('number')
+
+    document_passport_date_start = "xx.yy.zzzz"
+    document_passport_issued = ""
+    # document_polis_number = "77777777"
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
     work_organization_okved = "91.5 - Обслуживание и ремонт компютерной и оргтехники, заправка картриджей" \
@@ -93,7 +109,7 @@ def form_health_passport(ind):
     styleCenterBold.alignment = TA_CENTER
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
-    styleJustified.spaceAfter = 5.5 * mm
+    styleJustified.spaceAfter = 4.5 * mm
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
@@ -131,14 +147,14 @@ def form_health_passport(ind):
                   '<u>{}</u> </font>'.format(individual_fio), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">2.Пол: <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="90" />'
                   '3.Дата Рождения: <u>{}</u> </font>'.format(individual_sex, individual_date_born), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="20" />'
-                  'номер: <u>{}</u> </font>'.format(document_passport_serial, document_passport_number),
+        Paragraph('<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="25"/>'
+                  'номер: <u>{}</u></font>'.format(document_passport_serial, document_passport_number), styleJustified),
+        Paragraph('<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(document_passport_date_start),
                   styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">кем выдан: <u>{}</u></font>'.format(document_passport_issued),
-                  styleJustified),
+        Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(document_passport_issued), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">5. Адрес регистрации по месту жительства (пребывания):'
                   ' <u>{}</u></font>'.format(individual_address), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса:'
+        Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
                   ' <u>{}</u></font>'.format(document_polis_number), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7. Наименование работодателя:'
                   ' <u>{}</u></font>'.format(individual_work_organization), styleJustified),

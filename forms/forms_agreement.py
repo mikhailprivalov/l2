@@ -15,7 +15,7 @@ from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 
 
-def form_agree_hiv(ind):
+def form_agree_hiv(ind=None,ind_doc=None,ind_card=None):
     """
     generate form agreement to Hiv
     генерирует форму согласия на ВИЧ

@@ -1,8 +1,8 @@
 import sys
+from django.db.models import Count
 from django.http import HttpResponse
-from clients.models import Individual
+from clients.models import Individual, Document, DocumentType, Card
 from forms.models import FormsGroup, FormsList, FormsTemplate
-from forms.forms_agreement import form_agree_hiv
 from forms import forms_title_page, forms_agreement, forms_contract
 
 
@@ -24,6 +24,18 @@ def pdf(request):
     t = request.GET.get("type")
     response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
     i = Individual.objects.get(pk=request.GET.get('individual'))
+#get all distinct documents
+    try:
+        i_doc = list(Document.objects.values('document_type', 'serial', 'number').
+                     filter(individual=i,is_active=True).distinct())
+    except Document.DoesNotExist:
+        i_doc = None
+# get data by only rmis-card
+    try:
+        i_cards = Card.objects.get(individual=i, is_archive=False,base__is_rmis=True)
+    except Card.DoesNotExist:
+        i_cards = None
+
     type_int = int(t)
     try:
         obj_form_title = FormsList.objects.get(type_number=type_int)
@@ -39,7 +51,7 @@ def pdf(request):
 
         if (is_hide==False) and (hasattr(group_f_obj, 'form_%s' % title_f)):
             f = getattr(group_f_obj, 'form_%s' % title_f)
-            out_form = f(i)
+            out_form = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
         else:
             out_form = form_notfound()
 

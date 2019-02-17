@@ -102,7 +102,7 @@ def statistic_xls(request):
                     "title": i.research.title,
                 })
 
-        response['Content-Disposition'] = str.translate("attachment; filename=Назначения.xls", tr)
+        response['Content-Disposition'] = str.translate('attachment; filename=Назначения.xls', tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
