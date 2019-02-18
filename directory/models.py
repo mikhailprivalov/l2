@@ -4,6 +4,7 @@ from jsonfield import JSONField
 from researches.models import Tubes
 
 
+
 class DirectionsGroup(models.Model):
     """
     Группы направлений

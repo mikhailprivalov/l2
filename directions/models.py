@@ -189,20 +189,22 @@ class PriceName(models.Model):
     research = models.ManyToManyField(directory.Researches, through='PriceCoast' ,help_text="Услуга-Прайс", blank=True, null=True)
 
 class PriceCoast(models.Model):
-    pricename = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING)
+    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING)
     research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING)
-    coast = models.IntegerField()
+    coast = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return "{} {} {}".format(self.pricename_id, self.research_id, self.coast)
+        return "{} {} {}".format(self.price_name_id, self.research_id, self.coast)
 
+    class Meta:
+        unique_together =('price_name','research','coast')
 
 class IstochnikiFinansirovaniya(models.Model):
     """
     Таблица источников финансирования
     """
     title = models.CharField(max_length=511, help_text='Название')
-    price_name = models.ForeignKey(PriceName, help_text='Прайс',
+    price_name = models.ForeignKey(PriceName,null=True, help_text='Прайс',
                              db_index=True, on_delete=models.CASCADE)
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
