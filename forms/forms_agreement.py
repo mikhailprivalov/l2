@@ -15,7 +15,7 @@ from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 
 
-def form_agree_hiv(ind=None,ind_doc=None,ind_card=None):
+def form_agree_hiv(**kwargs):
     """
     generate form agreement to Hiv
     генерирует форму согласия на ВИЧ
@@ -23,6 +23,7 @@ def form_agree_hiv(ind=None,ind_doc=None,ind_card=None):
     :param t: type form (тип формы)
     :return: pdf
     """
+    ind = kwargs.get('ind')
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,

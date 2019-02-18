@@ -17,16 +17,19 @@ import pytils
 import os.path
 from io import BytesIO
 
-def form_health_passport(ind=None,ind_doc=None,ind_card=None):
-
+# def form_health_passport(ind=None,ind_doc=None,ind_card=None):
+def form_health_passport(**kwargs):
     """
+    ind=None, ind_doc=None, ind_card=None
     name def: form_xxx - part 'xxx' must be equivalent, such as in django admin: FormList.object.title
     generate health passport (Пасспорт здровья)
     :param ind: individual object(объекти физлицо)
     :param t: type form (тип формы)
     :return:
     """
-
+    ind_card = kwargs.get('ind_card')
+    ind_doc = kwargs.get('ind_doc')
+    ind = kwargs.get('ind')
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     organization_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"
@@ -38,7 +41,6 @@ def form_health_passport(ind=None,ind_doc=None,ind_card=None):
     document_polis_number=""
     document_passport_date_start=""
 
-    print(ind_doc)
     for z in range(len(ind_doc)):
         if ind_doc[z].get('document_type')==1:
             document_passport_number = ind_doc[z].get('number')
