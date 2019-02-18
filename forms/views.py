@@ -38,8 +38,7 @@ def pdf(request):
 
     type_int = int(t)
     try:
-        obj_form_title = FormsList.objects.get(type_number=type_int)
-        is_hide = obj_form_title.is_hide
+        obj_form_title = FormsList.objects.get(type_number=type_int, is_hide=False)
     except FormsList.DoesNotExist:
         obj_form_title = None
         out_form = form_notfound()
@@ -49,7 +48,7 @@ def pdf(request):
         group_f = 'forms_' + obj_form_title.form_group.title
         group_f_obj = str_to_class(group_f)
 
-        if (is_hide==False) and (hasattr(group_f_obj, 'form_%s' % title_f)):
+        if hasattr(group_f_obj, 'form_%s' % title_f):
             f = getattr(group_f_obj, 'form_%s' % title_f)
             out_form = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
         else:
