@@ -13,14 +13,12 @@ class CardAdmin(admin.ModelAdmin):
 class ResPriceCoast(admin.ModelAdmin):
     list_filter = ('price_name','price_name__active_status',)
     list_display = ('price_name','research', 'coast','status',)
-    # fields = [('form_name',), ('section_name','is_print_section',),'template_text']
     list_display_links = ('price_name','research', 'coast',)
-
 
     def status(self, obj):
         return obj.price_name.status()
 
-    status.short_description = 'Status'
+    status.short_description = 'Статус прайса'
 
 
 admin.site.register(TubesRegistration)
