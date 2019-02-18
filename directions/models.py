@@ -182,22 +182,35 @@ class TubesRegistration(models.Model):
         verbose_name_plural = 'Ёмкости для направлений'
 
 class PriceName(models.Model):
-    title = models.CharField(max_length=511, help_text='Наименование Прайса')
-    active_status = models.BooleanField(default=True, help_text='Статус активности')
+    title = models.CharField(max_length=511,unique=True, help_text='Наименование Прайса',db_index=True)
+    active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    research = models.ManyToManyField(directory.Researches, through='PriceCoast' ,help_text="Услуга-Прайс", blank=True, null=True)
+    research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
+
+    def __str__(self):
+        return "{}".format(self.title)
+
+
+    def status(self):
+        return self.active_status
+
+    class Meta:
+        verbose_name = 'Прайс - название'
+        verbose_name_plural = 'Прайс - название'
 
 class PriceCoast(models.Model):
-    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING)
-    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING)
+    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING,db_index=True)
+    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING,db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return "{} {} {}".format(self.price_name_id, self.research_id, self.coast)
+        return "{}".format(self.price_name.title)
 
     class Meta:
         unique_together =('price_name','research','coast')
+        verbose_name = 'Прайс - цены'
+        verbose_name_plural = 'Прайс - цены'
 
 class IstochnikiFinansirovaniya(models.Model):
     """
