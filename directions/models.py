@@ -186,7 +186,7 @@ class PriceName(models.Model):
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    research = models.ManyToManyField(directory.Researches, through=PriceCoast ,help_text="Услуга-Прайс", blank=True, null=True)
+    research = models.ManyToManyField(directory.Researches, through='PriceCoast' ,help_text="Услуга-Прайс", blank=True, null=True)
 
 class PriceCoast(models.Model):
     pricename = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING)
