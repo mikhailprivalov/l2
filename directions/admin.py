@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import IstochnikiFinansirovaniya, Napravleniya, TubesRegistration, Issledovaniya, Result, \
-    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses
+    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses, Price
 
 admin.site.register(IstochnikiFinansirovaniya)
 
@@ -18,3 +18,4 @@ admin.site.register(CustomResearchOrdering)
 admin.site.register(RMISOrgs)
 admin.site.register(RMISServiceInactive)
 admin.site.register(Diagnoses)
+admin.site.register(Price)

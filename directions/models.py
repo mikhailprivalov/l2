@@ -181,12 +181,29 @@ class TubesRegistration(models.Model):
         verbose_name = 'Ёмкость для направления'
         verbose_name_plural = 'Ёмкости для направлений'
 
+class PriceName(models.Model):
+    title = models.CharField(max_length=511, help_text='Наименование Прайса')
+    active_status = models.BooleanField(default=True, help_text='Статус активности')
+    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    research = models.ManyToManyField(directory.Researches, through=PriceCoast ,help_text="Услуга-Прайс", blank=True, null=True)
+
+class PriceCoast(models.Model):
+    pricename = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING)
+    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING)
+    coast = models.IntegerField()
+
+    def __str__(self):
+        return "{} {} {}".format(self.pricename_id, self.research_id, self.coast)
+
 
 class IstochnikiFinansirovaniya(models.Model):
     """
     Таблица источников финансирования
     """
     title = models.CharField(max_length=511, help_text='Название')
+    price_name = models.ForeignKey(PriceName, help_text='Прайс',
+                             db_index=True, on_delete=models.CASCADE)
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
