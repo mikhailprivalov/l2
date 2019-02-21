@@ -12,6 +12,7 @@ from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet
 
 import directory.models as directory
 import slog.models as slog
@@ -493,6 +494,13 @@ def result_print(request):
         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
             result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value.replace("<br>",
                                                                                                            "<br/>")
+            #my start
+            print("Из результата")
+            print(result)
+            for fr in range(len(result)):
+                print(result[fr])
+            #my end
+
             # try:
             jo = json.loads(result)["rows"]
             style_t.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
@@ -692,6 +700,15 @@ def result_print(request):
                 data = []
                 fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
                                                                render_type=0).order_by("pk").order_by("sort_weight")
+                # my start
+
+                print("Фракции 2")
+
+                for fr in range(len(fractions)):
+                    print(fractions[fr])
+
+                print(fractions[0])
+                #my end
                 if fractions.count() > 0:
                     if fractions.count() == 1:
                         tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
@@ -845,14 +862,22 @@ def result_print(request):
                             if f.render_type == 0:
                                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.title + "</font>",
                                                      styleSheet["BodyText"]))
+
                                 norm = "none"
-                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+                                # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and f.print_title==False:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
                                     f_units = r.get_units()
+                                elif f.print_title:
+                                    # tmp=[]
+                                    tmp[0]=(Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
+                                                         styleSheet["BodyText"]))
+                                    data.append(tmp)
+                                    continue
                                 else:
                                     continue
                                 if not iss.doc_confirmation and iss.deferred:
@@ -957,6 +982,7 @@ def result_print(request):
                         j = 0
                         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                             result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value
+
                             if result == "":
                                 continue
                             jo = json.loads(result)["rows"]

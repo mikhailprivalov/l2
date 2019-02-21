@@ -217,7 +217,7 @@ class IstochnikiFinansirovaniya(models.Model):
     Таблица источников финансирования
     """
     title = models.CharField(max_length=511, help_text='Название')
-    price_name = models.ForeignKey(PriceName,null=True, help_text='Прайс',
+    price_name = models.ForeignKey(PriceName,null=True, default='',blank=True, help_text='Прайс',
                              db_index=True, on_delete=models.CASCADE)
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
