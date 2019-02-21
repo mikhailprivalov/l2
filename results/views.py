@@ -493,13 +493,7 @@ def result_print(request):
         import operator
         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
             result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value.replace("<br>",
-                                                                                                           "<br/>")
-            #my start
-            print("Из результата")
-            print(result)
-            for fr in range(len(result)):
-                print(result[fr])
-            #my end
+
 
             # try:
             jo = json.loads(result)["rows"]
@@ -700,15 +694,7 @@ def result_print(request):
                 data = []
                 fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
                                                                render_type=0).order_by("pk").order_by("sort_weight")
-                # my start
 
-                print("Фракции 2")
-
-                for fr in range(len(fractions)):
-                    print(fractions[fr])
-
-                print(fractions[0])
-                #my end
                 if fractions.count() > 0:
                     if fractions.count() == 1:
                         tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
