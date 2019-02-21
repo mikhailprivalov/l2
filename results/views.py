@@ -493,8 +493,7 @@ def result_print(request):
         import operator
         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
             result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value.replace("<br>",
-
-
+                                                                                                           "<br/>")
             # try:
             jo = json.loads(result)["rows"]
             style_t.add('LINEBELOW', (0, j - 1), (-1, j - 1), 2, colors.black)
