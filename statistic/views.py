@@ -102,7 +102,7 @@ def statistic_xls(request):
                     "title": i.research.title,
                 })
 
-        response['Content-Disposition'] = str.translate('attachment; filename=Назначения.xls', tr)
+        response['Content-Disposition'] = str.translate('attachment; filename=\"Назначения.xls\"', tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
@@ -168,7 +168,7 @@ def statistic_xls(request):
                                            visit_who_mark=request.user.doctorprofile).order_by("visit_date")
 
         if t == "sum":
-            response['Content-Disposition'] = str.translate("attachment; filename=Суммарный отчёт по посещениям.xls",
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Суммарный отчёт по посещениям.xls\"",
                                                             tr)
             font_style = xlwt.XFStyle()
             font_style.alignment.wrap = 1
@@ -239,7 +239,7 @@ def statistic_xls(request):
                     row_num += 1
     elif tp == "vac":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
-        response['Content-Disposition'] = str.translate("attachment; filename=Вакцинация.xls", tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Вакцинация.xls\"", tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
@@ -307,7 +307,7 @@ def statistic_xls(request):
 
         users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
 
-        response['Content-Disposition'] = str.translate("attachment; filename=Статталоны.xls", tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
@@ -393,7 +393,7 @@ def statistic_xls(request):
             "11": "Декабрь",
         }
         date_values["month_title"] = monthes[date_values["month"]]
-        response['Content-Disposition'] = str.translate("attachment; filename=Статистика_Забор_биоматериала.xls", tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статистика_Забор_биоматериала.xls\"", tr)
         font_style = xlwt.XFStyle()
         font_style.alignment.wrap = 1
         font_style.borders = borders
@@ -508,7 +508,7 @@ def statistic_xls(request):
     elif tp == "lab":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Лаборатория_{}_{}-{}.xls".format(lab.title.replace(" ", "_"),
+            "attachment; filename=\"Статистика_Лаборатория_{}_{}-{}.xls\"".format(lab.title.replace(" ", "_"),
                                                                                 date_start_o, date_end_o), tr)
 
         import directions.models as d
@@ -718,7 +718,7 @@ def statistic_xls(request):
                 "sort_weight").order_by("direction_id"))
         pods = list(Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title"))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls".format(
+            "attachment; filename=\"Статистика_Исполнители_Лаборатория_{0}_{1}-{2}.xls\"".format(
                 lab.title.replace(" ", "_"),
                 date_start_o, date_end_o), tr)
         import datetime
@@ -818,7 +818,7 @@ def statistic_xls(request):
     elif tp == "otd":
         otd = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Отделение_{0}_{1}-{2}.xls".format(otd.title.replace(" ", "_"),
+            "attachment; filename=\"Статистика_Отделение_{0}_{1}-{2}.xls\"".format(otd.title.replace(" ", "_"),
                                                                                  date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("Выписано направлений")
@@ -872,7 +872,7 @@ def statistic_xls(request):
             ws.write(row_num, col_num, row[col_num], font_style)
 
     elif tp == "list-users":
-        response['Content-Disposition'] = str.translate("attachment; filename=Список_пользователей.xls", tr)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Список_пользователей.xls\"", tr)
         ws = wb.add_sheet("Пользователи")
         row_num = 0
         font_style = xlwt.XFStyle()
@@ -896,7 +896,7 @@ def statistic_xls(request):
     elif tp == "lab-receive":
         lab = Podrazdeleniya.objects.get(pk=int(pk))
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Принято_емкостей_{0}_{1}-{2}.xls".format(lab.title.replace(" ", "_"),
+            "attachment; filename=\"Статистика_Принято_емкостей_{0}_{1}-{2}.xls\"".format(lab.title.replace(" ", "_"),
                                                                                         date_start_o, date_end_o), tr)
 
         import directions.models as d
@@ -962,7 +962,7 @@ def statistic_xls(request):
     elif tp == "all-labs":
         labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации")
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Все_Лаборатории_{0}-{1}.xls".format(date_start_o, date_end_o), tr)
+            "attachment; filename=\"Статистика_Все_Лаборатории_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
         ws = wb.add_sheet("Выполненых анализов")
 
         font_style = xlwt.XFStyle()
@@ -1016,7 +1016,7 @@ def statistic_xls(request):
             ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "tubes-using":
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_Использование_Емкостей_{0}-{1}.xls".format(date_start_o, date_end_o), tr)
+            "attachment; filename=\"Статистика_Использование_Емкостей_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
 
         per = "{0} - {1}".format(date_start_o, date_end_o)
 
@@ -1165,7 +1165,7 @@ def statistic_xls(request):
         usrs = DoctorProfile.objects.filter(podrazdeleniye__p_type=Podrazdeleniya.LABORATORY).order_by(
             "podrazdeleniye__title")
         response['Content-Disposition'] = str.translate(
-            "attachment; filename=Статистика_УЕТс_{0}-{1}.xls".format(date_start_o, date_end_o), tr)
+            "attachment; filename=\"Статистика_УЕТс_{0}-{1}.xls\"".format(date_start_o, date_end_o), tr)
 
         ws = wb.add_sheet("УЕТы")
 
