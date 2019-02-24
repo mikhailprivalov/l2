@@ -18,7 +18,7 @@ import os.path
 from io import BytesIO
 
 # def form_health_passport(ind=None,ind_doc=None,ind_card=None):
-def form_10001(**kwargs):
+def form_100_01(**kwargs):
     """
     ind=None, ind_doc=None, ind_card=None
     name def: form_xxx - part 'xxx' must be equivalent, such as in django admin: FormList.object.title

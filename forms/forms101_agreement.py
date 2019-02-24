@@ -15,7 +15,7 @@ from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 
 
-def form_10101(**kwargs):
+def form_101_01(**kwargs):
     """
     generate form agreement to Hiv
     генерирует форму согласия на ВИЧ

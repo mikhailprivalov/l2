@@ -79,7 +79,7 @@ def pdf(request):
         return response
 
     if ((obj_form_title) and (forms_module)):
-        tr = str(t).replace('.','')
+        tr = str(t).replace('.','_')
         if hasattr(forms_module, 'form_%s' % tr):
             f = getattr(forms_module, 'form_%s' % tr)
             pdf = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
