@@ -2,9 +2,8 @@ import sys
 from django.db.models import Count
 from django.http import HttpResponse
 from clients.models import Individual, Document, DocumentType, Card
-from forms.models import FormsGroup, FormsList, FormsTemplate
-from forms import forms_title_page, forms_agreement, forms_contract
-
+from forms.models import FormsList
+from forms import forms100_title_page, forms101_agreement, forms102_contract
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -17,14 +16,36 @@ from reportlab.lib.enums import TA_CENTER
 import os.path
 from io import BytesIO
 from laboratory.settings import FONTS_FOLDER
-
+import os, fnmatch
 
 def pdf(request):
+    """
+    Get form's number (decimal type: 101.15 - where "101" is form's group and "15"-number itsels).
+    Can't use 1,2,3,4,5,6,7,8,9 for number itsels - which stands after the point.
+    Bacause in database field store in decimal format xxx.yy - two number after dot, and active status.
+    Must use: 01,02,03-09,10,11,12-19,20,21,22-29,30,31.....
+    :param request:
+    :return:
+    """
     response = HttpResponse(content_type='application/pdf')
     t = request.GET.get("type")
     response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
+
+    forms_file=None
+    obj_form_title=None
+    forms_module=None
+    pdf = form_notfound()
+
+#if not found determinated form in base return - form_notfound()
+    try:
+        obj_form_title = FormsList.objects.get(title=t, is_active=True)
+    except Exception:
+        response.write(pdf)
+        return response
+
     i = Individual.objects.get(pk=request.GET.get('individual'))
-#get all distinct documents
+
+# get all distinct documents
     try:
         i_doc = list(Document.objects.values('document_type', 'serial', 'number').
                      filter(individual=i,is_active=True).distinct())
@@ -36,39 +57,48 @@ def pdf(request):
     except Card.DoesNotExist:
         i_cards = None
 
-    type_int = int(t)
+# get form's group from "type". It mus be three number
     try:
-        obj_form_title = FormsList.objects.get(type_number=type_int, is_hide=False)
-    except FormsList.DoesNotExist:
-        obj_form_title = None
-        out_form = form_notfound()
+        tt = str(int(t[0:3]))
+    except:
+        tt = '0'
 
-    if obj_form_title:
-        title_f = obj_form_title.title
-        group_f = 'forms_' + obj_form_title.form_group.title
-        group_f_obj = str_to_class(group_f)
+    if len(tt)==3:
+        for file in os.listdir('./forms/'):
+            if fnmatch.fnmatch(file, 'forms'+tt+'*'):
+                forms_file = file[0:-3]
+                break
+        if forms_file:
+            try:
+                forms_module = str_to_class(forms_file)
+            except Exception:
+                response.write(pdf)
+                return response
+    else: # if len of part for group from "type" less then three number
+        response.write(pdf)
+        return response
 
-        if hasattr(group_f_obj, 'form_%s' % title_f):
-            f = getattr(group_f_obj, 'form_%s' % title_f)
-            out_form = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
-        else:
-            out_form = form_notfound()
+    if ((obj_form_title) and (forms_module)):
+        tr = str(t).replace('.','')
+        if hasattr(forms_module, 'form_%s' % tr):
+            f = getattr(forms_module, 'form_%s' % tr)
+            pdf = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
 
-    pdf = out_form
     response.write(pdf)
     return response
 
 
 def str_to_class(classname):
     """
-    convwert name module as 'string' to 'module'
+    convert name module as 'string' to 'module'
     """
     return getattr(sys.modules[__name__], classname)
+
 
 def form_notfound():
 
     """
-    В случае не верной настройки форм по типам и функциям
+    В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
     :return:
     """
 

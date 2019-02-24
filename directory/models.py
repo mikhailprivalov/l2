@@ -213,6 +213,8 @@ class Fractions(models.Model):
     formula = models.TextField(default="", blank=True, help_text="Формула для автоматического вычисления значения")
     code = models.CharField(max_length=16, default='', blank=True, help_text='Код фракции')
     print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
+    readonly_title = models.BooleanField(default=False, blank=True,
+                                         help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
 
     def __str__(self):
         return self.research.title + " | " + self.title
