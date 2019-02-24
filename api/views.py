@@ -11,6 +11,7 @@ import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.utils import timezone, dateformat
 from django.utils.decorators import method_decorator
@@ -366,9 +367,13 @@ def bases(request):
          "code": x.short_title,
          "hide": x.hide,
          "history_number": x.history_number,
-         "fin_sources": [{"pk": y.pk, "title": y.title, "default_diagnos": y.default_diagnos} for y in
-                         directions.IstochnikiFinansirovaniya.objects.filter(base=x)]
-         } for x in CardBase.objects.all()]})
+         "internal_type": x.internal_type,
+         "fin_sources": [{
+             "pk": y.pk,
+             "title": y.title,
+             "default_diagnos": y.default_diagnos
+         } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x).order_by('-order_weight')]
+         } for x in CardBase.objects.all().order_by('-order_weight')]})
 
 
 class ResearchesTemplates(View):
@@ -426,7 +431,9 @@ class Researches(View):
 
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
-           "department": {"pk": -1, "title": ""}, "groups": []}
+           "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
+            "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b'),
+        }}
     if ret["auth"]:
         ret["username"] = request.user.username
         ret["fio"] = request.user.doctorprofile.fio
@@ -1126,7 +1133,7 @@ def statistics_tickets_get(request):
     n = 0
     for row in StatisticsTicket.objects.filter(
             Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-            date__range=(date_start, date_end,)).order_by('pk'):
+        date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
         response["data"].append({
@@ -1158,7 +1165,7 @@ def statistics_tickets_invalidate(request):
     request_data = json.loads(request.body)
     if StatisticsTicket.objects.filter(
             Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-            pk=request_data.get("pk", -1)).exists():
+        pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
             for s in StatisticsTicket.objects.filter(pk=request_data["pk"]):
                 s.invalid_ticket = request_data.get("invalid", False)
@@ -1189,8 +1196,9 @@ def directions_paraclinic_form(request):
     if directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).exists():
         response["ok"] = True
         d = \
-        directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True, **add_f).distinct()[
-            0]
+            directions.Napravleniya.objects.filter(pk=pk, issledovaniya__research__is_paraclinic=True,
+                                                   **add_f).distinct()[
+                0]
         response["patient"] = {
             "fio_age": d.client.individual.fio(full=True),
             "card": d.client.number_with_type(),
@@ -1422,7 +1430,7 @@ def directions_services(request):
         response["visit_status"] = n.visit_date is not None
         response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
         response["allow_reset_confirm"] = bool(((
-                                                            ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                        ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                     str(x) for x in
                                                     request.user.groups.all()]) and n.visit_date)
     else:
@@ -1452,7 +1460,7 @@ def directions_mark_visit(request):
             n.save()
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
             allow_reset_confirm = bool(((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                             str(x) for x in
                                             request.user.groups.all()]) and n.visit_date)
             response["visit_status"] = n.visit_date is not None
@@ -1466,7 +1474,7 @@ def directions_mark_visit(request):
             rtm = SettingManager.get("visit_reset_time_min", default="20.0", default_type='f')
             rt = rtm * 60
             allow_reset_confirm = bool(((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                             str(x) for x in
                                             request.user.groups.all()]) and n.visit_date)
             if allow_reset_confirm:
@@ -1612,7 +1620,7 @@ def directions_results_report(request):
                     for r in directions.Result.objects.filter(issledovaniye__napravleniye__client__individual=i,
                                                               fraction=f,
                                                               issledovaniye__time_confirmation__range=(
-                                                              date_start, date_end)):
+                                                                      date_start, date_end)):
                         if r.value == "":
                             continue
                         is_norm = r.get_is_norm()
@@ -1771,8 +1779,11 @@ def search_template(request):
     result = []
     q = request.GET.get('q', '')
     if q != '':
-        for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by('title')[:10]:
-            result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
+        for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by(
+                'title')[:10]:
+            result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
+                                                                        users.AssignmentResearches.objects.filter(
+                                                                            template=r, research__hide=False)]})
     return JsonResponse({"result": result, "q": q})
 
 
@@ -1780,7 +1791,9 @@ def load_templates(request):
     result = []
     t = request.GET.get('type', '1')
     for r in users.AssignmentTemplates.objects.filter(global_template=t == '1').order_by('title'):
-        result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=r, research__hide=False)]})
+        result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
+                                                                    users.AssignmentResearches.objects.filter(
+                                                                        template=r, research__hide=False)]})
     return JsonResponse({"result": result})
 
 
@@ -1792,7 +1805,8 @@ def get_template(request):
     if pk:
         t = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
-        researches = [x.research.pk for x in users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
+        researches = [x.research.pk for x in
+                      users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
     return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
 
@@ -1820,10 +1834,60 @@ def update_template(request):
                 t.save()
             if t:
                 users.AssignmentResearches.objects.filter(template=t).exclude(research__pk__in=researches).delete()
-                to_add = [x for x in researches if not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
+                to_add = [x for x in researches if
+                          not users.AssignmentResearches.objects.filter(template=t, research__pk=x).exists()]
                 for ta in to_add:
                     if DResearches.objects.filter(pk=ta).exists():
                         users.AssignmentResearches(template=t, research=DResearches.objects.get(pk=ta)).save()
                 response["ok"] = True
     return JsonResponse(response)
 
+
+def modules_view(request):
+    return JsonResponse({
+        "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b')
+    })
+
+
+def patients_search_l2_card(request):
+    data = []
+    request_data = json.loads(request.body)
+
+    cards = Card.objects.filter(pk=request_data.get('card_pk', -1))
+    if cards.exists():
+        card_orig = cards[0]
+        l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
+        if not l2_cards.exists():
+            last_l2 = Card.objects.filter(base__internal_type=True).first()
+            n = 0
+            if last_l2:
+                n = int(last_l2.number)
+            c = Card(number=n + 1, base=CardBase.objects.filter(internal_type=True).first(),
+                     individual=card_orig.individual, polis=card_orig.polis,
+                     main_diagnosis=card_orig.main_diagnosis, main_address=card_orig.main_address,
+                     fact_address=card_orig.fact_address)
+            c.save()
+            l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
+
+        for row in l2_cards.filter(is_archive=False).prefetch_related("individual").distinct():
+            data.append({"type_title": row.base.title,
+                         "num": row.number,
+                         "is_rmis": row.base.is_rmis,
+                         "family": row.individual.family,
+                         "name": row.individual.name,
+                         "twoname": row.individual.patronymic,
+                         "birthday": row.individual.bd(),
+                         "age": row.individual.age_s(),
+                         "sex": row.individual.sex,
+                         "individual_pk": row.individual.pk,
+                         "base_pk": row.base.pk,
+                         "pk": row.pk,
+                         "phones": row.get_phones(),
+                         "main_diagnosis": row.main_diagnosis})
+    return JsonResponse({"results": data})
+
+
+def patients_get_card_data(request, card_id):
+    card = Card.objects.get(pk=card_id)
+    return JsonResponse({**model_to_dict(card), **model_to_dict(card.individual),
+                         "has_rmis_card": Card.objects.filter(base__is_rmis=True, individual=card.individual).exists()})

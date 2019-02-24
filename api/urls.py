@@ -18,6 +18,8 @@ urlpatterns = [
     path('directive-from', views.directive_from),
     path('patients/search-card', views.patients_search_card),
     path('patients/search-individual', views.patients_search_individual),
+    path('patients/search-l2-card', views.patients_search_l2_card),
+    path('patients/card/<int:card_id>', views.patients_get_card_data),
     path('directions/generate', views.directions_generate),
     path('directions/rmis-directions', views.directions_rmis_directions),
     path('directions/rmis-direction', views.directions_rmis_direction),
@@ -45,4 +47,5 @@ urlpatterns = [
     path('load-templates', views.load_templates),
     path('get-template', views.get_template),
     path('templates/update', views.update_template),
+    path('modules', views.modules_view),
 ]

@@ -385,10 +385,12 @@ class CardBase(models.Model):
     is_rmis = models.BooleanField(help_text="Это РМИС?", default=False)
     hide = models.BooleanField(help_text="Скрыть базу", default=False)
     history_number = models.BooleanField(help_text="Ввод номера истории", default=False)
+    internal_type = models.BooleanField(help_text="Внутренний тип карт", default=False)
     assign_in_search = models.ForeignKey("clients.CardBase", related_name="assign_in_search_base",
                                          help_text="Показывать результаты в поиске вместе с этой базой", null=True,
                                          blank=True, default=None,
                                          on_delete=models.SET_NULL)
+    order_weight = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
