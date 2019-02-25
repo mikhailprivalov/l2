@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import IstochnikiFinansirovaniya, Napravleniya, TubesRegistration, Issledovaniya, Result, \
-    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses, PriceName, PriceCoast
+    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses
 
 admin.site.register(IstochnikiFinansirovaniya)
 
@@ -10,15 +10,7 @@ class CardAdmin(admin.ModelAdmin):
     raw_id_fields = ('client',)
 
 
-class ResPriceCoast(admin.ModelAdmin):
-    list_filter = ('price_name','price_name__active_status',)
-    list_display = ('price_name','research', 'coast','status',)
-    list_display_links = ('price_name','research', 'coast',)
 
-    def status(self, obj):
-        return obj.price_name.status()
-
-    status.short_description = 'Статус прайса'
 
 
 admin.site.register(TubesRegistration)
@@ -29,5 +21,4 @@ admin.site.register(CustomResearchOrdering)
 admin.site.register(RMISOrgs)
 admin.site.register(RMISServiceInactive)
 admin.site.register(Diagnoses)
-admin.site.register(PriceName)
-admin.site.register(PriceCoast, ResPriceCoast)
+

@@ -13,6 +13,7 @@ import cases.models as cases
 from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
+import contracts.models as contracts
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -181,49 +182,18 @@ class TubesRegistration(models.Model):
         verbose_name = 'Ёмкость для направления'
         verbose_name_plural = 'Ёмкости для направлений'
 
-class PriceName(models.Model):
-    title = models.CharField(max_length=511,unique=True, help_text='Наименование Прайса',db_index=True)
-    active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)
-    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
-    research = models.ManyToManyField(directory.Researches, through='PriceCoast', help_text="Услуга-Прайс", blank=True)
-
-    def __str__(self):
-        return "{}".format(self.title)
-
-
-    def status(self):
-        return self.active_status
-
-    class Meta:
-        verbose_name = 'Прайс - название'
-        verbose_name_plural = 'Прайс - название'
-
-class PriceCoast(models.Model):
-    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING,db_index=True)
-    research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING,db_index=True)
-    coast = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return "{}".format(self.price_name.title)
-
-    class Meta:
-        unique_together =('price_name','research','coast')
-        verbose_name = 'Прайс - цены'
-        verbose_name_plural = 'Прайс - цены'
 
 class IstochnikiFinansirovaniya(models.Model):
     """
     Таблица источников финансирования
     """
     title = models.CharField(max_length=511, help_text='Название')
-    price_name = models.ForeignKey(PriceName,null=True, default='',blank=True, help_text='Прайс',
-                             db_index=True, on_delete=models.CASCADE)
     active_status = models.BooleanField(default=True, help_text='Статус активности')
     base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
     rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
+    contracts = models.ForeignKey(contracts.Contract, null=True,blank=True,default='', on_delete=models.CASCADE)
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -543,6 +513,8 @@ class Issledovaniya(models.Model):
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
+
+
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)

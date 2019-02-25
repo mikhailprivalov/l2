@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'mq.apps.MqConfig',
     'cases.apps.CasesConfig',
     'forms',
+    'contracts',
 )
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
