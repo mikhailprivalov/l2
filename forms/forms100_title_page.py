@@ -2,13 +2,13 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
     TableStyle
-from reportlab.platypus import PageBreak, NextPageTemplate
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
@@ -16,13 +16,13 @@ import sys
 import pytils
 import os.path
 from io import BytesIO
+from . import forms_func
 
 # def form_health_passport(ind=None,ind_doc=None,ind_card=None):
 def form_100_01(**kwargs):
     """
+    print Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     ind=None, ind_doc=None, ind_card=None
-    name def: form_xxx - part 'xxx' must be equivalent, such as in django admin: FormList.object.title
-    generate health passport (Пасспорт здровья)
     :param ind: individual object(объекти физлицо)
     :param t: type form (тип формы)
     :return:
@@ -34,26 +34,27 @@ def form_100_01(**kwargs):
     organization_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"
     number_health_passport = "1"  # номер id patient из базы
-    individual_sex = "М"
-    individual_address = ind_card.main_address
-    document_passport_number = ""
-    document_passport_serial = ""
-    document_polis_number=""
-    document_passport_date_start=""
+    individual_sex = ind.sex
 
-    for z in range(len(ind_doc)):
-        if ind_doc[z].get('document_type')==1:
-            document_passport_number = ind_doc[z].get('number')
-            document_passport_serial = ind_doc[z].get('serial')
-            if ind_doc[z].get('date_start'):
-                document_passport_date_start = ind_doc[z].get('date_start')
-        elif ind_doc[z].get('document_type') == 3:
-            if len(ind_doc[z].get('number'))==16:
-                document_polis_number = ind_doc[z].get('number')
+    individual_address = "г. Иркутск"
+    document_passport_issued=""
 
-    document_passport_date_start = "xx.yy.zzzz"
-    document_passport_issued = ""
-    # document_polis_number = "77777777"
+    ###############
+    documents = forms_func.get_all_doc(ind_doc)
+    document_passport_num = documents[0]
+    document_passport_serial = documents[1]
+    document_passport_date_start = documents[2]
+    document_polis = documents[3]
+    document_snils = documents[4]
+
+    indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
+    individual_benefit_code="_________"
+
+    card_attr = forms_func.get_cards_attr(ind_card)
+    ind_cards_num = card_attr[0]
+    ind_card_address = card_attr[1]
+    ind_card_phone = card_attr[2]
+
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
     work_organization_okved = "91.5 - Обслуживание и ремонт компютерной и оргтехники, заправка картриджей" \
@@ -102,7 +103,7 @@ def form_100_01(**kwargs):
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifBold"
     style.fontSize = 9
-    style.leading = 5
+    style.leading = 6
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
@@ -145,19 +146,19 @@ def form_100_01(**kwargs):
         Spacer(1, 7),
         Paragraph('<font face="PTAstraSerifReg" size=7>(дата оформления)</font>', styleCenter),
         Spacer(1, space),
-        Paragraph('<font face="PTAstraSerifReg">1.Фамилия, имя, отчество:  '
+        Paragraph('<font face="PTAstraSerifReg">1.Фамилия, имя, отчество:'
                   '<u>{}</u> </font>'.format(individual_fio), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">2.Пол: <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="90" />'
                   '3.Дата Рождения: <u>{}</u> </font>'.format(individual_sex, individual_date_born), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="25"/>'
-                  'номер: <u>{}</u></font>'.format(document_passport_serial, document_passport_number), styleJustified),
+                  'номер: <u>{}</u></font>'.format(document_passport_serial, document_passport_num), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(document_passport_date_start),
                   styleJustified),
         Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(document_passport_issued), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">5. Адрес регистрации по месту жительства (пребывания):'
-                  ' <u>{}</u></font>'.format(individual_address), styleJustified),
+                  ' <u>{}</u></font>'.format(ind_card_address), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
-                  ' <u>{}</u></font>'.format(document_polis_number), styleJustified),
+                  ' <u>{}</u></font>'.format(document_polis), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7. Наименование работодателя:'
                   ' <u>{}</u></font>'.format(individual_work_organization), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.1 Форма собственности и вид экономической деятельности '
@@ -231,7 +232,6 @@ def form_100_01(**kwargs):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), 0.01 * mm),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0.01 * mm),
-        ('LEFTPADDING ', (0, 2), (0, -1), 0.1 * mm),
         ('SPAN', (0, 0), (0, 1)),
         ('SPAN', (1, 0), (-1, 0)),
     ])
@@ -299,6 +299,192 @@ def form_100_01(**kwargs):
             ('SPAN', (1, 0), (-1, 0)),
         ])
     objs.append(tbl)
+
+    doc.build(objs)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_100_02(**kwargs):
+    """
+    Print 025/у - титульный лист амбулаторной карты
+    Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
+    ind=None, ind_doc=None, ind_card=None
+    :param ind: individual object(объекти физлицо)
+    :param t: type form (тип формы)
+    :return:
+    """
+    ind_card = kwargs.get('ind_card')
+    ind_doc = kwargs.get('ind_doc')
+    ind = kwargs.get('ind')
+    hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
+    organization_address = "г. Иркутс, ул. Байкальская 201"
+    hospital_kod_ogrn = "1033801542576"
+    hospital_okpo = "31348613"
+
+    individual_fio = ind.fio()
+    individual_sex = ind.sex
+    individual_date_born = ind.bd()
+    individual_address = "_____________________________________________________"
+    individual_tel="________________________________________"
+    document_passport = "Паспорт РФ"
+    documents = forms_func.get_all_doc(ind_doc)
+    document_passport_num = documents[0]
+    document_passport_serial = documents[1]
+    document_passport_date_start = documents[2]
+    document_polis = documents[3]
+    document_snils = documents[4]
+
+    indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
+    individual_benefit_code="_________"
+
+    card_attr = forms_func.get_cards_attr(ind_card)
+    ind_cards_num = card_attr[0]
+    ind_card_address = card_attr[1]
+    ind_card_phone = card_attr[2]
+
+    individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
+                                   "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
+    work_organization_okved = "91.5 - Обслуживание и ремонт компютерной и оргтехники, заправка картриджей" \
+                              "обслуживание принтеров"
+    individual_department = "отдел информационных технология, ораганизаци ремонта и обслуживания медицинского оборудования"
+    individual_profession = "старший государственный таможенный инспектор"  # реест профессий
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat
+    # Причина PTAstraSerif использовать
+
+    buffer = BytesIO()
+    individual_fio = ind.fio()
+    individual_date_born = ind.bd()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            leftMargin=25 * mm,
+                            rightMargin=5 * mm, topMargin=7 * mm,
+                            bottomMargin=10 * mm, allowSplitting=1,
+                            title="Форма {}".format("025/у"))
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10
+    style.leading = 12
+    style.spaceAfter = 0.5 * mm
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+
+    space = 5.5 * mm
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face ='PTAstraSerifReg'
+
+    opinion = [
+        [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} </font>'.format(
+            hospital_name,organization_address,hospital_kod_ogrn), styleT),
+         Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
+                   'Медицинская документация<br/>Учетная форма № 025/у</font>', styleT)],
+    ]
+
+    tbl = Table(opinion, 2 * [90 * mm])
+
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+        ('LEFTPADDING', (1, 0), (-1, -1), 80),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+
+    objs.append(tbl)
+
+
+
+    content_title =[
+        Indenter(left=0 *mm),
+        Spacer(1, 4 * mm),
+        Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
+        Paragraph('&nbsp;&nbsp;&nbsp;№&nbsp;{}'.format(ind_cards_num), styleCenterBold),
+        Spacer(1, 2 * mm),
+        Paragraph('1.Дата заполнения медицинской карты: {}'.
+                  format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
+        Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(individual_fio), style),
+        Paragraph('3. Пол: {}	&nbsp;&nbsp;&nbsp; 4. Дата рождения: {}'.format(individual_sex, individual_date_born), style),
+        Paragraph('5. Место регистрации: {}'.format(ind_card_address), style),
+        Paragraph('тел. {}'.format(ind_card_phone), style),
+        Paragraph('6. Местность: городская — 1, сельская — 2', style),
+        Paragraph('7. Полис ОМС: серия______№: {}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                  '8. СНИЛС: {}'.format(document_polis,document_snils),style),
+        Paragraph('9. Наименование страховой медицинской организации: {}'.format(indivudual_insurance_org), style),
+        Paragraph('10. Код категории льготы: {} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                  '11. Документ: {}&nbsp; серия: {} &nbsp;&nbsp; №: {}'.
+                  format(individual_benefit_code, document_passport, document_passport_serial, document_passport_num), style),
+        Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style),
+        Spacer(1,2 * mm),
+    ]
+
+    objs.extend(content_title)
+
+    styleTCenter = deepcopy(styleT)
+    styleTCenter.alignment=TA_CENTER
+    styleTCenter.leading = 3.5 * mm
+
+    opinion=[
+        [Paragraph('<font size=9>Дата начала диспансерного наблюдения </font>', styleTCenter),
+         Paragraph('<font size=9 >Дата прекращения диспансерного наблюдения</font>', styleTCenter),
+         Paragraph('<font size=9 >Диагноз</font>', styleTCenter),
+         Paragraph('<font size=9 >Код по МКБ-10</font>', styleTCenter),
+         Paragraph('<font size=9 >Врач</font>', styleTCenter),
+         ],
+    ]
+    for i in range(0, 5):
+        para = ['', '', '', '', '']
+        opinion.append(para)
+
+    row_height = []
+    for i in opinion:
+        row_height.append(5 * mm)
+
+    row_height[0] = None
+
+    tbl = Table(opinion, colWidths=(30 * mm, 30 * mm, 75 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
+
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+
+        ]))
+
+
+    objs.append(tbl)
+
 
     doc.build(objs)
 

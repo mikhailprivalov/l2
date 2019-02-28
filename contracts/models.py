@@ -1,6 +1,6 @@
 from django.db import models
 import directory.models as directory
-from django.core.validators import MaxValueValidator, MinValueValidator, MaxLengthValidator, MinLengthValidator
+
 
 # Create your models here.
 
@@ -62,6 +62,8 @@ class Contract(models.Model):
     show_in_research = models.BooleanField(default=False,help_text='Показывать для переопределения цен в услугах при назначении',
                                          db_index=True)
     show_in_card = models.BooleanField(default=False, help_text='Показывать в карте пациента', db_index=True)
+    main = models.BooleanField(default=False, help_text='По умолчанию действует. если несколько.'
+                                                        'Можно переназначить', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)

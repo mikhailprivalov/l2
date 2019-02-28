@@ -11,8 +11,6 @@ class CardAdmin(admin.ModelAdmin):
 
 
 
-
-
 admin.site.register(TubesRegistration)
 admin.site.register(Issledovaniya)
 admin.site.register(Result)

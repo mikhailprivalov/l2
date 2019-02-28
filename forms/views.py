@@ -53,10 +53,10 @@ def pdf(request):
         i_doc = None
 # get data by only rmis-card
     try:
-        i_cards = Card.objects.get(individual=i, is_archive=False,base__is_rmis=True)
+        # i_cards = Card.objects.filter(individual=i, is_archive=False,base__is_rmis=True)
+        i_cards = Card.objects.filter(individual=i, is_archive=False)
     except Card.DoesNotExist:
         i_cards = None
-
 # get form's group from "type". It mus be three number
     try:
         tt = str(int(t[0:3]))
@@ -82,7 +82,7 @@ def pdf(request):
         tr = str(t).replace('.','_')
         if hasattr(forms_module, 'form_%s' % tr):
             f = getattr(forms_module, 'form_%s' % tr)
-            pdf = f(ind=i,ind_doc=i_doc,ind_card=i_cards)
+            pdf = f(ind=i,ind_doc=i_doc, ind_card=i_cards)
 
     response.write(pdf)
     return response
