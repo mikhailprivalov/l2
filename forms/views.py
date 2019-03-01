@@ -3,7 +3,7 @@ from django.db.models import Count
 from django.http import HttpResponse
 from clients.models import Individual, Document, DocumentType, Card
 from forms.models import FormsList
-from forms import forms100_title_page, forms101_agreement, forms102_contract
+from . import forms100_title_page, forms101_agreement, forms102_contract, forms104_pay
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont

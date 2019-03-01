@@ -21,39 +21,34 @@ from . import forms_func
 # def form_health_passport(ind=None,ind_doc=None,ind_card=None):
 def form_100_01(**kwargs):
     """
-    print Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
-    ind=None, ind_doc=None, ind_card=None
-    :param ind: individual object(объекти физлицо)
-    :param t: type form (тип формы)
-    :return:
+    форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     """
     ind_card = kwargs.get('ind_card')
     ind_doc = kwargs.get('ind_doc')
     ind = kwargs.get('ind')
+
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
-    organization_address = "г. Иркутс, ул. Байкальская 201"
+    hospital_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"
-    number_health_passport = "1"  # номер id patient из базы
+    health_passport_num = "1"  # номер id patient из базы
+
     individual_sex = ind.sex
+    individual_fio = ind.fio()
+    individual_date_born = ind.bd()
 
-    individual_address = "г. Иркутск"
-    document_passport_issued=""
-
-    ###############
     documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents[0]
-    document_passport_serial = documents[1]
-    document_passport_date_start = documents[2]
-    document_polis = documents[3]
-    document_snils = documents[4]
+    document_passport_num = documents['passport']['num']
+    document_passport_serial = documents['passport']['serial']
+    document_passport_date_start = documents['passport']['date_start']
+    document_passport_issued = documents['passport']['issued']
+    document_polis = documents['polis']['num']
+    document_snils = documents['snils']['num']
 
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_cards_attr(ind_card)
-    ind_cards_num = card_attr[0]
-    ind_card_address = card_attr[1]
-    ind_card_phone = card_attr[2]
+    card_attr = forms_func.get_card_attr(ind_card)
+    ind_card_address = card_attr.get('addr')
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
@@ -90,8 +85,6 @@ def form_100_01(**kwargs):
     # Причина PTAstraSerif использовать
 
     buffer = BytesIO()
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=10 * mm,
@@ -133,12 +126,12 @@ def form_100_01(**kwargs):
         Paragraph('<font face="PTAstraSerifReg"><font size=9>(наименование медицинской организации)</font></font>',
                   styleCenter),
         Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold"><u>{}</u></font>'.format(organization_address), styleCenter),
+        Paragraph('<font face="PTAstraSerifBold"><u>{}</u></font>'.format(hospital_address), styleCenter),
         Spacer(1, 5 * mm),
         Paragraph('<font face="PTAstraSerifBold" size=12>Код ОГРН {}</font>'.format(hospital_kod_ogrn), styleCenter),
         Spacer(1, 10 * mm),
         Paragraph('<font face="PTAstraSerifBold" size=12>ПАСПОРТ ЗДОРОВЬЯ РАБОТНИКА № <u>{}</u></font>'.
-                  format(number_health_passport), styleCenter),
+                  format(health_passport_num), styleCenter),
         Spacer(1, space),
         Paragraph('<font face="PTAstraSerifReg"size=10><u>{} года</u></font>'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())),
@@ -309,41 +302,49 @@ def form_100_01(**kwargs):
 
 def form_100_02(**kwargs):
     """
-    Print 025/у - титульный лист амбулаторной карты
+    Форма 025/у - титульный лист амбулаторной карты
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
-    ind=None, ind_doc=None, ind_card=None
-    :param ind: individual object(объекти физлицо)
-    :param t: type form (тип формы)
-    :return:
     """
     ind_card = kwargs.get('ind_card')
     ind_doc = kwargs.get('ind_doc')
     ind = kwargs.get('ind')
+
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
-    organization_address = "г. Иркутс, ул. Байкальская 201"
+    hospital_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"
     hospital_okpo = "31348613"
 
     individual_fio = ind.fio()
     individual_sex = ind.sex
     individual_date_born = ind.bd()
-    individual_address = "_____________________________________________________"
-    individual_tel="________________________________________"
+
     document_passport = "Паспорт РФ"
+
     documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents[0]
-    document_passport_serial = documents[1]
-    document_passport_date_start = documents[2]
-    document_polis = documents[3]
-    document_snils = documents[4]
+    document_passport_num = documents['passport']['num']
+    document_passport_serial = documents['passport']['serial']
+    document_passport_date_start = documents['passport']['date_start']
+    document_passport_issued = documents['passport']['issued']
+    document_polis = documents['polis']['num']
+    document_snils = documents['snils']['num']
 
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_cards_attr(ind_card)
-    ind_cards_num = card_attr[0]
-    ind_card_address = card_attr[1]
-    ind_card_phone = card_attr[2]
+
+    card_attr = forms_func.get_card_attr(ind_card)
+    ind_card_numtype_total = card_attr['num_type']
+
+    ind_card_num = ""
+    for k,v in ind_card_numtype_total.items():
+        ind_card_num += "{} ({})".format(k,v)+'&nbsp;&nbsp;&nbsp;&nbsp;'
+
+    ind_card_address = card_attr.get('addr')
+    ind_card_phone_s = set(card_attr.get('phone'))
+
+    ind_card_phone=""
+    for i in ind_card_phone_s:
+        ind_card_phone+=i
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
@@ -369,8 +370,8 @@ def form_100_02(**kwargs):
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=25 * mm,
-                            rightMargin=5 * mm, topMargin=7 * mm,
-                            bottomMargin=10 * mm, allowSplitting=1,
+                            rightMargin=5 * mm, topMargin=6 * mm,
+                            bottomMargin=6 * mm, allowSplitting=1,
                             title="Форма {}".format("025/у"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -397,8 +398,6 @@ def form_100_02(**kwargs):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-
-    space = 5.5 * mm
     objs = []
 
     styleT = deepcopy(style)
@@ -409,7 +408,7 @@ def form_100_02(**kwargs):
 
     opinion = [
         [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} </font>'.format(
-            hospital_name,organization_address,hospital_kod_ogrn), styleT),
+            hospital_name,hospital_address,hospital_kod_ogrn), styleT),
          Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
                    'Медицинская документация<br/>Учетная форма № 025/у</font>', styleT)],
     ]
@@ -430,7 +429,7 @@ def form_100_02(**kwargs):
         Indenter(left=0 *mm),
         Spacer(1, 4 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
-        Paragraph('&nbsp;&nbsp;&nbsp;№&nbsp;{}'.format(ind_cards_num), styleCenterBold),
+        Paragraph('&nbsp;&nbsp;&nbsp;№&nbsp;{}'.format(ind_card_num), styleCenterBold),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
@@ -469,25 +468,20 @@ def form_100_02(**kwargs):
 
     row_height = []
     for i in opinion:
-        row_height.append(5 * mm)
+        row_height.append(6 * mm)
 
     row_height[0] = None
 
-    tbl = Table(opinion, colWidths=(30 * mm, 30 * mm, 75 * mm, 20 * mm, 25 * mm), rowHeights=row_height)
+    tbl = Table(opinion, colWidths=(27 * mm, 30 * mm, 75 * mm, 20 * mm, 27 * mm), rowHeights=row_height)
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
 
         ]))
 
-
     objs.append(tbl)
-
-
     doc.build(objs)
-
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
