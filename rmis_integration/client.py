@@ -147,6 +147,8 @@ class Client(object):
             self.hosp = Hosp(self)
         if "department" in modules:
             self.department = Department(self)
+        if "individuals" in modules:
+            self.individuals = Individuals(self)
         if "tc" in modules:
             self.localclient = TC(enforce_csrf_checks=False)
 
@@ -319,6 +321,25 @@ class Directory(BaseRequester):
         return None
 
 
+class Individuals(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_individuals")
+
+    def update_patient_data(self, card: clients_models.Card):
+        data = {
+            "individualId": card.number,
+            "individualData": {
+                "name": card.individual.name,
+                "patrName": card.individual.patronymic,
+                "surname": card.individual.family,
+                "gender": {"ж": "2"}.get(card.individual.sex.lower(), "1"),
+                "birthDate": card.individual.birthday,
+            },
+        }
+        d = self.client.editIndividual(**data)
+        print(d, data)
+
+
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
@@ -370,7 +391,8 @@ class Patients(BaseRequester):
                     if a["type"] not in '43':
                         continue
                     addr = ', '.join(
-                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + ((', Дом ' + a['house']) if a['house'] else '')
+                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + (
+                               (', Дом ' + a['house']) if a['house'] else '')
                     if a['apartment']:
                         addr += ', ' + a['apartment']
                     if a["type"] == '4' and card.main_address != addr:
@@ -509,7 +531,7 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                        (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
+                    (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
                     and individual_row["birthDate"] is not None):
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
@@ -526,10 +548,10 @@ class Patients(BaseRequester):
                     document_object = self.client.getDocument(document_id)
                     if document_object["type"] in self.polis_types_id_list and document_object["active"]:
                         q = dict(document_type=clients_models.DocumentType.objects.filter(title="Полис ОМС")[0],
-                            serial=document_object["series"] or "",
-                            number=document_object["number"] or "",
-                            individual=individual,
-                            is_active=True)
+                                 serial=document_object["series"] or "",
+                                 number=document_object["number"] or "",
+                                 individual=individual,
+                                 is_active=True)
                         if clients_models.Document.objects.filter(**q).exists():
                             continue
                         doc = clients_models.Document(**q)
@@ -703,8 +725,8 @@ class Directions(BaseRequester):
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
         if client_rmis and client_rmis != "NONERMIS" and (
-                            not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
-                            direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
+                direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
             if not direction.imported_from_rmis:
                 ref_data = dict(patientUid=client_rmis,
                                 number=str(direction.pk),

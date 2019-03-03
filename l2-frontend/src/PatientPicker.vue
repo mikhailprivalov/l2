@@ -4,7 +4,8 @@
       <div class="input-group">
         <div class="input-group-btn" v-if="bases.length > 1">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
-                  style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
+                  style="width: 200px;text-align: left!important;">
+            <span class="caret"></span> {{selected_base.title}}
           </button>
           <ul class="dropdown-menu">
             <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk">
@@ -133,7 +134,7 @@
         <small>Показано не более 10 карт</small>
       </div>
     </modal>
-    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" />
+    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
   </div>
 </template>
 
@@ -219,6 +220,21 @@
       })
       this.$root.$on('search', () => {
         vm.search()
+      })
+      this.$root.$on('select_card', data => {
+        vm.base = data.base_pk;
+        vm.query = `card_pk:${data.card_pk}`
+        vm.search_after_loading = true
+        $(vm.$refs.q).focus()
+        vm.emit_input()
+        if (!data.hide) {
+          vm.editor_pk = data.card_pk
+        } else {
+          vm.editor_pk = -2;
+        }
+        setTimeout(() => {
+          vm.search()
+        }, 5)
       })
       this.$root.$on('hide_l2_card_create', () => {
         vm.editor_pk = -2;

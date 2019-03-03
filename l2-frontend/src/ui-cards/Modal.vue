@@ -99,4 +99,9 @@
   .page-header {
     min-width: 400px;
   }
+
+  .panel-body {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 </style>

@@ -24,7 +24,7 @@ import users.models as users
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card
+from clients.models import CardBase, Individual, Card, Document, DocumentType
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -1858,10 +1858,12 @@ def patients_search_l2_card(request):
         card_orig = cards[0]
         l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
         if not l2_cards.exists():
-            last_l2 = Card.objects.filter(base__internal_type=True).first()
+            last_l2 = Card.objects.filter(base__internal_type=True).extra(
+                select={'numberInt': 'CAST(number AS INTEGER)'}
+            ).order_by("-numberInt").first()
             n = 0
             if last_l2:
-                n = int(last_l2.number)
+                n = last_l2.numberInt
             c = Card(number=n + 1, base=CardBase.objects.filter(internal_type=True).first(),
                      individual=card_orig.individual, polis=card_orig.polis,
                      main_diagnosis=card_orig.main_diagnosis, main_address=card_orig.main_address,
@@ -1889,5 +1891,136 @@ def patients_search_l2_card(request):
 
 def patients_get_card_data(request, card_id):
     card = Card.objects.get(pk=card_id)
-    return JsonResponse({**model_to_dict(card), **model_to_dict(card.individual),
-                         "has_rmis_card": Card.objects.filter(base__is_rmis=True, individual=card.individual).exists()})
+    c = model_to_dict(card)
+    i = model_to_dict(card.individual)
+    docs = [{**model_to_dict(x), "type_title": x.document_type.title}
+            for x in Document.objects.filter(individual=card.individual).distinct("number", "document_type", "serial")]
+    rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
+    return JsonResponse({**i, **c,
+                         "docs": docs,
+                         "has_rmis_card": rc.exists(),
+                         "rmis_uid": rc[0].number if rc.exists() else None,
+                         "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
+
+
+def individual_search(request):
+    result = []
+    request_data = json.loads(request.body)
+    for i in Individual.objects.filter(**request_data):
+        result.append({
+            "pk": i.pk,
+            "fio": i.fio(full=True),
+            "docs": [
+                {**model_to_dict(x), "type_title": x.document_type.title}
+                for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
+            ]
+        })
+    return JsonResponse({"result": result})
+
+
+def autocomplete(request):
+    t = request.GET.get("type")
+    v = request.GET.get("value", "")
+    l = request.GET.get("limit", 10)
+    data = []
+    if v != "" and l > 0:
+        if t == "name":
+            p = Individual.objects.filter(name__istartswith=v).distinct('name')[:l]
+            if p.exists():
+                data = [x.name for x in p]
+        if t == "family":
+            p = Individual.objects.filter(family__istartswith=v).distinct('family')[:l]
+            if p.exists():
+                data = [x.family for x in p]
+        if t == "patronymic":
+            p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:l]
+            if p.exists():
+                data = [x.patronymic for x in p]
+
+    return JsonResponse({"data": data})
+
+
+def patients_card_save(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    result = "fail"
+    message = ""
+    card_pk = -1
+    individual_pk = -1
+
+    if (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
+        i = Individual(family=request_data["family"],
+                       name=request_data["name"],
+                       patronymic=request_data["patronymic"],
+                       birthday=request_data["birthday"],
+                       sex=request_data["sex"])
+    else:
+        i = Individual.objects.get(pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(pk=request_data["card_pk"]).individual.pk)
+        i.family = request_data["family"]
+        i.name = request_data["name"]
+        i.patronymic = request_data["patronymic"]
+        i.birthday = request_data["birthday"]
+        i.sex = request_data["sex"]
+        if Card.objects.filter(individual=i, base__is_rmis=True).exists():
+            c = Client(modules="individuals")
+            c.individuals.update_patient_data(Card.objects.filter(individual=i, base__is_rmis=True)[0])
+    i.save()
+    individual_pk = i.pk
+
+    if request_data["card_pk"] < 0:
+        base = CardBase.objects.get(pk=request_data["base_pk"], internal_type=True)
+        last_l2 = Card.objects.filter(base__internal_type=True).extra(
+            select={'numberInt': 'CAST(number AS INTEGER)'}
+        ).order_by("-numberInt").first()
+        n = 0
+        if last_l2:
+            n = int(last_l2.number)
+        c = Card(number=n + 1, base=base,
+                 individual=i,
+                 main_diagnosis="", main_address="",
+                 fact_address="")
+        c.save()
+        card_pk = c.pk
+    else:
+        card_pk = request_data["card_pk"]
+        individual_pk = request_data["individual_pk"]
+    result = "ok"
+    return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})
+
+
+def get_sex_by_param(request):
+    request_data = json.loads(request.body)
+    t = request_data.get("t")
+    v = request_data.get("v", "")
+    r = "м"
+    print(t, v)
+    if t == "name":
+        p = Individual.objects.filter(name=v)
+        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
+        r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
+    if t == "family":
+        p = Individual.objects.filter(family=v)
+        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
+        r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
+    if t == "patronymic":
+        p = Individual.objects.filter(patronymic=v)
+        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
+        r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
+    return JsonResponse({"sex": r})
+
+
+def edit_doc(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    serial = request_data["serial"]
+    number = request_data["number"]
+    type_o = DocumentType.objects.get(pk=request_data["type"])
+    is_active = request_data["is_active"]
+
+    if pk == -1:
+        Document(document_type=type_o, number=number, serial=serial,
+                 is_active=is_active, individual=Individual.objects.get(pk=request_data["individual_pk"])).save()
+    else:
+        Document.objects.filter(pk=pk).update(number=number, serial=serial, is_active=is_active)
+
+    return JsonResponse({"ok": True})
