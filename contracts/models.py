@@ -31,9 +31,10 @@ class PriceCoast(models.Model):
         return "{}".format(self.price_name.title)
 
     class Meta:
-        unique_together =('price_name','research','coast')
+        unique_together =('price_name','research')
         verbose_name = 'Прайс - цены'
         verbose_name_plural = 'Прайс - цены'
+
 
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование организации', db_index=True)

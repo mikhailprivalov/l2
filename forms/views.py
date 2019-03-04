@@ -17,6 +17,7 @@ import os.path
 from io import BytesIO
 from laboratory.settings import FONTS_FOLDER
 import os, fnmatch
+import simplejson as json
 
 def pdf(request):
     """
@@ -44,6 +45,7 @@ def pdf(request):
         return response
 
     i = Individual.objects.get(pk=request.GET.get('individual'))
+    dir = json.loads(request.GET["dir"])
 
 # get all distinct documents
     try:
@@ -53,8 +55,7 @@ def pdf(request):
         i_doc = None
 # get data by only rmis-card
     try:
-        # i_cards = Card.objects.filter(individual=i, is_archive=False,base__is_rmis=True)
-        i_cards = Card.objects.filter(individual=i, is_archive=False)
+         i_cards = Card.objects.filter(individual=i, is_archive=False)
     except Card.DoesNotExist:
         i_cards = None
 # get form's group from "type". It mus be three number
@@ -82,7 +83,7 @@ def pdf(request):
         tr = str(t).replace('.','_')
         if hasattr(forms_module, 'form_%s' % tr):
             f = getattr(forms_module, 'form_%s' % tr)
-            pdf = f(ind=i,ind_doc=i_doc, ind_card=i_cards)
+            pdf = f(ind=i,ind_doc=i_doc, ind_card=i_cards, ind_dir = dir)
 
     response.write(pdf)
     return response

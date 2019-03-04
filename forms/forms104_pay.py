@@ -18,28 +18,69 @@ import pytils
 import os.path
 from io import BytesIO
 from . import forms_func
-from datetime import datetime
+from datetime import *; from dateutil.relativedelta import *
+import calendar
+from dateutil.relativedelta import *
+from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 
 def form_104_01(**kwargs):
     """
     Форма Лист на оплату по созданным направлениям на услуги
     """
-
     form_name = "Лист на оплату"
 
     ind_card = kwargs.get('ind_card')
     ind_doc = kwargs.get('ind_doc')
     ind = kwargs.get('ind')
-
+    try:
+        ind_dir = kwargs.get('ind_dir')
+    except Exception:
+        ind_dir = None
+    # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
     individual_sex = ind.sex
     individual_date_born = ind.bd()
+
+    # Отфильтровать направления - по источнику финансирования "платно" Если таковых не имеется отдать "пусто"
+    dir_temp = []
+    pay_source={13,3}
+    for i in ind_dir:
+        try:
+            n = Napravleniya.objects.get(id=i)
+        except Napravleniya.DoesNotExist:
+            n = None
+        if n:
+            if n.istochnik_f_id in pay_source:
+                dir_temp.append(n.pk)
+
+    # Получить прайс по источнику "платно"
+    price_obj=forms_func.get_price(13)
+
+    # получить УСЛУГИ по направлениям(отфильтрованы уже по "платно" и нет сохраненных исследований) из Issledovaniya
+    research_direction = forms_func.get_research_by_dir(dir_temp)
+
+    # получить по прайсу и услугам: текущие цена
+    research_price = forms_func.get_coast(research_direction, price_obj)
+
+
+    # (пере)записать текущие цены, скидку, в БД (по issledovaniya)
+
+
+    #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
+
+    mark_down_up=10
+    count = 2
+
+    result_data = forms_func.get_final_data(research_price,mark_down_up, count)
+
+
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
     hospital_kod_ogrn = "1033801542576"
     hospital_okpo = "31348613"
 
+    # Получить данные физлицо-документы: паспорт, полис, снилс
     document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
     document_passport_num = documents['passport']['num']
@@ -54,12 +95,13 @@ def form_104_01(**kwargs):
 
     card_attr = forms_func.get_card_attr(ind_card)
     ind_cards_num_total = card_attr['num_type']
-
+    # Получить данные номер и тип карты по физ лицу
     ind_cards_num = ""
     for k, v in ind_cards_num_total.items():
         if v == "Поликлиника":
             num = k
         ind_cards_num += "{} ({})".format(k, v) + '&nbsp;&nbsp;&nbsp;&nbsp;'
+
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -67,15 +109,13 @@ def form_104_01(**kwargs):
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
 
+
+
+    # Генерировать pdf-Лист на оплату
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat
-    # Причина PTAstraSerif использовать
 
     buffer = BytesIO()
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
-
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=10 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
@@ -135,8 +175,7 @@ def form_104_01(**kwargs):
 
     opinion = [
         [Paragraph('№ карты:', style), Paragraph(num + " - L2", styleTBold), barcode128 ],
-        [Paragraph('Дата:', style), Paragraph(date_now, style),'' ],
-    ]
+     ]
 
     tbl = Table(opinion, colWidths=(25 * mm, 55 * mm, 100 * mm))
 
@@ -147,7 +186,7 @@ def form_104_01(**kwargs):
         ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
     ]))
 
-    objs.append(Spacer(1,10*mm))
+    objs.append(Spacer(1,4.5 * mm))
     objs.append(tbl)
 
     opinion = [
@@ -188,10 +227,36 @@ def form_104_01(**kwargs):
         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
           Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка,<br/>%', styleTB), Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
          Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
-        [Paragraph('10.15.1', styleTC), Paragraph('1234567', styleTC), Paragraph('Услуга', styleTC),
-         Paragraph('125 500.48', styleTCright), Paragraph('-10', styleTCcenter), Paragraph('112 500.24', styleTCright),
-         Paragraph('10', styleTCcenter), Paragraph('1 125 002.40', styleTCright), ],
     ]
+
+    # example_template = [
+    #     ['1.2.3','4856397','Полный гематологический анализ','1000.00','0','1000.00','1','1000.00'],
+    #     ['1.2.3','','РМП','2500.45','0','2500.45','1','2500.45'],
+    #     ['1.2.3', '4856398', 'УЗИ брюшной полости', '3500.49', '0', '3500.49', '1', '3500.49'],
+    #     ['1.2.3','4856398','Эзофагогастродуоденоскопия','5700.99','0','5700.99','1','5700.99']
+    # ]
+    # #
+
+    example_template=result_data[0]
+
+    list_g =[]
+    for i in range(len(example_template)):
+        list_t = []
+        for j in range(len(example_template[i])):
+            if j in (3,5,7):
+                s=styleTCright
+            elif j in (4,6):
+                s=styleTCcenter
+            else:
+                s=styleTC
+            list_t.append(Paragraph(example_template[i][j],s))
+        list_g.append(list_t)
+
+    sum_research = result_data[1]
+
+    opinion.extend(list_g)
+
+
 
     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 50 * mm, 25 * mm, 20 * mm, 25 * mm, 15 * mm, 25 * mm))
 
@@ -203,6 +268,20 @@ def form_104_01(**kwargs):
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(tbl)
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('<font size=16> Итого: {}</font>'.format(sum_research), styleTCright))
+
+    objs.append(Spacer(1, 2 * mm))
+    # start_day = datetime.today()
+    end_date = (date.today() + relativedelta(days=+10))
+    end_date1 = datetime.strftime(end_date, "%d.%m.%Y")
+
+    objs.append(Spacer(1,15 * mm))
+    objs.append(Paragraph('<font size=16> Внимание:</font>', styleTBold))
+    objs.append(Paragraph('<font size=16> Лист на оплату действителен в течение 10 (десяти) дней – до {}.'
+               '</font>'.format(end_date1), style))
+
 
     doc.build(objs)
     pdf = buffer.getvalue()
