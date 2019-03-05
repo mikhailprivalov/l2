@@ -182,7 +182,6 @@ def gen_pdf_dir(request):
     p = Paginator(list(ddef), 4)  # Деление списка направлений по 4
     instructions = []
     has_def = ddef.count() > 0
-
     if has_def:
         framePage(c)
     for pg_num in p.page_range:
@@ -197,7 +196,6 @@ def gen_pdf_dir(request):
             framePage(c)  # Рисование разделительных линий для страницы
 
     donepage = dn.exclude(issledovaniya__research__direction_form=0)
-    print(donepage)
     if donepage.count() > 0 and has_def:
         c.showPage()
 
