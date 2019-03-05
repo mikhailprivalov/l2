@@ -22,6 +22,7 @@ from datetime import *
 from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 
+
 def form_104_01(**kwargs):
     """
     Форма Лист на оплату по созданным направлениям на услуги
@@ -31,10 +32,17 @@ def form_104_01(**kwargs):
     ind_card = kwargs.get('ind_card')
     ind_doc = kwargs.get('ind_doc')
     ind = kwargs.get('ind')
+
+    if not ind:
+        return forms_func.form_notfound()
+
     try:
         ind_dir = kwargs.get('ind_dir')
     except Exception:
         ind_dir = None
+
+    if not ind_dir:
+        return forms_func.form_notfound()
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
     individual_sex = ind.sex

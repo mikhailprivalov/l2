@@ -19,6 +19,8 @@ from laboratory.settings import FONTS_FOLDER
 import os, fnmatch
 import simplejson as json
 
+from . import forms_func
+
 def pdf(request):
     """
     Get form's number (decimal type: 101.15 - where "101" is form's group and "15"-number itsels).
@@ -35,7 +37,7 @@ def pdf(request):
     forms_file=None
     obj_form_title=None
     forms_module=None
-    pdf = form_notfound()
+    pdf = forms_func.form_notfound()
 
 #if not found determinated form in base return - form_notfound()
     try:
@@ -43,8 +45,11 @@ def pdf(request):
     except Exception:
         response.write(pdf)
         return response
+    try:
+        i = Individual.objects.get(pk=request.GET.get('individual'))
+    except Exception:
+        i=None
 
-    i = Individual.objects.get(pk=request.GET.get('individual'))
     try:
         dir = json.loads(request.GET["dir"])
     except Exception:
@@ -58,7 +63,7 @@ def pdf(request):
         i_doc = None
 # get data by only rmis-card
     try:
-         i_cards = Card.objects.filter(individual=i, is_archive=False)
+        i_cards = Card.objects.filter(individual=i, is_archive=False)
     except Card.DoesNotExist:
         i_cards = None
 # get form's group from "type". It mus be three number
@@ -99,46 +104,46 @@ def str_to_class(classname):
     return getattr(sys.modules[__name__], classname)
 
 
-def form_notfound():
-
-    """
-    В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
-    :return:
-    """
-
-    buffer = BytesIO()
-    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
-    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=10 * mm,
-                            rightMargin=10 * mm, topMargin=10 * mm,
-                            bottomMargin=10 * mm, allowSplitting=1,
-                            title="Форма {}".format("Паспорт здоровья"))
-    styleSheet = getSampleStyleSheet()
-    style = styleSheet["Normal"]
-    style.fontName = "PTAstraSerifBold"
-    style.fontSize = 16
-    style.leading = 15
-    styleBold = deepcopy(style)
-    styleBold.fontName = "PTAstraSerifBold"
-    styleCenter = deepcopy(style)
-    styleCenter.alignment = TA_CENTER
-    styleCenterBold = deepcopy(styleBold)
-    styleCenterBold.alignment = TA_CENTER
-
-    objs = [
-        Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">Ая-я-я-я-я-я-я-яй!</font>',
-                  styleCenter),
-        Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">Что-то Администраторы не верно настроили с типами форм! </font>',
-                  styleCenter),
-        Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold">А-та-та-та им!</font>',
-                  styleCenter),
-        ]
-    doc.build(objs)
-
-    pdf = buffer.getvalue()
-    buffer.close()
-    return pdf
+# def form_notfound():
+#
+#     """
+#     В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
+#     :return:
+#     """
+#
+#     buffer = BytesIO()
+#     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+#     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+#     doc = SimpleDocTemplate(buffer, pagesize=A4,
+#                             leftMargin=10 * mm,
+#                             rightMargin=10 * mm, topMargin=10 * mm,
+#                             bottomMargin=10 * mm, allowSplitting=1,
+#                             title="Форма {}".format("Паспорт здоровья"))
+#     styleSheet = getSampleStyleSheet()
+#     style = styleSheet["Normal"]
+#     style.fontName = "PTAstraSerifBold"
+#     style.fontSize = 16
+#     style.leading = 15
+#     styleBold = deepcopy(style)
+#     styleBold.fontName = "PTAstraSerifBold"
+#     styleCenter = deepcopy(style)
+#     styleCenter.alignment = TA_CENTER
+#     styleCenterBold = deepcopy(styleBold)
+#     styleCenterBold.alignment = TA_CENTER
+#
+#     objs = [
+#         Spacer(1, 3 * mm),
+#         Paragraph('<font face="PTAstraSerifBold">Ая-я-я-я-я-я-я-яй!</font>',
+#                   styleCenter),
+#         Spacer(1, 3 * mm),
+#         Paragraph('<font face="PTAstraSerifBold">Что-то Администраторы не верно настроили с типами форм! </font>',
+#                   styleCenter),
+#         Spacer(1, 3 * mm),
+#         Paragraph('<font face="PTAstraSerifBold">А-та-та-та им!</font>',
+#                   styleCenter),
+#         ]
+#     doc.build(objs)
+#
+#     pdf = buffer.getvalue()
+#     buffer.close()
+#     return pdf
