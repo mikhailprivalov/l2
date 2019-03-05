@@ -110,13 +110,11 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     """
     total_sum=0
     tmp_data=[]
-    total_data =[]
-    dir_num=""
+
     for k,v in research_price_loc.items():
         research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id,research_coast in v.items():
-            dir_num=k
             h = []
             for j in research_attr_list:
                 if research_id == j[0]:
@@ -126,13 +124,18 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
                     else:
                         h.append("")
                     h.extend(j)
-                    h.append(research_coast)
-                    h.append(mark_down_up_l)
+                    h.append("{:,.2f}".format(research_coast).replace(",", " "))
+                    if mark_down_up_l*-1 > 0:
+                        x="+"
+                    else:
+                        x=""
+
+                    h.append(x+str(mark_down_up_l*-1))
                     coast_with_discount = research_coast-(research_coast*mark_down_up_l/100)
-                    h.append(coast_with_discount)
+                    h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
                     h.append(count_l)
                     research_sum = coast_with_discount*count_l
-                    h.append(research_sum)
+                    h.append("{:,.2f}".format(research_sum).replace(",", " "))
                     h[0],h[1]=h[1],h[0]
                     total_sum +=research_sum
                     research_attr_list.remove(j)
@@ -142,13 +145,13 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
 
     res_lis=[]
     for t in tmp_data:
-        tmp_d =([str(k) for k in t])
+        tmp_d=list(map(str, t))
         res_lis.append(tmp_d)
 
-    result_list=[]
-    result_list.append(res_lis)
-    result_list.append(total_sum)
-    return result_list
+    total_data =[]
+    total_data.append(res_lis)
+    total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
+    return total_data
 
 
 

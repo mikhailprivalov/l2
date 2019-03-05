@@ -18,8 +18,7 @@ import pytils
 import os.path
 from io import BytesIO
 from . import forms_func
-from datetime import *; from dateutil.relativedelta import *
-import calendar
+from datetime import *
 from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 
@@ -68,8 +67,8 @@ def form_104_01(**kwargs):
 
     #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
 
-    mark_down_up=10
-    count = 2
+    mark_down_up=-2
+    count = 1
 
     result_data = forms_func.get_final_data(research_price,mark_down_up, count)
 
@@ -209,7 +208,7 @@ def form_104_01(**kwargs):
     objs.append(tbl)
 
     styleTB = deepcopy(style)
-    styleTB.fontSize = 12
+    styleTB.fontSize = 11.5
     styleTB.alignment = TA_CENTER
     styleTB.fontName = "PTAstraSerifBold"
 
@@ -225,7 +224,7 @@ def form_104_01(**kwargs):
 
     opinion = [
         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка,<br/>%', styleTB), Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
+          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB), Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
          Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
     ]
 
@@ -256,9 +255,7 @@ def form_104_01(**kwargs):
 
     opinion.extend(list_g)
 
-
-
-    tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 50 * mm, 25 * mm, 20 * mm, 25 * mm, 15 * mm, 25 * mm))
+    tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
@@ -277,10 +274,13 @@ def form_104_01(**kwargs):
     end_date = (date.today() + relativedelta(days=+10))
     end_date1 = datetime.strftime(end_date, "%d.%m.%Y")
 
-    objs.append(Spacer(1,15 * mm))
+    objs.append(Spacer(1,7 * mm))
     objs.append(Paragraph('<font size=16> Внимание:</font>', styleTBold))
-    objs.append(Paragraph('<font size=16> Лист на оплату действителен в течение 10 (десяти) дней – до {}.'
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('<font size=16> 1) Лист на оплату действителен в течение 10 (десяти) дней – до {}.'
                '</font>'.format(end_date1), style))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('<font size=16> 2) Проверяйте услуги с направлениями</font>', style))
 
 
     doc.build(objs)

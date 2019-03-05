@@ -45,7 +45,10 @@ def pdf(request):
         return response
 
     i = Individual.objects.get(pk=request.GET.get('individual'))
-    dir = json.loads(request.GET["dir"])
+    try:
+        dir = json.loads(request.GET["dir"])
+    except Exception:
+        dir=None
 
 # get all distinct documents
     try:
