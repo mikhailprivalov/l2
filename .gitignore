@@ -222,3 +222,5 @@ webpack-stats.json
 assets/webpack_bundles/*
 assets/static/img/logo*
 .idea
+static/*
+!static/.gitkeep
