@@ -288,7 +288,11 @@ class Napravleniya(models.Model):
         return r
 
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, doc_current, ofname_id, ofname, issledovaniya=None, save=True, for_rmis=None, rmis_data=None):
+    def gen_napravleniye(client_id: object, doc: object, istochnik_f: object, diagnos: object, historynum: object, doc_current: object, ofname_id: object, ofname: object,
+                         issledovaniya: object = None,
+                         save: object = True,
+                         for_rmis: object = None,
+                         rmis_data: object = None) -> object:
         """
         Генерация направления
         :param client_id: id пациента
@@ -343,6 +347,10 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code=''):
+
+        #импорт для получения прайса и цены по услугам
+        from forms import forms_func
+
         if rmis_data is None:
             rmis_data = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -390,8 +398,14 @@ class Napravleniya(models.Model):
 
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
+                # начало Касьяненко С.Н.
+                # получить прайс
+                price_obj = forms_func.get_price(finsource.id)
+                #конец Касьяненко С.Н.
+
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
+                    research_coast = None
 
                     dir_group = -1
                     if research.direction:
@@ -424,8 +438,14 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
+
+                    # начало Касьяненко С.Н.
+                    # получить по прайсу и услуге: текущую цену
+                    research_coast = forms_func.get_coast(research.id, price_obj)
+                    # конец Касьяненко С.Н.
+
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  research=research,
+                                                  research=research,coast=research_coast,
                                                   deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
@@ -513,6 +533,7 @@ class Issledovaniya(models.Model):
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
+    coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
 
 
 

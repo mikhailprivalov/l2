@@ -21,6 +21,7 @@ from . import forms_func
 from datetime import *
 from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
+from clients.models import Card
 
 
 def form_104_01(**kwargs):
@@ -48,27 +49,45 @@ def form_104_01(**kwargs):
     individual_sex = ind.sex
     individual_date_born = ind.bd()
 
-    # Отфильтровать направления - по источнику финансирования "платно" Если таковых не имеется отдать "пусто"
+    #Получить все источники, у которых title-ПЛАТНО
+    ist_f=[]
+    ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title='Платно'))
+    ist_f_list = []
+    ist_f_list = ([int(x[0]) for x in ist_f])
+
+
+    #Получить номера карт на физ.лицо
+    card_list=[]
+    card_n=[]
+    for i in ind_card:
+        card_list.append(i.pk)
+        card_n.append(i.number)
+
+    # Отфильтровать направления - по источнику финансирования "платно". Если таковых не имеется отдать "пусто"
     dir_temp = []
-    pay_source={13,3}
     for i in ind_dir:
         try:
             n = Napravleniya.objects.get(id=i)
         except Napravleniya.DoesNotExist:
             n = None
         if n:
-            if n.istochnik_f_id in pay_source:
-                dir_temp.append(n.pk)
+            # Проверить, что направления принадлежат данносу физ.лицу
+            if n.client_id in card_list:
+                # Проверить, что источник инансирования "Платно"
+                if n.istochnik_f_id in ist_f_list:
+                    dir_temp.append(n.pk)
 
-    # Получить прайс по источнику "платно"
-    price_obj=forms_func.get_price(13)
+    c = Card.objects.get(id=n.client_id)
+    print(c.number)
 
-    # получить УСЛУГИ по направлениям(отфильтрованы уже по "платно" и нет сохраненных исследований) из Issledovaniya
+    # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
+    price_modifier_obj=forms_func.get_price(ist_f_list[0])
+
+    # получить УСЛУГИ из Issledovaniya по направлениям(отфильтрованы выше)
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
     # получить по прайсу и услугам: текущие цена
-    research_price = forms_func.get_coast(research_direction, price_obj)
-
+    research_price = forms_func.get_coast(research_direction, price_modifier_obj)
 
     # (пере)записать текущие цены, скидку, в БД (по issledovaniya)
 
@@ -169,16 +188,17 @@ def form_104_01(**kwargs):
     styleTCenter.leading = 3.5 * mm
 
     styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize =20
+    styleTBold.fontSize =12
     styleTBold.alignment = TA_LEFT
 
 
     num = '0123456'
-    barcode128 = code128.Code128(num,barHeight= 10 * mm, barWidth = 1.3)
+    # num = c.number
+    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
     date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
-        [Paragraph('№ карты:', style), Paragraph(num + " - L2", styleTBold), barcode128 ],
+        [Paragraph('№ карты:', style), Paragraph(num + "- L2", styleTBold), barcode128 ],
      ]
 
     tbl = Table(opinion, colWidths=(25 * mm, 55 * mm, 100 * mm))
@@ -186,7 +206,7 @@ def form_104_01(**kwargs):
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('BOTTOMPADDING', (1, 0), (1, 0), 3.0 * mm),
+        ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
         ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
     ]))
 
@@ -211,6 +231,10 @@ def form_104_01(**kwargs):
 
     objs.append(Spacer(1,2 * mm))
     objs.append(tbl)
+
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('<font size=13><b>На водительскую справку</b></font>', style))
+
 
     styleTB = deepcopy(style)
     styleTB.fontSize = 11.5

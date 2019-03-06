@@ -858,12 +858,13 @@ def result_print(request):
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
                                     f_units = r.get_units()
+                                # начало Касьяненко С.Н. Вывести жирным только название фракции. Если свойство print_title true
                                 elif f.print_title:
-                                    # tmp=[]
                                     tmp[0]=(Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
                                                          styleSheet["BodyText"]))
                                     data.append(tmp)
                                     continue
+                                # начало Касьяненко С.Н.
                                 else:
                                     continue
                                 if not iss.doc_confirmation and iss.deferred:

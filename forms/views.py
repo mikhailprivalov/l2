@@ -40,6 +40,7 @@ def pdf(request):
     pdf = forms_func.form_notfound()
 
 #if not found determinated form in base return - form_notfound()
+
     try:
         obj_form_title = FormsList.objects.get(title=t, is_active=True)
     except Exception:
