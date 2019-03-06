@@ -337,7 +337,6 @@ class Individuals(BaseRequester):
             },
         }
         d = self.client.editIndividual(**data)
-        print(d, data)
 
 
 class Patients(BaseRequester):
