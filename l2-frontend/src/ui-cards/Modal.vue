@@ -1,7 +1,7 @@
 <template>
   <transition name="modal">
     <div class="modal-mask">
-      <div class="panel panel-flt" :style="{ minWidth, maxWidth, alignSelf, marginTop, width, marginLeft: marginLeftRight, marginRight: marginLeftRight }">
+      <div class="panel panel-flt" :style="{ minWidth: minWidth, alignSelf: 'flex-start', marginTop: marginTop }">
         <div class="panel-heading">
           <h3 class="panel-title">
             <slot name="header">
@@ -41,30 +41,14 @@
         required: false,
         default: '30%',
       },
-      'max-width': {
-        required: false,
-        default: '100%',
-      },
-      'width': {
-        required: false,
-        default: 'auto',
-      },
       'margin-top': {
         required: false,
         default: '15px',
-      },
-      alignSelf: {
-        required: false,
-        default: 'flex-start',
       },
       'no-close': {
         required: false,
         default: false,
         type: Boolean,
-      },
-      marginLeftRight: {
-        required: false,
-        default: '41px',
       },
     }
   }
@@ -98,10 +82,5 @@
 
   .page-header {
     min-width: 400px;
-  }
-
-  .panel-body {
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 </style>

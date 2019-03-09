@@ -75,6 +75,9 @@ def statistic_xls(request):
     borders.right = xlwt.Borders.THIN
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
+############## my start
+
+############## my send
 
     if tp == "directions_list":
         pk = json.loads(pk)
