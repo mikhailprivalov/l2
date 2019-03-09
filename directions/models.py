@@ -13,6 +13,7 @@ import cases.models as cases
 from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
+import contracts.models as contracts
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -192,7 +193,7 @@ class IstochnikiFinansirovaniya(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
     rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    order_weight = models.SmallIntegerField(default=0)
+    contracts = models.ForeignKey(contracts.Contract, null=True,blank=True,default='', on_delete=models.CASCADE)
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
@@ -533,6 +534,8 @@ class Issledovaniya(models.Model):
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
+
+
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)
