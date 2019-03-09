@@ -358,9 +358,7 @@ def departments(request):
     return JsonResponse(0)
 
 
-@login_required
 def bases(request):
-    from clients.models import CardBase
     return JsonResponse({"bases": [
         {"pk": x.pk,
          "title": x.title,
