@@ -1,7 +1,6 @@
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
 from contracts.models import Contract, Company, PriceName, PriceCoast
-from decimal import Decimal
 def get_all_doc(ind_doc_l):
     """
     возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
@@ -60,43 +59,28 @@ def get_price(istochnik_f_local):
     price_l = ""
     try:
         contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
-        price_modifier = Contract.objects.values_list('price','modifier').get(id=contract_l[0])
-    except Exception:
-        price_modifier = ""
+        price_l = Contract.objects.values_list('price').get(id=contract_l[0])
+    except Napravleniya.DoesNotExist:
+        price_l = ""
+    return price_l
 
-    return price_modifier
-
-def get_coast(dir_research_loc, price_modifier_loc):
+def get_coast(dir_research_loc, price_obj_loc):
     """
-    Получение нужных цен (значение: 'coast' * 'модификатор' из контракта)
-    На основании прайса, услуг возвращает Для листа на оплату {
+    Поиск нужных цен
+    На основании прайса, направления-услуг возвращает словарь словарей {
                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
                                                              }
-
-                                           Для записи в объект issledovaniye - значение
     :return:
     :param **kwargs: направления-услуги, прайс
     """
-    price_name_loc = price_modifier_loc[0]
-    price_modifier_loc = price_modifier_loc[1]
-    d=tuple()
-    if type(dir_research_loc)==dict:
-        dict_coast= {}
-        for k,v in dir_research_loc.items():
-            d = ({r:(s*price_modifier_loc).quantize(Decimal("1.00")) for r, s in PriceCoast.objects.filter(price_name=price_name_loc, research__in=v).values_list('research_id', 'coast')})
-            dict_coast[k]=d
-        return dict_coast
-    elif type(dir_research_loc)==int:
-        try:
-            d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
-            res_coast=d[0]
-        except Exception:
-            res_coast = 0
-        dd = (res_coast*price_modifier_loc).quantize(Decimal("1.00"))
-        return dd
+    dict_coast= {}
+    for k,v in dir_research_loc.items():
+        d = ({r:s for r, s in PriceCoast.objects.filter(price_name=price_obj_loc, research__in=v).values_list('research_id', 'coast')})
+        dict_coast[k]=d
 
+    return dict_coast
 
 
 def get_research_by_dir(dir_temp_l):
@@ -169,11 +153,11 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
     return total_data
 
-
 def form_notfound():
 
+
     """
-    В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры, генерируется эта форма-заглушка
+    В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
     :return:
     """
     from reportlab.pdfbase import pdfmetrics
