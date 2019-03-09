@@ -2016,9 +2016,9 @@ def edit_doc(request):
     is_active = request_data["is_active"]
 
     if pk == -1:
-        Document(document_type=type_o, number=number, serial=serial,
+        Document(document_type=type_o, number=number, serial=serial, from_rmis=False,
                  is_active=is_active, individual=Individual.objects.get(pk=request_data["individual_pk"])).save()
     else:
-        Document.objects.filter(pk=pk).update(number=number, serial=serial, is_active=is_active)
+        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial, is_active=is_active)
 
     return JsonResponse({"ok": True})

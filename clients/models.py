@@ -105,6 +105,9 @@ class Individual(models.Model):
                 out.write("Добавление РМИС карты -> %s" % s)
 
         if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
+            pat_data = c.patients.extended_data(rmis_uid)
+            if out:
+                out.write(str(pat_data))
             cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
             for card_i in cards:
                 c.patients.sync_card_data(card_i, out)
@@ -369,6 +372,8 @@ class Document(models.Model):
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    who_give = models.TextField(default="", blank=True)
+    from_rmis = models.BooleanField(default=True, blank=True)
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,

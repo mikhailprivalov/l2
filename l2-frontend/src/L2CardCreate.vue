@@ -118,7 +118,8 @@
               {{d.is_active ? 'действ.' : 'не действителен'}}
             </td>
             <td>
-              <a @click.prevent="edit_document(d.id)" href="#"><i class="fa fa-pencil"></i></a>
+              <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
+              <span v-else>РМИС</span>
             </td>
           </tr>
           <tr>

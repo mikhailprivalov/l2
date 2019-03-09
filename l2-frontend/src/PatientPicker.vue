@@ -4,7 +4,8 @@
       <div class="input-group">
         <div class="input-group-btn" v-if="bases.length > 1">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
-                  style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
+                  style="width: 200px;text-align: left!important;">
+            <span class="caret"></span> {{selected_base.title}}
           </button>
           <ul class="dropdown-menu">
             <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk">
@@ -52,14 +53,25 @@
             <td class="table-header-row">Пол:</td>
             <td class="table-content-row">{{selected_card.sex}}</td>
           </tr>
-          <tr v-if="history_n === 'true'">
+          <tr>
             <td class="table-header-row">
-              <span class="hospital" style="display: block;line-height: 1.2;">Номер истории:</span>
+              <span class="hospital" style="display: block;line-height: 1.2;" v-if="history_n === 'true'">Номер истории:</span>
             </td>
-            <td class="table-content-row" colspan="3">
-              <div style="height: 34px">
-            <span class="hospital"><input type="text" class="form-control" maxlength="11" v-model="history_num"
-                                          :disabled="!selected_base.history_number"/></span>
+            <td class="table-content-row" colspan="2">
+              <div style="height: 34px" v-if="history_n === 'true'">
+                <span class="hospital">
+                  <input type="text" class="form-control" maxlength="11" v-model="history_num"
+                                              :disabled="!selected_base.history_number"/>
+                </span>
+              </div>
+            </td>
+            <td>
+              <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
+                <button class="btn last btn-blue-nb nbr" type="button" @click="open_editor(true)"><i class="fa fa-plus"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()"><i class="glyphicon glyphicon-pencil"></i></button>
+              </div>
+              <div class="internal_type" v-else-if="l2_cards">
+                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
               </div>
             </td>
           </tr>
@@ -122,11 +134,13 @@
         <small>Показано не более 10 карт</small>
       </div>
     </modal>
+    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
   </div>
 </template>
 
 <script>
   import SelectPickerB from './SelectPickerB'
+  import L2CardCreate from './L2CardCreate'
   import LinkSelector from './LinkSelector'
   import PatientCard from './ui-cards/PatientCard'
   import Modal from './ui-cards/Modal'
@@ -135,7 +149,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal},
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate},
     props: {
       directive_from_need: {
         default: 'false',
@@ -153,7 +167,7 @@
         default: 'true',
         type: String
       },
-      value: {}
+      value: {},
     },
     data() {
       return {
@@ -170,7 +184,8 @@
         selected_card: {},
         loaded: false,
         history_num: '',
-        search_after_loading: false
+        search_after_loading: false,
+        editor_pk: -2,
       }
     },
     created() {
@@ -205,6 +220,24 @@
       })
       this.$root.$on('search', () => {
         vm.search()
+      })
+      this.$root.$on('select_card', data => {
+        vm.base = data.base_pk;
+        vm.query = `card_pk:${data.card_pk}`
+        vm.search_after_loading = true
+        $(vm.$refs.q).focus()
+        vm.emit_input()
+        if (!data.hide) {
+          vm.editor_pk = data.card_pk
+        } else {
+          vm.editor_pk = -2;
+        }
+        setTimeout(() => {
+          vm.search()
+        }, 5)
+      })
+      this.$root.$on('hide_l2_card_create', () => {
+        vm.editor_pk = -2;
       })
     },
     watch: {
@@ -242,13 +275,16 @@
             return b
           }
         }
-        return {title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: []}
+        return {title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: [], internal_type: false,}
       },
       normalized_query() {
         return this.query.trim()
       },
       query_valid() {
         return this.normalized_query.length > 0
+      },
+      l2_cards() {
+        return (this.$store.getters.user_data.modules || {}).l2_cards;
       },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {
@@ -287,6 +323,13 @@
       }
     },
     methods: {
+      open_editor(isnew) {
+        if (isnew) {
+          this.editor_pk = -1;
+        } else {
+          this.editor_pk = this.selected_card.pk;
+        }
+      },
       format_number(a) {
         if (a.length === 6) {
           return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
@@ -355,6 +398,9 @@
       select_card(index) {
         this.hide_modal()
         this.selected_card = this.founded_cards[index]
+        if (this.selected_card.base_pk) {
+          this.base = this.selected_card.base_pk
+        }
         this.emit_input()
         this.loaded = true
         this.$root.$emit('patient-picker:select_card')
@@ -445,6 +491,23 @@
           this.query = ''
         }
         this.emit_input()
+      },
+      open_as_l2_card() {
+        let vm = this
+        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
+        patients_point.searchL2Card(this.selected_card.pk).then((result) => {
+          vm.clear()
+          if (result.results) {
+            vm.founded_cards = result.results
+            vm.select_card(0)
+          } else {
+            errmessage('Ошибка на сервере')
+          }
+        }).catch((error) => {
+          errmessage('Ошибка на сервере', error.message)
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+        })
       },
       search() {
         this.search_after_loading = false
@@ -643,5 +706,9 @@
     border-left: none !important;
     border-top: none !important;
     border-right: none !important;
+  }
+
+  .internal_type {
+    text-align: right;
   }
 </style>
