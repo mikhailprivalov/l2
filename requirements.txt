@@ -41,3 +41,4 @@ pika
 socketIO-client-nexus
 python-dateutil
 django_extensions
+pytils
