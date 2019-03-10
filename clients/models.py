@@ -105,6 +105,9 @@ class Individual(models.Model):
                 out.write("Добавление РМИС карты -> %s" % s)
 
         if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
+            pat_data = c.patients.extended_data(rmis_uid)
+            if out:
+                out.write(str(pat_data))
             cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
             for card_i in cards:
                 c.patients.sync_card_data(card_i, out)
@@ -115,25 +118,25 @@ class Individual(models.Model):
                     return r[0]
                 return None
 
-            document_ids = c.patients.client.getIndividualDocuments(rmis_uid)
             if out:
                 out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
-            for document_id in document_ids:
-                document_object = c.patients.client.getDocument(document_id)
+            for document_object in pat_data["identifiers"] or []:
                 k = get_key(c.patients.local_types, document_object["type"])
                 if k and document_object["active"]:
                     if out:
-                        out.write("Документ в РМИС: %s" % document_id)
                         out.write("Тип: %s -> %s (%s)" % (document_object["type"], k, document_object["active"]))
                     data = dict(document_type=DocumentType.objects.get(pk=k),
                                 serial=document_object["series"] or "",
                                 number=document_object["number"] or "",
+                                date_start=document_object["issueDate"],
+                                date_end=document_object["expiryDate"],
+                                who_give=(document_object["issueOrganization"] or {"name": ""})["name"] or "",
                                 individual=self,
                                 is_active=True)
-                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self)
+                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True)
                     if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
                             card__isnull=True).exists():
-                        Document.objects.filter(document_type=data['document_type'], individual=self).delete()
+                        Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
                                                    number=data['number'])
@@ -141,10 +144,9 @@ class Individual(models.Model):
                         doc = Document(**data)
                         doc.save()
                         if out:
-                            out.write("Обновление докумена: %s" % doc)
+                            out.write("Добавление докумена: %s" % doc)
                         continue
                     else:
-                        docs = docs.filter(individual=self)
                         to_delete = []
                         has = []
                         ndocs = {}
@@ -165,12 +167,31 @@ class Individual(models.Model):
                                                        serial=data['serial'],
                                                        number=data['number'],
                                                        individual=self)
+                        for d in docs:
+                            if d.date_start != data["date_start"]:
+                                d.date_start = data["date_start"]
+                                d.save()
+                                if out:
+                                    out.write("Update date_start: %s" % d.date_start)
+                            if d.date_end != data["date_end"]:
+                                d.date_end = data["date_end"]
+                                d.save()
+                                if out:
+                                    out.write("Update date_end: %s" % d.date_end)
+                            if d.who_give != data["who_give"]:
+                                d.who_give = data["who_give"]
+                                d.save()
+                                if out:
+                                    out.write("Update who_give: %s" % d.who_give)
+
                         if out:
                             out.write("Данные для документов верны: %s" % [str(x) for x in docs])
 
                     docs = Document.objects.filter(document_type=data['document_type'],
+                                                   document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ',
+                                                                             'Полис ОМС'],
                                                    serial=data['serial'],
-                                                   number=data['number']).exclude(individual=self)
+                                                   number=data['number']).exclude(individual=self).exclude(number="")
                     if docs.exists():
                         if out:
                             out.write("Объединение записей физ.лиц")
@@ -369,6 +390,8 @@ class Document(models.Model):
     is_active = models.BooleanField(default=True, blank=True)
     date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    who_give = models.TextField(default="", blank=True)
+    from_rmis = models.BooleanField(default=True, blank=True)
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,

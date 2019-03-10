@@ -1,28 +1,34 @@
+from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
-from contracts.models import Contract, Company, PriceName, PriceCoast
-def get_all_doc(ind_doc_l):
+from contracts.models import Contract, PriceCoast
+
+
+def get_all_doc(docs: [Document]):
     """
     возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
     """
-    documents = {'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
-                 'polis': {'serial': "", 'num': "", 'issued': ""},
-                 'snils': {'num':""}
-                 }
+    documents = {
+        'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
+        'polis': {'serial': "", 'num': "", 'issued': ""},
+        'snils': {'num': ""}
+     }
 
-    ind_doc_l
+    for d in docs:
+        if d.document_type.title == "СНИЛС":
+            documents["snils"]["num"] = d.number
 
-    for z in range(len(ind_doc_l)):
-        if ind_doc_l[z].get('document_type') == 1:
-            documents['passport']['num'] = ind_doc_l[z].get('number')
-            documents['passport']['serial'] = ind_doc_l[z].get('serial')
-            if ind_doc_l[z].get('date_start'):
-                documents['passport']['date_start'] = ind_doc_l[z].get('date_start')
-        if ind_doc_l[z].get('document_type') == 3:
-            if len(ind_doc_l[z].get('number')) == 16:
-                documents['polis']['num'] = ind_doc_l[z].get('number')
-        if ind_doc_l[z].get('document_type') == 4:
-            documents['snils']['num'] = ind_doc_l[z].get('number')
+        if d.document_type.title == 'Паспорт гражданина РФ':
+            documents["passport"]["num"] = d.number
+            documents["passport"]["serial"] = d.serial
+            documents["passport"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+            documents["polis"]["issued"] = d.who_give
+
+        if d.document_type.title == 'Полис ОМС':
+            documents["polis"]["num"] = d.number
+            documents["polis"]["serial"] = d.serial
+            documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+            documents["polis"]["issued"] = d.who_give
 
     return documents
 
@@ -31,10 +37,11 @@ def get_card_attr(ind_card_l):
     """
     Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
     """
-    card_attr = {'num_type':{},
-                 'phone':"",
-                 'addr':"",
+    card_attr = {'num_type': {},
+                 'phone': "",
+                 'addr': "",
                  }
+
 
     for z in range(len(ind_card_l)):
         card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title

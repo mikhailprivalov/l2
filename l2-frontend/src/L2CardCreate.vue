@@ -118,7 +118,8 @@
               {{d.is_active ? 'действ.' : 'не действителен'}}
             </td>
             <td>
-              <a @click.prevent="edit_document(d.id)" href="#"><i class="fa fa-pencil"></i></a>
+              <a @click.prevent="edit_document(d.id)" href="#" v-if="!d.from_rmis"><i class="fa fa-pencil"></i></a>
+              <span v-else>РМИС</span>
             </td>
           </tr>
           <tr>
@@ -146,6 +147,18 @@
           <div class="form-group">
             <label for="de-f3">Номер:</label>
             <input class="form-control" id="de-f3" v-model="document.number">
+          </div>
+          <div class="form-group">
+            <label for="de-f4">Дата выдачи:</label>
+            <input class="form-control" type="date" id="de-f4" v-model="document.date_start">
+          </div>
+          <div class="form-group">
+            <label for="de-f5">Дата окончания:</label>
+            <input class="form-control" type="date" id="de-f5" v-model="document.date_end">
+          </div>
+          <div class="form-group">
+            <label for="de-f6">Выдал:</label>
+            <input class="form-control" id="de-f6" v-model="document.who_give">
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
@@ -427,6 +440,9 @@
           number: "",
           serial: "",
           type_title: null,
+          date_start: null,
+          date_end: null,
+          who_give: null,
           ...(this.card.docs.find(x => x.id === pk) || {})
         };
         this.document_to_edit = pk
@@ -444,7 +460,9 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.editDoc(this.document_to_edit,
             this.document.document_type, this.document.serial,
-            this.document.number, this.document.is_active, this.card.individual_pk)
+            this.document.number, this.document.is_active, this.card.individual_pk,
+            this.document.date_start, this.document.date_end, this.document.who_give,
+          )
           this.load_data();
           this.document = {
             number: ''

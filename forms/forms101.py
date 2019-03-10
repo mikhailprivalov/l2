@@ -11,19 +11,18 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 
+from clients.models import Individual
 from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 
 
-def form_101_01(**kwargs):
+def form_01(request_data):
     """
     generate form agreement to Hiv
-    генерирует форму согласия на ВИЧ
-    :param ind: individual object(объекти физлицо)
-    :param t: type form (тип формы)
+    :param request_data: GET request data
     :return: pdf
     """
-    ind = kwargs.get('ind')
+    ind = Individual.objects.get(pk=request_data["individual"])
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
@@ -56,7 +55,6 @@ def form_101_01(**kwargs):
     styleCenterBold.alignment = TA_CENTER
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
-    objs = []
 
     i = ind
     objs = [
