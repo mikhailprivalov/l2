@@ -488,7 +488,11 @@
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
-            vm.select_card(0)
+            if (vm.founded_cards.length > 1) {
+              vm.showModal = true
+            } else if (vm.founded_cards.length === 1) {
+              vm.select_card(0)
+            }
           } else {
             errmessage('Ошибка на сервере')
           }

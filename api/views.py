@@ -1873,7 +1873,10 @@ def patients_search_l2_card(request):
             c.save()
             l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
 
-        for row in l2_cards.filter(is_archive=False).prefetch_related("individual").distinct():
+        for row in l2_cards.filter(is_archive=False):
+            docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
+                                           document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])\
+                .distinct("pk", "number", "document_type", "serial").order_by('pk')
             data.append({"type_title": row.base.title,
                          "num": row.number,
                          "is_rmis": row.base.is_rmis,
@@ -1887,6 +1890,7 @@ def patients_search_l2_card(request):
                          "base_pk": row.base.pk,
                          "pk": row.pk,
                          "phones": row.get_phones(),
+                         "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
                          "main_diagnosis": row.main_diagnosis})
     return JsonResponse({"results": data})
 
