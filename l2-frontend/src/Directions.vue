@@ -30,11 +30,8 @@
                 Печатные формы <span class="caret"></span>
               </button>
               <ul class="dropdown-menu">
-                <!--<li><a href="#" @click.prevent="selected_do('resend_results_rmis')">Повтор отправки результатов в РМИС</a>
-                </li>
-                <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
-                  РМИС</a></li>-->
-                <li><a :href="`/forms/pdf?type=1&individual=${selected_card.individual_pk}`" target="_blank" class="ddm">Согласие на ВИЧ-исследование</a></li>
+                <li><a :href="`/forms/pdf?type=101.01&individual=${selected_card.individual_pk}`" target="_blank" class="ddm">Согласие на ВИЧ-исследование</a></li>
+                <li><a :href="`/forms/pdf?type=100.02&card_pk=${selected_card.pk}`" target="_blank" class="ddm">Титульный лист карты</a></li>
               </ul>
             </div>
             <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">

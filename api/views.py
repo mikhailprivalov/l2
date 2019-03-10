@@ -469,7 +469,7 @@ def patients_search_card(request):
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
     p3 = re.compile(r'[0-9]{1,15}')
-    p4 = re.compile(r'card_pk:\d+')
+    p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
@@ -510,7 +510,7 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if re.search(p3, query) or card_type.is_rmis:
+        if (re.search(p3, query) and not card_type.is_rmis) or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -552,6 +552,9 @@ def patients_search_card(request):
             cards = cards.filter(number=query)
 
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
+        docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
+                                       document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])\
+            .distinct("pk", "number", "document_type", "serial").order_by('pk')
         data.append({"type_title": card_type.title,
                      "num": row.number,
                      "is_rmis": row.base.is_rmis,
@@ -564,7 +567,8 @@ def patients_search_card(request):
                      "individual_pk": row.individual.pk,
                      "pk": row.pk,
                      "phones": row.get_phones(),
-                     "main_diagnosis": row.main_diagnosis})
+                     "main_diagnosis": row.main_diagnosis,
+                     "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs]})
     return JsonResponse({"results": data})
 
 
@@ -1892,7 +1896,7 @@ def patients_get_card_data(request, card_id):
     c = model_to_dict(card)
     i = model_to_dict(card.individual)
     docs = [{**model_to_dict(x), "type_title": x.document_type.title}
-            for x in Document.objects.filter(individual=card.individual).distinct("number", "document_type", "serial")]
+            for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type", "serial").order_by('pk')]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     return JsonResponse({**i, **c,
                          "docs": docs,
@@ -2014,11 +2018,19 @@ def edit_doc(request):
     number = request_data["number"]
     type_o = DocumentType.objects.get(pk=request_data["type"])
     is_active = request_data["is_active"]
+    date_start = request_data["date_start"]
+    date_start = None if date_start == "" else date_start
+    date_end = request_data["date_end"]
+    date_end = None if date_end == "" else date_end
+    who_give = request_data["who_give"]
 
     if pk == -1:
-        Document(document_type=type_o, number=number, serial=serial, from_rmis=False,
-                 is_active=is_active, individual=Individual.objects.get(pk=request_data["individual_pk"])).save()
+        Document(document_type=type_o, number=number, serial=serial, from_rmis=False, date_start=date_start,
+                 date_end=date_end, who_give=who_give, is_active=is_active,
+                 individual=Individual.objects.get(pk=request_data["individual_pk"])).save()
     else:
-        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial, is_active=is_active)
+        Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial,
+                                                               is_active=is_active, date_start=date_start,
+                                                               date_end=date_end, who_give=who_give)
 
     return JsonResponse({"ok": True})

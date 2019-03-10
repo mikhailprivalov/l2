@@ -148,6 +148,18 @@
             <label for="de-f3">Номер:</label>
             <input class="form-control" id="de-f3" v-model="document.number">
           </div>
+          <div class="form-group">
+            <label for="de-f4">Дата выдачи:</label>
+            <input class="form-control" type="date" id="de-f4" v-model="document.date_start">
+          </div>
+          <div class="form-group">
+            <label for="de-f5">Дата окончания:</label>
+            <input class="form-control" type="date" id="de-f5" v-model="document.date_end">
+          </div>
+          <div class="form-group">
+            <label for="de-f6">Выдал:</label>
+            <input class="form-control" id="de-f6" v-model="document.who_give">
+          </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
               <input type="checkbox" v-model="document.is_active"> действителен
@@ -428,6 +440,9 @@
           number: "",
           serial: "",
           type_title: null,
+          date_start: null,
+          date_end: null,
+          who_give: null,
           ...(this.card.docs.find(x => x.id === pk) || {})
         };
         this.document_to_edit = pk
@@ -445,7 +460,9 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.editDoc(this.document_to_edit,
             this.document.document_type, this.document.serial,
-            this.document.number, this.document.is_active, this.card.individual_pk)
+            this.document.number, this.document.is_active, this.card.individual_pk,
+            this.document.date_start, this.document.date_end, this.document.who_give,
+          )
           this.load_data();
           this.document = {
             number: ''

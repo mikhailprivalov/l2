@@ -9,6 +9,9 @@ from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+
+from appconf.manager import SettingManager
+from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
@@ -18,7 +21,7 @@ import os.path
 from io import BytesIO
 from . import forms_func
 
-# def form_health_passport(ind=None,ind_doc=None,ind_card=None):
+
 def form_100_01(**kwargs):
     """
     форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
@@ -300,19 +303,19 @@ def form_100_01(**kwargs):
     return pdf
 
 
-def form_100_02(**kwargs):
+def form_02(request_data):
     """
     Форма 025/у - титульный лист амбулаторной карты
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
     """
-    ind_card = kwargs.get('ind_card')
-    ind_doc = kwargs.get('ind_doc')
-    ind = kwargs.get('ind')
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
 
-    hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
-    hospital_address = "г. Иркутс, ул. Байкальская 201"
-    hospital_kod_ogrn = "1033801542576"
-    hospital_okpo = "31348613"
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
+    hospital_kod_ogrn = SettingManager.get("org_ogrn", "<TODO:OGRN>")
+    hospital_okpo = SettingManager.get("org_ogrn", "<TODO:OKPO>")
 
     individual_fio = ind.fio()
     individual_sex = ind.sex
@@ -328,23 +331,14 @@ def form_100_02(**kwargs):
     document_polis = documents['polis']['num']
     document_snils = documents['snils']['num']
 
-    indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
-    individual_benefit_code="_________"
+    indivudual_insurance_org = documents['polis']['issued']
+    individual_benefit_code = "_________"
 
+    ind_card_num = ind_card.number_with_type()
 
-    card_attr = forms_func.get_card_attr(ind_card)
-    ind_card_numtype_total = card_attr['num_type']
+    ind_card_address = ind_card.main_address
 
-    ind_card_num = ""
-    for k,v in ind_card_numtype_total.items():
-        ind_card_num += "{} ({})".format(k,v)+'&nbsp;&nbsp;&nbsp;&nbsp;'
-
-    ind_card_address = card_attr.get('addr')
-    ind_card_phone_s = set(card_attr.get('phone'))
-
-    ind_card_phone=""
-    for i in ind_card_phone_s:
-        ind_card_phone+=i
+    ind_card_phone = ", ".join(ind_card.get_phones())
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
@@ -439,7 +433,7 @@ def form_100_02(**kwargs):
         Paragraph('тел. {}'.format(ind_card_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
         Paragraph('7. Полис ОМС: серия______№: {}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                  '8. СНИЛС: {}'.format(document_polis,document_snils),style),
+                  '8. СНИЛС: {}'.format(document_polis, document_snils),style),
         Paragraph('9. Наименование страховой медицинской организации: {}'.format(indivudual_insurance_org), style),
         Paragraph('10. Код категории льготы: {} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
                   '11. Документ: {}&nbsp; серия: {} &nbsp;&nbsp; №: {}'.

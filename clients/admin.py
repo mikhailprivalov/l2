@@ -14,8 +14,7 @@ class DocumentTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.Document)
 class DocumentAdmin(admin.ModelAdmin):
-    pass
-
+    raw_id_fields = ('individual',)
 
 @admin.register(models.CardBase)
 class CardBaseAdmin(admin.ModelAdmin):

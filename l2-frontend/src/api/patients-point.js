@@ -78,9 +78,11 @@ async function individualSex(t, v) {
   return {sex: 'м'}
 }
 
-async function editDoc(pk, type, serial, number, is_active, individual_pk) {
+async function editDoc(pk, type, serial, number, is_active, individual_pk, date_start, date_end, who_give) {
   try {
-    const response = await HTTP.post('patients/individuals/edit-doc', {pk, type, serial, number, is_active, individual_pk})
+    const response = await HTTP.post('patients/individuals/edit-doc', {
+      pk, type, serial, number, date_start, date_end, who_give, is_active, individual_pk
+    })
     if (response.statusText === 'OK') {
       return response.data
     }

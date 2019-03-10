@@ -101,34 +101,17 @@
     <div class="bottom-picker" v-if="bottom_picker === 'true'">
       <slot name="for_card_bottom"/>
     </div>
-    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
+    <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
-        <table class="table table-responsive table-bordered table-hover"
-               style="background-color: #fff;max-width: 680px">
-          <colgroup>
-            <col width="95">
-            <col width="155">
-            <col>
-            <col width="140">
-          </colgroup>
-          <thead>
-          <tr>
-            <th>Категория</th>
-            <th>Карта</th>
-            <th>ФИО, пол</th>
-            <th>Дата рождения</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(row, i) in founded_cards" class="cursor-pointer" @click="select_card(i)">
-            <td class="text-center">{{row.type_title}}</td>
-            <td>{{row.num}}</td>
-            <td>{{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</td>
-            <td class="text-center">{{row.birthday}}</td>
-          </tr>
-          </tbody>
-        </table>
+        <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)">
+          <div class="founded-row">Карта <span class="b">{{row.type_title}} {{row.num}}</span></div>
+          <div class="founded-row"><span class="b">ФИО, пол:</span> {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</div>
+          <div class="founded-row"><span class="b">Дата рождения:</span> {{row.birthday}} ({{row.age}})</div>
+          <div class="founded-row" v-for="d in row.docs">
+            <span class="b">{{d.type_title}}:</span> {{d.serial}} {{d.number}}
+          </div>
+        </div>
       </div>
       <div slot="footer" class="text-center">
         <small>Показано не более 10 карт</small>
@@ -241,6 +224,11 @@
       })
     },
     watch: {
+      query() {
+        this.query = this.query.split(' ')
+        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ');
+      },
       bases() {
         this.check_base()
       },
@@ -343,7 +331,8 @@
       },
       hide_modal() {
         this.showModal = false
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal)
+          this.$refs.modal.$el.style.display = 'none'
       },
       update_ofname() {
         if (this.ofname_to_set === '-2' || this.inLoading)
@@ -524,7 +513,6 @@
           if (result.results) {
             vm.founded_cards = result.results
             if (vm.founded_cards.length > 1) {
-              vm.$refs.modal.$el.style.display = 'flex'
               vm.showModal = true
             } else if (vm.founded_cards.length === 1) {
               vm.select_card(0)
@@ -710,5 +698,24 @@
 
   .internal_type {
     text-align: right;
+  }
+
+  .founded {
+    background: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    position: relative;
+    &:hover {
+      transform: scale(1.03);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+    }
+  }
+  .b {
+    font-weight: bold;
   }
 </style>
