@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
 from simplejson import JSONDecodeError
 from zeep import Client as zeepClient, helpers
-from zeep.cache import SqliteCache, Base
+from zeep.cache import Base
 from zeep.exceptions import Fault
 from zeep.transports import Transport
 
@@ -97,9 +97,11 @@ class DjangoCache(Base):
         self._timeout = timeout
 
     def k(self, url):
-        return "zeep_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
+        return "zp_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
 
     def add(self, url, content):
+        if "patients" in url or "individuals" in url:
+            return
         # print("Caching contents of %s", url)
         key = self.k(url)
         cache.set(key, pickle.dumps(content, protocol=4), self._timeout)
@@ -337,6 +339,7 @@ class Individuals(BaseRequester):
             },
         }
         d = self.client.editIndividual(**data)
+        return d
 
 
 class Patients(BaseRequester):
@@ -368,6 +371,19 @@ class Patients(BaseRequester):
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)
         return {} if d["error"] else d["patientCard"]
+
+    def send_patient(self, card: clients_models.Card):
+        data = [{
+            "patient": {
+                "uid": card.number,
+                "firstName": card.individual.name,
+                "middleName": card.individual.patronymic,
+                "lastName": card.individual.family,
+                "birthDate": card.individual.birthday,
+                "gender": {"ж": "2"}.get(card.individual.sex.lower(), "1"),
+            },
+        }]
+        return self.smart_client.sendPatient(patientCard=data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
@@ -401,6 +417,7 @@ class Patients(BaseRequester):
                         card.fact_address = addr
                         card.save()
                     break
+            clients_models.Card.add_l2_card(card_orig=card)
         else:
             card.is_archive = True
             card.save()

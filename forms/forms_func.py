@@ -22,7 +22,7 @@ def get_all_doc(docs: [Document]):
             documents["passport"]["num"] = d.number
             documents["passport"]["serial"] = d.serial
             documents["passport"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
-            documents["polis"]["issued"] = d.who_give
+            documents["passport"]["issued"] = d.who_give
 
         if d.document_type.title == 'Полис ОМС':
             documents["polis"]["num"] = d.number

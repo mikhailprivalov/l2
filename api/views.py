@@ -464,13 +464,12 @@ def patients_search_card(request):
     data = []
     d = json.loads(request.body)
     card_type = CardBase.objects.get(pk=d['type'])
-    list_all_cards = d.get('list_all_cards', False)
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
     p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.[0-9]{2}\.[0-9]{4}))?)?)?$')
-    p3 = re.compile(r'[0-9]{1,15}')
+    p3 = re.compile(r'^[0-9]{1,15}$')
     p4 = re.compile(r'card_pk:\d+', flags=re.IGNORECASE)
-    p4i = bool(re.search(p4, query))
+    p4i = bool(re.search(p4, query.lower()))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     if not p4i:
@@ -483,7 +482,7 @@ def patients_search_card(request):
                 objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
                                                     patronymic__startswith=initials[2], birthday=btday,
                                                     card__base=card_type)
-                if card_type.is_rmis and len(objects) == 0:
+                if (card_type.is_rmis and len(objects) == 0) or card_type.internal_type:
                     c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(
                         {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
@@ -501,7 +500,8 @@ def patients_search_card(request):
                                                     birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[
                           :10]
 
-            if card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10)):
+            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) \
+                    or card_type.internal_type:
                 objects = list(objects)
                 try:
                     if not c:
@@ -510,7 +510,9 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) or (card_type.is_rmis and not re.search(p3, query)):
+        if (re.search(p3, query) and not card_type.is_rmis) \
+                or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) \
+                or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -519,7 +521,7 @@ def patients_search_card(request):
                                                         card__base=card_type)
                 except ValueError:
                     pass
-                if card_type.is_rmis and len(list(objects)) == 0 and len(query) == 16:
+                if (card_type.is_rmis or card_type.internal_type) and len(list(objects)) == 0 and len(query) == 16:
                     if not c:
                         c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(query)
@@ -1858,20 +1860,8 @@ def patients_search_l2_card(request):
     cards = Card.objects.filter(pk=request_data.get('card_pk', -1))
     if cards.exists():
         card_orig = cards[0]
+        Card.add_l2_card(card_orig=card_orig)
         l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
-        if not l2_cards.exists():
-            last_l2 = Card.objects.filter(base__internal_type=True).extra(
-                select={'numberInt': 'CAST(number AS INTEGER)'}
-            ).order_by("-numberInt").first()
-            n = 0
-            if last_l2:
-                n = last_l2.numberInt
-            c = Card(number=n + 1, base=CardBase.objects.filter(internal_type=True).first(),
-                     individual=card_orig.individual, polis=card_orig.polis,
-                     main_diagnosis=card_orig.main_diagnosis, main_address=card_orig.main_address,
-                     fact_address=card_orig.fact_address)
-            c.save()
-            l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
 
         for row in l2_cards.filter(is_archive=False):
             docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
@@ -1942,7 +1932,11 @@ def autocomplete(request):
             p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:l]
             if p.exists():
                 data = [x.patronymic for x in p]
-
+        if "who_give:" in t:
+            tpk = t.split(":")[1]
+            p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:l]
+            if p.exists():
+                data = [x.who_give for x in p]
     return JsonResponse({"data": data})
 
 
@@ -1960,6 +1954,7 @@ def patients_card_save(request):
                        patronymic=request_data["patronymic"],
                        birthday=request_data["birthday"],
                        sex=request_data["sex"])
+        i.save()
     else:
         i = Individual.objects.get(pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(pk=request_data["card_pk"]).individual.pk)
         i.family = request_data["family"]
@@ -1967,10 +1962,11 @@ def patients_card_save(request):
         i.patronymic = request_data["patronymic"]
         i.birthday = request_data["birthday"]
         i.sex = request_data["sex"]
+        i.save()
         if Card.objects.filter(individual=i, base__is_rmis=True).exists():
-            c = Client(modules="individuals")
-            c.individuals.update_patient_data(Card.objects.filter(individual=i, base__is_rmis=True)[0])
-    i.save()
+            c = Client(modules=["individuals", "patients"])
+            print(c.patients.send_patient(Card.objects.filter(individual=i, base__is_rmis=True)[0]))
+
     individual_pk = i.pk
 
     if request_data["card_pk"] < 0:

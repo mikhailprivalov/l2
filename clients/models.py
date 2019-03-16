@@ -478,6 +478,32 @@ class Card(models.Model):
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
 
+    @staticmethod
+    def next_l2_n():
+        last_l2 = Card.objects.filter(base__internal_type=True).extra(
+            select={'numberInt': 'CAST(number AS INTEGER)'}
+        ).order_by("-numberInt").first()
+        n = 0
+        if last_l2:
+            n = last_l2.numberInt
+        return n + 1
+
+    @staticmethod
+    def add_l2_card(individual: [Individual, None]=None, card_orig: ['Card', None]=None, distinct=True):
+        if distinct and card_orig \
+                and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
+            return
+        if not card_orig and not individual:
+            return
+        c = Card(number=Card.next_l2_n(), base=CardBase.objects.filter(internal_type=True).first(),
+                 individual=individual if individual else card_orig.individual, polis=None if not card_orig else card_orig.polis,
+                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
+                 main_address='' if not card_orig else card_orig.main_address,
+                 fact_address='' if not card_orig else card_orig.fact_address)
+        c.save()
+        print('add_l2_card', c)
+        return c
+
 
 class Phones(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
