@@ -159,6 +159,67 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     return total_data
 
 
+# def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
+#     """
+#     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
+#     Направление указывается один раз для нескольких строк
+#     :param mark_down_up_l:
+#     :param count_l:
+#     :return:
+#     """
+#     total_sum=0
+#     tmp_data=[]
+#
+#     for k,v in research_price_loc.items():
+#         research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
+#         research_attr_list = [list(z) for z in research_attr]
+#         for research_id,research_coast in v.items():
+#             h = []
+#             for j in research_attr_list:
+#                 if research_id == j[0]:
+#                     if k !=0:
+#                         h.append(k)
+#                         k=0
+#                     else:
+#                         h.append("")
+#                     h.extend(j)
+#                     h.append("{:,.2f}".format(research_coast).replace(",", " "))
+#                     coast_with_discount = research_coast + (research_coast * mark_down_up_l / 100)
+#                     print(mark_down_up_l)
+#                     if mark_down_up_l != 0:
+#                         if  mark_down_up_l > 0:
+#                             x="+"
+#                         else:
+#                             x=""
+#                         h.append(x+str(mark_down_up_l))
+#                         h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
+#                     h.append(count_l)
+#                     research_sum = coast_with_discount*count_l
+#                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
+#                     h[0],h[1]=h[1],h[0]
+#                     total_sum +=research_sum
+#                     research_attr_list.remove(j)
+#                     tmp_data.append(h)
+#                 if h:
+#                     break
+#
+#     res_lis=[]
+#     for t in tmp_data:
+#         tmp_d=list(map(str, t))
+#         res_lis.append(tmp_d)
+#
+#     total_data =[]
+#     total_data.append(res_lis)
+#     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
+#     return total_data
+
+
+
+
+
+
+
+
 def form_notfound():
 
     """
