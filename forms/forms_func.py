@@ -51,14 +51,15 @@ def get_all_doc(docs: [Document]):
 #
 #     return card_attr
 
+
 def get_price(istochnik_f_local):
     """
     На основании источника финансирования возвращает прайс
     Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
     Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
-    Если источник финансирования ПЛАТНО поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
-    Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
-    Если источник финансирования Бюджет поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
+    Если источник финансирования ПЛАТНО поиск осуществляется по цепочке contract
+    Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке contract
+    Если источник финансирования Бюджет поиск осуществляется по цепочке contract
 
     :param **kwargs: istochnik_f, место работы, страховая организация
     :return:
@@ -66,28 +67,11 @@ def get_price(istochnik_f_local):
     price_l = ""
     try:
         contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
-        price_l = Contract.objects.values_list('price').get(id=contract_l[0])
-    except Napravleniya.DoesNotExist:
-        price_l = ""
-    return price_l
+        price_modifier = Contract.objects.values_list('price','modifier').get(id=contract_l[0])
+    except Exception:
+        price_modifier = ""
 
-def get_coast(dir_research_loc, price_obj_loc):
-    """
-    Поиск нужных цен
-    На основании прайса, направления-услуг возвращает словарь словарей {
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
-                                                             }
-    :return:
-    :param **kwargs: направления-услуги, прайс
-    """
-    dict_coast= {}
-    for k,v in dir_research_loc.items():
-        d = ({r:s for r, s in PriceCoast.objects.filter(price_name=price_obj_loc, research__in=v).values_list('research_id', 'coast')})
-        dict_coast[k]=d
-
-    return dict_coast
+    return price_modifier
 
 
 def get_coast(dir_research_loc, price_modifier_loc):
