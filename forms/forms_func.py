@@ -2,7 +2,7 @@ from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
 from contracts.models import Contract, PriceCoast
-
+from decimal import Decimal
 
 def get_all_doc(docs: [Document]):
     """
