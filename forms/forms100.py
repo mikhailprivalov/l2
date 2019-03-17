@@ -336,9 +336,7 @@ def form_02(request_data):
     individual_benefit_code = "_________"
 
     ind_card_num = ind_card.number_with_type()
-
     ind_card_address = ind_card.main_address
-
     ind_card_phone = ", ".join(ind_card.get_phones())
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
@@ -352,7 +350,6 @@ def form_02(request_data):
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -417,8 +414,6 @@ def form_02(request_data):
         ]))
 
     objs.append(tbl)
-
-
 
     content_title =[
         Indenter(left=0 *mm),
