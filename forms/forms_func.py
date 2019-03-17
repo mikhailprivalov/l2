@@ -33,23 +33,23 @@ def get_all_doc(docs: [Document]):
     return documents
 
 
-def get_card_attr(ind_card_l):
-    """
-    Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
-    """
-    card_attr = {'num_type': {},
-                 'phone': "",
-                 'addr': "",
-                 }
-
-
-    for z in range(len(ind_card_l)):
-        card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
-        card_attr['phone']= ind_card_l[z].get_phones()
-        if ind_card_l[z].base.is_rmis:
-            card_attr['addr'] = ind_card_l[z].main_address
-
-    return card_attr
+# def get_card_attr(ind_card_l):
+#     """
+#     Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
+#     """
+#     card_attr = {'num_type': {},
+#                  'phone': "",
+#                  'addr': "",
+#                  }
+#
+#
+#     for z in range(len(ind_card_l)):
+#         card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
+#         card_attr['phone']= ind_card_l[z].get_phones()
+#         if ind_card_l[z].base.is_rmis:
+#             card_attr['addr'] = ind_card_l[z].main_address
+#
+#     return card_attr
 
 def get_price(istochnik_f_local):
     """

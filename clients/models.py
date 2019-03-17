@@ -446,6 +446,9 @@ class Card(models.Model):
                                      Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
                          y != ""]))
 
+    def type_card(self):
+        return "{}".format(self.base.short_title)
+
     class Meta:
         verbose_name = 'Карта'
         verbose_name_plural = 'Карты'

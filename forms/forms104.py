@@ -21,23 +21,28 @@ from . import forms_func
 from datetime import *
 from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
+from clients.models import Card, Document
+from laboratory.settings import FONTS_FOLDER
 
-
-def form_104_01(**kwargs):
+def form_01(request_data):
     """
     Форма Лист на оплату по созданным направлениям на услуги
     """
     form_name = "Лист на оплату"
 
-    ind_card = kwargs.get('ind_card')
-    ind_doc = kwargs.get('ind_doc')
-    ind = kwargs.get('ind')
+    # ind_card = kwargs.get('ind_card')
+    # ind_doc = kwargs.get('ind_doc')
+    # ind = kwargs.get('ind')
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    ind_dir = request_data["direct"]
+    # print(ind_dir)
 
     if not ind:
         return forms_func.form_notfound()
-
     try:
-        ind_dir = kwargs.get('ind_dir')
+        ind_dir = ind_dir
     except Exception:
         ind_dir = None
 
@@ -53,7 +58,7 @@ def form_104_01(**kwargs):
     pay_source={13,3}
     for i in ind_dir:
         try:
-            n = Napravleniya.objects.get(id=i)
+            n = Napravleniya.objects.get(id=ind_dir)
         except Napravleniya.DoesNotExist:
             n = None
         if n:
@@ -100,14 +105,14 @@ def form_104_01(**kwargs):
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_card_attr(ind_card)
-    ind_cards_num_total = card_attr['num_type']
+    # card_attr = forms_func.get_card_attr(ind_card)
+    # ind_cards_num_total = card_attr['num_type']
     # Получить данные номер и тип карты по физ лицу
     ind_cards_num = ""
-    for k, v in ind_cards_num_total.items():
-        if v == "Поликлиника":
-            num = k
-        ind_cards_num += "{} ({})".format(k, v) + '&nbsp;&nbsp;&nbsp;&nbsp;'
+    # for k, v in ind_cards_num_total.items():
+    #     if v == "Поликлиника":
+    #         num = k
+    #     ind_cards_num += "{} ({})".format(k, v) + '&nbsp;&nbsp;&nbsp;&nbsp;'
 
 
     if sys.platform == 'win32':
@@ -169,24 +174,24 @@ def form_104_01(**kwargs):
     styleTCenter.leading = 3.5 * mm
 
     styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize =20
+    styleTBold.fontSize = 15
     styleTBold.alignment = TA_LEFT
 
-
-    num = '0123456'
+    num = ind_card.number
+    num_type = ind_card.type_card()
     barcode128 = code128.Code128(num,barHeight= 10 * mm, barWidth = 1.3)
     date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
-        [Paragraph('№ карты:', style), Paragraph(num + " - L2", styleTBold), barcode128 ],
+        [Paragraph('№ карты:', style), Paragraph(num + " ("+ num_type+")", styleTBold), barcode128 ],
      ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 55 * mm, 100 * mm))
+    tbl = Table(opinion, colWidths=(25 * mm, 70 * mm, 100 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('BOTTOMPADDING', (1, 0), (1, 0), 3.0 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ('BOTTOMPADDING', (1, 0), (1, 0), 1 * mm),
         ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
     ]))
 
@@ -201,7 +206,7 @@ def form_104_01(**kwargs):
         [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
     ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 155 * mm))
+    tbl = Table(opinion, colWidths=(25 * mm, 170 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
