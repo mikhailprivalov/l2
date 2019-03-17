@@ -29,7 +29,7 @@ def form_01(request_data):
                             leftMargin=15 * mm,
                             rightMargin=15 * mm, topMargin=10 * mm,
                             bottomMargin=5 * mm, allowSplitting=1,
-                            title="Форма {}".format("Вич"))
+                            title="Форма {}".format("Сгласие на вич"))
 
     pdfmetrics.registerFont(
         TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))

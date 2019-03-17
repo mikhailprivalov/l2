@@ -2,7 +2,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
     TableStyle
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape, portrait
@@ -10,11 +9,9 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.graphics.barcode import code128
-from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
 import sys
-import pytils
 import os.path
 from io import BytesIO
 from . import forms_func
@@ -24,30 +21,21 @@ from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledova
 from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 
+
 def form_01(request_data):
     """
     Форма Лист на оплату по созданным направлениям на услуги
     """
     form_name = "Лист на оплату"
 
-    # ind_card = kwargs.get('ind_card')
-    # ind_doc = kwargs.get('ind_doc')
-    # ind = kwargs.get('ind')
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
-    ind_dir = request_data["direct"]
-    # print(ind_dir)
 
-    if not ind:
-        return forms_func.form_notfound()
-    try:
-        ind_dir = ind_dir
-    except Exception:
-        ind_dir = None
+    ind_dir_str = request_data["dir"]
+    t = ind_dir_str.split(',')
+    ind_dir = ([int(x) for x in t])
 
-    if not ind_dir:
-        return forms_func.form_notfound()
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
     individual_sex = ind.sex
@@ -56,27 +44,21 @@ def form_01(request_data):
     # Отфильтровать направления - по источнику финансирования "платно" Если таковых не имеется отдать "пусто"
     dir_temp = []
     pay_source={13,3}
-    for i in ind_dir:
-        try:
-            n = Napravleniya.objects.get(id=ind_dir)
-        except Napravleniya.DoesNotExist:
-            n = None
-        if n:
-            if n.istochnik_f_id in pay_source:
-                dir_temp.append(n.pk)
+
+    napr = Napravleniya.objects.filter(id__in=ind_dir)
+    print(napr)
+    for n in napr:
+        if n.istochnik_f_id in pay_source:
+            dir_temp.append(n.pk)
 
     # Получить прайс по источнику "платно"
     price_obj=forms_func.get_price(13)
 
-    # получить УСЛУГИ по направлениям(отфильтрованы уже по "платно" и нет сохраненных исследований) из Issledovaniya
+    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) из Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
     # получить по прайсу и услугам: текущие цена
     research_price = forms_func.get_coast(research_direction, price_obj)
-
-
-    # (пере)записать текущие цены, скидку, в БД (по issledovaniya)
-
 
     #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
 
@@ -84,8 +66,6 @@ def form_01(request_data):
     count = 1
 
     result_data = forms_func.get_final_data(research_price,mark_down_up, count)
-
-
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
@@ -105,16 +85,6 @@ def form_01(request_data):
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    # card_attr = forms_func.get_card_attr(ind_card)
-    # ind_cards_num_total = card_attr['num_type']
-    # Получить данные номер и тип карты по физ лицу
-    ind_cards_num = ""
-    # for k, v in ind_cards_num_total.items():
-    #     if v == "Поликлиника":
-    #         num = k
-    #     ind_cards_num += "{} ({})".format(k, v) + '&nbsp;&nbsp;&nbsp;&nbsp;'
-
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -129,7 +99,7 @@ def form_01(request_data):
                             leftMargin=10 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=5 * mm, allowSplitting=1,
-                            title="Форма {}".format("025/у"))
+                            title="Форма {}".format("Лист на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]

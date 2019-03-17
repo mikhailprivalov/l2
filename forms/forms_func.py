@@ -98,10 +98,10 @@ def get_research_by_dir(dir_temp_l):
     """
     dict_research_dir={}
     for i in dir_temp_l:
+        #Если хотя бы одна из услуг в направлении сохранена, то продожить (она не входит в выборку)
         if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
-            # research_l = list(Issledovaniya.objects.filter(napravleniye_id=i))
             research_l=([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
         dict_research_dir[i]=research_l
 
@@ -160,8 +160,8 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
     return total_data
 
-def form_notfound():
 
+def form_notfound():
 
     """
     В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
