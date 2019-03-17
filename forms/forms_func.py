@@ -105,6 +105,23 @@ def get_coast(dir_research_loc, price_modifier_loc):
         dd = (res_coast*price_modifier_loc).quantize(Decimal("1.00"))
         return dd
 
+def get_research_by_dir(dir_temp_l):
+    """
+    Получить словаь: {направление1:[услуга1, услуга2, услуша3],направление2:[услуга1].....}
+    :param dir_temp_l:
+    :return:
+    """
+    dict_research_dir={}
+    for i in dir_temp_l:
+        #Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
+        if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
+            continue
+        else:
+            research_l=([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
+        dict_research_dir[i]=research_l
+
+    return dict_research_dir
+
 def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     """
     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
