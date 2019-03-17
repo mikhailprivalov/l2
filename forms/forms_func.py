@@ -90,22 +90,36 @@ def get_coast(dir_research_loc, price_obj_loc):
     return dict_coast
 
 
-def get_research_by_dir(dir_temp_l):
+def get_coast(dir_research_loc, price_modifier_loc):
     """
-    Получить словаь: {направление1:[услуга1, услуга2, услуша3],направление2:[услуга1].....}
-    :param dir_temp_l:
-    :return:
-    """
-    dict_research_dir={}
-    for i in dir_temp_l:
-        #Если хотя бы одна из услуг в направлении сохранена, то продожить (она не входит в выборку)
-        if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
-            continue
-        else:
-            research_l=([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
-        dict_research_dir[i]=research_l
+    Получение нужных цен (значение: 'coast' * 'модификатор' из контракта)
+    На основании прайса, услуг возвращает Для листа на оплату {
+                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
+                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
+                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
+                                                             }
 
-    return dict_research_dir
+                                           Для записи в объект issledovaniye - значение
+    :return:
+    :param **kwargs: направления-услуги, прайс
+    """
+    price_name_loc = price_modifier_loc[0]
+    price_modifier_loc = price_modifier_loc[1]
+    d=tuple()
+    if type(dir_research_loc)==dict:
+        dict_coast= {}
+        for k,v in dir_research_loc.items():
+            d = ({r:(s*price_modifier_loc).quantize(Decimal("1.00")) for r, s in PriceCoast.objects.filter(price_name=price_name_loc, research__in=v).values_list('research_id', 'coast')})
+            dict_coast[k]=d
+        return dict_coast
+    elif type(dir_research_loc)==int:
+        try:
+            d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
+            res_coast=d[0]
+        except Exception:
+            res_coast = 0
+        dd = (res_coast*price_modifier_loc).quantize(Decimal("1.00"))
+        return dd
 
 def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
     """
