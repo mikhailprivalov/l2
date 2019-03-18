@@ -163,18 +163,18 @@ def form_01(request_data):
 
     num = ind_card.number
     num_type = ind_card.type_card()
-    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
+    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.3)
     date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
-        [Paragraph('№ карты:', style), Paragraph(num + "-"+num_type, styleTBold), barcode128 ],
+        [Paragraph('№ карты:', style), Paragraph(num + "-"+"("+num_type+")", styleTBold), barcode128 ],
      ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 55 * mm, 100 * mm))
+    tbl = Table(opinion, colWidths=(25 * mm, 70 * mm, 100 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.0 * mm),
         ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
         ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
     ]))
@@ -190,7 +190,7 @@ def form_01(request_data):
         [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
     ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 155 * mm))
+    tbl = Table(opinion, colWidths=(25 * mm, 170 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
