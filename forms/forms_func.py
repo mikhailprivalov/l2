@@ -147,14 +147,15 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
                         h.append("")
                     h.extend(j)
                     h.append("{:,.2f}".format(research_coast).replace(",", " "))
-                    if mark_down_up_l*-1 > 0:
-                        x="+"
-                    else:
-                        x=""
-
-                    h.append(x+str(mark_down_up_l*-1))
-                    coast_with_discount = research_coast-(research_coast*mark_down_up_l/100)
-                    h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
+                    coast_with_discount = research_coast + (research_coast * mark_down_up_l / 100)
+                    print(mark_down_up_l)
+                    if mark_down_up_l != 0:
+                        if  mark_down_up_l > 0:
+                            x="+"
+                        else:
+                            x=""
+                        h.append(x+str(mark_down_up_l))
+                        h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
                     h.append(count_l)
                     research_sum = coast_with_discount*count_l
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
