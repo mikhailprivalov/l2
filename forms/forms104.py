@@ -58,6 +58,7 @@ def form_01(request_data):
             dir_temp.append(n.pk)
 
 
+
     # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
     price_modifier_obj=forms_func.get_price(ist_f_list[0])
 
@@ -67,19 +68,16 @@ def form_01(request_data):
     # получить по прайсу и услугам: текущие цена
     research_price = forms_func.get_coast(research_direction, price_modifier_obj)
 
-    #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
-    # получить по прайсу и услугам: текущие цена
-    research_price = forms_func.get_coast(research_direction, price_modifier_obj)
 
     # Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
-    discount = -10
-    if type(discount) != int:
-        return forms_func.form_notfound()
+    # discount = -10
+    # if type(discount) != int:
+    #     return forms_func.form_notfound()
 
-    mark_down_up = discount * -1
-    count = 1
+    # mark_down_up = discount * -1
+    # count = 1
 
-    result_data = forms_func.get_final_data(research_price,mark_down_up, count)
+    result_data = forms_func.get_final_data(research_price)
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
@@ -158,19 +156,19 @@ def form_01(request_data):
     styleTCenter.leading = 3.5 * mm
 
     styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize = 15
+    styleTBold.fontSize = 14
     styleTBold.alignment = TA_LEFT
 
     num = ind_card.number
-    num_type = ind_card.type_card()
-    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.3)
+    num_type = ind_card.full_type_card()
+    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
     date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
         [Paragraph('№ карты:', style), Paragraph(num + "-"+"("+num_type+")", styleTBold), barcode128 ],
      ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 70 * mm, 100 * mm))
+    tbl = Table(opinion, colWidths=(23 * mm, 75 * mm, 100 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
@@ -190,11 +188,11 @@ def form_01(request_data):
         [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
     ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 170 * mm))
+    tbl = Table(opinion, colWidths=(23 * mm, 175 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.1 * mm),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
     ]))
 
@@ -220,10 +218,11 @@ def form_01(request_data):
     styleTCcenter=deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-    if mark_down_up == 0:
+    if result_data[2]=='no_discount':
         opinion = [
             [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-              Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
+             Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB),
+             Paragraph('Сумма, руб.', styleTB), ],
         ]
     else:
         opinion = [
@@ -231,8 +230,7 @@ def form_01(request_data):
              Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
              Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
              Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
-    ]
-
+        ]
 
     # example_template = [
     #     ['1.2.3','4856397','Полный гематологический анализ','1000.00','0','1000.00','1','1000.00'],
@@ -257,11 +255,12 @@ def form_01(request_data):
             list_t.append(Paragraph(example_template[i][j],s))
         list_g.append(list_t)
 
+
     sum_research = result_data[1]
 
     opinion.extend(list_g)
 
-    if mark_down_up !=0:
+    if result_data[2] == 'is_discount':
         tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
     else:
         tbl = Table(opinion, colWidths=(23 * mm, 34 * mm, 62 * mm, 22 * mm, 23 * mm, 25 * mm))
