@@ -62,7 +62,7 @@ def form_01(request_data):
 
     #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
 
-    mark_down_up=-2
+    mark_down_up=0
     count = 1
 
     result_data = forms_func.get_final_data(research_price,mark_down_up, count)
