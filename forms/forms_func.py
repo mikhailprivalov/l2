@@ -64,7 +64,7 @@ def get_price(istochnik_f_local):
     :param **kwargs: istochnik_f, место работы, страховая организация
     :return:
     """
-    price_l = ""
+
     try:
         contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
         price_modifier = Contract.objects.values_list('price','modifier').get(id=contract_l[0])
@@ -74,42 +74,8 @@ def get_price(istochnik_f_local):
     return price_modifier
 
 
-# def get_coast(dir_research_loc, price_modifier_loc):
-#     """
-#     Получение нужных цен (значение: 'coast' * 'модификатор' из контракта)
-#     На основании прайса, услуг возвращает Для листа на оплату {
-#                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
-#                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
-#                                                              направление: {услуга-цена,услуга-цена,услуга-цена,},
-#                                                              }
-#
-#                                            Для записи в объект issledovaniye - значение
-#     :return:
-#     :param **kwargs: направления-услуги, прайс
-#     """
-#     price_name_loc = price_modifier_loc[0]
-#     price_modifier_loc = price_modifier_loc[1]
-#     d=tuple()
-#     if type(dir_research_loc)==dict:
-#         dict_coast= {}
-#         for k,v in dir_research_loc.items():
-#             d = ({r:(s*price_modifier_loc).quantize(Decimal("1.00")) for r, s in PriceCoast.objects.filter(price_name=price_name_loc, research__in=v).values_list('research_id', 'coast')})
-#             dict_coast[k]=d
-#         return dict_coast
-#     elif type(dir_research_loc)==int:
-#         try:
-#             d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
-#             res_coast=d[0]
-#         except Exception:
-#             res_coast = 0
-#         dd = (res_coast*price_modifier_loc).quantize(Decimal("1.00"))
-#         return dd
-
-def get_coast(dir_research_loc, price_modifier_loc):
+def get_coast_from_issledovanie(dir_research_loc):
     """
-    При создании направления:
-    Получение нужных цен (значение: 'coast' * 'модификатор' из контракта) возвращает: значение для определеннуой услуги
-
     При печати листа на оплату возвращает (цены из записанных в Исследования)
     На основании прайса, услуг возвращает Для листа на оплату {
                                                              направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
@@ -117,11 +83,9 @@ def get_coast(dir_research_loc, price_modifier_loc):
                                                              направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
                                                              }
     """
-    price_name_loc = price_modifier_loc[0]
-    price_modifier_loc = price_modifier_loc[1]
+
     d=tuple()
     if type(dir_research_loc)==dict:
-        dict_research ={}
         dict_coast = {}
         for k,v in dir_research_loc.items():
             d = ({r: [s,d,h,]  for r, s, d, h in
@@ -129,15 +93,9 @@ def get_coast(dir_research_loc, price_modifier_loc):
             dict_coast[k]=d
             print(dict_coast)
         return dict_coast
+    else:
+        return 0
 
-    elif type(dir_research_loc)==int:
-        try:
-            d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
-            res_coast=d[0]
-        except Exception:
-            res_coast = 0
-        dd = (res_coast*price_modifier_loc).quantize(Decimal("1.00"))
-        return dd
 
 def get_research_by_dir(dir_temp_l):
     """
@@ -155,69 +113,12 @@ def get_research_by_dir(dir_temp_l):
         dict_research_dir[i]=research_l
     return dict_research_dir
 
-
-# def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
-#     """
-#     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
-#     Направление указывается один раз для нескольких строк
-#     :param mark_down_up_l:
-#     :param count_l:
-#     :return:
-#     """
-#     total_sum=0
-#     tmp_data=[]
-#
-#     for k,v in research_price_loc.items():
-#         research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
-#         research_attr_list = [list(z) for z in research_attr]
-#         for research_id,research_coast in v.items():
-#             h = []
-#             for j in research_attr_list:
-#                 if research_id == j[0]:
-#                     if k !=0:
-#                         h.append(k)
-#                         k=0
-#                     else:
-#                         h.append("")
-#                     h.extend(j)
-#                     h.append("{:,.2f}".format(research_coast).replace(",", " "))
-#                     coast_with_discount = research_coast + (research_coast * mark_down_up_l / 100)
-#                     if mark_down_up_l != 0:
-#                         if  mark_down_up_l > 0:
-#                             x="+"
-#                         else:
-#                             x=""
-#                         h.append(x+str(mark_down_up_l))
-#                         h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
-#                     h.append(count_l)
-#                     research_sum = coast_with_discount*count_l
-#                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
-#                     h[0],h[1]=h[1],h[0]
-#                     total_sum +=research_sum
-#                     research_attr_list.remove(j)
-#                     tmp_data.append(h)
-#                 if h:
-#                     break
-#
-#     res_lis=[]
-#     for t in tmp_data:
-#         tmp_d=list(map(str, t))
-#         res_lis.append(tmp_d)
-#
-#     total_data =[]
-#     total_data.append(res_lis)
-#     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
-#     return total_data
-
 def get_final_data(research_price_loc):
     """
     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
     Направление указывается один раз для нескольких строк
-    :param mark_down_up_l:
-    :param count_l:
-    :return:
     """
-    # mark_down_up_l = 0
+
     total_sum=0
     tmp_data=[]
     is_discount = False

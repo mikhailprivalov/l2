@@ -20,6 +20,7 @@ from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
+import simplejson as json
 
 
 def form_01(request_data):
@@ -31,19 +32,13 @@ def form_01(request_data):
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
-
-    ind_dir_str = request_data["dir"]
-    t = ind_dir_str.split(',')
-    ind_dir = ([int(x) for x in t])
+    ind_dir = json.loads(request_data["dir"])
 
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
     individual_sex = ind.sex
     individual_date_born = ind.bd()
 
-    # Отфильтровать направления - по источнику финансирования "платно" Если таковых не имеется отдать "пусто"
-
-    # pay_source={13,3}
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
@@ -53,29 +48,21 @@ def form_01(request_data):
 
     napr = Napravleniya.objects.filter(id__in=ind_dir)
     dir_temp = []
+
+    #Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
     for n in napr:
         if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
             dir_temp.append(n.pk)
 
-
-
     # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
     price_modifier_obj=forms_func.get_price(ist_f_list[0])
 
-    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) из Issledovaniya
+    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
-    # получить по прайсу и услугам: текущие цена
-    research_price = forms_func.get_coast(research_direction, price_modifier_obj)
-
-
-    # Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
-    # discount = -10
-    # if type(discount) != int:
-    #     return forms_func.form_notfound()
-
-    # mark_down_up = discount * -1
-    # count = 1
+    # получить по направлению-услугам цену из Issledovaniya
+    # research_price = forms_func.get_coast(research_direction, price_modifier_obj)
+    research_price = forms_func.get_coast_from_issledovanie(research_direction)
 
     result_data = forms_func.get_final_data(research_price)
 
@@ -241,8 +228,9 @@ def form_01(request_data):
     # #
 
     example_template=result_data[0]
-    # print(result_data[0])
+
     list_g =[]
+    #используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
     for i in range(len(example_template)):
         list_t = []
         for j in range(len(example_template[i])):
@@ -254,7 +242,6 @@ def form_01(request_data):
                 s=styleTC
             list_t.append(Paragraph(example_template[i][j],s))
         list_g.append(list_t)
-
 
     sum_research = result_data[1]
 
