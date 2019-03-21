@@ -401,7 +401,7 @@ class Napravleniya(models.Model):
 
                 # начало Касьяненко С.Н.
                 # получить прайс
-                price_obj = contracts.PriceName.get_price(finsource.id)
+                price_obj = contracts.PriceName.get_price(finsource.pk)
                 #конец Касьяненко С.Н.
 
                 for v in res:
@@ -443,7 +443,7 @@ class Napravleniya(models.Model):
                     # начало Касьяненко С.Н.
                     # получить по прайсу и услуге: текущую цену
                     # research_coast = forms_func.get_coast(research.id, price_obj)
-                    research_coast = contracts.PriceCoast.get_coast_from_price(research.id, price_obj)
+                    research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
                     research_discount = 10*-1
                     research_howmany = 1
                     # конец Касьяненко С.Н.

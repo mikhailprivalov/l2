@@ -15,6 +15,7 @@ class PriceName(models.Model):
     def __str__(self):
         return "{}".format(self.title)
 
+    @staticmethod
     def get_price(istochnik_f_local):
         """
         На основании источника финансирования возвращает прайс
@@ -54,8 +55,9 @@ class PriceCoast(models.Model):
     def __str__(self):
         return "{}".format(self.price_name.title)
 
+    @staticmethod
     def get_coast_from_price(dir_research_loc, price_modifier_loc):
-        price_name_loc = price_modifier_loc[0]
+        price_name_loc = price_modifier_loc[ 0]
         price_modifier_loc = price_modifier_loc[1]
         try:
             d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
@@ -64,7 +66,6 @@ class PriceCoast(models.Model):
             res_coast = 0
         dd = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
         return dd
-
 
 
     class Meta:
