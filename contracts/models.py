@@ -56,17 +56,19 @@ class PriceCoast(models.Model):
         return "{}".format(self.price_name.title)
 
     @staticmethod
-    def get_coast_from_price(dir_research_loc, price_modifier_loc):
-        price_name_loc = price_modifier_loc[ 0]
-        price_modifier_loc = price_modifier_loc[1]
-        try:
-            d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
-            res_coast = d[0]
-        except Exception:
-            res_coast = 0
-        dd = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
-        return dd
-
+    def get_coast_from_price(dir_research_loc, price_modifier):
+        value = 0
+        if price_modifier:
+            price_name_loc = price_modifier[0]
+            price_modifier_loc = price_modifier[1]
+            try:
+                d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
+                res_coast = d[0]
+                value = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
+            except PriceCoast.DoesNotExist:
+                return value
+        else:
+            return value
 
     class Meta:
         unique_together =('price_name','research')
