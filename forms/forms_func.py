@@ -22,7 +22,7 @@ def get_all_doc(docs: [Document]):
             documents["passport"]["num"] = d.number
             documents["passport"]["serial"] = d.serial
             documents["passport"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
-            documents["polis"]["issued"] = d.who_give
+            documents["passport"]["issued"] = d.who_give
 
         if d.document_type.title == 'Полис ОМС':
             documents["polis"]["num"] = d.number
@@ -67,7 +67,7 @@ def get_price(istochnik_f_local):
     try:
         contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
         price_l = Contract.objects.values_list('price').get(id=contract_l[0])
-    except Napravleniya.DoesNotExist:
+    except Exception:
         price_l = ""
     return price_l
 
@@ -83,10 +83,12 @@ def get_coast(dir_research_loc, price_obj_loc):
     :param **kwargs: направления-услуги, прайс
     """
     dict_coast= {}
-    for k,v in dir_research_loc.items():
-        d = ({r:s for r, s in PriceCoast.objects.filter(price_name=price_obj_loc, research__in=v).values_list('research_id', 'coast')})
-        dict_coast[k]=d
-
+    try:
+        for k,v in dir_research_loc.items():
+            d = ({r:s for r, s in PriceCoast.objects.filter(price_name=price_obj_loc, research__in=v).values_list('research_id', 'coast')})
+            dict_coast[k]=d
+    except Exception:
+        pass
     return dict_coast
 
 

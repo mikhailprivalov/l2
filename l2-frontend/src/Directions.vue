@@ -31,7 +31,7 @@
               </button>
               <ul class="dropdown-menu">
                 <li><a :href="`/forms/pdf?type=101.01&individual=${selected_card.individual_pk}`" target="_blank" class="ddm">Согласие на ВИЧ-исследование</a></li>
-                <li><a :href="`/forms/pdf?type=100.02&card_pk=${selected_card.pk}`" target="_blank" class="ddm">Титульный лист карты</a></li>
+                <li v-if="this.selected_card.base.internal_type"><a :href="`/forms/pdf?type=100.02&card_pk=${selected_card.pk}`" target="_blank" class="ddm">Титульный лист карты</a></li>
               </ul>
             </div>
             <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">

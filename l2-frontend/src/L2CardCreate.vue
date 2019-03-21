@@ -156,9 +156,13 @@
             <label for="de-f5">Дата окончания:</label>
             <input class="form-control" type="date" id="de-f5" v-model="document.date_end">
           </div>
-          <div class="form-group">
-            <label for="de-f6">Выдал:</label>
-            <input class="form-control" id="de-f6" v-model="document.who_give">
+          <div class="form-group str">
+            <label>Выдал:</label>
+            <TypeAhead :delayTime="100" :getResponse="getResponse"
+                       :highlighting="highlighting" :limit="10"
+                       :minChars="1" :onHit="onHitDocWhoGive" :selectFirst="true" maxlength="36"
+                       ref="dwg" :src="`/api/autocomplete?value=:keyword&type=who_give:` + document.document_type" v-model="document.who_give"
+            />
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
@@ -399,6 +403,9 @@
       onHitPatronymic(item) {
         this.card.patronymic = item
       },
+      onHitDocWhoGive(item) {
+        this.document.who_give = item
+      },
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       load_data() {
         if (this.card_pk === -1) {
@@ -578,5 +585,8 @@
     &:hover {
       background-color: rgba(0, 0, 0, .15);
     }
+  }
+  .str /deep/ .input-group {
+    width: 100%;
   }
 </style>

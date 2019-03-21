@@ -388,6 +388,9 @@
         this.hide_modal()
         this.selected_card = this.founded_cards[index]
         if (this.selected_card.base_pk) {
+          if (this.base && this.base !== this.selected_card.base_pk) {
+            this.query = '';
+          }
           this.base = this.selected_card.base_pk
         }
         this.emit_input()
@@ -404,12 +407,23 @@
           let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
             window.history.pushState('', '', window.location.href.split('?')[0])
+            let has_internal = false
             for (let row of this.bases) {
-              if (row.code === 'Р') {
+              if (row.internal_type) {
                 this.base = row.pk
                 this.query = rmis_uid
                 this.search_after_loading = true
                 break
+              }
+            }
+            if (!has_internal) {
+              for (let row of this.bases) {
+                if (row.code === 'Р') {
+                  this.base = row.pk
+                  this.query = rmis_uid
+                  this.search_after_loading = true
+                  break
+                }
               }
             }
             if (this.base === -1) {
@@ -476,7 +490,7 @@
         this.selected_card = {}
         this.history_num = ''
         this.founded_cards = []
-        if (this.query.includes('card_pk:')) {
+        if (this.query.toLowerCase().includes('card_pk:')) {
           this.query = ''
         }
         this.emit_input()
@@ -488,7 +502,11 @@
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
-            vm.select_card(0)
+            if (vm.founded_cards.length > 1) {
+              vm.showModal = true
+            } else if (vm.founded_cards.length === 1) {
+              vm.select_card(0)
+            }
           } else {
             errmessage('Ошибка на сервере')
           }

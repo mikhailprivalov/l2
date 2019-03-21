@@ -104,10 +104,10 @@ class Individual(models.Model):
             if out:
                 out.write("Добавление РМИС карты -> %s" % s)
 
+        save_docs = []
+
         if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
             pat_data = c.patients.extended_data(rmis_uid)
-            if out:
-                out.write(str(pat_data))
             cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
             for card_i in cards:
                 c.patients.sync_card_data(card_i, out)
@@ -139,12 +139,14 @@ class Individual(models.Model):
                         Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
-                                                   number=data['number'])
+                                                   number=data['number'], from_rmis=True)
                     if not docs.exists():
                         doc = Document(**data)
                         doc.save()
                         if out:
                             out.write("Добавление докумена: %s" % doc)
+                        kk = "%s_%s_%s" % (doc.document_type.pk, doc.serial, doc.number)
+                        save_docs.append(kk)
                         continue
                     else:
                         to_delete = []
@@ -152,14 +154,21 @@ class Individual(models.Model):
                         ndocs = {}
                         for d in docs:
                             kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
+                            if out:
+                                out.write("Checking: %s" % kk)
                             if kk in has:
+                                if out:
+                                    out.write("to delete: %s" % d.pk)
                                 to_delete.append(d.pk)
                                 if Card.objects.filter(polis=d).exists():
                                     for c in Card.objects.filter(polis=d):
                                         c.polis = ndocs[kk]
                                         c.save()
                             else:
+                                if out:
+                                    out.write("To has: %s" % d.pk)
                                 has.append(kk)
+                                save_docs.append(kk)
                                 ndocs[kk] = d
 
                         Document.objects.filter(pk__in=to_delete).delete()
@@ -197,6 +206,15 @@ class Individual(models.Model):
                             out.write("Объединение записей физ.лиц")
                         for doc in docs:
                             self.join_individual(doc.individual, out)
+
+            to_delete_pks = []
+            for d in Document.objects.filter(individual=self, from_rmis=True):
+                kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
+                if out:
+                    out.write("TD %s %s %s" % (kk, kk not in save_docs, save_docs,))
+                if kk not in save_docs:
+                    to_delete_pks.append(d.pk)
+            Document.objects.filter(pk__in=to_delete_pks).delete()
         else:
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
@@ -459,6 +477,32 @@ class Card(models.Model):
             return
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
+
+    @staticmethod
+    def next_l2_n():
+        last_l2 = Card.objects.filter(base__internal_type=True).extra(
+            select={'numberInt': 'CAST(number AS INTEGER)'}
+        ).order_by("-numberInt").first()
+        n = 0
+        if last_l2:
+            n = last_l2.numberInt
+        return n + 1
+
+    @staticmethod
+    def add_l2_card(individual: [Individual, None]=None, card_orig: ['Card', None]=None, distinct=True):
+        if distinct and card_orig \
+                and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
+            return
+        if not card_orig and not individual:
+            return
+        c = Card(number=Card.next_l2_n(), base=CardBase.objects.filter(internal_type=True).first(),
+                 individual=individual if individual else card_orig.individual, polis=None if not card_orig else card_orig.polis,
+                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
+                 main_address='' if not card_orig else card_orig.main_address,
+                 fact_address='' if not card_orig else card_orig.fact_address)
+        c.save()
+        print('add_l2_card', c)
+        return c
 
 
 class Phones(models.Model):

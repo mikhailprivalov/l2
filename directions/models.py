@@ -446,7 +446,7 @@ class Napravleniya(models.Model):
                     # конец Касьяненко С.Н.
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  research=research,coast=research_coast,
+                                                  research=research, coast=research_coast.get('whatever', 0),
                                                   deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
