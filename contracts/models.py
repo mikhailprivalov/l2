@@ -2,6 +2,7 @@ from django.db import models
 import directory.models as directory
 from decimal import Decimal
 
+
 # Create your models here.
 
 class PriceName(models.Model):
@@ -13,6 +14,29 @@ class PriceName(models.Model):
 
     def __str__(self):
         return "{}".format(self.title)
+
+    def get_price(istochnik_f_local):
+        """
+        На основании источника финансирования возвращает прайс
+        Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
+        Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
+        Если источник финансирования ПЛАТНО поиск осуществляется по цепочке contract
+        Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке contract
+        Если источник финансирования Бюджет поиск осуществляется по цепочке contract
+
+        :param **kwargs: istochnik_f, место работы, страховая организация
+        :return:
+        """
+
+        from directions.models import IstochnikiFinansirovaniya
+
+        try:
+            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
+            price_modifier = Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+        except Exception:
+            price_modifier = ""
+
+        return price_modifier
 
 
     def status(self):

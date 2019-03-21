@@ -401,7 +401,7 @@ class Napravleniya(models.Model):
 
                 # начало Касьяненко С.Н.
                 # получить прайс
-                price_obj = forms_func.get_price(finsource.id)
+                price_obj = contracts.PriceName.get_price(finsource.id)
                 #конец Касьяненко С.Н.
 
                 for v in res:

@@ -1,8 +1,6 @@
 from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
-from contracts.models import Contract, PriceCoast
-from decimal import Decimal
 
 def get_all_doc(docs: [Document]):
     """
@@ -51,29 +49,6 @@ def get_all_doc(docs: [Document]):
 #
 #     return card_attr
 
-
-def get_price(istochnik_f_local):
-    """
-    На основании источника финансирования возвращает прайс
-    Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
-    Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
-    Если источник финансирования ПЛАТНО поиск осуществляется по цепочке contract
-    Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке contract
-    Если источник финансирования Бюджет поиск осуществляется по цепочке contract
-
-    :param **kwargs: istochnik_f, место работы, страховая организация
-    :return:
-    """
-
-    try:
-        contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
-        price_modifier = Contract.objects.values_list('price','modifier').get(id=contract_l[0])
-    except Exception:
-        price_modifier = ""
-
-    return price_modifier
-
-
 def get_coast_from_issledovanie(dir_research_loc):
     """
     При печати листа на оплату возвращает (цены из записанных в Исследования)
@@ -91,7 +66,6 @@ def get_coast_from_issledovanie(dir_research_loc):
             d = ({r: [s,d,h,]  for r, s, d, h in
                   Issledovaniya.objects.filter(napravleniye=k, research__in=v).values_list('research_id','coast','discount','how_many') if s!=None})
             dict_coast[k]=d
-            print(dict_coast)
         return dict_coast
     else:
         return 0

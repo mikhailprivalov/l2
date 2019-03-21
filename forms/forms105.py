@@ -22,11 +22,18 @@ from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 import simplejson as json
 from contracts.models import PriceName
+from datetime import *
+from dateutil.relativedelta import *
+import datetime
+import locale
+import sys
+import pytils
+from appconf.manager import SettingManager
 
 
 def form_01(request_data):
     """
-    Форма Лист на оплату по созданным направлениям на услуги
+    Договор, включающий услуги на оплату и необходимые реквизиты
     """
     form_name = "Лист на оплату"
 
@@ -82,8 +89,6 @@ def form_01(request_data):
     document_polis = documents['polis']['num']
     document_snils = documents['snils']['num']
 
-    indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
-    individual_benefit_code="_________"
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -104,14 +109,15 @@ def form_01(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 13
+    style.fontSize = 9
     style.leading = 12
     style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
-    styleCenter.fontSize = 12
+    styleCenter.fontSize = 9
     styleCenter.leading = 10
     styleCenter.spaceAfter = 0 * mm
     styleCenterBold = deepcopy(styleBold)
@@ -127,68 +133,63 @@ def form_01(request_data):
 
     objs = []
 
-    date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%Y%m%d%H%M%S%f")
+    date_now_int = int(date_now1)
+
     objs = [
-        Paragraph('{}'.format(hospital_name),styleCenter),
-        Spacer(1, 1 *mm),
-        Paragraph('({} тел. 28-61-00)'.format(hospital_address), styleCenter),
-        Spacer(1, 3 * mm),
-        Paragraph('{}'.format(form_name), styleCenterBold),
-        Spacer(1, 4 * mm),
-        Paragraph('<font size = 11> <u> {}</u> </font>'.format(date_now), styleCenter),
-        Paragraph('<font size = 8> дата оформления </font>', styleCenter),
-    ]
+        Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_int),styleCenter),
+        Spacer(1, 1 * mm),
+        Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
+        ]
 
     styleTCenter = deepcopy(styleCenter)
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
 
     styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize = 14
+    styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
 
     num = ind_card.number
     num_type = ind_card.full_type_card()
-    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
-    date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
+    # barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+
+    styleTR = deepcopy(style)
+    styleTR.alignment = TA_RIGHT
 
     opinion = [
-        [Paragraph('№ карты:', style), Paragraph(num + "-"+"("+num_type+")", styleTBold), barcode128 ],
-     ]
-
-    tbl = Table(opinion, colWidths=(23 * mm, 75 * mm, 100 * mm))
-
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.0 * mm),
-        ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
-        ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
-    ]))
-
-    objs.append(Spacer(1,4.5 * mm))
-    objs.append(tbl)
-
-    opinion = [
-        [Paragraph('', style), Paragraph('', style), ],
-        [Paragraph('Пациент:', style), Paragraph(individual_fio, style), ],
-        [Paragraph('Паспорт:', style), Paragraph('серия: {} &nbsp;&nbsp;&nbsp;&nbsp; номер: {} &nbsp;&nbsp;&nbsp;&nbsp; дата выдачи: {}'.
-                    format(document_passport_serial,document_passport_num,document_passport_issued), style), ],
-        [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
+        [Paragraph('г. Иркутск', style),
+         Paragraph(date_now, styleTR)],
     ]
 
-    tbl = Table(opinion, colWidths=(23 * mm, 175 * mm))
+    tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.1 * mm),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-    ]))
-
-    objs.append(Spacer(1,2 * mm))
-    objs.append(tbl)
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ]))
 
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('<font size=13><b>На водительскую справку</b></font>', style))
+    objs.append(tbl)
+
+    objs.append(Spacer(1, 4.5 * mm))
+    hospital_name = SettingManager.get("rmis_orgname")
+    director = SettingManager.get("post_director")
+    fio_director = SettingManager.get("name_director")
+    objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующей на основании Устава с'
+                          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} '
+                          ' г., паспорт: {}-{}'.
+                          format(hospital_name, director,fio_director,individual_fio,individual_date_born,
+                                 document_passport_serial, document_passport_num),style))
+    opinion =[]
 
 
     styleTB = deepcopy(style)
@@ -268,7 +269,7 @@ def form_01(request_data):
     objs.append(Spacer(1, 2 * mm))
     # start_day = datetime.today()
     end_date = (date.today() + relativedelta(days=+10))
-    end_date1 = datetime.strftime(end_date, "%d.%m.%Y")
+    end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
 
     objs.append(Spacer(1,7 * mm))
     objs.append(Paragraph('<font size=16> Внимание:</font>', styleTBold))
