@@ -47,6 +47,7 @@ def form_01(request_data):
     individual_sex = ind.sex
     individual_date_born = ind.bd()
 
+
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
@@ -90,6 +91,8 @@ def form_01(request_data):
     document_snils = documents['snils']['num']
 
 
+
+
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -113,6 +116,7 @@ def form_01(request_data):
     style.leading = 12
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
@@ -184,21 +188,69 @@ def form_01(request_data):
     hospital_name = SettingManager.get("rmis_orgname")
     director = SettingManager.get("post_director")
     fio_director = SettingManager.get("name_director")
+
+    if document_passport_issued:
+        passport_who_give = document_passport_issued
+    else:
+        passport_who_give = "______________________________________________________________________"
+
+
+    if ind_card.main_address:
+        main_address = ind_card.main_address
+    else:
+        main_address = "______________________________________________________________________"
+
+    if ind_card.fact_address:
+        fact_address = ind_card.main_address
+    elif main_address:
+        fact_address = main_address
+    else:
+        fact_address = "______________________________________________________________________"
+
+
+
+
     objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующей на основании Устава с'
-                          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} '
-                          ' г., паспорт: {}-{}'.
+          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} '
+          ' г., паспорт: {}-{} '
+          'выдан {} г. '
+          'кем: {} '
+          'зарегистрирован по адресу: {}, '
+          'адрес проживания: {}'
+          'с другой стороны, вместе также именуемые "Стороны", заключили настоящий договор (далее - "Договор") о нижеследующем:'
+                          .
                           format(hospital_name, director,fio_director,individual_fio,individual_date_born,
-                                 document_passport_serial, document_passport_num),style))
+                                 document_passport_serial, document_passport_num,document_passport_date_start,
+                                 passport_who_give, main_address, fact_address),style))
+
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА',styleCenter))
+    objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с'
+                          'лицензий:', style))
+
+    #Касьяненко начало шаблон услуг только для водителей, на работу
+    template_research = "Медосмотр для водителей"
+    # Касьяненко конец
+
+    tr = ""
+    if template_research:
+        tr = template_research
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('{}'.format(tr), style))
+
+
     opinion =[]
 
 
     styleTB = deepcopy(style)
-    styleTB.fontSize = 11.5
+    styleTB.firstLineIndent =0
+    styleTB.fontSize = 8.5
     styleTB.alignment = TA_CENTER
     styleTB.fontName = "PTAstraSerifBold"
 
     styleTC = deepcopy(style)
-    styleTC.fontSize =10.5
+    styleTC.firstLineIndent = 0
+    styleTC.fontSize = 8.5
     styleTC.alignment = TA_LEFT
 
     styleTCright = deepcopy(styleTC)
@@ -260,25 +312,41 @@ def form_01(request_data):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
 
-    objs.append(Spacer(1, 2 * mm))
     objs.append(tbl)
-    objs.append(Spacer(1, 2 * mm))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('<font size=16> Итого: {}</font>'.format(sum_research), styleTCright))
 
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph('(далее - "медицинские услуги"), а Пациент уплачивает Исполнителю вознаграждение в размере, '
+                          'порядке и сроки, которые установлены настоящим Договором.', style))
+    objs.append(Paragraph('1.2.	Исполнитель оказывает услуги по месту своего нахождения по адресу: '
+          'г. Иркутск, Байкальская, 201, в соответствии с установленными Правилами предоставления платных медицинских услуг.', style))
     objs.append(Spacer(1, 2 * mm))
-    # start_day = datetime.today()
-    end_date = (date.today() + relativedelta(days=+10))
-    end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
+    objs.append(Paragraph('2. ПРАВА И ОБЯЗАННОСТИ СТОРОН', styleCenter))
+    objs.append(Paragraph('<u>2.1. Исполнитель обязуется:</u>',style))
+    objs.append(Paragraph('2.1.1. Обеспечить Пациента бесплатной, доступной и достоверной информацией о платных медицинских услугах, '
+                          'содержащей следующие сведения о:', style))
+    objs.append(Paragraph('а) порядках оказания медицинской помощи и стандартах медицинской помощи, применяемых при предоставлении платных медицинских услуг;', style))
+    objs.append(Paragraph('б) данных о конкретном медицинском работнике, предоставляющем соответствующую платную медицинскую услугу (его профессиональном образовании и квалификации);', style))
+    objs.append(Paragraph('в) данных о методах оказания медицинской помощи, связанных с ними рисках, возможных видах медицинского вмешательства, их последствиях и ожидаемых результатах оказания медицинской помощи;', style))
+    objs.append(Paragraph('г) других сведениях, относящихся к предмету настоящего Договора.', style))
+    objs.append(Paragraph('2.1.2.Оказывать Пациенту услуги, предусмотренные п. 1.1 настоящего Договора, а при необходимости и дополнительные услуги.', style))
+    objs.append(Paragraph('2.1.3.Давать при необходимости по просьбе Пациента разъяснения о ходе оказания услуг ему и '
+                          'предоставлять по требованию Пациента необходимую медицинскую документацию.', style))
+    objs.append(Paragraph('2.1.4.Предоставить в доступной форме информацию о возможности получения соответствующих видов '
+                          'и объемов медицинской помощи без взимания платы в рамках Программы государственных гарантий '
+                          'бесплатного оказания гражданам медицинской помощи и территориальной программы государственных гарантий '
+                          'бесплатного оказания гражданам медицинской помощи.', style))
+    objs.append(Paragraph('2.15. Соблюдать порядки оказания медицинской помощи, утвержденные Министерством здравоохранения '
+                          'Российской Федерации.',style))
+    objs.append(Paragraph('<u>2.2. Пациент обязуется:</u>',style))
+    objs.append(Paragraph('2.2.1. Соблюдать назначение и рекомендации лечащих врачей.', style))
+    objs.append(Paragraph('2.2.3. Оплачивать услуги Исполнителя в порядке, сроки и на условиях, которые установлены настоящим Договором.', style))
+    objs.append(Paragraph('2.2.4. Подписывать своевременно акты об оказании услуг Исполнителем.', style))
+    objs.append(Paragraph('2.2.5. Кроме того Пациент обязан:', style))
+
 
     objs.append(Spacer(1,7 * mm))
-    objs.append(Paragraph('<font size=16> Внимание:</font>', styleTBold))
-    objs.append(Spacer(1, 1 * mm))
-    objs.append(Paragraph('<font size=16> 1) Лист на оплату действителен в течение 10 (десяти) дней – до {}.'
-               '</font>'.format(end_date1), style))
-    objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('<font size=16> 2) Проверяйте услуги с направлениями</font>', style))
-
 
     doc.build(objs)
     pdf = buffer.getvalue()
