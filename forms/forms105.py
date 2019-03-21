@@ -299,6 +299,8 @@ def form_01(request_data):
 
     sum_research = result_data[1]
 
+    sum_research_decimal = sum_research.replace(' ', '')
+
     opinion.extend(list_g)
 
     if result_data[2] == 'is_discount':
@@ -315,6 +317,7 @@ def form_01(request_data):
     objs.append(tbl)
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('<font size=14> Итого: {}</font>'.format(sum_research), styleTCright))
+    objs.append(Spacer(1,2 * mm))
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('(далее - "медицинские услуги"), а Пациент уплачивает Исполнителю вознаграждение в размере, '
@@ -369,7 +372,9 @@ def form_01(request_data):
     objs.append(Paragraph('3.5. К отношениям, связанным с исполнением настоящего Договора, применяются положения Закона '
                           'Российской Федерации от 7 февраля 1992 г. N 2300-1 "О защите прав потребителей".', style))
     objs.append(Paragraph('4. ПОРЯДОК ОПЛАТЫ', styleCenter))
-    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет: <u>{}</u> '.format(sum_research), style))
+
+    s = pytils.numeral.rubles(float(sum_research_decimal))
+    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет: <u>{}</u> '.format(s.capitalize()), style))
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
