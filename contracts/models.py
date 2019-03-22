@@ -33,6 +33,11 @@ class PriceCoast(models.Model):
 
     @staticmethod
     def get_coast_from_price(dir_research_loc, price_modifier):
+        """
+        Принимает вид исследования, объект price_modifier: объект прайса, модификатор
+        на основании прайса получает базовую цену и умножает на модификатор.
+        Возвращает окончательну цену для записи в issledovaniya
+        """
         value = 0
         if price_modifier:
             price_name_loc = price_modifier[0]
