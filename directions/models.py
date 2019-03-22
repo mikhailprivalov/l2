@@ -401,7 +401,7 @@ class Napravleniya(models.Model):
 
                 # начало Касьяненко С.Н.
                 # получить прайс
-                price_obj = forms_func.get_price(finsource.id)
+                price_obj = contracts.PriceName.get_price(finsource.pk)
                 #конец Касьяненко С.Н.
 
                 for v in res:
@@ -442,11 +442,15 @@ class Napravleniya(models.Model):
 
                     # начало Касьяненко С.Н.
                     # получить по прайсу и услуге: текущую цену
-                    research_coast = forms_func.get_coast(research.id, price_obj)
+                    # research_coast = forms_func.get_coast(research.id, price_obj)
+                    research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
+                    research_discount = 10*-1
+                    research_howmany = 1
                     # конец Касьяненко С.Н.
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  research=research, coast=research_coast.get('whatever', 0),
+                                                  research=research,coast=research_coast,discount=research_discount,
+                                                  how_many=research_howmany,
                                                   deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
@@ -535,6 +539,9 @@ class Issledovaniya(models.Model):
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
+    discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
+    how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+
 
 
 

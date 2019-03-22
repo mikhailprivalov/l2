@@ -1,5 +1,6 @@
 from django.db import models
 import directory.models as directory
+from decimal import Decimal
 
 
 # Create your models here.
@@ -13,6 +14,30 @@ class PriceName(models.Model):
 
     def __str__(self):
         return "{}".format(self.title)
+
+    @staticmethod
+    def get_price(istochnik_f_local):
+        """
+        На основании источника финансирования возвращает прайс
+        Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
+        Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
+        Если источник финансирования ПЛАТНО поиск осуществляется по цепочке contract
+        Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке contract
+        Если источник финансирования Бюджет поиск осуществляется по цепочке contract
+
+        :param **kwargs: istochnik_f, место работы, страховая организация
+        :return:
+        """
+
+        from directions.models import IstochnikiFinansirovaniya
+
+        try:
+            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
+            price_modifier = Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+        except Exception:
+            price_modifier = ""
+
+        return price_modifier
 
 
     def status(self):
@@ -30,10 +55,26 @@ class PriceCoast(models.Model):
     def __str__(self):
         return "{}".format(self.price_name.title)
 
+    @staticmethod
+    def get_coast_from_price(dir_research_loc, price_modifier):
+        value = 0
+        if price_modifier:
+            price_name_loc = price_modifier[0]
+            price_modifier_loc = price_modifier[1]
+            try:
+                d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
+                res_coast = d[0]
+                value = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
+            except PriceCoast.DoesNotExist:
+                return value
+        else:
+            return value
+
     class Meta:
         unique_together =('price_name','research')
         verbose_name = 'Прайс - цены'
         verbose_name_plural = 'Прайс - цены'
+
 
 
 class Contract(models.Model):
@@ -78,4 +119,3 @@ class Company(models.Model):
             return "{}".format(self.contract.modifier)
         else:
             return ""
-

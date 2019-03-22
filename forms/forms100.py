@@ -22,13 +22,14 @@ from io import BytesIO
 from . import forms_func
 
 
-def form_100_01(**kwargs):
+# def form_100_01(**kwargs):
+def form_01(request_data):
     """
     форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     """
-    ind_card = kwargs.get('ind_card')
-    ind_doc = kwargs.get('ind_doc')
-    ind = kwargs.get('ind')
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
@@ -50,8 +51,8 @@ def form_100_01(**kwargs):
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_card_attr(ind_card)
-    ind_card_address = card_attr.get('addr')
+    # card_attr = forms_func.get_card_attr(ind_card)
+    ind_card_address = ind_card.main_address
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
@@ -335,9 +336,7 @@ def form_02(request_data):
     individual_benefit_code = "_________"
 
     ind_card_num = ind_card.number_with_type()
-
     ind_card_address = ind_card.main_address
-
     ind_card_phone = ", ".join(ind_card.get_phones())
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
@@ -351,7 +350,6 @@ def form_02(request_data):
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -416,8 +414,6 @@ def form_02(request_data):
         ]))
 
     objs.append(tbl)
-
-
 
     content_title =[
         Indenter(left=0 *mm),
