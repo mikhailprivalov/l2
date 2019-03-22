@@ -1,7 +1,7 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle
+    TableStyle, KeepInFrame, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape, portrait
@@ -47,7 +47,6 @@ def form_01(request_data):
     individual_sex = ind.sex
     individual_date_born = ind.bd()
 
-
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
@@ -64,19 +63,18 @@ def form_01(request_data):
             dir_temp.append(n.pk)
 
     # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
-    price_modifier_obj= PriceName.get_price(ist_f_list[0])
+
 
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
     # получить по направлению-услугам цену из Issledovaniya
-    # research_price = forms_func.get_coast(research_direction, price_modifier_obj)
     research_price = forms_func.get_coast_from_issledovanie(research_direction)
 
     result_data = forms_func.get_final_data(research_price)
 
-    hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
-    hospital_address = "г. Иркутс, ул. Байкальская 201"
+
+
     hospital_kod_ogrn = "1033801542576"
     hospital_okpo = "31348613"
 
@@ -186,6 +184,9 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 4.5 * mm))
     hospital_name = SettingManager.get("rmis_orgname")
+    hospital_address = SettingManager.get("org_address")
+
+
     director = SettingManager.get("post_director")
     fio_director = SettingManager.get("name_director")
 
@@ -315,11 +316,11 @@ def form_01(request_data):
     ]))
 
     objs.append(tbl)
-    objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('<font size=14> Итого: {}</font>'.format(sum_research), styleTCright))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
     objs.append(Spacer(1,2 * mm))
 
-    objs.append(Spacer(1, 5 * mm))
+    objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('(далее - "медицинские услуги"), а Пациент уплачивает Исполнителю вознаграждение в размере, '
                           'порядке и сроки, которые установлены настоящим Договором.', style))
     objs.append(Paragraph('1.2.	Исполнитель оказывает услуги по месту своего нахождения по адресу: '
@@ -375,13 +376,98 @@ def form_01(request_data):
 
     s = pytils.numeral.rubles(float(sum_research_decimal))
     objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет: <u>{}</u> '.format(s.capitalize()), style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
+    objs.append(Paragraph('Сроки оплаты:', style))
+    objs.append(Paragraph('Предоплата________________________________________ , оставшаяся сумма______________________________ рублей', style))
+    objs.append(Paragraph('Сроки оплаты: _________________________', style))
+    objs.append(Paragraph('4.2.	Компенсируемые расходы Исполнителя на _________________________________________________', style))
+    objs.append(Paragraph('составляют_____________________ рублей', style))
+    objs.append(Paragraph('4.3.	Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
+    objs.append(Paragraph('Пациенту в соответствии с законодательством Российской Федерации выдается документ; '
+                          'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
+                          'или иные документы).', style))
+    objs.append(Paragraph('4.4.	Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
+    objs.append(Paragraph('5. ОТВЕТСТВЕННОСТЬ СТОРОН', styleCenter))
+    objs.append(Paragraph('5.1.	Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
+                          'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '
+                          'диагностики, профилактики и лечения, разрешенным на территории Российской Федерации, а также '
+                          'в случае причинения вреда здоровью и жизни Пациента.', style))
+    objs.append(Paragraph('5.2.	При несоблюдении Исполнителем обязательств по срокам исполнения услуг Пациент вправе по своему выбору:', style))
+    objs.append(Paragraph('- назначить новый срок оказания услуги;', style))
+    objs.append(Paragraph('- потребовать уменьшения стоимости предоставленной услуги;', style))
+    objs.append(Paragraph('- потребовать исполнения услуги другим специалистом;', style))
+    objs.append(Paragraph('- расторгнуть настоящий Договор и потребовать возмещения убытков.', style))
+    objs.append(Paragraph('5.3.	Ни одна из Сторон не будет нести ответственности за полное или частичное неисполнение другой '
+                          'Стороной своих обязанностей, если, неисполнение будет являться следствием обстоятельств непреодолимой '
+                          'силы, таких как, пожар, наводнение, землетрясение, забастовки и другие стихийные бедствия; '
+                          'война и военные действия или другие обстоятельства, находящиеся вне контроля Сторон, '
+                          'препятствующие выполнению настоящего Договора, возникшие после заключения Договора, а также по '
+                          'иным основаниям, предусмотренным законом', style))
+    objs.append(Paragraph('Если любое из таких обстоятельств непосредственно повлияло на неисполнение обязательства в '
+                          'срок, указанный в Договоре, то этот срок соразмерно отодвигается на время действия соответствующего '
+                          'обстоятельства.', style))
+    objs.append(Paragraph('5.4.	Вред, причиненный жизни или здоровью Пациента в результате предоставления некачественной '
+                          'платной медицинской услуги, подлежит возмещению Исполнителем в соответствии с законодательством '
+                          'Российской Федерации.', style))
+    objs.append(Paragraph('6. ПОРЯДОК РАССМОТРЕНИЯ СПОРОВ', styleCenter))
+    objs.append(Paragraph('6.1.	Все споры, претензии и разногласия, которые могут возникнуть между Сторонами, будут '
+                          'разрешаться путем переговоров.', style))
+    objs.append(Paragraph('6.2.	При не урегулировании в процессе переговоров спорных вопросов споры подлежат рассмотрению '
+                          'в судебном порядке.', style))
+    objs.append(Paragraph('7. СРОК ДЕЙСТВИЯ ДОГОВОРА', styleCenter))
+    objs.append(Paragraph('7.1.	Срок действия настоящего Договора: с «	»	201	г. по «	»	201	г.', style))
+    objs.append(Paragraph('7.2.	Настоящий Договор, может быть, расторгнут по обоюдному согласию Сторон или в порядке, '
+                          'предусмотренном действующим законодательством.', style))
+    objs.append(Paragraph('7.3.	Все изменения и дополнения к настоящему Договору, а также его расторжение считаются '
+                          'действительными при условии, если они совершены в письменной форме и подписаны уполномоченными'
+                          ' на то представителями обеих Сторон.', style))
+    objs.append(Paragraph('8. ИНЫЕ УСЛОВИЯ', styleCenter))
+    objs.append(Paragraph('8.1.	Все дополнительные соглашения Сторон, акты и иные приложения к настоящему Договору, '
+                          'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.', style))
+    objs.append(Paragraph('8.2.	Настоящий Договор составлен в 2 (двух) экземплярах, имеющих одинаковую юридическую силу, '
+                          'по одному для каждой из Сторон', style))
+    # objs.append(Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter))
+
+    styleAtr = deepcopy(style)
+    styleAtr.firstLineIndent = 0
+    f = ind.family
+    n = ind.name[0:1]
+    p = ind.patronymic[0:1]
+    npf = n+'.'+' '+p+'.'+' '+f
+    fio_director_list = fio_director.split(' ')
+    dir_f = fio_director_list[0]
+    dir_n = fio_director_list[1]
+    dir_p = fio_director_list[2]
+    dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
+    opinion = [
+        [Paragraph('Пациент:', styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('Исполнитель', styleAtr)],
+        [Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(individual_fio,document_passport_serial,document_passport_num,ind_card.main_address ), styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr)],
+        [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
+        [Paragraph('________________________/{}/'.format(npf), styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('________________________/{}/'.format(dir_npf), styleAtr)],
+
+    ]
+
+    tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm))
+
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+        ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP')
+    ]))
+
+    objs.append(Spacer(1, 2 * mm))
+
+    objs.append(KeepTogether([Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
+    # objs.append(tbl)
+
+
+
+
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
