@@ -15,30 +15,6 @@ class PriceName(models.Model):
     def __str__(self):
         return "{}".format(self.title)
 
-    @staticmethod
-    def get_price(istochnik_f_local):
-        """
-        На основании источника финансирования возвращает прайс
-        Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
-        Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
-        Если источник финансирования ПЛАТНО поиск осуществляется по цепочке contract
-        Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке contract
-        Если источник финансирования Бюджет поиск осуществляется по цепочке contract
-
-        :param **kwargs: istochnik_f, место работы, страховая организация
-        :return:
-        """
-
-        from directions.models import IstochnikiFinansirovaniya
-
-        try:
-            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
-            price_modifier = Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
-        except Exception:
-            price_modifier = ""
-
-        return price_modifier
-
 
     def status(self):
         return self.active_status
@@ -67,14 +43,13 @@ class PriceCoast(models.Model):
                 value = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
             except PriceCoast.DoesNotExist:
                 return value
-        else:
-            return value
+
+        return value
 
     class Meta:
         unique_together =('price_name','research')
         verbose_name = 'Прайс - цены'
         verbose_name_plural = 'Прайс - цены'
-
 
 
 class Contract(models.Model):

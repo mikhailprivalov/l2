@@ -14,6 +14,7 @@ from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
 import contracts.models as contracts
+from appconf.manager import SettingManager
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -198,6 +199,31 @@ class IstochnikiFinansirovaniya(models.Model):
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
+
+    def get_price_modifier(self):
+        """
+        На основании источника финансирования возвращает прайс
+        Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
+        Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
+        Если источник финансирования ПЛАТНО поиск осуществляется по цепочке ист.фин-contract-прайс
+        Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке ист.фин-contract-прайс
+        Если источник финансирования Бюджет поиск осуществляется по цепочке contract
+        """
+        price_modifier=None
+        price_contract = set(SettingManager.get("price_contract").split(','))
+        price_company = set(SettingManager.get("price_company").split(','))
+
+        if self.title.upper() in price_contract:
+            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=self.pk).first()
+            print(contract_l)
+            if contract_l[0]:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+        elif self.title.upper() in price_company:
+            contract_l = contracts.Company.objects.values_list('contracts_id').filter(pk=self.pk).first()
+            print(contract_l)
+            if contract_l[0]:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+        return price_modifier
 
     class Meta:
         verbose_name = 'Источник финансирования'
@@ -398,10 +424,12 @@ class Napravleniya(models.Model):
                 # Исследования привязываются к направлению по группе
 
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
+                print(finsource.title)
 
                 # начало Касьяненко С.Н.
                 # получить прайс
-                price_obj = contracts.PriceName.get_price(finsource.pk)
+                # price_obj = contracts.PriceName.get_price(finsource.pk)
+                price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource)
                 #конец Касьяненко С.Н.
 
                 for v in res:
