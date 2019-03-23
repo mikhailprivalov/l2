@@ -41,6 +41,8 @@ def form_01(request_data):
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     ind_dir = json.loads(request_data["dir"])
+    # print(request_data.user.doctorprofile.fio)
+
 
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
@@ -434,10 +436,12 @@ def form_01(request_data):
     p = ind.patronymic[0:1]
     npf = n+'.'+' '+p+'.'+' '+f
     fio_director_list = fio_director.split(' ')
+    print(fio_director_list)
     dir_f = fio_director_list[0]
     dir_n = fio_director_list[1]
     dir_p = fio_director_list[2]
     dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
+
     opinion = [
         [Paragraph('Пациент:', styleAtr),
          Paragraph('', styleAtr),

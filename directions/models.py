@@ -356,7 +356,7 @@ class Napravleniya(models.Model):
         return dir
 
     @staticmethod
-    def set_of_name(dir, doc_current, ofname_id, ofname: DoctorProfile):
+    def set_of_name(dir: object, doc_current: object, ofname_id: object, ofname: object) -> object:
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
         :rtype: Null
