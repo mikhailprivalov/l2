@@ -1,10 +1,9 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle, KeepInFrame, KeepTogether
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape, portrait
+from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -66,7 +65,7 @@ class PageNumCanvas(canvas.Canvas):
         """
         page = "Лист {} из {}".format(self._pageNumber, page_count)
         self.setFont("PTAstraSerifReg", 9)
-        self.drawRightString(35 * mm, 8 * mm, page)
+        self.drawRightString(31 * mm, 10 * mm, page)
 
 
 
@@ -86,7 +85,6 @@ def form_01(request_data):
 
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
-    individual_sex = ind.sex
     individual_date_born = ind.bd()
 
     # Получить все источники, у которых title-ПЛАТНО
@@ -104,9 +102,6 @@ def form_01(request_data):
         if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
             dir_temp.append(n.pk)
 
-    # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
-
-
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
@@ -115,18 +110,13 @@ def form_01(request_data):
 
     result_data = forms_func.get_final_data(research_price)
 
-    hospital_kod_ogrn = "1033801542576"
-    hospital_okpo = "31348613"
-
-    # Получить данные физлицо-документы: паспорт, полис, снилс
+   # Получить данные физлицо-документы: паспорт, полис, снилс
     document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
     document_passport_num = documents['passport']['num']
     document_passport_serial = documents['passport']['serial']
     document_passport_date_start = documents['passport']['date_start']
     document_passport_issued = documents['passport']['issued']
-    document_polis = documents['polis']['num']
-    document_snils = documents['snils']['num']
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -216,6 +206,7 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 4.5 * mm))
     hospital_name = SettingManager.get("rmis_orgname")
+    hospital_short_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
 
 
@@ -269,10 +260,6 @@ def form_01(request_data):
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('{}'.format(tr), style))
 
-
-    opinion =[]
-
-
     styleTB = deepcopy(style)
     styleTB.firstLineIndent =0
     styleTB.fontSize = 8.5
@@ -290,6 +277,7 @@ def form_01(request_data):
     styleTCcenter=deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
+    opinion = []
     if result_data[2]=='no_discount':
         opinion = [
             [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
@@ -315,6 +303,7 @@ def form_01(request_data):
     example_template=result_data[0]
 
     list_g =[]
+
     #используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
     for i in range(len(example_template)):
         list_t = []
@@ -516,14 +505,18 @@ def form_01(request_data):
     styleRight = deepcopy(style)
     styleRight.alignment = TA_RIGHT
 
+    space_symbol = '&nbsp;'
     def later_pages(canvas, document):
         canvas.saveState()
         canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawRightString(200 * mm, 8 * mm, '№ договора: {} _______________________/{}/'.format(date_now_int,npf))
+        canvas.drawRightString(203 * mm, 10 * mm, '____________________         № договора: {} _____________________/{}/'.
+                               format(date_now_int,npf))
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(45 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(150 * mm, 7 * mm, '(подпись пациента)')
         canvas.restoreState()
 
 
-    # doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages,)
     doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     pdf = buffer.getvalue()
     buffer.close()
