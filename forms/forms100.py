@@ -414,26 +414,25 @@ def form_02(request_data):
         ]))
 
     objs.append(tbl)
-
+    space_symbol = '&nbsp;'
     content_title =[
         Indenter(left=0 *mm),
         Spacer(1, 4 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
-        Paragraph('&nbsp;&nbsp;&nbsp;№&nbsp;{}'.format(ind_card_num), styleCenterBold),
+        Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, ind_card_num), styleCenterBold),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
         Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(individual_fio), style),
-        Paragraph('3. Пол: {}	&nbsp;&nbsp;&nbsp; 4. Дата рождения: {}'.format(individual_sex, individual_date_born), style),
+        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(individual_sex, 3 * space_symbol, individual_date_born), style),
         Paragraph('5. Место регистрации: {}'.format(ind_card_address), style),
         Paragraph('тел. {}'.format(ind_card_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
-        Paragraph('7. Полис ОМС: серия______№: {}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                  '8. СНИЛС: {}'.format(document_polis, document_snils),style),
+        Paragraph('7. Полис ОМС: серия______№: {} {}'
+                  '8. СНИЛС: {}'.format(document_polis, 13 * space_symbol, document_snils),style),
         Paragraph('9. Наименование страховой медицинской организации: {}'.format(indivudual_insurance_org), style),
-        Paragraph('10. Код категории льготы: {} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                  '11. Документ: {}&nbsp; серия: {} &nbsp;&nbsp; №: {}'.
-                  format(individual_benefit_code, document_passport, document_passport_serial, document_passport_num), style),
+        Paragraph('10. Код категории льготы: {} {} 11. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.
+                  format(individual_benefit_code, 35 * space_symbol, document_passport, document_passport_serial, document_passport_num), style),
         Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style),
         Spacer(1,2 * mm),
     ]

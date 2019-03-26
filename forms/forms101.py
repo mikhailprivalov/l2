@@ -104,11 +104,202 @@ def form_01(request_data):
 
     return pdf
 
+
 def form_02(request_data):
     """
     Согласие на обработку персональных данных
     """
-    pass
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    # ind = Individual.objects.get(pk=request_data["individual"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    individual_age = ind.age()
+
+    # Касьяненко
+    # # передать законного представителья, если возраст меньше 15 лет, или имеется опекун, или доверенность
+    # if request_data["agent_pk"]:
+    #     ind_agent_card = Card.objects.get(pk=request_data["agent_pk"])
+    #
+    #
+    # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
+    # if individual_age < 15:
+    #     patient_agent = ind_card.patient_agent
+    #     ind_card = patient_agent
+    #     ind = ind_card.individual
+    # Касьяненко
+
+    individual_fio = ind.fio()
+    individual_date_born = ind.bd()
+    is_child =''
+
+    if individual_age < 15:
+        patient_agent = " Иванова Марья Ивановна"
+        is_child = "ребёнка"
+
+    document_passport = "Паспорт РФ"
+    documents = forms_func.get_all_doc(ind_doc)
+    document_passport_num = documents['passport']['num']
+    document_passport_serial = documents['passport']['serial']
+    document_passport_date_start = documents['passport']['date_start']
+    document_passport_issued = documents['passport']['issued']
+
+    if ind_card.main_address:
+        main_address = ind_card.main_address
+    else:
+        main_address = "______________________________________________________________________"
+
+    if ind_card.fact_address:
+        fact_address = ind_card.fact_address
+    elif ind_card.main_address:
+        fact_address = main_address
+    else:
+        fact_address = "______________________________________________________________________"
+
+    person_agent = ''
+    patient_agent = ''
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    # Генерировать pdf-Лист на оплату
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            leftMargin=13 * mm,
+                            rightMargin=4 * mm, topMargin=4 * mm,
+                            bottomMargin=4 * mm, allowSplitting=1,
+                            title="Форма {}".format("Лист на оплату"))
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 0 * mm
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 9
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 0 * mm
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.firstLineIndent = 0
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 13
+    styleCenterBold.face = 'PTAstraSerifBold'
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    objs = [
+        Paragraph('СОГЛАСИЕ <br/> на обработку персональных данных {}'.format(is_child),styleCenterBold),
+    ]
+
+    d = datetime.datetime.strptime(individual_date_born, '%d.%m.%Y').date()
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Я, нижеподписавшийся {}&nbsp; {} г. рождения'. format(individual_fio, date_individual_born), styleSign))
+
+    styleLeft = deepcopy(style)
+    styleLeft.alignment =TA_LEFT
+    objs.append(Paragraph('Зарегистрированный по адресу: {}'.format(main_address), styleSign))
+    objs.append(Paragraph('Проживающий по адресу: {}'.format(fact_address), styleSign))
+    objs.append(Paragraph('Документ, удостоверяющий личность паспорт: серия <u> {}</u> номер: <u>{}</u>'.
+        format(document_passport_serial, document_passport_num),styleSign))
+    objs.append(Paragraph('Выдан: {} {}'.format(document_passport_date_start,document_passport_issued), styleSign))
+    objs.append(Spacer(1, 3 * mm))
+    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_address = SettingManager.get("org_address")
+    objs.append(Paragraph(', в соответствии с требованиями федерального закона от 27.07.2006 г. "О персональных данных" '
+                          '№ 152-ФЗ, даю согласие Оператору: {} (далее – Оператор), находящегося по адресу: '
+                          '{} на обработку моих и/или лица предствителем, которого я являюсь персональных данных (далее - Персональные данные),'
+                          ' включающих: фамилию, имя, отчество, пол, дату рождения, адрес места жительства, контактные '
+                          'телефон(ы), реквизиты полиса (ОМС, ДМС), страховой номер индивидуального лицевого счета в '
+                          'Пенсионном фонде России (СНИЛС), данные паспорта (свидетельства о рождении ребёнка) '
+                          '(номер, серия, кем и когда выдан), место работы (учебы) и должность, социальный статус, '
+                          'семейное положение; любые сведения о состоянии '
+                          'моего здоровья, и/или лица представителем которого я являюсь, заболеваниях, случаях обращения за медицинской помощью в следующих целях: '
+                          'медико-профилактических, установления медицинского диагноза и оказания медицинских и медико-социальных услуг, '
+                          'ведения медицинской карты пациента (на бумажных и безбумажных носителях); '
+                          'реализации электронной записи к врачу; ведения персонифицированного учета оказанния медицинских '
+                          'услуг; для реализации телемедицинских консультаций, электронного документооборота; осуществления '
+                          'взаиморасчетов за оказанную медицинскую помощь в системе медицинского страхования (ОМС, ДМС); '
+                          'хранения результатов исследований для последующего использования в установлении медицинского диагноза.'.
+                          format(hospital_name, hospital_address), style))
+    objs.append(Paragraph('Я согласен (согласна) на осмотр с применением телемедицинских технологий, а также на фото - и видеосъемку '
+                          'в процессе лечения в интересах моего, или лица, представителем которого я являюсь обследования и лечения.', style))
+    objs.append(Paragraph('Предоставляю Оператору право осуществлять любое действие (операцию) или совокупность действий '
+                          '(операций) с использованием средств автоматизации и/или без использования таких средств с '
+                          'Персональными данными , включая сбор, запись, '
+                          'систематизацию, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, '
+                          'передачу (распространение, предоставление, доступ), обезличивание, блокирование, удаление, уничтожение', style))
+    objs.append(Paragraph('В процессе оказания Оператором медицинской помощи субъекту персональных данных я предоставляю '
+                          'право медицинским работникам передавать персональные данные, содержащие сведения, составляющие врачебную тайну, '
+                          'другим должностным лицам Оператора, в интересах обследования и лечения, обслуживания документации, '
+                          'программного обеспечения и технических средств. Я согласен с тем, что доступ к Персональным данным '
+                          'будут иметь сотрудники Оператора, осуществляющие техническое обслуживание информационной системы.', style))
+    objs.append(Paragraph('Я согласен (согласна) с тем, что в соответствии с частью 3 статьи 6 федерального закона от 27.07.2006 г. '
+                          '"О персональных данных" № 152-ФЗ обработка указанных в настоящем согласии персональных данных '
+                          'может быть поручена другим лицам, на основании соглашения между оператором и лицом. Я согласен '
+                          'с тем, что в медико-профилактических целях, в целях установления медицинского диагноза и оказания '
+                          'медицинских и медико-социальных услуг, указанные в настоящем согласии персональные данные могут '
+                          'быть переданы в другие лечебно-профилактические учреждения для обработки лицом, профессионально '
+                          'занимающимся медицинской деятельностью и обязанным в соответствии с законодательством '
+                          'Российской Федерации сохранять врачебную тайну. Я согласен (согласна) с тем, что в целях осуществления '
+                          'медицинского страхования(обязательного/добровольного) персональные данные могут быть переданы в страховую медицинскую '
+                          'организацию и территориальный фонд ОМС с использованием машинных носителей или по каналам связи, '
+                          'с соблюдением мер, обеспечивающих их защиту от несанкционированного доступа. Я согласен (согласна) '
+                          'с тем, что в научных целях указанные в настоящем согласии персональные данные могут быть переданы '
+                          'в научные и образовательные организации, а также предоставляться доступ к ним обучающимся, '
+                          'ординаторам и аспирантам медицинских учебных учреждений. Срок хранения персональных данных '
+                          'соответствует сроку хранения первичных медицинских документов и составляет двадцать пять лет. '
+                          'Настоящее согласие действует бессрочно. Я оставляю за собой право отозвать свое согласие посредством '
+                          'составления соответствующего письменного документа, который может быть направлен мной в адрес '
+                          'Оператора по почте заказным письмом с уведомлением о вручении либо вручен лично под расписку '
+                          'представителю Оператора. В случае получения моего письменного заявления об отзыве настоящего '
+                          'согласия на обработку персональных данных, Оператор обязан прекратить их обработку в течение '
+                          'периода времени, необходимого для завершения взаиморасчетов по оплате оказанной до этого медицинской помощи.', style))
+    date_year = datetime.datetime.now().strftime('%Y')
+    objs.append(Spacer(1, 5 * mm))
+    space_bottom = ' &nbsp;'
+
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    objs.append(Paragraph('\"___\"____________{} {} _________________________'.format(date_year, 35*space_bottom), styleSign))
+    objs.append(Paragraph('{} (подпись) '.format(61 * space_bottom), style))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+
+
+
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
 
 
 def form_03(request_data):
@@ -161,6 +352,7 @@ def form_03(request_data):
     document_passport_date_start = documents['passport']['date_start']
     document_passport_issued = documents['passport']['issued']
 
+    m=-1
     if ind_card.main_address:
         ind_address = ind_card.main_address
     else:
@@ -168,7 +360,7 @@ def form_03(request_data):
 
     if m==0 and ind_card.fact_address:
         ind_address = ind_card.fact_address
-    else:
+    elif not ind_card.main_address:
         ind_address = "______________________________________________________________________"
 
     if sys.platform == 'win32':
@@ -281,9 +473,7 @@ def form_03(request_data):
     styleBottom = deepcopy(style)
     styleBottom.fontSize = 8
 
-    sign_bottom = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(подпись) '
-
-    space_bottom = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'
+    space_symbol = '&nbsp;'
 
     sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
@@ -292,32 +482,23 @@ def form_03(request_data):
     objs.append(Spacer(1, 9 * mm))
     objs.append(Paragraph('', styleFCenter))
     objs.append(HRFlowable(width= 190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} {}'.format(4 * space_bottom, sign_fio_person), styleBottom))
+    objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(individual_fio), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} {} {}'.format(sign_bottom, 2 * space_bottom, sign_patient_agent), styleBottom))
+    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('{}'.format(individual_fio), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph('{} {} {}'.format( sign_bottom, 2 * space_bottom, sign_fio_doc), styleBottom))
+    objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('{} г.'.format(date_now), style))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
-
-
-
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-    objs.append(Paragraph('', style))
-
-
 
 
     if document_passport_issued:
