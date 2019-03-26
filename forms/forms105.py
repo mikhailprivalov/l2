@@ -9,21 +9,15 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.graphics.barcode import code128
-import datetime
-import locale
-import sys
+
 import os.path
 from io import BytesIO
 from . import forms_func
-from datetime import *
-from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 import simplejson as json
-from contracts.models import PriceName
 from datetime import *
-from dateutil.relativedelta import *
 import datetime
 import locale
 import sys
@@ -75,8 +69,6 @@ def form_01(request_data):
 
     result_data = forms_func.get_final_data(research_price)
 
-
-
     hospital_kod_ogrn = "1033801542576"
     hospital_okpo = "31348613"
 
@@ -89,9 +81,6 @@ def form_01(request_data):
     document_passport_issued = documents['passport']['issued']
     document_polis = documents['polis']['num']
     document_snils = documents['snils']['num']
-
-
-
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -159,11 +148,6 @@ def form_01(request_data):
     num_type = ind_card.full_type_card()
     # barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
 
-    if sys.platform == 'win32':
-        locale.setlocale(locale.LC_ALL, 'rus_rus')
-    else:
-        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 
     styleTR = deepcopy(style)
@@ -204,18 +188,16 @@ def form_01(request_data):
         main_address = "______________________________________________________________________"
 
     if ind_card.fact_address:
-        fact_address = ind_card.main_address
+        fact_address = ind_card.fact_address
     elif main_address:
         fact_address = main_address
     else:
         fact_address = "______________________________________________________________________"
 
 
-
-
     objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующей на основании Устава с'
-          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} '
-          ' г., паспорт: {}-{} '
+          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} г., '
+          'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
           'зарегистрирован по адресу: {}, '
