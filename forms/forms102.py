@@ -484,23 +484,8 @@ def form_01(request_data):
     objs.append(Spacer(1, 2 * mm))
 
     objs.append(KeepTogether([Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
-    # objs.append(tbl)
-
 
     objs.append(Spacer(1,7 * mm))
-
-    def first_page(canvas, document):
-        title = 'PLATYPUS Demo'
-        # PAGE_HEIGHT = defaultPageSize[1]
-        # PAGE_WIDTH = defaultPageSize[0]
-        PAGE_HEIGHT, PAGE_WIDTH = portrait(A4)
-        canvas.saveState()
-        canvas.setFont('Times-Bold', 18)
-        canvas.drawCentredString(PAGE_WIDTH / 2.0, PAGE_HEIGHT - 108, title)
-        canvas.setFont('Times-Roman', 10)
-        text = 'Welcome to the first PLATYPUS Page!'
-        canvas.drawString(mm, 10 * mm, text)
-        canvas.restoreState()
 
     styleRight = deepcopy(style)
     styleRight.alignment = TA_RIGHT
