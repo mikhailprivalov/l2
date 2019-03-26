@@ -23,6 +23,7 @@ import sys
 import pytils
 from appconf.manager import SettingManager
 from reportlab.pdfgen import canvas
+from reportlab.lib.colors import HexColor
 
 
 class PageNumCanvas(canvas.Canvas):
@@ -131,7 +132,7 @@ def form_01(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=12 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=15 * mm, allowSplitting=1,
+                            bottomMargin=17 * mm, allowSplitting=1,
                             title="Форма {}".format("Лист на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -191,7 +192,7 @@ def form_01(request_data):
 
     opinion = [
         [Paragraph('г. Иркутск', style),
-         Paragraph(date_now, styleTR)],
+         Paragraph('{} года'.format(date_now), styleTR)],
     ]
 
     tbl = Table(opinion, colWidths=(95 * mm, 95 * mm))
@@ -247,8 +248,7 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА',styleCenter))
-    objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с'
-                          'лицензий:', style))
+    objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с лицензией:', style))
 
     #Касьяненко начало шаблон услуг только для водителей, на работу
     template_research = "Медосмотр для водителей"
@@ -490,15 +490,19 @@ def form_01(request_data):
     styleRight = deepcopy(style)
     styleRight.alignment = TA_RIGHT
 
-    space_symbol = '&nbsp;'
+    space_symbol = ' '
     def later_pages(canvas, document):
         canvas.saveState()
         canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawRightString(203 * mm, 10 * mm, '____________________         № договора: {} _____________________/{}/'.
+        canvas.drawString(37 * mm, 10 * mm, '__________________ № договора: {} __________________/{}/'.
                                format(date_now_int,npf))
         canvas.setFont('PTAstraSerifReg', 8)
-        canvas.drawString(45 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(150 * mm, 7 * mm, '(подпись пациента)')
+        canvas.drawString(39 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(130 * mm, 7 * mm, '(подпись пациента)')
+        canvas.rotate(90)
+        canvas.setFillColor(HexColor(0x4b4747))
+        canvas.setFont('PTAstraSerifReg',6)
+        canvas.drawString(10 * mm, -13 * mm, '{}'.format(9 * (hospital_short_name+ 8 * space_symbol)))
         canvas.restoreState()
 
 
