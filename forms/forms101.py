@@ -26,6 +26,7 @@ from . import forms_func
 from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 from appconf.manager import SettingManager
+from django.utils.datastructures import MultiValueDictKeyError
 
 
 
@@ -115,12 +116,33 @@ def form_02(request_data):
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_age = ind.age()
 
-    # Касьяненко
-    # # передать законного представителья, если возраст меньше 15 лет, или имеется опекун, или доверенность
-    # if request_data["agent_pk"]:
-    #     ind_agent_card = Card.objects.get(pk=request_data["agent_pk"])
-    #
-    #
+     # # проверить наличие представителя в запросе
+    try:
+        agent_pk = request_data["agent_pk"]
+    except MultiValueDictKeyError:
+        agent_pk = False
+
+    print(agent_pk)
+
+    if agent_pk:
+        #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
+
+
+        #выбрать данные объекта "Представителя"
+        ind_agent_card = Card.objects.get(pk=agent_pk)
+        ind_agent_ind = ind_agent_card.individual
+        ind_agent_doc = Document.objects.filter(individual=ind_agent_ind, is_active=True)
+        ind_agent_fio = ind_agent_ind.fio()
+        ind_agent_date_born = ind_agent_ind.bd()
+        ind_agent_documents = forms_func.get_all_doc(ind_agent_doc)
+        ind_agent_document_passport_num = ind_agent_documents['passport']['num']
+        ind_agent_document_passport_serial = ind_agent_documents['passport']['serial']
+        ind_agent_document_passport_date_start = ind_agent_documents['passport']['date_start']
+        ind_agent_document_passport_issued = ind_agent_documents['passport']['issued']
+
+        print(ind_agent_card)
+
+
     # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
     # if individual_age < 15:
     #     patient_agent = ind_card.patient_agent
@@ -130,6 +152,7 @@ def form_02(request_data):
 
     individual_fio = ind.fio()
     individual_date_born = ind.bd()
+
     is_child =''
 
     if individual_age < 15:
