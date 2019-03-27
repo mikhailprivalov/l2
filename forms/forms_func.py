@@ -90,6 +90,7 @@ def get_research_by_dir(dir_temp_l):
 def get_final_data(research_price_loc):
     """
     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
+
     Направление указывается один раз для нескольких строк
     """
 
@@ -98,7 +99,7 @@ def get_final_data(research_price_loc):
     is_discount = False
     z = ""
     x = ""
-
+    tmp_napr = []
     for k,v in research_price_loc.items():
         research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
         research_attr_list = [list(z) for z in research_attr]
@@ -129,6 +130,8 @@ def get_final_data(research_price_loc):
                     total_sum +=research_sum
                     research_attr_list.remove(j)
                     tmp_data.append(h)
+                    if h[1]:
+                        tmp_napr.append(h[1])
                 if h:
                     break
 
@@ -138,14 +141,18 @@ def get_final_data(research_price_loc):
         res_lis.append(tmp_d)
 
     total_data =[]
+
     total_data.append(res_lis)
+
     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
     if z=="+":
         total_data.append("is_discount")
     else:
         total_data.append("no_discount")
 
-    print(total_data[2])
+    total_data.append(tmp_napr)
+
+    #total_data:[стру-рка данных, итоговая сумма, есть ли скидка, номера направлений]
 
     return total_data
 

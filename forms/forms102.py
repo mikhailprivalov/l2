@@ -81,8 +81,8 @@ def form_01(request_data):
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     ind_dir = json.loads(request_data["dir"])
-    # print(request_data.user.doctorprofile.fio)
-
+    #exec_person = print(request_data.user.doctorprofile.fio)
+    exec_person = 'Иванов Иван Иванович'
 
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
@@ -99,8 +99,10 @@ def form_01(request_data):
     dir_temp = []
 
     #Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    num_contract_set = set()
     for n in napr:
         if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
+            num_contract_set.add(n.num_contract)
             dir_temp.append(n.pk)
 
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
@@ -109,7 +111,33 @@ def form_01(request_data):
     # получить по направлению-услугам цену из Issledovaniya
     research_price = forms_func.get_coast_from_issledovanie(research_direction)
 
+    #Получить Итоговую стр-ру данных
     result_data = forms_func.get_final_data(research_price)
+
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(ind_card.pk) + str(date_now1)
+
+
+    # Проверить записан ли номер контракта в направлениях
+    # ПереЗаписать номер контракта Если в наборе направлений значение None
+    num_contract_set = set()
+    napr_end = Napravleniya.objects.filter(id__in=result_data[3])
+    for n in napr_end:
+        num_contract_set.add(n.num_contract)
+
+    if (len(num_contract_set) == 1) and (None in num_contract_set):
+        print('Перезаписано т.к. было NONE')
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
+    # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
+    if len(num_contract_set) > 1:
+        print('Перезаписано т.к. были разные контракты в направлениях')
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
+
+    if (len(num_contract_set) == 1) and (not None in num_contract_set):
+        print('No-No-No-No не надо создавать номер контракта он есть')
+        print()
+        date_now_str = num_contract_set.pop()
 
    # Получить данные физлицо-документы: паспорт, полис, снилс
     document_passport = "Паспорт РФ"
@@ -163,12 +191,8 @@ def form_01(request_data):
 
     objs = []
 
-    today = datetime.datetime.now()
-    date_now1 = datetime.datetime.strftime(today, "%Y%m%d%H%M%S%f")
-    date_now_int = int(date_now1)
-
     objs = [
-        Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_int),styleCenter),
+        Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
         Spacer(1, 1 * mm),
         Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
         ]
@@ -210,9 +234,8 @@ def form_01(request_data):
     hospital_short_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
 
-
-    director = SettingManager.get("post_director")
-    fio_director = SettingManager.get("name_director")
+    post_contract = SettingManager.get("post_contract")
+    document_base = SettingManager.get("document_base")
 
     if document_passport_issued:
         passport_who_give = document_passport_issued
@@ -233,7 +256,7 @@ def form_01(request_data):
         fact_address = "______________________________________________________________________"
 
 
-    objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующей на основании Устава с'
+    objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующего(ей) на основании {} с '
           'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
@@ -242,7 +265,7 @@ def form_01(request_data):
           'адрес проживания: {} '
           'с другой стороны, вместе также именуемые "Стороны", заключили настоящий договор (далее - "Договор") о нижеследующем:'
                           .
-                          format(hospital_name, director,fio_director,individual_fio,individual_date_born,
+                          format(hospital_name, post_contract,exec_person,document_base, individual_fio,individual_date_born,
                                  document_passport_serial, document_passport_num,document_passport_date_start,
                                  passport_who_give, main_address, fact_address),style))
 
@@ -452,7 +475,7 @@ def form_01(request_data):
     n = ind.name[0:1]
     p = ind.patronymic[0:1]
     npf = n+'.'+' '+p+'.'+' '+f
-    fio_director_list = fio_director.split(' ')
+    fio_director_list = exec_person.split(' ')
     print(fio_director_list)
     dir_f = fio_director_list[0]
     dir_n = fio_director_list[1]
@@ -467,6 +490,9 @@ def form_01(request_data):
          Paragraph('', styleAtr),
          Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr)],
         [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
+        [Paragraph('', styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr)],
         [Paragraph('________________________/{}/'.format(npf), styleAtr),
          Paragraph('', styleAtr),
          Paragraph('________________________/{}/'.format(dir_npf), styleAtr)],
@@ -494,15 +520,15 @@ def form_01(request_data):
     def later_pages(canvas, document):
         canvas.saveState()
         canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawString(37 * mm, 10 * mm, '__________________ № договора: {} __________________/{}/'.
-                               format(date_now_int,npf))
+        canvas.drawString(37 * mm, 10 * mm, '__________________ Договор №: {} __________________/{}/'.
+                               format(date_now_str,npf))
         canvas.setFont('PTAstraSerifReg', 8)
         canvas.drawString(39 * mm, 7 * mm, '(подпись сотрудника)')
         canvas.drawString(130 * mm, 7 * mm, '(подпись пациента)')
         canvas.rotate(90)
-        canvas.setFillColor(HexColor(0x4b4747))
-        canvas.setFont('PTAstraSerifReg',6)
-        canvas.drawString(10 * mm, -13 * mm, '{}'.format(9 * (hospital_short_name+ 8 * space_symbol)))
+        canvas.setFillColor(HexColor(0x4f4b4b))
+        canvas.setFont('PTAstraSerifReg',5.2)
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
         canvas.restoreState()
 
 
