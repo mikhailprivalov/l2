@@ -241,7 +241,7 @@ import warnings
 warnings.filterwarnings('ignore', message='DateTimeField*', category=RuntimeWarning)
 MAX_UPLOAD_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 
-DEBUG = True
+DEBUG = False
 
 LOGOUT_REDIRECT_URL = '/'
 
