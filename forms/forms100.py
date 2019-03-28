@@ -22,13 +22,14 @@ from io import BytesIO
 from . import forms_func
 
 
-def form_100_01(**kwargs):
+# def form_100_01(**kwargs):
+def form_01(request_data):
     """
     форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     """
-    ind_card = kwargs.get('ind_card')
-    ind_doc = kwargs.get('ind_doc')
-    ind = kwargs.get('ind')
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
@@ -50,8 +51,8 @@ def form_100_01(**kwargs):
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_card_attr(ind_card)
-    ind_card_address = card_attr.get('addr')
+    # card_attr = forms_func.get_card_attr(ind_card)
+    ind_card_address = ind_card.main_address
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
                                    "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
@@ -335,9 +336,7 @@ def form_02(request_data):
     individual_benefit_code = "_________"
 
     ind_card_num = ind_card.number_with_type()
-
     ind_card_address = ind_card.main_address
-
     ind_card_phone = ", ".join(ind_card.get_phones())
 
     individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
@@ -351,7 +350,6 @@ def form_02(request_data):
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
         locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -416,28 +414,25 @@ def form_02(request_data):
         ]))
 
     objs.append(tbl)
-
-
-
+    space_symbol = '&nbsp;'
     content_title =[
         Indenter(left=0 *mm),
         Spacer(1, 4 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
-        Paragraph('&nbsp;&nbsp;&nbsp;№&nbsp;{}'.format(ind_card_num), styleCenterBold),
+        Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, ind_card_num), styleCenterBold),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
         Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(individual_fio), style),
-        Paragraph('3. Пол: {}	&nbsp;&nbsp;&nbsp; 4. Дата рождения: {}'.format(individual_sex, individual_date_born), style),
+        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(individual_sex, 3 * space_symbol, individual_date_born), style),
         Paragraph('5. Место регистрации: {}'.format(ind_card_address), style),
         Paragraph('тел. {}'.format(ind_card_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
-        Paragraph('7. Полис ОМС: серия______№: {}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                  '8. СНИЛС: {}'.format(document_polis, document_snils),style),
+        Paragraph('7. Полис ОМС: серия______№: {} {}'
+                  '8. СНИЛС: {}'.format(document_polis, 13 * space_symbol, document_snils),style),
         Paragraph('9. Наименование страховой медицинской организации: {}'.format(indivudual_insurance_org), style),
-        Paragraph('10. Код категории льготы: {} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                  '11. Документ: {}&nbsp; серия: {} &nbsp;&nbsp; №: {}'.
-                  format(individual_benefit_code, document_passport, document_passport_serial, document_passport_num), style),
+        Paragraph('10. Код категории льготы: {} {} 11. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.
+                  format(individual_benefit_code, 35 * space_symbol, document_passport, document_passport_serial, document_passport_num), style),
         Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style),
         Spacer(1,2 * mm),
     ]

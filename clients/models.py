@@ -452,6 +452,13 @@ class Card(models.Model):
                                       db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
+    mother = models.ForeignKey('self', related_name='mother_p', blank=True, null=True, default=None, on_delete=models.CASCADE)
+    father = models.ForeignKey('self', related_name='father_p', blank=True, null=True, default=None,
+                               on_delete=models.CASCADE)
+    curator = models.ForeignKey('self', related_name='curator_p', blank=True, null=True, default=None,
+                               on_delete=models.CASCADE)
+    agent = models.ForeignKey('self', related_name='agent_p', blank=True, null=True, default=None,
+                               on_delete=models.CASCADE)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -463,6 +470,13 @@ class Card(models.Model):
         return list(set([y for y in [x.normalize_number() for x in
                                      Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
                          y != ""]))
+
+    def full_type_card(self):
+        return "{}".format(self.base.title)
+
+    def short_type_card(self):
+        return "{}".format(self.base.short_title)
+
 
     class Meta:
         verbose_name = 'Карта'
