@@ -7,7 +7,9 @@ from reportlab.lib.pagesizes import A4, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.graphics.barcode import code128
+from reportlab.graphics.barcode import code128, qr
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
 
 import os.path
 from io import BytesIO
@@ -123,6 +125,7 @@ def form_01(request_data):
     # Проверить записан ли номер контракта в направлениях
     # ПереЗаписать номер контракта Если в наборе направлений значение None
     num_contract_set = set()
+    napr_end=[]
     napr_end = Napravleniya.objects.filter(id__in=result_data[3])
     for n in napr_end:
         num_contract_set.add(n.num_contract)
@@ -161,7 +164,7 @@ def form_01(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=12 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=17 * mm, allowSplitting=1,
+                            bottomMargin=22 * mm, allowSplitting=1,
                             title="Форма {}".format("Лист на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -193,9 +196,7 @@ def form_01(request_data):
     objs = []
     barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
 
-    objs.append(Spacer(1, 1 * mm))
-    objs.append(barcode128)
-    objs.append(Spacer(1, 3 * mm))
+    objs.append(Spacer(1, 11 * mm))
 
     # head = [
     #     Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
@@ -525,25 +526,46 @@ def form_01(request_data):
 
     space_symbol = ' '
 
+    an = ','+str(373580)+','+str(373581)+','+str(373582)+','+str(373588)+','+str(373589)+','+str(373580)+','+\
+         str(373581)+','+str(373581)+','+str(373581)+','+str(373581)
+
+    qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    print(qr_napr)
+    # qr_value = individual_fio+an
+    qr_value = npf+'('+qr_napr+qr_napr+')'
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont("PTAstraSerifReg", 9)
+        # вывести интерактивную форму "текст"
         form = canvas.acroForm
-        canvas.drawString(25, 780, '')
+        # canvas.drawString(25, 780, '')
         form.textfield(name='comment', tooltip='comment',fontName='Times-Roman', fontSize=10,
-                       x=57, y=750, borderStyle='underlined',
-                       borderColor=black, fillColor=white,
-                       width=515, height=15,
-                       textColor=black, forceBorder=False)
+                       x=57, y=750, borderStyle='underlined',borderColor=black, fillColor=white,
+                       width=515, height=13, textColor=black, forceBorder=False)
 
+        # Вывести на первой странице код-номер договора
+        barcode128.drawOn(canvas, 120 * mm, 283 * mm)
 
-
+        #вывести внизу QR-code (ФИО, (номера направлений))
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 70
+        qr_code.barHeight = 70
+        qr_code.qrVersion = 1
+        bounds = qr_code.getBounds()
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, canvas, 90 * mm, 7)
+        #вывести атрибуты для подписей
         canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawString(37 * mm, 10 * mm, '__________________ Договор №: {} __________________/{}/'.
-                               format(date_now_str,npf))
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
         canvas.setFont('PTAstraSerifReg', 8)
-        canvas.drawString(39 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(130 * mm, 7 * mm, '(подпись пациента)')
+        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись пациента)')
+
+        #вывестии защитны вертикальный мелкий текст
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)
@@ -552,15 +574,27 @@ def form_01(request_data):
 
         canvas.restoreState()
 
-
     def later_pages(canvas, document):
         canvas.saveState()
+        #вывести внизу QR-code (ФИО, (номера направлений))
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 70
+        qr_code.barHeight = 70
+        qr_code.qrVersion = 1
+        bounds = qr_code.getBounds()
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, canvas, 90 * mm, 7)
+        #вывести атрибуты для подписей
         canvas.setFont('PTAstraSerifReg', 10)
-        canvas.drawString(37 * mm, 10 * mm, '__________________ Договор №: {} __________________/{}/'.
-                               format(date_now_str,npf))
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
         canvas.setFont('PTAstraSerifReg', 8)
-        canvas.drawString(39 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(130 * mm, 7 * mm, '(подпись пациента)')
+        canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись пациента)')
+
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)
