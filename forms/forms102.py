@@ -191,13 +191,20 @@ def form_01(request_data):
     styleJustified.leading = 4.5 * mm
 
     objs = []
+    barcode128 = code128.Code128(date_now_str, barHeight=6 * mm, barWidth=1.25)
 
-    objs = [
-        Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
-        Spacer(1, 1 * mm),
-        Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
-        ]
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(barcode128)
+    objs.append(Spacer(1, 3 * mm))
 
+    # head = [
+    #     Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
+    #     Spacer(1, 1 * mm),
+    #     Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
+    #     ]
+    objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
     styleTCenter = deepcopy(styleCenter)
     styleTCenter.alignment = TA_CENTER
     styleTCenter.leading = 3.5 * mm
@@ -206,9 +213,7 @@ def form_01(request_data):
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
 
-    num = ind_card.number
-    num_type = ind_card.full_type_card()
-    # barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
+    # barcode128 = code128.Code128(date_now_str,barHeight= 4 * mm, barWidth = 1.25)
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 
@@ -229,6 +234,7 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 5 * mm))
     objs.append(tbl)
+
 
     objs.append(Spacer(1, 4.5 * mm))
     hospital_name = SettingManager.get("rmis_orgname")
@@ -525,7 +531,7 @@ def form_01(request_data):
         form = canvas.acroForm
         canvas.drawString(25, 780, '')
         form.textfield(name='comment', tooltip='comment',fontName='Times-Roman', fontSize=10,
-                       x=57, y=780, borderStyle='underlined',
+                       x=57, y=750, borderStyle='underlined',
                        borderColor=black, fillColor=white,
                        width=515, height=15,
                        textColor=black, forceBorder=False)
