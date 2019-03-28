@@ -24,6 +24,7 @@ import pytils
 from appconf.manager import SettingManager
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
+from reportlab.lib.colors import white, black
 
 
 class PageNumCanvas(canvas.Canvas):
@@ -226,7 +227,7 @@ def form_01(request_data):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
         ]))
 
-    objs.append(Spacer(1, 2 * mm))
+    objs.append(Spacer(1, 5 * mm))
     objs.append(tbl)
 
     objs.append(Spacer(1, 4.5 * mm))
@@ -274,7 +275,7 @@ def form_01(request_data):
     objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с лицензией:', style))
 
     #Касьяненко начало шаблон услуг только для водителей, на работу
-    template_research = "Медосмотр для водителей"
+    template_research = "Перечень услуг"
     # Касьяненко конец
 
     tr = ""
@@ -517,6 +518,35 @@ def form_01(request_data):
     styleRight.alignment = TA_RIGHT
 
     space_symbol = ' '
+
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.setFont("PTAstraSerifReg", 9)
+        form = canvas.acroForm
+        canvas.drawString(25, 780, '')
+        form.textfield(name='comment', tooltip='comment',fontName='Times-Roman', fontSize=10,
+                       x=57, y=780, borderStyle='underlined',
+                       borderColor=black, fillColor=white,
+                       width=515, height=15,
+                       textColor=black, forceBorder=False)
+
+
+
+        canvas.setFont('PTAstraSerifReg', 10)
+        canvas.drawString(37 * mm, 10 * mm, '__________________ Договор №: {} __________________/{}/'.
+                               format(date_now_str,npf))
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(39 * mm, 7 * mm, '(подпись сотрудника)')
+        canvas.drawString(130 * mm, 7 * mm, '(подпись пациента)')
+        canvas.rotate(90)
+        canvas.setFillColor(HexColor(0x4f4b4b))
+        canvas.setFont('PTAstraSerifReg',5.2)
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
+
+
+        canvas.restoreState()
+
+
     def later_pages(canvas, document):
         canvas.saveState()
         canvas.setFont('PTAstraSerifReg', 10)
@@ -532,7 +562,11 @@ def form_01(request_data):
         canvas.restoreState()
 
 
-    doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
+
     pdf = buffer.getvalue()
+
+
+
     buffer.close()
     return pdf
