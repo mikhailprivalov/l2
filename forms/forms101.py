@@ -29,7 +29,6 @@ from appconf.manager import SettingManager
 from django.utils.datastructures import MultiValueDictKeyError
 
 
-
 def form_01(request_data):
     """
     generate form agreement to Hiv
@@ -117,17 +116,35 @@ def form_02(request_data):
     individual_age = ind.age()
 
      # # проверить наличие представителя в запросе
+    # # проверить наличие представителя в запросе
     try:
         agent_pk = request_data["agent_pk"]
+        c = Card.objects.get(pk=agent_pk)
+        f = Card.objects.get(pk=203611)
+        a = Card.objects.get(pk=203651)
+        cur = Card.objects.get(pk=203789)
+        ind_card.p_mother = c
+        ind_card.p_father= f
+        ind_card.p_agent = a
+        ind_card.p_curator = cur
+        ind_card.save()
     except MultiValueDictKeyError:
         agent_pk = False
 
-    print(agent_pk)
 
-    if agent_pk:
+    ind_card_n = Card.objects.get(pk=request_data["card_pk"])
+    print('agent:',ind_card_n.p_agent)
+    n_fio = ind_card_n.p_mother.individual.fio()
+    print(ind_card_n)
+    print(agent_pk)
+    print('мать: ',ind_card_n.p_mother, n_fio)
+    print('отцец: ',ind_card_n.p_father.individual.fio())
+    print('опекун: ',ind_card_n.p_curator)
+    print('представитель: ', ind_card_n.p_agent)
+
         #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
 
-
+    if agent_pk:
         #выбрать данные объекта "Представителя"
         ind_agent_card = Card.objects.get(pk=agent_pk)
         ind_agent_ind = ind_agent_card.individual
