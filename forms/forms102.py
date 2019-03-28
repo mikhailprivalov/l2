@@ -530,9 +530,8 @@ def form_01(request_data):
          str(373581)+','+str(373581)+','+str(373581)+','+str(373581)
 
     qr_napr = ','.join([str(elem) for elem in result_data[3]])
-    print(qr_napr)
-    # qr_value = individual_fio+an
-    qr_value = npf+'('+qr_napr+qr_napr+')'
+
+    qr_value = npf+'('+qr_napr+')'
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont("PTAstraSerifReg", 9)
@@ -571,7 +570,6 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg',5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
 
-
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -601,12 +599,9 @@ def form_01(request_data):
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
         canvas.restoreState()
 
-
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
 
     pdf = buffer.getvalue()
-
-
 
     buffer.close()
     return pdf
