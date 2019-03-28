@@ -123,24 +123,23 @@ def form_02(request_data):
         f = Card.objects.get(pk=203611)
         a = Card.objects.get(pk=203651)
         cur = Card.objects.get(pk=203789)
-        ind_card.p_mother = c
-        ind_card.p_father= f
-        ind_card.p_agent = a
-        ind_card.p_curator = cur
+        ind_card.mother = c
+        ind_card.father= f
+        ind_card.agent = a
+        ind_card.curator = cur
         ind_card.save()
     except MultiValueDictKeyError:
         agent_pk = False
 
-
     ind_card_n = Card.objects.get(pk=request_data["card_pk"])
-    print('agent:',ind_card_n.p_agent)
-    n_fio = ind_card_n.p_mother.individual.fio()
+    print('agent:',ind_card_n.agent)
+    n_fio = ind_card_n.mother.individual.fio()
     print(ind_card_n)
     print(agent_pk)
-    print('мать: ',ind_card_n.p_mother, n_fio)
-    print('отцец: ',ind_card_n.p_father.individual.fio())
-    print('опекун: ',ind_card_n.p_curator)
-    print('представитель: ', ind_card_n.p_agent)
+    print('мать: ',ind_card_n.mother, n_fio)
+    print('отцец: ',ind_card_n.father.individual.fio())
+    print('опекун: ',ind_card_n.curator)
+    print('представитель: ', ind_card_n.agent)
 
         #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
 

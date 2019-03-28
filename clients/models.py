@@ -452,12 +452,12 @@ class Card(models.Model):
                                       db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
-    p_mother = models.ForeignKey('self', related_name='mother_p', blank=True, null=True, default=None, on_delete=models.CASCADE)
-    p_father = models.ForeignKey('self', related_name='father_p', blank=True, null=True, default=None,
+    mother = models.ForeignKey('self', related_name='mother_p', blank=True, null=True, default=None, on_delete=models.CASCADE)
+    father = models.ForeignKey('self', related_name='father_p', blank=True, null=True, default=None,
                                on_delete=models.CASCADE)
-    p_curator = models.ForeignKey('self', related_name='curator_p', blank=True, null=True, default=None,
+    curator = models.ForeignKey('self', related_name='curator_p', blank=True, null=True, default=None,
                                on_delete=models.CASCADE)
-    p_agent = models.ForeignKey('self', related_name='agent_p', blank=True, null=True, default=None,
+    agent = models.ForeignKey('self', related_name='agent_p', blank=True, null=True, default=None,
                                on_delete=models.CASCADE)
 
     def __str__(self):

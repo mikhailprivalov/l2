@@ -159,16 +159,6 @@ def get_final_data(research_price_loc):
 
 
 
-
-
-
-
-
-
-
-
-
-
 def form_notfound():
 
     """
