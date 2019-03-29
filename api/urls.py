@@ -24,6 +24,8 @@ urlpatterns = [
     path('patients/individuals/search', views.individual_search),
     path('patients/individuals/sex', views.get_sex_by_param),
     path('patients/individuals/edit-doc', views.edit_doc),
+    path('patients/individuals/update-cdu', views.update_cdu),
+    path('patients/individuals/sync-rmis', views.sync_rmis),
     path('directions/generate', views.directions_generate),
     path('directions/rmis-directions', views.directions_rmis_directions),
     path('directions/rmis-direction', views.directions_rmis_direction),

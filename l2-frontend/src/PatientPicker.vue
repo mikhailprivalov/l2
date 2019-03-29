@@ -1,6 +1,6 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker">
+    <div class="top-picker" :class="{internalType: selected_base.internal_type}">
       <div class="input-group">
         <div class="input-group-btn" v-if="bases.length > 1">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
@@ -20,6 +20,11 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
+        <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
+          <label class="btn btn-blue-nb nbr">
+            <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
+          </label>
+        </span>
         <span class="input-group-btn">
           <button style="margin-right: -2px"
                   class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
@@ -169,6 +174,7 @@
         history_num: '',
         search_after_loading: false,
         editor_pk: -2,
+        inc_rmis: false,
       }
     },
     created() {
@@ -526,7 +532,7 @@
         })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query).then((result) => {
+        patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
