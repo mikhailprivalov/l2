@@ -126,9 +126,11 @@ def form_02(request_data):
                 agent_relate = k
                 print(patient_agent.individual.fio())
                 agent_status = True
+                #Если в параметре агентов есть нужный параметр и в базе он соотносится с пациентом, то дальше поиск не нужен
                 break
     ind = ind_card.individual
     individual_age = ind.age()
+
     #Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     is_child = False
     patient_disabled = False
