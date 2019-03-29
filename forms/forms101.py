@@ -115,50 +115,9 @@ def form_02(request_data):
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_age = ind.age()
 
-     # # проверить наличие представителя в запросе
-    # # проверить наличие представителя в запросе
-    try:
-        agent_pk = request_data["agent_pk"]
-        c = Card.objects.get(pk=agent_pk)
-        f = Card.objects.get(pk=203611)
-        a = Card.objects.get(pk=203651)
-        cur = Card.objects.get(pk=203789)
-        ind_card.mother = c
-        ind_card.father= f
-        ind_card.agent = a
-        ind_card.curator = cur
-        ind_card.save()
-    except MultiValueDictKeyError:
-        agent_pk = False
-
-    ind_card_n = Card.objects.get(pk=request_data["card_pk"])
-    print('agent:',ind_card_n.agent)
-    n_fio = ind_card_n.mother.individual.fio()
-    print(ind_card_n)
-    print(agent_pk)
-    print('мать: ',ind_card_n.mother, n_fio)
-    print('отцец: ',ind_card_n.father.individual.fio())
-    print('опекун: ',ind_card_n.curator)
-    print('представитель: ', ind_card_n.agent)
-
-        #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
-
-    if agent_pk:
-        #выбрать данные объекта "Представителя"
-        ind_agent_card = Card.objects.get(pk=agent_pk)
-        ind_agent_ind = ind_agent_card.individual
-        ind_agent_doc = Document.objects.filter(individual=ind_agent_ind, is_active=True)
-        ind_agent_fio = ind_agent_ind.fio()
-        ind_agent_date_born = ind_agent_ind.bd()
-        ind_agent_documents = forms_func.get_all_doc(ind_agent_doc)
-        ind_agent_document_passport_num = ind_agent_documents['passport']['num']
-        ind_agent_document_passport_serial = ind_agent_documents['passport']['serial']
-        ind_agent_document_passport_date_start = ind_agent_documents['passport']['date_start']
-        ind_agent_document_passport_issued = ind_agent_documents['passport']['issued']
-
-        print(ind_agent_card)
-
-
+    # проверить наличие представителя в запросе
+    # проверить наличие представителя в запросе
+    #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
     # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
     # if individual_age < 15:
     #     patient_agent = ind_card.patient_agent
