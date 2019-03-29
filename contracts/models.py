@@ -1,5 +1,6 @@
 from django.db import models
 import directory.models as directory
+from decimal import Decimal
 
 
 # Create your models here.
@@ -29,6 +30,26 @@ class PriceCoast(models.Model):
 
     def __str__(self):
         return "{}".format(self.price_name.title)
+
+    @staticmethod
+    def get_coast_from_price(dir_research_loc, price_modifier):
+        """
+        Принимает вид исследования, объект price_modifier: объект прайса, модификатор
+        на основании прайса получает базовую цену и умножает на модификатор.
+        Возвращает окончательну цену для записи в issledovaniya
+        """
+        value = 0
+        if price_modifier:
+            price_name_loc = price_modifier[0]
+            price_modifier_loc = price_modifier[1]
+            try:
+                d = PriceCoast.objects.values_list('coast').get(price_name=price_name_loc, research_id=dir_research_loc)
+                res_coast = d[0]
+                value = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
+            except PriceCoast.DoesNotExist:
+                return value
+
+        return value
 
     class Meta:
         unique_together =('price_name','research')
@@ -78,4 +99,3 @@ class Company(models.Model):
             return "{}".format(self.contract.modifier)
         else:
             return ""
-

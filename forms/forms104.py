@@ -2,7 +2,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
     TableStyle
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape, portrait
@@ -10,77 +9,63 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.graphics.barcode import code128
-from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
 import sys
-import pytils
 import os.path
 from io import BytesIO
 from . import forms_func
 from datetime import *
 from dateutil.relativedelta import *
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
+from clients.models import Card, Document
+from laboratory.settings import FONTS_FOLDER
+import simplejson as json
+from contracts.models import PriceName
 
 
-def form_104_01(**kwargs):
+def form_01(request_data):
     """
     Форма Лист на оплату по созданным направлениям на услуги
     """
     form_name = "Лист на оплату"
 
-    ind_card = kwargs.get('ind_card')
-    ind_doc = kwargs.get('ind_doc')
-    ind = kwargs.get('ind')
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind = ind_card.individual
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    ind_dir = json.loads(request_data["dir"])
 
-    if not ind:
-        return forms_func.form_notfound()
-
-    try:
-        ind_dir = kwargs.get('ind_dir')
-    except Exception:
-        ind_dir = None
-
-    if not ind_dir:
-        return forms_func.form_notfound()
     # Получить данные с клиента физлицо-ФИО, пол, дата рождения
     individual_fio = ind.fio()
     individual_sex = ind.sex
     individual_date_born = ind.bd()
 
-    # Отфильтровать направления - по источнику финансирования "платно" Если таковых не имеется отдать "пусто"
+    # Получить все источники, у которых title-ПЛАТНО
+    ist_f = []
+    ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
+    ist_f_list = []
+    ist_f_list = ([int(x[0]) for x in ist_f])
+
+
+    napr = Napravleniya.objects.filter(id__in=ind_dir)
     dir_temp = []
-    pay_source={13,3}
-    for i in ind_dir:
-        try:
-            n = Napravleniya.objects.get(id=i)
-        except Napravleniya.DoesNotExist:
-            n = None
-        if n:
-            if n.istochnik_f_id in pay_source:
-                dir_temp.append(n.pk)
 
-    # Получить прайс по источнику "платно"
-    price_obj=forms_func.get_price(13)
+    #Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    for n in napr:
+        if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
+            dir_temp.append(n.pk)
 
-    # получить УСЛУГИ по направлениям(отфильтрованы уже по "платно" и нет сохраненных исследований) из Issledovaniya
+    # Получить объект прайс по источнику "платно" из всех видов источников имеющих title платно, берется первое значение
+    price_modifier_obj= PriceName.get_price(ist_f_list[0])
+
+    # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
-    # получить по прайсу и услугам: текущие цена
-    research_price = forms_func.get_coast(research_direction, price_obj)
+    # получить по направлению-услугам цену из Issledovaniya
+    # research_price = forms_func.get_coast(research_direction, price_modifier_obj)
+    research_price = forms_func.get_coast_from_issledovanie(research_direction)
 
-
-    # (пере)записать текущие цены, скидку, в БД (по issledovaniya)
-
-
-    #Получить сформированную структуру данных вида Направление, услуга, цена, количество, скидка, цена со скидкой, Сумма по позиции
-
-    mark_down_up=-2
-    count = 1
-
-    result_data = forms_func.get_final_data(research_price,mark_down_up, count)
-
-
+    result_data = forms_func.get_final_data(research_price)
 
     hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
     hospital_address = "г. Иркутс, ул. Байкальская 201"
@@ -100,16 +85,6 @@ def form_104_01(**kwargs):
     indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
     individual_benefit_code="_________"
 
-    card_attr = forms_func.get_card_attr(ind_card)
-    ind_cards_num_total = card_attr['num_type']
-    # Получить данные номер и тип карты по физ лицу
-    ind_cards_num = ""
-    for k, v in ind_cards_num_total.items():
-        if v == "Поликлиника":
-            num = k
-        ind_cards_num += "{} ({})".format(k, v) + '&nbsp;&nbsp;&nbsp;&nbsp;'
-
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -124,7 +99,7 @@ def form_104_01(**kwargs):
                             leftMargin=10 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=5 * mm, allowSplitting=1,
-                            title="Форма {}".format("025/у"))
+                            title="Форма {}".format("Лист на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -169,24 +144,24 @@ def form_104_01(**kwargs):
     styleTCenter.leading = 3.5 * mm
 
     styleTBold = deepcopy(styleCenterBold)
-    styleTBold.fontSize =20
+    styleTBold.fontSize = 14
     styleTBold.alignment = TA_LEFT
 
-
-    num = '0123456'
-    barcode128 = code128.Code128(num,barHeight= 10 * mm, barWidth = 1.3)
+    num = ind_card.number
+    num_type = ind_card.full_type_card()
+    barcode128 = code128.Code128(num,barHeight= 9 * mm, barWidth = 1.25)
     date_now = datetime.strftime(datetime.now(), "%d.%m.%Y")
 
     opinion = [
-        [Paragraph('№ карты:', style), Paragraph(num + " - L2", styleTBold), barcode128 ],
+        [Paragraph('№ карты:', style), Paragraph(num + "-"+"("+num_type+")", styleTBold), barcode128 ],
      ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 55 * mm, 100 * mm))
+    tbl = Table(opinion, colWidths=(23 * mm, 75 * mm, 100 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('BOTTOMPADDING', (1, 0), (1, 0), 3.0 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.0 * mm),
+        ('BOTTOMPADDING', (1, 0), (1, 0), 1.0 * mm),
         ('ALIGN',(-1,0),(-1,-1),'RIGHT'),
     ]))
 
@@ -201,16 +176,20 @@ def form_104_01(**kwargs):
         [Paragraph('Д/р:', style), Paragraph(individual_date_born, style), ],
     ]
 
-    tbl = Table(opinion, colWidths=(25 * mm, 155 * mm))
+    tbl = Table(opinion, colWidths=(23 * mm, 175 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.1 * mm),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
     ]))
 
     objs.append(Spacer(1,2 * mm))
     objs.append(tbl)
+
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('<font size=13><b>На водительскую справку</b></font>', style))
+
 
     styleTB = deepcopy(style)
     styleTB.fontSize = 11.5
@@ -227,11 +206,19 @@ def form_104_01(**kwargs):
     styleTCcenter=deepcopy(styleTC)
     styleTCcenter.alignment = TA_CENTER
 
-    opinion = [
-        [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB), Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
-         Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
-    ]
+    if result_data[2]=='no_discount':
+        opinion = [
+            [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+             Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB),
+             Paragraph('Сумма, руб.', styleTB), ],
+        ]
+    else:
+        opinion = [
+            [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+             Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
+             Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
+             Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
+        ]
 
     # example_template = [
     #     ['1.2.3','4856397','Полный гематологический анализ','1000.00','0','1000.00','1','1000.00'],
@@ -244,6 +231,7 @@ def form_104_01(**kwargs):
     example_template=result_data[0]
 
     list_g =[]
+    #используется range(len()) - к определенной колонке (по номеру) применяется свое свойство
     for i in range(len(example_template)):
         list_t = []
         for j in range(len(example_template[i])):
@@ -260,7 +248,10 @@ def form_104_01(**kwargs):
 
     opinion.extend(list_g)
 
-    tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
+    if result_data[2] == 'is_discount':
+        tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
+    else:
+        tbl = Table(opinion, colWidths=(23 * mm, 34 * mm, 62 * mm, 22 * mm, 23 * mm, 25 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),

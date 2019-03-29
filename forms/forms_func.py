@@ -1,8 +1,6 @@
 from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
-from contracts.models import Contract, PriceCoast
-
 
 def get_all_doc(docs: [Document]):
     """
@@ -22,7 +20,7 @@ def get_all_doc(docs: [Document]):
             documents["passport"]["num"] = d.number
             documents["passport"]["serial"] = d.serial
             documents["passport"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
-            documents["passport"]["issued"] = d.who_give
+            documents["polis"]["issued"] = d.who_give
 
         if d.document_type.title == 'Полис ОМС':
             documents["polis"]["num"] = d.number
@@ -33,93 +31,75 @@ def get_all_doc(docs: [Document]):
     return documents
 
 
-def get_card_attr(ind_card_l):
+# def get_card_attr(ind_card_l):
+#     """
+#     Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
+#     """
+#     card_attr = {'num_type': {},
+#                  'phone': "",
+#                  'addr': "",
+#                  }
+#
+#
+#     for z in range(len(ind_card_l)):
+#         card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
+#         card_attr['phone']= ind_card_l[z].get_phones()
+#         if ind_card_l[z].base.is_rmis:
+#             card_attr['addr'] = ind_card_l[z].main_address
+#
+#     return card_attr
+
+def get_coast_from_issledovanie(dir_research_loc):
     """
-    Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
-    """
-    card_attr = {'num_type': {},
-                 'phone': "",
-                 'addr': "",
-                 }
-
-
-    for z in range(len(ind_card_l)):
-        card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
-        card_attr['phone']= ind_card_l[z].get_phones()
-        if ind_card_l[z].base.is_rmis:
-            card_attr['addr'] = ind_card_l[z].main_address
-
-    return card_attr
-
-def get_price(istochnik_f_local):
-    """
-    На основании источника финансирования возвращает прайс
-    Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
-    Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
-    Если источник финансирования ПЛАТНО поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
-    Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
-    Если источник финансирования Бюджет поиск осуществляется по цепочке company-contract Company (self:Медучреждение)
-
-    :param **kwargs: istochnik_f, место работы, страховая организация
-    :return:
-    """
-    price_l = ""
-    try:
-        contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').get(pk=istochnik_f_local)
-        price_l = Contract.objects.values_list('price').get(id=contract_l[0])
-    except Exception:
-        price_l = ""
-    return price_l
-
-def get_coast(dir_research_loc, price_obj_loc):
-    """
-    Поиск нужных цен
-    На основании прайса, направления-услуг возвращает словарь словарей {
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
-                                                             направление: {услуга-цена,услуга-цена,услуга-цена,},
+    При печати листа на оплату возвращает (цены из записанных в Исследования)
+    На основании прайса, услуг возвращает Для листа на оплату {
+                                                             направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
+                                                             направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
+                                                             направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
                                                              }
-    :return:
-    :param **kwargs: направления-услуги, прайс
     """
-    dict_coast= {}
-    try:
+
+    d=tuple()
+    if type(dir_research_loc)==dict:
+        dict_coast = {}
         for k,v in dir_research_loc.items():
-            d = ({r:s for r, s in PriceCoast.objects.filter(price_name=price_obj_loc, research__in=v).values_list('research_id', 'coast')})
+            d = ({r: [s,d,h,]  for r, s, d, h in
+                  Issledovaniya.objects.filter(napravleniye=k, research__in=v).values_list('research_id','coast','discount','how_many') if s!=None})
             dict_coast[k]=d
-    except Exception:
-        pass
-    return dict_coast
+        return dict_coast
+    else:
+        return 0
 
 
 def get_research_by_dir(dir_temp_l):
     """
-    Получить словаь: {направление1:[услуга1, услуга2, услуша3],направление2:[услуга1].....}
+    Получить словаь: {направление1:[услуга1, услуга2, услуга3],направление2:[услуга1].....}
     :param dir_temp_l:
     :return:
     """
     dict_research_dir={}
     for i in dir_temp_l:
+        #Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
         if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
-            # research_l = list(Issledovaniya.objects.filter(napravleniye_id=i))
             research_l=([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
         dict_research_dir[i]=research_l
-
     return dict_research_dir
 
-def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
+def get_final_data(research_price_loc):
     """
     Получить итоговую структуру данных: код услуги, напрвление, услуга, цена, скидка/наценка, цена со скидкой, кол-во, сумма
+
     Направление указывается один раз для нескольких строк
-    :param mark_down_up_l:
-    :param count_l:
-    :return:
     """
+
     total_sum=0
     tmp_data=[]
-
+    is_discount = False
+    z = ""
+    x = ""
+    tmp_napr = []
     for k,v in research_price_loc.items():
         research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
         research_attr_list = [list(z) for z in research_attr]
@@ -133,22 +113,25 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
                     else:
                         h.append("")
                     h.extend(j)
-                    h.append("{:,.2f}".format(research_coast).replace(",", " "))
-                    if mark_down_up_l*-1 > 0:
-                        x="+"
-                    else:
-                        x=""
-
-                    h.append(x+str(mark_down_up_l*-1))
-                    coast_with_discount = research_coast-(research_coast*mark_down_up_l/100)
-                    h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
-                    h.append(count_l)
-                    research_sum = coast_with_discount*count_l
+                    h.append("{:,.2f}".format(research_coast[0]).replace(",", " "))
+                    coast_with_discount = research_coast[0] + (research_coast[0] * research_coast[1] / 100)
+                    if research_coast[1] != 0:
+                        z="+"
+                        if  research_coast[1] > 0:
+                            x="+"
+                        else:
+                            x=""
+                        h.append(x+str(research_coast[1]))
+                        h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
+                    h.append(research_coast[2])
+                    research_sum = coast_with_discount*research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
                     h[0],h[1]=h[1],h[0]
                     total_sum +=research_sum
                     research_attr_list.remove(j)
                     tmp_data.append(h)
+                    if h[1]:
+                        tmp_napr.append(h[1])
                 if h:
                     break
 
@@ -158,12 +141,25 @@ def get_final_data(research_price_loc, mark_down_up_l=0, count_l=1):
         res_lis.append(tmp_d)
 
     total_data =[]
+
     total_data.append(res_lis)
+
     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
+    if z=="+":
+        total_data.append("is_discount")
+    else:
+        total_data.append("no_discount")
+
+    total_data.append(tmp_napr)
+
+    #total_data:[стру-рка данных, итоговая сумма, есть ли скидка, номера направлений]
+
     return total_data
 
-def form_notfound():
 
+
+
+def form_notfound():
 
     """
     В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
