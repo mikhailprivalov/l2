@@ -541,13 +541,13 @@ def form_01(request_data):
     space_symbol = ' '
 
     qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    protect_val = SettingManager.get('protect_val')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
 
-    bstr = (qr_napr+'PrivalovKasian').encode()
-    ptotect_code = str(zlib.crc32(bstr))
+    left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
 
-    left_size_str = hospital_short_name +15 * space_symbol + ptotect_code + 15 * space_symbol
-
-    qr_value = npf+'('+qr_napr+')'
+    qr_value = npf+'('+qr_napr+'),'+protect_code
 
     def first_pages(canvas, document):
         canvas.saveState()

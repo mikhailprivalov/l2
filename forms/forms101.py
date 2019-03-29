@@ -27,7 +27,7 @@ from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 from appconf.manager import SettingManager
 from django.utils.datastructures import MultiValueDictKeyError
-
+import ast
 
 def form_01(request_data):
     """
@@ -114,6 +114,14 @@ def form_02(request_data):
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_age = ind.age()
+
+    agents = SettingManager.get("patient_agents")
+    agents_dict = ast.literal_eval(agents)
+
+    for k, v in request_data.items():
+        if k in agents_dict.keys():
+            print(getattr(ind_card, k))
+
 
     # проверить наличие представителя в запросе
     # проверить наличие представителя в запросе
@@ -488,7 +496,7 @@ def form_03(request_data):
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('{}'.format(individual_fio), styleFCenter))
+    objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
 
