@@ -345,27 +345,35 @@ class Individuals(BaseRequester):
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        key = "zeep_patients"
+        key = "zeep_pat"
         r = cache.get(key)
 
         if not r:
             r = {}
             document_types_directory = client.get_directory("pc_doc_type")
-            r["polis_types_id_list"] = [Utils.get_column_value(x, "ID") for x in
-                                        document_types_directory.get_values_by_data(search_data="Полис")]
+            dts = document_types_directory.get_values_by_data(search_data="Полис")
+            r["polis_types_id_list"] = [Utils.get_column_value(x, "ID") for x in dts]
             r["local_types"] = {}
+            r["reverse_types"] = {}
+
             for t in clients_models.DocumentType.objects.all():
+                if 'Полис ОМС' in t.title:
+                    for dtp in r["polis_types_id_list"]:
+                        r["reverse_types"][dtp] = t.pk
                 tmp = [Utils.get_column_value(x, "ID") for x in
                        document_types_directory.get_values_by_data(search_data=t.title)]
                 if len(tmp) > 0:
                     r["local_types"][t.pk] = tmp[0]
+                    r["reverse_types"][tmp[0]] = t.pk
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
+                    r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
             cache.set(key, pickle.dumps(r, protocol=4), 3600)
         else:
             r = pickle.loads(r, encoding="utf8")
         self.polis_types_id_list = r["polis_types_id_list"]
         self.local_types = r["local_types"]
+        self.local_reverse_types = r["reverse_types"]
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
 
     def extended_data(self, uid):

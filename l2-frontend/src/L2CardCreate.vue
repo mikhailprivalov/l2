@@ -83,19 +83,58 @@
       <div class="row" v-else>
         <div class="col-xs-12">
           <div class="info-row">
-            Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}} <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
+            Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
+            <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
+            <span v-if="card.has_rmis_card"><a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a></span>
           </div>
         </div>
       </div>
       <div class="row" v-if="card_pk < 0">
         <div class="col-xs-12 text-center">
-          Для настройки документов сохраните карту
+          Для настройки документов и других параметров сохраните карту
         </div>
       </div>
       <div v-else>
+        <div class="row" style="margin-bottom: 10px">
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row">
+                <div class="row-t">Адрес регистрации</div>
+                <input class="form-control" v-model="card.main_address">
+            </div>
+            <div class="form-row">
+              <div class="row-t">Адрес проживания</div>
+              <input class="form-control" v-model="card.fact_address">
+            </div>
+            <div class="form-row">
+              <div class="row-t">Место работы</div>
+              <TypeAhead :delayTime="100" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         :minChars="1" :onHit="onHitWorkPlace" :selectFirst="true" maxlength="36"
+                         ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
+              />
+            </div>
+            <div class="form-row">
+              <div class="row-t">Основной диагноз</div>
+              <TypeAhead :delayTime="100" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         :minChars="1" :onHit="onHitMainDiagnosis" :selectFirst="true" maxlength="36"
+                         ref="md" src="/api/autocomplete?value=:keyword&type=main_diagnosis" v-model="card.main_diagnosis"
+              />
+            </div>
+          </div>
+        </div>
         <table class="table table-bordered table-condensed">
+          <colgroup>
+            <col width="70" />
+            <col />
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
           <thead>
           <tr>
+            <th>ПРИОР.</th>
             <th>Тип документа</th>
             <th>Серия</th>
             <th>Номер</th>
@@ -104,7 +143,13 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="d in card.docs">
+          <tr v-for="d in card.docs" :title="d.who_give" :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
+            prior: card.main_docs[d.document_type] === d.id}">
+            <td>
+              <input type="radio" :name="`card-doc${d.document_type}`"
+                     @click="update_cdu(d.id)"
+                     :checked="card.main_docs[d.document_type] === d.id" />
+            </td>
             <td>
               {{d.type_title}}
             </td>
@@ -123,7 +168,7 @@
             </td>
           </tr>
           <tr>
-            <td class="text-center" colspan="5">
+            <td class="text-center" colspan="6">
               <a @click.prevent="edit_document(-1)" href="#">добавить документ</a>
             </td>
           </tr>
@@ -264,6 +309,7 @@
           number: '',
           main_address: "",
           fact_address: "",
+          work_place: "",
           family: "",
           patronymic: "",
           name: "",
@@ -277,6 +323,7 @@
           docs_to_delete: [],
           rmis_uid: null,
           doc_types: [],
+          main_docs: {},
         },
         individuals: [],
         document_to_edit: -2,
@@ -373,7 +420,8 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.sendCard(this.card_pk, this.card.family, this.card.name,
             this.card.patronymic, this.card.birthday, this.card.sex,
-            this.card.individual_pk, this.card.new_individual, this.base_pk)
+            this.card.individual_pk, this.card.new_individual, this.base_pk,
+            this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis)
           if (data.result !== 'ok') {
             return
           }
@@ -391,11 +439,37 @@
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      update_cdu(doc) {
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.updateCdu(this.card_pk, doc)
+          this.load_data();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      sync_rmis() {
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.syncRmis(this.card_pk)
+          this.load_data();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
       getResponse(resp) {
         return [...resp.data.data]
       },
       onHitFamily(item) {
         this.card.family = item
+      },
+      onHitWorkPlace(item) {
+        this.card.work_place = item
+      },
+      onHitMainDiagnosis(item) {
+        this.card.main_diagnosis = item
       },
       onHitName(item) {
         this.card.name = item
@@ -468,7 +542,7 @@
           const data = await patients_point.editDoc(this.document_to_edit,
             this.document.document_type, this.document.serial,
             this.document.number, this.document.is_active, this.card.individual_pk,
-            this.document.date_start, this.document.date_end, this.document.who_give,
+            this.document.date_start, this.document.date_end, this.document.who_give, this.card_pk,
           )
           this.load_data();
           this.document = {
@@ -484,6 +558,17 @@
 </script>
 
 <style scoped lang="scss">
+  .nonPrior {
+    opacity: .7;
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .prior {
+    background-color: rgba(#000, .05);
+  }
+
   .modal-mask {
     align-items: stretch !important;
     justify-content: stretch !important;
@@ -568,7 +653,7 @@
         border-right: 1px solid #434a54 !important;
       }
     }
-    &:not(.left) {
+    &:not(.left):not(.mid) {
       padding-left: 0!important;
       .row-t {
         border-right: 1px solid #434a54;
