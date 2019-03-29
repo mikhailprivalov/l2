@@ -215,12 +215,10 @@ class IstochnikiFinansirovaniya(models.Model):
 
         if self.title.upper() in price_contract:
             contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=self.pk).first()
-            print(contract_l)
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
         elif self.title.upper() in price_company:
             contract_l = contracts.Company.objects.values_list('contracts_id').filter(pk=self.pk).first()
-            print(contract_l)
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
         return price_modifier
@@ -425,13 +423,10 @@ class Napravleniya(models.Model):
                 # Исследования привязываются к направлению по группе
 
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
-                print(finsource.title)
 
-                # начало Касьяненко С.Н.
                 # получить прайс
-                # price_obj = contracts.PriceName.get_price(finsource.pk)
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource)
-                #конец Касьяненко С.Н.
+
 
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
@@ -469,13 +464,12 @@ class Napravleniya(models.Model):
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 
-                    # начало Касьяненко С.Н.
+
                     # получить по прайсу и услуге: текущую цену
-                    # research_coast = forms_func.get_coast(research.id, price_obj)
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
                     research_discount = 10*-1
                     research_howmany = 1
-                    # конец Касьяненко С.Н.
+
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                   research=research,coast=research_coast,discount=research_discount,

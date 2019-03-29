@@ -452,13 +452,18 @@ class Card(models.Model):
                                       db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
-    mother = models.ForeignKey('self', related_name='mother_p', blank=True, null=True, default=None, on_delete=models.CASCADE)
-    father = models.ForeignKey('self', related_name='father_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
-    curator = models.ForeignKey('self', related_name='curator_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
-    agent = models.ForeignKey('self', related_name='agent_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
+    mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опеку", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    agent = models.ForeignKey('self', related_name='agent_p',help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -471,8 +476,8 @@ class Card(models.Model):
                                      Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
                          y != ""]))
 
-    def full_type_card(self):
-        return "{}".format(self.base.title)
+    # def full_type_card(self):
+    #     return "{}".format(self.base.title)
 
     def short_type_card(self):
         return "{}".format(self.base.short_title)
