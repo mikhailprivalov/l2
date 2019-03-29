@@ -109,38 +109,43 @@ def form_02(request_data):
     """
     Согласие на обработку персональных данных
     """
+    # mother_card = Card.objects.get(pk=203793)
+    # ind_card = Card.objects.filter(pk=203729).update(mother=mother_card)
+
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    # ind = Individual.objects.get(pk=request_data["individual"])
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
-    individual_age = ind.age()
 
     agents = SettingManager.get("patient_agents")
     agents_dict = ast.literal_eval(agents)
 
+    #сравнить переданное значение параметра с представителями у карты.
+    agent_status = False
     for k, v in request_data.items():
-        if k in agents_dict.keys():
-            print(getattr(ind_card, k))
+        if k in agents_dict.keys() and getattr(ind_card, k):
+            patient_agent = getattr(ind_card, k)
+            if patient_agent.pk == int(v):
+                agent_relate = k
+                print(patient_agent.individual.fio())
+                agent_status = True
+                break
+    ind = ind_card.individual
+    individual_age = ind.age()
+    #Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    is_child = False
+    patient_disabled = False
+    if individual_age < SettingManager.get("child_age") and not agent_status:
+        return False
+    elif individual_age < 15 and agent_status:
+        is_child = True
+    elif agent_status:
+        patient_disabled = True
 
 
-    # проверить наличие представителя в запросе
-    # проверить наличие представителя в запросе
-    #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
-    # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
-    # if individual_age < 15:
-    #     patient_agent = ind_card.patient_agent
-    #     ind_card = patient_agent
-    #     ind = ind_card.individual
-    # Касьяненко
-
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_fio = ind.fio()
     individual_date_born = ind.bd()
 
     is_child =''
 
-    if individual_age < 15:
-        patient_agent = " Иванова Марья Ивановна"
-        is_child = "ребёнка"
 
     document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
