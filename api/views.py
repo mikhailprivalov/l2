@@ -1942,6 +1942,10 @@ def autocomplete(request):
             p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:l]
             if p.exists():
                 data = [x.main_diagnosis for x in p]
+        if t == "work_position":
+            p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:l]
+            if p.exists():
+                data = [x.work_position for x in p]
         if "who_give:" in t:
             tpk = t.split(":")[1]
             p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:l]
@@ -2007,6 +2011,7 @@ def patients_card_save(request):
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
     c.work_place = request_data["work_place"]
+    c.work_position = request_data["work_position"]
     c.save()
     result = "ok"
     return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})

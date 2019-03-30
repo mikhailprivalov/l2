@@ -464,6 +464,7 @@ class Card(models.Model):
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
+    work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
     mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
