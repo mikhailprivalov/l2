@@ -105,13 +105,27 @@
               <div class="row-t">Адрес проживания</div>
               <input class="form-control" v-model="card.fact_address">
             </div>
-            <div class="form-row">
-              <div class="row-t">Место работы</div>
-              <TypeAhead :delayTime="100" :getResponse="getResponse"
-                         :highlighting="highlighting" :limit="10"
-                         :minChars="1" :onHit="onHitWorkPlace" :selectFirst="true" maxlength="36"
-                         ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
-              />
+            <div class="row">
+              <div class="col-xs-6" style="padding-right: 0">
+                <div class="form-row nbt-i">
+                  <div class="row-t">Место работы</div>
+                  <TypeAhead :delayTime="100" :getResponse="getResponse"
+                             :highlighting="highlighting" :limit="10"
+                             :minChars="1" :onHit="onHitWorkPlace" :selectFirst="true" maxlength="36"
+                             ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
+                  />
+                </div>
+              </div>
+              <div class="col-xs-6" style="padding-left: 0">
+                <div class="form-row nbt-i">
+                  <div class="row-t">Должность</div>
+                  <TypeAhead :delayTime="100" :getResponse="getResponse"
+                             :highlighting="highlighting" :limit="10"
+                             :minChars="1" :onHit="onHitPosition" :selectFirst="true" maxlength="36"
+                             ref="wp" src="/api/autocomplete?value=:keyword&type=work_position" v-model="card.work_position"
+                  />
+                </div>
+              </div>
             </div>
             <div class="form-row">
               <div class="row-t">Основной диагноз</div>
@@ -310,6 +324,7 @@
           main_address: "",
           fact_address: "",
           work_place: "",
+          work_position: "",
           family: "",
           patronymic: "",
           name: "",
@@ -421,7 +436,8 @@
           const data = await patients_point.sendCard(this.card_pk, this.card.family, this.card.name,
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual_pk, this.card.new_individual, this.base_pk,
-            this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis)
+            this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
+            this.card.work_position)
           if (data.result !== 'ok') {
             return
           }
@@ -479,6 +495,9 @@
       },
       onHitDocWhoGive(item) {
         this.document.who_give = item
+      },
+      onHitPosition(item) {
+        this.card.work_position = item
       },
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       load_data() {
@@ -593,7 +612,7 @@
     width: 100%;
     display: flex;
     border-bottom: 1px solid #434a54;
-    &:first-child {
+    &:first-child:not(.nbt-i) {
       border-top: 1px solid #434a54;
     }
     justify-content: stretch;
