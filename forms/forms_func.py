@@ -166,7 +166,7 @@ def get_data_individual(card_object):
     :param card_object:
     :return:
     """
-    ind_data ={}
+    ind_data = {}
     ind_data['ind'] = card_object.individual
     ind_data['age'] = ind_data['ind'].age()
     ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
@@ -177,8 +177,7 @@ def get_data_individual(card_object):
     ind_data['fact_address'] = "____________________________________________________" if not card_object.fact_address \
         else card_object.fact_address
 
-
-#     document_passport = "Паспорт РФ"
+    #     document_passport = "Паспорт РФ"
     ind_documents = get_all_doc(ind_data['doc'])
     ind_data['passport_num'] = ind_documents['passport']['num']
     ind_data['passport_serial'] = ind_documents['passport']['serial']
@@ -186,15 +185,13 @@ def get_data_individual(card_object):
     ind_data['passport_issued'] = ind_documents['passport']['issued']
 
     ind_data['snils'] = ind_documents["snils"]["num"]
-    ind_data['oms'] ={}
-    ind_data['oms']['polis_num']        = ind_documents["polis"]["num"]
-    ind_data['oms']['polis_serial']     = ind_documents["polis"]["serial"]
+    ind_data['oms'] = {}
+    ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+    ind_data['oms']['polis_serial'] = ind_documents["polis"]["serial"]
     # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-    ind_data['oms']['polis_issued']     = ind_documents["polis"]["issued"]
+    ind_data['oms']['polis_issued'] = ind_documents["polis"]["issued"]
 
     return ind_data
-
-
 
 
 def form_notfound():
