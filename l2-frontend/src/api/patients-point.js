@@ -1,8 +1,8 @@
 import {HTTP} from '../http-common'
 
-async function searchCard(type, query, list_all_cards = false) {
+async function searchCard(type, query, list_all_cards = false, inc_rmis = false) {
   try {
-    const response = await HTTP.post('patients/search-card', {type, query, list_all_cards})
+    const response = await HTTP.post('patients/search-card', {type, query, list_all_cards, inc_rmis})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -44,10 +44,13 @@ async function getCard(card_pk) {
   return []
 }
 
-async function sendCard(card_pk, family, name, patronymic, birthday, sex, individual_pk, new_individual, base_pk) {
+async function sendCard(card_pk, family, name, patronymic,
+                        birthday, sex, individual_pk, new_individual, base_pk,
+                        fact_address, main_address, work_place, main_diagnosis) {
   try {
     const response = await HTTP.post('patients/card/save', {card_pk, family, name,
-      patronymic, birthday, sex, individual_pk, new_individual, base_pk})
+      patronymic, birthday, sex, individual_pk, new_individual, base_pk,
+      fact_address, main_address, work_place, main_diagnosis})
     if (response.statusText === 'OK') {
       return response.data
     }
@@ -78,10 +81,10 @@ async function individualSex(t, v) {
   return {sex: 'м'}
 }
 
-async function editDoc(pk, type, serial, number, is_active, individual_pk, date_start, date_end, who_give) {
+async function editDoc(pk, type, serial, number, is_active, individual_pk, date_start, date_end, who_give, card_pk) {
   try {
     const response = await HTTP.post('patients/individuals/edit-doc', {
-      pk, type, serial, number, date_start, date_end, who_give, is_active, individual_pk
+      pk, type, serial, number, date_start, date_end, who_give, is_active, individual_pk, card_pk,
     })
     if (response.statusText === 'OK') {
       return response.data
@@ -91,5 +94,31 @@ async function editDoc(pk, type, serial, number, is_active, individual_pk, date_
   return {}
 }
 
-export default {searchCard, searchIndividual, searchL2Card,
-  getCard, sendCard, individualsSearch, individualSex, editDoc}
+async function updateCdu(card_pk, doc_pk) {
+  try {
+    const response = await HTTP.post('patients/individuals/update-cdu', {
+      card_pk, doc_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function syncRmis(card_pk) {
+  try {
+    const response = await HTTP.post('patients/individuals/sync-rmis', {
+      card_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+export default {searchCard, searchIndividual, searchL2Card, syncRmis,
+  getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu}

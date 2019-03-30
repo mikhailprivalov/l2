@@ -27,6 +27,7 @@ from appconf.manager import SettingManager
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
 from reportlab.lib.colors import white, black
+import zlib
 
 
 class PageNumCanvas(canvas.Canvas):
@@ -159,6 +160,7 @@ def form_01(request_data):
     # Генерировать pdf-Лист на оплату
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
@@ -490,29 +492,41 @@ def form_01(request_data):
     dir_p = fio_director_list[2]
     dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
 
-    opinion = [
-        [Paragraph('Пациент:', styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('Исполнитель', styleAtr)],
-        [Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(individual_fio,document_passport_serial,document_passport_num,ind_card.main_address ), styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr)],
-        [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
-        [Paragraph('', styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr)],
-        [Paragraph('________________________/{}/'.format(npf), styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('________________________/{}/'.format(dir_npf), styleAtr)],
+    styleAtrEndStr = deepcopy(styleAtr)
 
+    # styleAtrEndStr.spaceBefor = 5
+
+    space_symbol = '&nbsp;'
+    opinion = [
+        [Paragraph('Исполнитель', styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('Пациент/Плательщик:', styleAtr)],
+        [Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(individual_fio, document_passport_serial,
+                                                        document_passport_num, ind_card.main_address),styleAtr)],
+        [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
+        [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('', styleAtr)],
+        [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+         Paragraph('', styleAtr),
+         Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
+         ],
     ]
 
-    tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm))
+    rowHeights = 5 * [None]
+    rowHeights[4]=35
+    tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm),rowHeights=rowHeights)
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
         ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP')
+        ('VALIGN', (0, 0), (-1, -2), 'TOP'),
+        ('VALIGN', (0, -1), (-1, -1), 'BOTTOM'),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 4.2 * mm),
+        ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
+
     ]))
 
     objs.append(Spacer(1, 2 * mm))
@@ -526,12 +540,15 @@ def form_01(request_data):
 
     space_symbol = ' '
 
-    an = ','+str(373580)+','+str(373581)+','+str(373582)+','+str(373588)+','+str(373589)+','+str(373580)+','+\
-         str(373581)+','+str(373581)+','+str(373581)+','+str(373581)
-
     qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    protect_val = SettingManager.get('protect_val')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
 
-    qr_value = npf+'('+qr_napr+')'
+    left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
+
+    qr_value = npf+'('+qr_napr+'),'+protect_code
+
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont("PTAstraSerifReg", 9)
@@ -560,15 +577,18 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg', 10)
         canvas.drawString(40 * mm, 10 * mm, '____________________________')
         canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
+        canvas.setFont('Symbola', 18)
+        canvas.drawString(195 * mm, 10 * mm, '\u2713')
+
         canvas.setFont('PTAstraSerifReg', 8)
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(160 * mm, 7 * mm, '(подпись пациента)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
 
         #вывестии защитны вертикальный мелкий текст
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)
-        canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
 
         canvas.restoreState()
 
@@ -589,14 +609,18 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg', 10)
         canvas.drawString(40 * mm, 10 * mm, '____________________________')
         canvas.drawString(115 * mm, 10 * mm, '/{}/____________________________'.format(npf))
+
+        canvas.setFont('Symbola', 18)
+        canvas.drawString(195 * mm, 10 * mm, '\u2713')
+
         canvas.setFont('PTAstraSerifReg', 8)
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
-        canvas.drawString(160 * mm, 7 * mm, '(подпись пациента)')
+        canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
 
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)
-        canvas.drawString(10 * mm, -12 * mm, '{}'.format(10 * (hospital_short_name+ 10 * space_symbol)))
+        canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)

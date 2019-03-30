@@ -24,7 +24,7 @@ import users.models as users
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, DocumentType
+from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -463,6 +463,7 @@ def patients_search_card(request):
     objects = []
     data = []
     d = json.loads(request.body)
+    inc_rmis = d.get('inc_rmis')
     card_type = CardBase.objects.get(pk=d['type'])
     query = d['query'].strip()
     p = re.compile(r'[а-яё]{3}[0-9]{8}', re.IGNORECASE)
@@ -482,7 +483,7 @@ def patients_search_card(request):
                 objects = Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1],
                                                     patronymic__startswith=initials[2], birthday=btday,
                                                     card__base=card_type)
-                if (card_type.is_rmis and len(objects) == 0) or card_type.internal_type:
+                if (card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis):
                     c = Client(modules="patients")
                     objects = c.patients.import_individual_to_base(
                         {"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%",
@@ -501,7 +502,7 @@ def patients_search_card(request):
                           :10]
 
             if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) \
-                    or card_type.internal_type:
+                    or (card_type.internal_type and inc_rmis):
                 objects = list(objects)
                 try:
                     if not c:
@@ -1894,6 +1895,7 @@ def patients_get_card_data(request, card_id):
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     return JsonResponse({**i, **c,
                          "docs": docs,
+                         "main_docs": card.get_card_documents(),
                          "has_rmis_card": rc.exists(),
                          "rmis_uid": rc[0].number if rc.exists() else None,
                          "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
@@ -1932,6 +1934,14 @@ def autocomplete(request):
             p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:l]
             if p.exists():
                 data = [x.patronymic for x in p]
+        if t == "work_place":
+            p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:l]
+            if p.exists():
+                data = [x.work_place for x in p]
+        if t == "main_diagnosis":
+            p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:l]
+            if p.exists():
+                data = [x.main_diagnosis for x in p]
         if "who_give:" in t:
             tpk = t.split(":")[1]
             p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:l]
@@ -1942,7 +1952,6 @@ def autocomplete(request):
 
 def patients_card_save(request):
     request_data = json.loads(request.body)
-    print(request_data)
     result = "fail"
     message = ""
     card_pk = -1
@@ -1956,16 +1965,23 @@ def patients_card_save(request):
                        sex=request_data["sex"])
         i.save()
     else:
+        changed = False
         i = Individual.objects.get(pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(pk=request_data["card_pk"]).individual.pk)
+        if i.family != request_data["family"] \
+                or i.name != request_data["name"]\
+                or i.patronymic != request_data["patronymic"]\
+                or str(i.birthday) != request_data["birthday"]\
+                or i.sex != request_data["sex"]:
+            changed = True
         i.family = request_data["family"]
         i.name = request_data["name"]
         i.patronymic = request_data["patronymic"]
         i.birthday = request_data["birthday"]
         i.sex = request_data["sex"]
         i.save()
-        if Card.objects.filter(individual=i, base__is_rmis=True).exists():
+        if Card.objects.filter(individual=i, base__is_rmis=True).exists() and changed:
             c = Client(modules=["individuals", "patients"])
-            print(c.patients.send_patient(Card.objects.filter(individual=i, base__is_rmis=True)[0]))
+            c.patients.send_patient(Card.objects.filter(individual=i, base__is_rmis=True)[0])
 
     individual_pk = i.pk
 
@@ -1985,7 +2001,13 @@ def patients_card_save(request):
         card_pk = c.pk
     else:
         card_pk = request_data["card_pk"]
+        c = Card.objects.get(pk=card_pk)
         individual_pk = request_data["individual_pk"]
+    c.main_diagnosis = request_data["main_diagnosis"]
+    c.main_address = request_data["main_address"]
+    c.fact_address = request_data["fact_address"]
+    c.work_place = request_data["work_place"]
+    c.save()
     result = "ok"
     return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})
 
@@ -2025,12 +2047,39 @@ def edit_doc(request):
     who_give = request_data["who_give"]
 
     if pk == -1:
-        Document(document_type=type_o, number=number, serial=serial, from_rmis=False, date_start=date_start,
-                 date_end=date_end, who_give=who_give, is_active=is_active,
-                 individual=Individual.objects.get(pk=request_data["individual_pk"])).save()
+        card = Card.objects.get(pk=request_data["card_pk"])
+        d = Document(document_type=type_o, number=number, serial=serial, from_rmis=False, date_start=date_start,
+                     date_end=date_end, who_give=who_give, is_active=is_active,
+                     individual=Individual.objects.get(pk=request_data["individual_pk"]))
+        d.save()
+        cdu = CardDocUsage.objects.filter(card=card, document__document_type=type_o)
+        if not cdu.exists():
+            CardDocUsage(card=card, document=d).save()
+        else:
+            cdu.update(document=d)
     else:
         Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial,
                                                                is_active=is_active, date_start=date_start,
                                                                date_end=date_end, who_give=who_give)
 
+    return JsonResponse({"ok": True})
+
+
+def update_cdu(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    doc = Document.objects.get(pk=request_data["doc_pk"])
+    cdu = CardDocUsage.objects.filter(card=card, document__document_type=doc.document_type)
+    if not cdu.exists():
+        CardDocUsage(card=card, document=doc).save()
+    else:
+        cdu.update(document=doc)
+
+    return JsonResponse({"ok": True})
+
+
+def sync_rmis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    card.individual.sync_with_rmis()
     return JsonResponse({"ok": True})

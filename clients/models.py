@@ -118,10 +118,16 @@ class Individual(models.Model):
                     return r[0]
                 return None
 
+            def get_key_reverse(d: dict, val):
+                return d.get(val)
+
             if out:
                 out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
+
             for document_object in pat_data["identifiers"] or []:
                 k = get_key(c.patients.local_types, document_object["type"])
+                if not k:
+                    k = get_key_reverse(c.patients.local_reverse_types, document_object["type"])
                 if k and document_object["active"]:
                     if out:
                         out.write("Тип: %s -> %s (%s)" % (document_object["type"], k, document_object["active"]))
@@ -130,7 +136,7 @@ class Individual(models.Model):
                                 number=document_object["number"] or "",
                                 date_start=document_object["issueDate"],
                                 date_end=document_object["expiryDate"],
-                                who_give=(document_object["issueOrganization"] or {"name": ""})["name"] or "",
+                                who_give=(document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})["name"] or "",
                                 individual=self,
                                 is_active=True)
                     rowss = Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True)
@@ -420,6 +426,11 @@ class Document(models.Model):
         verbose_name_plural = 'Документы'
 
 
+class CardDocUsage(models.Model):
+    card = models.ForeignKey('clients.Card', db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey('clients.Document', db_index=True, on_delete=models.CASCADE)
+
+
 class CardBase(models.Model):
     title = models.CharField(max_length=50, help_text="Полное название базы")
     short_title = models.CharField(max_length=4, help_text="Краткий код базы", db_index=True)
@@ -452,13 +463,19 @@ class Card(models.Model):
                                       db_index=True)
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
-    mother = models.ForeignKey('self', related_name='mother_p', blank=True, null=True, default=None, on_delete=models.CASCADE)
-    father = models.ForeignKey('self', related_name='father_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
-    curator = models.ForeignKey('self', related_name='curator_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
-    agent = models.ForeignKey('self', related_name='agent_p', blank=True, null=True, default=None,
-                               on_delete=models.CASCADE)
+    work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
+    mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опеку", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    agent = models.ForeignKey('self', related_name='agent_p',help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
+                               on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -471,8 +488,8 @@ class Card(models.Model):
                                      Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
                          y != ""]))
 
-    def full_type_card(self):
-        return "{}".format(self.base.title)
+    # def full_type_card(self):
+    #     return "{}".format(self.base.title)
 
     def short_type_card(self):
         return "{}".format(self.base.short_title)
@@ -491,6 +508,22 @@ class Card(models.Model):
             return
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
+
+    def get_card_documents(self):
+        types = [t.pk for t in DocumentType.objects.all()]
+        docs = {}
+        for t in types:
+            CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
+            if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
+                docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document.pk
+            elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
+                d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
+                c = CardDocUsage(card=self, document=d)
+                c.save()
+                docs[t] = d.pk
+            else:
+                docs[t] = None
+        return docs
 
     @staticmethod
     def next_l2_n():
@@ -515,7 +548,6 @@ class Card(models.Model):
                  main_address='' if not card_orig else card_orig.main_address,
                  fact_address='' if not card_orig else card_orig.fact_address)
         c.save()
-        print('add_l2_card', c)
         return c
 
 

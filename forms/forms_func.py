@@ -2,6 +2,7 @@ from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
 
+
 def get_all_doc(docs: [Document]):
     """
     возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
@@ -10,7 +11,7 @@ def get_all_doc(docs: [Document]):
         'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         'polis': {'serial': "", 'num': "", 'issued': ""},
         'snils': {'num': ""}
-     }
+    }
 
     for d in docs:
         if d.document_type.title == "СНИЛС":
@@ -58,14 +59,14 @@ def get_coast_from_issledovanie(dir_research_loc):
                                                              направление: {услуга:[цена, скидка, количество],услуга:[цена, скидка, количество]},
                                                              }
     """
-
-    d=tuple()
-    if type(dir_research_loc)==dict:
+    d = tuple()
+    if type(dir_research_loc) == dict:
         dict_coast = {}
-        for k,v in dir_research_loc.items():
-            d = ({r: [s,d,h,]  for r, s, d, h in
-                  Issledovaniya.objects.filter(napravleniye=k, research__in=v).values_list('research_id','coast','discount','how_many') if s!=None})
-            dict_coast[k]=d
+        for k, v in dir_research_loc.items():
+            d = ({r: [s, d, h, ] for r, s, d, h in
+                  Issledovaniya.objects.filter(napravleniye=k, research__in=v, coast__isnull=False).values_list(
+                      'research_id', 'coast', 'discount', 'how_many')})
+            dict_coast[k] = d
         return dict_coast
     else:
         return 0
@@ -77,15 +78,16 @@ def get_research_by_dir(dir_temp_l):
     :param dir_temp_l:
     :return:
     """
-    dict_research_dir={}
+    dict_research_dir = {}
     for i in dir_temp_l:
-        #Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
+        # Если есть хотя бы одно сохранения услуги по направлению, то не учитывается
         if any([x.doc_save is not None for x in Issledovaniya.objects.filter(napravleniye=i)]):
             continue
         else:
-            research_l=([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
-        dict_research_dir[i]=research_l
+            research_l = ([x.research_id for x in Issledovaniya.objects.filter(napravleniye=i)])
+        dict_research_dir[i] = research_l
     return dict_research_dir
+
 
 def get_final_data(research_price_loc):
     """
@@ -94,40 +96,40 @@ def get_final_data(research_price_loc):
     Направление указывается один раз для нескольких строк
     """
 
-    total_sum=0
-    tmp_data=[]
+    total_sum = 0
+    tmp_data = []
     is_discount = False
     z = ""
     x = ""
     tmp_napr = []
-    for k,v in research_price_loc.items():
-        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id','title')])
+    for k, v in research_price_loc.items():
+        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
         research_attr_list = [list(z) for z in research_attr]
-        for research_id,research_coast in v.items():
+        for research_id, research_coast in v.items():
             h = []
             for j in research_attr_list:
                 if research_id == j[0]:
-                    if k !=0:
+                    if k != 0:
                         h.append(k)
-                        k=0
+                        k = 0
                     else:
                         h.append("")
                     h.extend(j)
                     h.append("{:,.2f}".format(research_coast[0]).replace(",", " "))
                     coast_with_discount = research_coast[0] + (research_coast[0] * research_coast[1] / 100)
                     if research_coast[1] != 0:
-                        z="+"
-                        if  research_coast[1] > 0:
-                            x="+"
+                        z = "+"
+                        if research_coast[1] > 0:
+                            x = "+"
                         else:
-                            x=""
-                        h.append(x+str(research_coast[1]))
+                            x = ""
+                        h.append(x + str(research_coast[1]))
                         h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
                     h.append(research_coast[2])
-                    research_sum = coast_with_discount*research_coast[2]
+                    research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
-                    h[0],h[1]=h[1],h[0]
-                    total_sum +=research_sum
+                    h[0], h[1] = h[1], h[0]
+                    total_sum += research_sum
                     research_attr_list.remove(j)
                     tmp_data.append(h)
                     if h[1]:
@@ -135,32 +137,29 @@ def get_final_data(research_price_loc):
                 if h:
                     break
 
-    res_lis=[]
+    res_lis = []
     for t in tmp_data:
-        tmp_d=list(map(str, t))
+        tmp_d = list(map(str, t))
         res_lis.append(tmp_d)
 
-    total_data =[]
+    total_data = []
 
     total_data.append(res_lis)
 
     total_data.append("{:,.2f}".format(total_sum).replace(",", " "))
-    if z=="+":
+    if z == "+":
         total_data.append("is_discount")
     else:
         total_data.append("no_discount")
 
     total_data.append(tmp_napr)
 
-    #total_data:[стру-рка данных, итоговая сумма, есть ли скидка, номера направлений]
+    # total_data:[стру-рка данных, итоговая сумма, есть ли скидка, номера направлений]
 
     return total_data
 
 
-
-
 def form_notfound():
-
     """
     В случае не верной настройки форм по типам и функциям или переданным аргументам в параметры
     :return:
@@ -207,10 +206,9 @@ def form_notfound():
         Spacer(1, 3 * mm),
         Paragraph('<font face="PTAstraSerifBold">А-та-та-та им!</font>',
                   styleCenter),
-        ]
+    ]
     doc.build(objs)
 
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
-

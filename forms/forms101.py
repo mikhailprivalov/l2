@@ -27,7 +27,7 @@ from laboratory import settings
 from laboratory.settings import FONTS_FOLDER
 from appconf.manager import SettingManager
 from django.utils.datastructures import MultiValueDictKeyError
-
+import ast
 
 def form_01(request_data):
     """
@@ -109,71 +109,45 @@ def form_02(request_data):
     """
     Согласие на обработку персональных данных
     """
+    # mother_card = Card.objects.get(pk=203793)
+    # ind_card = Card.objects.filter(pk=203729).update(mother=mother_card)
+
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    # ind = Individual.objects.get(pk=request_data["individual"])
+
+    agents = SettingManager.get("patient_agents")
+    agents_dict = ast.literal_eval(agents)
+
+    #сравнить переданное значение параметра с представителями у карты.
+    agent_status = False
+    for k, v in request_data.items():
+        if k in agents_dict.keys() and getattr(ind_card, k):
+            patient_agent = getattr(ind_card, k)
+            if patient_agent.pk == int(v):
+                agent_relate = k
+                print(patient_agent.individual.fio())
+                agent_status = True
+                #Если в параметре агентов есть нужный параметр и в базе он соотносится с пациентом, то дальше поиск не нужен
+                break
     ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_age = ind.age()
 
-     # # проверить наличие представителя в запросе
-    # # проверить наличие представителя в запросе
-    try:
-        agent_pk = request_data["agent_pk"]
-        c = Card.objects.get(pk=agent_pk)
-        f = Card.objects.get(pk=203611)
-        a = Card.objects.get(pk=203651)
-        cur = Card.objects.get(pk=203789)
-        ind_card.mother = c
-        ind_card.father= f
-        ind_card.agent = a
-        ind_card.curator = cur
-        ind_card.save()
-    except MultiValueDictKeyError:
-        agent_pk = False
-
-    ind_card_n = Card.objects.get(pk=request_data["card_pk"])
-    print('agent:',ind_card_n.agent)
-    n_fio = ind_card_n.mother.individual.fio()
-    print(ind_card_n)
-    print(agent_pk)
-    print('мать: ',ind_card_n.mother, n_fio)
-    print('отцец: ',ind_card_n.father.individual.fio())
-    print('опекун: ',ind_card_n.curator)
-    print('представитель: ', ind_card_n.agent)
-
-        #сравнить переданное значение с представителями у карты индивидуала. Если оно совпадает с активным, тогда дальше
-
-    if agent_pk:
-        #выбрать данные объекта "Представителя"
-        ind_agent_card = Card.objects.get(pk=agent_pk)
-        ind_agent_ind = ind_agent_card.individual
-        ind_agent_doc = Document.objects.filter(individual=ind_agent_ind, is_active=True)
-        ind_agent_fio = ind_agent_ind.fio()
-        ind_agent_date_born = ind_agent_ind.bd()
-        ind_agent_documents = forms_func.get_all_doc(ind_agent_doc)
-        ind_agent_document_passport_num = ind_agent_documents['passport']['num']
-        ind_agent_document_passport_serial = ind_agent_documents['passport']['serial']
-        ind_agent_document_passport_date_start = ind_agent_documents['passport']['date_start']
-        ind_agent_document_passport_issued = ind_agent_documents['passport']['issued']
-
-        print(ind_agent_card)
+    #Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    is_child = False
+    patient_disabled = False
+    if individual_age < SettingManager.get("child_age") and not agent_status:
+        return False
+    elif individual_age < 15 and agent_status:
+        is_child = True
+    elif agent_status:
+        patient_disabled = True
 
 
-    # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
-    # if individual_age < 15:
-    #     patient_agent = ind_card.patient_agent
-    #     ind_card = patient_agent
-    #     ind = ind_card.individual
-    # Касьяненко
-
+    ind_doc = Document.objects.filter(individual=ind, is_active=True)
     individual_fio = ind.fio()
     individual_date_born = ind.bd()
 
     is_child =''
 
-    if individual_age < 15:
-        patient_agent = " Иванова Марья Ивановна"
-        is_child = "ребёнка"
 
     document_passport = "Паспорт РФ"
     documents = forms_func.get_all_doc(ind_doc)
@@ -529,7 +503,7 @@ def form_03(request_data):
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('{}'.format(individual_fio), styleFCenter))
+    objs.append(Paragraph('{}'.format(space_symbol), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_fio_doc), styleBottom))
 
