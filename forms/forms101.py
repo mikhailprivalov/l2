@@ -110,9 +110,6 @@ def form_02(request_data):
     """
     Согласие на обработку персональных данных
     """
-    mother_card = Card.objects.get(pk=203793)
-    ind_card = Card.objects.filter(pk=203729).update(mother=mother_card,who_is_agent='mother')
-
     ind_card = Card.objects.get(pk=request_data["card_pk"])
 
     agent_status = False
