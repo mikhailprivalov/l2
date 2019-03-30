@@ -110,24 +110,15 @@ def form_02(request_data):
     """
     Согласие на обработку персональных данных
     """
-    # mother_card = Card.objects.get(pk=203793)
-    # ind_card = Card.objects.filter(pk=203729).update(mother=mother_card)
+    mother_card = Card.objects.get(pk=203793)
+    ind_card = Card.objects.filter(pk=203729).update(mother=mother_card,who_is_agent='mother')
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
 
-    agents = SettingManager.get("patient_agents")
-    agents_dict = ast.literal_eval(agents)
-
-    # сравнить переданное значение параметра с представителями у карты.
     agent_status = False
-    for k, v in request_data.items():
-        if k in agents_dict.keys() and getattr(ind_card, k):
-            p_agent = getattr(ind_card, k)
-            if p_agent.pk == int(v):
-                agent_relate = k
-                agent_status = True
-                # Если в параметре агентов есть нужный параметр и в базе он соотносится с пациентом, то дальше поиск не нужен
-                break
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
 
     ind = ind_card.individual
     individual_age = ind.age()
@@ -136,7 +127,7 @@ def form_02(request_data):
     who_patient = 'пациента'
     patient_disabled = False
     if individual_age < SettingManager.get("child_age") and not agent_status:
-        return False
+        pass
     elif individual_age < 15 and agent_status:
         who_patient = 'ребёнка'
     elif agent_status:
@@ -229,7 +220,7 @@ def form_02(request_data):
 
     if agent_status:
         opinion = [
-            Paragraph('<u>являюсь законным представителем ({}) {}:</u>'.format(agents_dict[k], who_patient), styleSign),
+            Paragraph('<u>являюсь законным представителем ({}) {}:</u>'.format(ind_card.get_who_is_agent_display(), who_patient), styleSign),
             Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
             Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign)
             ]

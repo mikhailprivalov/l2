@@ -8,6 +8,7 @@ from django.db import models
 
 import slog.models as slog
 
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -453,6 +454,13 @@ class CardBase(models.Model):
 
 
 class Card(models.Model):
+    AGENT_CHOICES = (
+        ('mother', "мать"),
+        ('father', "отец"),
+        ('curator', "опекун"),
+        ('agent', "представитель"),
+        ('',''),
+    )
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
@@ -476,6 +484,9 @@ class Card(models.Model):
     agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
+
+    who_is_agent = models.CharField(max_length=7,choices=AGENT_CHOICES, blank=True, default='',help_text="Законный представитель пациента",
+                                    db_index=True)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
