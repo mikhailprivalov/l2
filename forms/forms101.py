@@ -111,28 +111,22 @@ def form_02(request_data):
     Согласие на обработку персональных данных
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
 
     agent_status = False
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
         agent_status = True
 
-    ind = ind_card.individual
-    individual_age = ind.age()
-
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    patient_disabled = False
-    if individual_age < SettingManager.get("child_age") and not agent_status:
-        pass
-    elif individual_age < 15 and agent_status:
+    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
         who_patient = 'ребёнка'
-    elif agent_status:
-        patient_disabled = True
 
-    patient_data = forms_func.get_data_individual(ind_card)
     if agent_status:
-        person_data = forms_func.get_data_individual(p_agent)
+        person_data = p_agent.get_data_individual()
     else:
         person_data = patient_data
 
@@ -168,6 +162,7 @@ def form_02(request_data):
 
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
 
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
@@ -206,21 +201,32 @@ def form_02(request_data):
     styleLeft.alignment = TA_LEFT
     objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
     objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
-    objs.append(Paragraph('Документ, удостоверяющий личность паспорт: серия <u> {}</u> номер: <u>{}</u>'.
-                          format(person_data['passport_serial'], person_data['passport_num']), styleSign))
+    objs.append(Paragraph('Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.
+                          format(person_data['type_doc'],person_data['passport_serial'], person_data['passport_num']), styleSign))
     objs.append(
         Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
-    objs.append(Spacer(1, 3 * mm))
+    objs.append(Spacer(1, 2 * mm))
 
     hospital_name = SettingManager.get("rmis_orgname")
     hospital_address = SettingManager.get("org_address")
 
     if agent_status:
         opinion = [
-            Paragraph('<u>являюсь законным представителем ({}) {}:</u>'.format(ind_card.get_who_is_agent_display(), who_patient), styleSign),
+            Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient), styleBold),
             Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
-            Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign)
-            ]
+            Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
+            Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign)
+        ]
+
+        #Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age"):
+            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'],
+                                     patient_data['bc_serial'],patient_data['bc_num']), styleSign))
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+        else:
+            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'],
+                                     patient_data['passport_serial'], patient_data[['passport_num']]), styleSign))
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
 
         objs.extend(opinion)
 
@@ -283,9 +289,9 @@ def form_02(request_data):
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
-    objs.append(
-        Paragraph('\"___\"____________{} {} _________________________'.format(date_year, 35 * space_bottom), styleSign))
-    objs.append(Paragraph('{} (подпись) '.format(61 * space_bottom), style))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('\"___\"____________{} {} _____________________ /______________________ /'.format(date_year, 30 * space_bottom), styleSign))
+    objs.append(Paragraph('{} (подпись) '.format(57 * space_bottom), style))
 
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
@@ -312,49 +318,25 @@ def form_03(request_data):
     :param request_date:
     :return:
     """
-
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    # ind = Individual.objects.get(pk=request_data["individual"])
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
-    individual_age = ind.age()
+    patient_data = ind_card.get_data_individual()
 
-    # Касьяненко
-    # # передать законного представителья, если возраст меньше 15 лет, или имеется опекун, или доверенность
-    # if request_data["agent_pk"]:
-    #     ind_agent_card = Card.objects.get(pk=request_data["agent_pk"])
-    #
-    #
-    # #Если пациенту меньше 15 лет у него д.б. законный прелстаитель
-    # if individual_age < 15:
-    #     patient_agent = ind_card.patient_agent
-    #     ind_card = patient_agent
-    #     ind = ind_card.individual
-    # Касьяненко
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
 
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
+        who_patient = 'ребёнка'
 
-    if individual_age < 15:
-        patient_agent = " Иванова Марья Ивановна"
-
-    document_passport = "Паспорт РФ"
-    documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents['passport']['num']
-    document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
-    document_passport_issued = documents['passport']['issued']
-
-    m = -1
-    if ind_card.main_address:
-        ind_address = ind_card.main_address
+    if agent_status:
+        person_data = p_agent.get_data_individual()
     else:
-        m = 0
-
-    if m == 0 and ind_card.fact_address:
-        ind_address = ind_card.fact_address
-    elif not ind_card.main_address:
-        ind_address = "______________________________________________________________________"
+        person_data = patient_data
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -364,6 +346,9 @@ def form_03(request_data):
     # Генерировать pdf-Лист на оплату
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_address = SettingManager.get("org_address")
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
@@ -381,8 +366,14 @@ def form_03(request_data):
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
 
+    styleSign = deepcopy(style)
+    styleSign.firstLineIndent = 0
+    styleSign.alignment = TA_LEFT
+    styleSign.leading = 13
+
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
+    styleBold.firstLineIndent = 0
 
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
@@ -409,66 +400,82 @@ def form_03(request_data):
         Paragraph(
             'Информированное добровольное согласие на виды медицинских вмешательств,<br/> включенные в Перечень определенных'
             ' видов медицинских вмешательств,<br/> на которые граждане дают информированное добровольное согласие при '
-            'выборе врача и медицинской организации для получения первичной медико-санитарной помощи ',
+            'выборе врача и медицинской организации для получения первичной медико-санитарной помощи {} '.format(who_patient),
             styleCenterBold),
     ]
 
-    d = datetime.datetime.strptime(individual_date_born, '%d.%m.%Y').date()
+    objs.append(Spacer(1, 4 * mm))
+
+    d = datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date()
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=d)
 
-    objs.append(Spacer(1, 4.5 * mm))
-    objs.append(Paragraph('Я, {}&nbsp; {} г. рождения, зарегистрированный по адресу:  {} '.
-                          format(individual_fio, date_individual_born, ind_address), style))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(
+        Paragraph('Я, нижеподписавшийся(аяся) {}&nbsp; {} г. рождения'.format(person_data['fio'], date_individual_born),
+                  styleSign))
 
-    person_agent = ''
-    patient_agent = ''
-    if person_agent:
-        patient_agent = "лицом, законным представителем которого я являюсь"
-    else:
-        patient_agent = ''
+    styleLeft = deepcopy(style)
+    styleLeft.alignment = TA_LEFT
+    objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
+    objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
+    objs.append(Paragraph('Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.
+                          format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']),
+                          styleSign))
+    objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
+    objs.append(Spacer(1, 3 * mm))
+
     hospital_name = SettingManager.get("rmis_orgname")
-    hospital_address = SettingManager.get("org_address")
+
+    if agent_status:
+        opinion = [
+            Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(),who_patient), styleBold),
+            Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
+            Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
+            Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign)
+        ]
+
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age"):
+            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
+                                     format(patient_data['type_doc'], patient_data['bc_serial'], patient_data['bc_num']),styleSign))
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+        else:
+            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
+                           format(patient_data['type_doc'], patient_data[ 'passport_serial'],patient_data[['passport_num']]),styleSign))
+            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']),styleSign))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('даю информированное добровольное согласие на виды медицинских вмешательств, включенные в '
                           '\"Перечень\" определенных видов медицинских вмешательств, на которые граждане дают информированное '
                           'добровольное согласие при выборе врача и медицинской организации для получения первичной '
                           'медико-санитарной помощи, утвержденный  приказом  Министерства здравоохранения и социального развития '
                           'Российской Федерации от 23 апреля 2012 г. N 390н (зарегистрирован Министерством  юстиции '
                           'Российской Федерации 5 мая 2012 г. N 24082) (далее - \"Перечень\"), для  получения  первичной'
-                          'медико-санитарной помощи {} в:<br/> {}'.format(patient_agent, hospital_name), style))
+                          'медико-санитарной помощи {} в:  {}'.format(patient_data['fio'], hospital_name), style))
 
-    ofname = ''
-    if ofname:
-        doc_ofname = ofname
-    else:
-        doc_ofname = "________________________________________________________"
-
-    objs.append(Paragraph('Медицинским работником {}'.format(doc_ofname), style))
-    objs.append(
-        Paragraph('в доступной для меня форме мне разъяснены цели, методы оказания медицинской помощи, связанный '
+    space_symbol = '&nbsp;'
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('Медицинским работником <u>{}</u>'.format(115 * space_symbol), style))
+    objs.append(Paragraph('в доступной для меня форме мне разъяснены цели, методы оказания медицинской помощи, связанный '
                   'с ними риск, возможные варианты медицинских вмешательств, их  последствия,  в  том  числе  '
                   'вероятность  развития  осложнений, а также предполагаемые  результаты оказания медицинской помощи. '
                   'Мне разъяснено, что я  имею  право  отказаться  от  одного  или  нескольких  видов  медицинских вмешательств,  '
                   'включенных в Перечень, или потребовать его (их) прекращения, за  исключением  случаев,  предусмотренных  '
                   'частью 9 статьи 20 Федерального закона  от 21 ноября 2011 г. N 323-ФЗ "Об основах охраны здоровья '
                   'граждан в Российской  Федерации"  (Собрание  законодательства  Российской  Федерации, 2011, '
-                  'N 48, ст. 6724; 2012, N 26, ст. 3442, 3446).  ', style))
-    if person_agent:
-        patient_agent = 'лица,  законным представителем которого я являюсь (ненужное зачеркнуть)'
-    else:
-        patient_agent = 'моего здоровья'
+                  'N 48, ст. 6724; 2012, N 26, ст. 3442, 3446).', style))
 
-    objs.append(
-        Paragraph('Сведения  о  выбранных  мною  лицах, которым в соответствии с пунктом 5 части  5  статьи  19 '
+    objs.append(Paragraph('Сведения  о  выбранных  мною  лицах, которым в соответствии с пунктом 5 части  5  статьи  19 '
                   'Федерального закона от 21 ноября 2011 г. N 323-ФЗ "Об основах охраны здоровья граждан в '
-                  'Российской Федерации" может быть передана информация  о состоянии {}'.format(patient_agent), style))
+                  'Российской Федерации" может быть передана информация о состоянии {}'.format(''), style))
 
     styleFCenter = deepcopy(style)
     styleFCenter.alignment = TA_CENTER
 
     styleBottom = deepcopy(style)
     styleBottom.fontSize = 8
-
-    space_symbol = '&nbsp;'
 
     sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
     sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
@@ -480,7 +487,7 @@ def form_03(request_data):
     objs.append(Paragraph('{} {}'.format(73 * space_symbol, sign_fio_person), styleBottom))
 
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph('{}'.format(individual_fio), styleFCenter))
+    objs.append(Paragraph('{}'.format(person_data['fio']), styleFCenter))
     objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
     objs.append(
         Paragraph('{} (подпись) {} {}'.format(16 * space_symbol, 38 * space_symbol, sign_patient_agent), styleBottom))
@@ -496,11 +503,6 @@ def form_03(request_data):
     objs.append(
         HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
-
-    if document_passport_issued:
-        passport_who_give = document_passport_issued
-    else:
-        passport_who_give = "______________________________________________________________________"
 
     doc.build(objs)
     pdf = buffer.getvalue()

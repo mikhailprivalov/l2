@@ -10,7 +10,8 @@ def get_all_doc(docs: [Document]):
     documents = {
         'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         'polis': {'serial': "", 'num': "", 'issued': ""},
-        'snils': {'num': ""}
+        'snils': {'num': ""},
+        'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
     }
 
     for d in docs:
@@ -30,31 +31,13 @@ def get_all_doc(docs: [Document]):
             documents["polis"]["issued"] = d.who_give
 
         if d.document_type.title == 'Свидетельство о рождении':
-            documents["BC"]["num"] = d.number
-            documents["BC"]["serial"] = d.serial
-            documents["BC"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
-            documents["BC"]["issued"] = d.who_give
+            documents["bc"]["num"] = d.number
+            documents["bc"]["serial"] = d.serial
+            documents["bc"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+            documents["bc"]["issued"] = d.who_give
 
     return documents
 
-
-# def get_card_attr(ind_card_l):
-#     """
-#     Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
-#     """
-#     card_attr = {'num_type': {},
-#                  'phone': "",
-#                  'addr': "",
-#                  }
-#
-#
-#     for z in range(len(ind_card_l)):
-#         card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
-#         card_attr['phone']= ind_card_l[z].get_phones()
-#         if ind_card_l[z].base.is_rmis:
-#             card_attr['addr'] = ind_card_l[z].main_address
-#
-#     return card_attr
 
 def get_coast_from_issledovanie(dir_research_loc):
     """
@@ -189,6 +172,11 @@ def get_data_individual(card_object):
     ind_data['passport_serial'] = ind_documents['passport']['serial']
     ind_data['passport_date_start'] = ind_documents['passport']['date_start']
     ind_data['passport_issued'] = ind_documents['passport']['issued']
+
+    ind_data['bc_num'] = ind_documents['bc']['num']
+    ind_data['bc_serial'] = ind_documents['bc']['serial']
+    ind_data['bc_date_start'] = ind_documents['bc']['date_start']
+    ind_data['bc_issued'] = ind_documents['bc']['issued']
 
     ind_data['snils'] = ind_documents["snils"]["num"]
     ind_data['oms'] = {}

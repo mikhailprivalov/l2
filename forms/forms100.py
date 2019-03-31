@@ -28,38 +28,12 @@ def form_01(request_data):
     форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    patient_data = ind_card.get_data_individual()
 
-    hospital_name = "ОГАУЗ \"Иркутская медикосанитарная часть № 2\""
-    hospital_address = "г. Иркутс, ул. Байкальская 201"
-    hospital_kod_ogrn = "1033801542576"
-    health_passport_num = "1"  # номер id patient из базы
-
-    individual_sex = ind.sex
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
-
-    documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents['passport']['num']
-    document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
-    document_passport_issued = documents['passport']['issued']
-    document_polis = documents['polis']['num']
-    document_snils = documents['snils']['num']
-
-    indivudual_insurance_org="38014_ИРКУТСКИЙ ФИЛИАЛ АО \"СТРАХОВАЯ КОМПАНИЯ \"СОГАЗ-МЕД\" (Область Иркутская)"
-    individual_benefit_code="_________"
-
-    # card_attr = forms_func.get_card_attr(ind_card)
-    ind_card_address = ind_card.main_address
-
-    individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
-                                   "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
-    work_organization_okved = "91.5 - Обслуживание и ремонт компютерной и оргтехники, заправка картриджей" \
-                              "обслуживание принтеров"
-    individual_department = "отдел информационных технология, ораганизаци ремонта и обслуживания медицинского оборудования"
-    individual_profession = "старший государственный таможенный инспектор"  # реест профессий
+    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_address = SettingManager.get("org_address")
+    hospital_kod_ogrn = SettingManager.get("org_ogrn")
+    health_passport_num = request_data["card_pk"]  # номер id patient из базы
 
     list_result = ['Общ. анализ крови', 'Общ.анализ мочи', 'Глюкоза крови', 'Холестерин', 'RW', 'Флюорография', 'ЭКГ',
                    'Спирометрия', 'УЗИ м/желёз (маммогр.)', 'Аудиометрия', 'УЗИ огр.м/таза',
@@ -85,8 +59,6 @@ def form_01(request_data):
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat
-    # Причина PTAstraSerif использовать
 
     buffer = BytesIO()
 
@@ -105,11 +77,13 @@ def form_01(request_data):
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
+    styleCenter.leading = 1
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.leading = 10
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
-    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.spaceAfter = 4 * mm
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
@@ -120,16 +94,17 @@ def form_01(request_data):
     doc.addPageTemplates(PageTemplate(id='TwoCol', frames=[righ_frame, left_frame], pagesize=landscape(A4)))
 
     space = 5.5 * mm
+    space_symbol = '&nbsp;'
     objs = [
         Spacer(1, 3 * mm),
         Paragraph('<font face="PTAstraSerifBold">Министерство здравоохранения Российской Федерации</font>',
                   styleCenter),
-        Spacer(1, 3 * mm),
-        Paragraph('<font face="PTAstraSerifBold"><u>{}</u></font>'.format(hospital_name), styleCenter),
-        Spacer(1, 2 * mm),
+        Spacer(1, 5 * mm),
+        Paragraph('<font face="PTAstraSerifBold"><u>{}</u></font>'.format(hospital_name), styleCenterBold),
+        Spacer(1, 1),
         Paragraph('<font face="PTAstraSerifReg"><font size=9>(наименование медицинской организации)</font></font>',
                   styleCenter),
-        Spacer(1, 3 * mm),
+        Spacer(1, 7 * mm),
         Paragraph('<font face="PTAstraSerifBold"><u>{}</u></font>'.format(hospital_address), styleCenter),
         Spacer(1, 5 * mm),
         Paragraph('<font face="PTAstraSerifBold" size=12>Код ОГРН {}</font>'.format(hospital_kod_ogrn), styleCenter),
@@ -140,30 +115,30 @@ def form_01(request_data):
         Paragraph('<font face="PTAstraSerifReg"size=10><u>{} года</u></font>'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())),
                   styleCenter),
-        Spacer(1, 7),
+        Spacer(1, 3 * mm),
         Paragraph('<font face="PTAstraSerifReg" size=7>(дата оформления)</font>', styleCenter),
         Spacer(1, space),
         Paragraph('<font face="PTAstraSerifReg">1.Фамилия, имя, отчество:'
-                  '<u>{}</u> </font>'.format(individual_fio), styleJustified),
+                  '<u>{}</u> </font>'.format(patient_data['fio']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">2.Пол: <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="90" />'
-                  '3.Дата Рождения: <u>{}</u> </font>'.format(individual_sex, individual_date_born), styleJustified),
+                  '3.Дата Рождения: <u>{}</u> </font>'.format(patient_data['sex'], patient_data['born']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="25"/>'
-                  'номер: <u>{}</u></font>'.format(document_passport_serial, document_passport_num), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(document_passport_date_start),
+                  'номер: <u>{}</u></font>'.format(patient_data['passport_serial'], patient_data['passport_num']), styleJustified),
+        Paragraph('<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(patient_data['passport_date_start']),
                   styleJustified),
-        Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(document_passport_issued), styleJustified),
+        Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(patient_data['passport_issued']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">5. Адрес регистрации по месту жительства (пребывания):'
-                  ' <u>{}</u></font>'.format(ind_card_address), styleJustified),
+                  ' <u>{}</u></font>'.format(patient_data['main_address']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
-                  ' <u>{}</u></font>'.format(document_polis), styleJustified),
+                  ' <u>{}</u></font>'.format(patient_data['oms']['polis_num']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7. Наименование работодателя:'
-                  ' <u>{}</u></font>'.format(individual_work_organization), styleJustified),
+                  ' <u>{}</u></font>'.format(patient_data['work_place']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.1 Форма собственности и вид экономической деятельности '
-                  'работодателя по ОКВЭД: <u>{}</u></font>'.format(work_organization_okved), styleJustified),
+                  'работодателя по ОКВЭД: <u>{}</u></font>'.format(50 * space_symbol), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.2  Наименование структурного подразделения (цех, участок, отдел):'
-                  ' <u> {} </u></font>'.format(individual_department), styleJustified),
+                  '<br/> <u> {} </u></font>'.format(120 * space_symbol), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">8. Профессия (должность) (в настоящее время):'
-                  ' <u>{}</u></font>'.format(individual_profession), styleJustified),
+                  ' <u>{}</u></font>'.format(patient_data['work_position']), styleJustified),
         FrameBreak(),
         Spacer(1, space),
         Paragraph('<font face="PTAstraSerifReg">12. Заключение:</font>', styleJustified),
@@ -310,34 +285,11 @@ def form_02(request_data):
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    patient_data = ind_card.get_data_individual()
 
     hospital_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
-    hospital_kod_ogrn = SettingManager.get("org_ogrn", "<TODO:OGRN>")
-    hospital_okpo = SettingManager.get("org_ogrn", "<TODO:OKPO>")
-
-    individual_fio = ind.fio()
-    individual_sex = ind.sex
-    individual_date_born = ind.bd()
-
-    document_passport = "Паспорт РФ"
-
-    documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents['passport']['num']
-    document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
-    document_passport_issued = documents['passport']['issued']
-    document_polis = documents['polis']['num']
-    document_snils = documents['snils']['num']
-
-    indivudual_insurance_org = documents['polis']['issued']
-    individual_benefit_code = "_________"
-
-    ind_card_num = ind_card.number_with_type()
-    ind_card_address = ind_card.main_address
-    ind_card_phone = ", ".join(ind_card.get_phones())
+    hospital_kod_ogrn = SettingManager.get("org_ogrn")
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -346,13 +298,8 @@ def form_02(request_data):
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
-    # http://www.cnews.ru/news/top/2018-12-10_rossijskim_chinovnikam_zapretili_ispolzovat
-    # Причина PTAstraSerif использовать
 
     buffer = BytesIO()
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
-
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
@@ -399,7 +346,6 @@ def form_02(request_data):
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
-
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (1, 0), (-1, -1), 80),
@@ -408,24 +354,31 @@ def form_02(request_data):
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
+    if patient_data['age'] < SettingManager.get("child_age"):
+        patient_data['serial'] = patient_data['bc_serial']
+        patient_data['num'] = patient_data['bc_num']
+    else:
+        patient_data['serial'] = patient_data['passport_serial']
+        patient_data['num'] = patient_data['passport_num']
+
     content_title =[
         Indenter(left=0 *mm),
-        Spacer(1, 4 * mm),
+        Spacer(1, 1 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
-        Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, ind_card_num), styleCenterBold),
+        Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, patient_data['card_num']), styleCenterBold),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
-        Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(individual_fio), style),
-        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(individual_sex, 3 * space_symbol, individual_date_born), style),
-        Paragraph('5. Место регистрации: {}'.format(ind_card_address), style),
-        Paragraph('тел. {}'.format(ind_card_phone), style),
+        Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(patient_data['fio']), style),
+        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
+        Paragraph('5. Место регистрации: {}'.format(patient_data['main_address']), style),
+        Paragraph('тел. {}'.format(", ".join(patient_data['phone'])), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
-        Paragraph('7. Полис ОМС: серия______№: {} {}'
-                  '8. СНИЛС: {}'.format(document_polis, 13 * space_symbol, document_snils),style),
-        Paragraph('9. Наименование страховой медицинской организации: {}'.format(indivudual_insurance_org), style),
+        Paragraph('7. Полис ОМС: серия {} №: {} {}'
+                  '8. СНИЛС: {}'.format(patient_data['oms']['polis_serial'],patient_data['oms']['polis_num'], 13 * space_symbol, patient_data['snils']),style),
+        Paragraph('9. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']), style),
         Paragraph('10. Код категории льготы: {} {} 11. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.
-                  format(individual_benefit_code, 35 * space_symbol, document_passport, document_passport_serial, document_passport_num), style),
+                  format(8 * space_symbol, 25 * space_symbol, patient_data['type_doc'], patient_data['serial'],patient_data['num']), style),
         Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style),
         Spacer(1,2 * mm),
     ]
