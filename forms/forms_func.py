@@ -29,6 +29,12 @@ def get_all_doc(docs: [Document]):
             documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
             documents["polis"]["issued"] = d.who_give
 
+        if d.document_type.title == 'Свидетельство о рождении':
+            documents["BC"]["num"] = d.number
+            documents["BC"]["serial"] = d.serial
+            documents["BC"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+            documents["BC"]["issued"] = d.who_give
+
     return documents
 
 

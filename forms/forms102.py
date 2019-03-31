@@ -82,6 +82,7 @@ def form_01(request_data):
     form_name = "Договор"
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
+
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     ind_dir = json.loads(request_data["dir"])
@@ -200,11 +201,6 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 11 * mm))
 
-    # head = [
-    #     Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
-    #     Spacer(1, 1 * mm),
-    #     Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
-    #     ]
     objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter))
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
@@ -215,8 +211,6 @@ def form_01(request_data):
     styleTBold = deepcopy(styleCenterBold)
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
-
-    # barcode128 = code128.Code128(date_now_str,barHeight= 4 * mm, barWidth = 1.25)
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 

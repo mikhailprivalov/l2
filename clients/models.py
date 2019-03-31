@@ -388,6 +388,8 @@ class Individual(models.Model):
             return Card.objects.filter(base__is_rmis=True, is_archive=False, individual=self)[0].number
         return ""
 
+
+
     class Meta:
         verbose_name = 'Физическое лицо'
         verbose_name_plural = 'Физические лица'

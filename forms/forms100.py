@@ -339,13 +339,6 @@ def form_02(request_data):
     ind_card_address = ind_card.main_address
     ind_card_phone = ", ".join(ind_card.get_phones())
 
-    individual_work_organization = "Управление Федераньной службы по ветеринарному и фитосанитрному надзору по Иркутской области" \
-                                   "и Усть-Ордынскому бурятскому автономному округу"  # реест организаций
-    work_organization_okved = "91.5 - Обслуживание и ремонт компютерной и оргтехники, заправка картриджей" \
-                              "обслуживание принтеров"
-    individual_department = "отдел информационных технология, ораганизаци ремонта и обслуживания медицинского оборудования"
-    individual_profession = "старший государственный таможенный инспектор"  # реест профессий
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
