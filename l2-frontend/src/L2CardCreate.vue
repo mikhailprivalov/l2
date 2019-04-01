@@ -59,8 +59,8 @@
           </div>
         </div>
         <div class="col-xs-12" v-if="!card.new_individual && individuals.length > 0">
-          <div @click="select_individual(card.individual_pk)" class="info-row individual" v-for="i in individuals">
-            <input :checked="i.pk === card.individual_pk" type="checkbox"/> {{i.fio}}<br/>
+          <div @click="select_individual(card.individual)" class="info-row individual" v-for="i in individuals">
+            <input :checked="i.pk === card.individual" type="checkbox"/> {{i.fio}}<br/>
             <table class="table table-bordered table-condensed">
               <thead>
               <tr>
@@ -332,7 +332,7 @@
           sex: "м",
           has_rmis_card: false,
           birthday: moment().format('YYYY-MM-DD'),
-          individual_pk: -1,
+          individual: -1,
           new_individual: false,
           docs: [],
           docs_to_delete: [],
@@ -414,7 +414,7 @@
     },
     methods: {
       select_individual(invpk) {
-        this.card.individual_pk = invpk
+        this.card.individual = invpk
       },
       toggleNewIndividual() {
         this.card.new_individual = !this.card.new_individual
@@ -435,7 +435,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.sendCard(this.card_pk, this.card.family, this.card.name,
             this.card.patronymic, this.card.birthday, this.card.sex,
-            this.card.individual_pk, this.card.new_individual, this.base_pk,
+            this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
             this.card.work_position)
           if (data.result !== 'ok') {
@@ -445,7 +445,7 @@
             this.hide_modal()
           }
           this.card.pk = data.card_pk
-          this.card.individual_pk = data.individual_pk
+          this.card.individual = data.individual
           this.$root.$emit('select_card', {
             card_pk: data.card_pk,
             base_pk: this.base_pk,
@@ -521,7 +521,7 @@
         patients_point.individualsSearch(this.card.family, this.card.name,
           this.card.patronymic, this.card.birthday, this.card.sex).then(({result}) => {
           this.individuals = result
-          this.card.individual_pk = result.length === 0 ? -1 : result[0].pk
+          this.card.individual = result.length === 0 ? -1 : result[0].pk
           this.card.new_individual = result.length === 0
         })
       },
@@ -560,7 +560,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.editDoc(this.document_to_edit,
             this.document.document_type, this.document.serial,
-            this.document.number, this.document.is_active, this.card.individual_pk,
+            this.document.number, this.document.is_active, this.card.individual,
             this.document.date_start, this.document.date_end, this.document.who_give, this.card_pk,
           )
           this.load_data();
