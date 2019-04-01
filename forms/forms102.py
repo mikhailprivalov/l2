@@ -82,6 +82,7 @@ def form_01(request_data):
     form_name = "Договор"
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
+
     ind = ind_card.individual
     ind_doc = Document.objects.filter(individual=ind, is_active=True)
     ind_dir = json.loads(request_data["dir"])
@@ -140,8 +141,6 @@ def form_01(request_data):
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
 
     if (len(num_contract_set) == 1) and (not None in num_contract_set):
-        print('No-No-No-No не надо создавать номер контракта он есть')
-        print()
         date_now_str = num_contract_set.pop()
 
    # Получить данные физлицо-документы: паспорт, полис, снилс
@@ -200,11 +199,6 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 11 * mm))
 
-    # head = [
-    #     Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter),
-    #     Spacer(1, 1 * mm),
-    #     Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter),
-    #     ]
     objs.append(Paragraph('ДОГОВОР &nbsp;&nbsp; № <u>{}</u>'.format(date_now_str),styleCenter))
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('НА ОКАЗАНИЕ ПЛАТНЫХ МЕДИЦИНСКИХ УСЛУГ НАСЕЛЕНИЮ', styleCenter))
@@ -215,8 +209,6 @@ def form_01(request_data):
     styleTBold = deepcopy(styleCenterBold)
     styleTBold.fontSize = 10
     styleTBold.alignment = TA_LEFT
-
-    # barcode128 = code128.Code128(date_now_str,barHeight= 4 * mm, barWidth = 1.25)
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
 
@@ -283,9 +275,7 @@ def form_01(request_data):
     objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА',styleCenter))
     objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с лицензией:', style))
 
-    #Касьяненко начало шаблон услуг только для водителей, на работу
     template_research = "Перечень услуг"
-    # Касьяненко конец
 
     tr = ""
     if template_research:
@@ -331,7 +321,7 @@ def form_01(request_data):
     #     ['1.2.3', '4856398', 'УЗИ брюшной полости', '3500.49', '0', '3500.49', '1', '3500.49'],
     #     ['1.2.3','4856398','Эзофагогастродуоденоскопия','5700.99','0','5700.99','1','5700.99']
     # ]
-    # #
+    #
 
     example_template=result_data[0]
 
@@ -350,11 +340,10 @@ def form_01(request_data):
             list_t.append(Paragraph(example_template[i][j],s))
         list_g.append(list_t)
 
-    sum_research = result_data[1]
-
-    sum_research_decimal = sum_research.replace(' ', '')
-
     opinion.extend(list_g)
+
+    sum_research = result_data[1]
+    sum_research_decimal = sum_research.replace(' ', '')
 
     if result_data[2] == 'is_discount':
         tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
@@ -371,7 +360,6 @@ def form_01(request_data):
     objs.append(Spacer(1, 1 * mm))
     objs.append(Paragraph('<font size=12> Итого: {}</font>'.format(sum_research), styleTCright))
     objs.append(Spacer(1,2 * mm))
-
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('(далее - "медицинские услуги"), а Пациент уплачивает Исполнителю вознаграждение в размере, '
                           'порядке и сроки, которые установлены настоящим Договором.', style))
@@ -477,7 +465,6 @@ def form_01(request_data):
                           'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.', style))
     objs.append(Paragraph('8.2.	Настоящий Договор составлен в 2 (двух) экземплярах, имеющих одинаковую юридическую силу, '
                           'по одному для каждой из Сторон', style))
-    # objs.append(Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter))
 
     styleAtr = deepcopy(style)
     styleAtr.firstLineIndent = 0
@@ -493,8 +480,6 @@ def form_01(request_data):
     dir_npf = dir_n[0:1] + '.' + ' ' + dir_p[0:1] + '.' + ' ' + dir_f
 
     styleAtrEndStr = deepcopy(styleAtr)
-
-    # styleAtrEndStr.spaceBefor = 5
 
     space_symbol = '&nbsp;'
     opinion = [
@@ -518,7 +503,6 @@ def form_01(request_data):
     rowHeights = 5 * [None]
     rowHeights[4]=35
     tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm),rowHeights=rowHeights)
-
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
         ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
@@ -526,13 +510,11 @@ def form_01(request_data):
         ('VALIGN', (0, -1), (-1, -1), 'BOTTOM'),
         ('BOTTOMPADDING', (0, -1), (-1, -1), 4.2 * mm),
         ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
-
     ]))
 
     objs.append(Spacer(1, 2 * mm))
-
+    #Заголовок Адреса и реквизиты + сами реквизиты всегда вместе, если разры на странице
     objs.append(KeepTogether([Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
-
     objs.append(Spacer(1,7 * mm))
 
     styleRight = deepcopy(style)
