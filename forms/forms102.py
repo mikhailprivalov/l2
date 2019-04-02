@@ -18,6 +18,7 @@ from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledova
 from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 import simplejson as json
+from dateutil.relativedelta import *
 from datetime import *
 import datetime
 import locale
@@ -85,35 +86,33 @@ def form_01(request_data):
 
     patient_data = ind_card.get_data_individual()
 
-    agent_status = False
+    # agent_status = False
+    p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
         agent_status = True
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
         return False
-    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
-    if agent_status:
+    if p_agent:
         person_data = p_agent.get_data_individual()
     else:
         person_data = patient_data
 
     payer_status = False
+
+    p_payer = None
     if ind_card.payer:
         p_payer = ind_card.payer
-        payer_status = True
-
-
-    # ind = ind_card.individual
-    # ind_doc = Document.objects.filter(individual=ind, is_active=True)
+        # payer_status = True
 
     ind_dir = json.loads(request_data["dir"])
-    # exec_person = request_data['user'].doctorprofile.fio
-    exec_person = 'Иванов Иван Иванович'
+    exec_person = request_data['user'].doctorprofile.fio
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
@@ -164,14 +163,6 @@ def form_01(request_data):
 
     if (len(num_contract_set) == 1) and (not None in num_contract_set):
         date_now_str = num_contract_set.pop()
-
-   # Получить данные физлицо-документы: паспорт, полис, снилс
-   #  document_passport = "Паспорт РФ"
-   #  documents = forms_func.get_all_doc(ind_doc)
-   #  document_passport_num = documents['passport']['num']
-   #  document_passport_serial = documents['passport']['serial']
-   #  document_passport_date_start = documents['passport']['date_start']
-   #  document_passport_issued = documents['passport']['issued']
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -261,45 +252,54 @@ def form_01(request_data):
     post_contract = SettingManager.get("post_contract")
     document_base = SettingManager.get("document_base")
 
-    objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующего(ей) на основании {} с '
+    objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с '
           'одной стороны, и'.format(hospital_name, post_contract,exec_person,document_base),style))
 
     # Если Заказчик(Плательщик) другое физ лицо
-    if payer_status:
+    if p_payer and (p_payer != p_agent):
         objs.append( Paragraph('Заказчик: {}, дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
-          'зарегистрирован по адресу: {}, '
+          'адрес регистрации: {}, '
           'адрес проживания: {} '.format(),style))
 
     #Добавдяем представителя(мать, отец, опекун или др. не дееспособный)
-    if agent_status:
-        objs.append( Paragraph('Представитель: {} ({}) {}, {} дата рождения {} г.,, '
+    if (not p_payer) or (p_payer == p_agent):
+        p_agent_who = "Заказчик (представитель пациента)"
+    else:
+        p_agent_who = "Представитель пациента"
+
+    if p_agent:
+        objs.append( Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
-          'зарегистрирован по адресу: {}, '
-          'адрес проживания: {} '.format(person_data['fio'],ind_card.get_who_is_agent_display(), who_patient, person_data['born'],
+          'адрес регистрации: {}, '
+          'адрес проживания: {}'.format(p_agent_who, person_data['fio'],ind_card.get_who_is_agent_display(), who_patient, person_data['born'],
                                          person_data['passport_serial'],person_data['passport_num'],person_data['passport_date_start'],
                                          person_data['passport_issued'],person_data['main_address'],person_data['fact_address']
                                          ),style))
 
     # Добавдяем потребителя услуги (пациента)
-    p_doc_serial, p_doc_num = '',''
-    if patient_data['age'] < SettingManager.get("child_age"):
-        p_doc_serial, p_doc_num, p_doc_start,p_doc_issued = patient_data['bc_serial'], patient_data['bc_num'],patient_data['bc_date_start']
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+        p_doc_serial, p_doc_num, p_doc_start = patient_data['bc_serial'], patient_data['bc_num'],patient_data['bc_date_start']
         p_doc_issued = patient_data['passport_issued']
     else:
         p_doc_serial, p_doc_num,p_doc_start = patient_data['passport_serial'], patient_data['passport_num'],patient_data['passport_date_start']
         p_doc_issued = patient_data['bc_issued']
 
-    objs.append(Paragraph('Пациент(потребитель) {},, дата рождения {} г.,'
+    if (not p_payer) and (not p_agent):
+        p_who = "Заказчик - Пациент(потребитель)"
+    else:
+        p_who = "Пациент(потребитель)"
+
+    objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}:</font> {}, дата рождения {} г.,'
                           '{}: {}-{} '
                           'выдан {} г. '
                           'кем: {} '
-                          'зарегистрирован по адресу: {}, '
-                          'адрес проживания: {} '.format(patient_data['fio'],patient_data['born'],patient_data['type_doc'],
+                          'адрес регистрации: {}, '
+                          'адрес проживания: {} '.format(p_who, patient_data['fio'],patient_data['born'],patient_data['type_doc'],
                                                          p_doc_serial, p_doc_num,p_doc_start,p_doc_issued,
                                                          patient_data['main_address'],patient_data['fact_address']),style))
 
@@ -447,17 +447,16 @@ def form_01(request_data):
     objs.append(Paragraph('4. ПОРЯДОК ОПЛАТЫ', styleCenter))
 
     s = pytils.numeral.rubles(float(sum_research_decimal))
-    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет: <u>{}</u> '.format(s.capitalize()), style))
-    objs.append(Paragraph('Сроки оплаты:', style))
-    objs.append(Paragraph('Предоплата________________________________________ , оставшаяся сумма______________________________ рублей', style))
-    objs.append(Paragraph('Сроки оплаты: _________________________', style))
-    objs.append(Paragraph('4.2.	Компенсируемые расходы Исполнителя на _________________________________________________', style))
-    objs.append(Paragraph('составляют_____________________ рублей', style))
-    objs.append(Paragraph('4.3.	Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
+    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет:<font fontname ="PTAstraSerifBold"> <u>{}</u> </font> '.format(s.capitalize()), style))
+    end_date = (date.today() + relativedelta(days=+10))
+    end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
+    objs.append(Paragraph('Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1), style))
+    objs.append(Paragraph('Предоплата 100%.', style))
+    objs.append(Paragraph('4.2.	Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
     objs.append(Paragraph('Пациенту в соответствии с законодательством Российской Федерации выдается документ; '
                           'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
                           'или иные документы).', style))
-    objs.append(Paragraph('4.4.	Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
+    objs.append(Paragraph('4.3.	Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
     objs.append(Paragraph('5. ОТВЕТСТВЕННОСТЬ СТОРОН', styleCenter))
     objs.append(Paragraph('5.1.	Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
                           'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '

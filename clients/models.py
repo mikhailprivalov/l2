@@ -602,7 +602,8 @@ class Card(models.Model):
         ind_data['passport_num'] = ind_documents['passport']['num']
         ind_data['passport_serial'] = ind_documents['passport']['serial']
         ind_data['passport_date_start'] = ind_documents['passport']['date_start']
-        ind_data['passport_issued'] = ind_documents['passport']['issued']
+        ind_data['passport_issued'] = "______________________________________________________________" \
+            if not ind_documents['passport']['issued'] else ind_documents['passport']['issued']
 
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
