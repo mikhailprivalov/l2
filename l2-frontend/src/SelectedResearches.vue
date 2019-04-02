@@ -282,6 +282,9 @@
         return {pk: -1, title: "", default_diagnos: ""}
       },
       select_fin(pk) {
+        if (this.base.fin_sources.length === 1 && pk === -1) {
+          pk = this.base.fin_sources[0].pk;
+        }
         const cfin = this.fin
         this.fin = pk
         if(this.get_def_diagnosis(cfin) === this.diagnos || this.diagnos.trim() === ""){
@@ -292,7 +295,7 @@
         this.$root.$emit('researches-picker:deselect_department', pk)
       },
       generate(type) {
-        if (this.diagnos === '') {
+        if (this.diagnos === '' && this.current_fin !== 'Платно') {
           $(this.$refs.d).focus()
           errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
           return
@@ -325,6 +328,9 @@
       },
     },
     computed: {
+      current_fin() {
+        return this.get_fin_obj(this.fin);
+      },
       researches_departments() {
         let r = {}
         let deps = {"-2": {title: "Консультации"}}

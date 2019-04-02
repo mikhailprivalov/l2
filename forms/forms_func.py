@@ -10,7 +10,8 @@ def get_all_doc(docs: [Document]):
     documents = {
         'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         'polis': {'serial': "", 'num': "", 'issued': ""},
-        'snils': {'num': ""}
+        'snils': {'num': ""},
+        'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
     }
 
     for d in docs:
@@ -29,26 +30,14 @@ def get_all_doc(docs: [Document]):
             documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
             documents["polis"]["issued"] = d.who_give
 
+        if d.document_type.title == 'Свидетельство о рождении':
+            documents["bc"]["num"] = d.number
+            documents["bc"]["serial"] = d.serial
+            documents["bc"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+            documents["bc"]["issued"] = d.who_give
+
     return documents
 
-
-# def get_card_attr(ind_card_l):
-#     """
-#     Возвращает словарь card_attr. Атрибуты карт пациента: номер карты и тип(несколько),address, phone (несколько)
-#     """
-#     card_attr = {'num_type': {},
-#                  'phone': "",
-#                  'addr': "",
-#                  }
-#
-#
-#     for z in range(len(ind_card_l)):
-#         card_attr['num_type'][ind_card_l[z].number] = ind_card_l[z].base.title
-#         card_attr['phone']= ind_card_l[z].get_phones()
-#         if ind_card_l[z].base.is_rmis:
-#             card_attr['addr'] = ind_card_l[z].main_address
-#
-#     return card_attr
 
 def get_coast_from_issledovanie(dir_research_loc):
     """
@@ -157,6 +146,46 @@ def get_final_data(research_price_loc):
     # total_data:[стру-рка данных, итоговая сумма, есть ли скидка, номера направлений]
 
     return total_data
+
+
+def get_data_individual(card_object):
+    """
+    Получает на входе объект Карта
+    возвращает словарь атрибутов по карте и Физ.лицу(Индивидуалу)
+    :param card_object:
+    :return:
+    """
+    ind_data = {}
+    ind_data['ind'] = card_object.individual
+    ind_data['age'] = ind_data['ind'].age()
+    ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
+    ind_data['fio'] = ind_data['ind'].fio()
+    ind_data['born'] = ind_data['ind'].bd()
+    ind_data['main_address'] = "____________________________________________________" if not card_object.main_address \
+        else card_object.main_address
+    ind_data['fact_address'] = "____________________________________________________" if not card_object.fact_address \
+        else card_object.fact_address
+
+    #     document_passport = "Паспорт РФ"
+    ind_documents = get_all_doc(ind_data['doc'])
+    ind_data['passport_num'] = ind_documents['passport']['num']
+    ind_data['passport_serial'] = ind_documents['passport']['serial']
+    ind_data['passport_date_start'] = ind_documents['passport']['date_start']
+    ind_data['passport_issued'] = ind_documents['passport']['issued']
+
+    ind_data['bc_num'] = ind_documents['bc']['num']
+    ind_data['bc_serial'] = ind_documents['bc']['serial']
+    ind_data['bc_date_start'] = ind_documents['bc']['date_start']
+    ind_data['bc_issued'] = ind_documents['bc']['issued']
+
+    ind_data['snils'] = ind_documents["snils"]["num"]
+    ind_data['oms'] = {}
+    ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+    ind_data['oms']['polis_serial'] = ind_documents["polis"]["serial"]
+    # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
+    ind_data['oms']['polis_issued'] = ind_documents["polis"]["issued"]
+
+    return ind_data
 
 
 def form_notfound():

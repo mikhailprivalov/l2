@@ -8,6 +8,7 @@ from django.db import models
 
 import slog.models as slog
 
+
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
 
@@ -421,6 +422,42 @@ class Document(models.Model):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
                                                         self.is_active, self.individual)
 
+    @staticmethod
+    def get_all_doc(docs):
+        """
+        возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
+        """
+        documents = {
+            'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
+            'polis': {'serial': "", 'num': "", 'issued': ""},
+            'snils': {'num': ""},
+            'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
+        }
+
+        for d in docs:
+            if d.document_type.title == "СНИЛС":
+                documents["snils"]["num"] = d.number
+
+            if d.document_type.title == 'Паспорт гражданина РФ':
+                documents["passport"]["num"] = d.number
+                documents["passport"]["serial"] = d.serial
+                documents["passport"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+                documents["passport"]["issued"] = d.who_give
+
+            if d.document_type.title == 'Полис ОМС':
+                documents["polis"]["num"] = d.number
+                documents["polis"]["serial"] = d.serial
+                documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+                documents["polis"]["issued"] = d.who_give
+
+            if d.document_type.title == 'Свидетельство о рождении':
+                documents["bc"]["num"] = d.number
+                documents["bc"]["serial"] = d.serial
+                documents["bc"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
+                documents["bc"]["issued"] = d.who_give
+
+        return documents
+
     class Meta:
         verbose_name = 'Документ'
         verbose_name_plural = 'Документы'
@@ -453,6 +490,13 @@ class CardBase(models.Model):
 
 
 class Card(models.Model):
+    AGENT_CHOICES = (
+        ('mother', "мать"),
+        ('father', "отец"),
+        ('curator', "опекун"),
+        ('agent', "представитель"),
+        ('',''),
+    )
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
@@ -464,19 +508,23 @@ class Card(models.Model):
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
     mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опеку", blank=True, null=True, default=None,
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
     agent = models.ForeignKey('self', related_name='agent_p',help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
     agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
+
+    who_is_agent = models.CharField(max_length=7,choices=AGENT_CHOICES, blank=True, default='',help_text="Законный представитель пациента",
+                                    db_index=True)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -525,6 +573,64 @@ class Card(models.Model):
             else:
                 docs[t] = None
         return docs
+
+    def get_data_individual(self):
+        """
+        Получает на входе объект Карта
+        возвращает словарь атрибутов по карте и Физ.лицу(Индивидуалу)
+        :param card_object:
+        :return:
+        """
+        ind_data = {}
+        ind_data['ind'] = self.individual
+        ind_data['age'] = ind_data['ind'].age()
+        ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
+        ind_data['fio'] = ind_data['ind'].fio()
+        ind_data['born'] = ind_data['ind'].bd()
+        ind_data['main_address'] = "____________________________________________________" if not self.main_address \
+            else self.main_address
+        ind_data['fact_address'] = "____________________________________________________" if not self.fact_address \
+            else self.fact_address
+        ind_data['card_num'] = self.number_with_type()
+        ind_data['phone'] = self.get_phones()
+        ind_data['work_place'] = self.work_place
+        ind_data['work_position'] = self.work_position
+        ind_data['sex'] = ind_data['ind'].sex
+
+        # document "Паспорт РФ"
+        ind_documents = Document.get_all_doc(ind_data['doc'])
+        ind_data['passport_num'] = ind_documents['passport']['num']
+        ind_data['passport_serial'] = ind_documents['passport']['serial']
+        ind_data['passport_date_start'] = ind_documents['passport']['date_start']
+        ind_data['passport_issued'] = ind_documents['passport']['issued']
+
+        # document "св-во о рождении"
+        ind_data['bc_num'] = ind_documents['bc']['num']
+        ind_data['bc_serial'] = ind_documents['bc']['serial']
+        ind_data['bc_date_start'] = ind_documents['bc']['date_start']
+        ind_data['bc_issued'] = ind_documents['bc']['issued']
+
+        if ind_data['passport_num']:
+            ind_data['type_doc'] = 'паспорт'
+        elif ind_data['bc_num']:
+            ind_data['type_doc'] = 'свидетельство о рождении'
+        else:
+            ind_data['type_doc'] =''
+
+        # document= "снилс'
+        ind_data['snils'] = ind_documents["snils"]["num"]
+        # document= "полис ОМС"
+        ind_data['oms'] = {}
+        ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+        if not ind_data['oms']['polis_num']:
+            ind_data['oms']['polis_num'] = '___________________________'
+        ind_data['oms']['polis_serial'] = ind_documents["polis"]["serial"]
+        if not ind_data['oms']['polis_serial']:
+            ind_data['oms']['polis_serial'] = '________'
+        # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
+        ind_data['oms']['polis_issued'] = ind_documents["polis"]["issued"]
+
+        return ind_data
 
     @staticmethod
     def next_l2_n():
