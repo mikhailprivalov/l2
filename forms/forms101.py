@@ -120,9 +120,9 @@ def form_02(request_data):
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before") and not agent_status:
         return False
-    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
+    elif patient_data['age'] < SettingManager.get("child_age_before") and agent_status:
         who_patient = 'ребёнка'
 
     if agent_status:
@@ -219,7 +219,7 @@ def form_02(request_data):
         ]
 
         #Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
-        if patient_data['age'] < SettingManager.get("child_age"):
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'],
                                      patient_data['bc_serial'],patient_data['bc_num']), styleSign))
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
@@ -328,9 +328,9 @@ def form_03(request_data):
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
         return False
-    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
     if agent_status:
@@ -435,7 +435,7 @@ def form_03(request_data):
         ]
 
         # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
-        if patient_data['age'] < SettingManager.get("child_age"):
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
                                      format(patient_data['type_doc'], patient_data['bc_serial'], patient_data['bc_num']),styleSign))
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))

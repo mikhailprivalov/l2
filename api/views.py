@@ -25,6 +25,7 @@ from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage
+from contracts.models import Company
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -370,7 +371,7 @@ def bases(request):
              "pk": y.pk,
              "title": y.title,
              "default_diagnos": y.default_diagnos
-         } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x).order_by('-order_weight')]
+         } for y in directions.IstochnikiFinansirovaniya.objects.filter(base=x, hide=False).order_by('-order_weight')]
          } for x in CardBase.objects.all().order_by('-order_weight')]})
 
 
@@ -1897,6 +1898,10 @@ def patients_get_card_data(request, card_id):
                          "docs": docs,
                          "main_docs": card.get_card_documents(),
                          "has_rmis_card": rc.exists(),
+                         "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""},
+                                          *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
+                         "custom_workplace": card.work_place != "",
+                         "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
                          "rmis_uid": rc[0].number if rc.exists() else None,
                          "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
 
@@ -1910,8 +1915,12 @@ def individual_search(request):
             "fio": i.fio(full=True),
             "docs": [
                 {**model_to_dict(x), "type_title": x.document_type.title}
-                for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
-            ]
+                for x in Document.objects.filter(individual=i, is_active=True)
+                    .distinct("number", "document_type", "serial", "date_end", "date_start")
+            ],
+            "l2_cards": [
+                x.number for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
+            ],
         })
     return JsonResponse({"result": result})
 
@@ -2010,7 +2019,12 @@ def patients_card_save(request):
     c.main_diagnosis = request_data["main_diagnosis"]
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
-    c.work_place = request_data["work_place"]
+    if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data["work_place_db"]).exists():
+        c.work_place_db = None
+        c.work_place = request_data["work_place"]
+    else:
+        c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
+        c.work_place = ''
     c.work_position = request_data["work_position"]
     c.save()
     result = "ok"

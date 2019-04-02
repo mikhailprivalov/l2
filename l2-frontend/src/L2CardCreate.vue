@@ -2,13 +2,13 @@
   <modal ref="modal" @close="hide_modal" show-footer="true" white-bg="true" max-width="680px" width="100%" marginLeftRight="auto" margin-top>
     <span slot="header">Регистратура L2</span>
     <div slot="body" style="min-height: 200px" class="registry-body">
-      <form autocomplete="off" class="row" onsubmit="return false;">
+      <form autocomplete="off" class="row" onsubmit.prevent>
         <div class="col-xs-6 col-form left">
           <div class="form-row">
             <div class="row-t">Фамилия</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
-                       :minChars="1" :onHit="onHitFamily" :selectFirst="true" maxlength="36"
+                       :minChars="1" :onHit="onHit('family')" :selectFirst="true" maxlength="36"
                        ref="f" src="/api/autocomplete?value=:keyword&type=family" v-model="card.family"
             />
           </div>
@@ -16,7 +16,7 @@
             <div class="row-t">Имя</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse" :highlighting="highlighting"
                        :limit="10"
-                       :minChars="1" :onHit="onHitName" :selectFirst="true" maxlength="36"
+                       :minChars="1" :onHit="onHit('name')" :selectFirst="true" maxlength="36"
                        ref="n" src="/api/autocomplete?value=:keyword&type=name" v-model="card.name"
             />
           </div>
@@ -24,7 +24,7 @@
             <div class="row-t">Отчество</div>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
-                       :minChars="1" :onHit="onHitPatronymic" :selectFirst="true" maxlength="36"
+                       :minChars="1" :onHit="onHit('patronymic')" :selectFirst="true" maxlength="36"
                        ref="n" src="/api/autocomplete?value=:keyword&type=patronymic" v-model="card.patronymic"
             />
           </div>
@@ -75,6 +75,12 @@
                 <td>{{d.serial}}</td>
                 <td>{{d.number}}</td>
               </tr>
+              <tr v-if="i.l2_cards.length > 0">
+                <th>Активные карты L2</th>
+                <td colspan="2">
+                  <div v-for="c in i.l2_cards"><strong>{{c}}</strong></div>
+                </td>
+              </tr>
               </tbody>
             </table>
           </div>
@@ -97,31 +103,42 @@
       <div v-else>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
-            <div class="form-row">
+            <div class="form-row sm-f">
                 <div class="row-t">Адрес регистрации</div>
                 <input class="form-control" v-model="card.main_address">
             </div>
-            <div class="form-row">
+            <div class="form-row sm-f">
               <div class="row-t">Адрес проживания</div>
               <input class="form-control" v-model="card.fact_address">
             </div>
             <div class="row">
               <div class="col-xs-6" style="padding-right: 0">
-                <div class="form-row nbt-i">
-                  <div class="row-t">Место работы</div>
-                  <TypeAhead :delayTime="100" :getResponse="getResponse"
+                <div class="form-row nbt-i sm-f">
+                  <div class="row-t" style="display: flex;width: 45%;flex: 0 45%;">
+                    <input type="checkbox" v-model="card.custom_workplace" title="Ручной ввод названия"
+                           style="height: auto;flex: 0 23px;" />
+                    Место работы
+                  </div>
+                  <TypeAhead v-if="card.custom_workplace"
+                             :delayTime="100" :getResponse="getResponse"
                              :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHitWorkPlace" :selectFirst="true" maxlength="36"
+                             :minChars="1" :onHit="onHit('work_place')" :selectFirst="true" maxlength="36"
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
                   />
+                  <select v-else v-model="card.work_place_db" class="form-control"
+                          style="width: 55%;border: none;height: 28px;">
+                    <option v-for="c in card.av_companies" :value="c.id">
+                      {{c.short_title === '' ? c.title : c.short_title}}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="col-xs-6" style="padding-left: 0">
-                <div class="form-row nbt-i">
+                <div class="form-row nbt-i sm-f">
                   <div class="row-t">Должность</div>
                   <TypeAhead :delayTime="100" :getResponse="getResponse"
                              :highlighting="highlighting" :limit="10"
-                             :minChars="1" :onHit="onHitPosition" :selectFirst="true" maxlength="36"
+                             :minChars="1" :onHit="onHit('work_position')" :selectFirst="true" maxlength="36"
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_position" v-model="card.work_position"
                   />
                 </div>
@@ -131,7 +148,7 @@
               <div class="row-t">Основной диагноз</div>
               <TypeAhead :delayTime="100" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
-                         :minChars="1" :onHit="onHitMainDiagnosis" :selectFirst="true" maxlength="36"
+                         :minChars="1" :onHit="onHit('main_diagnosis')" :selectFirst="true" maxlength="36"
                          ref="md" src="/api/autocomplete?value=:keyword&type=main_diagnosis" v-model="card.main_diagnosis"
               />
             </div>
@@ -334,10 +351,13 @@
           birthday: moment().format('YYYY-MM-DD'),
           individual: -1,
           new_individual: false,
+          custom_workplace: false,
           docs: [],
           docs_to_delete: [],
           rmis_uid: null,
+          work_place_db: null,
           doc_types: [],
+          av_companies: [],
           main_docs: {},
         },
         individuals: [],
@@ -349,6 +369,9 @@
     },
     created() {
       this.load_data()
+      this.$root.$on('reload_editor', () => {
+        this.load_data()
+      })
     },
     computed: {
       family() {
@@ -364,6 +387,9 @@
         return this.card.sex
       },
       valid() {
+        if (!(this.card.family && this.card.name && this.card.birthday)) {
+          return false;
+        }
         return this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm)
       },
       birthday() {
@@ -437,15 +463,13 @@
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position)
+            this.card.work_position, this.card.work_place_db, this.card.custom_workplace)
           if (data.result !== 'ok') {
             return
           }
           if (hide_after) {
             this.hide_modal()
           }
-          this.card.pk = data.card_pk
-          this.card.individual = data.individual
           this.$root.$emit('select_card', {
             card_pk: data.card_pk,
             base_pk: this.base_pk,
@@ -478,26 +502,23 @@
       getResponse(resp) {
         return [...resp.data.data]
       },
-      onHitFamily(item) {
-        this.card.family = item
-      },
-      onHitWorkPlace(item) {
-        this.card.work_place = item
-      },
-      onHitMainDiagnosis(item) {
-        this.card.main_diagnosis = item
-      },
-      onHitName(item) {
-        this.card.name = item
-      },
-      onHitPatronymic(item) {
-        this.card.patronymic = item
-      },
       onHitDocWhoGive(item) {
+        if (!item) {
+          return
+        }
         this.document.who_give = item
       },
-      onHitPosition(item) {
-        this.card.work_position = item
+      onHit(name) {
+        return (item, t) => {
+          if (t.$el) {
+            let index = $('input', this.$el).index($('input', t.$el)) + 1;
+            $('input', this.$el).eq(index).focus();
+          }
+          if (!item) {
+            return;
+          }
+          this.card[name] = item;
+        }
       },
       highlighting: (item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`),
       load_data() {
@@ -635,6 +656,15 @@
       width: 65%;
       flex: 0 65%;
       height: 34px;
+    }
+
+    &.sm-f {
+      .row-t {
+        padding: 4px 0 0 10px;
+      }
+      input, .row-v, /deep/ input {
+        height: 28px;
+      }
     }
 
     /deep/ input {

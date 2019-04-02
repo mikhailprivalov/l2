@@ -422,7 +422,8 @@ class Document(models.Model):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
                                                         self.is_active, self.individual)
 
-    def get_all_doc(self):
+    @staticmethod
+    def get_all_doc(docs):
         """
         возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
         """
@@ -433,7 +434,7 @@ class Document(models.Model):
             'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         }
 
-        for d in self:
+        for d in docs:
             if d.document_type.title == "СНИЛС":
                 documents["snils"]["num"] = d.number
 
@@ -456,7 +457,6 @@ class Document(models.Model):
                 documents["bc"]["issued"] = d.who_give
 
         return documents
-
 
     class Meta:
         verbose_name = 'Документ'
@@ -508,6 +508,7 @@ class Card(models.Model):
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
     mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
