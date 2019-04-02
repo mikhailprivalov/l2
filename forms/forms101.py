@@ -225,7 +225,7 @@ def form_02(request_data):
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
         else:
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'],
-                                     patient_data['passport_serial'], patient_data[['passport_num']]), styleSign))
+                                     patient_data['passport_serial'], patient_data['passport_num']), styleSign))
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
 
         objs.extend(opinion)

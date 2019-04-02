@@ -83,15 +83,37 @@ def form_01(request_data):
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
 
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
-    ind_dir = json.loads(request_data["dir"])
-    #exec_person = print(request_data.user.doctorprofile.fio)
-    exec_person = 'Иванов Иван Иванович'
+    patient_data = ind_card.get_data_individual()
 
-    # Получить данные с клиента физлицо-ФИО, пол, дата рождения
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age") and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age") and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    payer_status = False
+    if ind_card.payer:
+        p_payer = ind_card.payer
+        payer_status = True
+
+
+    # ind = ind_card.individual
+    # ind_doc = Document.objects.filter(individual=ind, is_active=True)
+
+    ind_dir = json.loads(request_data["dir"])
+    # exec_person = request_data['user'].doctorprofile.fio
+    exec_person = 'Иванов Иван Иванович'
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
@@ -144,12 +166,12 @@ def form_01(request_data):
         date_now_str = num_contract_set.pop()
 
    # Получить данные физлицо-документы: паспорт, полис, снилс
-    document_passport = "Паспорт РФ"
-    documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents['passport']['num']
-    document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
-    document_passport_issued = documents['passport']['issued']
+   #  document_passport = "Паспорт РФ"
+   #  documents = forms_func.get_all_doc(ind_doc)
+   #  document_passport_num = documents['passport']['num']
+   #  document_passport_serial = documents['passport']['serial']
+   #  document_passport_date_start = documents['passport']['date_start']
+   #  document_passport_issued = documents['passport']['issued']
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -239,37 +261,47 @@ def form_01(request_data):
     post_contract = SettingManager.get("post_contract")
     document_base = SettingManager.get("document_base")
 
-    if document_passport_issued:
-        passport_who_give = document_passport_issued
-    else:
-        passport_who_give = "______________________________________________________________________"
-
-
-    if ind_card.main_address:
-        main_address = ind_card.main_address
-    else:
-        main_address = "______________________________________________________________________"
-
-    if ind_card.fact_address:
-        fact_address = ind_card.fact_address
-    elif main_address:
-        fact_address = main_address
-    else:
-        fact_address = "______________________________________________________________________"
-
-
     objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующего(ей) на основании {} с '
-          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} г., '
+          'одной стороны, и'.format(hospital_name, post_contract,exec_person,document_base),style))
+
+    # Если Заказчик(Плательщик) другое физ лицо
+    if payer_status:
+        objs.append( Paragraph('Заказчик: {}, дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
           'зарегистрирован по адресу: {}, '
-          'адрес проживания: {} '
-          'с другой стороны, вместе также именуемые "Стороны", заключили настоящий договор (далее - "Договор") о нижеследующем:'
-                          .
-                          format(hospital_name, post_contract,exec_person,document_base, individual_fio,individual_date_born,
-                                 document_passport_serial, document_passport_num,document_passport_date_start,
-                                 passport_who_give, main_address, fact_address),style))
+          'адрес проживания: {} '.format(),style))
+
+    #Добавдяем представителя(мать, отец, опекун или др. не дееспособный)
+    if agent_status:
+        objs.append( Paragraph('Представитель: {} ({}) {}, {} дата рождения {} г.,, '
+          'паспорт: {}-{} '
+          'выдан {} г. '
+          'кем: {} '
+          'зарегистрирован по адресу: {}, '
+          'адрес проживания: {} '.format(person_data['fio'],ind_card.get_who_is_agent_display(), who_patient, person_data['born'],
+                                         person_data['passport_serial'],person_data['passport_num'],person_data['passport_date_start'],
+                                         person_data['passport_issued'],person_data['main_address'],person_data['fact_address']
+                                         ),style))
+
+    # Добавдяем потребителя услуги (пациента)
+    p_doc_serial, p_doc_num = '',''
+    if patient_data['age'] < SettingManager.get("child_age"):
+        p_doc_serial, p_doc_num, p_doc_start,p_doc_issued = patient_data['bc_serial'], patient_data['bc_num'],patient_data['bc_date_start']
+        p_doc_issued = patient_data['passport_issued']
+    else:
+        p_doc_serial, p_doc_num,p_doc_start = patient_data['passport_serial'], patient_data['passport_num'],patient_data['passport_date_start']
+        p_doc_issued = patient_data['bc_issued']
+
+    objs.append(Paragraph('Пациент(потребитель) {},, дата рождения {} г.,'
+                          '{}: {}-{} '
+                          'выдан {} г. '
+                          'кем: {} '
+                          'зарегистрирован по адресу: {}, '
+                          'адрес проживания: {} '.format(patient_data['fio'],patient_data['born'],patient_data['type_doc'],
+                                                         p_doc_serial, p_doc_num,p_doc_start,p_doc_issued,
+                                                         patient_data['main_address'],patient_data['fact_address']),style))
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА',styleCenter))
@@ -468,9 +500,9 @@ def form_01(request_data):
 
     styleAtr = deepcopy(style)
     styleAtr.firstLineIndent = 0
-    f = ind.family
-    n = ind.name[0:1]
-    p = ind.patronymic[0:1]
+    f = ind_card.individual.family
+    n = ind_card.individual.name[0:1]
+    p = ind_card.individual.patronymic[0:1]
     npf = n+'.'+' '+p+'.'+' '+f
     fio_director_list = exec_person.split(' ')
     print(fio_director_list)
@@ -488,8 +520,8 @@ def form_01(request_data):
          Paragraph('Пациент/Плательщик:', styleAtr)],
         [Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr),
          Paragraph('', styleAtr),
-         Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(individual_fio, document_passport_serial,
-                                                        document_passport_num, ind_card.main_address),styleAtr)],
+         Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'],
+                                                        patient_data['passport_num'], patient_data['main_address']),styleAtr)],
         [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
         [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
          Paragraph('', styleAtr),
