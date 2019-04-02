@@ -354,7 +354,7 @@ def form_02(request_data):
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
-    if patient_data['age'] < SettingManager.get("child_age"):
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
         patient_data['serial'] = patient_data['bc_serial']
         patient_data['num'] = patient_data['bc_num']
     else:

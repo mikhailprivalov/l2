@@ -16,5 +16,5 @@ def pdf(request):
     response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
 
     f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
-    response.write(f(request_data=request.GET))
+    response.write(f(request_data={**dict(request.GET.items()), "user": request.user}))
     return response

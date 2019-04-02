@@ -21,7 +21,7 @@
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
         <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
-          <label class="btn btn-blue-nb nbr">
+          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
           </label>
         </span>
@@ -223,7 +223,12 @@
         }
         setTimeout(() => {
           vm.search()
-        }, 5)
+          if (!data.hide) {
+            setTimeout(() => {
+              this.$root.$emit('reload_editor');
+            }, 5);
+          }
+        }, 5);
       })
       this.$root.$on('hide_l2_card_create', () => {
         vm.editor_pk = -2;
