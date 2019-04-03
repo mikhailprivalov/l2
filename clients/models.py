@@ -594,6 +594,7 @@ class Card(models.Model):
         ind_data['card_num'] = self.number_with_type()
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
+        ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
         ind_data['sex'] = ind_data['ind'].sex
 
@@ -609,8 +610,8 @@ class Card(models.Model):
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']
         ind_data['bc_date_start'] = ind_documents['bc']['date_start']
-        ind_data['bc_issued'] = ind_documents['bc']['issued']
-
+        ind_data['bc_issued'] = "______________________________________________________________" \
+            if not ind_documents['bc']['issued'] else ind_documents['bc']['issued']
         if ind_data['passport_num']:
             ind_data['type_doc'] = 'паспорт'
         elif ind_data['bc_num']:
