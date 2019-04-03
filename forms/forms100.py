@@ -96,6 +96,8 @@ def form_01(request_data):
 
     space = 5.5 * mm
     space_symbol = '&nbsp;'
+
+    work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
     objs = [
         Spacer(1, 3 * mm),
         Paragraph('<font face="PTAstraSerifBold">Министерство здравоохранения Российской Федерации</font>',
@@ -133,7 +135,7 @@ def form_01(request_data):
         Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
                   ' <u>{}</u></font>'.format(patient_data['oms']['polis_num']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7. Наименование работодателя:'
-                  ' <u>{}</u></font>'.format(patient_data['work_place']), styleJustified),
+                  ' <u>{}</u></font>'.format(work_p), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.1 Форма собственности и вид экономической деятельности '
                   'работодателя по ОКВЭД: <u>{}</u></font>'.format(50 * space_symbol), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.2  Наименование структурного подразделения (цех, участок, отдел):'
@@ -284,6 +286,8 @@ def form_02(request_data):
     """
     Форма 025/у - титульный лист амбулаторной карты
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
+    http://docs.cntd.ru/document/436733768) Об утверждении критериев оценки качества медицинской помощи
+    ПРИКАЗ Минздрава России от 10 мая 2017 года N 203н https://minjust.consultant.ru/documents/35361
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()

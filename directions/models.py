@@ -200,7 +200,8 @@ class IstochnikiFinansirovaniya(models.Model):
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
-    def get_price_modifier(self):
+    @staticmethod
+    def get_price_modifier(finsource,work_place_link):
         """
         На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
         Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
@@ -209,18 +210,20 @@ class IstochnikiFinansirovaniya(models.Model):
         Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке ист.фин-contract-прайс
         Если источник финансирования Бюджет поиск осуществляется по цепочке contract
         """
-        price_modifier=None
+        price_modifier = None
         price_contract = set(SettingManager.get("price_contract").split(','))
         price_company = set(SettingManager.get("price_company").split(','))
 
-        if self.title.upper() in price_contract:
-            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=self.pk).first()
+
+        if finsource.title.upper() in price_contract:
+            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=finsource.pk).first()
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
-        elif self.title.upper() in price_company:
-            contract_l = contracts.Company.objects.values_list('contracts_id').filter(pk=self.pk).first()
+        elif finsource.title.upper() in price_company and work_place_link:
+            contract_l = contracts.Company.objects.values_list('contract').filter(pk=work_place_link.pk).first()
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+
         return price_modifier
 
     class Meta:
@@ -425,8 +428,8 @@ class Napravleniya(models.Model):
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
                 # получить прайс
-                price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource)
-
+                work_place_link = Clients.Card.objects.get(pk=client_id).work_place_db
+                price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
 
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
