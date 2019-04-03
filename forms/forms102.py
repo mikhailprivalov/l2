@@ -85,13 +85,6 @@ def form_01(request_data):
     p_agent = None
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-
-    payer_card = Card.objects.get(pk=203793)
-    # payer_card = None
-    ind_card = Card.objects.filter(pk=203610).update(payer=payer_card)
-    ind_card = Card.objects.filter(pk=203729).update(who_is_agent='mother')
-
-    ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
 
     # agent_status = False
