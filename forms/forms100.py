@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Card, Document
@@ -95,6 +96,8 @@ def form_01(request_data):
 
     space = 5.5 * mm
     space_symbol = '&nbsp;'
+
+    work_p = patient_data['work_place_db'] if patient_data['work_place_db'] else patient_data['work_place']
     objs = [
         Spacer(1, 3 * mm),
         Paragraph('<font face="PTAstraSerifBold">Министерство здравоохранения Российской Федерации</font>',
@@ -132,7 +135,7 @@ def form_01(request_data):
         Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
                   ' <u>{}</u></font>'.format(patient_data['oms']['polis_num']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7. Наименование работодателя:'
-                  ' <u>{}</u></font>'.format(patient_data['work_place']), styleJustified),
+                  ' <u>{}</u></font>'.format(work_p), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.1 Форма собственности и вид экономической деятельности '
                   'работодателя по ОКВЭД: <u>{}</u></font>'.format(50 * space_symbol), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">7.2  Наименование структурного подразделения (цех, участок, отдел):'
@@ -283,6 +286,8 @@ def form_02(request_data):
     """
     Форма 025/у - титульный лист амбулаторной карты
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
+    http://docs.cntd.ru/document/436733768) Об утверждении критериев оценки качества медицинской помощи
+    ПРИКАЗ Минздрава России от 10 мая 2017 года N 203н https://minjust.consultant.ru/documents/35361
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -361,6 +366,10 @@ def form_02(request_data):
         patient_data['serial'] = patient_data['passport_serial']
         patient_data['num'] = patient_data['passport_num']
 
+    p_phone = ''
+    if patient_data['phone']:
+        p_phone = 'тел. ' + ", ".join(patient_data['phone'])
+
     content_title =[
         Indenter(left=0 *mm),
         Spacer(1, 1 * mm),
@@ -372,50 +381,53 @@ def form_02(request_data):
         Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(patient_data['fio']), style),
         Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
         Paragraph('5. Место регистрации: {}'.format(patient_data['main_address']), style),
-        Paragraph('тел. {}'.format(", ".join(patient_data['phone'])), style),
+        Paragraph('{}'.format(p_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
         Paragraph('7. Полис ОМС: серия {} №: {} {}'
                   '8. СНИЛС: {}'.format(patient_data['oms']['polis_serial'],patient_data['oms']['polis_num'], 13 * space_symbol, patient_data['snils']),style),
         Paragraph('9. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']), style),
         Paragraph('10. Код категории льготы: {} {} 11. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.
                   format(8 * space_symbol, 25 * space_symbol, patient_data['type_doc'], patient_data['serial'],patient_data['num']), style),
-        Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style),
-        Spacer(1,2 * mm),
     ]
 
     objs.extend(content_title)
 
-    styleTCenter = deepcopy(styleT)
-    styleTCenter.alignment=TA_CENTER
-    styleTCenter.leading = 3.5 * mm
+    if SettingManager.get("dispensary"):
+        objs.append(Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style))
+        objs.append(Spacer(1,2 * mm))
 
-    opinion=[
-        [Paragraph('<font size=9>Дата начала диспансерного наблюдения </font>', styleTCenter),
-         Paragraph('<font size=9 >Дата прекращения диспансерного наблюдения</font>', styleTCenter),
-         Paragraph('<font size=9 >Диагноз</font>', styleTCenter),
-         Paragraph('<font size=9 >Код по МКБ-10</font>', styleTCenter),
-         Paragraph('<font size=9 >Врач</font>', styleTCenter),
-         ],
-    ]
-    for i in range(0, 5):
-        para = ['', '', '', '', '']
-        opinion.append(para)
+        styleTCenter = deepcopy(styleT)
+        styleTCenter.alignment=TA_CENTER
+        styleTCenter.leading = 3.5 * mm
 
-    row_height = []
-    for i in opinion:
-        row_height.append(6 * mm)
+        opinion=[
+            [Paragraph('<font size=9>Дата начала диспансерного наблюдения </font>', styleTCenter),
+             Paragraph('<font size=9 >Дата прекращения диспансерного наблюдения</font>', styleTCenter),
+             Paragraph('<font size=9 >Диагноз</font>', styleTCenter),
+             Paragraph('<font size=9 >Код по МКБ-10</font>', styleTCenter),
+             Paragraph('<font size=9 >Врач</font>', styleTCenter),
+             ],
+        ]
+        for i in range(0, 5):
+            para = ['', '', '', '', '']
+            opinion.append(para)
 
-    row_height[0] = None
+        row_height = []
+        for i in opinion:
+            row_height.append(6 * mm)
 
-    tbl = Table(opinion, colWidths=(27 * mm, 30 * mm, 75 * mm, 20 * mm, 27 * mm), rowHeights=row_height)
+        row_height[0] = None
 
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+        tbl = Table(opinion, colWidths=(27 * mm, 30 * mm, 75 * mm, 20 * mm, 27 * mm), rowHeights=row_height)
 
-        ]))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
 
-    objs.append(tbl)
+            ]))
+
+        objs.append(tbl)
+
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()

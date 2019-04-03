@@ -120,9 +120,9 @@ def form_02(request_data):
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before") and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
         return False
-    elif patient_data['age'] < SettingManager.get("child_age_before") and agent_status:
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
     if agent_status:
@@ -154,6 +154,9 @@ def form_02(request_data):
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
@@ -225,14 +228,14 @@ def form_02(request_data):
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
         else:
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'],
-                                     patient_data['passport_serial'], patient_data[['passport_num']]), styleSign))
+                                     patient_data['passport_serial'], patient_data['passport_num']), styleSign))
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
 
         objs.extend(opinion)
 
     objs.append(Spacer(1, 2 * mm))
     objs.append(
-        Paragraph(', в соответствии с требованиями федерального закона от 27.07.2006 г. "О персональных данных" '
+        Paragraph('в соответствии с требованиями федерального закона от 27.07.2006 г. "О персональных данных" '
                   '№ 152-ФЗ, даю согласие Оператору: {} (далее – Оператор), находящегося по адресу: '
                   '{} на обработку моих и/или лица предствителем, которого я являюсь персональных данных (далее - Персональные данные),'
                   ' включающих: фамилию, имя, отчество, пол, дату рождения, адрес места жительства, контактные '
@@ -247,7 +250,7 @@ def form_02(request_data):
                   'услуг; для реализации телемедицинских консультаций, электронного документооборота; осуществления '
                   'взаиморасчетов за оказанную медицинскую помощь в системе медицинского страхования (ОМС, ДМС); '
                   'хранения результатов исследований для последующего использования в установлении медицинского диагноза.'.
-                  format(hospital_name, hospital_address), style))
+                  format(hospital_name, hospital_address), styleFL))
     objs.append(Paragraph(
         'Я согласен (согласна) на осмотр с применением телемедицинских технологий, а также на фото - и видеосъемку '
         'в процессе лечения в интересах моего, или лица, представителем которого я являюсь обследования и лечения.',
@@ -366,6 +369,9 @@ def form_03(request_data):
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
 
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
+
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     styleSign.alignment = TA_LEFT
@@ -452,12 +458,13 @@ def form_03(request_data):
                           'добровольное согласие при выборе врача и медицинской организации для получения первичной '
                           'медико-санитарной помощи, утвержденный  приказом  Министерства здравоохранения и социального развития '
                           'Российской Федерации от 23 апреля 2012 г. N 390н (зарегистрирован Министерством  юстиции '
-                          'Российской Федерации 5 мая 2012 г. N 24082) (далее - \"Перечень\"), для  получения  первичной'
-                          'медико-санитарной помощи {} в:  {}'.format(patient_data['fio'], hospital_name), style))
+                          'Российской Федерации 5 мая 2012 г. N 24082) (далее - \"Перечень\"), для  получения  первичной '
+                          'медико-санитарной помощи <font fontname ="PTAstraSerifBold"> Пациентом: </font> {} '
+                          '<font fontname ="PTAstraSerifBold">в Учреждении:</font>  {}'.format(patient_data['fio'], hospital_name), styleFL))
 
     space_symbol = '&nbsp;'
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('Медицинским работником <u>{}</u>'.format(115 * space_symbol), style))
+    objs.append(Paragraph('<font fontname ="PTAstraSerifBold">Медицинским работником </font><u>{}</u>'.format(115 * space_symbol), style))
     objs.append(Paragraph('в доступной для меня форме мне разъяснены цели, методы оказания медицинской помощи, связанный '
                   'с ними риск, возможные варианты медицинских вмешательств, их  последствия,  в  том  числе  '
                   'вероятность  развития  осложнений, а также предполагаемые  результаты оказания медицинской помощи. '
@@ -465,7 +472,7 @@ def form_03(request_data):
                   'включенных в Перечень, или потребовать его (их) прекращения, за  исключением  случаев,  предусмотренных  '
                   'частью 9 статьи 20 Федерального закона  от 21 ноября 2011 г. N 323-ФЗ "Об основах охраны здоровья '
                   'граждан в Российской  Федерации"  (Собрание  законодательства  Российской  Федерации, 2011, '
-                  'N 48, ст. 6724; 2012, N 26, ст. 3442, 3446).', style))
+                  'N 48, ст. 6724; 2012, N 26, ст. 3442, 3446).', styleFL))
 
     objs.append(Paragraph('Сведения  о  выбранных  мною  лицах, которым в соответствии с пунктом 5 части  5  статьи  19 '
                   'Федерального закона от 21 ноября 2011 г. N 323-ФЗ "Об основах охраны здоровья граждан в '
