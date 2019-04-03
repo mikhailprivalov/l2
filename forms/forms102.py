@@ -18,6 +18,7 @@ from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledova
 from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
 import simplejson as json
+from dateutil.relativedelta import *
 from datetime import *
 import datetime
 import locale
@@ -80,18 +81,38 @@ def form_01(request_data):
     Договор, включающий услуги на оплату и необходимые реквизиты
     """
     form_name = "Договор"
+    p_payer = None
+    p_agent = None
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
 
-    ind = ind_card.individual
-    ind_doc = Document.objects.filter(individual=ind, is_active=True)
+    # agent_status = False
+    p_agent = None
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = True
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if p_agent:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    p_payer = None
+    payer_data = None
+    if ind_card.payer:
+        p_payer = ind_card.payer
+        payer_data = p_payer.get_data_individual()
+
     ind_dir = json.loads(request_data["dir"])
-    #exec_person = print(request_data.user.doctorprofile.fio)
-    exec_person = 'Иванов Иван Иванович'
-
-    # Получить данные с клиента физлицо-ФИО, пол, дата рождения
-    individual_fio = ind.fio()
-    individual_date_born = ind.bd()
+    exec_person = request_data['user'].doctorprofile.fio
 
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
@@ -109,6 +130,9 @@ def form_01(request_data):
         if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
             num_contract_set.add(n.num_contract)
             dir_temp.append(n.pk)
+
+    if not dir_temp:
+        return False
 
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
@@ -133,23 +157,13 @@ def form_01(request_data):
         num_contract_set.add(n.num_contract)
 
     if (len(num_contract_set) == 1) and (None in num_contract_set):
-        print('Перезаписано т.к. было NONE')
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
     # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
     if len(num_contract_set) > 1:
-        print('Перезаписано т.к. были разные контракты в направлениях')
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
 
     if (len(num_contract_set) == 1) and (not None in num_contract_set):
         date_now_str = num_contract_set.pop()
-
-   # Получить данные физлицо-документы: паспорт, полис, снилс
-    document_passport = "Паспорт РФ"
-    documents = forms_func.get_all_doc(ind_doc)
-    document_passport_num = documents['passport']['num']
-    document_passport_serial = documents['passport']['serial']
-    document_passport_date_start = documents['passport']['date_start']
-    document_passport_issued = documents['passport']['issued']
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -165,8 +179,8 @@ def form_01(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=12 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=22 * mm, allowSplitting=1,
-                            title="Форма {}".format("Лист на оплату"))
+                            bottomMargin=28 * mm, allowSplitting=1,
+                            title="Форма {}".format("Договор на оплату"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -176,18 +190,24 @@ def form_01(request_data):
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = 15
+
+    styleFL = deepcopy(style)
+    styleFL.firstLineIndent = 0
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleCenter = deepcopy(style)
+
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 9
     styleCenter.leading = 10
     styleCenter.spaceAfter = 0 * mm
+
     styleCenterBold = deepcopy(styleBold)
     styleCenterBold.alignment = TA_CENTER
     styleCenterBold.fontSize = 20
     styleCenterBold.leading = 15
     styleCenterBold.face = 'PTAstraSerifBold'
+
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
     styleJustified.spaceAfter = 4.5 * mm
@@ -239,38 +259,85 @@ def form_01(request_data):
     post_contract = SettingManager.get("post_contract")
     document_base = SettingManager.get("document_base")
 
-    if document_passport_issued:
-        passport_who_give = document_passport_issued
+    objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> Исполнитель:  </font>  {}, в лице {} {}, действующего(ей) на основании {} с '
+          'одной стороны, и'.format(hospital_name, post_contract,exec_person,document_base),style))
+
+
+    # Если Заказчик(Плательщик) другое физ лицо
+    them_contract = 'настоящий договор о нижеследующем:'
+    client_who = 'Заказчик'
+    is_payer = False
+
+    #Добавдяем представителя(мать, отец, опекун или др. не дееспособный)
+    is_pagent = False
+    #представитель==Заказчик
+    if (p_payer == None) or (p_payer == p_agent) or (p_agent and p_payer==None):
+        payer_fio = person_data['fio']
+        is_pagent = True
+        p_agent_who = client_who + " (представитель пациента)"
     else:
-        passport_who_give = "______________________________________________________________________"
+        p_agent_who = "Представитель пациента"
 
+        # отдельный Заказчик
+    if p_payer and (p_payer != p_agent):
+        client_side = ''
+        if p_agent == None:
+            client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
+        is_payer = True
+        payer_fio = payer_data['fio']
+        objs.append(Paragraph('<font fontname ="PTAstraSerifBold">{}: </font> {}, дата рождения {} г., '
+                              'паспорт: {}-{} '
+                              'выдан {} г. '
+                              'кем: {} '
+                              'адрес регистрации: {}, '
+                              'адрес проживания: {} {}'.format(client_who, payer_data['fio'], payer_data['born'],
+                                                               payer_data['passport_serial'],
+                                                               payer_data['passport_num'],
+                                                               payer_data['passport_date_start'],
+                                                               payer_data['passport_issued'],
+                                                               payer_data['main_address'], payer_data['fact_address'],
+                                                               client_side
+                                                               ), style))
 
-    if ind_card.main_address:
-        main_address = ind_card.main_address
-    else:
-        main_address = "______________________________________________________________________"
-
-    if ind_card.fact_address:
-        fact_address = ind_card.fact_address
-    elif main_address:
-        fact_address = main_address
-    else:
-        fact_address = "______________________________________________________________________"
-
-
-    objs.append(Paragraph('{}, именуемая в дальнейшем "Исполнитель", в лице {} {}, действующего(ей) на основании {} с '
-          'одной стороны, и <u>{}</u>, именуемый(ая) в дальнейшем "Пациент", дата рождения {} г., '
+    if p_agent:
+        client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
+        objs.append( Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
-          'зарегистрирован по адресу: {}, '
-          'адрес проживания: {} '
-          'с другой стороны, вместе также именуемые "Стороны", заключили настоящий договор (далее - "Договор") о нижеследующем:'
-                          .
-                          format(hospital_name, post_contract,exec_person,document_base, individual_fio,individual_date_born,
-                                 document_passport_serial, document_passport_num,document_passport_date_start,
-                                 passport_who_give, main_address, fact_address),style))
+          'адрес регистрации: {}, '
+          'адрес проживания: {} {}'.format(p_agent_who, person_data['fio'],ind_card.get_who_is_agent_display(), who_patient, person_data['born'],
+                                         person_data['passport_serial'],person_data['passport_num'],person_data['passport_date_start'],
+                                         person_data['passport_issued'],person_data['main_address'],person_data['fact_address'], client_side
+                                         ),style))
 
+    # Добавдяем потребителя услуги (пациента)
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+        p_doc_serial, p_doc_num, p_doc_start = patient_data['bc_serial'], patient_data['bc_num'],patient_data['bc_date_start']
+        p_doc_issued = patient_data['passport_issued']
+    else:
+        p_doc_serial, p_doc_num,p_doc_start = patient_data['passport_serial'], patient_data['passport_num'],patient_data['passport_date_start']
+        p_doc_issued = patient_data['bc_issued']
+
+    #Пациент==Заказчик?
+    if (p_payer==None) and (p_agent == None):
+        p_who = client_who + " - Пациент (потребитель)"
+        client_side = ', с другой стороны, заключили настоящий договор о нижеследующем:'
+        them_contract = ''
+    else:
+        p_who = "Пациент (потребитель)"
+        client_side = ''
+
+    objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}:</font> {}, дата рождения {} г.,'
+                          '{}: {}-{} '
+                          'выдан {} г. '
+                          'кем: {} '
+                          'адрес регистрации: {}, '
+                          'адрес проживания: {} {} '.format(p_who, patient_data['fio'],patient_data['born'],patient_data['type_doc'],
+                                                         p_doc_serial, p_doc_num,p_doc_start,p_doc_issued,
+                                                         patient_data['main_address'],patient_data['fact_address'],client_side),style))
+
+    objs.append(Paragraph('{}'.format(them_contract),styleFL))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('1. ПРЕДМЕТ ДОГОВОРА',styleCenter))
     objs.append(Paragraph('1.1. Исполнитель на основании обращения Пациента обязуется оказать ему медицинские услуги в соответствие с лицензией:', style))
@@ -395,6 +462,7 @@ def form_01(request_data):
     objs.append(Paragraph('2.3.	Предоставление Исполнителем дополнительных услуг оформляется дополнительным соглашением Сторон и оплачивается дополнительно.', style))
     objs.append(Paragraph('2.4.	Стороны обязуются хранить в тайне лечебную, финансовую и иную конфиденциальную информацию, '
                           'полученную от другой Стороны при исполнении настоящего Договора.', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('3. ПОРЯДОК ИСПОЛНЕНИЯ ДОГОВОРА', styleCenter))
     objs.append(Paragraph('3.1.	Условия получения Пациентом медицинских услуг: (вне медицинской организации; амбулаторно; '
                           'в дневном стационаре; стационарно; указать,организационные моменты, связанные с оказанием медицинских услуг)', style))
@@ -412,20 +480,21 @@ def form_01(request_data):
                           'связанные с исполнением обязательств по Договору. ', style))
     objs.append(Paragraph('3.5. К отношениям, связанным с исполнением настоящего Договора, применяются положения Закона '
                           'Российской Федерации от 7 февраля 1992 г. N 2300-1 "О защите прав потребителей".', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('4. ПОРЯДОК ОПЛАТЫ', styleCenter))
 
     s = pytils.numeral.rubles(float(sum_research_decimal))
-    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет: <u>{}</u> '.format(s.capitalize()), style))
-    objs.append(Paragraph('Сроки оплаты:', style))
-    objs.append(Paragraph('Предоплата________________________________________ , оставшаяся сумма______________________________ рублей', style))
-    objs.append(Paragraph('Сроки оплаты: _________________________', style))
-    objs.append(Paragraph('4.2.	Компенсируемые расходы Исполнителя на _________________________________________________', style))
-    objs.append(Paragraph('составляют_____________________ рублей', style))
-    objs.append(Paragraph('4.3.	Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
+    objs.append(Paragraph('4.1.	Стоимость медицинских услуг составляет:<font fontname ="PTAstraSerifBold"> <u>{}</u> </font> '.format(s.capitalize()), style))
+    end_date = (date.today() + relativedelta(days=+10))
+    end_date1 = datetime.datetime.strftime(end_date, "%d.%m.%Y")
+    objs.append(Paragraph('Сроки оплаты: в течение<font fontname ="PTAstraSerifBold"> 10 дней </font> со дня заключения договора до <font fontname ="PTAstraSerifBold"> {}</font>'.format(end_date1), style))
+    objs.append(Paragraph('Предоплата 100%.', style))
+    objs.append(Paragraph('4.2.	Оплата услуг производится путем перечисления суммы на расчетный счет Исполнителя или путем внесения в кассу Исполнителя.', style))
     objs.append(Paragraph('Пациенту в соответствии с законодательством Российской Федерации выдается документ; '
                           'подтверждающий произведенную оплату предоставленных медицинских услуг (кассовый чек, квитанция '
                           'или иные документы).', style))
-    objs.append(Paragraph('4.4.	Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
+    objs.append(Paragraph('4.3.	Дополнительные услуги оплачиваются на основании акта об оказанных услугах, подписанного Сторонами.', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('5. ОТВЕТСТВЕННОСТЬ СТОРОН', styleCenter))
     objs.append(Paragraph('5.1.	Исполнитель несет ответственность перед Пациентом за неисполнение или ненадлежащее '
                           'исполнение условий настоящего Договора, несоблюдение требований, предъявляемых к методам '
@@ -448,11 +517,13 @@ def form_01(request_data):
     objs.append(Paragraph('5.4.	Вред, причиненный жизни или здоровью Пациента в результате предоставления некачественной '
                           'платной медицинской услуги, подлежит возмещению Исполнителем в соответствии с законодательством '
                           'Российской Федерации.', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('6. ПОРЯДОК РАССМОТРЕНИЯ СПОРОВ', styleCenter))
     objs.append(Paragraph('6.1.	Все споры, претензии и разногласия, которые могут возникнуть между Сторонами, будут '
                           'разрешаться путем переговоров.', style))
     objs.append(Paragraph('6.2.	При не урегулировании в процессе переговоров спорных вопросов споры подлежат рассмотрению '
                           'в судебном порядке.', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('7. СРОК ДЕЙСТВИЯ ДОГОВОРА', styleCenter))
     objs.append(Paragraph('7.1.	Срок действия настоящего Договора: с «	»	201	г. по «	»	201	г.', style))
     objs.append(Paragraph('7.2.	Настоящий Договор, может быть, расторгнут по обоюдному согласию Сторон или в порядке, '
@@ -460,6 +531,7 @@ def form_01(request_data):
     objs.append(Paragraph('7.3.	Все изменения и дополнения к настоящему Договору, а также его расторжение считаются '
                           'действительными при условии, если они совершены в письменной форме и подписаны уполномоченными'
                           ' на то представителями обеих Сторон.', style))
+    objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('8. ИНЫЕ УСЛОВИЯ', styleCenter))
     objs.append(Paragraph('8.1.	Все дополнительные соглашения Сторон, акты и иные приложения к настоящему Договору, '
                           'подписываемые Сторонами при исполнении настоящего Договора, являются его неотъемлемой частью.', style))
@@ -468,12 +540,8 @@ def form_01(request_data):
 
     styleAtr = deepcopy(style)
     styleAtr.firstLineIndent = 0
-    f = ind.family
-    n = ind.name[0:1]
-    p = ind.patronymic[0:1]
-    npf = n+'.'+' '+p+'.'+' '+f
+
     fio_director_list = exec_person.split(' ')
-    print(fio_director_list)
     dir_f = fio_director_list[0]
     dir_n = fio_director_list[1]
     dir_p = fio_director_list[2]
@@ -482,34 +550,178 @@ def form_01(request_data):
     styleAtrEndStr = deepcopy(styleAtr)
 
     space_symbol = '&nbsp;'
-    opinion = [
-        [Paragraph('Исполнитель', styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('Пациент/Плательщик:', styleAtr)],
-        [Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(individual_fio, document_passport_serial,
-                                                        document_passport_num, ind_card.main_address),styleAtr)],
-        [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
-        [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('', styleAtr)],
-        [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
-         Paragraph('', styleAtr),
-         Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
-         ],
-    ]
+    fio_list = payer_fio.split(' ')
+    f = fio_list[0]
+    n = fio_list[1][0:1]
+    p = fio_list[2][0:1]
+    npf = n + '.' + ' ' + p + '.' + ' ' + f
 
-    rowHeights = 5 * [None]
-    rowHeights[4]=35
-    tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm),rowHeights=rowHeights)
+    patient_list = patient_data['fio'].split(' ')
+    pf = patient_list[0]
+    pn = patient_list[1][0:1]
+    pp = patient_list[2][0:1]
+    p_npf = pn + '.' + ' ' + pp + '.' + ' ' + pf
+
+    rowHeights = None
+
+#Ниже реквизиты в таблице. Возможные варианты: Заказчик(Пациент), Заказчик + Пациент, Заказчик+Представитель+Пациент (Ужасно)
+    #Если есть отдельный заказчик
+    row_count = 0
+    if is_payer:
+        row_count = 0
+        opinion = [
+            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(client_who), styleAtr)],
+            [Paragraph('{} <br/>{}'.format(hospital_name, hospital_address), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(payer_data['fio'], payer_data['passport_serial'],
+                                                                   payer_data['passport_num'],
+                                                                   payer_data['main_address']), styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('', styleAtr)],
+            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
+             ],
+        ]
+        row_count = row_count + len(opinion)
+
+        #Если Заказчик и представитель разные лица. Добавить представителя
+        if p_agent:
+            agent_list = person_data['fio'].split(' ')
+            af = agent_list[0]
+            an = agent_list[1][0:1]
+            ap = agent_list[2][0:1]
+            a_npf = an + '.' + ' ' + ap + '.' + ' ' + af
+
+            opinion_agent = [
+            [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
+                                                                         format(p_agent_who), styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
+                       format(person_data['fio'], person_data['type_doc'], person_data['passport_serial'],
+                              person_data['passport_num'],person_data['main_address']), styleAtr)],
+
+
+            [Paragraph(''.format(dir_npf), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(a_npf), styleAtr)
+             ]
+        ]
+            opinion.extend(opinion_agent)
+            row_count = row_count + len(opinion_agent)
+
+
+        #Добавить Пациента
+        opinion_patient = [
+            [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr),
+             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
+                       format(p_who), styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
+                       format(patient_data['fio'], patient_data['type_doc'], p_doc_serial, p_doc_num, patient_data['main_address']),
+                                                                         styleAtr)],
+        ]
+
+        parient_sign = [[Paragraph('', styleAtr), Paragraph('', styleAtr),Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(p_npf), styleAtr)
+             ],]
+        if not p_agent:
+            opinion_patient.extend(parient_sign)
+
+        row_count = row_count + len(opinion_patient)
+
+        opinion.extend(opinion_patient)
+
+        rowHeights = row_count * [None]
+        rowHeights[4] = 35
+        rowHeights[9] = 35
+
+
+    if is_pagent and not is_payer:
+        #Таблица для Заказчика-представителя
+        row_count = 0
+        opinion = [
+            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_agent_who), styleAtr)],
+            [Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(person_data['fio'], person_data['passport_serial'],
+                                                            person_data['passport_num'], person_data['main_address']),styleAtr)],
+            [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('', styleAtr)],
+            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
+             ],
+        ]
+        row_count = row_count + len(opinion)
+    # Таблица для Пациента
+
+        opinion_patient = [
+            [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.
+                                                                         format(p_who), styleAtr)],
+            [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('{}<br/>{}: {}-{}<br/>Адрес:{}'.
+                       format(patient_data['fio'], patient_data['type_doc'], p_doc_serial,
+                              p_doc_num,patient_data['main_address']), styleAtr)],
+
+            # [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
+            [Paragraph('', styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph(''.format(npf), styleAtr)
+             ],
+        ]
+        row_count = row_count + len(opinion_patient)
+
+        opinion.extend(opinion_patient)
+        rowHeights = row_count * [None]
+        rowHeights[4] = 35
+        rowHeights[9] = 35
+
+    #Выводим Заказчик-Пациент(потребитель)
+    if (not p_payer) and (not p_agent):
+        row_count = 0
+        opinion = [
+            [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('<font fontname ="PTAstraSerifBold">{}:</font>'.format(p_who), styleAtr)],
+            [Paragraph('{} <br/>{}'.format(hospital_name,hospital_address), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('{}<br/>Паспорт: {}-{}<br/>Адрес:{}'.format(patient_data['fio'], patient_data['passport_serial'],
+                                                            patient_data['passport_num'], patient_data['main_address']),styleAtr)],
+            [Paragraph('', styleAtr),Paragraph('', style),Paragraph('', styleAtr)],
+            [Paragraph('Сотрудник {}'.format(hospital_short_name), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('', styleAtr)],
+            [Paragraph('________________________/{}/'.format(dir_npf), styleAtr),
+             Paragraph('', styleAtr),
+             Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(npf), styleAtr)
+             ],
+        ]
+        row_count = row_count + 5
+        rowHeights = row_count * [None]
+        rowHeights[4] = 35
+
+#Строим необходиму таблицу
+    tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm), rowHeights=rowHeights)
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
         ('TOPPADDING', (0, 0), (-1, -1), 1.5 * mm),
         ('VALIGN', (0, 0), (-1, -2), 'TOP'),
-        ('VALIGN', (0, -1), (-1, -1), 'BOTTOM'),
-        ('BOTTOMPADDING', (0, -1), (-1, -1), 4.2 * mm),
+        ('VALIGN', (0, 4), (-1, 4), 'BOTTOM'),
+        # ('VALIGN', (1, 4), (-1, -1), 'BOTTOM'),
+        ('BOTTOMPADDING', (-1, 4), (-1, 4), 4.2 * mm),
         ('BOTTOMPADDING', (0, -1), (0, -1), 1 * mm),
+        ('BOTTOMPADDING', (-1, -1), (-1, -1), 4.2 * mm),
     ]))
 
     objs.append(Spacer(1, 2 * mm))
@@ -530,6 +742,10 @@ def form_01(request_data):
     left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
 
     qr_value = npf+'('+qr_napr+'),'+protect_code
+
+    if npf != p_npf:
+        qr_value = npf + '-' +p_npf + '(' + qr_napr + '),' + protect_code
+
 
     def first_pages(canvas, document):
         canvas.saveState()
