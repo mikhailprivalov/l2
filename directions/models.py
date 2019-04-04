@@ -201,7 +201,7 @@ class IstochnikiFinansirovaniya(models.Model):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
     @staticmethod
-    def get_price_modifier(finsource,work_place_link):
+    def get_price_modifier(finsource, work_place_link = None):
         """
         На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
         Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
