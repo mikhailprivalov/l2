@@ -24,7 +24,7 @@ import users.models as users
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage
+from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District
 from contracts.models import Company
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
@@ -1902,6 +1902,10 @@ def patients_get_card_data(request, card_id):
                                           *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
                          "custom_workplace": card.work_place != "",
                          "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
+                         "district": card.district_id or -1,
+                         "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
+                                       *[{"id": x.pk, "title": x.title}
+                                            for x in District.objects.all().order_by('-id')]],
                          "rmis_uid": rc[0].number if rc.exists() else None,
                          "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
 
@@ -2025,6 +2029,7 @@ def patients_card_save(request):
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
+    c.district = District.objects.filter(pk=request_data["district"]).first()
     c.work_position = request_data["work_position"]
     c.save()
     result = "ok"

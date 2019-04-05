@@ -16,6 +16,7 @@ class DocumentTypeAdmin(admin.ModelAdmin):
 class DocumentAdmin(admin.ModelAdmin):
     raw_id_fields = ('individual',)
 
+
 @admin.register(models.CardBase)
 class CardBaseAdmin(admin.ModelAdmin):
     pass
@@ -33,4 +34,9 @@ class PhonesAdmin(admin.ModelAdmin):
 
 @admin.register(models.AgeCache)
 class AgeCacheAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.District)
+class DistrictAdmin(admin.ModelAdmin):
     pass

@@ -32,7 +32,7 @@
         <div class="col-xs-6 col-form">
           <div class="form-row">
             <div class="row-t">Карта</div>
-            <div class="row-v">
+            <div class="row-v" style="font-weight: bold;">
               {{card_pk >= 0 ? (card.id ? card.number : 'загрузка') : 'НОВАЯ'}}
             </div>
           </div>
@@ -91,7 +91,7 @@
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
-            <span v-if="card.has_rmis_card"><a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a></span>
+            <a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a>
           </div>
         </div>
       </div>
@@ -103,6 +103,15 @@
       <div v-else>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+              <div class="row-t">Участок</div>
+              <select v-model="card.district" class="form-control"
+                      style="width: 65%;border: none;height: 26px;">
+                <option v-for="c in card.districts" :value="c.id">
+                  {{c.title}}
+                </option>
+              </select>
+            </div>
             <div class="form-row sm-f">
                 <div class="row-t">Адрес регистрации</div>
                 <input class="form-control" v-model="card.main_address">
@@ -126,7 +135,7 @@
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
                   />
                   <select v-else v-model="card.work_place_db" class="form-control"
-                          style="width: 55%;border: none;height: 28px;">
+                          style="width: 55%;border: none;height: 26px;">
                     <option v-for="c in card.av_companies" :value="c.id">
                       {{c.short_title === '' ? c.title : c.short_title}}
                     </option>
@@ -144,7 +153,7 @@
                 </div>
               </div>
             </div>
-            <div class="form-row">
+            <div class="form-row sm-f">
               <div class="row-t">Основной диагноз</div>
               <TypeAhead :delayTime="100" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
@@ -154,7 +163,7 @@
             </div>
           </div>
         </div>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
             <col width="70" />
             <col />
@@ -264,12 +273,25 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-4">
+        <div class="col-xs-3">
+          <div class="dropup" v-if="card_pk >= 0">
+            <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+                    style="width: 100%">
+              Печатн. формы <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li v-for="f in forms">
+                <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-xs-2">
           <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
-            Отмена
+            Закрыть
           </button>
         </div>
-        <div class="col-xs-4">
+        <div class="col-xs-3">
           <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
             Сохранить
           </button>
@@ -290,6 +312,7 @@
   import * as action_types from './store/action-types'
   import TypeAhead from 'vue2-typeahead'
   import moment from 'moment'
+  import forms from './forms'
 
   function capitalizeFirstLetter(string) {
     string = SwapLayouts(string)
@@ -359,12 +382,14 @@
           doc_types: [],
           av_companies: [],
           main_docs: {},
+          districts: [],
+          district: -1,
         },
         individuals: [],
         document_to_edit: -2,
         document: {
           number: ''
-        }
+        },
       }
     },
     created() {
@@ -397,7 +422,15 @@
       },
       valid_doc() {
         return this.document.number.length > 0;
-      }
+      },
+      forms() {
+        return forms.map(f => {
+          return {...f, url: f.url.kwf({
+              card: this.card_pk,
+              individual: this.card.individual,
+            })}
+        });
+      },
     },
     watch: {
       sex() {
@@ -463,7 +496,7 @@
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position, this.card.work_place_db, this.card.custom_workplace)
+            this.card.work_position, this.card.work_place_db, this.card.custom_workplace, this.card.district)
           if (data.result !== 'ok') {
             return
           }
@@ -660,10 +693,10 @@
 
     &.sm-f {
       .row-t {
-        padding: 4px 0 0 10px;
+        padding: 2px 0 0 10px;
       }
       input, .row-v, /deep/ input {
-        height: 28px;
+        height: 26px;
       }
     }
 
@@ -722,5 +755,10 @@
   }
   .str /deep/ .input-group {
     width: 100%;
+  }
+
+  .lst {
+    margin: 0;
+    line-height: 1;
   }
 </style>

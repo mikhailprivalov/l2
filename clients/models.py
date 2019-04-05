@@ -489,6 +489,17 @@ class CardBase(models.Model):
         verbose_name_plural = 'Базы карт'
 
 
+class District(models.Model):
+    title = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Участок'
+        verbose_name_plural = 'Участки'
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "мать"),
@@ -508,23 +519,26 @@ class Card(models.Model):
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
-    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None,
+                                      on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
+    mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
+    father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True,
+                                default=None, on_delete=models.SET_NULL)
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
-    agent = models.ForeignKey('self', related_name='agent_p',help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)",
+                              blank=True, null=True, default=None, on_delete=models.SET_NULL)
     agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
-    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True,
+                              default=None, on_delete=models.SET_NULL)
 
-    who_is_agent = models.CharField(max_length=7,choices=AGENT_CHOICES, blank=True, default='',help_text="Законный представитель пациента",
-                                    db_index=True)
+    who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='',
+                                    help_text="Законный представитель пациента", db_index=True)
+    district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
+                                 on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
