@@ -74,9 +74,7 @@ class PageNumCanvas(canvas.Canvas):
         self.drawRightString(31 * mm, 10 * mm, page)
 
 
-
-
-def form_01(request_data=None, dirs= None):
+def form_01(request_data):
     """
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
@@ -85,16 +83,9 @@ def form_01(request_data=None, dirs= None):
     p_payer = None
     p_agent = None
 
-    if request_data:
-        ind_card = Card.objects.get(pk=request_data["card_pk"])
-        exec_person = request_data['user'].doctorprofile.fio
-        ind_dir = json.loads(request_data["dir"])
-    else:
-        ind_card = Card.objects.get(pk=203610)
-        exec_person = 'Иванов Иван Иванович'
-        ind_dir = dirs
-
-    # exec_person = request_data['user'].doctorprofile.fio
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    ind_dir = json.loads(request_data["dir"])
+    exec_person = request_data['user'].doctorprofile.fio
 
     patient_data = ind_card.get_data_individual()
 
@@ -153,28 +144,46 @@ def form_01(request_data=None, dirs= None):
     #Получить Итоговую стр-ру данных
     result_data = forms_func.get_final_data(research_price)
 
+    sum_research = result_data[1]
+
+    #Контрольная сумма расчет: послдеовательность направлений+Итоговая сумма (стоимость денежная)
+    qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    protect_val = sum_research.replace(' ','')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
+
     today = datetime.datetime.now()
     date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
 
 
-    # Проверить записан ли номер контракта в направлениях
-    # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты.
-    # Сейчас они в другой контракт объеденены
+    # Проверить записан ли номер контракта в направлениях, и контрольная сумма
+    # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты,
+    # а также разные контрольные суммы, все перезаписать.
     num_contract_set = set()
+    protect_code_set = set()
     napr_end=[]
     napr_end = Napravleniya.objects.filter(id__in=result_data[3])
     for n in napr_end:
         num_contract_set.add(n.num_contract)
+        protect_code_set.add(n.protect_code)
 
-    if (len(num_contract_set) == 1) and (None in num_contract_set):
-        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
+    if (len(num_contract_set) == 1) and (None in num_contract_set) or None in protect_code_set:
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
     # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
-    if len(num_contract_set) > 1:
-        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
+    if (len(num_contract_set) > 1) or (len(protect_code_set) > 1) :
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,protect_code=protect_code)
 
-    if (len(num_contract_set) == 1) and (not None in num_contract_set):
-        date_now_str = num_contract_set.pop()
+
+    if ((len(num_contract_set) == 1) and (not None in num_contract_set)):
+        if (len(protect_code_set) == 1) and (not None in protect_code_set):
+            if protect_code_set.pop() == protect_code:
+                date_now_str = num_contract_set.pop()
+            else:
+                Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,
+                                                                          protect_code=protect_code)
+
+
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -420,7 +429,6 @@ def form_01(request_data=None, dirs= None):
 
     opinion.extend(list_g)
 
-    sum_research = result_data[1]
     sum_research_decimal = sum_research.replace(' ', '')
 
     if result_data[2] == 'is_discount':
@@ -750,16 +758,12 @@ def form_01(request_data=None, dirs= None):
 
     space_symbol = ' '
 
-    qr_napr = ','.join([str(elem) for elem in result_data[3]])
-    protect_val = SettingManager.get('protect_val')
-    bstr = (qr_napr + protect_val).encode()
-    protect_code = str(zlib.crc32(bstr))
 
     left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
-    qr_value = npf+'('+qr_napr+'),'+protect_code
+    qr_value = npf+'('+qr_napr+')' + protect_val + ',' + protect_code
 
     if npf != p_npf:
-        qr_value = npf + '-' +p_npf + '(' + qr_napr + '),' + protect_code
+        qr_value = npf + '-' +p_npf + '(' + qr_napr + ')' + protect_val + ',' + protect_code
 
     def first_pages(canvas, document):
         canvas.saveState()

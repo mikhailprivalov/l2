@@ -303,12 +303,10 @@ class Napravleniya(models.Model):
     force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
     forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
 
-
-
-
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
-
+    #protect_code =номера направлений, сумма денежная crc32. Если не равно, то перезаписать и номер контракта и контрольную сумму
+    protect_code = models.CharField(max_length=32, default=None,blank=True,null=True, db_index=True,help_text="Контрольная сумма контракта")
 
 
     def __str__(self):
@@ -320,6 +318,8 @@ class Napravleniya(models.Model):
         for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
             r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
         return r
+
+
 
     @staticmethod
     def gen_napravleniye(client_id: object, doc: object, istochnik_f: object, diagnos: object, historynum: object, doc_current: object, ofname_id: object, ofname: object,
