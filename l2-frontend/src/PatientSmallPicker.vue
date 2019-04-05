@@ -58,57 +58,13 @@
             <td class="table-header-row">Пол:</td>
             <td class="table-content-row">{{selected_card.sex}}</td>
           </tr>
-          <tr>
-            <td class="table-header-row">
-              <span class="hospital" style="display: block;line-height: 1.2;" v-if="history_n === 'true'">Номер истории:</span>
-            </td>
-            <td class="table-content-row" colspan="2">
-              <div style="height: 34px" v-if="history_n === 'true'">
-                <span class="hospital">
-                  <input type="text" class="form-control" maxlength="11" v-model="history_num"
-                                              :disabled="!selected_base.history_number"/>
-                </span>
-              </div>
-            </td>
-            <td>
-              <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
-                <button class="btn last btn-blue-nb nbr" type="button" @click="open_editor(true)" v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
-                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()" v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
-              </div>
-              <div class="internal_type" v-else-if="l2_cards">
-                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="directive_from_need === 'true'">
-            <td class="table-header-row" style="line-height: 1;">Работа от имени:</td>
-            <td class="table-content-row select-td">
-              <select-picker-b v-model="directive_department" :options="directive_departments_select"/>
-            </td>
-            <td class="table-content-row select-td" colspan="2">
-              <select-picker-b v-model="directive_doc" :options="directive_docs_select"/>
-            </td>
-          </tr>
           </tbody>
         </table>
-        <div v-if="phones.length > 0" class="hovershow">
-          <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
-          <div class="fastlinks hovershow2" style="margin-top: 1px">
-            <a :href="'sip:' + p" v-for="p in phones" style="display: inline-block">
-              <i class="glyphicon glyphicon-phone"></i> {{format_number(p)}}
-            </a>
-          </div>
-        </div>
-        <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
-        <slot name="for_all" style="margin-top: 5px"/>
       </div>
-    </div>
-    <div class="bottom-picker" v-if="bottom_picker === 'true'">
-      <slot name="for_card_bottom"/>
     </div>
     <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
-      <div slot="body">
+      <div slot="body" style="padding: 10px">
         <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)">
           <div class="founded-row">Карта <span class="b">{{row.type_title}} {{row.num}}</span></div>
           <div class="founded-row"><span class="b">ФИО, пол:</span> {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</div>
@@ -122,13 +78,11 @@
         <small>Показано не более 10 карт</small>
       </div>
     </modal>
-    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
   </div>
 </template>
 
 <script>
   import SelectPickerB from './SelectPickerB'
-  import L2CardCreate from './L2CardCreate'
   import LinkSelector from './LinkSelector'
   import PatientCard from './ui-cards/PatientCard'
   import Modal from './ui-cards/Modal'
@@ -136,24 +90,12 @@
   import patients_point from './api/patients-point'
 
   export default {
-    name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate},
+    name: 'patient-small-picker',
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal},
     props: {
-      directive_from_need: {
-        default: 'false',
-        type: String
-      },
-      search_results: {
-        default: 'false',
-        type: String
-      },
-      bottom_picker: {
-        default: 'false',
-        type: String
-      },
-      history_n: {
-        default: 'true',
-        type: String
+      base_pk: {
+        type: Number,
+        required: true
       },
       value: {},
     },
@@ -175,63 +117,14 @@
         search_after_loading: false,
         editor_pk: -2,
         inc_rmis: false,
+        perf_val: false,
       }
     },
     created() {
-      let vm = this
-
-      vm.$store.dispatch(action_types.INC_LOADING).then()
-      this.$store.dispatch(action_types.GET_DIRECTIVE_FROM).then(() => {
-        vm.local_directive_departments = vm.$store.getters.directive_from
-        vm.directive_departments_select = []
-        for (let dep of vm.local_directive_departments) {
-          vm.directive_departments_select.push({label: dep.title, value: dep.pk})
-        }
-
-        if (vm.local_directive_departments.length > 0 && vm.ofname_to_set === '-1') {
-          for (let dep of vm.local_directive_departments) {
-            if (dep.pk === vm.$store.getters.user_data.department.pk) {
-              vm.directive_department = dep.pk + ''
-              vm.check_base()
-              return
-            }
-          }
-          vm.directive_department = vm.local_directive_departments[0].pk.toString()
-        }
-
-        vm.check_base()
-      }).finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
-      })
+      this.check_base();
 
       this.$store.watch(state => state.bases, (oldValue, newValue) => {
         this.check_base()
-      })
-      this.$root.$on('search', () => {
-        vm.search()
-      })
-      this.$root.$on('select_card', data => {
-        vm.base = data.base_pk;
-        vm.query = `card_pk:${data.card_pk}`
-        vm.search_after_loading = true
-        $(vm.$refs.q).focus()
-        vm.emit_input()
-        if (!data.hide) {
-          vm.editor_pk = data.card_pk
-        } else {
-          vm.editor_pk = -2;
-        }
-        setTimeout(() => {
-          vm.search()
-          if (!data.hide) {
-            setTimeout(() => {
-              this.$root.$emit('reload_editor');
-            }, 5);
-          }
-        }, 5);
-      })
-      this.$root.$on('hide_l2_card_create', () => {
-        vm.editor_pk = -2;
       })
     },
     watch: {
@@ -243,22 +136,7 @@
       bases() {
         this.check_base()
       },
-      directive_department() {
-        this.update_ofname()
-      },
-      directive_doc() {
-        this.emit_input()
-      },
-      is_operator() {
-        this.emit_input()
-      },
-      history_num() {
-        this.emit_input()
-      },
       inLoading() {
-        if (!this.inLoading  && (this.directive_department === '-1' || this.directive_doc === '-1')) {
-          this.update_ofname()
-        }
         if (!this.inLoading && this.search_after_loading) {
           this.search()
         }
@@ -266,7 +144,7 @@
     },
     computed: {
       bases() {
-        return this.$store.getters.bases.filter(b => !b.hide)
+        return this.$store.getters.bases.filter(b => b.pk === this.base_pk)
       },
       selected_base() {
         for (let b of this.bases) {
@@ -355,51 +233,6 @@
         if (this.$refs.modal)
           this.$refs.modal.$el.style.display = 'none'
       },
-      update_ofname() {
-        if (this.ofname_to_set === '-2' || this.inLoading)
-          return
-        if (this.ofname_to_set !== '-1') {
-          if (this.ofname_to_set_dep !== '-1') {
-            this.directive_department = this.ofname_to_set_dep
-            this.directive_doc = this.ofname_to_set
-            this.$root.$emit('resync')
-            this.emit_input()
-            this.ofname_to_set = '-2'
-            return
-          }
-          let dps = Object.keys(this.directive_from_departments)
-          if (dps.length > 0 && !this.inLoading) {
-            let onts = this.ofname_to_set
-            this.ofname_to_set = '-1'
-            for (let d of dps) {
-              let users = this.directive_from_departments[d].docs
-              for (let u of users) {
-                if (u.pk.toString() === onts) {
-                  this.directive_department = d.toString()
-                  this.directive_doc = onts
-                  this.emit_input()
-                  this.ofname_to_set = '-2'
-                  return
-                }
-              }
-            }
-          }
-          return
-        }
-        let dpk = -1
-        if (this.directive_department !== '-1') {
-          for (let d of this.directive_docs_select) {
-            if (d.value === this.$store.getters.user_data.doc_pk) {
-              dpk = d.value
-              break
-            }
-          }
-          if (dpk === -1 && this.directive_docs_select.length > 0) {
-            dpk = this.directive_docs_select[0].value
-          }
-        }
-        this.directive_doc = dpk.toString()
-      },
       select_base(pk) {
         this.base = pk
         this.emit_input()
@@ -414,97 +247,39 @@
           }
           this.base = this.selected_card.base_pk
         }
+        if (this.query.toLowerCase().includes('card_pk:')) {
+          this.query = ''
+        }
         this.emit_input()
         this.loaded = true
-        this.$root.$emit('patient-picker:select_card')
       },
       check_base() {
-        if (this.base === -1 && this.bases.length > 0) {
-          let params = new URLSearchParams(window.location.search)
-          let rmis_uid = params.get('rmis_uid')
-          let base_pk = params.get('base_pk')
-          let card_pk = params.get('card_pk')
-          let ofname = params.get('ofname')
-          let ofname_dep = params.get('ofname_dep')
-          if (rmis_uid) {
-            window.history.pushState('', '', window.location.href.split('?')[0])
-            let has_internal = false
-            for (let row of this.bases) {
-              if (row.internal_type) {
-                this.base = row.pk
-                this.query = rmis_uid
-                this.search_after_loading = true
-                break
-              }
-            }
-            if (!has_internal) {
-              for (let row of this.bases) {
-                if (row.code === 'Р') {
-                  this.base = row.pk
-                  this.query = rmis_uid
-                  this.search_after_loading = true
-                  break
-                }
-              }
-            }
-            if (this.base === -1) {
-              this.base = this.bases[0].pk
-            }
-          } else if (base_pk) {
-            window.history.pushState('', '', window.location.href.split('?')[0])
-            if (ofname) {
-              this.ofname_to_set = ofname
-            }
-            if (ofname_dep) {
-              this.ofname_to_set_dep = ofname_dep
-            }
-            for (let row of this.bases) {
-              if (row.pk === parseInt(base_pk)) {
-                this.base = row.pk
-                break
-              }
-            }
-            if (this.base === -1) {
-              this.base = this.bases[0].pk
-            }
-            if (card_pk) {
-              this.query = `card_pk:${card_pk}`
+        if (this.base === -1 && this.bases.length > 0 || !this.perf_val) {
+          let ns = false;
+          if (!this.perf_val) {
+            if (this.value) {
+              this.query = `card_pk:${this.value}`
               this.search_after_loading = true
             }
+            this.perf_val = true;
+            ns = true;
           }
-          else {
+          if (this.base === -1) {
             this.base = this.bases[0].pk
           }
           $(this.$refs.q).focus()
           this.emit_input()
+          if (ns) {
+            this.search()
+          }
         }
+
       },
       emit_input() {
-        let pk = -1
+        let pk = null
         if ('pk' in this.selected_card)
           pk = this.selected_card.pk
-        let individual_pk = -1
-        if ('individual_pk' in this.selected_card)
-          individual_pk = this.selected_card.individual_pk
-        this.$emit('input', {
-          pk: pk,
-          individual_pk: individual_pk,
-          base: this.selected_base,
-          ofname_dep: parseInt(this.directive_department),
-          ofname: parseInt(this.directive_doc),
-          operator: this.is_operator,
-          history_num: this.history_num,
-          is_rmis: this.selected_card.is_rmis,
-          family: this.selected_card.family,
-          name: this.selected_card.name,
-          twoname: this.selected_card.twoname,
-          birthday: this.selected_card.birthday,
-          age: this.selected_card.age,
-          main_diagnosis: this.selected_card.main_diagnosis,
-        })
-        if(pk !== -1) {
-          $("#fndsrc").focus()
-        }
+        this.$emit('input', pk)
       },
       clear() {
         this.loaded = false
@@ -516,39 +291,14 @@
         }
         this.emit_input()
       },
-      open_as_l2_card() {
-        let vm = this
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
-        patients_point.searchL2Card(this.selected_card.pk).then((result) => {
-          vm.clear()
-          if (result.results) {
-            vm.founded_cards = result.results
-            if (vm.founded_cards.length > 1) {
-              vm.showModal = true
-            } else if (vm.founded_cards.length === 1) {
-              vm.select_card(0)
-            }
-          } else {
-            errmessage('Ошибка на сервере')
-          }
-        }).catch((error) => {
-          errmessage('Ошибка на сервере', error.message)
-        }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
-        })
-      },
       search() {
         this.search_after_loading = false
         if (!this.query_valid || this.inLoading)
           return
         this.check_base()
-        $('input').each(function () {
-          $(this).trigger('blur')
-        })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
         patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
-          vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
             if (vm.founded_cards.length > 1) {
@@ -604,7 +354,7 @@
     top: 34px;
     left: 0;
     right: 0;
-    bottom: 34px;
+    bottom: 0;
     overflow-y: auto;
     overflow-x: hidden;
   }

@@ -95,10 +95,36 @@ async function editDoc(pk, type, serial, number, is_active, individual_pk, date_
   return {}
 }
 
+async function editAgent(key, parent_card_pk, card_pk, doc, clear) {
+  try {
+    const response = await HTTP.post('patients/individuals/edit-agent', {
+      key, card_pk, doc, clear, parent_card_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 async function updateCdu(card_pk, doc_pk) {
   try {
     const response = await HTTP.post('patients/individuals/update-cdu', {
       card_pk, doc_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function updateWIA(card_pk, key) {
+  try {
+    const response = await HTTP.post('patients/individuals/update-wia', {
+      card_pk, key,
     })
     if (response.statusText === 'OK') {
       return response.data
@@ -122,4 +148,6 @@ async function syncRmis(card_pk) {
 }
 
 export default {searchCard, searchIndividual, searchL2Card, syncRmis,
-  getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu}
+  getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
+  editAgent,
+}

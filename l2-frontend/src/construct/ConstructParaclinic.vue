@@ -31,6 +31,8 @@
   import researches_point from '../api/researches-point'
   import * as action_types from '../store/action-types'
 
+  const cons = {pk: -2, title: 'Консультации', type: '3'};
+
   export default {
     components: {
       SelectPickerB,
@@ -69,14 +71,15 @@
     },
     mounted() {
       let vm = this
-      vm.departments = vm.$store.getters.allDepartments
+      vm.departments = [...vm.$store.getters.allDepartments, cons]
       this.$store.watch(state => state.departments.all, (oldValue, newValue) => {
-        vm.departments = vm.$store.getters.allDepartments
+        vm.departments = [vm.$store.getters.allDepartments, cons]
       })
     },
     watch: {
       departments() {
-        if (this.department !== '-1' || this.departments_of_type.length === 0)
+        if (this.department !== '-1' || this.departments_of_type.length === 0
+          || !this.$store.getters.user_data.department)
           return
         for(let row of this.departments_of_type) {
           if(row.value === this.$store.getters.user_data.department.pk) {

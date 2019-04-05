@@ -237,9 +237,9 @@ class Individual(models.Model):
 
         if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or \
                 ((not iss.tubes.exists() or not iss.tubes.filter(
-                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic):
+                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
             today = date.today()
-        elif iss.time_confirmation and iss.research.is_paraclinic or not iss.tubes.exists():
+        elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
@@ -344,7 +344,7 @@ class Individual(models.Model):
                 AgeCache(n=age, t=2, s=r).save()
         return r
 
-    def fio(self, short=False, dots=False, full=False, direction=None, npf=False):
+    def fio(self, short=False, dots=False, full=False, direction=None, npf=False, bd=False):
 
         if not short:
             if full:
@@ -353,6 +353,9 @@ class Individual(models.Model):
                                                                   self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
+            elif bd:
+                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic,
+                                                                  self.birthday)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
@@ -502,12 +505,15 @@ class District(models.Model):
 
 class Card(models.Model):
     AGENT_CHOICES = (
-        ('mother', "мать"),
-        ('father', "отец"),
-        ('curator', "опекун"),
-        ('agent', "представитель"),
-        ('',''),
+        ('mother', "Мать"),
+        ('father', "Отец"),
+        ('curator', "Опекун"),
+        ('agent', "Представитель"),
+        ('', 'НЕ ВЫБРАНО'),
     )
+
+    AGENT_NEED_DOC = ['curator', 'agent']
+
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
@@ -542,6 +548,9 @@ class Card(models.Model):
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
+
+    def get_fio_w_card(self):
+        return "L2 №{} {} {}".format(self.number, self.individual.fio(), self.individual.bd())
 
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")

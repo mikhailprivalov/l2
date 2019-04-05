@@ -214,6 +214,51 @@
           </tr>
           </tbody>
         </table>
+        <table class="table table-bordered table-condensed table-sm-pd">
+          <colgroup>
+            <col width="70" />
+            <col width="120" />
+            <col />
+            <col width="150" />
+            <col width="40" />
+          </colgroup>
+          <thead>
+          <tr>
+            <th>ВЫБОР</th>
+            <th>Статус</th>
+            <th>ФИО</th>
+            <th>Докум.-основание</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="t in card.agent_types" :class="{nonPrior: card.who_is_agent !== t.key,
+            prior: card.who_is_agent === t.key}">
+            <td>
+              <input type="radio" name="agent"
+                     @click="update_wia(t.key)"
+                     :checked="card.who_is_agent === t.key" />
+            </td>
+            <td>
+              {{t.title}}
+            </td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
+            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td>
+              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
+            </td>
+          </tr>
+          <tr :class="{nonPrior: card.who_is_agent !== '',
+            prior: card.who_is_agent === ''}">
+            <td>
+              <input type="radio" name="agent"
+                     @click="update_wia('')"
+                     :checked="card.who_is_agent === ''" />
+            </td>
+            <td colspan="4">НЕ ВЫБРАНО</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
@@ -270,6 +315,39 @@
           </div>
         </div>
       </modal>
+      <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
+        <div slot="body" style="min-height: 140px" class="registry-body">
+          <div v-show="!agent_clear">
+            <div style="height: 110px">
+              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk" />
+            </div>
+            <div class="form-group" v-if="agent_need_doc(agent_to_edit)" style="padding: 10px">
+              <label for="ae-f2">Документ-основание:</label>
+              <input class="form-control" id="ae-f2" v-model="agent_doc">
+            </div>
+          </div>
+          <div class="checkbox" style="padding-left: 35px;padding-top: 10px" v-if="!!card[agent_to_edit]">
+            <label>
+              <input type="checkbox" v-model="agent_clear"> очистить представителя ({{agent_type_by_key(agent_to_edit)}})
+            </label>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_agent_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-4">
+              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
     </div>
     <div slot="footer">
       <div class="row">
@@ -309,6 +387,7 @@
 <script>
   import Modal from './ui-cards/Modal'
   import patients_point from './api/patients-point'
+  import PatientSmallPicker from './PatientSmallPicker'
   import * as action_types from './store/action-types'
   import TypeAhead from 'vue2-typeahead'
   import moment from 'moment'
@@ -346,7 +425,7 @@
 
   export default {
     name: 'l2-card-create',
-    components: {Modal, TypeAhead},
+    components: {Modal, TypeAhead, PatientSmallPicker},
     props: {
       card_pk: {
         type: Number,
@@ -384,12 +463,29 @@
           main_docs: {},
           districts: [],
           district: -1,
+          agent_types: [],
+          agent_need_doc: [],
+          who_is_agent: "",
+          mother: null,
+          mother_pk: null,
+          father: null,
+          father_pk: null,
+          curator: null,
+          curator_doc: null,
+          curator_pk: null,
+          agent: null,
+          agent_doc: null,
+          agent_pk: null,
         },
         individuals: [],
         document_to_edit: -2,
         document: {
           number: ''
         },
+        agent_to_edit: null,
+        agent_card_selected: null,
+        agent_doc: '',
+        agent_clear: false,
       }
     },
     created() {
@@ -422,6 +518,11 @@
       },
       valid_doc() {
         return this.document.number.length > 0;
+      },
+      valid_agent() {
+        if (this.agent_clear)
+          return true;
+        return this.agent_card_selected && this.agent_card_selected !== this.card_pk;
       },
       forms() {
         return forms.map(f => {
@@ -472,6 +573,17 @@
       }
     },
     methods: {
+      agent_type_by_key(key) {
+        for (const t of this.card.agent_types) {
+          if (t.key === key) {
+            return t.title;
+          }
+        }
+        return 'НЕ ВЫБРАНО';
+      },
+      agent_need_doc(key) {
+        return this.card.agent_need_doc.includes(key);
+      },
       select_individual(invpk) {
         this.card.individual = invpk
       },
@@ -521,6 +633,22 @@
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      update_wia(key) {
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.updateWIA(this.card_pk, key)
+          this.load_data();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      edit_agent(key) {
+        this.agent_card_selected = this.card[`${key}_pk`]
+        this.agent_doc = this.card[`${key}_doc_auth`] || ''
+        this.agent_clear = false
+        this.agent_to_edit = key;
       },
       sync_rmis() {
         let vm = this;
@@ -605,6 +733,10 @@
         this.$refs.modalDocEdit.$el.style.display = 'none'
         this.document_to_edit = -2
       },
+      hide_modal_agent_edit() {
+        this.$refs.modalAgentEdit.$el.style.display = 'none';
+        this.agent_to_edit = null;
+      },
       save_doc() {
         if (!this.valid_doc) {
           return
@@ -622,6 +754,26 @@
             number: ''
           };
           this.hide_modal_doc_edit();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      save_agent() {
+        if (!this.valid_agent) {
+          return
+        }
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          const data = await patients_point.editAgent(
+            this.agent_to_edit,
+            this.card_pk,
+            this.agent_card_selected,
+            this.agent_doc,
+            this.agent_clear,
+          )
+          this.load_data();
+          this.hide_modal_agent_edit();
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
