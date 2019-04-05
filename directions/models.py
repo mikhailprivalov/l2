@@ -220,9 +220,9 @@ class IstochnikiFinansirovaniya(models.Model):
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
         elif finsource.title.upper() in price_company and work_place_link:
-            contract_l = contracts.Company.objects.values_list('contract').filter(pk=work_place_link.pk).first()
-            if contract_l[0]:
-                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+            contract_l = work_place_link.contract_id
+            if contract_l:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l)
 
         return price_modifier
 
@@ -303,8 +303,13 @@ class Napravleniya(models.Model):
     force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
     forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
 
+
+
+
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+
+
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
