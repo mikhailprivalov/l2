@@ -151,6 +151,7 @@ def gen_pdf_execlist(request):
     response.write(pdf)  # Запись PDF в ответ
     return response
 
+
 # @cache_page(60 * 15)
 @logged_in_or_token
 def gen_pdf_dir(request):
@@ -246,14 +247,11 @@ def gen_pdf_dir(request):
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, 15 * mm, h - 15 * mm - ht)
         c.showPage()
-
     c.save()  # Сохранение отрисованного на PDF
 
     pdf = buffer.getvalue()  # Получение данных из буфера
     buffer.close()  # Закрытие буфера
-
     response.write(pdf)  # Запись PDF в ответ
-
     return response
 
 

@@ -74,21 +74,20 @@ class PageNumCanvas(canvas.Canvas):
         self.drawRightString(31 * mm, 10 * mm, page)
 
 
+
+
 def form_01(request_data):
     """
-    Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
-    у пациента
+    Договор, включающий услуги на оплату и необходимые реквизиты
     """
     form_name = "Договор"
     p_payer = None
     p_agent = None
 
     ind_card = Card.objects.get(pk=request_data["card_pk"])
-    ind_dir = json.loads(request_data["dir"])
-    exec_person = request_data['user'].doctorprofile.fio
-
     patient_data = ind_card.get_data_individual()
 
+    # agent_status = False
     p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)
@@ -112,6 +111,9 @@ def form_01(request_data):
         p_payer = ind_card.payer
         payer_data = p_payer.get_data_individual()
 
+    ind_dir = json.loads(request_data["dir"])
+    exec_person = request_data['user'].doctorprofile.fio
+
     # Получить все источники, у которых title-ПЛАТНО
     ist_f = []
     ist_f = list(IstochnikiFinansirovaniya.objects.values_list('id').filter(title__exact='Платно'))
@@ -125,7 +127,7 @@ def form_01(request_data):
     #Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
     num_contract_set = set()
     for n in napr:
-        if (n.istochnik_f_id in ist_f_list) and (n.client == ind_card):
+        if (n.istochnik_f_id in ist_f_list) and (n.client ==ind_card):
             num_contract_set.add(n.num_contract)
             dir_temp.append(n.pk)
 
@@ -135,55 +137,33 @@ def form_01(request_data):
     # получить УСЛУГИ по направлениям(отфильтрованы по "платно" и нет сохраненных исследований) в Issledovaniya
     research_direction = forms_func.get_research_by_dir(dir_temp)
 
-    if not research_direction:
-        return False
-
     # получить по направлению-услугам цену из Issledovaniya
     research_price = forms_func.get_coast_from_issledovanie(research_direction)
 
     #Получить Итоговую стр-ру данных
     result_data = forms_func.get_final_data(research_price)
 
-    sum_research = result_data[1]
-
-    #Контрольная сумма расчет: послдеовательность направлений+Итоговая сумма (стоимость денежная)
-    qr_napr = ','.join([str(elem) for elem in result_data[3]])
-    protect_val = sum_research.replace(' ','')
-    bstr = (qr_napr + protect_val).encode()
-    protect_code = str(zlib.crc32(bstr))
-
     today = datetime.datetime.now()
     date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
 
 
-    # Проверить записан ли номер контракта в направлениях, и контрольная сумма
-    # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты,
-    # а также разные контрольные суммы, все перезаписать.
+    # Проверить записан ли номер контракта в направлениях
+    # ПереЗаписать номер контракта Если в наборе направлений значение None
     num_contract_set = set()
-    protect_code_set = set()
     napr_end=[]
     napr_end = Napravleniya.objects.filter(id__in=result_data[3])
     for n in napr_end:
         num_contract_set.add(n.num_contract)
-        protect_code_set.add(n.protect_code)
 
-    if (len(num_contract_set) == 1) and (None in num_contract_set) or None in protect_code_set:
-        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
+    if (len(num_contract_set) == 1) and (None in num_contract_set):
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
     # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
-    if (len(num_contract_set) > 1) or (len(protect_code_set) > 1) :
-        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,protect_code=protect_code)
+    if len(num_contract_set) > 1:
+        Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str)
 
-
-    if ((len(num_contract_set) == 1) and (not None in num_contract_set)):
-        if (len(protect_code_set) == 1) and (not None in protect_code_set):
-            if protect_code_set.pop() == protect_code:
-                date_now_str = num_contract_set.pop()
-            else:
-                Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,
-                                                                          protect_code=protect_code)
-
-
+    if (len(num_contract_set) == 1) and (not None in num_contract_set):
+        date_now_str = num_contract_set.pop()
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -283,14 +263,14 @@ def form_01(request_data):
           'одной стороны, и'.format(hospital_name, post_contract,exec_person,document_base),style))
 
 
-
+    # Если Заказчик(Плательщик) другое физ лицо
     them_contract = 'настоящий договор о нижеследующем:'
     client_who = 'Заказчик'
     is_payer = False
 
-    #Добавдяем представителя (мать, отец, опекун или др. не дееспособный)
+    #Добавдяем представителя(мать, отец, опекун или др. не дееспособный)
     is_pagent = False
-    #представитель==Заказчик ()
+    #представитель==Заказчик
     if (p_payer == None) or (p_payer == p_agent) or (p_agent and p_payer==None):
         payer_fio = person_data['fio']
         is_pagent = True
@@ -298,7 +278,7 @@ def form_01(request_data):
     else:
         p_agent_who = "Представитель пациента"
 
-    #Если Заказчик(Плательщик) другое физ лицо отдельный Заказчик, отдельно Представитель, отдельно пациент
+        # отдельный Заказчик
     if p_payer and (p_payer != p_agent):
         client_side = ''
         if p_agent == None:
@@ -339,8 +319,8 @@ def form_01(request_data):
         p_doc_serial, p_doc_num,p_doc_start = patient_data['passport_serial'], patient_data['passport_num'],patient_data['passport_date_start']
         p_doc_issued = patient_data['bc_issued']
 
-    #Пациент==Заказчик
-    if (p_payer == None) and (p_agent == None):
+    #Пациент==Заказчик?
+    if (p_payer==None) and (p_agent == None):
         p_who = client_who + " - Пациент (потребитель)"
         client_side = ', с другой стороны, заключили настоящий договор о нижеследующем:'
         them_contract = ''
@@ -429,6 +409,7 @@ def form_01(request_data):
 
     opinion.extend(list_g)
 
+    sum_research = result_data[1]
     sum_research_decimal = sum_research.replace(' ', '')
 
     if result_data[2] == 'is_discount':
@@ -560,7 +541,6 @@ def form_01(request_data):
     styleAtr = deepcopy(style)
     styleAtr.firstLineIndent = 0
 
-    #Данные исполнителя в Договоре
     fio_director_list = exec_person.split(' ')
     dir_f = fio_director_list[0]
     dir_n = fio_director_list[1]
@@ -570,15 +550,12 @@ def form_01(request_data):
     styleAtrEndStr = deepcopy(styleAtr)
 
     space_symbol = '&nbsp;'
-
-    #Данные плательщика в Договоре
     fio_list = payer_fio.split(' ')
     f = fio_list[0]
     n = fio_list[1][0:1]
     p = fio_list[2][0:1]
     npf = n + '.' + ' ' + p + '.' + ' ' + f
 
-    # Данные пациента в Договоре
     patient_list = patient_data['fio'].split(' ')
     pf = patient_list[0]
     pn = patient_list[1][0:1]
@@ -653,7 +630,6 @@ def form_01(request_data):
 
         parient_sign = [[Paragraph('', styleAtr), Paragraph('', styleAtr),Paragraph('/{}/________________________ <font face="Symbola" size=18>\u2713</font>'.format(p_npf), styleAtr)
              ],]
-
         if not p_agent:
             opinion_patient.extend(parient_sign)
 
@@ -665,8 +641,9 @@ def form_01(request_data):
         rowHeights[4] = 35
         rowHeights[9] = 35
 
-    # Таблица для Заказчика-представителя
+
     if is_pagent and not is_payer:
+        #Таблица для Заказчика-представителя
         row_count = 0
         opinion = [
             [Paragraph('<font fontname ="PTAstraSerifBold">Исполнитель</font>', styleAtr),
@@ -686,8 +663,8 @@ def form_01(request_data):
              ],
         ]
         row_count = row_count + len(opinion)
-
     # Таблица для Пациента
+
         opinion_patient = [
             [Paragraph('', styleAtr), Paragraph('', style), Paragraph('', styleAtr)],
             [Paragraph('', styleAtr), Paragraph('', styleAtr), Paragraph('', styleAtr)],
@@ -710,7 +687,7 @@ def form_01(request_data):
         rowHeights[4] = 35
         rowHeights[9] = 35
 
-    #Выводим Заказчик-Пациент(потребитель) - одно лицо
+    #Выводим Заказчик-Пациент(потребитель)
     if (not p_payer) and (not p_agent):
         row_count = 0
         opinion = [
@@ -734,7 +711,7 @@ def form_01(request_data):
         rowHeights = row_count * [None]
         rowHeights[4] = 35
 
-    #Строим необходимую таблицу
+#Строим необходиму таблицу
     tbl = Table(opinion, colWidths=(90 * mm, 10* mm, 90 * mm), rowHeights=rowHeights)
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
@@ -748,8 +725,7 @@ def form_01(request_data):
     ]))
 
     objs.append(Spacer(1, 2 * mm))
-
-    #Заголовок Адреса и реквизиты + сами реквизиты всегда вместе, если разрыв на странице
+    #Заголовок Адреса и реквизиты + сами реквизиты всегда вместе, если разры на странице
     objs.append(KeepTogether([Paragraph('9. АДРЕСА И РЕКВИЗИТЫ СТОРОН', styleCenter), tbl]))
     objs.append(Spacer(1,7 * mm))
 
@@ -758,12 +734,18 @@ def form_01(request_data):
 
     space_symbol = ' '
 
+    qr_napr = ','.join([str(elem) for elem in result_data[3]])
+    protect_val = SettingManager.get('protect_val')
+    bstr = (qr_napr + protect_val).encode()
+    protect_code = str(zlib.crc32(bstr))
 
     left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
-    qr_value = npf+'('+qr_napr+')' + protect_val + ',' + protect_code
+
+    qr_value = npf+'('+qr_napr+'),'+protect_code
 
     if npf != p_npf:
-        qr_value = npf + '-' +p_npf + '(' + qr_napr + ')' + protect_val + ',' + protect_code
+        qr_value = npf + '-' +p_npf + '(' + qr_napr + '),' + protect_code
+
 
     def first_pages(canvas, document):
         canvas.saveState()
