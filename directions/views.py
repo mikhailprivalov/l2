@@ -152,9 +152,9 @@ def gen_pdf_execlist(request):
     return response
 
 
-# @cache_page(60 * 15)
 @logged_in_or_token
 def gen_pdf_dir(request):
+    #требется передать pc_card, usrprofile
     """Генерация PDF направлений"""
     if SettingManager.get("pdf_auto_print", "true", "b"):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
@@ -247,11 +247,141 @@ def gen_pdf_dir(request):
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, 15 * mm, h - 15 * mm - ht)
         c.showPage()
+
+    c.save()  # Сохранение отрисованного на PDF
+
+
+    from forms.forms102 import form_01 as f_contract
+    # Нужно передать необходимые аргументы
+    fc = f_contract(None, direction_id)
+    fc_buf = BytesIO()
+    fc_buf.write(fc)
+
+    pdf = buffer.getvalue()  # Получение данных из буфера
+    # buffer.close()  # Закрытие буфера
+    import PyPDF2
+    pdf_all =BytesIO()
+    pdf_contract = PyPDF2.PdfFileReader(fc_buf)
+    pdf_napr = PyPDF2.PdfFileReader(buffer)
+    merger = PyPDF2.PdfFileMerger()
+    merger.append(pdf_napr)
+    merger.append(pdf_contract)
+    merger.write(pdf_all)
+    pdf_out = pdf_all.getvalue()
+    buffer.close()
+    fc_buf.close()
+    pdf_all.close()
+
+    # response.write(pdf)  # Запись PDF в ответ
+    response.write(pdf_out)  # Запись PDF в ответ
+    # response.write(a)  # Запись PDF в ответ
+
+    return response
+
+
+# @cache_page(60 * 15)
+@logged_in_or_token
+def gen_pdf_dir_t(request):
+    """Генерация PDF направлений"""
+    if SettingManager.get("pdf_auto_print", "true", "b"):
+        pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
+    direction_id = json.loads(request.GET["napr_id"])  # Перевод JSON строки в объект
+
+    response = HttpResponse(content_type='application/pdf')  # Формирование ответа типа PDF
+    response['Content-Disposition'] = 'inline; filename="directions.pdf"'  # Включение режима вывода PDF в браузер
+
+    buffer = BytesIO()  # Буфер
+    c = canvas.Canvas(buffer, pagesize=A4)  # Создание холста для PDF размера А4
+    c.setTitle('Направления {}'.format(', '.join([str(x) for x in direction_id])))
+
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    import os.path
+
+    pdfmetrics.registerFont(
+        TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))  # Загрузка шрифта из файла
+    pdfmetrics.registerFont(
+        TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))  # Загрузка шрифта из файла
+    pdfmetrics.registerFont(
+        TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))  # Загрузка шрифта из файла
+    dn = Napravleniya.objects.filter(pk__in=direction_id)
+    ddef = dn.filter(issledovaniya__research__direction_form=0).distinct()
+    p = Paginator(list(ddef), 4)  # Деление списка направлений по 4
+    instructions = []
+    has_def = ddef.count() > 0
+    if has_def:
+        framePage(c)
+    for pg_num in p.page_range:
+        pg = p.page(pg_num)
+        i = 4  # Номер позиции направления на странице (4..1)
+        for n_ob in pg.object_list:  # Перебор номеров направлений на странице
+            printDirection(c, i, n_ob)  # Вызов функции печати направления на указанную позицию
+            instructions += n_ob.get_instructions()
+            i -= 1
+        if pg.has_next():  # Если есть следующая страница
+            c.showPage()  # Создание новой страницы
+            framePage(c)  # Рисование разделительных линий для страницы
+
+    donepage = dn.exclude(issledovaniya__research__direction_form=0)
+    if donepage.count() > 0 and has_def:
+        c.showPage()
+
+    thismodule = sys.modules[__name__]
+    n = 0
+    cntn = donepage.count()
+    for d in donepage:
+        n += 1
+        iss = Issledovaniya.objects.filter(napravleniye=d)
+        if not iss.exists():
+            continue
+        form = iss[0].research.direction_form
+        if hasattr(thismodule, 'form%s' % form):
+            f = getattr(thismodule, 'form%s' % form)
+            f(c, d)
+        if n != cntn:
+            c.showPage()
+
+    instructions_pks = []
+    instructions_filtered = []
+    for i in instructions:
+        if i["pk"] in instructions_pks:
+            continue
+        instructions_pks.append(i["pk"])
+        instructions_filtered.append(i)
+    if len(instructions_filtered) > 0:
+        s = getSampleStyleSheet()
+        s = s["BodyText"]
+        s.wordWrap = 'LTR'
+        c.showPage()
+        tx = '<font face="OpenSansBold" size="10">Памятка пациенту по проведению исследований</font>\n'
+        for i in instructions_filtered:
+            tx += '--------------------------------------------------------------------------------------\n<font face="OpenSansBold" size="10">{}</font>\n<font face="OpenSans" size="10">&nbsp;&nbsp;&nbsp;&nbsp;{}\n</font>'.format(
+                i["title"], i["text"])
+        data = [[Paragraph(tx.replace("\n", "<br/>"), s)]]
+
+        t = Table(data, colWidths=[w - 30 * mm])
+        t.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                               ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                               ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+                               ('BOX', (0, 0), (-1, -1), 0.25, colors.white),
+                               ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                               ('TOPPADDING', (0, 0), (-1, -1), 0.5),
+                               ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                               ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                               ]))
+        t.canv = c
+        wt, ht = t.wrap(0, 0)
+        t.drawOn(c, 15 * mm, h - 15 * mm - ht)
+        c.showPage()
+
     c.save()  # Сохранение отрисованного на PDF
 
     pdf = buffer.getvalue()  # Получение данных из буфера
     buffer.close()  # Закрытие буфера
+
     response.write(pdf)  # Запись PDF в ответ
+
     return response
 
 

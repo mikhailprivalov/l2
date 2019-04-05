@@ -76,7 +76,7 @@ class PageNumCanvas(canvas.Canvas):
 
 
 
-def form_01(request_data):
+def form_01(request_data=None, dirs= None):
     """
     Договор, включающий услуги на оплату и необходимые реквизиты. С Учетом представителей и Заказчиков(Плательщиков)
     у пациента
@@ -85,9 +85,16 @@ def form_01(request_data):
     p_payer = None
     p_agent = None
 
-    ind_card = Card.objects.get(pk=request_data["card_pk"])
-    ind_dir = json.loads(request_data["dir"])
-    exec_person = request_data['user'].doctorprofile.fio
+    if request_data:
+        ind_card = Card.objects.get(pk=request_data["card_pk"])
+        exec_person = request_data['user'].doctorprofile.fio
+        ind_dir = json.loads(request_data["dir"])
+    else:
+        ind_card = Card.objects.get(pk=203610)
+        exec_person = 'Иванов Иван Иванович'
+        ind_dir = dirs
+
+    # exec_person = request_data['user'].doctorprofile.fio
 
     patient_data = ind_card.get_data_individual()
 
