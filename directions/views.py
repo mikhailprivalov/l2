@@ -248,8 +248,35 @@ def gen_pdf_dir(request):
         c.showPage()
 
     c.save()  # Сохранение отрисованного на PDF
-
     pdf = buffer.getvalue()  # Получение данных из буфера
+
+    #Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
+    fin_ist_set = set()
+    for n in dn:
+        fin_ist_set.add(n.istochnik_f)
+
+    if request.GET.get("card_pk"):
+        if (len(fin_ist_set)== 1) and (fin_ist_set.pop().title.lower()) == 'платно':
+            from forms.forms102 import form_01 as f_contract
+            fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user})
+            fc_buf = BytesIO()
+            fc_buf.write(fc)
+            import PyPDF2
+            pdf_all = BytesIO()
+            pdf_contract = PyPDF2.PdfFileReader(fc_buf)
+            pdf_napr = PyPDF2.PdfFileReader(buffer)
+            merger = PyPDF2.PdfFileMerger()
+            merger.append(pdf_napr)
+            merger.append(pdf_contract)
+            merger.write(pdf_all)
+            pdf_out = pdf_all.getvalue()
+            buffer.close()
+            fc_buf.close()
+            pdf_all.close()
+            response.write(pdf_out)
+
+            return response
+
     buffer.close()  # Закрытие буфера
 
     response.write(pdf)  # Запись PDF в ответ

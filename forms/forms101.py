@@ -432,6 +432,7 @@ def form_03(request_data):
 
     hospital_name = SettingManager.get("rmis_orgname")
 
+    opinion =[]
     if agent_status:
         opinion = [
             Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(),who_patient), styleBold),
@@ -447,7 +448,7 @@ def form_03(request_data):
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
         else:
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
-                           format(patient_data['type_doc'], patient_data[ 'passport_serial'],patient_data[['passport_num']]),styleSign))
+                           format(patient_data['type_doc'], patient_data[ 'passport_serial'],patient_data['passport_num']),styleSign))
             opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']),styleSign))
 
         objs.extend(opinion)
