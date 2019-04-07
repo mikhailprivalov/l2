@@ -308,7 +308,6 @@ class Napravleniya(models.Model):
     #protect_code =номера направлений, сумма денежная crc32. Если не равно, то перезаписать и номер контракта и контрольную сумму
     protect_code = models.CharField(max_length=32, default=None,blank=True,null=True, db_index=True,help_text="Контрольная сумма контракта")
 
-
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
             self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
@@ -382,8 +381,6 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code=''):
 
-        #импорт для получения прайса и цены по услугам
-        from forms import forms_func
 
         if rmis_data is None:
             rmis_data = {}
@@ -552,6 +549,29 @@ class Napravleniya(models.Model):
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
+
+class PersonContract(models.Model):
+    """
+    Каждый раз при генерации нового контракта для физлица создается просто запись
+    """
+    num_contract = models.CharField(max_length=25, null=False, db_index=True, help_text='Номер договора')
+    protect_code = models.CharField(max_length=32, null=False, db_index=True, help_text="Контрольная сумма контракта")
+    dir_list = models.CharField(max_length=255, null=False, db_index=True, help_text="Направления для контракта")
+    sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
+    patient_data = models.CharField(max_length=255, null=False, db_index=True, help_text="Фамилия инициалы Заказчика-Пациента")
+
+    class Meta:
+        unique_together = ("num_contract", "protect_code")
+        verbose_name = 'Договор физ.лица'
+        verbose_name_plural = 'Договоры физ.лиц'
+
+    @staticmethod
+    def person_contract_save(n_contract, p_code, d_list,s_contract, p_data):
+        """
+        Запись в базу сведений о контракте
+        """
+        pers_contract = PersonContract(num_contract =n_contract, protect_code=p_code,dir_list=d_list,sum_contract=s_contract,patient_data=p_data)
+        pers_contract.save()
 
 
 class Issledovaniya(models.Model):
