@@ -537,7 +537,7 @@ class Card(models.Model):
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
     agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)",
                               blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True,
                               default=None, on_delete=models.SET_NULL)
 

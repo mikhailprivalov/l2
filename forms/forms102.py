@@ -172,12 +172,12 @@ def form_01(request_data):
 
 
     if (len(num_contract_set) == 1) and (None in num_contract_set) or None in protect_code_set:
-        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'])
+        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
     # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
     if (len(num_contract_set) > 1) or (len(protect_code_set) > 1) :
-        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'])
+        PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,protect_code=protect_code)
 
 
@@ -186,7 +186,7 @@ def form_01(request_data):
             if protect_code_set.pop() == protect_code:
                 date_now_str = num_contract_set.pop()
             else:
-                PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'])
+                PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
                 Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
     if sys.platform == 'win32':
