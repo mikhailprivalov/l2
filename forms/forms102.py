@@ -82,7 +82,7 @@ def form_01(request_data):
     form_name = "Договор"
     p_payer = None
     p_agent = None
-
+    print(request_data["card_pk"])
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind_dir = json.loads(request_data["napr_id"])
     exec_person = request_data['user'].doctorprofile.fio

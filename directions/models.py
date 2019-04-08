@@ -472,7 +472,12 @@ class Napravleniya(models.Model):
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
-                    research_discount = 10*-1
+
+                    discount = 9
+                    research_discount = 0
+                    if discount <= SettingManager.get("max_discount", default='10', default_type='i'):
+                        research_discount = discount*-1
+
                     research_howmany = 1
 
 
