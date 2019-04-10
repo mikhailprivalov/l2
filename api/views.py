@@ -663,7 +663,9 @@ def directions_generate(request):
                                                                        p.get("comments"),
                                                                        p.get("for_rmis"),
                                                                        p.get("rmis_data", {}),
-                                                                       vich_code=p.get("vich_code", ""))
+                                                                       vich_code=p.get("vich_code", ""),
+                                                                       count=p.get("count", 1),
+                                                                       discount=p.get("discount", 0))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:
@@ -1929,8 +1931,9 @@ def patients_get_card_data(request, card_id):
                          "district": card.district_id or -1,
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
                                        *[{"id": x.pk, "title": x.title}
-                                            for x in District.objects.all().order_by('-id')]],
+                                            for x in District.objects.all().order_by('-sort_weight', '-id')]],
                          "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
+                         "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
                          "mother": None if not card.mother else card.mother.get_fio_w_card(),
                          "mother_pk": None if not card.mother else card.mother.pk,
@@ -1940,6 +1943,8 @@ def patients_get_card_data(request, card_id):
                          "curator_pk": None if not card.curator else card.curator.pk,
                          "agent": None if not card.agent else card.agent.get_fio_w_card(),
                          "agent_pk": None if not card.agent else card.agent.pk,
+                         "payer": None if not card.payer else card.payer.get_fio_w_card(),
+                         "payer_pk": None if not card.payer else card.payer.pk,
                          "rmis_uid": rc[0].number if rc.exists() else None,
                          "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
 
@@ -2175,7 +2180,8 @@ def edit_agent(request):
         upd[key] = card
         if need_doc:
             upd[key + "_doc_auth"] = doc
-        upd["who_is_agent"] = key
+        if not key in Card.AGENT_CANT_SELECT:
+            upd["who_is_agent"] = key
 
     parent_card.update(**upd)
 

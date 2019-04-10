@@ -233,10 +233,10 @@
           </thead>
           <tbody>
           <tr v-for="t in card.agent_types" :class="{nonPrior: card.who_is_agent !== t.key,
-            prior: card.who_is_agent === t.key}">
+            prior: card.who_is_agent === t.key}" v-if="!card.excluded_types.includes(t.key)">
             <td>
               <input type="radio" name="agent"
-                     @click="update_wia(t.key)"
+                     @click="update_wia(t.key)" v-if="!card.excluded_types.includes(t.key)"
                      :checked="card.who_is_agent === t.key" />
             </td>
             <td>
@@ -256,6 +256,18 @@
                      :checked="card.who_is_agent === ''" />
             </td>
             <td colspan="4">НЕ ВЫБРАНО</td>
+          </tr>
+          <tr v-for="t in card.agent_types" class="prior" v-if="card.excluded_types.includes(t.key)">
+            <td>
+            </td>
+            <td>
+              {{t.title}}
+            </td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
+            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td>
+              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
+            </td>
           </tr>
           </tbody>
         </table>
@@ -465,6 +477,7 @@
           district: -1,
           agent_types: [],
           agent_need_doc: [],
+          excluded_types: [],
           who_is_agent: "",
           mother: null,
           mother_pk: null,

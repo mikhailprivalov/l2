@@ -375,7 +375,8 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
-                                          researches, comments, for_rmis=None, rmis_data=None, vich_code=''):
+                                          researches, comments, for_rmis=None, rmis_data=None, vich_code='',
+                                          count=1, discount=0):
 
         #импорт для получения прайса и цены по услугам
         from forms import forms_func
@@ -470,12 +471,12 @@ class Napravleniya(models.Model):
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
-                    research_discount = 10*-1
-                    research_howmany = 1
+                    research_discount = discount * -1
+                    research_howmany = count
 
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  research=research,coast=research_coast,discount=research_discount,
+                                                  research=research, coast=research_coast, discount=research_discount,
                                                   how_many=research_howmany,
                                                   deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
@@ -494,7 +495,9 @@ class Napravleniya(models.Model):
                                           "history_num": history_num, "ofname": str(ofname),
                                           "for_rmis": for_rmis,
                                           "rmis_data": rmis_data,
-                                          "comments": comments})).save()
+                                          "comments": comments,
+                                          "count": count,
+                                          "discount": discount})).save()
 
             else:
                 result["r"] = False
