@@ -330,7 +330,7 @@ def get_fin():
 
 
 @login_required
-@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники")
+@group_required("Лечащий врач", "Оператор лечащего врача", "Врач-лаборант", "Лаборант", "Врач параклиники", "Врач консультаций")
 def results_history(request):
     podr = Podrazdeleniya.objects.filter(p_type__in=[Podrazdeleniya.LABORATORY, Podrazdeleniya.PARACLINIC]).order_by(
         "title")
@@ -793,13 +793,13 @@ def hosp(request):
 
 
 @login_required
-@group_required("Врач параклиники")
+@group_required("Врач параклиники", "Врач консультаций")
 def results_paraclinic(request):
     return render(request, 'dashboard/results_paraclinic.html')
 
 
 @login_required
-@group_required("Врач параклиники", "Посещения по направлениям")
+@group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
 def direction_visit(request):
     return render(request, 'dashboard/direction_visit.html')
 
@@ -811,7 +811,7 @@ def results_report(request):
 
 
 @login_required
-@group_required("Врач параклиники")
+@group_required("Врач параклиники", "Врач консультаций")
 def results_paraclinic_blanks(request):
     researches = directory.Researches.objects.filter(hide=False, is_paraclinic=True,
                                                      podrazdeleniye=request.user.doctorprofile.podrazdeleniye).order_by(

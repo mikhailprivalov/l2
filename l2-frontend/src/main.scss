@@ -7,7 +7,12 @@
   animation-duration: .3s;
 }
 
+.dash-btn {
+  overflow: hidden;
+}
+
 .dash-btn .panel-body {
+  overflow: hidden;
   font-size: 16pt;
   border: #ddd 1px solid;
   border-radius: 5px;

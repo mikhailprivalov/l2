@@ -567,7 +567,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal:
                 has_paraclinic = True
         maxdate = ""
         if dates != {}:
@@ -1108,7 +1108,9 @@ def result_print(request):
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if iss.doc_confirmation.podrazdeleniye.vaccine:
+                if iss.research.is_doc_refferal:
+                    fwb.append(Paragraph(iss.research.title, styleBold))
+                elif iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
                 else:
                     fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
@@ -2149,7 +2151,7 @@ def results_search_directions(request):
             iss_dir = iss_dir.filter(research__pk__in=rq_researches)
 
         for r in iss_dir:
-            if not r.research.is_paraclinic:
+            if not r.research.is_paraclinic and not r.research.is_doc_refferal:
                 if not Result.objects.filter(issledovaniye=r).exists():
                     continue
                 tmp_r = {"title": r.research.title}

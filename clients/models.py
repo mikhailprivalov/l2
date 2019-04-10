@@ -237,9 +237,9 @@ class Individual(models.Model):
 
         if iss is None or (not iss.tubes.exists() and not iss.time_confirmation) or \
                 ((not iss.tubes.exists() or not iss.tubes.filter(
-                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic):
+                    time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
             today = date.today()
-        elif iss.time_confirmation and iss.research.is_paraclinic or not iss.tubes.exists():
+        elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
@@ -344,7 +344,7 @@ class Individual(models.Model):
                 AgeCache(n=age, t=2, s=r).save()
         return r
 
-    def fio(self, short=False, dots=False, full=False, direction=None, npf=False):
+    def fio(self, short=False, dots=False, full=False, direction=None, npf=False, bd=False):
 
         if not short:
             if full:
@@ -353,6 +353,9 @@ class Individual(models.Model):
                                                                   self.sex)
             elif not npf:
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
+            elif bd:
+                r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic,
+                                                                  self.birthday)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
@@ -489,14 +492,31 @@ class CardBase(models.Model):
         verbose_name_plural = 'Базы карт'
 
 
+class District(models.Model):
+    title = models.CharField(max_length=128)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Участок'
+        verbose_name_plural = 'Участки'
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
-        ('mother', "мать"),
-        ('father', "отец"),
-        ('curator', "опекун"),
-        ('agent', "представитель"),
-        ('',''),
+        ('mother', "Мать"),
+        ('father', "Отец"),
+        ('curator', "Опекун"),
+        ('agent', "Представитель"),
+        ('payer', "Плательщик"),
+        ('', 'НЕ ВЫБРАНО'),
     )
+
+    AGENT_NEED_DOC = ['curator', 'agent']
+    AGENT_CANT_SELECT = ['payer']
+
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
@@ -508,26 +528,32 @@ class Card(models.Model):
     main_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес регистрации")
     fact_address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес факт. проживания")
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
-    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None,
+                                      on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    mother = models.ForeignKey('self', related_name='mother_p',help_text="Мать", blank=True, null=True, default=None,
+    mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    father = models.ForeignKey('self', related_name='father_p',help_text="Отец", blank=True, null=True, default=None,
+    father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None,
                                on_delete=models.SET_NULL)
-    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True,
+                                default=None, on_delete=models.SET_NULL)
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
-    agent = models.ForeignKey('self', related_name='agent_p',help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)",
+                              blank=True, null=True, default=None, on_delete=models.SET_NULL)
     agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание опекуна")
-    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None,
-                               on_delete=models.SET_NULL)
+    payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True,
+                              default=None, on_delete=models.SET_NULL)
 
-    who_is_agent = models.CharField(max_length=7,choices=AGENT_CHOICES, blank=True, default='',help_text="Законный представитель пациента",
-                                    db_index=True)
+    who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='',
+                                    help_text="Законный представитель пациента", db_index=True)
+    district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
+                                 on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
+
+    def get_fio_w_card(self):
+        return "L2 №{} {} {}".format(self.number, self.individual.fio(), self.individual.bd())
 
     def number_with_type(self):
         return "{}{}".format(self.number, (" " + self.base.short_title) if not self.base.is_rmis else "")

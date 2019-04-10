@@ -32,7 +32,7 @@
         <div class="col-xs-6 col-form">
           <div class="form-row">
             <div class="row-t">Карта</div>
-            <div class="row-v">
+            <div class="row-v" style="font-weight: bold;">
               {{card_pk >= 0 ? (card.id ? card.number : 'загрузка') : 'НОВАЯ'}}
             </div>
           </div>
@@ -91,7 +91,7 @@
           <div class="info-row">
             Связь с РМИС – {{card.has_rmis_card ? 'ЕСТЬ' : 'НЕТ'}}
             <strong v-if="card.has_rmis_card">{{card.rmis_uid}}</strong>
-            <span v-if="card.has_rmis_card"><a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a></span>
+            <a href="#" @click.prevent="sync_rmis" tabindex="-1">синхронизировать</a>
           </div>
         </div>
       </div>
@@ -103,6 +103,15 @@
       <div v-else>
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+              <div class="row-t">Участок</div>
+              <select v-model="card.district" class="form-control"
+                      style="width: 65%;border: none;height: 26px;">
+                <option v-for="c in card.districts" :value="c.id">
+                  {{c.title}}
+                </option>
+              </select>
+            </div>
             <div class="form-row sm-f">
                 <div class="row-t">Адрес регистрации</div>
                 <input class="form-control" v-model="card.main_address">
@@ -126,7 +135,7 @@
                              ref="wp" src="/api/autocomplete?value=:keyword&type=work_place" v-model="card.work_place"
                   />
                   <select v-else v-model="card.work_place_db" class="form-control"
-                          style="width: 55%;border: none;height: 28px;">
+                          style="width: 55%;border: none;height: 26px;">
                     <option v-for="c in card.av_companies" :value="c.id">
                       {{c.short_title === '' ? c.title : c.short_title}}
                     </option>
@@ -144,7 +153,7 @@
                 </div>
               </div>
             </div>
-            <div class="form-row">
+            <div class="form-row sm-f">
               <div class="row-t">Основной диагноз</div>
               <TypeAhead :delayTime="100" :getResponse="getResponse"
                          :highlighting="highlighting" :limit="10"
@@ -154,7 +163,7 @@
             </div>
           </div>
         </div>
-        <table class="table table-bordered table-condensed">
+        <table class="table table-bordered table-condensed table-sm-pd">
           <colgroup>
             <col width="70" />
             <col />
@@ -201,6 +210,63 @@
           <tr>
             <td class="text-center" colspan="6">
               <a @click.prevent="edit_document(-1)" href="#">добавить документ</a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <table class="table table-bordered table-condensed table-sm-pd">
+          <colgroup>
+            <col width="70" />
+            <col width="120" />
+            <col />
+            <col width="150" />
+            <col width="40" />
+          </colgroup>
+          <thead>
+          <tr>
+            <th>ВЫБОР</th>
+            <th>Статус</th>
+            <th>ФИО</th>
+            <th>Докум.-основание</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="t in card.agent_types" :class="{nonPrior: card.who_is_agent !== t.key,
+            prior: card.who_is_agent === t.key}" v-if="!card.excluded_types.includes(t.key)">
+            <td>
+              <input type="radio" name="agent"
+                     @click="update_wia(t.key)" v-if="!card.excluded_types.includes(t.key)"
+                     :checked="card.who_is_agent === t.key" />
+            </td>
+            <td>
+              {{t.title}}
+            </td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
+            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td>
+              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
+            </td>
+          </tr>
+          <tr :class="{nonPrior: card.who_is_agent !== '',
+            prior: card.who_is_agent === ''}">
+            <td>
+              <input type="radio" name="agent"
+                     @click="update_wia('')"
+                     :checked="card.who_is_agent === ''" />
+            </td>
+            <td colspan="4">НЕ ВЫБРАНО</td>
+          </tr>
+          <tr v-for="t in card.agent_types" class="prior" v-if="card.excluded_types.includes(t.key)">
+            <td>
+            </td>
+            <td>
+              {{t.title}}
+            </td>
+            <td :colspan="agent_need_doc(t.key) ? 1 : 2">{{card[t.key]}}</td>
+            <td v-if="agent_need_doc(t.key)">{{card[`${t.key}_doc_auth`]}}</td>
+            <td>
+              <a @click.prevent="edit_agent(t.key)" href="#"><i class="fa fa-pencil"></i></a>
             </td>
           </tr>
           </tbody>
@@ -261,15 +327,61 @@
           </div>
         </div>
       </modal>
+      <modal v-if="agent_to_edit" ref="modalAgentEdit" @close="hide_modal_agent_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header">Редактор – {{agent_type_by_key(agent_to_edit)}} (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
+        <div slot="body" style="min-height: 140px" class="registry-body">
+          <div v-show="!agent_clear">
+            <div style="height: 110px">
+              <patient-small-picker v-model="agent_card_selected" :base_pk="base_pk" />
+            </div>
+            <div class="form-group" v-if="agent_need_doc(agent_to_edit)" style="padding: 10px">
+              <label for="ae-f2">Документ-основание:</label>
+              <input class="form-control" id="ae-f2" v-model="agent_doc">
+            </div>
+          </div>
+          <div class="checkbox" style="padding-left: 35px;padding-top: 10px" v-if="!!card[agent_to_edit]">
+            <label>
+              <input type="checkbox" v-model="agent_clear"> очистить представителя ({{agent_type_by_key(agent_to_edit)}})
+            </label>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_agent_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-4">
+              <button :disabled="!valid_agent" @click="save_agent()" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-4">
+        <div class="col-xs-3">
+          <div class="dropup" v-if="card_pk >= 0">
+            <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
+                    style="width: 100%">
+              Печатн. формы <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li v-for="f in forms">
+                <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-xs-2">
           <button @click="hide_modal" class="btn btn-primary-nb btn-blue-nb" type="button">
-            Отмена
+            Закрыть
           </button>
         </div>
-        <div class="col-xs-4">
+        <div class="col-xs-3">
           <button :disabled="!valid" @click="save()" class="btn btn-primary-nb btn-blue-nb" type="button">
             Сохранить
           </button>
@@ -287,9 +399,11 @@
 <script>
   import Modal from './ui-cards/Modal'
   import patients_point from './api/patients-point'
+  import PatientSmallPicker from './PatientSmallPicker'
   import * as action_types from './store/action-types'
   import TypeAhead from 'vue2-typeahead'
   import moment from 'moment'
+  import forms from './forms'
 
   function capitalizeFirstLetter(string) {
     string = SwapLayouts(string)
@@ -323,7 +437,7 @@
 
   export default {
     name: 'l2-card-create',
-    components: {Modal, TypeAhead},
+    components: {Modal, TypeAhead, PatientSmallPicker},
     props: {
       card_pk: {
         type: Number,
@@ -359,12 +473,32 @@
           doc_types: [],
           av_companies: [],
           main_docs: {},
+          districts: [],
+          district: -1,
+          agent_types: [],
+          agent_need_doc: [],
+          excluded_types: [],
+          who_is_agent: "",
+          mother: null,
+          mother_pk: null,
+          father: null,
+          father_pk: null,
+          curator: null,
+          curator_doc: null,
+          curator_pk: null,
+          agent: null,
+          agent_doc: null,
+          agent_pk: null,
         },
         individuals: [],
         document_to_edit: -2,
         document: {
           number: ''
-        }
+        },
+        agent_to_edit: null,
+        agent_card_selected: null,
+        agent_doc: '',
+        agent_clear: false,
       }
     },
     created() {
@@ -397,7 +531,20 @@
       },
       valid_doc() {
         return this.document.number.length > 0;
-      }
+      },
+      valid_agent() {
+        if (this.agent_clear)
+          return true;
+        return this.agent_card_selected && this.agent_card_selected !== this.card_pk;
+      },
+      forms() {
+        return forms.map(f => {
+          return {...f, url: f.url.kwf({
+              card: this.card_pk,
+              individual: this.card.individual,
+            })}
+        });
+      },
     },
     watch: {
       sex() {
@@ -439,6 +586,17 @@
       }
     },
     methods: {
+      agent_type_by_key(key) {
+        for (const t of this.card.agent_types) {
+          if (t.key === key) {
+            return t.title;
+          }
+        }
+        return 'НЕ ВЫБРАНО';
+      },
+      agent_need_doc(key) {
+        return this.card.agent_need_doc.includes(key);
+      },
       select_individual(invpk) {
         this.card.individual = invpk
       },
@@ -463,7 +621,7 @@
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position, this.card.work_place_db, this.card.custom_workplace)
+            this.card.work_position, this.card.work_place_db, this.card.custom_workplace, this.card.district)
           if (data.result !== 'ok') {
             return
           }
@@ -488,6 +646,22 @@
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      update_wia(key) {
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.updateWIA(this.card_pk, key)
+          this.load_data();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      edit_agent(key) {
+        this.agent_card_selected = this.card[`${key}_pk`]
+        this.agent_doc = this.card[`${key}_doc_auth`] || ''
+        this.agent_clear = false
+        this.agent_to_edit = key;
       },
       sync_rmis() {
         let vm = this;
@@ -572,6 +746,10 @@
         this.$refs.modalDocEdit.$el.style.display = 'none'
         this.document_to_edit = -2
       },
+      hide_modal_agent_edit() {
+        this.$refs.modalAgentEdit.$el.style.display = 'none';
+        this.agent_to_edit = null;
+      },
       save_doc() {
         if (!this.valid_doc) {
           return
@@ -589,6 +767,26 @@
             number: ''
           };
           this.hide_modal_doc_edit();
+        })().then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      save_agent() {
+        if (!this.valid_agent) {
+          return
+        }
+        let vm = this;
+        (async () => {
+          await vm.$store.dispatch(action_types.INC_LOADING)
+          const data = await patients_point.editAgent(
+            this.agent_to_edit,
+            this.card_pk,
+            this.agent_card_selected,
+            this.agent_doc,
+            this.agent_clear,
+          )
+          this.load_data();
+          this.hide_modal_agent_edit();
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
@@ -660,10 +858,10 @@
 
     &.sm-f {
       .row-t {
-        padding: 4px 0 0 10px;
+        padding: 2px 0 0 10px;
       }
       input, .row-v, /deep/ input {
-        height: 28px;
+        height: 26px;
       }
     }
 
@@ -722,5 +920,10 @@
   }
   .str /deep/ .input-group {
     width: 100%;
+  }
+
+  .lst {
+    margin: 0;
+    line-height: 1;
   }
 </style>

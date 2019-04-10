@@ -120,7 +120,8 @@
               vm.last_result = data.last_result
               vm.has_last_result = data.has_last_result
             }
-            vm.is_paraclinic = data.data.is_paraclinic || (data.last_result ? data.last_result.is_paraclinic : false)
+            vm.is_paraclinic = data.data.is_paraclinic || data.data.is_doc_referral ||
+              (data.last_result ? data.last_result.is_paraclinic : false)
             let m = moment.unix(data.data.ts)
             let n = moment()
             vm.ms = n.diff(m)

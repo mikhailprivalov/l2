@@ -2,7 +2,7 @@
   <div ref="root" class="construct-root">
     <div class="construct-sidebar" v-show="opened_id === -2">
       <div class="sidebar-select">
-        <select-picker-b style="height: 34px;" :options="departments_of_type" v-model="department"/>
+        <select-picker-m style="height: 34px;" :options="departments_of_type" v-model="department" v-if="departments_of_type.length > 0" />
       </div>
       <input class="form-control" v-model="title_filter" style="padding-top: 7px;padding-bottom: 7px"
              placeholder="Фильтр по названию"/>
@@ -26,21 +26,22 @@
 </template>
 
 <script>
-  import SelectPickerB from '../SelectPickerB'
+  import SelectPickerM from '../SelectPickerM'
   import ParaclinicResearchEditor from './ParaclinicResearchEditor'
   import researches_point from '../api/researches-point'
+  import { mapGetters } from 'vuex'
   import * as action_types from '../store/action-types'
 
   export default {
     components: {
-      SelectPickerB,
+      SelectPickerM,
       ParaclinicResearchEditor,
     },
     name: 'construct-paraclinic',
     data() {
       return {
         department: '-1',
-        departments: [],
+        // departments: [],
         researches_list: [],
         opened_id: -2,
         title_filter: ''
@@ -67,29 +68,30 @@
     created() {
       this.$parent.$on('research-editor:cancel', this.cancel_edit)
     },
-    mounted() {
-      let vm = this
-      vm.departments = vm.$store.getters.allDepartments
-      this.$store.watch(state => state.departments.all, (oldValue, newValue) => {
-        vm.departments = vm.$store.getters.allDepartments
-      })
-    },
     watch: {
-      departments() {
-        if (this.department !== '-1' || this.departments_of_type.length === 0)
-          return
-        for(let row of this.departments_of_type) {
-          if(row.value === this.$store.getters.user_data.department.pk) {
-            this.department = row.value.toString()
+      departments_of_type: {
+        handler(){
+          if (this.department !== '-1' || this.departments_of_type.length === 0
+            || !this.$store.getters.user_data.department)
             return
+          for(let row of this.departments_of_type) {
+            if(row.value === this.$store.getters.user_data.department.pk) {
+              this.department = row.value.toString()
+              return
+            }
           }
-        }
-        this.department = this.departments_of_type[0].value.toString()
+          this.department = this.departments_of_type[0].value.toString()
+        },
+        deep: true,
+        immediate: true,
       },
-      department() {
-        if (this.department === '-1')
-          return
-        this.load_researches()
+      department: {
+        handler() {
+          if (this.department === '-1')
+            return
+          this.load_researches()
+        },
+        immediate: true,
       }
     },
     computed: {
@@ -100,14 +102,19 @@
             d.push({label: row.title, value: row.pk})
           }
         }
-        return d
+        if (d.length === 0)
+          return;
+        return [...d, {value: -2, label: 'Консультации'}];
       },
       department_int() {
         return parseInt(this.department)
       },
       researches_list_filtered() {
         return this.researches_list.filter(row => row.title.trim().toLowerCase().indexOf(this.title_filter.trim().toLowerCase()) >= 0)
-      }
+      },
+      ...mapGetters({
+        departments: 'allDepartments',
+      }),
     }
   }
 </script>
