@@ -494,6 +494,7 @@ class CardBase(models.Model):
 
 class District(models.Model):
     title = models.CharField(max_length=128)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
 
     def __str__(self):
         return self.title
@@ -509,10 +510,12 @@ class Card(models.Model):
         ('father', "Отец"),
         ('curator', "Опекун"),
         ('agent', "Представитель"),
+        ('payer', "Плательщик"),
         ('', 'НЕ ВЫБРАНО'),
     )
 
     AGENT_NEED_DOC = ['curator', 'agent']
+    AGENT_CANT_SELECT = ['payer']
 
     number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)

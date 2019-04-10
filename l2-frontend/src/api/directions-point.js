@@ -1,6 +1,6 @@
 import {HTTP} from '../http-common'
 
-async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_pk, researches, comments, for_rmis, rmis_data, vich_code) {
+async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_pk, researches, comments, for_rmis, rmis_data, vich_code, count, discount) {
   try {
     const response = await HTTP.post('directions/generate', {
       card_pk,
@@ -12,7 +12,9 @@ async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_
       comments,
       for_rmis,
       rmis_data,
-      vich_code
+      vich_code,
+      count,
+      discount,
     })
     if (response.statusText === 'OK') {
       return response.data

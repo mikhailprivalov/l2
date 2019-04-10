@@ -246,7 +246,6 @@ def gen_pdf_dir(request):
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, 15 * mm, h - 15 * mm - ht)
         c.showPage()
-
     c.save()  # Сохранение отрисованного на PDF
     pdf = buffer.getvalue()  # Получение данных из буфера
 
@@ -284,7 +283,9 @@ def gen_pdf_dir(request):
                 return response
 
     buffer.close()  # Закрытие буфера
+
     response.write(pdf)  # Запись PDF в ответ
+
     return response
 
 
