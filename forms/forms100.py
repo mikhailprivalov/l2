@@ -124,12 +124,17 @@ def form_01(request_data):
         Paragraph('<font face="PTAstraSerifReg">1.Фамилия, имя, отчество:'
                   '<u>{}</u> </font>'.format(patient_data['fio']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">2.Пол: <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="90" />'
-                  '3.Дата Рождения: <u>{}</u> </font>'.format(patient_data['sex'], patient_data['born']), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="25"/>'
-                  'номер: <u>{}</u></font>'.format(patient_data['passport_serial'], patient_data['passport_num']), styleJustified),
-        Paragraph('<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(patient_data['passport_date_start']),
+                  '3.Дата Рождения: <u>{}</u> </font>'.format(patient_data['sex'], patient_data['born']),
                   styleJustified),
-        Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(patient_data['passport_issued']), styleJustified),
+        Paragraph(
+            '<font face="PTAstraSerifReg">4.Паспорт: серия <u>{}</u> <img src="forms/img/FFFFFF-space.png" width="25"/>'
+            'номер: <u>{}</u></font>'.format(patient_data['passport_serial'], patient_data['passport_num']),
+            styleJustified),
+        Paragraph(
+            '<font face="PTAstraSerifReg">Дата выдачи: <u>{}</u></font>'.format(patient_data['passport_date_start']),
+            styleJustified),
+        Paragraph('<font face="PTAstraSerifReg"> Кем Выдан: <u>{}</u></font>'.format(patient_data['passport_issued']),
+                  styleJustified),
         Paragraph('<font face="PTAstraSerifReg">5. Адрес регистрации по месту жительства (пребывания):'
                   ' <u>{}</u></font>'.format(patient_data['main_address']), styleJustified),
         Paragraph('<font face="PTAstraSerifReg">6. Номер страхового полиса(ЕНП):'
@@ -341,18 +346,18 @@ def form_02(request_data):
     styleT.alignment = TA_LEFT
     styleT.fontSize = 10
     styleT.leading = 4.5 * mm
-    styleT.face ='PTAstraSerifReg'
+    styleT.face = 'PTAstraSerifReg'
 
     print_district = ''
-    if SettingManager.get("district", default = 'True', default_type = 'b'):
+    if SettingManager.get("district", default='True', default_type='b'):
         if ind_card.district != None:
             print_district = 'Участок: {}'.format(ind_card.district.title)
 
     opinion = [
         [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(
-            hospital_name,hospital_address,hospital_kod_ogrn,print_district), styleT),
-         Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
-                   'Медицинская документация<br/>Учетная форма № 025/у</font>', styleT)],
+            hospital_name, hospital_address, hospital_kod_ogrn, print_district), styleT),
+            Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
+                      'Медицинская документация<br/>Учетная форма № 025/у</font>', styleT)],
     ]
 
     tbl = Table(opinion, 2 * [90 * mm])
@@ -360,7 +365,7 @@ def form_02(request_data):
         ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
         ('LEFTPADDING', (1, 0), (-1, -1), 80),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+    ]))
 
     objs.append(tbl)
     space_symbol = '&nbsp;'
@@ -375,36 +380,42 @@ def form_02(request_data):
     if patient_data['phone']:
         p_phone = 'тел. ' + ", ".join(patient_data['phone'])
 
-    content_title =[
-        Indenter(left=0 *mm),
+    content_title = [
+        Indenter(left=0 * mm),
         Spacer(1, 1 * mm),
-        Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ', styleCenter),
+        Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ',
+                  styleCenter),
         Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, patient_data['card_num']), styleCenterBold),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
         Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(patient_data['fio']), style),
-        Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
+        Paragraph(
+            '3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']),
+            style),
         Paragraph('5. Место регистрации: {}'.format(patient_data['main_address']), style),
         Paragraph('{}'.format(p_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
         Paragraph('7. Полис ОМС: серия {} №: {} {}'
-                  '8. СНИЛС: {}'.format(patient_data['oms']['polis_serial'],patient_data['oms']['polis_num'], 13 * space_symbol, patient_data['snils']),style),
-        Paragraph('9. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']), style),
+                  '8. СНИЛС: {}'.format(patient_data['oms']['polis_serial'], patient_data['oms']['polis_num'],
+                                        13 * space_symbol, patient_data['snils']), style),
+        Paragraph('9. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
+                  style),
         Paragraph('10. Код категории льготы: {} {} 11. Документ: {} &nbsp; серия: {} &nbsp;&nbsp; №: {}'.
-                  format(8 * space_symbol, 25 * space_symbol, patient_data['type_doc'], patient_data['serial'],patient_data['num']), style),
+                  format(8 * space_symbol, 25 * space_symbol, patient_data['type_doc'], patient_data['serial'],
+                         patient_data['num']), style),
     ]
 
     objs.extend(content_title)
-    if SettingManager.get("dispensary", default = 'True', default_type = 'b'):
+    if SettingManager.get("dispensary", default='True', default_type='b'):
         objs.append(Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style))
-        objs.append(Spacer(1,2 * mm))
+        objs.append(Spacer(1, 2 * mm))
 
         styleTCenter = deepcopy(styleT)
-        styleTCenter.alignment=TA_CENTER
+        styleTCenter.alignment = TA_CENTER
         styleTCenter.leading = 3.5 * mm
 
-        opinion=[
+        opinion = [
             [Paragraph('<font size=9>Дата начала диспансерного наблюдения </font>', styleTCenter),
              Paragraph('<font size=9 >Дата прекращения диспансерного наблюдения</font>', styleTCenter),
              Paragraph('<font size=9 >Диагноз</font>', styleTCenter),
@@ -428,7 +439,7 @@ def form_02(request_data):
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
 
-            ]))
+        ]))
 
         objs.append(tbl)
 

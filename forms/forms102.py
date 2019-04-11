@@ -82,12 +82,9 @@ def form_01(request_data):
     form_name = "Договор"
     p_payer = None
     p_agent = None
-    print(request_data["card_pk"])
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind_dir = json.loads(request_data["napr_id"])
     exec_person = request_data['user'].doctorprofile.fio
-    # exec_person = 'Иванов Иван Иванович'
-
 
     patient_data = ind_card.get_data_individual()
 
@@ -127,7 +124,7 @@ def form_01(request_data):
     #Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
     num_contract_set = set()
     for n in napr:
-        if (n.istochnik_f_id in ist_f_list) and (n.client == ind_card):
+        if n.istochnik_f_id in ist_f_list and n.client == ind_card:
             num_contract_set.add(n.num_contract)
             dir_temp.append(n.pk)
 
@@ -171,18 +168,18 @@ def form_01(request_data):
         protect_code_set.add(n.protect_code)
 
 
-    if (len(num_contract_set) == 1) and (None in num_contract_set) or None in protect_code_set:
+    if len(num_contract_set) == 1 and None in num_contract_set or None in protect_code_set:
         PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
 
     # ПереЗаписать номер контракта Если в наборе направлении значение разные значения
-    if (len(num_contract_set) > 1) or (len(protect_code_set) > 1) :
+    if len(num_contract_set) > 1 or len(protect_code_set) > 1:
         PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str,protect_code=protect_code)
 
 
-    if ((len(num_contract_set) == 1) and (not None in num_contract_set)):
-        if (len(protect_code_set) == 1) and (not None in protect_code_set):
+    if len(num_contract_set) == 1 and not None in num_contract_set:
+        if len(protect_code_set) == 1 and not None in protect_code_set:
             if protect_code_set.pop() == protect_code:
                 date_now_str = num_contract_set.pop()
             else:
