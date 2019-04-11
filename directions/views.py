@@ -263,7 +263,7 @@ def gen_pdf_dir(request):
 
     if request.GET.get("contract"):
         if request.GET["contract"] == '1':
-            if len(card_pk_set == 1) and fin_status:
+            if (len(card_pk_set) == 1) and fin_status:
                 from forms.forms102 import form_01 as f_contract
                 fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
                 fc_buf = BytesIO()
