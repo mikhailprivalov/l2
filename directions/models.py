@@ -201,7 +201,7 @@ class IstochnikiFinansirovaniya(models.Model):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
     @staticmethod
-    def get_price_modifier(finsource,work_place_link):
+    def get_price_modifier(finsource, work_place_link=None):
         """
         На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
         Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
@@ -214,15 +214,14 @@ class IstochnikiFinansirovaniya(models.Model):
         price_contract = set(SettingManager.get("price_contract").split(','))
         price_company = set(SettingManager.get("price_company").split(','))
 
-
         if finsource.title.upper() in price_contract:
             contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=finsource.pk).first()
             if contract_l[0]:
                 price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
         elif finsource.title.upper() in price_company and work_place_link:
-            contract_l = contracts.Company.objects.values_list('contract').filter(pk=work_place_link.pk).first()
-            if contract_l[0]:
-                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+            contract_l = work_place_link.contract_id
+            if contract_l:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l)
 
         return price_modifier
 
