@@ -343,9 +343,14 @@ def form_02(request_data):
     styleT.leading = 4.5 * mm
     styleT.face ='PTAstraSerifReg'
 
+    print_district = ''
+    if SettingManager.get("district", default = 'True', default_type = 'b'):
+        if ind_card.district != None:
+            print_district = 'Участок: {}'.format(ind_card.district.title)
+
     opinion = [
-        [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} </font>'.format(
-            hospital_name,hospital_address,hospital_kod_ogrn), styleT),
+        [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(
+            hospital_name,hospital_address,hospital_kod_ogrn,print_district), styleT),
          Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: 31348613<br/>'
                    'Медицинская документация<br/>Учетная форма № 025/у</font>', styleT)],
     ]
@@ -391,8 +396,7 @@ def form_02(request_data):
     ]
 
     objs.extend(content_title)
-
-    if SettingManager.get("dispensary"):
+    if SettingManager.get("dispensary", default = 'True', default_type = 'b'):
         objs.append(Paragraph('12. Заболевания, по поводу которых осуществляется диспансерное наблюдение:', style))
         objs.append(Spacer(1,2 * mm))
 
