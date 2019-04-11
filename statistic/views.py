@@ -178,55 +178,6 @@ def statistic_xls(request):
         #         "title": i.research.title,
         #     })
 
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 1
-        font_style.borders = borders
-        font_style_b = xlwt.XFStyle()
-        font_style_b.alignment.wrap = 1
-        font_style_b.font.bold = True
-        font_style_b.borders = borders
-        ws = wb.add_sheet("Вакцинация")
-        row_num = 0
-        row = [
-            ("Пациент", 7000),
-            ("Карта", 6000),
-            ("Направление", 4000),
-            ("Дата", 4000),
-            ("Назначение", 7000),
-        ]
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_b)
-            ws.col(col_num).width = row[col_num][1]
-        row_num += 1
-        for ck in cards.keys():
-            c = cards[ck]
-            started = False
-            for dk in c["d"].keys():
-                if not started:
-                    row = [
-                        "{} {}".format(c["fio"], c["bd"]),
-                        c["card"],
-                    ]
-                    started = True
-                else:
-                    row = ["", ""]
-                s2 = False
-                for r in c["d"][dk]["r"]:
-                    if not s2:
-                        s2 = True
-                        row.append(str(dk))
-                        row.append(c["d"][dk]["dn"])
-                    else:
-                        row.append("")
-                        row.append("")
-                        row.append("")
-                        row.append("")
-                    row.append(r["title"])
-                    for col_num in range(len(row)):
-                        ws.write(row_num, col_num, row[col_num], font_style)
-                    row_num += 1
-                    row = []
 
     # Все возможные анализы в направлениях - стр-ра А
     print(depart_fraction)
@@ -241,48 +192,100 @@ def statistic_xls(request):
                   napravleniye_id__in=l_napr)])
         obj.append(a)
 
-    # print(obj)
     for i in obj:
         for j in i:
             result_k = ({fr_id: val for fr_id, val in
                          Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
-            # print(result_k)
             j.append(result_k)
 
-    print('##########')
-    print('##########')
     finish_obj = []
     for i in obj:
-        print('###')
         for j in i:
             j.pop(0)
             finish_obj.append(j)
 
-    for i in finish_obj:
-        print(i)
-
     # Строим стр-ру {id-анализа:{(направление, дата):{id-фракции:результат}}}
-    finish_ord = {}
+    finish_ord = OrderedDict()
     for t_lab, name_iss in depart_fraction.items():
         finish_ord[t_lab] = {}
         for s, u in name_iss.items():
-            temp_ord = {}
-            temp_ord2 = {}
+            temp_ord = OrderedDict()
+            temp_ord2 = OrderedDict()
             napr_date = ('напр', 'дата',)
             temp_ord2[napr_date] = u
             temp_ord[s] = temp_ord2
             print(s)
             print(u)
             print('######')
+            uu = u.copy()
+            for kk in uu.keys():
+                uu[kk]=''
             finish_ord[t_lab].update(temp_ord)
             for d in finish_obj:
                 if s == d[0]:
                     napr_date = (d[1], d[2])
-                    u = d[3]
-                    finish_ord[t_lab][s][napr_date] = u
+                    for kk in uu.keys():
+                        uu[kk] = d[3].get(kk,'')
+                    finish_ord[t_lab][s][napr_date] = uu
+                elif s == 'one_param':
+                    napr_date = (d[1], d[2])
+                    for kk in uu.keys():
+                        if d[3].get(kk,'') != '':
+                            uu[kk] = d[3].get(kk, '')
+                            finish_ord[t_lab][s][napr_date] = uu
 
-    print('######')
+    print('###### Finish')
     print(finish_ord)
+
+    response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
+    font_style = xlwt.XFStyle()
+    font_style.alignment.wrap = 1
+    font_style.borders = borders
+    font_style_b = xlwt.XFStyle()
+    font_style_b.alignment.wrap = 1
+    font_style_b.font.bold = True
+    font_style_b.borders = borders
+    ws = wb.add_sheet("Динамика")
+    row_num = 0
+    row = [
+        ("Пациент", 7000),
+        ("Карта", 6000),
+        ("Направление", 4000),
+        ("Дата", 4000),
+        ("Назначение", 7000),
+    ]
+    for col_num in range(len(row)):
+        ws.write(row_num, col_num, row[col_num][0], font_style_b)
+        ws.col(col_num).width = row[col_num][1]
+    row_num += 1
+    for ck in cards.keys():
+        c = cards[ck]
+        started = False
+        for dk in c["d"].keys():
+            if not started:
+                row = [
+                    "{} {}".format(c["fio"], c["bd"]),
+                    c["card"],
+                ]
+                started = True
+            else:
+                row = ["", ""]
+            s2 = False
+            for r in c["d"][dk]["r"]:
+                if not s2:
+                    s2 = True
+                    row.append(str(dk))
+                    row.append(c["d"][dk]["dn"])
+                else:
+                    row.append("")
+                    row.append("")
+                    row.append("")
+                    row.append("")
+                row.append(r["title"])
+                for col_num in range(len(row)):
+                    ws.write(row_num, col_num, row[col_num], font_style)
+                row_num += 1
+                row = []
 
     #
     # Вывести окончательную структуру в нужный формат: эксель (pdf, word, html, др.)
