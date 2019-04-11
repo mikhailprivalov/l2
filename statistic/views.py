@@ -13,6 +13,7 @@ import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
+from directory.models import Researches
 from laboratory import settings
 from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
@@ -122,11 +123,6 @@ def statistic_xls(request):
                 tmp_num_dir.append(d.pk)
                 depart_napr[department_title] = tmp_num_dir
 
-            # for i in Issledovaniya.objects.filter(napravleniye=d):
-            #     cards[c.pk]["d"][d.pk]["r"].append({
-            #         "title": i.research.title,
-            #     })
-
             # По исследованиям строим структуру "depart_fraction":
             # Будущие заголовки в Excel. Те исследования у, к-рых по одной фракции в общий подсловарь,
             # у к-рых больше одного показателя (фракции) в самостоятельные подсловари. Выборка из справочника, НЕ из "Результатов"
@@ -140,7 +136,6 @@ def statistic_xls(request):
             for i in Issledovaniya.objects.filter(napravleniye=d):
                 dict_research_fraction = OrderedDict()
                 research_iss = i.research_id
-                # print(i.time_confirmation.date())
                 dict_research_fraction = ({p: str(t) + ',' + str(u) for p, t, u in
                                            directory.Fractions.objects.values_list('pk', 'title', 'units').filter(
                                                research=i.research).order_by("sort_weight")})
@@ -160,30 +155,8 @@ def statistic_xls(request):
                         depart_fraction[department_id].update({research_iss: dict_research_fraction})
                         depart_fraction[department_id].update({one_param: {}})
 
-        # if c.pk not in cards:
-        #     cards[c.pk] = {
-        #         "card": c.number_with_type(),
-        #         "fio": c.individual.fio(),
-        #         "bd": c.individual.bd(),
-        #         "hn": d.history_num,
-        #         "d": {},
-        #     }
-        # cards[c.pk]["d"][d.pk] = {
-        #     "r": [],
-        #     "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
-        # }
-
-        # for i in Issledovaniya.objects.filter(napravleniye=d):
-        #     cards[c.pk]["d"][d.pk]["r"].append({
-        #         "title": i.research.title,
-        #     })
-
-
     # Все возможные анализы в направлениях - стр-ра А
-    print(depart_fraction)
     # направления по лабораториям (тип лаборатории, [номера направлений])
-    print(depart_napr)
-    print('##########')
     obj = []
     import datetime
     for type_lab, l_napr in depart_napr.items():
@@ -204,38 +177,42 @@ def statistic_xls(request):
             j.pop(0)
             finish_obj.append(j)
 
-    # Строим стр-ру {id-анализа:{(направление, дата):{id-фракции:результат}}}
+    # Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
     finish_ord = OrderedDict()
     for t_lab, name_iss in depart_fraction.items():
         finish_ord[t_lab] = {}
-        for s, u in name_iss.items():
-            temp_ord = OrderedDict()
-            temp_ord2 = OrderedDict()
-            napr_date = ('напр', 'дата',)
-            temp_ord2[napr_date] = u
-            temp_ord[s] = temp_ord2
-            print(s)
-            print(u)
-            print('######')
-            uu = u.copy()
-            for kk in uu.keys():
-                uu[kk]=''
-            finish_ord[t_lab].update(temp_ord)
-            for d in finish_obj:
-                if s == d[0]:
-                    napr_date = (d[1], d[2])
-                    for kk in uu.keys():
-                        uu[kk] = d[3].get(kk,'')
-                    finish_ord[t_lab][s][napr_date] = uu
-                elif s == 'one_param':
-                    napr_date = (d[1], d[2])
-                    for kk in uu.keys():
-                        if d[3].get(kk,'') != '':
-                            uu[kk] = d[3].get(kk, '')
-                            finish_ord[t_lab][s][napr_date] = uu
+        for iss_id, fract_dict in name_iss.items():
+            if fract_dict:
+               frac = True
+            else:
+                frac = False
+            finish_ord[t_lab][iss_id] = {}
+            opinion_dict = {('напр','дата',):fract_dict}
+            val_dict = fract_dict.copy()
+            finish_ord[t_lab][iss_id].update(opinion_dict)
+            for k, v in fract_dict.items():
+                val_dict[k] = ''
 
-    print('###### Finish')
-    print(finish_ord)
+            tmp_dict = {}
+            if iss_id != None:
+                for d in finish_obj:
+                    tmp_dict = {}
+                    if iss_id == d[0]:
+                        for i,j in d[3].items():
+                            val_dict[i] = j
+                        tmp_dict[(d[1],d[2],)] = dict(val_dict)
+                        finish_ord[t_lab][iss_id].update(tmp_dict)
+                        tmp_dict = {}
+
+            if iss_id == 'one_param':
+                for d in finish_obj:
+                    tmp_dict = {}
+                    for s,u in d[3].items():
+                        if s in val_dict.keys():
+                            val_dict[s] = u
+                            tmp_dict[(d[1],d[2],)] = dict(val_dict)
+                    finish_ord[t_lab][iss_id].update(tmp_dict)
+                    tmp_dict = {}
 
     response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
     font_style = xlwt.XFStyle()
@@ -247,45 +224,74 @@ def statistic_xls(request):
     font_style_b.borders = borders
     ws = wb.add_sheet("Динамика")
     row_num = 0
-    row = [
-        ("Пациент", 7000),
-        ("Карта", 6000),
-        ("Направление", 4000),
-        ("Дата", 4000),
-        ("Назначение", 7000),
-    ]
-    for col_num in range(len(row)):
-        ws.write(row_num, col_num, row[col_num][0], font_style_b)
-        ws.col(col_num).width = row[col_num][1]
-    row_num += 1
-    for ck in cards.keys():
-        c = cards[ck]
-        started = False
-        for dk in c["d"].keys():
-            if not started:
-                row = [
-                    "{} {}".format(c["fio"], c["bd"]),
-                    c["card"],
-                ]
-                started = True
+
+    for k,v in finish_ord.items():
+        col_num = 0
+        ws.write(row_num, 0, label=Podrazdeleniya.objects.values_list('title').get(pk=k))
+        row_num += 1
+        col_num = 0
+        for name_iss, fr_id in v.items():
+            if name_iss !='one_param':
+                ws.write(row_num, 0, label=Researches.objects.values_list('title').get(pk=name_iss))
             else:
-                row = ["", ""]
-            s2 = False
-            for r in c["d"][dk]["r"]:
-                if not s2:
-                    s2 = True
-                    row.append(str(dk))
-                    row.append(c["d"][dk]["dn"])
-                else:
-                    row.append("")
-                    row.append("")
-                    row.append("")
-                    row.append("")
-                row.append(r["title"])
-                for col_num in range(len(row)):
-                    ws.write(row_num, col_num, row[col_num], font_style)
+                ws.write(row_num, 0, label=name_iss)
+            row_num += 1
+            a,b='',''
+            for i,j in fr_id.items():
+                col_num = 0
+                a, b = i
+                ws.write(row_num, col_num, label=a)
+                col_num += 1
+                ws.write(row_num, col_num, label=b)
+                ss=''
+                for g,h in j.items():
+                    col_num += 1
+                    ss = str(h)
+                    ws.write(row_num, col_num, label=ss)
                 row_num += 1
-                row = []
+                col_num += 1
+            row_num += 1
+        row_num+=1
+
+    # row = [
+    #     ("Пациент", 7000),
+    #     ("Карта", 6000),
+    #     ("Направление", 4000),
+    #     ("Дата", 4000),
+    #     ("Назначение", 7000),
+    # ]
+    # for col_num in range(len(row)):
+    #     ws.write(row_num, col_num, row[col_num][0], font_style_b)
+    #     ws.col(col_num).width = row[col_num][1]
+    # row_num += 1
+    # for ck in cards.keys():
+    #     c = cards[ck]
+    #     started = False
+    #     for dk in c["d"].keys():
+    #         if not started:
+    #             row = [
+    #                 "{} {}".format(c["fio"], c["bd"]),
+    #                 c["card"],
+    #             ]
+    #             started = True
+    #         else:
+    #             row = ["", ""]
+    #         s2 = False
+    #         for r in c["d"][dk]["r"]:
+    #             if not s2:
+    #                 s2 = True
+    #                 row.append(str(dk))
+    #                 row.append(c["d"][dk]["dn"])
+    #             else:
+    #                 row.append("")
+    #                 row.append("")
+    #                 row.append("")
+    #                 row.append("")
+    #             row.append(r["title"])
+    #             for col_num in range(len(row)):
+    #                 ws.write(row_num, col_num, row[col_num], font_style)
+    #             row_num += 1
+    #             row = []
 
     #
     # Вывести окончательную структуру в нужный формат: эксель (pdf, word, html, др.)

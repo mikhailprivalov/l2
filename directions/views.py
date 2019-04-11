@@ -258,7 +258,7 @@ def gen_pdf_dir(request):
         card_pk_set.add(n.client_id)
 
     fin_status = None
-    if len(fin_ist_set == 1) and fin_ist_set.pop().title.lower() == 'платно':
+    if (len(fin_ist_set) == 1) and (fin_ist_set.pop().title.lower() == 'платно'):
         fin_status = True
 
     if request.GET.get("contract"):
