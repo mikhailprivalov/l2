@@ -304,6 +304,7 @@ class Napravleniya(models.Model):
 
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
