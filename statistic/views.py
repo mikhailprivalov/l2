@@ -19,7 +19,7 @@ from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-
+from copy import deepcopy
 
 # from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
@@ -203,7 +203,7 @@ def statistic_xls(request):
                     if iss_id == d[0]:
                         for i,j in d[3].items():
                             val_dict[i] = j
-                        tmp_dict[(d[1],d[2],)] = dict(val_dict)
+                        tmp_dict[(d[1],d[2],)] = deepcopy(val_dict)
                         finish_ord[t_lab][iss_id].update(tmp_dict)
 
 # Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
@@ -218,7 +218,7 @@ def statistic_xls(request):
                     for u,s in val_dict.items():
                         if d[3].get(u):
                             val_dict[u] = d[3].get(u)
-                            tmp_dict[(d[1], d[2],)] = dict(val_dict)
+                            tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
                             key_tuple = (d[1], d[2],)
 
                 finish_ord[t_lab][iss_id].update(tmp_dict)
