@@ -72,11 +72,12 @@
             </td>
             <td>
               <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
-                <button class="btn last btn-blue-nb nbr" type="button" @click="open_editor(true)" v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
-                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()" v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Анамнез жизни" @click="open_anamnesis()" v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Новая L2 карта" @click="open_editor(true)" v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()" v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
               </div>
               <div class="internal_type" v-else-if="l2_cards">
-                <button class="btn last btn-blue-nb nbr" type="button" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Открыть пациента в базе L2" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
               </div>
             </td>
           </tr>
@@ -123,6 +124,35 @@
       </div>
     </modal>
     <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
+    <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top class="an">
+        <span slot="header">Анамнез жизни – карта {{selected_card.num}}, {{selected_card.fio_age}}</span>
+        <div slot="body" class="an-body">
+          <div class="an-sidebar">
+            <div class="an-s" :class="{active: an_state.tab === 'text'}" @click="an_tab('text')">Анамнез</div>
+            <div class="an-s" :class="{active: an_state.tab === 'history'}" @click="an_tab('history')">История изменений</div>
+          </div>
+          <div class="an-content">
+            <div v-if="an_state.tab === 'text'">
+              <pre>{{anamnesis_data.text || 'нет данных'}}</pre>
+            </div>
+            <div v-else class="an-history">
+              <div v-for="h in anamnesis_data.history">
+                <pre>{{h.text || 'нет данных'}}</pre>
+                {{h.who_save.fio}}, {{h.who_save.department}}. {{h.datetime}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_anamnesis" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
   </div>
 </template>
 
@@ -175,6 +205,11 @@
         search_after_loading: false,
         editor_pk: -2,
         inc_rmis: false,
+        anamnesis: false,
+        anamnesis_data: {},
+        an_state: {
+          tab: 'text',
+        }
       }
     },
     created() {
@@ -332,6 +367,25 @@
       }
     },
     methods: {
+      open_anamnesis() {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadAnamnesis(this.selected_card.pk).then(data => {
+          vm.an_tab('text');
+          vm.anamnesis_data = data;
+        }).finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING).then();
+          this.anamnesis = true;
+        })
+      },
+      hide_modal_anamnesis() {
+        this.$refs.modalAnamnesis.$el.style.display = 'none'
+        this.anamnesis_data = {};
+        this.anamnesis = false;
+      },
+      an_tab(tab) {
+        this.an_state.tab = tab;
+      },
       open_editor(isnew) {
         if (isnew) {
           this.editor_pk = -1;
@@ -688,6 +742,92 @@
         }
       }
     }
+  }
+
+  .an {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+
+    /deep/ .panel-flt {
+      margin: 41px;
+      align-self: stretch !important;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /deep/ .panel-body {
+      flex: 1;
+      padding: 0;
+      height: calc(100% - 91px);
+      min-height: 200px;    position: relative;
+    }
+
+    &-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-content: stretch;
+      & > div {
+        align-self: stretch;
+      }
+    }
+    &-sidebar {
+      width: 100px;
+      background: rgba(0, 0, 0, .04);
+      border-right: 1px solid rgba(0, 0, 0, .16);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    &-content {
+      display: flex;
+      flex-direction: column;
+      width: calc(100% - 100px);
+      & > div {
+        flex: 1;
+        padding: 5px 10px;
+        overflow-y: auto;
+      }
+    }
+
+    &-history > div {
+      margin-bottom: 10px;
+      padding: 5px;
+      background: rgba(#000, .1);
+      border-radius: 5px;
+    }
+
+  &-s {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+    &:not(.active) {
+      cursor: pointer;
+      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    }
+    position: relative;
+
+    &.active {
+      background-image: linear-gradient(#6C7A89, #56616c);
+      color: #fff;
+    }
+
+    &:not(.active):hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+      transform: scale(1.008);
+    }
+  }
   }
 
   .hovershow {

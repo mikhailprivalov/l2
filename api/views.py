@@ -6,6 +6,7 @@ import time
 from collections import defaultdict
 from operator import itemgetter
 
+import pytz
 import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
@@ -24,7 +25,7 @@ import users.models as users
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District
+from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory
 from contracts.models import Company
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField
 from laboratory import settings
@@ -569,6 +570,7 @@ def patients_search_card(request):
                      "twoname": row.individual.patronymic,
                      "birthday": row.individual.bd(),
                      "age": row.individual.age_s(),
+                     "fio_age": row.individual.fio(full=True),
                      "sex": row.individual.sex,
                      "individual_pk": row.individual.pk,
                      "pk": row.pk,
@@ -1218,9 +1220,11 @@ def directions_paraclinic_form(request):
 
         if df.exists():
             response["ok"] = True
+            response["has_doc_referral"] = True
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "card": d.client.number_with_type(),
+                "card_pk": d.client.pk,
                 "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
@@ -1233,6 +1237,8 @@ def directions_paraclinic_form(request):
             }
             response["researches"] = []
             for i in df:
+                if i.research.is_doc_refferal:
+                    response["has_doc_referral"] = True
                 ctp = int(0 if not i.time_confirmation else int(
                     time.mktime(timezone.localtime(i.time_confirmation).timetuple())))
                 ctime = int(time.time())
@@ -1268,6 +1274,8 @@ def directions_paraclinic_form(request):
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
+            if response["has_doc_referral"]:
+                response["anamnesis"] = d.client.anamnesis_of_life
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -2013,7 +2021,7 @@ def patients_card_save(request):
     card_pk = -1
     individual_pk = -1
 
-    if (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
+    if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
         i = Individual(family=request_data["family"],
                        name=request_data["name"],
                        patronymic=request_data["patronymic"],
@@ -2055,10 +2063,12 @@ def patients_card_save(request):
                  fact_address="")
         c.save()
         card_pk = c.pk
+        Log.log(card_pk, 30000, request.user.doctorprofile, request_data)
     else:
         card_pk = request_data["card_pk"]
         c = Card.objects.get(pk=card_pk)
         individual_pk = request_data["individual_pk"]
+        Log.log(card_pk, 30001, request.user.doctorprofile, request_data)
     c.main_diagnosis = request_data["main_diagnosis"]
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
@@ -2120,10 +2130,12 @@ def edit_doc(request):
             CardDocUsage(card=card, document=d).save()
         else:
             cdu.update(document=d)
+        Log.log(d.pk, 30002, request.user.doctorprofile, request_data)
     else:
         Document.objects.filter(pk=pk, from_rmis=False).update(number=number, serial=serial,
                                                                is_active=is_active, date_start=date_start,
                                                                date_end=date_end, who_give=who_give)
+        Log.log(pk, 30002, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
 
@@ -2137,6 +2149,7 @@ def update_cdu(request):
         CardDocUsage(card=card, document=doc).save()
     else:
         cdu.update(document=doc)
+    Log.log(card.pk, 30004, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
 
@@ -2155,6 +2168,7 @@ def update_wia(request):
     if key in [x[0] for x in Card.AGENT_CHOICES]:
         card.who_is_agent = key
         card.save()
+        Log.log(card.pk, 30006, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
 
@@ -2185,4 +2199,37 @@ def edit_agent(request):
 
     parent_card.update(**upd)
 
+    Log.log(parent_card.pk, 30005, request.user.doctorprofile, request_data)
+
+    return JsonResponse({"ok": True})
+
+
+def load_anamnesis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    history = []
+    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk'):
+        history.append({
+            "pk": a.pk,
+            "text": a.text,
+            "who_save": {
+                "fio": a.who_save.get_fio(dots=True),
+                "department": a.who_save.podrazdeleniye.get_title(),
+            },
+            "datetime": a.created_at.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+        })
+    data = {
+        "text": card.anamnesis_of_life,
+        "history": history,
+    }
+    return JsonResponse(data)
+
+
+def save_anamnesis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    if card.anamnesis_of_life != request_data["text"]:
+        card.anamnesis_of_life = request_data["text"]
+        card.save()
+        AnamnesisHistory(card=card, text=request_data["text"], who_save=request.user.doctorprofile).save()
     return JsonResponse({"ok": True})

@@ -148,7 +148,7 @@
                 $.each(d.data, function (k, v) {
                     let dbody = v.body
                     try {
-                        const par = JSON.parse(v.body.replaceAll(`{'`, `{"`).replaceAll(`':`, `":`))
+                        const par = JSON.parse(v.body.replace(/'/g, '"'))
                         dbody = syntaxHighlight(JSON.stringify(((Object.prototype.toString.call(par) === '[object Array]') ? par.filter(function (n) {
                             return n !== undefined
                         }) : par), null, 2))
