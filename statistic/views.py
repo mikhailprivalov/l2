@@ -163,20 +163,26 @@ def statistic_xls(request):
         a = ([[p, r, n, datetime.datetime.strftime(t, "%d.%m.%y")] for p, r, n, t in
               Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
                   napravleniye_id__in=l_napr)])
+        print(a)
         obj.append(a)
 
     for i in obj:
         for j in i:
             result_k = ({fr_id: val for fr_id, val in
                          Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
+            print(result_k)
             j.append(result_k)
-
+    print('######')
+    print(obj)
+    print('######')
     finish_obj = []
     for i in obj:
         for j in i:
             j.pop(0)
             finish_obj.append(j)
-
+    print('######')
+    print(finish_obj)
+    print('######')
     # Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
     finish_ord = OrderedDict()
     for t_lab, name_iss in depart_fraction.items():
@@ -190,11 +196,11 @@ def statistic_xls(request):
             opinion_dict = {('напр','дата',):fract_dict}
             val_dict = fract_dict.copy()
             finish_ord[t_lab][iss_id].update(opinion_dict)
+            print(finish_ord)
             for k, v in fract_dict.items():
                 val_dict[k] = ''
 
-            tmp_dict = {}
-            if iss_id != None:
+            if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
                 for d in finish_obj:
                     tmp_dict = {}
                     if iss_id == d[0]:
@@ -202,17 +208,29 @@ def statistic_xls(request):
                             val_dict[i] = j
                         tmp_dict[(d[1],d[2],)] = dict(val_dict)
                         finish_ord[t_lab][iss_id].update(tmp_dict)
-                        tmp_dict = {}
 
-            if iss_id == 'one_param':
+            key_tuple = (0,0,),
+            if iss_id == 'one_param' and frac:
+                tmp_dict = {}
                 for d in finish_obj:
-                    tmp_dict = {}
-                    for s,u in d[3].items():
-                        if s in val_dict.keys():
-                            val_dict[s] = u
-                            tmp_dict[(d[1],d[2],)] = dict(val_dict)
-                    finish_ord[t_lab][iss_id].update(tmp_dict)
-                    tmp_dict = {}
+                    if key_tuple != (d[1], d[2],):
+                        for k, v in fract_dict.items():
+                            val_dict[k] = ''
+                    for u,s in val_dict.items():
+                        if d[3].get(u):
+                            val_dict[u] = d[3].get(u)
+                            tmp_dict[(d[1], d[2],)] = dict(val_dict)
+                            key_tuple = (d[1], d[2],)
+
+
+                finish_ord[t_lab][iss_id].update(tmp_dict)
+
+                print(tmp_dict)
+
+
+
+                # finish_ord[t_lab][iss_id].update(one_dict)
+
 
     response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
     font_style = xlwt.XFStyle()
