@@ -76,9 +76,8 @@ def statistic_xls(request):
     borders.right = xlwt.Borders.THIN
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
-############## my start
-    ############## my start
-    ############## my start
+
+#Отчет по динамике анализов
     if tp == "directions_list":
         from collections import OrderedDict
         pk = json.loads(pk)
@@ -172,18 +171,14 @@ def statistic_xls(request):
                          Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
             print(result_k)
             j.append(result_k)
-    print('######')
-    print(obj)
-    print('######')
+
     finish_obj = []
     for i in obj:
         for j in i:
             j.pop(0)
             finish_obj.append(j)
-    print('######')
-    print(finish_obj)
-    print('######')
-    # Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
+
+# Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
     finish_ord = OrderedDict()
     for t_lab, name_iss in depart_fraction.items():
         finish_ord[t_lab] = {}
@@ -200,6 +195,8 @@ def statistic_xls(request):
             for k, v in fract_dict.items():
                 val_dict[k] = ''
 
+# Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+# one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
             if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
                 for d in finish_obj:
                     tmp_dict = {}
@@ -209,6 +206,8 @@ def statistic_xls(request):
                         tmp_dict[(d[1],d[2],)] = dict(val_dict)
                         finish_ord[t_lab][iss_id].update(tmp_dict)
 
+# Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+# one_param - это анализы у которых только один параметр-фракции (холестерин, глюкоза и др.)
             key_tuple = (0,0,),
             if iss_id == 'one_param' and frac:
                 tmp_dict = {}
@@ -222,14 +221,7 @@ def statistic_xls(request):
                             tmp_dict[(d[1], d[2],)] = dict(val_dict)
                             key_tuple = (d[1], d[2],)
 
-
                 finish_ord[t_lab][iss_id].update(tmp_dict)
-
-                print(tmp_dict)
-
-
-
-                # finish_ord[t_lab][iss_id].update(one_dict)
 
 
     response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
