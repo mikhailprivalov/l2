@@ -82,15 +82,19 @@ def statistic_xls(request):
         from collections import OrderedDict
         pk = json.loads(pk)
         dn = Napravleniya.objects.filter(pk__in=pk)
-        cards = {}
+
+        #Фильтровать направления только для типа-лабораторные
+        tmp_nap = []
+        for nap in dn:
+            if  (nap.department()!= None) and (nap.department().p_type == 2):
+                tmp_nap.append(nap)
 
         napr_client = set()
         depart_napr = OrderedDict()
         depart_fraction = OrderedDict()
         one_param = "one_param"
-        # depart_fraction = {}
 
-        for d in dn:
+        for d in tmp_nap:
             c = d.client
             napr_client.add(c.pk)
             # Проверить, что все направления относятся к одной карте. И тип "Лаборатория"
@@ -162,14 +166,12 @@ def statistic_xls(request):
         a = ([[p, r, n, datetime.datetime.strftime(t, "%d.%m.%y")] for p, r, n, t in
               Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
                   napravleniye_id__in=l_napr)])
-        print(a)
         obj.append(a)
 
     for i in obj:
         for j in i:
             result_k = ({fr_id: val for fr_id, val in
                          Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
-            print(result_k)
             j.append(result_k)
 
     finish_obj = []
@@ -191,7 +193,6 @@ def statistic_xls(request):
             opinion_dict = {('напр','дата',):fract_dict}
             val_dict = fract_dict.copy()
             finish_ord[t_lab][iss_id].update(opinion_dict)
-            print(finish_ord)
             for k, v in fract_dict.items():
                 val_dict[k] = ''
 
