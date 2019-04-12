@@ -548,6 +548,7 @@ class Card(models.Model):
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
+    anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)

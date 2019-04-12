@@ -2107,7 +2107,7 @@ def edit_doc(request):
     date_start = None if date_start == "" else date_start
     date_end = request_data["date_end"]
     date_end = None if date_end == "" else date_end
-    who_give = request_data["who_give"]
+    who_give = request_data["who_give"] or ""
 
     if pk == -1:
         card = Card.objects.get(pk=request_data["card_pk"])
