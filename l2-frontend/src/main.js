@@ -105,6 +105,7 @@ new Vue({
     }
 
     this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
+    this.$root.$on('print:directions:contract', (pks) => printForm('/directions/pdf?napr_id={pks}&contract=1', pks))
 
     this.$root.$on('print:barcodes', (pks) => printForm('/barcodes/tubes?napr_id={pks}', pks))
 
@@ -112,7 +113,7 @@ new Vue({
 
     this.$root.$on('print:directions_list', (pks) => printForm('/statistic/xls?pk={pks}&type=directions_list', pks))
 
-    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments, for_rmis, rmis_data, callback, vich_code, count, discount}) => {
+    this.$root.$on('generate-directions', ({type, card_pk, fin_source_pk, diagnos, base, researches, operator, ofname, history_num, comments, for_rmis, rmis_data, callback, vich_code, count, discount, need_contract}) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
         return
@@ -137,7 +138,11 @@ new Vue({
 
         if (data.ok) {
           if (type === 'direction') {
-            this.$root.$emit('print:directions', data.directions)
+            if (need_contract) {
+              this.$root.$emit('print:directions:contract', data.directions)
+            } else {
+              this.$root.$emit('print:directions', data.directions)
+            }
           }
           if (type === 'barcode') {
             this.$root.$emit('print:barcodes', data.directions)

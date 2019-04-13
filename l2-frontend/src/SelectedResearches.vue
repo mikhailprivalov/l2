@@ -337,6 +337,7 @@
           vich_code: this.need_vich_code ? this.vich_code : '',
           count: this.count,
           discount: this.discount,
+          need_contract: this.pay_source
         })
       },
       clear_all() {
