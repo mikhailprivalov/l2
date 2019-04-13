@@ -313,7 +313,7 @@
         this.$root.$emit('researches-picker:deselect_department', pk)
       },
       generate(type) {
-        if (this.diagnos === '' && this.current_fin !== 'Платно') {
+        if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source) {
           $(this.$refs.d).focus()
           errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
           return
