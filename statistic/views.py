@@ -175,6 +175,7 @@ def statistic_xls(request):
             j.append(result_k)
 
     finish_obj = []
+
     for i in obj:
         for j in i:
             j.pop(0)
