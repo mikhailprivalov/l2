@@ -214,7 +214,6 @@ class IstochnikiFinansirovaniya(models.Model):
         price_contract = set(SettingManager.get("price_contract").split(','))
         price_company = set(SettingManager.get("price_company").split(','))
 
-
         if finsource.title.upper() in price_contract:
             contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=finsource.pk).first()
             if contract_l[0]:
@@ -305,8 +304,7 @@ class Napravleniya(models.Model):
 
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
-    #protect_code =номера направлений, сумма денежная crc32. Если не равно, то перезаписать и номер контракта и контрольную сумму
-    protect_code = models.CharField(max_length=32, default=None,blank=True,null=True, db_index=True,help_text="Контрольная сумма контракта")
+    protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
 
     def __str__(self):
@@ -556,6 +554,32 @@ class Napravleniya(models.Model):
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
 
+class PersonContract(models.Model):
+    """
+    Каждый раз при генерации нового контракта для физлица создается просто запись
+    """
+    num_contract = models.CharField(max_length=25, null=False, db_index=True, help_text='Номер договора')
+    protect_code = models.CharField(max_length=32, null=False, db_index=True, help_text="Контрольная сумма контракта")
+    dir_list = models.CharField(max_length=255, null=False, db_index=True, help_text="Направления для контракта")
+    sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
+    patient_data = models.CharField(max_length=255, null=False, db_index=True, help_text="Фамилия инициалы Заказчика-Пациента")
+    patient_card = models.ForeignKey(Clients.Card,related_name='patient_card', null= True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
+    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
+    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, help_text='Карта Представителя', db_index=False,on_delete=models.SET_NULL)
+
+    class Meta:
+        unique_together = ("num_contract", "protect_code")
+        verbose_name = 'Договор физ.лица'
+        verbose_name_plural = 'Договоры физ.лиц'
+
+    @staticmethod
+    def person_contract_save(n_contract, p_code, d_list,s_contract, p_data, p_card, p_payer = None, p_agent = None):
+        """
+        Запись в базу сведений о контракте
+        """
+        pers_contract = PersonContract(num_contract =n_contract, protect_code=p_code,dir_list=d_list,sum_contract=s_contract,patient_data=p_data,
+                                       patient_card = p_card, payer_card=p_payer,agent_card=p_agent)
+        pers_contract.save()
 
 class Issledovaniya(models.Model):
     """
