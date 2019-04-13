@@ -262,7 +262,7 @@ def gen_pdf_dir(request):
         fin_status = True
 
     if request.GET.get("contract"):
-        if request.GET["contract"] == '1':
+        if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
                 fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
