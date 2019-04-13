@@ -151,7 +151,6 @@ def gen_pdf_execlist(request):
     response.write(pdf)  # Запись PDF в ответ
     return response
 
-
 # @cache_page(60 * 15)
 @logged_in_or_token
 def gen_pdf_dir(request):
@@ -247,11 +246,47 @@ def gen_pdf_dir(request):
         wt, ht = t.wrap(0, 0)
         t.drawOn(c, 15 * mm, h - 15 * mm - ht)
         c.showPage()
-    c.save()  # Сохранение отрисованного на PDF
 
+    c.save()  # Сохранение отрисованного на PDF
     pdf = buffer.getvalue()  # Получение данных из буфера
+
+    #Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
+    fin_ist_set = set()
+    card_pk_set = set()
+    for n in dn:
+        fin_ist_set.add(n.istochnik_f)
+        card_pk_set.add(n.client_id)
+
+    fin_status = None
+    if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
+        fin_status = True
+
+    if request.GET.get("contract"):
+        if request.GET["contract"] == '1':
+            if len(card_pk_set) == 1 and fin_status:
+                from forms.forms102 import form_01 as f_contract
+                fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
+                fc_buf = BytesIO()
+                fc_buf.write(fc)
+                import PyPDF2
+                pdf_all = BytesIO()
+                pdf_contract = PyPDF2.PdfFileReader(fc_buf)
+                pdf_napr = PyPDF2.PdfFileReader(buffer)
+                merger = PyPDF2.PdfFileMerger()
+                merger.append(pdf_napr)
+                merger.append(pdf_contract)
+                merger.write(pdf_all)
+                pdf_out = pdf_all.getvalue()
+                buffer.close()
+                fc_buf.close()
+                pdf_all.close()
+                response.write(pdf_out)
+                return response
+
     buffer.close()  # Закрытие буфера
+
     response.write(pdf)  # Запись PDF в ответ
+
     return response
 
 

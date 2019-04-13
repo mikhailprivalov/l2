@@ -13,12 +13,13 @@ import directory.models as directory
 import slog.models as slog
 from clients.models import CardBase
 from directions.models import Napravleniya, TubesRegistration, IstochnikiFinansirovaniya, Result, RMISOrgs, ParaclinicResult
+from directory.models import Researches
 from laboratory import settings
 from researches.models import Tubes
 from statistics_tickets.models import StatisticsTicket
 from users.models import DoctorProfile
 from users.models import Podrazdeleniya
-
+from copy import deepcopy
 
 # from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
@@ -75,92 +76,323 @@ def statistic_xls(request):
     borders.right = xlwt.Borders.THIN
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
-############## my start
 
-############## my send
-
+#Отчет по динамике анализов
     if tp == "directions_list":
+        from collections import OrderedDict
         pk = json.loads(pk)
-
         dn = Napravleniya.objects.filter(pk__in=pk)
 
-        cards = {}
+        #Фильтровать направления только для типа-лабораторные
+        tmp_nap = []
+        for nap in dn:
+            if  (nap.department()!= None) and (nap.department().p_type == 2):
+                tmp_nap.append(nap)
 
-        for d in dn:
+        napr_client = set()
+        depart_napr = OrderedDict()
+        depart_fraction = OrderedDict()
+        one_param = "one_param"
+
+        for d in tmp_nap:
             c = d.client
-            if c.pk not in cards:
-                cards[c.pk] = {
-                    "card": c.number_with_type(),
-                    "fio": c.individual.fio(),
-                    "bd": c.individual.bd(),
-                    "hn": d.history_num,
-                    "d": {},
-                }
-            cards[c.pk]["d"][d.pk] = {
-                "r": [],
-                "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
-            }
+            napr_client.add(c.pk)
+            # Проверить, что все направления относятся к одной карте. И тип "Лаборатория"
+            if len(napr_client) > 1 or d.department().p_type != 2:
+                response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
+                ws = wb.add_sheet("Вакцинация")
+                row_num = 0
+                row = [
+                    ("Пациент", 7000),
+                    ("Карта", 6000),
+                    ("Направление", 4000),
+                    ("Дата", 4000),
+                    ("Назначение", 7000),
+                ]
+                wb.save(response)
+                return response
+            # Распределить направления по подразделениям: "depart_napr"
+            # {БИО:[напр1, напр2, напр3], КДЛ: [напр11, напр21, напр31], ИММ: [напр41, напр42, напр43]}
+
+            tmp_num_dir = []
+            department_title = d.department().id
+            department_id = d.department().id
+
+            if department_title in depart_napr.keys():
+                tmp_num_dir = depart_napr.get(department_title)
+                tmp_num_dir.append(d.pk)
+                depart_napr[department_title] = tmp_num_dir
+            else:
+                tmp_num_dir.append(d.pk)
+                depart_napr[department_title] = tmp_num_dir
+
+            # По исследованиям строим структуру "depart_fraction":
+            # Будущие заголовки в Excel. Те исследования у, к-рых по одной фракции в общий подсловарь,
+            # у к-рых больше одного показателя (фракции) в самостоятельные подсловари. Выборка из справочника, НЕ из "Результатов"
+            # пример стр-ра: {биохим: {услуги, имеющие по 1 фракции:[фр1-усл1, фр2-усл2, фр3-усл3],
+            #                   усл1:[фр1, фр2, фр3],усл2:[фр1, фр2, фр3],
+            #                   усл2:[фр1, фр2, фр3],усл2:[фр1, фр2, фр3]}
+            # порядок фракций "По весу".
+
+            one_param_temp = OrderedDict()
+
             for i in Issledovaniya.objects.filter(napravleniye=d):
-                cards[c.pk]["d"][d.pk]["r"].append({
-                    "title": i.research.title,
-                })
+                dict_research_fraction = OrderedDict()
+                research_iss = i.research_id
+                dict_research_fraction = ({p: str(t) + ',' + str(u) for p, t, u in
+                                           directory.Fractions.objects.values_list('pk', 'title', 'units').filter(
+                                               research=i.research).order_by("sort_weight")})
 
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 1
-        font_style.borders = borders
-
-        font_style_b = xlwt.XFStyle()
-        font_style_b.alignment.wrap = 1
-        font_style_b.font.bold = True
-        font_style_b.borders = borders
-
-        ws = wb.add_sheet("Вакцинация")
-        row_num = 0
-        row = [
-            ("Пациент", 7000),
-            ("Карта", 6000),
-            ("Направление", 4000),
-            ("Дата", 4000),
-            ("Назначение", 7000),
-        ]
-
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_b)
-            ws.col(col_num).width = row[col_num][1]
-        row_num += 1
-
-        for ck in cards.keys():
-            c = cards[ck]
-            started = False
-            for dk in c["d"].keys():
-                if not started:
-                    row = [
-                        "{} {}".format(c["fio"], c["bd"]),
-                        c["card"],
-                    ]
-                    started = True
-                else:
-                    row = ["", ""]
-
-                s2 = False
-
-                for r in c["d"][dk]["r"]:
-                    if not s2:
-                        s2 = True
-                        row.append(str(dk))
-                        row.append(c["d"][dk]["dn"])
+                if depart_fraction.get(department_id) != None:
+                    if len(dict_research_fraction.keys()) == 1:
+                        one_param_temp = depart_fraction[department_id][one_param]
+                        one_param_temp.update(dict_research_fraction)
+                        depart_fraction[department_id].update({one_param: one_param_temp})
                     else:
-                        row.append("")
-                        row.append("")
-                        row.append("")
-                        row.append("")
-                    row.append(r["title"])
+                        depart_fraction[department_id].update({research_iss: dict_research_fraction})
+                else:
+                    depart_fraction.update({department_id: {}})
+                    if len(dict_research_fraction) == 1:
+                        depart_fraction[department_id].update({one_param: dict_research_fraction})
+                    else:
+                        depart_fraction[department_id].update({research_iss: dict_research_fraction})
+                        depart_fraction[department_id].update({one_param: {}})
 
-                    for col_num in range(len(row)):
-                        ws.write(row_num, col_num, row[col_num], font_style)
-                    row_num += 1
-                    row = []
+    # Все возможные анализы в направлениях - стр-ра А
+    # направления по лабораториям (тип лаборатории, [номера направлений])
+    obj = []
+    import datetime
+    for type_lab, l_napr in depart_napr.items():
+        a = ([[p, r, n, datetime.datetime.strftime(t, "%d.%m.%y")] for p, r, n, t in
+              Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
+                  napravleniye_id__in=l_napr)])
+        obj.append(a)
+
+    for i in obj:
+        for j in i:
+            result_k = ({fr_id: val for fr_id, val in
+                         Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
+            j.append(result_k)
+
+    finish_obj = []
+
+    for i in obj:
+        for j in i:
+            j.pop(0)
+            finish_obj.append(j)
+
+# Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
+    finish_ord = OrderedDict()
+    for t_lab, name_iss in depart_fraction.items():
+        finish_ord[t_lab] = {}
+        for iss_id, fract_dict in name_iss.items():
+            if fract_dict:
+               frac = True
+            else:
+                frac = False
+            finish_ord[t_lab][iss_id] = {}
+            opinion_dict = {('напр','дата',):fract_dict}
+            val_dict = fract_dict.copy()
+            finish_ord[t_lab][iss_id].update(opinion_dict)
+            for k, v in fract_dict.items():
+                val_dict[k] = ''
+
+# Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+# one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
+            if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
+                for d in finish_obj:
+                    tmp_dict = {}
+                    if iss_id == d[0]:
+                        for i,j in d[3].items():
+                            val_dict[i] = j
+                        tmp_dict[(d[1],d[2],)] = deepcopy(val_dict)
+                        finish_ord[t_lab][iss_id].update(tmp_dict)
+
+# Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+# one_param - это анализы у которых только один параметр-фракции (холестерин, глюкоза и др.)
+            key_tuple = (0,0,),
+            if iss_id == 'one_param' and frac:
+                tmp_dict = {}
+                for d in finish_obj:
+                    if key_tuple != (d[1], d[2],):
+                        for k, v in fract_dict.items():
+                            val_dict[k] = ''
+                    for u,s in val_dict.items():
+                        if d[3].get(u):
+                            val_dict[u] = d[3].get(u)
+                            tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
+                            key_tuple = (d[1], d[2],)
+
+                finish_ord[t_lab][iss_id].update(tmp_dict)
+
+
+    response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
+    font_style = xlwt.XFStyle()
+    font_style.alignment.wrap = 1
+    font_style.borders = borders
+    font_style_b = xlwt.XFStyle()
+    font_style_b.alignment.wrap = 1
+    font_style_b.font.bold = True
+    font_style_b.borders = borders
+    ws = wb.add_sheet("Динамика")
+    row_num = 0
+
+    for k,v in finish_ord.items():
+        col_num = 0
+        ws.write(row_num, 0, label=Podrazdeleniya.objects.values_list('title').get(pk=k))
+        row_num += 1
+        col_num = 0
+        for name_iss, fr_id in v.items():
+            if name_iss !='one_param':
+                ws.write(row_num, 0, label=Researches.objects.values_list('title').get(pk=name_iss))
+            else:
+                ws.write(row_num, 0, label=name_iss)
+            row_num += 1
+            a,b='',''
+            for i,j in fr_id.items():
+                col_num = 0
+                a, b = i
+                ws.write(row_num, col_num, label=a)
+                col_num += 1
+                ws.write(row_num, col_num, label=b)
+                ss=''
+                for g,h in j.items():
+                    col_num += 1
+                    ss = str(h)
+                    ws.write(row_num, col_num, label=ss)
+                row_num += 1
+                col_num += 1
+            row_num += 1
+        row_num+=1
+
+    # row = [
+    #     ("Пациент", 7000),
+    #     ("Карта", 6000),
+    #     ("Направление", 4000),
+    #     ("Дата", 4000),
+    #     ("Назначение", 7000),
+    # ]
+    # for col_num in range(len(row)):
+    #     ws.write(row_num, col_num, row[col_num][0], font_style_b)
+    #     ws.col(col_num).width = row[col_num][1]
+    # row_num += 1
+    # for ck in cards.keys():
+    #     c = cards[ck]
+    #     started = False
+    #     for dk in c["d"].keys():
+    #         if not started:
+    #             row = [
+    #                 "{} {}".format(c["fio"], c["bd"]),
+    #                 c["card"],
+    #             ]
+    #             started = True
+    #         else:
+    #             row = ["", ""]
+    #         s2 = False
+    #         for r in c["d"][dk]["r"]:
+    #             if not s2:
+    #                 s2 = True
+    #                 row.append(str(dk))
+    #                 row.append(c["d"][dk]["dn"])
+    #             else:
+    #                 row.append("")
+    #                 row.append("")
+    #                 row.append("")
+    #                 row.append("")
+    #             row.append(r["title"])
+    #             for col_num in range(len(row)):
+    #                 ws.write(row_num, col_num, row[col_num], font_style)
+    #             row_num += 1
+    #             row = []
+
+    #
+    # Вывести окончательную структуру в нужный формат: эксель (pdf, word, html, др.)
+    #
+    #
+    #
+
+    # if tp == "directions_list":
+    #     pk = json.loads(pk)
+    #
+    #     dn = Napravleniya.objects.filter(pk__in=pk)
+    #
+    #     cards = {}
+    #
+    #     for d in dn:
+    #         c = d.client
+    #         if c.pk not in cards:
+    #             cards[c.pk] = {
+    #                 "card": c.number_with_type(),
+    #                 "fio": c.individual.fio(),
+    #                 "bd": c.individual.bd(),
+    #                 "hn": d.history_num,
+    #                 "d": {},
+    #             }
+    #         cards[c.pk]["d"][d.pk] = {
+    #             "r": [],
+    #             "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
+    #         }
+    #         for i in Issledovaniya.objects.filter(napravleniye=d):
+    #             cards[c.pk]["d"][d.pk]["r"].append({
+    #                 "title": i.research.title,
+    #             })
+    #
+    #     response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
+    #     font_style = xlwt.XFStyle()
+    #     font_style.alignment.wrap = 1
+    #     font_style.borders = borders
+    #
+    #     font_style_b = xlwt.XFStyle()
+    #     font_style_b.alignment.wrap = 1
+    #     font_style_b.font.bold = True
+    #     font_style_b.borders = borders
+    #
+    #     ws = wb.add_sheet("Вакцинация")
+    #     row_num = 0
+    #     row = [
+    #         ("Пациент", 7000),
+    #         ("Карта", 6000),
+    #         ("Направление", 4000),
+    #         ("Дата", 4000),
+    #         ("Назначение", 7000),
+    #     ]
+    #
+    #     for col_num in range(len(row)):
+    #         ws.write(row_num, col_num, row[col_num][0], font_style_b)
+    #         ws.col(col_num).width = row[col_num][1]
+    #     row_num += 1
+    #
+    #     for ck in cards.keys():
+    #         c = cards[ck]
+    #         started = False
+    #         for dk in c["d"].keys():
+    #             if not started:
+    #                 row = [
+    #                     "{} {}".format(c["fio"], c["bd"]),
+    #                     c["card"],
+    #                 ]
+    #                 started = True
+    #             else:
+    #                 row = ["", ""]
+    #
+    #             s2 = False
+    #
+    #             for r in c["d"][dk]["r"]:
+    #                 if not s2:
+    #                     s2 = True
+    #                     row.append(str(dk))
+    #                     row.append(c["d"][dk]["dn"])
+    #                 else:
+    #                     row.append("")
+    #                     row.append("")
+    #                     row.append("")
+    #                     row.append("")
+    #                 row.append(r["title"])
+    #
+    #                 for col_num in range(len(row)):
+    #                     ws.write(row_num, col_num, row[col_num], font_style)
+    #                 row_num += 1
+    #
 
     if tp == "statistics-visits":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)

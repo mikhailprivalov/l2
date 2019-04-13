@@ -120,7 +120,8 @@ def form_02(request_data):
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15',
+                                                default_type='i') and not agent_status:
         return False
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
@@ -205,7 +206,8 @@ def form_02(request_data):
     objs.append(Paragraph('Зарегистрированный(ая) по адресу: {}'.format(person_data['main_address']), styleSign))
     objs.append(Paragraph('Проживающий(ая) по адресу: {}'.format(person_data['fact_address']), styleSign))
     objs.append(Paragraph('Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.
-                          format(person_data['type_doc'],person_data['passport_serial'], person_data['passport_num']), styleSign))
+                          format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']),
+                          styleSign))
     objs.append(
         Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 2 * mm))
@@ -215,21 +217,35 @@ def form_02(request_data):
 
     if agent_status:
         opinion = [
-            Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient), styleBold),
+            Paragraph(
+                'являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient),
+                styleBold),
             Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
             Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
             Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign)
         ]
 
-        #Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
-            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'],
-                                     patient_data['bc_serial'],patient_data['bc_num']), styleSign))
-            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+            opinion.append(Paragraph(
+                'Документ, удостоверяющий личность {}: серия <u>{}</u> номер <u>{}</u>'.format(patient_data['type_doc'],
+                                                                                               patient_data[
+                                                                                                   'bc_serial'],
+                                                                                               patient_data['bc_num']),
+                styleSign))
+            opinion.append(
+                Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
         else:
-            opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'],
-                                     patient_data['passport_serial'], patient_data['passport_num']), styleSign))
-            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']), styleSign))
+            opinion.append(
+                Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.format(patient_data['type_doc'],
+                                                                                           patient_data[
+                                                                                               'passport_serial'],
+                                                                                           patient_data[
+                                                                                               'passport_num']),
+                          styleSign))
+            opinion.append(
+                Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']),
+                          styleSign))
 
         objs.extend(opinion)
 
@@ -293,7 +309,9 @@ def form_02(request_data):
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('\"___\"____________{} {} _____________________ /______________________ /'.format(date_year, 30 * space_bottom), styleSign))
+    objs.append(Paragraph(
+        '\"___\"____________{} {} _____________________ /______________________ /'.format(date_year, 30 * space_bottom),
+        styleSign))
     objs.append(Paragraph('{} (подпись) '.format(57 * space_bottom), style))
 
     objs.append(Paragraph('', style))
@@ -331,7 +349,8 @@ def form_03(request_data):
 
     # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
     who_patient = 'пациента'
-    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15',
+                                                default_type='i') and not agent_status:
         return False
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
@@ -406,7 +425,8 @@ def form_03(request_data):
         Paragraph(
             'Информированное добровольное согласие на виды медицинских вмешательств,<br/> включенные в Перечень определенных'
             ' видов медицинских вмешательств,<br/> на которые граждане дают информированное добровольное согласие при '
-            'выборе врача и медицинской организации для получения первичной медико-санитарной помощи {} '.format(who_patient),
+            'выборе врача и медицинской организации для получения первичной медико-санитарной помощи {} '.format(
+                who_patient),
             styleCenterBold),
     ]
 
@@ -427,14 +447,18 @@ def form_03(request_data):
     objs.append(Paragraph('Документ, удостоверяющий личность {}: серия <u> {}</u> номер: <u>{}</u>'.
                           format(person_data['type_doc'], person_data['passport_serial'], person_data['passport_num']),
                           styleSign))
-    objs.append(Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
+    objs.append(
+        Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 3 * mm))
 
     hospital_name = SettingManager.get("rmis_orgname")
 
+    opinion = []
     if agent_status:
         opinion = [
-            Paragraph('являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(),who_patient), styleBold),
+            Paragraph(
+                'являюсь законным представителем ({}) {}:'.format(ind_card.get_who_is_agent_display(), who_patient),
+                styleBold),
             Paragraph('{}&nbsp; {} г. рождения'.format(patient_data['fio'], patient_data['born']), styleSign),
             Paragraph('Зарегистрированный(ая) по адресу: {}'.format(patient_data['main_address']), styleSign),
             Paragraph('Проживающий(ая) по адресу: {}'.format(patient_data['fact_address']), styleSign)
@@ -443,12 +467,17 @@ def form_03(request_data):
         # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
-                                     format(patient_data['type_doc'], patient_data['bc_serial'], patient_data['bc_num']),styleSign))
-            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
+                                     format(patient_data['type_doc'], patient_data['bc_serial'],
+                                            patient_data['bc_num']), styleSign))
+            opinion.append(
+                Paragraph('Выдан: {} {}'.format(patient_data["bc_date_start"], person_data['bc_issued']), styleSign))
         else:
             opinion.append(Paragraph('Документ, удостоверяющий личность {}: серия {} номер {}'.
-                           format(patient_data['type_doc'], patient_data[ 'passport_serial'],patient_data[['passport_num']]),styleSign))
-            opinion.append(Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']),styleSign))
+                                     format(patient_data['type_doc'], patient_data['passport_serial'],
+                                            patient_data['passport_num']), styleSign))
+            opinion.append(
+                Paragraph('Выдан: {} {}'.format(patient_data["passport_date_start"], person_data['passport_issued']),
+                          styleSign))
 
         objs.extend(opinion)
 
@@ -460,12 +489,15 @@ def form_03(request_data):
                           'Российской Федерации от 23 апреля 2012 г. N 390н (зарегистрирован Министерством  юстиции '
                           'Российской Федерации 5 мая 2012 г. N 24082) (далее - \"Перечень\"), для  получения  первичной '
                           'медико-санитарной помощи <font fontname ="PTAstraSerifBold"> Пациентом: </font> {} '
-                          '<font fontname ="PTAstraSerifBold">в Учреждении:</font>  {}'.format(patient_data['fio'], hospital_name), styleFL))
+                          '<font fontname ="PTAstraSerifBold">в Учреждении:</font>  {}'.format(patient_data['fio'],
+                                                                                               hospital_name), styleFL))
 
     space_symbol = '&nbsp;'
     objs.append(Spacer(1, 2 * mm))
-    objs.append(Paragraph('<font fontname ="PTAstraSerifBold">Медицинским работником </font><u>{}</u>'.format(115 * space_symbol), style))
-    objs.append(Paragraph('в доступной для меня форме мне разъяснены цели, методы оказания медицинской помощи, связанный '
+    objs.append(Paragraph(
+        '<font fontname ="PTAstraSerifBold">Медицинским работником </font><u>{}</u>'.format(115 * space_symbol), style))
+    objs.append(
+        Paragraph('в доступной для меня форме мне разъяснены цели, методы оказания медицинской помощи, связанный '
                   'с ними риск, возможные варианты медицинских вмешательств, их  последствия,  в  том  числе  '
                   'вероятность  развития  осложнений, а также предполагаемые  результаты оказания медицинской помощи. '
                   'Мне разъяснено, что я  имею  право  отказаться  от  одного  или  нескольких  видов  медицинских вмешательств,  '
@@ -474,7 +506,8 @@ def form_03(request_data):
                   'граждан в Российской  Федерации"  (Собрание  законодательства  Российской  Федерации, 2011, '
                   'N 48, ст. 6724; 2012, N 26, ст. 3442, 3446).', styleFL))
 
-    objs.append(Paragraph('Сведения  о  выбранных  мною  лицах, которым в соответствии с пунктом 5 части  5  статьи  19 '
+    objs.append(
+        Paragraph('Сведения  о  выбранных  мною  лицах, которым в соответствии с пунктом 5 части  5  статьи  19 '
                   'Федерального закона от 21 ноября 2011 г. N 323-ФЗ "Об основах охраны здоровья граждан в '
                   'Российской Федерации" может быть передана информация о состоянии {}'.format(''), style))
 
