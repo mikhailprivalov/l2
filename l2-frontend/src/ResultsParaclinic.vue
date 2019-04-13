@@ -76,6 +76,15 @@
           </div>
         </div>
       </div>
+      <div v-if="data.has_doc_referral">
+        <div class="research-title">Анамнез жизни</div>
+        <div class="anamnesis">
+<pre>
+{{ca === '' || !ca ? 'нет данных' : ca}}
+</pre>
+          <button class="btn btn-blue-nb" @click="edit_anamnesis">Редактировать</button>
+        </div>
+      </div>
       <div class="results-editor">
         <div v-for="row in data.researches">
           <div class="research-title">{{row.research.title}}</div>
@@ -126,19 +135,42 @@
       </div>
     </div>
     <div class="results-content" v-else></div>
+    <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
+        <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+        <div slot="body" style="min-height: 140px" class="registry-body">
+            <textarea v-model="anamnesis_data.text" rows="5" class="form-control"
+                      placeholder="Анамнез жизни"></textarea>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Отмена
+              </button>
+            </div>
+            <div class="col-xs-4">
+              <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
   </div>
 </template>
 
 <script>
   import moment from 'moment'
+  import patients_point from './api/patients-point'
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
   import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
+  import Modal from './ui-cards/Modal'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress},
+    components: {DateFieldNav, Longpress, Modal},
     data() {
       return {
         pk: '',
@@ -147,7 +179,10 @@
         directions_history: [],
         prev_scroll: 0,
         changed: false,
-        inserted: false
+        inserted: false,
+        anamnesis_edit: false,
+        anamnesis_data: {},
+        new_anamnesis: null,
       }
     },
     watch: {
@@ -179,6 +214,29 @@
       vm.load_history()
     },
     methods: {
+      hide_modal_anamnesis_edit() {
+        this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
+        this.anamnesis_edit = false;
+      },
+      save_anamnesis() {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.saveAnamnesis(vm.data.patient.card_pk, this.anamnesis_data.text).then().finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.new_anamnesis = this.anamnesis_data.text;
+          this.hide_modal_anamnesis_edit();
+        })
+      },
+      edit_anamnesis() {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadAnamnesis(vm.data.patient.card_pk).then(data => {
+          vm.anamnesis_data = data
+        }).finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.anamnesis_edit = true;
+        })
+      },
       enter_field($e) {
         this.prev_scroll = $('.results-editor').scrollTop()
         let $elem = $($e.target)
@@ -324,6 +382,8 @@
 
         this.inserted = false
         this.changed = false
+        this.anamnesis_edit = false
+        this.new_anamnesis = null
         this.data = {ok: false}
       },
       print_direction(pk) {
@@ -351,6 +411,12 @@
       }
     },
     computed: {
+      ca() {
+        if (this.new_anamnesis !== null) {
+          return this.new_anamnesis;
+        }
+        return this.data.anamnesis;
+      },
       pk_c() {
         let lpk = this.pk.trim()
         if (lpk === '')
@@ -660,5 +726,9 @@
   .btn-field:hover {
     background: rgba(0, 0, 0, .2);
     color: #fff;
+  }
+
+  .anamnesis {
+    padding: 10px;
   }
 </style>

@@ -548,6 +548,7 @@ class Card(models.Model):
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
+    anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -684,6 +685,13 @@ class Card(models.Model):
                  fact_address='' if not card_orig else card_orig.fact_address)
         c.save()
         return c
+
+
+class AnamnesisHistory(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    text = models.TextField(help_text='Анамнез жизни')
+    who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Phones(models.Model):

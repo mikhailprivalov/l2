@@ -28,6 +28,8 @@ urlpatterns = [
     path('patients/individuals/update-cdu', views.update_cdu),
     path('patients/individuals/update-wia', views.update_wia),
     path('patients/individuals/sync-rmis', views.sync_rmis),
+    path('patients/individuals/load-anamnesis', views.load_anamnesis),
+    path('patients/individuals/save-anamnesis', views.save_anamnesis),
     path('directions/generate', views.directions_generate),
     path('directions/rmis-directions', views.directions_rmis_directions),
     path('directions/rmis-direction', views.directions_rmis_direction),

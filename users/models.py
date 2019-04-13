@@ -39,6 +39,8 @@ class DoctorProfile(models.Model):
     labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
 
+    restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
+
     def get_login_id(self):
         if not self.login_id:
             self.login_id = uuid.uuid4()

@@ -39,7 +39,7 @@
         <tr>
           <th class="text-center">Дата</th>
           <th>№ напр.</th>
-          <th>Исследования</th>
+          <th>Назначения</th>
           <th class="text-center">Статус</th>
           <th></th>
           <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
