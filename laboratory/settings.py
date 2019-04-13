@@ -21,6 +21,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
+    'django_extensions',
     'ajax_select',
     'health',
     'appconf',
@@ -47,7 +48,10 @@ INSTALLED_APPS = (
     'reports',
     'mq.apps.MqConfig',
     'cases.apps.CasesConfig',
+    'forms',
+    'contracts',
 )
+
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.admindocs.middleware.XViewMiddleware',

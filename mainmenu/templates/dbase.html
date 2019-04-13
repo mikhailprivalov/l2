@@ -366,6 +366,15 @@
         }
         return s
     }
+
+    String.prototype.kwf = function(kw = {}) {
+        let s = this;
+        for (let k in kw) {
+            s = s.replace(new RegExp('\\{' + k + '\\}', 'gm'), kw[k]);
+        }
+        return s;
+    }
+
     Array.prototype.reversedCopy = function () {
         let arr = []
         for (let i = this.length; i--;) {

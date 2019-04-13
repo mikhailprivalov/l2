@@ -59,6 +59,7 @@ coverage.xml
 *.log
 .static_storage/
 .media/
+
 local_settings.py
 
 # Flask stuff:
@@ -222,3 +223,6 @@ webpack-stats.json
 assets/webpack_bundles/*
 assets/static/img/logo*
 .idea
+static/*
+!/static/.gitkeep
+.DS_Store

@@ -1,10 +1,11 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker">
+    <div class="top-picker" :class="{internalType: selected_base.internal_type}">
       <div class="input-group">
         <div class="input-group-btn" v-if="bases.length > 1">
           <button class="btn btn-blue-nb btn-ell dropdown-toggle nbr" type="button" data-toggle="dropdown"
-                  style="width: 200px;text-align: left!important;"><span class="caret"></span> {{selected_base.title}}
+                  style="width: 200px;text-align: left!important;">
+            <span class="caret"></span> {{selected_base.title}}
           </button>
           <ul class="dropdown-menu">
             <li v-for="row in bases" :value="row.pk" v-if="!row.hide && row.pk !== selected_base.pk">
@@ -19,6 +20,11 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
+        <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
+          <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
+            <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
+          </label>
+        </span>
         <span class="input-group-btn">
           <button style="margin-right: -2px"
                   class="btn last btn-blue-nb nbr" type="button" :disabled="!query_valid || inLoading" @click="search">
@@ -52,14 +58,26 @@
             <td class="table-header-row">Пол:</td>
             <td class="table-content-row">{{selected_card.sex}}</td>
           </tr>
-          <tr v-if="history_n === 'true'">
+          <tr>
             <td class="table-header-row">
-              <span class="hospital" style="display: block;line-height: 1.2;">Номер истории:</span>
+              <span class="hospital" style="display: block;line-height: 1.2;" v-if="history_n === 'true'">Номер истории:</span>
             </td>
-            <td class="table-content-row" colspan="3">
-              <div style="height: 34px">
-            <span class="hospital"><input type="text" class="form-control" maxlength="11" v-model="history_num"
-                                          :disabled="!selected_base.history_number"/></span>
+            <td class="table-content-row" colspan="2">
+              <div style="height: 34px" v-if="history_n === 'true'">
+                <span class="hospital">
+                  <input type="text" class="form-control" maxlength="11" v-model="history_num"
+                                              :disabled="!selected_base.history_number"/>
+                </span>
+              </div>
+            </td>
+            <td>
+              <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
+                <button class="btn last btn-blue-nb nbr" type="button" title="Анамнез жизни" @click="open_anamnesis()" v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Новая L2 карта" @click="open_editor(true)" v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button" title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()" v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
+              </div>
+              <div class="internal_type" v-else-if="l2_cards">
+                <button class="btn last btn-blue-nb nbr" type="button" title="Открыть пациента в базе L2" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
               </div>
             </td>
           </tr>
@@ -89,44 +107,58 @@
     <div class="bottom-picker" v-if="bottom_picker === 'true'">
       <slot name="for_card_bottom"/>
     </div>
-    <modal ref="modal" v-show="showModal" @close="hide_modal" show-footer="true">
+    <modal ref="modal" v-if="showModal" @close="hide_modal" show-footer="true">
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
-        <table class="table table-responsive table-bordered table-hover"
-               style="background-color: #fff;max-width: 680px">
-          <colgroup>
-            <col width="95">
-            <col width="155">
-            <col>
-            <col width="140">
-          </colgroup>
-          <thead>
-          <tr>
-            <th>Категория</th>
-            <th>Карта</th>
-            <th>ФИО, пол</th>
-            <th>Дата рождения</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(row, i) in founded_cards" class="cursor-pointer" @click="select_card(i)">
-            <td class="text-center">{{row.type_title}}</td>
-            <td>{{row.num}}</td>
-            <td>{{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</td>
-            <td class="text-center">{{row.birthday}}</td>
-          </tr>
-          </tbody>
-        </table>
+        <div class="founded" v-for="(row, i) in founded_cards" @click="select_card(i)">
+          <div class="founded-row">Карта <span class="b">{{row.type_title}} {{row.num}}</span></div>
+          <div class="founded-row"><span class="b">ФИО, пол:</span> {{row.family}} {{row.name}} {{row.twoname}}, {{row.sex}}</div>
+          <div class="founded-row"><span class="b">Дата рождения:</span> {{row.birthday}} ({{row.age}})</div>
+          <div class="founded-row" v-for="d in row.docs">
+            <span class="b">{{d.type_title}}:</span> {{d.serial}} {{d.number}}
+          </div>
+        </div>
       </div>
       <div slot="footer" class="text-center">
         <small>Показано не более 10 карт</small>
       </div>
     </modal>
+    <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
+    <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top class="an">
+        <span slot="header">Анамнез жизни – карта {{selected_card.num}}, {{selected_card.fio_age}}</span>
+        <div slot="body" class="an-body">
+          <div class="an-sidebar">
+            <div class="an-s" :class="{active: an_state.tab === 'text'}" @click="an_tab('text')">Анамнез</div>
+            <div class="an-s" :class="{active: an_state.tab === 'history'}" @click="an_tab('history')">История изменений</div>
+          </div>
+          <div class="an-content">
+            <div v-if="an_state.tab === 'text'">
+              <pre>{{anamnesis_data.text || 'нет данных'}}</pre>
+            </div>
+            <div v-else class="an-history">
+              <div v-for="h in anamnesis_data.history">
+                <pre>{{h.text || 'нет данных'}}</pre>
+                {{h.who_save.fio}}, {{h.who_save.department}}. {{h.datetime}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="hide_modal_anamnesis" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
   </div>
 </template>
 
 <script>
   import SelectPickerB from './SelectPickerB'
+  import L2CardCreate from './L2CardCreate'
   import LinkSelector from './LinkSelector'
   import PatientCard from './ui-cards/PatientCard'
   import Modal from './ui-cards/Modal'
@@ -135,7 +167,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal},
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate},
     props: {
       directive_from_need: {
         default: 'false',
@@ -153,7 +185,7 @@
         default: 'true',
         type: String
       },
-      value: {}
+      value: {},
     },
     data() {
       return {
@@ -170,7 +202,14 @@
         selected_card: {},
         loaded: false,
         history_num: '',
-        search_after_loading: false
+        search_after_loading: false,
+        editor_pk: -2,
+        inc_rmis: false,
+        anamnesis: false,
+        anamnesis_data: {},
+        an_state: {
+          tab: 'text',
+        }
       }
     },
     created() {
@@ -206,8 +245,36 @@
       this.$root.$on('search', () => {
         vm.search()
       })
+      this.$root.$on('select_card', data => {
+        vm.base = data.base_pk;
+        vm.query = `card_pk:${data.card_pk}`
+        vm.search_after_loading = true
+        $(vm.$refs.q).focus()
+        vm.emit_input()
+        if (!data.hide) {
+          vm.editor_pk = data.card_pk
+        } else {
+          vm.editor_pk = -2;
+        }
+        setTimeout(() => {
+          vm.search()
+          if (!data.hide) {
+            setTimeout(() => {
+              this.$root.$emit('reload_editor');
+            }, 5);
+          }
+        }, 5);
+      })
+      this.$root.$on('hide_l2_card_create', () => {
+        vm.editor_pk = -2;
+      })
     },
     watch: {
+      query() {
+        this.query = this.query.split(' ')
+        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .join(' ');
+      },
       bases() {
         this.check_base()
       },
@@ -242,7 +309,7 @@
             return b
           }
         }
-        return {title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: []}
+        return {title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: [], internal_type: false,}
       },
       normalized_query() {
         return this.query.trim()
@@ -250,10 +317,23 @@
       query_valid() {
         return this.normalized_query.length > 0
       },
+      l2_cards() {
+        return (this.$store.getters.user_data.modules || {}).l2_cards;
+      },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {
           for (let g of this.$store.getters.user_data.groups) {
             if (g === 'Оператор лечащего врача') {
+              return true
+            }
+          }
+        }
+        return false
+      },
+      is_l2_cards() {
+        if ('groups' in this.$store.getters.user_data) {
+          for (let g of this.$store.getters.user_data.groups) {
+            if (g === 'Картотека L2' || g === "Admin") {
               return true
             }
           }
@@ -287,6 +367,32 @@
       }
     },
     methods: {
+      open_anamnesis() {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadAnamnesis(this.selected_card.pk).then(data => {
+          vm.an_tab('text');
+          vm.anamnesis_data = data;
+        }).finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING).then();
+          this.anamnesis = true;
+        })
+      },
+      hide_modal_anamnesis() {
+        this.$refs.modalAnamnesis.$el.style.display = 'none'
+        this.anamnesis_data = {};
+        this.anamnesis = false;
+      },
+      an_tab(tab) {
+        this.an_state.tab = tab;
+      },
+      open_editor(isnew) {
+        if (isnew) {
+          this.editor_pk = -1;
+        } else {
+          this.editor_pk = this.selected_card.pk;
+        }
+      },
       format_number(a) {
         if (a.length === 6) {
           return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
@@ -300,7 +406,8 @@
       },
       hide_modal() {
         this.showModal = false
-        this.$refs.modal.$el.style.display = 'none'
+        if (this.$refs.modal)
+          this.$refs.modal.$el.style.display = 'none'
       },
       update_ofname() {
         if (this.ofname_to_set === '-2' || this.inLoading)
@@ -355,6 +462,12 @@
       select_card(index) {
         this.hide_modal()
         this.selected_card = this.founded_cards[index]
+        if (this.selected_card.base_pk) {
+          if (this.base && this.base !== this.selected_card.base_pk) {
+            this.query = '';
+          }
+          this.base = this.selected_card.base_pk
+        }
         this.emit_input()
         this.loaded = true
         this.$root.$emit('patient-picker:select_card')
@@ -369,12 +482,23 @@
           let ofname_dep = params.get('ofname_dep')
           if (rmis_uid) {
             window.history.pushState('', '', window.location.href.split('?')[0])
+            let has_internal = false
             for (let row of this.bases) {
-              if (row.code === 'Р') {
+              if (row.internal_type) {
                 this.base = row.pk
                 this.query = rmis_uid
                 this.search_after_loading = true
                 break
+              }
+            }
+            if (!has_internal) {
+              for (let row of this.bases) {
+                if (row.code === 'Р') {
+                  this.base = row.pk
+                  this.query = rmis_uid
+                  this.search_after_loading = true
+                  break
+                }
               }
             }
             if (this.base === -1) {
@@ -441,10 +565,31 @@
         this.selected_card = {}
         this.history_num = ''
         this.founded_cards = []
-        if (this.query.includes('card_pk:')) {
+        if (this.query.toLowerCase().includes('card_pk:')) {
           this.query = ''
         }
         this.emit_input()
+      },
+      open_as_l2_card() {
+        let vm = this
+        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
+        patients_point.searchL2Card(this.selected_card.pk).then((result) => {
+          vm.clear()
+          if (result.results) {
+            vm.founded_cards = result.results
+            if (vm.founded_cards.length > 1) {
+              vm.showModal = true
+            } else if (vm.founded_cards.length === 1) {
+              vm.select_card(0)
+            }
+          } else {
+            errmessage('Ошибка на сервере')
+          }
+        }).catch((error) => {
+          errmessage('Ошибка на сервере', error.message)
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+        })
       },
       search() {
         this.search_after_loading = false
@@ -456,12 +601,11 @@
         })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query).then((result) => {
+        patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
             if (vm.founded_cards.length > 1) {
-              vm.$refs.modal.$el.style.display = 'flex'
               vm.showModal = true
             } else if (vm.founded_cards.length === 1) {
               vm.select_card(0)
@@ -600,6 +744,92 @@
     }
   }
 
+  .an {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+
+    /deep/ .panel-flt {
+      margin: 41px;
+      align-self: stretch !important;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /deep/ .panel-body {
+      flex: 1;
+      padding: 0;
+      height: calc(100% - 91px);
+      min-height: 200px;    position: relative;
+    }
+
+    &-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-content: stretch;
+      & > div {
+        align-self: stretch;
+      }
+    }
+    &-sidebar {
+      width: 100px;
+      background: rgba(0, 0, 0, .04);
+      border-right: 1px solid rgba(0, 0, 0, .16);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    &-content {
+      display: flex;
+      flex-direction: column;
+      width: calc(100% - 100px);
+      & > div {
+        flex: 1;
+        padding: 5px 10px;
+        overflow-y: auto;
+      }
+    }
+
+    &-history > div {
+      margin-bottom: 10px;
+      padding: 5px;
+      background: rgba(#000, .1);
+      border-radius: 5px;
+    }
+
+  &-s {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+    &:not(.active) {
+      cursor: pointer;
+      transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    }
+    position: relative;
+
+    &.active {
+      background-image: linear-gradient(#6C7A89, #56616c);
+      color: #fff;
+    }
+
+    &:not(.active):hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+      transform: scale(1.008);
+    }
+  }
+  }
+
   .hovershow {
     position: relative;
 
@@ -643,5 +873,28 @@
     border-left: none !important;
     border-top: none !important;
     border-right: none !important;
+  }
+
+  .internal_type {
+    text-align: right;
+  }
+
+  .founded {
+    background: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all .2s cubic-bezier(.25, .8, .25, 1);
+    position: relative;
+    &:hover {
+      transform: scale(1.03);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+    }
+  }
+  .b {
+    font-weight: bold;
   }
 </style>

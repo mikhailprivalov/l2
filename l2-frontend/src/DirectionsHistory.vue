@@ -39,7 +39,7 @@
         <tr>
           <th class="text-center">Дата</th>
           <th>№ напр.</th>
-          <th>Исследования</th>
+          <th>Назначения</th>
           <th class="text-center">Статус</th>
           <th></th>
           <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
@@ -91,10 +91,9 @@
             Действие с отмеченными <span class="caret"></span>
           </button>
           <ul class="dropdown-menu">
-            <!--<li><a href="#" @click.prevent="selected_do('resend_results_rmis')">Повтор отправки результатов в РМИС</a>
+            <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
+                <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
-            <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
-              РМИС</a></li>-->
             <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
             <li><a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a></li>
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
@@ -112,6 +111,7 @@
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
   import moment from 'moment'
+  import {forDirs} from './forms';
 
   export default {
     components: {DateRange},
@@ -147,6 +147,14 @@
       }
     },
     computed: {
+      forms() {
+        return forDirs.map(f => {
+          return {...f, url: f.url.kwf({
+              card: this.patient_pk,
+              dir: JSON.stringify(this.checked),
+            })}
+        });
+      },
       active_type_obj() {
         for (let row of this.types) {
           if (row.pk === this.active_type) {

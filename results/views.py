@@ -12,6 +12,7 @@ from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
+from reportlab.lib.styles import getSampleStyleSheet
 
 import directory.models as directory
 import slog.models as slog
@@ -386,6 +387,7 @@ def result_print(request):
         response['Content-Disposition'] = 'attachment; filename="results.pdf"'
 
     pk = json.loads(request.GET["pk"])
+
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
 
     from io import BytesIO
@@ -565,7 +567,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal:
                 has_paraclinic = True
         maxdate = ""
         if dates != {}:
@@ -692,6 +694,7 @@ def result_print(request):
                 data = []
                 fractions = directory.Fractions.objects.filter(research=iss.research, hide=False,
                                                                render_type=0).order_by("pk").order_by("sort_weight")
+
                 if fractions.count() > 0:
                     if fractions.count() == 1:
                         tmp = [Paragraph('<font face="OpenSans" size="8">' + iss.research.title + "</font>",
@@ -845,14 +848,23 @@ def result_print(request):
                             if f.render_type == 0:
                                 tmp.append(Paragraph('<font face="OpenSans" size="8">' + f.title + "</font>",
                                                      styleSheet["BodyText"]))
+
                                 norm = "none"
-                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+                                # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
+                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and f.print_title==False:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
                                     result = result_normal(r.value)
                                     ref = r.get_ref()
                                     f_units = r.get_units()
+                                # начало Касьяненко С.Н. Вывести жирным только название фракции. Если свойство print_title true
+                                elif f.print_title:
+                                    tmp[0]=(Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
+                                                         styleSheet["BodyText"]))
+                                    data.append(tmp)
+                                    continue
+                                # начало Касьяненко С.Н.
                                 else:
                                     continue
                                 if not iss.doc_confirmation and iss.deferred:
@@ -957,6 +969,7 @@ def result_print(request):
                         j = 0
                         if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                             result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value
+
                             if result == "":
                                 continue
                             jo = json.loads(result)["rows"]
@@ -1095,7 +1108,9 @@ def result_print(request):
         else:
             for iss in Issledovaniya.objects.filter(napravleniye=direction).order_by("research__pk"):
                 fwb.append(Spacer(1, 5 * mm))
-                if iss.doc_confirmation.podrazdeleniye.vaccine:
+                if iss.research.is_doc_refferal:
+                    fwb.append(Paragraph(iss.research.title, styleBold))
+                elif iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
                 else:
                     fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
@@ -2136,7 +2151,7 @@ def results_search_directions(request):
             iss_dir = iss_dir.filter(research__pk__in=rq_researches)
 
         for r in iss_dir:
-            if not r.research.is_paraclinic:
+            if not r.research.is_paraclinic and not r.research.is_doc_refferal:
                 if not Result.objects.filter(issledovaniye=r).exists():
                     continue
                 tmp_r = {"title": r.research.title}

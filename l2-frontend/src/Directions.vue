@@ -30,11 +30,9 @@
                 Печатные формы <span class="caret"></span>
               </button>
               <ul class="dropdown-menu">
-                <!--<li><a href="#" @click.prevent="selected_do('resend_results_rmis')">Повтор отправки результатов в РМИС</a>
+                <li v-for="f in forms" v-if="selected_card.base.internal_type || f.not_internal">
+                  <a :href="f.url" target="_blank" class="ddm">{{f.title}}</a>
                 </li>
-                <li><a href="#" @click.prevent="selected_do('resend_directions_rmis')">Повтор отправки направлений в
-                  РМИС</a></li>-->
-                <li><a :href="`/forms/pdf?type=1&individual=${selected_card.individual_pk}`" target="_blank" class="ddm">Согласие на ВИЧ-исследование</a></li>
               </ul>
             </div>
             <a href="#" @click.prevent="do_show_rmis_directions" v-if="selected_card.is_rmis">
@@ -76,8 +74,8 @@
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
   import RmisDirectionsViewer from './RmisDirectionsViewer'
-  // import RmisSendDirections from './RmisSendDirections'
   import LastResult from './LastResult'
+  import forms from './forms';
 
   export default {
     components: {
@@ -87,7 +85,6 @@
       DirectionsHistory,
       ResultsViewer,
       RmisDirectionsViewer,
-      // RmisSendDirections,
       LastResult,
     },
     name: 'directions',
@@ -195,6 +192,14 @@
       }
     },
     computed: {
+      forms() {
+        return forms.map(f => {
+          return {...f, url: f.url.kwf({
+              card: this.selected_card.pk,
+              individual: this.selected_card.individual_pk,
+            })}
+        });
+      },
       patient_valid() {
         return this.selected_card.pk !== -1
       },

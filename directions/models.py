@@ -13,6 +13,8 @@ import cases.models as cases
 from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
+import contracts.models as contracts
+from appconf.manager import SettingManager
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -192,9 +194,36 @@ class IstochnikiFinansirovaniya(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
     rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
+    contracts = models.ForeignKey(contracts.Contract, null=True,blank=True,default='', on_delete=models.CASCADE)
+    order_weight = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
+
+    @staticmethod
+    def get_price_modifier(finsource, work_place_link = None):
+        """
+        На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
+        Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
+        Если источник финансирования МЕДОСМОТР поиск осуществляется по цепочке company-contract. Company(место работы)
+        Если источник финансирования ПЛАТНО поиск осуществляется по цепочке ист.фин-contract-прайс
+        Если источник финансирования ОМС, ДИСПАНСЕРИЗАЦИЯ поиск осуществляется по цепочке ист.фин-contract-прайс
+        Если источник финансирования Бюджет поиск осуществляется по цепочке contract
+        """
+        price_modifier = None
+        price_contract = set(SettingManager.get("price_contract").split(','))
+        price_company = set(SettingManager.get("price_company").split(','))
+
+        if finsource.title.upper() in price_contract:
+            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=finsource.pk).first()
+            if contract_l[0]:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+        elif finsource.title.upper() in price_company and work_place_link:
+            contract_l = work_place_link.contract_id
+            if contract_l:
+                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l)
+
+        return price_modifier
 
     class Meta:
         verbose_name = 'Источник финансирования'
@@ -274,10 +303,13 @@ class Napravleniya(models.Model):
     forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
 
     case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
+    num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
+
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
-            self.pk, self.client.individual.fio(), self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
+            self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
 
     def get_instructions(self):
         r = []
@@ -285,8 +317,14 @@ class Napravleniya(models.Model):
             r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
         return r
 
+
+
     @staticmethod
-    def gen_napravleniye(client_id, doc, istochnik_f, diagnos, historynum, doc_current, ofname_id, ofname, issledovaniya=None, save=True, for_rmis=None, rmis_data=None):
+    def gen_napravleniye(client_id: object, doc: object, istochnik_f: object, diagnos: object, historynum: object, doc_current: object, ofname_id: object, ofname: object,
+                         issledovaniya: object = None,
+                         save: object = True,
+                         for_rmis: object = None,
+                         rmis_data: object = None) -> object:
         """
         Генерация направления
         :param client_id: id пациента
@@ -323,7 +361,7 @@ class Napravleniya(models.Model):
         return dir
 
     @staticmethod
-    def set_of_name(dir, doc_current, ofname_id, ofname: DoctorProfile):
+    def set_of_name(dir: object, doc_current: object, ofname_id: object, ofname: object) -> object:
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
         :rtype: Null
@@ -340,7 +378,12 @@ class Napravleniya(models.Model):
 
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
-                                          researches, comments, for_rmis=None, rmis_data=None, vich_code=''):
+                                          researches, comments, for_rmis=None, rmis_data=None, vich_code='',
+                                          count=1, discount=0):
+
+        #импорт для получения прайса и цены по услугам
+        from forms import forms_func
+
         if rmis_data is None:
             rmis_data = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
@@ -388,8 +431,13 @@ class Napravleniya(models.Model):
 
                 finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
 
+                # получить прайс
+                work_place_link = Clients.Card.objects.get(pk=client_id).work_place_db
+                price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
+
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
+                    research_coast = None
 
                     dir_group = -1
                     if research.direction:
@@ -422,8 +470,17 @@ class Napravleniya(models.Model):
                                                                                              rmis_data=rmis_data)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
+
+
+                    # получить по прайсу и услуге: текущую цену
+                    research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
+                    research_discount = discount * -1
+                    research_howmany = count
+
+
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
-                                                  research=research,
+                                                  research=research, coast=research_coast, discount=research_discount,
+                                                  how_many=research_howmany,
                                                   deferred=False)
                     issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
@@ -441,7 +498,9 @@ class Napravleniya(models.Model):
                                           "history_num": history_num, "ofname": str(ofname),
                                           "for_rmis": for_rmis,
                                           "rmis_data": rmis_data,
-                                          "comments": comments})).save()
+                                          "comments": comments,
+                                          "count": count,
+                                          "discount": discount})).save()
 
             else:
                 result["r"] = False
@@ -495,6 +554,32 @@ class Napravleniya(models.Model):
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
 
+class PersonContract(models.Model):
+    """
+    Каждый раз при генерации нового контракта для физлица создается просто запись
+    """
+    num_contract = models.CharField(max_length=25, null=False, db_index=True, help_text='Номер договора')
+    protect_code = models.CharField(max_length=32, null=False, db_index=True, help_text="Контрольная сумма контракта")
+    dir_list = models.CharField(max_length=255, null=False, db_index=True, help_text="Направления для контракта")
+    sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
+    patient_data = models.CharField(max_length=255, null=False, db_index=True, help_text="Фамилия инициалы Заказчика-Пациента")
+    patient_card = models.ForeignKey(Clients.Card,related_name='patient_card', null= True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
+    payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, help_text='Карта плательщика', db_index=False, on_delete=models.SET_NULL)
+    agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, help_text='Карта Представителя', db_index=False,on_delete=models.SET_NULL)
+
+    class Meta:
+        unique_together = ("num_contract", "protect_code")
+        verbose_name = 'Договор физ.лица'
+        verbose_name_plural = 'Договоры физ.лиц'
+
+    @staticmethod
+    def person_contract_save(n_contract, p_code, d_list,s_contract, p_data, p_card, p_payer = None, p_agent = None):
+        """
+        Запись в базу сведений о контракте
+        """
+        pers_contract = PersonContract(num_contract =n_contract, protect_code=p_code,dir_list=d_list,sum_contract=s_contract,patient_data=p_data,
+                                       patient_card = p_card, payer_card=p_payer,agent_card=p_agent)
+        pers_contract.save()
 
 class Issledovaniya(models.Model):
     """
@@ -511,6 +596,10 @@ class Issledovaniya(models.Model):
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
+    coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
+    discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
+    how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)

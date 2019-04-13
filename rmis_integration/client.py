@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from requests_toolbelt import MultipartEncoder
 from simplejson import JSONDecodeError
 from zeep import Client as zeepClient, helpers
-from zeep.cache import SqliteCache, Base
+from zeep.cache import Base
 from zeep.exceptions import Fault
 from zeep.transports import Transport
 
@@ -97,9 +97,11 @@ class DjangoCache(Base):
         self._timeout = timeout
 
     def k(self, url):
-        return "zeep_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
+        return "zp_{}".format(str(hashlib.sha256(url.encode()).hexdigest()))
 
     def add(self, url, content):
+        if "patients" in url or "individuals" in url:
+            return
         # print("Caching contents of %s", url)
         key = self.k(url)
         cache.set(key, pickle.dumps(content, protocol=4), self._timeout)
@@ -147,6 +149,8 @@ class Client(object):
             self.hosp = Hosp(self)
         if "department" in modules:
             self.department = Department(self)
+        if "individuals" in modules:
+            self.individuals = Individuals(self)
         if "tc" in modules:
             self.localclient = TC(enforce_csrf_checks=False)
 
@@ -319,35 +323,75 @@ class Directory(BaseRequester):
         return None
 
 
+class Individuals(BaseRequester):
+    def __init__(self, client: Client):
+        super().__init__(client, "path_individuals")
+
+    def update_patient_data(self, card: clients_models.Card):
+        data = {
+            "individualId": card.number,
+            "individualData": {
+                "name": card.individual.name,
+                "patrName": card.individual.patronymic,
+                "surname": card.individual.family,
+                "gender": {"ж": "2"}.get(card.individual.sex.lower(), "1"),
+                "birthDate": card.individual.birthday,
+            },
+        }
+        d = self.client.editIndividual(**data)
+        return d
+
+
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        key = "zeep_patients"
+        key = "zeep_pat"
         r = cache.get(key)
 
         if not r:
             r = {}
             document_types_directory = client.get_directory("pc_doc_type")
-            r["polis_types_id_list"] = [Utils.get_column_value(x, "ID") for x in
-                                        document_types_directory.get_values_by_data(search_data="Полис")]
+            dts = document_types_directory.get_values_by_data(search_data="Полис")
+            r["polis_types_id_list"] = [Utils.get_column_value(x, "ID") for x in dts]
             r["local_types"] = {}
+            r["reverse_types"] = {}
+
             for t in clients_models.DocumentType.objects.all():
+                if 'Полис ОМС' in t.title:
+                    for dtp in r["polis_types_id_list"]:
+                        r["reverse_types"][dtp] = t.pk
                 tmp = [Utils.get_column_value(x, "ID") for x in
                        document_types_directory.get_values_by_data(search_data=t.title)]
                 if len(tmp) > 0:
                     r["local_types"][t.pk] = tmp[0]
+                    r["reverse_types"][tmp[0]] = t.pk
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
+                    r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
             cache.set(key, pickle.dumps(r, protocol=4), 3600)
         else:
             r = pickle.loads(r, encoding="utf8")
         self.polis_types_id_list = r["polis_types_id_list"]
         self.local_types = r["local_types"]
+        self.local_reverse_types = r["reverse_types"]
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
 
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)
         return {} if d["error"] else d["patientCard"]
+
+    def send_patient(self, card: clients_models.Card):
+        data = [{
+            "patient": {
+                "uid": card.number,
+                "firstName": card.individual.name,
+                "middleName": card.individual.patronymic,
+                "lastName": card.individual.family,
+                "birthDate": card.individual.birthday,
+                "gender": {"ж": "2"}.get(card.individual.sex.lower(), "1"),
+            },
+        }]
+        return self.smart_client.sendPatient(patientCard=data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
@@ -370,7 +414,8 @@ class Patients(BaseRequester):
                     if a["type"] not in '43':
                         continue
                     addr = ', '.join(
-                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + ((', Дом ' + a['house']) if a['house'] else '')
+                        [x['name'] for x in a['entries'] if x['type'] not in ['1', '2', '53'] and x['type']]) + (
+                               (', Дом ' + a['house']) if a['house'] else '')
                     if a['apartment']:
                         addr += ', ' + a['apartment']
                     if a["type"] == '4' and card.main_address != addr:
@@ -380,6 +425,7 @@ class Patients(BaseRequester):
                         card.fact_address = addr
                         card.save()
                     break
+            clients_models.Card.add_l2_card(card_orig=card)
         else:
             card.is_archive = True
             card.save()
@@ -509,7 +555,7 @@ class Patients(BaseRequester):
             if q != "":
                 individual_row = self.client.getIndividual(q)
             if individual_row and (
-                        (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
+                    (individual_row["surname"] or individual_row["name"] or individual_row["patrName"])
                     and individual_row["birthDate"] is not None):
                 qq = dict(family=(individual_row["surname"] or "").title(),
                           name=(individual_row["name"] or "").title(),
@@ -526,10 +572,10 @@ class Patients(BaseRequester):
                     document_object = self.client.getDocument(document_id)
                     if document_object["type"] in self.polis_types_id_list and document_object["active"]:
                         q = dict(document_type=clients_models.DocumentType.objects.filter(title="Полис ОМС")[0],
-                            serial=document_object["series"] or "",
-                            number=document_object["number"] or "",
-                            individual=individual,
-                            is_active=True)
+                                 serial=document_object["series"] or "",
+                                 number=document_object["number"] or "",
+                                 individual=individual,
+                                 is_active=True)
                         if clients_models.Document.objects.filter(**q).exists():
                             continue
                         doc = clients_models.Document(**q)
@@ -703,8 +749,8 @@ class Directions(BaseRequester):
     def check_send(self, direction: Napravleniya, stdout: OutputWrapper = None):
         client_rmis = direction.client.individual.check_rmis()
         if client_rmis and client_rmis != "NONERMIS" and (
-                            not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
-                            direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
+                not direction.rmis_number or direction.rmis_number == "" or direction.rmis_number == "NONERMIS" or (
+                direction.imported_from_rmis and not direction.imported_directions_rmis_send)):
             if not direction.imported_from_rmis:
                 ref_data = dict(patientUid=client_rmis,
                                 number=str(direction.pk),

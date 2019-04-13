@@ -10,8 +10,12 @@ class CardAdmin(admin.ModelAdmin):
     raw_id_fields = ('client',)
 
 
+@admin.register(Issledovaniya)
+class IssAdmin(admin.ModelAdmin):
+    raw_id_fields = ('napravleniye', 'research',)
+
+
 admin.site.register(TubesRegistration)
-admin.site.register(Issledovaniya)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)

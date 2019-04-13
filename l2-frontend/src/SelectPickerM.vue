@@ -19,7 +19,34 @@
     methods: {
       update_val(v) {
         this.$emit('input', v)
-      }
+      },
+    },
+    data() {
+      return {
+        elc: null,
+      };
+    },
+    watch: {
+      value: {
+        handler(v) {
+          if (this.elc)
+          this.elc.selectpicker('val', v)
+        },
+        deep: true,
+        immediate: true,
+      },
+      options: {
+        handler() {
+          this.$forceUpdate();
+        },
+        deep: true,
+      },
+      elc: {
+        handler() {
+          if (this.elc)
+          this.elc.selectpicker('val', this.value)
+        },
+      },
     },
     created() {
       this.update_val(this.value)
@@ -49,8 +76,9 @@
             vnode.context.update_val(lval)
           })
         },
-        inserted(el) {
+        inserted(el, binding, vnode) {
           $(el).selectpicker()
+          vnode.context.elc = $(el)
         }
       }
     }

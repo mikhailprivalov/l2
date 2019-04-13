@@ -1,6 +1,6 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative">
-    <div :class="['top-picker', need_vich_code ? 'need-vich-code': '']" v-if="!simple">
+  <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && 'pay_source']">
+    <div :class="['top-picker', need_vich_code && 'need-vich-code']" v-if="!simple">
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз">
         <span>&times;</span>
       </button>
@@ -49,6 +49,14 @@
         </tr>
         </tbody>
       </table>
+    </div>
+    <div class="bottom-picker-inputs" v-if="pay_source">
+      <input v-model="count" placeholder="Количество" title="Количество" type="number" min="1" max="1000" class="form-control" />
+      <input v-model="discount" placeholder="Скидка" title="Скидка" type="number" min="0" max="100" class="form-control" />
+      <div class="bottom-picker-inputs-over">
+        кол.<br/>
+        -%
+      </div>
     </div>
     <div class="bottom-picker" v-if="!simple">
       <div class="top-inner-select" :class="{ disabled: !can_save }" @click="generate('direction')"
@@ -146,9 +154,17 @@
         limit: 11,
         selectFirst: true,
         vich_code: '',
+        count: 1,
+        discount: 0,
       }
     },
     watch: {
+      count() {
+        this.count = Math.min(Math.max(parseInt(this.count) || 1, 1), 1000)
+      },
+      discount() {
+        this.discount = Math.min(Math.max(parseInt(this.discount) || 0, 0), 100)
+      },
       card_pk() {
         this.clear_fin()
       },
@@ -282,8 +298,13 @@
         return {pk: -1, title: "", default_diagnos: ""}
       },
       select_fin(pk) {
+        if (this.base.fin_sources.length === 1 && pk === -1) {
+          pk = this.base.fin_sources[0].pk;
+        }
         const cfin = this.fin
         this.fin = pk
+        this.count = 1;
+        this.discount = 0;
         if(this.get_def_diagnosis(cfin) === this.diagnos || this.diagnos.trim() === ""){
           this.diagnos = this.get_def_diagnosis()
         }
@@ -292,7 +313,7 @@
         this.$root.$emit('researches-picker:deselect_department', pk)
       },
       generate(type) {
-        if (this.diagnos === '') {
+        if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source) {
           $(this.$refs.d).focus()
           errmessage('Диагноз не указан', 'Если не требуется, то укажите прочерк ("-")')
           return
@@ -314,6 +335,9 @@
           history_num: this.history_num,
           comments: this.comments,
           vich_code: this.need_vich_code ? this.vich_code : '',
+          count: this.count,
+          discount: this.discount,
+          need_contract: this.pay_source
         })
       },
       clear_all() {
@@ -325,6 +349,12 @@
       },
     },
     computed: {
+      current_fin() {
+        return this.get_fin_obj(this.fin);
+      },
+      pay_source() {
+        return this.current_fin.title.toLowerCase() === 'платно';
+      },
       researches_departments() {
         let r = {}
         let deps = {"-2": {title: "Консультации"}}
@@ -535,12 +565,61 @@
 
   .bottom-picker {
     bottom: 0;
+    left: 0;
     align-content: stretch;
     overflow: hidden;
+  }
+
+  .bottom-picker-inputs {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding-left: 25px;
+    align-content: stretch;
+    overflow: hidden;
+    right: calc(100% - 70px);
+    display: flex;
+    flex-direction: column;
+
+    .form-control {
+      width: 100%;
+      border-bottom: 0;
+      border-left: 0;
+      border-right: 0;
+      border-radius: 0;
+      padding-left: 5px;
+      height: 17px;
+      padding-right: 3px;
+    }
+
+    .bottom-picker-inputs-over {
+      background: #aab2bd;
+      color: #fff;
+      line-height: 17px;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      right: calc(100% - 25px);
+      font-size: 12px;
+      padding-left: 1px;
+    }
+  }
+
+  .pay_source .bottom-picker {
+      left: 70px;
   }
 
   .bottom-picker .top-inner-select span {
     margin: 0 auto;
     text-align: center;
+  }
+
+  .bottom-picker-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-content: center;
+    align-items: stretch;
+    overflow-y: auto;
   }
 </style>
