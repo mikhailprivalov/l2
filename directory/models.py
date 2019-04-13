@@ -81,6 +81,10 @@ class Researches(models.Model):
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
 
+    @property
+    def is_doc_referral(self):
+        return self.is_doc_refferal
+
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
 
