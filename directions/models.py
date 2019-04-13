@@ -201,7 +201,7 @@ class IstochnikiFinansirovaniya(models.Model):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
     @staticmethod
-    def get_price_modifier(finsource, work_place_link=None):
+    def get_price_modifier(finsource, work_place_link = None):
         """
         На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
         Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
@@ -306,6 +306,7 @@ class Napravleniya(models.Model):
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
     protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
+
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
             self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
@@ -315,6 +316,8 @@ class Napravleniya(models.Model):
         for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
             r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
         return r
+
+
 
     @staticmethod
     def gen_napravleniye(client_id: object, doc: object, istochnik_f: object, diagnos: object, historynum: object, doc_current: object, ofname_id: object, ofname: object,

@@ -167,7 +167,6 @@ def form_01(request_data):
         num_contract_set.add(n.num_contract)
         protect_code_set.add(n.protect_code)
 
-
     if len(num_contract_set) == 1 and None in num_contract_set or None in protect_code_set:
         PersonContract.person_contract_save(date_now_str, protect_code, qr_napr, sum_research, patient_data['fio'],ind_card,p_payer, p_agent)
         Napravleniya.objects.filter(id__in=result_data[3]).update(num_contract=date_now_str, protect_code=protect_code)
@@ -761,10 +760,12 @@ def form_01(request_data):
 
 
     left_size_str = hospital_short_name +15 * space_symbol + protect_code + 15 * space_symbol
+
     qr_value = protect_code +',' + npf + '(' + qr_napr + ')' + protect_val
 
     if npf != p_npf:
         qr_value = protect_code + ',' + npf + '-' +p_npf + '(' + qr_napr + ')' + protect_val
+
 
     def first_pages(canvas, document):
         canvas.saveState()

@@ -147,7 +147,33 @@ async function syncRmis(card_pk) {
   return {}
 }
 
+async function loadAnamnesis(card_pk) {
+  try {
+    const response = await HTTP.post('patients/individuals/load-anamnesis', {
+      card_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function saveAnamnesis(card_pk, text) {
+  try {
+    const response = await HTTP.post('patients/individuals/save-anamnesis', {
+      card_pk, text,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 export default {searchCard, searchIndividual, searchL2Card, syncRmis,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
-  editAgent,
+  editAgent, loadAnamnesis, saveAnamnesis,
 }

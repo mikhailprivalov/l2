@@ -1,3 +1,4 @@
+import simplejson
 from django.db import models
 from users.models import DoctorProfile
 
@@ -70,12 +71,24 @@ class Log(models.Model):
         (10000, 'Конструктор: создание или редактирование исследования'),
 
         (20000, 'Отчёт по результатам: загрузка данных'),
+
+        (30000, 'Картотека: создание карты'),
+        (30001, 'Картотека: редактирование карты'),
+        (30002, 'Картотека: создание документа'),
+        (30003, 'Картотека: редактирование документа'),
+        (30004, 'Картотека: установка активного документа карты'),
+        (30005, 'Картотека: изменение представителя'),
+        (30006, 'Картотека: установка активного представителя'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
     body = models.TextField()
     user = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, blank=True, null=True)
     time = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def log(key, type, user=None, body=None):
+        Log(key=key, type=type, body=simplejson.dumps(body), user=user).save()
 
     @staticmethod
     def get_client_ip(request):

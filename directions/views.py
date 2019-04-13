@@ -284,7 +284,9 @@ def gen_pdf_dir(request):
                 return response
 
     buffer.close()  # Закрытие буфера
+
     response.write(pdf)  # Запись PDF в ответ
+
     return response
 
 

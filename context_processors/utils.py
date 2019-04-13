@@ -26,7 +26,7 @@ def menu(request):
             {"url": "/mainmenu/", "title": "Начальная страница", "nt": False, "access": ["*"], "not_show_home": True},
             {"url": "/logout", "title": "Выход из профиля", "nt": False, "access": ["*"], "not_show_home": True},
             {"hr": True, "access": ["*"]},
-            {"url": "/mainmenu/directions", "title": "Направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
+            {"url": "/mainmenu/directions", "title": "Направления и картотека", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
             {"url": "/mainmenu/direction/info", "title": "История направления", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала"]},
             {"url": "/mainmenu/directions/multiprint", "title": "Печать направлений", "nt": False, "access": ["*"]},
             {"url": "/mainmenu/results_fastprint", "title": "Печать результатов", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
