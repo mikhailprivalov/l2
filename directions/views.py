@@ -281,7 +281,7 @@ def gen_pdf_dir(request):
                 file_dir = 'c:\\temp\\' + date_now_str + '_dir.pdf'
                 file_contract = 'c:\\temp\\' + date_now_str + '_contract.pdf'
                 save(buffer, filename=file_dir)
-                save(fc, filename=file_contract)
+                save(fc_buf, filename=file_contract)
                 pdf_all = BytesIO()
                 inputs = [file_dir, file_contract]
                 writer = PdfWriter()
@@ -296,7 +296,6 @@ def gen_pdf_dir(request):
                 os.remove(file_contract)
                 fc_buf.close()
                 return response
-
 
     buffer.close()  # Закрытие буфера
 
