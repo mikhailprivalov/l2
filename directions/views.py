@@ -278,8 +278,9 @@ def gen_pdf_dir(request):
                 today = datetime.now()
                 date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
                 date_now_str = str(n.client_id) + str(date_now1)
-                file_dir = 'c:\\temp\\' + date_now_str + '_dir.pdf'
-                file_contract = 'c:\\temp\\' + date_now_str + '_contract.pdf'
+                dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                file_dir = dir_param + date_now_str + '_dir.pdf'
+                file_contract = dir_param + date_now_str + '_contract.pdf'
                 save(buffer, filename=file_dir)
                 save(fc_buf, filename=file_contract)
                 pdf_all = BytesIO()
