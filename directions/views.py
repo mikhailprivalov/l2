@@ -261,6 +261,8 @@ def gen_pdf_dir(request):
     if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
 
+
+
     if request.GET.get("contract"):
         if request.GET["contract"] == '1':
             if len(card_pk_set) == 1 and fin_status:
@@ -268,20 +270,31 @@ def gen_pdf_dir(request):
                 fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
                 fc_buf = BytesIO()
                 fc_buf.write(fc)
-                import PyPDF2
+                fc_buf.seek(0)
+                buffer.seek(0)
+                from pdfrw import PdfReader, PdfWriter
+                today = datetime.now()
+                date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+                date_now_str = str(n.client_id) + str(date_now1)
+                file_dir = 'c:\\temp\\' + date_now_str + '_dir.pdf'
+                file_contract = 'c:\\temp\\' + date_now_str + '_contract.pdf'
+                save(buffer, filename=file_dir)
+                save(fc, filename=file_contract)
                 pdf_all = BytesIO()
-                pdf_contract = PyPDF2.PdfFileReader(fc_buf)
-                pdf_napr = PyPDF2.PdfFileReader(buffer)
-                merger = PyPDF2.PdfFileMerger()
-                merger.append(pdf_napr)
-                merger.append(pdf_contract)
-                merger.write(pdf_all)
+                inputs = [file_dir, file_contract]
+                writer = PdfWriter()
+                for inpfn in inputs:
+                    writer.addpages(PdfReader(inpfn).pages)
+                writer.write(pdf_all)
                 pdf_out = pdf_all.getvalue()
-                buffer.close()
-                fc_buf.close()
                 pdf_all.close()
                 response.write(pdf_out)
+                buffer.close()
+                os.remove(file_dir)
+                os.remove(file_contract)
+                fc_buf.close()
                 return response
+
 
     buffer.close()  # Закрытие буфера
 
