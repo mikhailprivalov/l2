@@ -261,7 +261,9 @@ def gen_pdf_dir(request):
     if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
 
-
+    def save(form, filename: str):
+        with open(filename, 'wb') as f:
+            f.write(form.read())
 
     if request.GET.get("contract"):
         if request.GET["contract"] == '1':
