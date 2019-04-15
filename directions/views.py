@@ -257,6 +257,8 @@ def gen_pdf_dir(request):
         fin_ist_set.add(n.istochnik_f)
         card_pk_set.add(n.client_id)
 
+    internal_type = n.client.base.internal_type
+
     fin_status = None
     if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
@@ -265,7 +267,7 @@ def gen_pdf_dir(request):
         with open(filename, 'wb') as f:
             f.write(form.read())
 
-    if request.GET.get("contract"):
+    if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
