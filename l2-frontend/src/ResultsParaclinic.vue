@@ -63,7 +63,7 @@
           </div>
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
-            <div>Карта: {{data.patient.card}}</div>
+            <div>Карта: {{data.patient.card}} <a href="#" @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a></div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
             </div>
@@ -74,15 +74,6 @@
               <span>&times;</span>
             </button>
           </div>
-        </div>
-      </div>
-      <div v-if="data.has_doc_referral">
-        <div class="research-title">Анамнез жизни</div>
-        <div class="anamnesis">
-<pre>
-{{ca === '' || !ca ? 'нет данных' : ca}}
-</pre>
-          <button class="btn btn-blue-nb" @click="edit_anamnesis">Редактировать</button>
         </div>
       </div>
       <div class="results-editor">
@@ -138,7 +129,7 @@
     <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
         <div slot="body" style="min-height: 140px" class="registry-body">
-            <textarea v-model="anamnesis_data.text" rows="5" class="form-control"
+            <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
                       placeholder="Анамнез жизни"></textarea>
         </div>
         <div slot="footer">
