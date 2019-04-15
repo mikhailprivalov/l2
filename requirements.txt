@@ -43,3 +43,4 @@ python-dateutil
 django_extensions
 pytils
 PyPDF2
+pdfrw
