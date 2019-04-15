@@ -1220,7 +1220,8 @@ def directions_paraclinic_form(request):
 
         if df.exists():
             response["ok"] = True
-            response["has_doc_referral"] = True
+            response["has_doc_referral"] = False
+            response["card_internal"] = d.client.base.internal_type
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "card": d.client.number_with_type(),
