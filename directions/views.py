@@ -257,30 +257,47 @@ def gen_pdf_dir(request):
         fin_ist_set.add(n.istochnik_f)
         card_pk_set.add(n.client_id)
 
+    internal_type = n.client.base.internal_type
+
     fin_status = None
     if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
 
-    if request.GET.get("contract"):
+    def save(form, filename: str):
+        with open(filename, 'wb') as f:
+            f.write(form.read())
+
+    if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
             if len(card_pk_set) == 1 and fin_status:
                 from forms.forms102 import form_01 as f_contract
                 fc = f_contract(request_data = {**dict(request.GET.items()), "user": request.user, "card_pk":card_pk_set.pop()})
                 fc_buf = BytesIO()
                 fc_buf.write(fc)
-                import PyPDF2
+                fc_buf.seek(0)
+                buffer.seek(0)
+                from pdfrw import PdfReader, PdfWriter
+                today = datetime.now()
+                date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+                date_now_str = str(n.client_id) + str(date_now1)
+                dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                file_dir = dir_param + date_now_str + '_dir.pdf'
+                file_contract = dir_param + date_now_str + '_contract.pdf'
+                save(buffer, filename=file_dir)
+                save(fc_buf, filename=file_contract)
                 pdf_all = BytesIO()
-                pdf_contract = PyPDF2.PdfFileReader(fc_buf)
-                pdf_napr = PyPDF2.PdfFileReader(buffer)
-                merger = PyPDF2.PdfFileMerger()
-                merger.append(pdf_napr)
-                merger.append(pdf_contract)
-                merger.write(pdf_all)
+                inputs = [file_dir, file_contract]
+                writer = PdfWriter()
+                for inpfn in inputs:
+                    writer.addpages(PdfReader(inpfn).pages)
+                writer.write(pdf_all)
                 pdf_out = pdf_all.getvalue()
-                buffer.close()
-                fc_buf.close()
                 pdf_all.close()
                 response.write(pdf_out)
+                buffer.close()
+                os.remove(file_dir)
+                os.remove(file_contract)
+                fc_buf.close()
                 return response
 
     buffer.close()  # Закрытие буфера
