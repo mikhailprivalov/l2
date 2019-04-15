@@ -63,7 +63,7 @@
           </div>
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
-            <div>Карта: {{data.patient.card}} <a href="#" @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a></div>
+            <div>Карта: {{data.patient.card}} <a href="#" v-if="data.card_internal && data.has_doc_referral" @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a></div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
             </div>
