@@ -71,7 +71,7 @@
     watch: {
       departments_of_type: {
         handler(){
-          if (this.department !== '-1' || this.departments_of_type.length === 0
+          if (this.department !== '-1' || !this.departments_of_type || this.departments_of_type.length === 0
             || !this.$store.getters.user_data.department)
             return
           for(let row of this.departments_of_type) {
