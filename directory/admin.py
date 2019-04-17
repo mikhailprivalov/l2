@@ -55,7 +55,8 @@ class RefFractions(admin.ModelAdmin):
 
 
 
-
+admin.site.register(models.ResearchSite)
+admin.site.register(models.SiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.ParaclinicInputGroups)

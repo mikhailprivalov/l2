@@ -44,6 +44,40 @@ class ResearchGroup(models.Model):
         verbose_name = 'Группа исследований'
         verbose_name_plural = 'Группы исследований'
 
+class SiteType(models.Model):
+    """Названия Разделов (Выподающее меню не лаборатория и не параклиника):
+    Консультация, Стоматология, Стационар. Поля должны называться также, как в Research
+    is_doc_refferal, is_stom, is_hospital, is_physio
+    """
+    title = models.CharField(max_length=255, null=False, blank=False, help_text='is_doc_refferal, is_stom, is_hospital, is_physio')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие раздела', db_index=True)
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Раздел'
+        verbose_name_plural = 'Разделы'
+
+class ResearchSite(models.Model):
+    """
+    Определяем абстрактные в РАЗДЕЛАХ - подразделы для размещения услуг
+    в Консультации: первичные, повторные, медосмотры, др
+    в Стоматология: терапевтическая, хирургическая, ортопедическая, др
+    в Стационар: круглосуточный, дневной, др
+    в Физиотерапевт: ЛФК, ФИЗИО, др.
+    если в модели Research отсутствует ссылка на ResearchSite. То услуги выводить в корне
+    """
+    site_type = models.ForeignKey(SiteType, null=True, blank=True, help_text='Раздел услуги', on_delete=models.SET_NULL)
+    title = models.CharField(max_length=255, null=True, blank=True, help_text='Подраздел')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Подраздел'
+        verbose_name_plural = 'Подразделы'
 
 class Researches(models.Model):
     """
@@ -75,6 +109,11 @@ class Researches(models.Model):
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
+    is_physio = models.BooleanField(default=False, blank=True, help_text="Это Физио")
+    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL)
+
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
