@@ -129,7 +129,7 @@ class Individual(models.Model):
             if out:
                 out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
 
-            for document_object in pat_data["identifiers"] or []:
+            for document_object in pat_data.get("identifiers", "") or []:
                 k = get_key(c.patients.local_types, document_object["type"])
                 if not k:
                     k = get_key_reverse(c.patients.local_reverse_types, document_object["type"])
