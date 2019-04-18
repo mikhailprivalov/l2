@@ -341,6 +341,19 @@ class Individuals(BaseRequester):
         d = self.client.editIndividual(**data)
         return d
 
+    def documents(self, card: clients_models.Card):
+        return self.client.getIndividualDocuments(card.number)
+
+    def createIndividual(self, individual: clients_models.Individual):
+        data = {
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
+        }
+        return self.client.createIndividual(**data)
+
 
 class Patients(BaseRequester):
     def __init__(self, client: Client):
@@ -392,6 +405,12 @@ class Patients(BaseRequester):
             },
         }]
         return self.smart_client.sendPatient(patientCard=data)
+
+    def send_new_patient(self, card: clients_models.Card):
+        data = {
+            "patientId": card.number,
+        }
+        # return self.smart_client.createPatient(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:

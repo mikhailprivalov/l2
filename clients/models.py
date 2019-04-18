@@ -27,6 +27,7 @@ class Individual(models.Model):
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
+    primary_for_rmis = models.BooleanField(default=False, blank=True)
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -40,6 +41,9 @@ class Individual(models.Model):
         b.delete()
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
+        if self.primary_for_rmis:
+            self.reverse_sync()
+            return
         if out:
             out.write("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
@@ -223,9 +227,28 @@ class Individual(models.Model):
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
         else:
+            print('Not founded in RMIS')
+            self.primary_for_rmis = True
+            self.save()
+            self.reverse_sync()
             if out:
                 out.write("Физ.лицо не найдено в РМИС")
         return ok
+
+    def reverse_sync(self):
+        from rmis_integration.client import Client
+        c = Client(modules=['patients', 'individuals'])
+        cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
+        if not cards.exists():
+            rmis_uid = c.individuals.createIndividual(self)
+            c.patients.create_rmis_card(self, rmis_uid)
+            cards = Card.objects.filter(number=rmis_uid)
+            rdp = c.patients.send_new_patient(cards[0])
+            print('rdp', rdp)
+        card = cards[0]
+        pat_data = c.patients.extended_data(card.number)
+        print('pat_data', pat_data)
+
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
