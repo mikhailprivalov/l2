@@ -10,6 +10,8 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.platypus.flowables import HRFlowable
+from reportlab.lib.colors import HexColor
+from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
 from clients.models import Card, Document
@@ -334,6 +336,7 @@ def form_02(request_data):
     styleCenterBold.fontSize = 12
     styleCenterBold.leading = 15
     styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
     styleJustified.spaceAfter = 4.5 * mm
@@ -380,16 +383,22 @@ def form_02(request_data):
     if patient_data['phone']:
         p_phone = 'тел. ' + ", ".join(patient_data['phone'])
 
+    card_num_obj = patient_data['card_num'].split(' ')
+    p_card_num = card_num_obj[0]
+    if len(card_num_obj) ==2:
+        p_card_type = '('+ str(card_num_obj[1]) + ')'
+    else:
+        p_card_type =''
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 1 * mm),
         Paragraph('МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА, <br/> ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ',
                   styleCenter),
-        Paragraph('{}№&nbsp;{}'.format(3 * space_symbol, patient_data['card_num']), styleCenterBold),
+        Paragraph('{}<font size=14>№</font><font fontname="PTAstraSerifBold" size=17> <u>{}</u></font><font size=14> {}</font>'.format(3 * space_symbol, p_card_num, p_card_type), styleCenter),
         Spacer(1, 2 * mm),
         Paragraph('1.Дата заполнения медицинской карты: {}'.
                   format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
-        Paragraph("2. Фамилия, имя, отчество:<b> {} </b> ".format(patient_data['fio']), style),
+        Paragraph("2. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
         Paragraph(
             '3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']),
             style),
