@@ -306,6 +306,8 @@ class Napravleniya(models.Model):
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
     protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
+    polis_who_give = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Страховая компания")
+    polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
@@ -317,6 +319,19 @@ class Napravleniya(models.Model):
             r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
         return r
 
+    def set_polis(self):
+        i = self.client.get_data_individual(empty=True)
+        c = False
+        if i['oms']['polis_num']:
+            n = ('' if not i['oms']['polis_serial'] else i['oms']['polis_serial'] + ' ') + i['oms']['polis_num']
+            if n != self.polis_n:
+                c = True
+                self.polis_n = n
+        if i['oms']['polis_issued'] and self.polis_who_give != i['oms']['polis_issued']:
+            self.polis_who_give = i['oms']['polis_issued']
+            c = True
+        if c:
+            self.save()
 
 
     @staticmethod
@@ -358,6 +373,7 @@ class Napravleniya(models.Model):
                 dir.doc_who_create = doc_current
         if save:
             dir.save()
+        dir.set_polis()
         return dir
 
     @staticmethod
