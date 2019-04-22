@@ -402,6 +402,14 @@ def form_01(request_data):
              Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
         ]
 
+    #Всегда заголовки одинаково со скидкой
+    opinion = [
+        [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+         Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
+         Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
+         Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
+    ]
+
     # example_template = [
     #     ['1.2.3','4856397','Полный гематологический анализ','1000.00','0','1000.00','1','1000.00'],
     #     ['1.2.3','','РМП','2500.45','0','2500.45','1','2500.45'],
@@ -411,6 +419,7 @@ def form_01(request_data):
     #
 
     example_template=result_data[0]
+    print(result_data[0])
 
     list_g =[]
 
@@ -431,10 +440,11 @@ def form_01(request_data):
 
     sum_research_decimal = sum_research.replace(' ', '')
 
-    if result_data[2] == 'is_discount':
-        tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
-    else:
-        tbl = Table(opinion, colWidths=(23 * mm, 34 * mm, 62 * mm, 22 * mm, 23 * mm, 25 * mm))
+    tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
+    # if result_data[2] == 'is_discount':
+    #     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
+    # else:
+    #     tbl = Table(opinion, colWidths=(23 * mm, 34 * mm, 62 * mm, 22 * mm, 23 * mm, 25 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
