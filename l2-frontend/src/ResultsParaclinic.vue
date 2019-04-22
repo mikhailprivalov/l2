@@ -82,7 +82,8 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}"
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed, required: field.required}"
+                   :title="field.required && 'обязательно для заполнения'"
                    @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
@@ -115,15 +116,19 @@
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed">Подтвердить
+            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить</button>
+            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed || !r(row)">Подтвердить
             </button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed">Сохранить и
+            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
               подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="reset_confirm(row)" v-if="row.confirmed && row.allow_reset_confirm">
               Сброс подтверждения
             </button>
+            <div class="status-list" v-if="!r(row)">
+              <div class="status status-none">Не заполнено:</div>
+              <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
+            </div>
           </div>
         </div>
       </div>
@@ -208,6 +213,37 @@
       vm.load_history()
     },
     methods: {
+      r(research) {
+        if (research.confirmed) {
+          return true;
+        }
+
+        for (const g of research.research.groups) {
+          for (const f of g.fields) {
+            if (f.required && (f.value === '' || !f.value)) {
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      r_list(research) {
+        const l = [];
+        if (research.confirmed) {
+          return [];
+        }
+
+        for (const g of research.research.groups) {
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || !f.value)) {
+              l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title));
+            }
+          }
+        }
+        return l;
+      },
       hide_modal_anamnesis_edit() {
         this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
         this.anamnesis_edit = false;
@@ -423,7 +459,7 @@
       },
       has_changed() {
         return this.changed && this.data && this.data.ok && this.inserted
-      }
+      },
     }
   }
 </script>
@@ -559,6 +595,9 @@
 
     &.open-field:not(.disabled) {
       background-color: #efefef;
+      &.required {
+        background-color: #e3e3e3;
+      }
       .input-values {
         overflow: visible !important;
       }
@@ -572,6 +611,11 @@
       .form-control {
         border-color: #00a1cb;
       }
+    }
+
+    &.required {
+      background-color: #e6e6e6;
+      border-right: 3px solid #00a1cb;
     }
   }
 
@@ -724,5 +768,9 @@
 
   .anamnesis {
     padding: 10px;
+  }
+
+  .status-list {
+    display: flex;
   }
 </style>
