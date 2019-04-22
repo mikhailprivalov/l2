@@ -1127,14 +1127,17 @@ def result_print(request):
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
+                                v = r.value.replace("\n", "<br/>")
+                                if r.field.field_type == 1:
+                                    vv = v.split('-')
+                                    if len(vv) == 3:
+                                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
                                     fwb.append(Paragraph(
-                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title,
-                                                                                           r.value.replace("\n",
-                                                                                                           "<br/>")),
+                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, v),
                                         style_ml if group_title else style))
                                 else:
-                                    fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
+                                    fwb.append(Paragraph(v, style))
                 else:
                     txt = ""
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
@@ -1146,10 +1149,15 @@ def result_print(request):
                                 txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title)
                             vals = []
                             for r in results:
+                                v = r.value.replace("\n", "<br/>")
+                                if r.field.field_type == 1:
+                                    vv = v.split('-')
+                                    if len(vv) == 3:
+                                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
-                                    vals.append("{}:&nbsp;{}".format(r.field.title, r.value))
+                                    vals.append("{}:&nbsp;{}".format(r.field.title, v))
                                 else:
-                                    vals.append(r.value)
+                                    vals.append(v)
                             txt += "; ".join(vals)
                             txt = txt.strip()
                             if len(txt) > 0 and txt.strip()[-1] != ".":
