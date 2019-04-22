@@ -111,6 +111,11 @@ class ParaclinicInputGroups(models.Model):
 
 
 class ParaclinicInputField(models.Model):
+    TYPES = (
+        (0, 'Text'),
+        (1, 'Date'),
+    )
+
     title = models.CharField(max_length=255, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
@@ -118,6 +123,7 @@ class ParaclinicInputField(models.Model):
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
+    field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
 
 
 class AutoAdd(models.Model):

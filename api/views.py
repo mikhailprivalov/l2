@@ -862,7 +862,8 @@ def researches_update(request):
                                                          lines=field["lines"],
                                                          hide=field["hide"],
                                                          default_value=field["default"],
-                                                         input_templates=json.dumps(field["values_to_input"]))
+                                                         input_templates=json.dumps(field["values_to_input"]),
+                                                         field_type=field.get("field_type", 0))
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
@@ -872,6 +873,7 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.input_templates = json.dumps(field["values_to_input"])
+                                f.field_type = field.get("field_type", 0)
                             if f:
                                 f.save()
 
@@ -908,6 +910,7 @@ def researches_details(request):
                     "default": field.default_value,
                     "hide": field.hide,
                     "values_to_input": json.loads(field.input_templates),
+                    "field_type": field.field_type,
                     "new_value": ""
                 })
             response["groups"].append(g)
@@ -931,7 +934,8 @@ def paraclinic_details(request):
                 "title": field.title,
                 "default": field.default_value,
                 "hide": field.hide,
-                "values_to_input": json.loads(field.input_templates)
+                "values_to_input": json.loads(field.input_templates),
+                "field_type": field.field_type,
             })
         response["groups"].append(g)
     return JsonResponse(response)
@@ -1272,6 +1276,7 @@ def directions_paraclinic_form(request):
                             "value": field.default_value if not directions.ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
+                            "field_type": field.field_type,
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)

@@ -65,12 +65,12 @@
                 <span class="input-group-addon">Название поля</span>
                 <input type="text" class="form-control" v-model="row.title">
               </div>
-              <div>
+              <div v-show="row.field_type === 0">
                 <strong>Значение по умолчанию:</strong>
                 <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                 <input v-model="row.default" class="form-control" v-else/>
               </div>
-              <v-collapse-wrapper>
+              <v-collapse-wrapper v-show="row.field_type === 0">
                 <div class="header" v-collapse-toggle>
                   <a href="#" @click.prevent>
                     Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -113,9 +113,16 @@
               <label>
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
-              <label>
+              <label style="line-height: 1" v-show="row.field_type === 0">
                 Число строк<br/>для ввода:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
+              </label>
+              <label>
+                Тип поля:<br/>
+                <select v-model="row.field_type" class="form-control">
+                  <option value="0">Строка</option>
+                  <option value="1">Дата</option>
+                </select>
               </label>
             </div>
           </div>
@@ -358,7 +365,8 @@
           values_to_input: [],
           new_value: '',
           hide: false,
-          lines: 3
+          lines: 3,
+          field_type: 0,
         })
       },
       add_group() {

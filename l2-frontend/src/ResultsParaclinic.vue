@@ -99,10 +99,13 @@
                     </div>
                   </div>
                 </div>
-                <div class="field-value">
+                <div class="field-value" v-if="field.field_type === 0">
                   <textarea v-model="field.value" :rows="field.lines" class="form-control"
                             v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" v-else/>
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 1">
+                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
               </div>
             </div>

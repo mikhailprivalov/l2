@@ -341,6 +341,19 @@ class Individuals(BaseRequester):
         d = self.client.editIndividual(**data)
         return d
 
+    def documents(self, card: clients_models.Card):
+        return self.client.getIndividualDocuments(card.number)
+
+    def createIndividual(self, individual: clients_models.Individual):
+        data = {
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
+        }
+        return self.client.createIndividual(**data)
+
 
 class Patients(BaseRequester):
     def __init__(self, client: Client):
@@ -392,6 +405,12 @@ class Patients(BaseRequester):
             },
         }]
         return self.smart_client.sendPatient(patientCard=data)
+
+    def send_new_patient(self, card: clients_models.Card):
+        data = {
+            "patientId": card.number,
+        }
+        # return self.smart_client.createPatient(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
@@ -902,13 +921,17 @@ class Directions(BaseRequester):
                                                 "{{значение}}", "")
 
                                         for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
-                                                                                 field__group=g).exclude(
-                                            value="").order_by("field__order"):
+                                                                                 field__group=g).exclude(value="")\
+                                                .order_by("field__order"):
+                                            v = y.value.replace("\n", "<br/>")
+                                            if y.field.field_type == 1:
+                                                vv = v.split('-')
+                                                if len(vv) == 3:
+                                                    v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                             xresult += protocol_row.replace("{{фракция}}", y.field.title).replace(
-                                                "{{значение}}", y.value)
-                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>",
-                                                                                                            "") \
-                                        .replace("<font>", "").replace("</font>", "")
+                                                "{{значение}}", v)
+                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "")\
+                                        .replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                     self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                             for x in Result.objects.filter(issledovaniye__napravleniye=direction).distinct():
