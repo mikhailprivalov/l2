@@ -624,7 +624,7 @@ class Card(models.Model):
                 docs[t] = None
         return docs
 
-    def get_data_individual(self):
+    def get_data_individual(self, empty=False):
         """
         Получает на входе объект Карта
         возвращает словарь атрибутов по карте и Физ.лицу(Индивидуалу)
@@ -634,7 +634,8 @@ class Card(models.Model):
         ind_data = {}
         ind_data['ind'] = self.individual
         ind_data['age'] = ind_data['ind'].age()
-        ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
+        docs = map(lambda cd: cd.document, CardDocUsage.objects.filter(card=self))
+        ind_data['doc'] = docs
         ind_data['fio'] = ind_data['ind'].fio()
         ind_data['born'] = ind_data['ind'].bd()
         ind_data['main_address'] = "____________________________________________________" if not self.main_address \
@@ -667,7 +668,7 @@ class Card(models.Model):
         elif ind_data['bc_num']:
             ind_data['type_doc'] = 'свидетельство о рождении'
         else:
-            ind_data['type_doc'] =''
+            ind_data['type_doc'] = ''
 
         # document= "снилс'
         ind_data['snils'] = ind_documents["snils"]["num"]
@@ -675,12 +676,12 @@ class Card(models.Model):
         ind_data['oms'] = {}
         ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
         if not ind_data['oms']['polis_num']:
-            ind_data['oms']['polis_num'] = '___________________________'
+            ind_data['oms']['polis_num'] = None if empty else '___________________________'
         ind_data['oms']['polis_serial'] = ind_documents["polis"]["serial"]
         if not ind_data['oms']['polis_serial']:
-            ind_data['oms']['polis_serial'] = '________'
+            ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-        ind_data['oms']['polis_issued'] = ind_documents["polis"]["issued"]
+        ind_data['oms']['polis_issued'] = None if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
 
         return ind_data
 

@@ -286,9 +286,14 @@
             <label for="de-f2">Серия (при наличии):</label>
             <input class="form-control" id="de-f2" v-model="document.serial">
           </div>
-          <div class="form-group">
-            <label for="de-f3">Номер:</label>
-            <input class="form-control" id="de-f3" v-model="document.number" v-mask="doc_edit_fields.masks.number">
+          <div class="form-group" v-show="is_snils">
+            <label for="de-f3">Номер СНИЛС:</label>
+            <input class="form-control" id="de-f3" v-model="document.number" v-if="is_snils"
+                   v-mask="doc_edit_fields.masks.number">
+          </div>
+          <div class="form-group" v-show="!is_snils">
+            <label for="de-f3-2">Номер:</label>
+            <input class="form-control" id="de-f3-2" v-model="document.number">
           </div>
           <div class="form-group" v-show="doc_edit_fields.dates">
             <label for="de-f4">Дата выдачи:</label>
@@ -555,6 +560,10 @@
           return '';
         return (this.card.doc_types.find(x => x.pk === t) || {}).title || '';
       },
+      is_snils() {
+        const tt = this.doc_edit_type_title;
+        return tt === 'СНИЛС'
+      },
       doc_edit_fields() {
         const tt = this.doc_edit_type_title;
         const d = {
@@ -562,7 +571,7 @@
           dates: tt !== 'СНИЛС',
           who_give: tt !== 'СНИЛС',
           masks: {
-            number: tt === 'СНИЛС' ? '999-999-999 99' : '*',
+            number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
           }
         };
 

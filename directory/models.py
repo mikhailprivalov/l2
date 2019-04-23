@@ -80,6 +80,8 @@ class Researches(models.Model):
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
+    def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
+    prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
 
     @property
     def is_doc_referral(self):
@@ -124,6 +126,7 @@ class ParaclinicInputField(models.Model):
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
+    required = models.BooleanField(default=False, blank=True)
 
 
 class AutoAdd(models.Model):
