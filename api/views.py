@@ -863,7 +863,8 @@ def researches_update(request):
                                                          hide=field["hide"],
                                                          default_value=field["default"],
                                                          input_templates=json.dumps(field["values_to_input"]),
-                                                         field_type=field.get("field_type", 0))
+                                                         field_type=field.get("field_type", 0),
+                                                         required=field.get("required", False))
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
@@ -874,6 +875,7 @@ def researches_update(request):
                                 f.default_value = field["default"]
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
+                                f.required = field.get("required", False)
                             if f:
                                 f.save()
 
@@ -911,6 +913,7 @@ def researches_details(request):
                     "hide": field.hide,
                     "values_to_input": json.loads(field.input_templates),
                     "field_type": field.field_type,
+                    "required": field.required,
                     "new_value": ""
                 })
             response["groups"].append(g)
@@ -936,6 +939,7 @@ def paraclinic_details(request):
                 "hide": field.hide,
                 "values_to_input": json.loads(field.input_templates),
                 "field_type": field.field_type,
+                "required": field.required,
             })
         response["groups"].append(g)
     return JsonResponse(response)
@@ -1277,6 +1281,7 @@ def directions_paraclinic_form(request):
                                 issledovaniye=i, field=field).exists() else
                             directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
                             "field_type": field.field_type,
+                            "required": field.required,
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
