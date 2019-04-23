@@ -681,7 +681,7 @@ class Card(models.Model):
         if not ind_data['oms']['polis_serial']:
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-        ind_data['oms']['polis_issued'] = None if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
 
         return ind_data
 
