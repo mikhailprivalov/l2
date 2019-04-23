@@ -634,7 +634,7 @@ class Card(models.Model):
         ind_data = {}
         ind_data['ind'] = self.individual
         ind_data['age'] = ind_data['ind'].age()
-        docs = map(lambda cd: cd.document, CardDocUsage.objects.filter(card=self))
+        docs = self.get_card_documents()
         ind_data['doc'] = docs
         ind_data['fio'] = ind_data['ind'].fio()
         ind_data['born'] = ind_data['ind'].bd()
