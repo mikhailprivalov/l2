@@ -1179,6 +1179,10 @@ def result_print(request):
                     fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
                                                                        iss.doc_confirmation.podrazdeleniye.title),
                                          styleBold))
+                    fwb.append(Spacer(1, 3.5 * mm))
+                    fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
+
+
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
