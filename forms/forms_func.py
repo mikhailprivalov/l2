@@ -112,8 +112,8 @@ def get_final_data(research_price_loc):
                             x = "+"
                         else:
                             x = ""
-                        h.append(x + str(research_coast[1]))
-                        h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
+                    h.append(x + str(research_coast[1]))
+                    h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
                     h.append(research_coast[2])
                     research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))

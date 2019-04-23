@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.colors import white, black
 
 import directory.models as directory
 import slog.models as slog
@@ -620,6 +621,7 @@ def result_print(request):
 
         ]))
         fwb.append(t)
+        fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
             tw = pw
 
@@ -1179,6 +1181,9 @@ def result_print(request):
                     fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
                                                                        iss.doc_confirmation.podrazdeleniye.title),
                                          styleBold))
+                    fwb.append(Spacer(1, 3.5 * mm))
+                    fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
+
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
@@ -1188,7 +1193,17 @@ def result_print(request):
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual.pk
 
-    doc.build(naprs)
+        def first_pages(canvas, document):
+            canvas.saveState()
+            # вывести интерактивную форму "текст"
+            form = canvas.acroForm
+            # canvas.drawString(25, 780, '')
+            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
+                           x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+                           width=470, height=18, textColor=black, forceBorder=False)
+            canvas.restoreState()
+
+    doc.build(naprs,onFirstPage=first_pages)
 
     pdf = buffer.getvalue()
     buffer.close()
