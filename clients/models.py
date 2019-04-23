@@ -129,8 +129,6 @@ class Individual(models.Model):
             if out:
                 out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
 
-            print(pat_data)
-
             for document_object in pat_data.get("identifiers", "") or []:
                 k = get_key(c.patients.local_types, document_object["type"])
                 if not k:
