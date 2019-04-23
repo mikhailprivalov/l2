@@ -634,7 +634,11 @@ class Card(models.Model):
         ind_data = {}
         ind_data['ind'] = self.individual
         ind_data['age'] = ind_data['ind'].age()
-        docs = self.get_card_documents()
+        docs = []
+        cd = self.get_card_documents()
+        for d in cd:
+            if d and Document.objects.filter(pk=cd[d]).exists():
+                docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs
         ind_data['fio'] = ind_data['ind'].fio()
         ind_data['born'] = ind_data['ind'].bd()
