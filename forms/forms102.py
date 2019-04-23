@@ -388,21 +388,7 @@ def form_01(request_data):
     styleTCcenter.alignment = TA_CENTER
 
     opinion = []
-    #Если нет скидки выводить одни столбыцы
-    # if result_data[2]=='no_discount':
-    #     opinion = [
-    #         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-    #          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB),
-    #          Paragraph('Сумма, руб.', styleTB), ],
-    #     ]
-    # #Если скидка выводить столбцы со скидко
-    # else:
-    #     opinion = [
-    #         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-    #          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
-    #          Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
-    #          Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
-    #     ]
+
 
     #Всегда заголовки одинаково со скидкой
     opinion = [
@@ -442,10 +428,6 @@ def form_01(request_data):
     sum_research_decimal = sum_research.replace(' ', '')
 
     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
-    # if result_data[2] == 'is_discount':
-    #     tbl = Table(opinion, colWidths=(18 * mm, 19 * mm, 52 * mm, 22 * mm, 21 * mm, 22 * mm, 13 * mm, 25 * mm))
-    # else:
-    #     tbl = Table(opinion, colWidths=(23 * mm, 34 * mm, 62 * mm, 22 * mm, 23 * mm, 25 * mm))
 
     tbl.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
