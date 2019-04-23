@@ -421,7 +421,6 @@ def form_01(request_data):
     #
 
     example_template=result_data[0]
-    print(result_data[0])
 
     list_g =[]
 
