@@ -388,19 +388,21 @@ def form_01(request_data):
     styleTCcenter.alignment = TA_CENTER
 
     opinion = []
-    if result_data[2]=='no_discount':
-        opinion = [
-            [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-             Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB),
-             Paragraph('Сумма, руб.', styleTB), ],
-        ]
-    else:
-        opinion = [
-            [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
-             Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
-             Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
-             Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
-        ]
+    #Если нет скидки выводить одни столбыцы
+    # if result_data[2]=='no_discount':
+    #     opinion = [
+    #         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+    #          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Кол-во, усл.', styleTB),
+    #          Paragraph('Сумма, руб.', styleTB), ],
+    #     ]
+    # #Если скидка выводить столбцы со скидко
+    # else:
+    #     opinion = [
+    #         [Paragraph('Код услуги', styleTB), Paragraph('Направление', styleTB), Paragraph('Услуга', styleTB),
+    #          Paragraph('Цена,<br/>руб.', styleTB), Paragraph('Скидка<br/>Наценка<br/>%', styleTB),
+    #          Paragraph('Цена со<br/> скидкой,<br/>руб.', styleTB),
+    #          Paragraph('Кол-во, усл.', styleTB), Paragraph('Сумма, руб.', styleTB), ],
+    #     ]
 
     #Всегда заголовки одинаково со скидкой
     opinion = [
