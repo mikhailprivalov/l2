@@ -1195,7 +1195,6 @@ def result_print(request):
 
         def first_pages(canvas, document):
             canvas.saveState()
-            canvas.setFont("OpenSansBold", 9)
             # вывести интерактивную форму "текст"
             form = canvas.acroForm
             # canvas.drawString(25, 780, '')
