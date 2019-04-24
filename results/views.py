@@ -1182,7 +1182,7 @@ def result_print(request):
                                                                        iss.doc_confirmation.podrazdeleniye.title),
                                          styleBold))
 
-                    if SettingManager.get("agree_diagnos", default='True', default_type='b'):
+                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
                         fwb.append(Spacer(1, 3.5 * mm))
                         fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
 
