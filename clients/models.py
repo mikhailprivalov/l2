@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 import simplejson
 from django.core.management.base import OutputWrapper
 from django.db import models
+from  users.models import Speciality, DoctorProfile
 
 import slog.models as slog
 
@@ -720,6 +721,20 @@ class AnamnesisHistory(models.Model):
     text = models.TextField(help_text='Анамнез жизни')
     who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class DispensaryReg(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+    illnes = models.CharField(max_length=511, help_text='Заболевание по которому на учете', default='', blank=True)
+    spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', db_index=True, null=True, help_text='Лечащий врач кто поставил на учет',
+                                 on_delete=models.CASCADE)
+    date_start = models.DateTimeField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
+    doc_end_reg = models.ForeignKey(DoctorProfile,related_name='doc_end_reg', db_index=True, null=True, help_text='Лечащий врач, кто снял с учета',
+                                 on_delete=models.CASCADE)
+    date_end = models.DateTimeField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
+    why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
+
 
 
 class Phones(models.Model):
