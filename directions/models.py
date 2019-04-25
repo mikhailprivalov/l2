@@ -455,6 +455,10 @@ class Napravleniya(models.Model):
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
 
+                    #пользователю добавлять данные услуги в направления(не будут добавлены)
+                    if research in ofname.restricted_to_direct.all():
+                        continue
+
                     dir_group = -1
                     if research.direction:
                         dir_group = research.direction.pk
@@ -498,7 +502,6 @@ class Napravleniya(models.Model):
 
                     research_discount = discount_end * -1
                     research_howmany = count
-
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                   research=research, coast=research_coast, discount=research_discount,

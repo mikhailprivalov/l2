@@ -86,7 +86,7 @@ TEMPLATES = [
                 'context_processors.utils.card_bases',
                 'context_processors.utils.ws',
                 'context_processors.utils.menu',
-                'context_processors.utils.profile',
+                # 'context_processors.utils.profile',
             ],
         },
     },
