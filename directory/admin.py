@@ -67,5 +67,8 @@ admin.site.register(models.Fractions, RefFractions)
 admin.site.register(models.Absorption)
 admin.site.register(models.ReleationsFT)
 admin.site.register(models.AutoAdd)
+admin.site.register(models.ParaclinicTemplateName)
+admin.site.register(models.ParaclinicTemplateField)
+
 admin.site.register(models.RouteSheet, ResRouteSheet)
 admin.site.register(models.NameRouteSheet, ResNameRouteSheet)

@@ -128,6 +128,27 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
 
+class ParaclinicTemplateName(models.Model):
+    title = models.CharField(max_length=255, help_text='Название шаблона запонение полей')
+    research = models.ForeignKey(Researches, on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, help_text="Скрыть шаблон")
+
+    def __str__(self):
+        return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.research, self.hide)
+
+
+class ParaclinicTemplateField(models.Model):
+    template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE)
+    input_field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE)
+    value = models.CharField(max_length=750, help_text='Значение')
+
+    def __str__(self):
+        return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)
+
+
+
+
+
 
 class AutoAdd(models.Model):
     """
