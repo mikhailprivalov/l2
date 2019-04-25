@@ -116,7 +116,7 @@
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить</button>
+            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
             <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed || !r(row)">Подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
