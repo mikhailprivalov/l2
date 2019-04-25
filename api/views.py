@@ -882,15 +882,9 @@ def researches_update(request):
 
                             if f.default_value=='':
                                 continue
-                            if ParaclinicTemplateName.objects.filter(title=info).exists():
+                            if ParaclinicTemplateName.objects.filter(title=info, research=res).exists():
                                 templat_obj = ParaclinicTemplateName.objects.get(title=info, research=res)
                                 ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,input_field=f,value=f.default_value)
-
-                templat_obj = ParaclinicTemplateName.objects.get(title='13', research=res)
-                select_field = ParaclinicTemplateField.objects.filter(template_name=templat_obj)
-                print(select_field)
-                for i in select_field:
-                    print(i.value, i.template_name, i.input_field)
 
                 response["ok"] = True
         slog.Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
