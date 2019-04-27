@@ -306,7 +306,7 @@ class Napravleniya(models.Model):
     num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
     protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
 
-    polis_who_give = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Страховая компания")
+    polis_who_give = models.TextField(blank=True, null=True, default=None, help_text="Страховая компания")
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
 
     def __str__(self):
