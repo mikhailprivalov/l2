@@ -129,7 +129,7 @@ class Individual(models.Model):
             if out:
                 out.write("Типы документов: %s" % simplejson.dumps(c.patients.local_types))
 
-            for document_object in pat_data.get("identifiers", "") or []:
+            for document_object in pat_data["identifiers"] if "identifiers" in pat_data else []:
                 k = get_key(c.patients.local_types, document_object["type"])
                 if not k:
                     k = get_key_reverse(c.patients.local_reverse_types, document_object["type"])
@@ -634,7 +634,11 @@ class Card(models.Model):
         ind_data = {}
         ind_data['ind'] = self.individual
         ind_data['age'] = ind_data['ind'].age()
-        docs = map(lambda cd: cd.document, CardDocUsage.objects.filter(card=self))
+        docs = []
+        cd = self.get_card_documents()
+        for d in cd:
+            if d and Document.objects.filter(pk=cd[d]).exists():
+                docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs
         ind_data['fio'] = ind_data['ind'].fio()
         ind_data['born'] = ind_data['ind'].bd()
@@ -681,7 +685,7 @@ class Card(models.Model):
         if not ind_data['oms']['polis_serial']:
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-        ind_data['oms']['polis_issued'] = None if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
 
         return ind_data
 
