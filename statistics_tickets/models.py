@@ -72,11 +72,17 @@ class StatisticsTicket(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE, help_text="Карта")
     purpose = models.ForeignKey(VisitPurpose, blank=True, null=True, on_delete=models.SET_NULL,
                                 help_text="Цель посещения")
+    first_time = models.BooleanField(help_text="Впервые")
     result = models.ForeignKey(ResultOfTreatment, blank=True, null=True, on_delete=models.SET_NULL,
                                help_text="Результат обращения")
-    info = models.TextField(blank=True, help_text="Диагнозы, виды услуг, виды травм")
-    first_time = models.BooleanField(help_text="Впервые")
+    outcome = models.ForeignKey(Outcomes, blank=True, null=True, on_delete=models.SET_NULL,
+                                help_text="Исход", default=None)
     primary_visit = models.BooleanField(help_text="Первичное посещение")
+
+
+    info = models.TextField(blank=True, help_text="Диагнозы, виды услуг, виды травм")
+
+
     dispensary_registration = models.IntegerField(choices=DISPENSARY_REGISTRATIONS, default=DISPENSARY_NO, blank=True,
                                                   help_text="Диспансерный учёт")
     dispensary_diagnos = models.CharField(blank=True, help_text="Диагноз диспансерного учёта", default="",
@@ -88,8 +94,7 @@ class StatisticsTicket(models.Model):
     date = models.DateTimeField(auto_now_add=True, help_text='Дата создания', db_index=True)
     date_ticket = models.CharField(max_length=10, null=True, blank=True, default=None, help_text='Дата талона')
     invalid_ticket = models.BooleanField(default=False, blank=True, help_text='Статталон недействителен')
-    outcome = models.ForeignKey(Outcomes, blank=True, null=True, on_delete=models.SET_NULL,
-                                help_text="Исход", default=None)
+
 
     def can_invalidate(self):
         rt = SettingManager.get("ticket_invalidate_time_min", default='1440.0', default_type='f') * 60

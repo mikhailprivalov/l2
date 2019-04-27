@@ -14,6 +14,8 @@ from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
 import contracts.models as contracts
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+
 from appconf.manager import SettingManager
 
 
@@ -624,6 +626,16 @@ class Issledovaniya(models.Model):
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+
+    purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL,
+                                help_text="Цель посещения")
+    first_time = models.BooleanField(default=False, help_text="Впервые")
+    result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL,
+                               help_text="Результат обращения")
+    outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL,
+                                help_text="Исход")
+    diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
+    maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
 
 
     def __str__(self):
