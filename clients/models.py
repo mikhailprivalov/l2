@@ -241,11 +241,11 @@ class Individual(models.Model):
         c = Client(modules=['patients', 'individuals'])
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
         if not cards.exists():
-            rmis_uid = c.individuals.createIndividual(self)
+            ind_uid = c.individuals.createIndividual(self)
+            rmis_uid = c.patients.send_new_patient(ind_uid)
             c.patients.create_rmis_card(self, rmis_uid)
             cards = Card.objects.filter(number=rmis_uid)
-            rdp = c.patients.send_new_patient(cards[0])
-            print('rdp', rdp)
+            # print('rdp', rdp)
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
         print('pat_data', pat_data)
