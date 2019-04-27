@@ -406,11 +406,12 @@ class Patients(BaseRequester):
         }]
         return self.smart_client.sendPatient(patientCard=data)
 
-    def send_new_patient(self, card: clients_models.Card):
+    def send_new_patient(self, uid):
         data = {
-            "patientId": card.number,
+            "patientId": uid,
+            "patientData": {},
         }
-        # return self.smart_client.createPatient(**data)
+        return self.smart_client.createPatient(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:

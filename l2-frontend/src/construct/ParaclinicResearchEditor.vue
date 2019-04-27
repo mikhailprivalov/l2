@@ -125,6 +125,7 @@
                 <select v-model="row.field_type" class="form-control">
                   <option value="0">Строка</option>
                   <option value="1">Дата</option>
+                  <option value="2">Диагноз по МКБ</option>
                 </select>
               </label>
             </div>

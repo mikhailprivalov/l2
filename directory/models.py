@@ -116,6 +116,7 @@ class ParaclinicInputField(models.Model):
     TYPES = (
         (0, 'Text'),
         (1, 'Date'),
+        (2, 'MKB'),
     )
 
     title = models.CharField(max_length=255, help_text='Название поля ввода')

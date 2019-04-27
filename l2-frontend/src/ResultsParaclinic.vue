@@ -108,6 +108,19 @@
                 <div class="field-value" v-else-if="field.field_type === 1">
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
+                  <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="resp => [...resp.data.data]"
+                             :onHit="item => field.value = item.split(' ')[0] || ''" ref="d"
+                             v-if="!row.confirmed"
+                             placeholder="Диагноз (МКБ 10)"
+                             v-model="field.value" maxlength="36" :delayTime="300" :minChars="1"
+                             :render="items => items.map(i => `${i.code} ${i.title}`)"
+                             :limit="11" :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)" :selectFirst="true"
+                  />
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
+                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
+                </div>
               </div>
             </div>
           </div>
@@ -166,10 +179,11 @@
   import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
+  import TypeAhead from 'vue2-typeahead'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal},
+    components: {DateFieldNav, Longpress, Modal, TypeAhead},
     data() {
       return {
         pk: '',
@@ -773,4 +787,34 @@
   .status-list {
     display: flex;
   }
+
+  .mkb10 {
+    margin-right: -1px;
+  }
+
+  .mkb10 /deep/ .input-group {
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .mkb10 /deep/ input {
+    border-radius: 0!important;
+  }
+
+  .mkb10 /deep/ ul {
+    width: auto;
+    right: -250px;
+    font-size: 13px;
+  }
+
+  .mkb10 /deep/ ul li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+    a {
+      padding: 2px 10px;
+    }
+  }
+
 </style>
