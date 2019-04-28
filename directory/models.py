@@ -75,7 +75,6 @@ class Researches(models.Model):
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
-    is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
@@ -83,6 +82,7 @@ class Researches(models.Model):
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
+    is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
 
     @property
     def is_doc_referral(self):

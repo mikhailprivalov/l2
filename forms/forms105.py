@@ -34,6 +34,7 @@ def form_01(request_data):
     Печать статталона по амбулаторному приему. Входные параметры врач, дата.
     Выходные: форма
     """
+
     exec_person = request_data['user'].doctorprofile.fio
     doc_confirm = request_data['user'].doctorprofile
     str_date = request_data['date']

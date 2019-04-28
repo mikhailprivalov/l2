@@ -1,6 +1,8 @@
 from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
+from copy import deepcopy
+from collections import OrderedDict
 
 
 def get_all_doc(docs: [Document]):
@@ -259,13 +261,33 @@ def get_finaldata_talon(doc_result_obj):
 						  'причина снятия':'', 'Онкоподозрение':'Да'
 
     """
-    fin_source = {}
-    fin_oms = {}
-    fin_dms = {}
-    fin_pay = {}
+    fin_source = OrderedDict()
+    fin_oms = OrderedDict()
+    fin_dms = OrderedDict()
+    fin_pay = OrderedDict()
+    oms_count = 0
+    dms_count = 0
+    pay_count = 0
+    empty = None
 
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
-        if napr_attr[]
+        if napr_attr['istochnik_f'] == 'платно':
+            temp_dict = OrderedDict()
+            oms_count += 1
+            temp_dict['client_fio'] = napr_attr['client_fio']
+            temp_dict['card_num'] = napr_attr['card_num']
+            temp_dict['polis_data'] = napr_attr['polis_n'] + ';' + napr_attr['polis_who_give']
+            temp_dict['purpose'] = empty if not i.purpose else i.purpose
+            temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception  else 'Нет'
+            temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
+            temp_dict['first_time'] = 'Да' if i.first_time  else 'Нет'
+            temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
+            temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
+            print(i)
+            print(oms_count)
+            print(temp_dict)
+            fin_oms = {oms_count:{}}
+
 
     return i

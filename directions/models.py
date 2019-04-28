@@ -585,9 +585,10 @@ class Napravleniya(models.Model):
         """
         napr_data = {}
         napr_data['client_fio'] = self.client.individual.fio()
+        napr_data['card_num'] = self.client.number_with_type()
         napr_data['polis_n'] = self.polis_n
         napr_data['polis_who_give'] = self.polis_who_give
-        napr_data['istochnik_f'] = self.istochnik_f
+        napr_data['istochnik_f'] = self.istochnik_f.title.lower()
 
         return napr_data
 
