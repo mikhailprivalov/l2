@@ -241,3 +241,31 @@ def form_notfound():
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+def get_doc_results(doc_obj, date_result):
+    """
+    возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
+    """
+    doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result)
+    return doc_results
+
+def get_finaldata_talon(doc_result_obj):
+    """
+    Вход результаты врача за определенную дату
+    Выход: стр-ра данных {'№п.п':'номер',	'ФИО пациента':'Иванов Иван Иванович',	'№ карты (тип)':'1212 (L2)',
+                          'Данные полиса':'номер;Компаня', 'цель посещения': '(код)', 'первичны прием':'Нет',
+                          'Диагноз по МКБ': '(код)',	'Впервые':'Да',	'Результат обращения':'код',
+                          'Исход':'Код',	'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
+						  'причина снятия':'', 'Онкоподозрение':'Да'
+
+    """
+    fin_source = {}
+    fin_oms = {}
+    fin_dms = {}
+    fin_pay = {}
+
+    for i in doc_result_obj:
+        napr_attr = Napravleniya.get_attr(i.napravleniye)
+        if napr_attr[]
+
+    return i

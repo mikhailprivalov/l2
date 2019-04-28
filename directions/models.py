@@ -577,6 +577,21 @@ class Napravleniya(models.Model):
     def rmis_referral_title(self) -> str:
         return self.doc.podrazdeleniye.rmis_department_title
 
+    def get_attr(self):
+        """
+        Получает на входе объект Направление
+        возвращает словарь атрибутов направлению
+        :return:
+        """
+        napr_data = {}
+        napr_data['client_fio'] = self.client.individual.fio()
+        napr_data['polis_n'] = self.polis_n
+        napr_data['polis_who_give'] = self.polis_who_give
+        napr_data['istochnik_f'] = self.istochnik_f
+
+        return napr_data
+
+
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
