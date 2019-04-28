@@ -268,13 +268,13 @@ def get_finaldata_talon(doc_result_obj):
     oms_count = 0
     dms_count = 0
     pay_count = 0
-    empty = None
+    empty = ''
 
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
         if napr_attr['istochnik_f'] == 'платно':
             temp_dict = OrderedDict()
-            oms_count += 1
+            pay_count += 1
             temp_dict['client_fio'] = napr_attr['client_fio']
             temp_dict['card_num'] = napr_attr['card_num']
             temp_dict['polis_data'] = napr_attr['polis_n'] + ';' + napr_attr['polis_who_give']
@@ -284,10 +284,7 @@ def get_finaldata_talon(doc_result_obj):
             temp_dict['first_time'] = 'Да' if i.first_time  else 'Нет'
             temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
             temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
-            print(i)
-            print(oms_count)
-            print(temp_dict)
-            fin_oms = {oms_count:{}}
+            fin_oms = {pay_count:{}}
 
 
-    return i
+    return fin_source
