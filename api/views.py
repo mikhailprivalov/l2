@@ -1277,10 +1277,12 @@ def directions_paraclinic_form(request):
                             "title": field.title,
                             "hide": field.hide,
                             "values_to_input": json.loads(field.input_templates),
-                            "value": field.default_value if not directions.ParaclinicResult.objects.filter(
+                            "value": (field.default_value if field.field_type != 3 else '')
+                                if not directions.ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
                             "field_type": field.field_type,
+                            "default_value": field.default_value,
                             "required": field.required,
                         })
                     iss["research"]["groups"].append(g)

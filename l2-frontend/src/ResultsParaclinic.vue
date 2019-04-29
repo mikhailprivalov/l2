@@ -109,14 +109,10 @@
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="resp => [...resp.data.data]"
-                             :onHit="item => field.value = item.split(' ')[0] || ''" ref="d"
-                             v-if="!row.confirmed"
-                             placeholder="Диагноз (МКБ 10)"
-                             v-model="field.value" maxlength="36" :delayTime="300" :minChars="1"
-                             :render="items => items.map(i => `${i.code} ${i.title}`)"
-                             :limit="11" :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)" :selectFirst="true"
-                  />
+                  <m-k-b-field v-model="field.value" />
+                </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 3">
+                  <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
                   <input v-model="field.value" readonly class="form-control" :readonly="true" />
@@ -179,11 +175,12 @@
   import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
-  import TypeAhead from 'vue2-typeahead'
+  import MKBField from './MKBField'
+  import FormulaField from './FormulaField'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, TypeAhead},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField},
     data() {
       return {
         pk: '',
