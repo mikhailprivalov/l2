@@ -88,7 +88,7 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
+                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
