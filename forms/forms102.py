@@ -85,7 +85,6 @@ def form_01(request_data):
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     ind_dir = json.loads(request_data["napr_id"])
     exec_person = request_data['user'].doctorprofile.fio
-    print(request_data['user'])
 
     patient_data = ind_card.get_data_individual()
 

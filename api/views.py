@@ -881,7 +881,7 @@ def researches_update(request):
                             if f:
                                 f.save()
 
-                            if f.default_value=='':
+                            if f.default_value == '':
                                 continue
                             ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,input_field=f,value=f.default_value)
 

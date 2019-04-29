@@ -88,7 +88,6 @@ def statistic_xls(request):
         depart_napr = OrderedDict()
         depart_fraction = OrderedDict()
         one_param = "one_param"
-        # depart_fraction = {}
 
         for d in dn:
             if d.department()==None or d.department().p_type != 2:

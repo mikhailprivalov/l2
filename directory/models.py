@@ -142,7 +142,7 @@ class ParaclinicTemplateName(models.Model):
 class ParaclinicTemplateField(models.Model):
     template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE)
     input_field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE)
-    value = models.CharField(max_length=750, help_text='Значение')
+    value = models.TextField(help_text='Значение')
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)

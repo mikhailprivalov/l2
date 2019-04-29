@@ -10,6 +10,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.graphics.barcode import code128, qr
 from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
+from reportlab.platypus import PageBreak
 import os.path
 from io import BytesIO
 from . import forms_func
@@ -65,10 +66,14 @@ def form_01(request_data):
 
     styleFL = deepcopy(style)
     styleFL.firstLineIndent = 0
+
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
-    styleCenter = deepcopy(style)
+    styleBold.fontSize = 11
+    styleBold.alignment = TA_LEFT
+    styleBold.firstLineIndent = 0
 
+    styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 9
     styleCenter.leading = 10
@@ -89,7 +94,6 @@ def form_01(request_data):
     title = 'Ведомость статистических талонов по пациентам'
 
     objs = []
-    objs.append(Paragraph('Трам та ра рам', style))
     objs.append(Spacer(1, 1 * mm))
 
     styleT = deepcopy(style)
@@ -97,54 +101,43 @@ def form_01(request_data):
     styleT.firstLineIndent = 0
     styleT.fontSize = 9
 
-
     opinion = [
         [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента', styleT), Paragraph('Дата рождения', styleT),
          Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
-         Paragraph('Первичны прием', styleT),Paragraph('Диагноз код МКБ', styleT),Paragraph('Впервые', styleT),
-         Paragraph('Результат обращения (код)', styleT),Paragraph('Исход (код)', styleT),Paragraph('Стоит', styleT),
-         Paragraph('Взят', styleT), Paragraph('Снят', styleT),Paragraph('Причина снятия', styleT),
-         Paragraph('ОНКО подозрение', styleT),]
+         Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
+         Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT), Paragraph('Д-учет<br/>Стоит', styleT),
+         Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT), Paragraph('Причина снятия', styleT),
+         Paragraph('Онко<br/> подозрение', styleT), ]
     ]
-
-    # tbl = Table(opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 30 * mm, 20 * mm, 13 * mm, 17 * mm, 11 * mm,
-    #                                 20 * mm, 20 * mm, 13 * mm, 12 * mm, 12 * mm, 20 * mm, 22 * mm))
-    # tbl.setStyle(TableStyle([
-    #     ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-    # ]))
-    #
-    # objs.append(tbl)
 
     counter = 0
     list_g = []
     for k,v in talon.items():
         if len(talon.get(k)) == 0:
             continue
-        print(k)
-        print(v)
-        print('##########3#')
+        if counter > 0:
+            objs.append(PageBreak())
+        objs.append(Paragraph('Источник финансирования - {}'.format(str(k).upper()), styleBold))
+        objs.append(Spacer(1, 1.5 * mm))
+        t_opinion = opinion.copy()
         for u,s in v.items():
-            print(u)
-            # print(s)
             list_t = []
             list_t.append(Paragraph(str(u),styleT))
             for t,q in s.items():
-                # print(t)
-                # print(q)
                 list_t.append(Paragraph(q, styleT))
             list_g.append(list_t)
+        t_opinion.extend(list_g)
 
-    opinion.extend(list_g)
-    tbl = Table(opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 30 * mm, 20 * mm, 13 * mm, 17 * mm, 11 * mm,
-                                    20 * mm, 20 * mm, 13 * mm, 12 * mm, 12 * mm, 20 * mm, 22 * mm))
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
-    ]))
+        tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 45 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
+                                        20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
 
-    objs.append(tbl)
-
+        objs.append(tbl)
+        counter+=1
+        list_g = []
 
     styleTatr = deepcopy(style)
     styleTatr.alignment = TA_LEFT

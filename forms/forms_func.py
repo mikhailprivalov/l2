@@ -273,7 +273,6 @@ def get_finaldata_talon(doc_result_obj):
     pay_count = 0
     empty = '-'
 
-
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
         temp_dict = OrderedDict()
@@ -295,7 +294,8 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['client_fio'] = napr_attr['client_fio']
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
-        temp_dict['polis_data'] = napr_attr['polis_n'] + ';' + napr_attr['polis_who_give']
+        temp_dict['polis_data'] = napr_attr['polis_n'] + '<br/>' + napr_attr['polis_who_give']
+        # temp_dict['polis_data'] = napr_attr['polis_n']
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception  else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
