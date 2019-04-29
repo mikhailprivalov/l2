@@ -2094,6 +2094,8 @@ def patients_card_save(request):
     c.district = District.objects.filter(pk=request_data["district"]).first()
     c.work_position = request_data["work_position"]
     c.save()
+    if c.individual.primary_for_rmis:
+        c.individual.sync_with_rmis()
     result = "ok"
     return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})
 
