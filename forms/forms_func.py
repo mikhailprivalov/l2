@@ -287,7 +287,6 @@ def get_finaldata_talon(doc_result_obj):
             pay_count += 1
             dict_fsourcce = fin_pay
             order = pay_count
-            print('платно')
         elif napr_attr['istochnik_f'] == 'дмс':
             dms_count += 1
             dict_fsourcce = fin_dms
