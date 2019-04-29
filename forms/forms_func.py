@@ -244,12 +244,14 @@ def form_notfound():
     buffer.close()
     return pdf
 
+
 def get_doc_results(doc_obj, date_result):
     """
     возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
     """
     doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result)
     return doc_results
+
 
 def get_finaldata_talon(doc_result_obj):
     """
@@ -290,18 +292,18 @@ def get_finaldata_talon(doc_result_obj):
             dms_count += 1
             dict_fsourcce = fin_dms
             order = dms_count
-        else: continue
+        else:
+            continue
         temp_dict['client_fio'] = napr_attr['client_fio']
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
         temp_dict['polis_data'] = napr_attr['polis_n'] + '<br/>' + napr_attr['polis_who_give']
-        # temp_dict['polis_data'] = napr_attr['polis_n']
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
-        temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception  else 'Нет'
+        temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
-        temp_dict['first_time'] = 'Да' if i.first_time  else 'Нет'
+        temp_dict['first_time'] = 'Да' if i.first_time else 'Нет'
         temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
         temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
-        fin_source[dict_fsourcce].update({order:temp_dict})
+        fin_source[dict_fsourcce].update({order: temp_dict})
 
     return fin_source
