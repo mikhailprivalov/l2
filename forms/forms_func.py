@@ -261,30 +261,48 @@ def get_finaldata_talon(doc_result_obj):
 						  'причина снятия':'', 'Онкоподозрение':'Да'
 
     """
+    fin_oms = 'омс'
+    fin_dms = 'дмс'
+    fin_pay = 'платно'
     fin_source = OrderedDict()
-    fin_oms = OrderedDict()
-    fin_dms = OrderedDict()
-    fin_pay = OrderedDict()
+    fin_source[fin_oms] = OrderedDict()
+    fin_source[fin_pay] = OrderedDict()
+    fin_source[fin_dms] = OrderedDict()
     oms_count = 0
     dms_count = 0
     pay_count = 0
     empty = ''
 
+
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
-        if napr_attr['istochnik_f'] == 'платно':
-            temp_dict = OrderedDict()
+        temp_dict = OrderedDict()
+        dict_fsourcce = ''
+        order = ''
+        if napr_attr['istochnik_f'] == 'омс':
+            oms_count += 1
+            dict_fsourcce = fin_oms
+            order = oms_count
+        elif napr_attr['istochnik_f'] == 'платно':
             pay_count += 1
-            temp_dict['client_fio'] = napr_attr['client_fio']
-            temp_dict['card_num'] = napr_attr['card_num']
-            temp_dict['polis_data'] = napr_attr['polis_n'] + ';' + napr_attr['polis_who_give']
-            temp_dict['purpose'] = empty if not i.purpose else i.purpose
-            temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception  else 'Нет'
-            temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
-            temp_dict['first_time'] = 'Да' if i.first_time  else 'Нет'
-            temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
-            temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
-            fin_oms = {pay_count:{}}
-
+            dict_fsourcce = fin_pay
+            order = pay_count
+            print('платно')
+        elif napr_attr['istochnik_f'] == 'дмс':
+            dms_count += 1
+            dict_fsourcce = fin_dms
+            order = dms_count
+        else: continue
+        temp_dict['client_fio'] = napr_attr['client_fio']
+        temp_dict['client_bd'] = napr_attr['client_bd']
+        temp_dict['card_num'] = napr_attr['card_num']
+        temp_dict['polis_data'] = napr_attr['polis_n'] + ';' + napr_attr['polis_who_give']
+        temp_dict['purpose'] = empty if not i.purpose else i.purpose
+        temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception  else 'Нет'
+        temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
+        temp_dict['first_time'] = 'Да' if i.first_time  else 'Нет'
+        temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
+        temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
+        fin_source[dict_fsourcce].update({order:temp_dict})
 
     return fin_source
