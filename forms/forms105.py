@@ -49,7 +49,7 @@ def form_01(request_data):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4),
                             leftMargin=12 * mm,
-                            rightMargin=5 * mm, topMargin=10 * mm,
+                            rightMargin=5 * mm, topMargin=25 * mm,
                             bottomMargin=28 * mm, allowSplitting=1,
                             title="Форма {}".format("Договор на оплату"))
 
@@ -89,27 +89,73 @@ def form_01(request_data):
     title = 'Ведомость статистических талонов по пациентам'
 
     objs = []
+    objs.append(Paragraph('Трам та ра рам', style))
     objs.append(Spacer(1, 1 * mm))
-
-    counter = 0
-    for i in talon:
-        if len(talon.get(i)) == 0:
-            continue
-        else:
-            pass
-        print(i, len(talon.get(i)), talon.get(i))
-
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
     styleT.firstLineIndent = 0
-    styleT.fontSize = 11
+    styleT.fontSize = 9
+
 
     opinion = [
-        [Paragraph('ФИО врача:', styleT), Paragraph('{}'.format(doc_confirm.fio), styleT),
-         Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleT)],
-        [Paragraph('Специальность:', styleT), Paragraph('{}'.format(doc_confirm.specialities), styleT),
-         Paragraph('', styleT)],
+        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента', styleT), Paragraph('Дата рождения', styleT),
+         Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
+         Paragraph('Первичны прием', styleT),Paragraph('Диагноз код МКБ', styleT),Paragraph('Впервые', styleT),
+         Paragraph('Результат обращения (код)', styleT),Paragraph('Исход (код)', styleT),Paragraph('Стоит', styleT),
+         Paragraph('Взят', styleT), Paragraph('Снят', styleT),Paragraph('Причина снятия', styleT),
+         Paragraph('ОНКО подозрение', styleT),]
+    ]
+
+    # tbl = Table(opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 30 * mm, 20 * mm, 13 * mm, 17 * mm, 11 * mm,
+    #                                 20 * mm, 20 * mm, 13 * mm, 12 * mm, 12 * mm, 20 * mm, 22 * mm))
+    # tbl.setStyle(TableStyle([
+    #     ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+    # ]))
+    #
+    # objs.append(tbl)
+
+    counter = 0
+    list_g = []
+    for k,v in talon.items():
+        if len(talon.get(k)) == 0:
+            continue
+        print(k)
+        print(v)
+        print('##########3#')
+        for u,s in v.items():
+            print(u)
+            # print(s)
+            list_t = []
+            list_t.append(Paragraph(str(u),styleT))
+            for t,q in s.items():
+                # print(t)
+                # print(q)
+                list_t.append(Paragraph(q, styleT))
+            list_g.append(list_t)
+
+    opinion.extend(list_g)
+    tbl = Table(opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 30 * mm, 20 * mm, 13 * mm, 17 * mm, 11 * mm,
+                                    20 * mm, 20 * mm, 13 * mm, 12 * mm, 12 * mm, 20 * mm, 22 * mm))
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+    ]))
+
+    objs.append(tbl)
+
+
+    styleTatr = deepcopy(style)
+    styleTatr.alignment = TA_LEFT
+    styleTatr.firstLineIndent = 0
+    styleTatr.fontSize = 11
+
+    opinion = [
+        [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.fio), styleTatr),
+         Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
+        [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_confirm.specialities), styleTatr),
+         Paragraph('', styleTatr)],
     ]
 
     def later_pages(canvas, document):

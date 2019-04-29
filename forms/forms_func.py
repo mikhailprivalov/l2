@@ -271,7 +271,7 @@ def get_finaldata_talon(doc_result_obj):
     oms_count = 0
     dms_count = 0
     pay_count = 0
-    empty = ''
+    empty = '-'
 
 
     for i in doc_result_obj:
