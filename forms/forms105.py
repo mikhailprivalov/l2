@@ -7,28 +7,13 @@ from reportlab.lib.pagesizes import A4, portrait, landscape
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.graphics.barcode import code128, qr
-from reportlab.graphics import renderPDF
-from reportlab.graphics.shapes import Drawing
 from reportlab.platypus import PageBreak
 import os.path
 from io import BytesIO
 from . import forms_func
-from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya, PersonContract
-from clients.models import Card, Document
 from laboratory.settings import FONTS_FOLDER
-import simplejson as json
-from dateutil.relativedelta import *
 from datetime import *
 import datetime
-import locale
-import sys
-import pytils
-from appconf.manager import SettingManager
-from reportlab.pdfgen import canvas
-from reportlab.lib.colors import HexColor
-from reportlab.lib.colors import white, black
-import zlib
 
 def form_01(request_data):
     """
@@ -42,7 +27,6 @@ def form_01(request_data):
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
     talon = forms_func.get_finaldata_talon(doc_results)
 
-    # Генерировать pdf-Лист на оплату
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
@@ -105,38 +89,41 @@ def form_01(request_data):
         [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента', styleT), Paragraph('Дата рождения', styleT),
          Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
          Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
-         Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT), Paragraph('Д-учет<br/>Стоит', styleT),
-         Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT), Paragraph('Причина снятия', styleT),
+         Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
+         Paragraph('Д-учет<br/>Стоит', styleT),
+         Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT),
+         Paragraph('Причина снятия', styleT),
          Paragraph('Онко<br/> подозрение', styleT), ]
     ]
 
-    counter = 0
+    new_page = False
     list_g = []
-    for k,v in talon.items():
+    for k, v in talon.items():
         if len(talon.get(k)) == 0:
             continue
-        if counter > 0:
+        if new_page:
             objs.append(PageBreak())
         objs.append(Paragraph('Источник финансирования - {}'.format(str(k).upper()), styleBold))
         objs.append(Spacer(1, 1.5 * mm))
         t_opinion = opinion.copy()
-        for u,s in v.items():
+        for u, s in v.items():
             list_t = []
-            list_t.append(Paragraph(str(u),styleT))
-            for t,q in s.items():
+            list_t.append(Paragraph(str(u), styleT))
+            for t, q in s.items():
                 list_t.append(Paragraph(q, styleT))
             list_g.append(list_t)
         t_opinion.extend(list_g)
 
-        tbl = Table(t_opinion, colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 45 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
-                                        20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+        tbl = Table(t_opinion,
+                    colWidths=(10 * mm, 30 * mm, 20 * mm, 15 * mm, 45 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
+                               20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
         ]))
 
         objs.append(tbl)
-        counter+=1
+        new_page = True
         list_g = []
 
     styleTatr = deepcopy(style)
@@ -153,7 +140,7 @@ def form_01(request_data):
 
     def later_pages(canvas, document):
         canvas.saveState()
-        #вывести Название и данные врача
+        # вывести Название и данные врача
         width, height = landscape(A4)
         canvas.setFont('PTAstraSerifBold', 14)
         canvas.drawString(99 * mm, 200 * mm, '{}'.format(title))
@@ -168,7 +155,7 @@ def form_01(request_data):
 
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages,)
+    doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages, )
 
     pdf = buffer.getvalue()
 
