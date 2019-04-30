@@ -395,7 +395,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                     <h3 id="dataConfirmLabel">Некоторые исследования были сохранены другим пользователем</h3></div>
-                <div class="modal-body">Вы уведены, что хотите подтвердить всё?</div>
+                <div class="modal-body">Вы уверены, что хотите подтвердить всё?</div>
                 <div class="modal-footer">
                     <button class="btn" data-dismiss="modal" aria-hidden="true">Отмена</button>
                     <a class="btn btn-primary" id="dataConfirmOK">Подтвердить</a></div>
@@ -1193,6 +1193,7 @@
         let loaded_fractions = {};
         let researches_cache = {};
         let rendered_form_cache = {};
+        let laborants = [];
 
         let dir_active = -1;
         let tubes_active = [];
@@ -1285,6 +1286,14 @@
                 resize();
             });
             decsl();
+            $.ajax({
+                url: "/api/laborants",
+                dataType: 'json'
+            }).done(function ({data = []}) {
+                laborants = data;
+                console.log(data);
+            }).always(dechl);
+            nn++;
             $.ajax({ // AJAX запрос
                 url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
                 dataType: 'json'
@@ -1731,7 +1740,8 @@
 
                     let rendered = !!rendered_form_cache[research_pk];
                     if (!rendered)
-                        rendered_form_cache[research_pk] = jade.compile(template)(data2);
+                        rendered_form_cache[research_pk] = jade.compile(template)({...data2, laborants});
+
                     $("#result-form").html(rendered_form_cache[research_pk]);
                     $("#result-form").removeClass("no_units_and_ref");
                     if(data2.no_units_and_ref) {
@@ -1829,6 +1839,7 @@
                         $("#save-btn").attr("disabled", 1);
                         $("#ref-settings-btn").prop("disabled", true);
                         $("#confirm-andsave-btn").attr("disabled", 1);
+                        $('#laborant').prop("disabled", true);
                         datatype = 2;
                     }
                     else if (data2.saved) {
@@ -1844,6 +1855,7 @@
                         $("#ref-settings-btn").prop("disabled", false);
                         $("#confirm-andsave-btn").removeAttr("disabled");
                     }
+                    $('#laborant').val(data2.co_executor).selectpicker('refresh');
                     hl();
                     $('#result-jade-form').scrollTop(0);
                 }
@@ -2201,6 +2213,7 @@
             result.comment = $(".lab_comment").val() || "";
             result.fractions = JSON.stringify(result.fractions);
             result.fractions_ref = JSON.stringify(result.fractions_ref);
+            result.co_executor = $('#laborant').length ? $('#laborant').val(): '-1';
             $(this).disabled = false;
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function () {
                 emit_event('results_save', {pk: result.issledovaniye, user: user_pk, dir: dir_active})

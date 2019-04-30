@@ -45,6 +45,16 @@ input(type="hidden", value=research_pk)#research_pk
                                         td= index
                                         td.col-md-6
                                             | !{norm}
+        if laborants.length > 0
+            tr
+                td(colspan="4")
+            tr
+                td
+                    label(for="laborant").labtitle Лаборант
+                td(colspan="3")
+                    select(data-live-search="true", data-width="100%", data-container="body").select-b#laborant
+                        each l in laborants
+                            option(value=l.pk)= l.fio
 script.
     var k = -1;
     function genresult(th) {

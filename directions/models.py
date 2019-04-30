@@ -619,11 +619,10 @@ class Issledovaniya(models.Model):
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
-    coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
+    coast = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1, help_text='Кол-во услуг назначено оператором')
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None, null=True, blank=True, on_delete=models.SET_NULL)
-
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)

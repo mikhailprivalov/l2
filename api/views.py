@@ -2246,3 +2246,10 @@ def save_anamnesis(request):
         card.save()
         AnamnesisHistory(card=card, text=request_data["text"], who_save=request.user.doctorprofile).save()
     return JsonResponse({"ok": True})
+
+
+def laborants(request):
+    data = [{"pk": '-1', "fio": 'Не выбрано'}]
+    for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
+        data.append({"pk": str(d.pk), "fio": d.fio})
+    return JsonResponse({"data": data})
