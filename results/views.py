@@ -1205,7 +1205,7 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.restoreState()
 
-    doc.build(naprs,onFirstPage=first_pages)
+    doc.build(naprs, onFirstPage=first_pages)
 
     pdf = buffer.getvalue()
     buffer.close()
