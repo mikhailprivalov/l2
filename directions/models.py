@@ -919,7 +919,6 @@ class Result(models.Model):
                     rigthkk = rigths(kk)
 
                     if years == 0 and rigthkk and not has_years(k):
-                        print(days, monthes, years, k)
                         if monthes == 0:
                             if has_days(k):
                                 rigth = rigthkk
