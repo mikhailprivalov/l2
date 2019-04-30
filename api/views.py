@@ -834,8 +834,8 @@ def researches_update(request):
                 res.hide = hide
             if res:
                 res.save()
-                ParaclinicTemplateName.objects.update_or_create(title=info, research=res)
-                templat_obj = ParaclinicTemplateName.objects.get(title=info, research=res)
+                ParaclinicTemplateName.objects.update_or_create(title='default', research=res)
+                templat_obj = ParaclinicTemplateName.objects.get(title='default', research=res)
                 for group in groups:
                     g = None
                     pk = group["pk"]
