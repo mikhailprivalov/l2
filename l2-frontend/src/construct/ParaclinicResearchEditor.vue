@@ -62,13 +62,17 @@
             </div>
             <div>
               <div class="input-group">
-                <span class="input-group-addon">Название поля</span>
+                <span class="input-group-addon">Название поля ({{row.pk === -1 ? 'новое' : row.pk}})</span>
                 <input type="text" class="form-control" v-model="row.title">
               </div>
-              <div v-show="row.field_type === 0">
+              <div v-if="row.field_type === 0">
                 <strong>Значение по умолчанию:</strong>
                 <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                 <input v-model="row.default" class="form-control" v-else/>
+              </div>
+              <div v-else-if="row.field_type === 3">
+                <strong>Формула:</strong>
+                <input v-model="row.default" class="form-control"/>
               </div>
               <v-collapse-wrapper v-show="row.field_type === 0">
                 <div class="header" v-collapse-toggle>
@@ -126,6 +130,7 @@
                   <option value="0">Строка</option>
                   <option value="1">Дата</option>
                   <option value="2">Диагноз по МКБ</option>
+                  <option value="3">Расчётное</option>
                 </select>
               </label>
             </div>

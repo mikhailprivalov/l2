@@ -29,6 +29,7 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
     primary_for_rmis = models.BooleanField(default=False, blank=True)
+    rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -240,16 +241,28 @@ class Individual(models.Model):
         from rmis_integration.client import Client
         c = Client(modules=['patients', 'individuals'])
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
-        if not cards.exists():
-            ind_uid = c.individuals.createIndividual(self)
-            rmis_uid = c.patients.send_new_patient(ind_uid)
+        n = False
+        if not cards.exists() or not self.rmis_uid:
+            # ind_uid = c.individuals.createIndividual(self)
+            ind_uid, rmis_uid = c.patients.send_new_patient(self)
+            self.rmis_uid = ind_uid
+            self.save()
             c.patients.create_rmis_card(self, rmis_uid)
             cards = Card.objects.filter(number=rmis_uid)
             # print('rdp', rdp)
+            n = True
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
         print('pat_data', pat_data)
-
+        if not n:
+            p = pat_data["patient"]
+            g = {"ж": "2"}.get(self.sex.lower(), "1")
+            if self.family != p["lastName"] or \
+                    self.name != p["firstName"] or \
+                    self.patronymic != p["middleName"] or \
+                    self.sex != g or \
+                    self.birthday != self.birthday:
+                c.patients.edit_patient(self)
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)

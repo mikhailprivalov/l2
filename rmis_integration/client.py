@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
-from laboratory.utils import strdate, strtime, localtime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings as l2settings
 
@@ -406,12 +406,39 @@ class Patients(BaseRequester):
         }]
         return self.smart_client.sendPatient(patientCard=data)
 
-    def send_new_patient(self, uid):
+    def send_new_patient(self, individual):
         data = {
-            "patientId": uid,
-            "patientData": {},
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
         }
-        return self.smart_client.createPatient(**data)
+        iuid = self.client.createIndividual(**data)
+
+        ruid = self.smart_client.sendPatient(patientCard={
+            'patient': iuid,
+            'identifiers':{
+                'code': iuid,
+                'codeType': '7',
+                'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),
+            }
+        })
+
+        return iuid, ruid["patientUid"]
+
+    def edit_patient(self, individual):
+        data = {
+            "individualId": individual.rmis_uid,
+            "individualData": {
+                "patrName": individual.patronymic,
+                "surname": individual.family,
+                "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+                "birthDate": individual.birthday,
+            }
+        }
+        r = self.client.editIndividual(**data)
+        print(r)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:

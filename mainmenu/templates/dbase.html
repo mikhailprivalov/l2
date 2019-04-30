@@ -516,7 +516,7 @@
         const $contextSt = $('#contextSt')
         const $recalcValue = $('#recalcValue')
         $.contextMenu({
-            elementSelector: 'input.form-control:not(.tt-hint):not(.no-context),textarea:not(.no-context)',
+            elementSelector: 'input.form-control:not(.tt-hint):not(.no-context)[data-pk],textarea:not(.no-context)[data-pk]',
             menuSelector: '#contextMenu',
             menuSelected: function (invokedOn, selectedMenu) {
                 let val
