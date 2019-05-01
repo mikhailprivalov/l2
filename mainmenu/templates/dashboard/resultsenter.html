@@ -1862,6 +1862,7 @@
                     resize();
                     loaded_research = id;
                     datatype = -1;
+                    $('#laborant').val(data2.co_executor);
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").attr("disabled", 1);
@@ -1883,7 +1884,7 @@
                         $("#ref-settings-btn").prop("disabled", false);
                         $("#confirm-andsave-btn").removeAttr("disabled");
                     }
-                    $('#laborant').val(data2.co_executor).selectpicker('refresh');
+                    $('#laborant').selectpicker('refresh');
                     hl();
                     $('#result-jade-form').scrollTop(0);
                 }

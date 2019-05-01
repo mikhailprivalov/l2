@@ -238,7 +238,7 @@ def results_save(request):
 
             issledovaniye.time_save = timezone.now()  # Время сохранения
             issledovaniye.lab_comment = request.POST.get("comment", "")
-            issledovaniye.co_executor_id = None if request.POST["co_executor"] == '-1' else int(request.POST["co_executor"])
+            issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(request.POST["co_executor"])
             issledovaniye.save()
             result = {"ok": True}
 
