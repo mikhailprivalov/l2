@@ -1205,6 +1205,33 @@
         let lab_pk = {{ lab.pk }};
         let user_pk = {{ user.doctorprofile.pk }};
 
+        let entityMap = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '/': '&#x2F;',
+          '`': '&#x60;',
+          '=': '&#x3D;'
+        };
+        let mapEntity = Object.keys(entityMap).reduce(function(obj, key){
+           obj[entityMap[key]] = key;
+           return obj;
+        }, {});
+
+        function escapeHtml(string) {
+          return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+            return entityMap[s];
+          });
+        }
+
+        function deescapeHtml (string) {
+          return String(string).replace(new RegExp(`(${Object.keys(mapEntity).join('|')})`), function (s) {
+            return mapEntity[s];
+          });
+        }
+
         let statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         let statuses_titles = {
             "n": "Не обработан",
@@ -1793,6 +1820,7 @@
 
                     $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
+                            v = deescapeHtml(v);
                             if (v !== "")
                                 $(`[data-pk='${k}']`).typeahead('close').typeahead('val', v).blur();
                             $(`[data-pk='${k}']`).val(v);
