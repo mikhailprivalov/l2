@@ -229,7 +229,6 @@ class Individual(models.Model):
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
         else:
-            print('Not founded in RMIS')
             self.primary_for_rmis = True
             self.save()
             self.reverse_sync()
@@ -253,7 +252,6 @@ class Individual(models.Model):
             n = True
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
-        print('pat_data', pat_data)
         if not n:
             p = pat_data["patient"]
             g = {"ж": "2"}.get(self.sex.lower(), "1")
@@ -438,6 +436,7 @@ class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
     check_priority = models.IntegerField(default=0,
                                          help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
+    rmis_type = models.CharField(max_length=10, default=None, blank=True, null=True)
 
     def __str__(self):
         return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
@@ -457,6 +456,7 @@ class Document(models.Model):
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     who_give = models.TextField(default="", blank=True)
     from_rmis = models.BooleanField(default=True, blank=True)
+    rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
@@ -497,6 +497,51 @@ class Document(models.Model):
                 documents["bc"]["issued"] = d.who_give
 
         return documents
+
+    def sync_rmis(self):
+        if self.individual.primary_for_rmis and not self.from_rmis and self.individual.rmis_uid and self.document_type.rmis_type:
+            from rmis_integration.client import Client
+            c = Client(modules=['patients', 'individuals'])
+            cards = Card.objects.filter(individual=self.individual, base__is_rmis=True, is_archive=False)
+            if not cards.exists():
+                return
+            card = cards[0]
+            if self.rmis_uid:
+                d = c.individuals.client.getDocument(self.rmis_uid)
+                if d["series"] != self.serial or \
+                    d['number'] != self.number or \
+                    d['issuerText'] != self.who_give or \
+                    d['issueDate'] != self.date_start or \
+                    d['expireDate'] != self.date_end or \
+                    d['active'] != self.is_active:
+                    data = {
+                        "documentId": self.rmis_uid,
+                        "documentData": {
+                            "individualUid": self.individual.rmis_uid,
+                            "type": self.document_type.rmis_type,
+                            "issuerText": self.who_give,
+                            "series": self.serial,
+                            "number": self.number,
+                            "active": self.is_active,
+                            "issueDate": self.date_start,
+                            "expireDate": self.date_end,
+                        }
+                    }
+                    d = c.individuals.client.editDocument(**data)
+            else:
+                data = {
+                    "individualUid": self.individual.rmis_uid,
+                    "type": self.document_type.rmis_type,
+                    "issuerText": self.who_give,
+                    "series": self.serial,
+                    "number": self.number,
+                    "active": self.is_active,
+                    "issueDate": self.date_start,
+                    "expireDate": self.date_end,
+                }
+                d = c.individuals.client.createDocument(**data)
+                self.rmis_uid = d
+                self.save()
 
     class Meta:
         verbose_name = 'Документ'

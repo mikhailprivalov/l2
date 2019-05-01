@@ -2111,18 +2111,14 @@ def get_sex_by_param(request):
     t = request_data.get("t")
     v = request_data.get("v", "")
     r = "м"
-    print(t, v)
     if t == "name":
         p = Individual.objects.filter(name=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     if t == "family":
         p = Individual.objects.filter(family=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     if t == "patronymic":
         p = Individual.objects.filter(patronymic=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     return JsonResponse({"sex": r})
 
@@ -2157,6 +2153,8 @@ def edit_doc(request):
                                                                is_active=is_active, date_start=date_start,
                                                                date_end=date_end, who_give=who_give)
         Log.log(pk, 30002, request.user.doctorprofile, request_data)
+        d = Document.objects.get(pk=pk)
+    d.sync_rmis()
 
     return JsonResponse({"ok": True})
 
@@ -2254,3 +2252,12 @@ def save_anamnesis(request):
         card.save()
         AnamnesisHistory(card=card, text=request_data["text"], who_save=request.user.doctorprofile).save()
     return JsonResponse({"ok": True})
+
+
+def laborants(request):
+    data = []
+    if SettingManager.get("l2_results_laborants", default='false', default_type='b'):
+        data = [{"pk": '-1', "fio": 'Не выбрано'}]
+        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
+            data.append({"pk": str(d.pk), "fio": d.fio})
+    return JsonResponse({"data": data})

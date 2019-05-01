@@ -358,7 +358,7 @@ class Individuals(BaseRequester):
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        key = "zeep_pat"
+        key = "zeep_pat_v2"
         r = cache.get(key)
 
         if not r:
@@ -381,6 +381,9 @@ class Patients(BaseRequester):
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
                     r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
+                if t.rmis_type != r["local_types"][t.pk]:
+                    t.rmis_type = r["local_types"][t.pk]
+                    t.save()
             cache.set(key, pickle.dumps(r, protocol=4), 3600)
         else:
             r = pickle.loads(r, encoding="utf8")
@@ -438,7 +441,6 @@ class Patients(BaseRequester):
             }
         }
         r = self.client.editIndividual(**data)
-        print(r)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
