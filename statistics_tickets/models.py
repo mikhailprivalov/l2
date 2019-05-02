@@ -78,11 +78,7 @@ class StatisticsTicket(models.Model):
     outcome = models.ForeignKey(Outcomes, blank=True, null=True, on_delete=models.SET_NULL,
                                 help_text="Исход", default=None)
     primary_visit = models.BooleanField(help_text="Первичное посещение")
-
-
     info = models.TextField(blank=True, help_text="Диагнозы, виды услуг, виды травм")
-
-
     dispensary_registration = models.IntegerField(choices=DISPENSARY_REGISTRATIONS, default=DISPENSARY_NO, blank=True,
                                                   help_text="Диспансерный учёт")
     dispensary_diagnos = models.CharField(blank=True, help_text="Диагноз диспансерного учёта", default="",

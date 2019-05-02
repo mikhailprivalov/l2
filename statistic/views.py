@@ -163,14 +163,12 @@ def statistic_xls(request):
             a = ([[p, r, n, datetime.datetime.strftime(t, "%d.%m.%y")] for p, r, n, t in
                   Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
                       napravleniye_id__in=l_napr)])
-            print(a)
             obj.append(a)
 
         for i in obj:
             for j in i:
                 result_k = ({fr_id: val for fr_id, val in
                              Result.objects.values_list('fraction', 'value').filter(issledovaniye_id=j[0])})
-                print(result_k)
                 j.append(result_k)
 
         finish_obj = []
@@ -192,7 +190,6 @@ def statistic_xls(request):
                 opinion_dict = {('напр', 'дата',): fract_dict}
                 val_dict = fract_dict.copy()
                 finish_ord[t_lab][iss_id].update(opinion_dict)
-                print(finish_ord)
                 for k, v in fract_dict.items():
                     val_dict[k] = ''
 
