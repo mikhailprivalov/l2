@@ -27,7 +27,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory
 from contracts.models import Company
-from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ResearchSite
+from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ParaclinicTemplateName, ParaclinicTemplateField, ResearchSite
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.utils import strdate, strdatetime, tsdatetime
@@ -863,6 +863,8 @@ def researches_update(request):
                 res.hide = hide
             if res:
                 res.save()
+                ParaclinicTemplateName.objects.update_or_create(title='default', research=res)
+                templat_obj = ParaclinicTemplateName.objects.get(title='default', research=res)
                 for group in groups:
                     g = None
                     pk = group["pk"]
@@ -891,7 +893,9 @@ def researches_update(request):
                                                          lines=field["lines"],
                                                          hide=field["hide"],
                                                          default_value=field["default"],
-                                                         input_templates=json.dumps(field["values_to_input"]))
+                                                         input_templates=json.dumps(field["values_to_input"]),
+                                                         field_type=field.get("field_type", 0),
+                                                         required=field.get("required", False))
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
@@ -901,8 +905,14 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.input_templates = json.dumps(field["values_to_input"])
+                                f.field_type = field.get("field_type", 0)
+                                f.required = field.get("required", False)
                             if f:
                                 f.save()
+
+                            if f.default_value == '':
+                                continue
+                            ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,input_field=f,value=f.default_value)
 
                 response["ok"] = True
         slog.Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
@@ -937,6 +947,8 @@ def researches_details(request):
                     "default": field.default_value,
                     "hide": field.hide,
                     "values_to_input": json.loads(field.input_templates),
+                    "field_type": field.field_type,
+                    "required": field.required,
                     "new_value": ""
                 })
             response["groups"].append(g)
@@ -960,7 +972,9 @@ def paraclinic_details(request):
                 "title": field.title,
                 "default": field.default_value,
                 "hide": field.hide,
-                "values_to_input": json.loads(field.input_templates)
+                "values_to_input": json.loads(field.input_templates),
+                "field_type": field.field_type,
+                "required": field.required,
             })
         response["groups"].append(g)
     return JsonResponse(response)
@@ -1298,9 +1312,13 @@ def directions_paraclinic_form(request):
                             "title": field.title,
                             "hide": field.hide,
                             "values_to_input": json.loads(field.input_templates),
-                            "value": field.default_value if not directions.ParaclinicResult.objects.filter(
+                            "value": (field.default_value if field.field_type != 3 else '')
+                                if not directions.ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
+                            "field_type": field.field_type,
+                            "default_value": field.default_value,
+                            "required": field.required,
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
@@ -2122,6 +2140,8 @@ def patients_card_save(request):
     c.district = District.objects.filter(pk=request_data["district"]).first()
     c.work_position = request_data["work_position"]
     c.save()
+    if c.individual.primary_for_rmis:
+        c.individual.sync_with_rmis()
     result = "ok"
     return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})
 
@@ -2131,18 +2151,14 @@ def get_sex_by_param(request):
     t = request_data.get("t")
     v = request_data.get("v", "")
     r = "м"
-    print(t, v)
     if t == "name":
         p = Individual.objects.filter(name=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     if t == "family":
         p = Individual.objects.filter(family=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     if t == "patronymic":
         p = Individual.objects.filter(patronymic=v)
-        print(p.filter(sex__iexact="м").count(), p.filter(sex__iexact="ж").count())
         r = "м" if p.filter(sex__iexact="м").count() >= p.filter(sex__iexact="ж").count() else "ж"
     return JsonResponse({"sex": r})
 
@@ -2177,6 +2193,8 @@ def edit_doc(request):
                                                                is_active=is_active, date_start=date_start,
                                                                date_end=date_end, who_give=who_give)
         Log.log(pk, 30002, request.user.doctorprofile, request_data)
+        d = Document.objects.get(pk=pk)
+    d.sync_rmis()
 
     return JsonResponse({"ok": True})
 
@@ -2274,3 +2292,12 @@ def save_anamnesis(request):
         card.save()
         AnamnesisHistory(card=card, text=request_data["text"], who_save=request.user.doctorprofile).save()
     return JsonResponse({"ok": True})
+
+
+def laborants(request):
+    data = []
+    if SettingManager.get("l2_results_laborants", default='false', default_type='b'):
+        data = [{"pk": '-1', "fio": 'Не выбрано'}]
+        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
+            data.append({"pk": str(d.pk), "fio": d.fio})
+    return JsonResponse({"data": data})

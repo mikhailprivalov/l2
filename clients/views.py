@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from zeep.exceptions import Fault
 
 from appconf.manager import SettingManager
-from clients.models import Phones
+from clients.models import Phones, District
 from users.models import DoctorProfile
 from . import models as Clients
 
@@ -41,6 +41,7 @@ def get_db(request):
             values("number",
                    "pk",
                    "individual_id",
+                   "district_id",
                    "individual__family", "individual__name", "individual__patronymic", "individual__sex",
                    "individual__birthday",
                    "polis",
@@ -63,6 +64,7 @@ def get_db(request):
             "Tels": [y["number"] for y in Phones.objects.filter(card__pk=x["pk"]).values("number")],
             "MainDiagnosis": x["main_diagnosis"],
             "MainAddress": x["main_address"],
+            "District": None if not x["district_id"] else District.objects.get(pk=x["district_id"]).title,
         })
     return JsonResponse(data, safe=False)
 
@@ -91,6 +93,10 @@ def receive_db(request):
         pass
     docs_types = Clients.DocumentType.objects.filter(title__startswith="Полис ОМС")
     snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
+    districts = {}
+    for d in District.objects.all():
+        districts[d.title] = d
+
     for x in d:
         polis = Clients.Document.objects.filter(
             document_type__in=docs_types,
@@ -175,6 +181,9 @@ def receive_db(request):
                 if card.main_diagnosis != x.get("MainDiagnosis", "") or card.main_address != x.get("MainAddress", ""):
                     card.main_diagnosis = x.get("MainDiagnosis", "")
                     card.main_address = x.get("MainAddress", "")
+                    card.save()
+                if 'District' in x and x['District'] in districts and card.district != districts[x['District']]:
+                    card.district = districts[x['District']]
                     card.save()
     if len(bulk_cards) != 0:
         Clients.Card.objects.bulk_create(bulk_cards)

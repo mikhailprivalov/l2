@@ -82,12 +82,13 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed}"
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed, required: field.required}"
+                   :title="field.required && 'обязательно для заполнения'"
                    @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
+                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -99,10 +100,22 @@
                     </div>
                   </div>
                 </div>
-                <div class="field-value">
+                <div class="field-value" v-if="field.field_type === 0">
                   <textarea v-model="field.value" :rows="field.lines" class="form-control"
                             v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" v-else/>
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 1">
+                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
+                </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
+                  <m-k-b-field v-model="field.value" />
+                </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 3">
+                  <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
+                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
                 </div>
               </div>
             </div>
@@ -113,14 +126,18 @@
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed">Подтвердить
+            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed || !r(row)">Подтвердить
             </button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed">Сохранить и
+            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
               подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="reset_confirm(row)" v-if="row.confirmed && row.allow_reset_confirm">
               Сброс подтверждения
             </button>
+            <div class="status-list" v-if="!r(row)">
+              <div class="status status-none">Не заполнено:</div>
+              <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
+            </div>
           </div>
         </div>
       </div>
@@ -158,10 +175,12 @@
   import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
+  import MKBField from './MKBField'
+  import FormulaField from './FormulaField'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField},
     data() {
       return {
         pk: '',
@@ -205,6 +224,37 @@
       vm.load_history()
     },
     methods: {
+      r(research) {
+        if (research.confirmed) {
+          return true;
+        }
+
+        for (const g of research.research.groups) {
+          for (const f of g.fields) {
+            if (f.required && (f.value === '' || !f.value)) {
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      r_list(research) {
+        const l = [];
+        if (research.confirmed) {
+          return [];
+        }
+
+        for (const g of research.research.groups) {
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || !f.value)) {
+              l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title));
+            }
+          }
+        }
+        return l;
+      },
       hide_modal_anamnesis_edit() {
         this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
         this.anamnesis_edit = false;
@@ -420,7 +470,7 @@
       },
       has_changed() {
         return this.changed && this.data && this.data.ok && this.inserted
-      }
+      },
     }
   }
 </script>
@@ -556,6 +606,9 @@
 
     &.open-field:not(.disabled) {
       background-color: #efefef;
+      &.required {
+        background-color: #e3e3e3;
+      }
       .input-values {
         overflow: visible !important;
       }
@@ -569,6 +622,11 @@
       .form-control {
         border-color: #00a1cb;
       }
+    }
+
+    &.required {
+      background-color: #e6e6e6;
+      border-right: 3px solid #00a1cb;
     }
   }
 
@@ -722,4 +780,38 @@
   .anamnesis {
     padding: 10px;
   }
+
+  .status-list {
+    display: flex;
+  }
+
+  .mkb10 {
+    margin-right: -1px;
+  }
+
+  .mkb10 /deep/ .input-group {
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .mkb10 /deep/ input {
+    border-radius: 0!important;
+  }
+
+  .mkb10 /deep/ ul {
+    width: auto;
+    right: -250px;
+    font-size: 13px;
+  }
+
+  .mkb10 /deep/ ul li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+    a {
+      padding: 2px 10px;
+    }
+  }
+
 </style>

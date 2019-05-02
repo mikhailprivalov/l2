@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
-from laboratory.utils import strdate, strtime, localtime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings as l2settings
 
@@ -341,11 +341,24 @@ class Individuals(BaseRequester):
         d = self.client.editIndividual(**data)
         return d
 
+    def documents(self, card: clients_models.Card):
+        return self.client.getIndividualDocuments(card.number)
+
+    def createIndividual(self, individual: clients_models.Individual):
+        data = {
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
+        }
+        return self.client.createIndividual(**data)
+
 
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        key = "zeep_pat"
+        key = "zeep_pat_v2"
         r = cache.get(key)
 
         if not r:
@@ -368,6 +381,9 @@ class Patients(BaseRequester):
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
                     r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
+                if t.rmis_type != r["local_types"][t.pk]:
+                    t.rmis_type = r["local_types"][t.pk]
+                    t.save()
             cache.set(key, pickle.dumps(r, protocol=4), 3600)
         else:
             r = pickle.loads(r, encoding="utf8")
@@ -392,6 +408,39 @@ class Patients(BaseRequester):
             },
         }]
         return self.smart_client.sendPatient(patientCard=data)
+
+    def send_new_patient(self, individual):
+        data = {
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
+        }
+        iuid = self.client.createIndividual(**data)
+
+        ruid = self.smart_client.sendPatient(patientCard={
+            'patient': iuid,
+            'identifiers':{
+                'code': iuid,
+                'codeType': '7',
+                'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),
+            }
+        })
+
+        return iuid, ruid["patientUid"]
+
+    def edit_patient(self, individual):
+        data = {
+            "individualId": individual.rmis_uid,
+            "individualData": {
+                "patrName": individual.patronymic,
+                "surname": individual.family,
+                "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+                "birthDate": individual.birthday,
+            }
+        }
+        r = self.client.editIndividual(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:
@@ -902,13 +951,17 @@ class Directions(BaseRequester):
                                                 "{{значение}}", "")
 
                                         for y in ParaclinicResult.objects.filter(issledovaniye__napravleniye=direction,
-                                                                                 field__group=g).exclude(
-                                            value="").order_by("field__order"):
+                                                                                 field__group=g).exclude(value="")\
+                                                .order_by("field__order"):
+                                            v = y.value.replace("\n", "<br/>")
+                                            if y.field.field_type == 1:
+                                                vv = v.split('-')
+                                                if len(vv) == 3:
+                                                    v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                             xresult += protocol_row.replace("{{фракция}}", y.field.title).replace(
-                                                "{{значение}}", y.value)
-                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "").replace("</sub>",
-                                                                                                            "") \
-                                        .replace("<font>", "").replace("</font>", "")
+                                                "{{значение}}", v)
+                                    xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "")\
+                                        .replace("</sub>", "").replace("<font>", "").replace("</font>", "")
                                     self.put_protocol(code, direction, protocol_template, ss, x, xresult, stdout)
                                     RmisServices(napravleniye=direction, code=code, rmis_id=ss).save()
                             for x in Result.objects.filter(issledovaniye__napravleniye=direction).distinct():

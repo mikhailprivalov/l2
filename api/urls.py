@@ -7,6 +7,7 @@ urlpatterns = [
     path('endpoint', views.endpoint),
     path('departments', views.departments),
     path('bases', views.bases),
+    path('laborants', views.laborants),
     path('researches/templates', views.ResearchesTemplates.as_view()),
     path('researches/all', views.Researches.as_view()),
     path('researches/by-department', views.researches_by_department),

@@ -9,11 +9,13 @@ import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
 import VueAutosize from 'vue-autosize';
+const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
 Vue.use(Steps)
 Vue.use(Step)
+Vue.use(VueInputMask)
 
 const promiseFinally = require('promise.prototype.finally');
 promiseFinally.shim()
