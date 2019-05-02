@@ -11,6 +11,7 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -863,8 +864,7 @@ def researches_update(request):
                 res.hide = hide
             if res:
                 res.save()
-                ParaclinicTemplateName.objects.update_or_create(title='По умолчанию', research=res)
-                templat_obj = ParaclinicTemplateName.objects.get(title='По умолчанию', research=res)
+                templat_obj = ParaclinicTemplateName.make_default(res)
                 for group in groups:
                     g = None
                     pk = group["pk"]
@@ -912,8 +912,8 @@ def researches_update(request):
 
                             if f.default_value == '':
                                 continue
-                            ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,
-                                                                             input_field=f, value=f.default_value)
+                            ParaclinicTemplateField.objects.filter(template_name=templat_obj,
+                                                                   input_field=f).update(value=f.default_value)
 
                 response["ok"] = True
         slog.Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
@@ -2302,3 +2302,75 @@ def laborants(request):
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
     return JsonResponse({"data": data})
+
+
+def fast_templates(request):
+    data = []
+    request_data = json.loads(request.body)
+    is_all = request_data.get('all', False)
+
+    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=request_data["pk"]))
+
+    rts = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"])
+
+    if not is_all:
+        rts = rts.filter(hide=False)
+
+    for rt in rts.order_by('pk'):
+        data.append({
+            "pk": rt.pk,
+            "title": rt.title,
+            "hide": rt.hide,
+            "readonly": not is_all or rt.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+        })
+
+    return JsonResponse({"data": data})
+
+
+def fast_template_data(request):
+    request_data = json.loads(request.body)
+    p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
+    data = {
+        "readonly": p.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+        "hide": p.hide,
+        "title": p.title,
+        "fields": {},
+    }
+
+    for pi in ParaclinicTemplateField.objects.filter(template_name=p).order_by('pk'):
+        data["fields"][pi.input_field.pk] = pi.value
+
+    return JsonResponse({"data": data})
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+def fast_template_save(request):
+    request_data = json.loads(request.body)
+    data = request_data["data"]
+    if request_data["pk"] == -1:
+        p = ParaclinicTemplateName(research=DResearches.objects.get(pk=request_data["research_pk"]),
+                                   title=data["title"],
+                                   hide=data["hide"])
+        p.save()
+    else:
+        p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
+        p.title = data["title"]
+        p.hide = data["hide"]
+        p.save()
+    to_delete = []
+    has = []
+    for pi in ParaclinicTemplateField.objects.filter(template_name=p):
+        if str(pi.input_field.pk) not in data["fields"]:
+            to_delete.append(pi.pk)
+            has.append(pi.input_field.pk)
+        elif data["fields"][str(pi.input_field.pk)] != pi.value:
+            pi.value = data["fields"][str(pi.input_field.pk)]
+            pi.save()
+            has.append(pi.input_field.pk)
+    ParaclinicTemplateField.objects.filter(pk__in=to_delete).delete()
+    for pk in data["fields"]:
+        pki = int(pk)
+        if pki not in has:
+            ParaclinicTemplateField(template_name=p, input_field_id=pki, value=data["fields"][pk]).save()
+    return JsonResponse({"pk": p.pk})

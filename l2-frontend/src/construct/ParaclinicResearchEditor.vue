@@ -24,7 +24,7 @@
             <button class="btn btn-blue-nb"
                     type="button"
                     style="border-radius: 0;width: 100%;"
-                    :disabled="has_unsaved"
+                    :disabled="has_unsaved || loaded_pk < 0"
                     @click="f_templates()">
               Шаблоны быстрого ввода
             </button>
@@ -157,28 +157,19 @@
       <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
       <button class="btn btn-blue-nb" :disabled="!valid" @click="save">Сохранить</button>
     </div>
-    <modal v-if="f_templates_open" ref="modalTemplatesEdit" @close="f_templates_hide" show-footer="true" white-bg="true" min-width="85%" margin-top>
-        <span slot="header">Настройка шаблонов быстрого ввода ({{title}})</span>
-        <div slot="body" style="min-height: 140px" class="registry-body">
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button @click="f_templates_hide" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Закрыть
-              </button>
-            </div>
-          </div>
-        </div>
-      </modal>
+    <fast-templates-editor v-if="f_templates_open"
+                           :title="title"
+                           :research_pk="loaded_pk"
+                           :groups="groups"
+    />
   </div>
 </template>
 
 <script>
   import construct_point from '../api/construct-point'
+  import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
   import VueCollapse from 'vue2-collapse'
-  import Modal from '../ui-cards/Modal'
 
   import Vue from 'vue'
 
@@ -186,7 +177,7 @@
 
   export default {
     name: 'paraclinic-research-editor',
-    components: {Modal},
+    components: {FastTemplatesEditor},
     props: {
       pk: {
         type: Number,
@@ -245,6 +236,7 @@
         if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
+      this.$root.$on('hide_fte', () => this.f_templates_hide())
     },
     computed: {
       valid() {

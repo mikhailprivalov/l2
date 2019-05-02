@@ -12,15 +12,7 @@
       <div style="overflow-y: auto;overflow-x:hidden;">
         <div class="direction" v-for="direction in directions_history">
           <div>
-            Направление №<a href="#" @click.prevent="print_direction(direction.pk)">{{direction.pk}}</a> от
-            {{direction.date}}
-          </div>
-          <hr/>
-          <div>
-            {{direction.patient}}
-          </div>
-          <div>
-            Карта: {{direction.card}}
+            {{direction.patient}}, {{direction.card}}
           </div>
           <div v-for="i in direction.iss" class="research-row">
             <div class="row">
@@ -38,8 +30,7 @@
           <div class="row">
             <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
             <div class="col-xs-7 text-right">
-              <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать
-                результатов</a>
+              <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
             </div>
           </div>
         </div>
@@ -172,10 +163,10 @@
   import patients_point from './api/patients-point'
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
-  import DateFieldNav from './DateFieldNav'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
   import MKBField from './MKBField'
+  import DateFieldNav from './DateFieldNav'
   import FormulaField from './FormulaField'
 
   export default {

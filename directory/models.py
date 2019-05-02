@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
 from researches.models import Tubes
@@ -162,17 +162,33 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
 
+
 class ParaclinicTemplateName(models.Model):
+    DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
+
     title = models.CharField(max_length=255, help_text='Название шаблона запонение полей')
-    research = models.ForeignKey(Researches, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, help_text="Скрыть шаблон")
+    research = models.ForeignKey(Researches, on_delete=models.CASCADE, db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрыть шаблон")
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.research, self.hide)
 
+    @staticmethod
+    def make_default(research: Researches) -> 'ParaclinicTemplateName':
+        if not ParaclinicTemplateName.objects.filter(research=research,
+                                                     title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE).exists():
+            with transaction.atomic():
+                p = ParaclinicTemplateName(research=research,
+                                           title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+                p.save()
+                for f in ParaclinicInputField.objects.filter(group__research=research):
+                    ParaclinicTemplateField(template_name=p, input_field=f, value=f.default_value).save()
+        return ParaclinicTemplateName.objects.get(research=research,
+                                                  title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+
 
 class ParaclinicTemplateField(models.Model):
-    template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE)
+    template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE, db_index=True)
     input_field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE)
     value = models.TextField(help_text='Значение')
 
