@@ -2384,7 +2384,7 @@ def directions_patient_history(request):
 
     for i in directions.Issledovaniya.objects.filter(doc_confirmation__isnull=False,
                                                      research=iss.research,
-                                                     napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation'):
+                                                     napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation').exclude(pk=request_data["pk"]):
         data.append({
             "direction": i.napravleniye.pk,
             "date": strdate(i.time_confirmation)
