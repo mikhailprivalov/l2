@@ -50,6 +50,7 @@ urlpatterns = [
     path('directions/paraclinic_result_confirm', views.directions_paraclinic_confirm),
     path('directions/paraclinic_result_confirm_reset', views.directions_paraclinic_confirm_reset),
     path('directions/paraclinic_result_history', views.directions_paraclinic_history),
+    path('directions/patient-history', views.directions_patient_history),
     path('statistics-tickets/types', views.statistics_tickets_types),
     path('statistics-tickets/send', views.statistics_tickets_send),
     path('statistics-tickets/get', views.statistics_tickets_get),

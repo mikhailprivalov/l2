@@ -194,6 +194,17 @@ async function getRmisDirection(pk) {
   return {}
 }
 
+async function paraclinicResultPatientHistory(pk) {
+  try {
+    const response = await HTTP.post('directions/patient-history', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 
 export default {
   sendDirections,
@@ -212,4 +223,5 @@ export default {
   getResultsReport,
   getRmisDirections,
   getRmisDirection,
+  paraclinicResultPatientHistory,
 }

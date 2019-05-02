@@ -2374,3 +2374,20 @@ def fast_template_save(request):
         if pki not in has:
             ParaclinicTemplateField(template_name=p, input_field_id=pki, value=data["fields"][pk]).save()
     return JsonResponse({"pk": p.pk})
+
+
+def directions_patient_history(request):
+    data = []
+    request_data = json.loads(request.body)
+
+    iss = directions.Issledovaniya.objects.get(pk=request_data["pk"])
+
+    for i in directions.Issledovaniya.objects.filter(doc_confirmation__isnull=False,
+                                                     research=iss.research,
+                                                     napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation'):
+        data.append({
+            "direction": i.napravleniye.pk,
+            "date": strdate(i.time_confirmation)
+        })
+
+    return JsonResponse({"data": data})

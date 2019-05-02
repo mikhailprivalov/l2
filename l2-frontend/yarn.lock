@@ -6055,6 +6055,14 @@ vue-loader@^13.7.1:
   dependencies:
     vue "^2.1.10"
 
+vue-my-dropdown@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/vue-my-dropdown/-/vue-my-dropdown-2.1.0.tgz#01e09c8779916126882a1c838e60846fb772faa0"
+  integrity sha512-X48mvxqn6CissNJ9Xfh2m73iEjqi+a7yV9qvegzbfSOFTByGbcpAix2wm+SVqhtyYTqJNGx8widcNONE89h9jw==
+  dependencies:
+    vue "^2.4.2"
+    vue-template-compiler "^2.4.2"
+
 vue-resize@^0.4.3:
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/vue-resize/-/vue-resize-0.4.5.tgz#4777a23042e3c05620d9cbda01c0b3cc5e32dcea"
@@ -6072,6 +6080,14 @@ vue-style-loader@^3.0.0:
   dependencies:
     hash-sum "^1.0.2"
     loader-utils "^1.0.2"
+
+vue-template-compiler@^2.4.2:
+  version "2.6.10"
+  resolved "https://registry.yarnpkg.com/vue-template-compiler/-/vue-template-compiler-2.6.10.tgz#323b4f3495f04faa3503337a82f5d6507799c9cc"
+  integrity sha512-jVZkw4/I/HT5ZMvRnhv78okGusqe0+qH2A0Em0Cp8aq78+NK9TII263CDVz2QXZsIT+yyV/gZc/j/vlwa+Epyg==
+  dependencies:
+    de-indent "^1.0.2"
+    he "^1.1.0"
 
 vue-template-compiler@^2.5.16:
   version "2.6.8"

@@ -69,7 +69,23 @@
       </div>
       <div class="results-editor">
         <div v-for="row in data.researches">
-          <div class="research-title">{{row.research.title}}</div>
+          <div class="research-title">
+            <div class="research-left">
+              {{row.research.title}}
+              <dropdown :visible="research_open_history === row.pk" @clickout="hide_results">
+                <a title="Результаты по услуге у пациента" href="#" @click.prevent="open_results(row.pk)">
+                  <i class="fa fa-list"></i>
+                </a>
+                <div class="results-history" slot="dropdown">
+                  <ul>
+                    <li v-for="r in research_history">Результат от {{r.date}} <a href="#" @click.prevent="print_results(r.direction)">печать</a></li>
+                    <li v-if="research_history.length === 0">результатов не найдено</li>
+                  </ul>
+                </div>
+              </dropdown>
+            </div>
+            <div class="research-right"></div>
+          </div>
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
@@ -168,10 +184,11 @@
   import MKBField from './MKBField'
   import DateFieldNav from './DateFieldNav'
   import FormulaField from './FormulaField'
+  import dropdown from 'vue-my-dropdown';
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown},
     data() {
       return {
         pk: '',
@@ -184,6 +201,8 @@
         anamnesis_edit: false,
         anamnesis_data: {},
         new_anamnesis: null,
+        research_open_history: null,
+        research_history: [],
       }
     },
     watch: {
@@ -215,6 +234,25 @@
       vm.load_history()
     },
     methods: {
+      open_results(pk) {
+        if (this.research_open_history) {
+          this.hide_results()
+          return;
+        }
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.research_history = [];
+        directions_point.paraclinicResultPatientHistory(pk).then(({data}) => {
+          vm.research_history = data
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.research_open_history = pk;
+        })
+      },
+      hide_results() {
+        this.research_history = [];
+        this.research_open_history = null;
+      },
       r(research) {
         if (research.confirmed) {
           return true;
@@ -417,6 +455,7 @@
         this.anamnesis_edit = false
         this.new_anamnesis = null
         this.data = {ok: false}
+        this.research_open_history = null;
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
@@ -533,6 +572,32 @@
     padding: 5px;
     font-weight: bold;
     z-index: 2;
+  }
+
+  .research-left {
+    text-align: left;
+  }
+
+  .research-right {
+    text-align: right;
+  }
+
+  .results-history {
+    margin-top: -12px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    ul {
+      padding-left: 20px;
+      margin: 0;
+      li {
+        font-weight: normal;
+        a {
+          font-weight: bold;
+        }
+      }
+    }
   }
 
   .results-editor {
