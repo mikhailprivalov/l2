@@ -91,7 +91,7 @@
                 </div>
               </dropdown>
             </div>
-            <div class="research-right" v-if="fte">
+            <div class="research-right" v-if="fte && !row.confirmed">
               <div class="right-f">
                 <select-picker-m v-model="templates[row.pk]"
                                  :search="true"
@@ -507,7 +507,9 @@
         }
         for (const g of row.research.groups) {
           for (const f of g.fields) {
-            f.value = data[f.pk] || '';
+            if (![3].includes(f.field_type)) {
+              f.value = data[f.pk] || '';
+            }
           }
         }
       },
