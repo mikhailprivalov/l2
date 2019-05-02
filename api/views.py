@@ -27,7 +27,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory
 from contracts.models import Company
-from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ParaclinicTemplateName, ParaclinicTemplateField
+from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ParaclinicTemplateName, ParaclinicTemplateField, ResearchSite
 from laboratory import settings
 from laboratory.decorators import group_required
 from laboratory.utils import strdate, strdatetime, tsdatetime
@@ -322,9 +322,10 @@ def departments(request):
     can_edit = request.user.is_superuser or request.user.doctorprofile.has_group(
         'Создание и редактирование пользователей')
     if request.method == "GET":
+        deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
+                x in Podrazdeleniya.objects.all().order_by("pk")]
         return JsonResponse(
-            {"departments": [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
-                             x in Podrazdeleniya.objects.all().order_by("pk")],
+            {"departments": deps,
              "can_edit": can_edit,
              "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if
                        (x[0] == 3 and SettingManager.get("paraclinic_module", default='false', default_type='b'))
@@ -420,7 +421,8 @@ class Researches(View):
                  "autoadd": autoadd,
                  "addto": addto,
                  "code": r.code,
-                 "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type)
+                 "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
+                 "site_type": r.site_type.pk if r.site_type else None
                  })
         return JsonResponse({"researches": deps})
 
@@ -443,6 +445,33 @@ def current_user_info(request):
         ret["doc_pk"] = request.user.doctorprofile.pk
         ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
+        d = ResearchSite.objects.filter(hide=False).order_by('title')
+        e4 = []
+        if DResearches.objects.filter(hide=False, site_type__isnull=True):
+            e4 = [
+                {
+                    "pk": None,
+                    "title": 'По-умолчанию',
+                    'type': 0,
+                    "extended": True,
+                }
+            ]
+        ret["extended_departments"] = {
+            4: [*e4,
+                *[{
+                    "pk": x.pk,
+                    "title": x.title,
+                    "type": 0,
+                    "extended": True,
+                } for x in d.filter(site_type=0)]
+            ],
+            1: [{
+                "pk": x.pk,
+                "title": x.title,
+                "type": 1,
+                "extended": True,
+            } for x in d.filter(site_type=1)],
+        }
     return JsonResponse(ret)
 
 
@@ -560,7 +589,7 @@ def patients_search_card(request):
 
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
         docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
-                                       document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])\
+                                       document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
             .distinct("pk", "number", "document_type", "serial").order_by('pk')
         data.append({"type_title": card_type.title,
                      "num": row.number,
@@ -1456,12 +1485,14 @@ def directions_services(request):
     dn = directions.Napravleniya.objects.filter(pk=pk)
     if dn.exists():
         n = dn[0]
-        if directions.Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
+        if directions.Issledovaniya.objects.filter(
+                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
 
             response["ok"] = True
             researches = []
-            for i in directions.Issledovaniya.objects.filter(napravleniye=n).filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).distinct():
+            for i in directions.Issledovaniya.objects.filter(napravleniye=n).filter(
+                    Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).distinct():
                 researches.append({"title": i.research.title,
                                    "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title()})
             response["direction_data"] = {
@@ -1474,7 +1505,8 @@ def directions_services(request):
                 "imported_org": "" if not n.imported_org else n.imported_org.title,
                 "visit_who_mark": "" if not n.visit_who_mark else "{}, {}".format(n.visit_who_mark.get_fio(),
                                                                                   n.visit_who_mark.podrazdeleniye.title),
-                "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title, n.istochnik_f.title),
+                "fin_source": "" if not n.istochnik_f else "{} - {}".format(n.istochnik_f.base.title,
+                                                                            n.istochnik_f.title),
             }
             response["researches"] = researches
             response["loaded_pk"] = pk
@@ -1508,7 +1540,8 @@ def directions_mark_visit(request):
     f = False
     if dn.exists():
         n = dn[0]
-        if directions.Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
+        if directions.Issledovaniya.objects.filter(
+                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
             if not cancel:
                 n.visit_date = timezone.now()
                 n.visit_who_mark = request.user.doctorprofile
@@ -1543,7 +1576,8 @@ def directions_mark_visit(request):
                 else:
                     response["message"] = "Отмена посещения возможна только в течении {} мин.".format(rtm)
             slog.Log(key=pk, type=5001,
-                     body=json.dumps({"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}),
+                     body=json.dumps(
+                         {"Посещение": "отмена" if cancel else "да", "Дата и время": response["visit_date"]}),
                      user=request.user.doctorprofile).save()
             f = True
     if not f:
@@ -1920,7 +1954,7 @@ def patients_search_l2_card(request):
 
         for row in l2_cards.filter(is_archive=False):
             docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
-                                           document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС'])\
+                                           document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
                 .distinct("pk", "number", "document_type", "serial").order_by('pk')
             data.append({"type_title": row.base.title,
                          "num": row.number,
@@ -1945,20 +1979,22 @@ def patients_get_card_data(request, card_id):
     c = model_to_dict(card)
     i = model_to_dict(card.individual)
     docs = [{**model_to_dict(x), "type_title": x.document_type.title}
-            for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type", "serial").order_by('pk')]
+            for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type",
+                                                                                  "serial").order_by('pk')]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     return JsonResponse({**i, **c,
                          "docs": docs,
                          "main_docs": card.get_card_documents(),
                          "has_rmis_card": rc.exists(),
                          "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""},
-                                          *[model_to_dict(x) for x in Company.objects.filter(active_status=True).order_by('title')]],
+                                          *[model_to_dict(x) for x in
+                                            Company.objects.filter(active_status=True).order_by('title')]],
                          "custom_workplace": card.work_place != "",
                          "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
                          "district": card.district_id or -1,
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
                                        *[{"id": x.pk, "title": x.title}
-                                            for x in District.objects.all().order_by('-sort_weight', '-id')]],
+                                         for x in District.objects.all().order_by('-sort_weight', '-id')]],
                          "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
                          "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
@@ -2040,7 +2076,9 @@ def patients_card_save(request):
     card_pk = -1
     individual_pk = -1
 
-    if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
+    if "new_individual" in request_data and (
+            request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and \
+            request_data["card_pk"] < 0:
         i = Individual(family=request_data["family"],
                        name=request_data["name"],
                        patronymic=request_data["patronymic"],
@@ -2049,11 +2087,13 @@ def patients_card_save(request):
         i.save()
     else:
         changed = False
-        i = Individual.objects.get(pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(pk=request_data["card_pk"]).individual.pk)
+        i = Individual.objects.get(
+            pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(
+                pk=request_data["card_pk"]).individual.pk)
         if i.family != request_data["family"] \
-                or i.name != request_data["name"]\
-                or i.patronymic != request_data["patronymic"]\
-                or str(i.birthday) != request_data["birthday"]\
+                or i.name != request_data["name"] \
+                or i.patronymic != request_data["patronymic"] \
+                or str(i.birthday) != request_data["birthday"] \
                 or i.sex != request_data["sex"]:
             changed = True
         i.family = request_data["family"]

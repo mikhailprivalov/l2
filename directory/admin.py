@@ -54,8 +54,7 @@ class RefFractions(admin.ModelAdmin):
     podr.admin_order_field = 'research__podrazdeleniye'
 
 
-
-
+admin.site.register(models.ResearchSite)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.ParaclinicInputGroups)
