@@ -863,8 +863,8 @@ def researches_update(request):
                 res.hide = hide
             if res:
                 res.save()
-                ParaclinicTemplateName.objects.update_or_create(title='default', research=res)
-                templat_obj = ParaclinicTemplateName.objects.get(title='default', research=res)
+                ParaclinicTemplateName.objects.update_or_create(title='По умолчанию', research=res)
+                templat_obj = ParaclinicTemplateName.objects.get(title='По умолчанию', research=res)
                 for group in groups:
                     g = None
                     pk = group["pk"]
@@ -912,7 +912,8 @@ def researches_update(request):
 
                             if f.default_value == '':
                                 continue
-                            ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,input_field=f,value=f.default_value)
+                            ParaclinicTemplateField.objects.update_or_create(template_name=templat_obj,
+                                                                             input_field=f, value=f.default_value)
 
                 response["ok"] = True
         slog.Log(key=pk, type=10000, body=json.dumps(request_data), user=request.user.doctorprofile).save()
