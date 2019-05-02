@@ -205,6 +205,17 @@ async function paraclinicResultPatientHistory(pk) {
   return {}
 }
 
+async function paraclinicDataByFields(pk) {
+  try {
+    const response = await HTTP.post('directions/data-by-fields', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 
 export default {
   sendDirections,
@@ -224,4 +235,5 @@ export default {
   getRmisDirections,
   getRmisDirection,
   paraclinicResultPatientHistory,
+  paraclinicDataByFields,
 }

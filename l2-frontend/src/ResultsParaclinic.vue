@@ -72,19 +72,33 @@
           <div class="research-title">
             <div class="research-left">
               {{row.research.title}}
-              <dropdown :visible="research_open_history === row.pk" @clickout="hide_results">
-                <a title="Результаты по услуге у пациента" href="#" @click.prevent="open_results(row.pk)">
-                  <i class="fa fa-list"></i>
+              <dropdown :visible="research_open_history === row.pk"
+                        :position='["left", "bottom", "left", "top"]'
+                        @clickout="hide_results">
+                <a style="font-weight: normal"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  (другие результаты пациента)
                 </a>
                 <div class="results-history" slot="dropdown">
                   <ul>
-                    <li v-for="r in research_history">Результат от {{r.date}} <a href="#" @click.prevent="print_results(r.direction)">печать</a></li>
+                    <li v-for="r in research_history">
+                      Результат от {{r.date}}
+                      <a href="#" @click.prevent="print_results(r.direction)">печать</a>
+                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать результаты</a>
+                    </li>
                     <li v-if="research_history.length === 0">результатов не найдено</li>
                   </ul>
                 </div>
               </dropdown>
             </div>
-            <div class="research-right"></div>
+            <div class="research-right" v-if="fte">
+              <div class="right-f">
+                <select-picker-m v-model="templates[row.pk]"
+                                 :search="true"
+                                 :options="row.templates.map(x => ({label: x.title, value: x.pk}))" />
+              </div>
+              <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])">Загрузить шаблон</button>
+            </div>
           </div>
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
@@ -179,6 +193,8 @@
   import patients_point from './api/patients-point'
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
+  import SelectPickerM from './SelectPickerM'
+  import researches_point from './api/researches-point'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
   import MKBField from './MKBField'
@@ -188,7 +204,7 @@
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM},
     data() {
       return {
         pk: '',
@@ -203,6 +219,7 @@
         new_anamnesis: null,
         research_open_history: null,
         research_history: [],
+        templates: {},
       }
     },
     watch: {
@@ -463,6 +480,37 @@
       print_results(pk) {
         this.$root.$emit('print:results', [pk])
       },
+      copy_results(row, pk) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicDataByFields(pk).then(({data}) => {
+          this.hide_results();
+          this.replace_fields_values(row, data);
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      load_template(row, pk) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData(parseInt(pk)).then(({data: {fields: data, title}}) => {
+          this.replace_fields_values(row, data, title);
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      replace_fields_values(row, data, fromTemplate = null) {
+        let vm = this
+        let msg = `Вы действительно хотите заменить значения из ${fromTemplate ? 'шаблона "' + fromTemplate + '"' : 'результата'}?`;
+        if (!confirm(msg)) {
+          return
+        }
+        for (const g of row.research.groups) {
+          for (const f of g.fields) {
+            f.value = data[f.pk] || '';
+          }
+        }
+      },
       clear_val(field) {
         field.value = ''
       },
@@ -487,6 +535,9 @@
           return this.new_anamnesis;
         }
         return this.data.anamnesis;
+      },
+      fte() {
+        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
       },
       pk_c() {
         let lpk = this.pk.trim()
@@ -572,18 +623,35 @@
     padding: 5px;
     font-weight: bold;
     z-index: 2;
+    display: flex;
   }
 
   .research-left {
     text-align: left;
+    width: calc(100% - 385px);
   }
 
   .research-right {
     text-align: right;
+    width: 385px;
+    margin-top: -5px;
+    margin-right: -5px;
+    margin-bottom: -5px;
+    button {
+      border-radius: 0;
+    }
+  }
+
+  .right-f {
+    width: 220px;
+    display: inline-block;
+    /deep/ .btn {
+      border-radius: 0;
+    }
   }
 
   .results-history {
-    margin-top: -12px;
+    margin-top: -34px;
     padding: 8px;
     background: #fff;
     border-radius: 4px;
@@ -595,6 +663,14 @@
         font-weight: normal;
         a {
           font-weight: bold;
+          display: inline-block;
+          padding: 2px 4px;
+          background: rgba(#000, .03);
+          border-radius: 4px;
+          margin-left: 3px;
+          &:hover {
+            background: rgba(#000, .1);
+          }
         }
       }
     }
@@ -843,6 +919,7 @@
 
   .mkb10 {
     margin-right: -1px;
+    z-index: 0;
   }
 
   .mkb10 /deep/ .input-group {
@@ -855,9 +932,11 @@
   }
 
   .mkb10 /deep/ ul {
+    position: relative;
     width: auto;
     right: -250px;
     font-size: 13px;
+    z-index: 1000;
   }
 
   .mkb10 /deep/ ul li {

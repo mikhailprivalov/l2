@@ -436,6 +436,7 @@ def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
             "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b'),
+            "l2_fast_templates": SettingManager.get("l2_fast_templates", default='false', default_type='b'),
         }}
     if ret["auth"]:
         ret["username"] = request.user.username
@@ -1295,6 +1296,7 @@ def directions_paraclinic_form(request):
                         "title": i.research.title,
                         "groups": []
                     },
+                    "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
                     "allow_reset_confirm": ((
@@ -1302,6 +1304,17 @@ def directions_paraclinic_form(request):
                                                 str(x) for x in
                                                 request.user.groups.all()]) and i.time_confirmation is not None,
                 }
+
+                ParaclinicTemplateName.make_default(i.research)
+
+                rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
+
+                for rt in rts.order_by('pk'):
+                    iss["templates"].append({
+                        "pk": rt.pk,
+                        "title": rt.title,
+                    })
+
                 for group in ParaclinicInputGroups.objects.filter(research=i.research, hide=False).order_by("order"):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                          "hide": group.hide, "fields": []}
@@ -2382,12 +2395,25 @@ def directions_patient_history(request):
 
     iss = directions.Issledovaniya.objects.get(pk=request_data["pk"])
 
-    for i in directions.Issledovaniya.objects.filter(doc_confirmation__isnull=False,
+    for i in directions.Issledovaniya.objects.filter(time_confirmation__isnull=False,
                                                      research=iss.research,
                                                      napravleniye__client__individual=iss.napravleniye.client.individual).order_by('-time_confirmation').exclude(pk=request_data["pk"]):
         data.append({
+            "pk": i.pk,
             "direction": i.napravleniye.pk,
             "date": strdate(i.time_confirmation)
         })
 
+    return JsonResponse({"data": data})
+
+
+def directions_data_by_fields(request):
+    data = {}
+    request_data = json.loads(request.body)
+
+    i = directions.Issledovaniya.objects.get(pk=request_data["pk"])
+    if i.time_confirmation:
+        for field in ParaclinicInputField.objects.filter(group__research=i.research, group__hide=False, hide=False):
+            if directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
+                data[field.pk] = directions.ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
     return JsonResponse({"data": data})

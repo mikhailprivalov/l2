@@ -20,7 +20,7 @@
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
-          <span class="input-group-btn">
+          <span class="input-group-btn" v-if="fte">
             <button class="btn btn-blue-nb"
                     type="button"
                     style="border-radius: 0;width: 100%;"
@@ -239,6 +239,9 @@
       this.$root.$on('hide_fte', () => this.f_templates_hide())
     },
     computed: {
+      fte() {
+        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+      },
       valid() {
         return this.norm_title.length > 0 && !this.cancel_do
       },

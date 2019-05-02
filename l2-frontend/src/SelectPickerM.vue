@@ -1,6 +1,8 @@
 <template>
   <select v-selectpicker ref="self" class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано"
-          data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор" data-container="body">
+          data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор"
+          :data-live-search="search"
+          data-container="body">
     <option :value="option.value" v-for="option in options" :selected="option.value === value">{{ option.label }}
     </option>
   </select>
@@ -15,6 +17,11 @@
         required: true
       },
       value: {},
+      search: {
+        required: false,
+        type: Boolean,
+        default: false,
+      }
     },
     methods: {
       update_val(v) {

@@ -463,7 +463,7 @@
     padding: 5px;
     font-weight: bold;
     position: sticky;
-    top: 30px;
+    top: 0;
     z-index: 1;
   }
 
