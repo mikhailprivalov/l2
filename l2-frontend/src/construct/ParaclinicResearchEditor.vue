@@ -20,6 +20,15 @@
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
+          <span class="input-group-btn">
+            <button class="btn btn-blue-nb"
+                    type="button"
+                    style="border-radius: 0;width: 100%;"
+                    :disabled="has_unsaved"
+                    @click="f_templates()">
+              Шаблоны быстрого ввода
+            </button>
+          </span>
         </div>
       </div>
     </div>
@@ -148,6 +157,20 @@
       <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
       <button class="btn btn-blue-nb" :disabled="!valid" @click="save">Сохранить</button>
     </div>
+    <modal v-if="f_templates_open" ref="modalTemplatesEdit" @close="f_templates_hide" show-footer="true" white-bg="true" min-width="85%" margin-top>
+        <span slot="header">Настройка шаблонов быстрого ввода ({{title}})</span>
+        <div slot="body" style="min-height: 140px" class="registry-body">
+        </div>
+        <div slot="footer">
+          <div class="row">
+            <div class="col-xs-4">
+              <button @click="f_templates_hide" class="btn btn-primary-nb btn-blue-nb" type="button">
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      </modal>
   </div>
 </template>
 
@@ -155,6 +178,7 @@
   import construct_point from '../api/construct-point'
   import * as action_types from '../store/action-types'
   import VueCollapse from 'vue2-collapse'
+  import Modal from '../ui-cards/Modal'
 
   import Vue from 'vue'
 
@@ -162,6 +186,7 @@
 
   export default {
     name: 'paraclinic-research-editor',
+    components: {Modal},
     props: {
       pk: {
         type: Number,
@@ -192,7 +217,10 @@
           {sep: '. ', title: 'Точка и пробел'},
           {sep: '\n', title: 'Перенос строки'},
         ],
-        has_unsaved: false
+        has_unsaved: false,
+        f_templates_open: false,
+        templates: [],
+        opened_template_data: {},
       }
     },
     watch: {
@@ -245,6 +273,12 @@
       },
     },
     methods: {
+      f_templates() {
+        this.f_templates_open = true;
+      },
+      f_templates_hide() {
+        this.f_templates_open = false;
+      },
       is_first_in_template(i) {
         return i === 0
       },
@@ -438,6 +472,26 @@
 </script>
 
 <style scoped lang="scss">
+  .modal-mask {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  /deep/ .panel-flt {
+    margin: 41px;
+    align-self: stretch !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /deep/ .panel-body {
+    flex: 1;
+    padding: 0;
+    height: calc(100% - 91px);
+    min-height: 200px;
+  }
+
   .top-editor {
     display: flex;
     flex: 0 0 68px;
