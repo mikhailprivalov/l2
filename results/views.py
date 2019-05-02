@@ -1196,17 +1196,17 @@ def result_print(request):
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual.pk
 
-        def first_pages(canvas, document):
-            canvas.saveState()
-            # вывести интерактивную форму "текст"
-            form = canvas.acroForm
-            # canvas.drawString(25, 780, '')
-            form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
-                           x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
-                           width=470, height=18, textColor=black, forceBorder=False)
-            canvas.restoreState()
+    def first_pages(canvas, document):
+        canvas.saveState()
+        # вывести интерактивную форму "текст"
+        form = canvas.acroForm
+        # canvas.drawString(25, 780, '')
+        form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
+                       x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+                       width=470, height=18, textColor=black, forceBorder=False)
+        canvas.restoreState()
 
-    doc.build(naprs,onFirstPage=first_pages)
+    doc.build(naprs, onFirstPage=first_pages)
 
     pdf = buffer.getvalue()
     buffer.close()
