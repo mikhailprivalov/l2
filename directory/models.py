@@ -57,6 +57,7 @@ class ResearchSite(models.Model):
     TYPES = (
         (0, 'Консультация врача'),
         (1, 'Стоматалогия'),
+        (2, 'Лечение'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -196,10 +197,6 @@ class ParaclinicTemplateField(models.Model):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)
 
 
-
-
-
-
 class AutoAdd(models.Model):
     """
     Перечисление связей исследований, которые могут быть назначены только вместе (A только с B)
@@ -272,7 +269,6 @@ class MaterialVariants(models.Model):
 #     title = models.CharField(max_length=255, help_text='Название параметра')
 
 
-
 class Fractions(models.Model):
     """
     Фракции для исследований
@@ -321,6 +317,7 @@ class Absorption(models.Model):
         verbose_name = 'Поглощение фракции'
         verbose_name_plural = 'Поглощения фракций'
 
+
 class NameRouteSheet(models.Model):
     """
     Route list for research. Маршрутный лист для исследований
@@ -337,6 +334,7 @@ class NameRouteSheet(models.Model):
     class Meta:
         verbose_name = 'Cписки маршрутов'
         verbose_name_plural = 'Списки маршрутов'
+
 
 class RouteSheet(models.Model):
     name_route_sheet = models.ForeignKey(NameRouteSheet, db_index=True, help_text='Наименование перечня',on_delete=models.CASCADE)

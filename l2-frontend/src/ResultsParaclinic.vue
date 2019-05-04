@@ -377,6 +377,7 @@
         })
       },
       save(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -396,6 +397,7 @@
         })
       },
       save_and_confirm(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -418,6 +420,7 @@
         })
       },
       confirm(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -438,6 +441,7 @@
         })
       },
       reset_confirm(iss) {
+        this.hide_results();
         let vm = this
         let msg = `Сбросить подтверждение исследования ${iss.research.title}?`
         let doreset = confirm(msg)
@@ -509,6 +513,16 @@
           for (const f of g.fields) {
             if (![3].includes(f.field_type)) {
               f.value = data[f.pk] || '';
+            }
+          }
+        }
+      },
+      append_fields_values(row, data) {
+        let vm = this
+        for (const g of row.research.groups) {
+          for (const f of g.fields) {
+            if (![3].includes(f.field_type)) {
+              this.append_value(f, data[f.pk] || '');
             }
           }
         }
@@ -629,6 +643,7 @@
   }
 
   .research-left {
+    position: relative;
     text-align: left;
     width: calc(100% - 385px);
   }
@@ -653,7 +668,8 @@
   }
 
   .results-history {
-    margin-top: -34px;
+    margin-top: -100px;
+    margin-left: -295px;
     padding: 8px;
     background: #fff;
     border-radius: 4px;
