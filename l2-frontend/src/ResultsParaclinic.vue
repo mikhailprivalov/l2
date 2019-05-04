@@ -84,7 +84,7 @@
                     <li v-for="r in research_history">
                       Результат от {{r.date}}
                       <a href="#" @click.prevent="print_results(r.direction)">печать</a>
-                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать результаты</a>
+                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
                     </li>
                     <li v-if="research_history.length === 0">результатов не найдено</li>
                   </ul>
@@ -498,7 +498,7 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         researches_point.getTemplateData(parseInt(pk)).then(({data: {fields: data, title}}) => {
-          this.replace_fields_values(row, data, title);
+          this.append_fields_values(row, data, title);
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
@@ -517,8 +517,12 @@
           }
         }
       },
-      append_fields_values(row, data) {
+      append_fields_values(row, data, fromTemplate = null) {
         let vm = this
+        let msg = `Вы действительно хотите дописать значения из ${fromTemplate ? 'шаблона "' + fromTemplate + '"' : 'результата'}?`;
+        if (!confirm(msg)) {
+          return
+        }
         for (const g of row.research.groups) {
           for (const f of g.fields) {
             if (![3].includes(f.field_type)) {
@@ -668,8 +672,9 @@
   }
 
   .results-history {
-    margin-top: -100px;
+    margin-top: -95px;
     margin-left: -295px;
+    margin-right: -100px;
     padding: 8px;
     background: #fff;
     border-radius: 4px;
