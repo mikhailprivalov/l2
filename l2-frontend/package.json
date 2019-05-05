@@ -30,6 +30,7 @@
     "vue-tippy": "^2.0.12",
     "vue2-collapse": "^1.0.11",
     "vue2-typeahead": "^1.0.30",
+    "vuejs-dialog": "^1.4.0",
     "vuex": "^3.0.1",
     "webpack-bundle-tracker": "^0.3.0"
   },
