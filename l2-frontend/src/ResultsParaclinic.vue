@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto;overflow-x:hidden;">
+      <div style="overflow-y: auto;overflow-x:hidden;" class="directions">
         <div class="direction" v-for="direction in directions_history">
           <div>
             {{direction.patient}}, {{direction.card}}
@@ -37,6 +37,9 @@
         <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
           Нет данных
         </div>
+        <a v-else
+           class="btn btn-blue-nb stat"
+           :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
@@ -550,6 +553,10 @@
       }
     },
     computed: {
+      date_to_form() {
+        const date = this.date.split('.');
+        return date.join('');
+      },
       ca() {
         if (this.new_anamnesis !== null) {
           return this.new_anamnesis;
@@ -972,4 +979,16 @@
     }
   }
 
+  .directions {
+    position: relative;
+    height: calc(100% - 68px);
+    padding-bottom: 34px;
+    .stat {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: 0;
+    }
+  }
 </style>
