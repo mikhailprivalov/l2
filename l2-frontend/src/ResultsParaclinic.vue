@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto;overflow-x:hidden;">
+      <div style="overflow-y: auto;overflow-x:hidden;" class="directions">
         <div class="direction" v-for="direction in directions_history">
           <div>
             {{direction.patient}}, {{direction.card}}
@@ -37,6 +37,9 @@
         <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
           Нет данных
         </div>
+        <a v-else
+           class="btn btn-blue-nb stat"
+           :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
@@ -91,13 +94,16 @@
                 </div>
               </dropdown>
             </div>
-            <div class="research-right" v-if="fte && !row.confirmed">
-              <div class="right-f">
+            <div class="research-right" v-if="!row.confirmed">
+              <button class="btn btn-blue-nb" @click="clear_vals(row)">Очистить</button>
+              <div class="right-f" v-if="fte">
                 <select-picker-m v-model="templates[row.pk]"
                                  :search="true"
                                  :options="row.templates.map(x => ({label: x.title, value: x.pk}))" />
               </div>
-              <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])">Загрузить шаблон</button>
+              <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                Загрузить шаблон
+              </button>
             </div>
           </div>
           <div class="group" v-for="group in row.research.groups">
@@ -498,17 +504,23 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         researches_point.getTemplateData(parseInt(pk)).then(({data: {fields: data, title}}) => {
-          this.append_fields_values(row, data, title);
+          this.template_fields_values(row, data, title);
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
-      replace_fields_values(row, data, fromTemplate = null) {
-        let vm = this
-        let msg = `Вы действительно хотите заменить значения из ${fromTemplate ? 'шаблона "' + fromTemplate + '"' : 'результата'}?`;
-        if (!confirm(msg)) {
-          return
-        }
+      template_fields_values(row, dataTemplate, title) {
+        this.$dialog.alert(title, {
+          view: 'replace-append-modal',
+        }).then(({data}) => {
+          if (data === 'append') {
+            this.append_fields_values(row, dataTemplate);
+          }  else {
+            this.replace_fields_values(row, dataTemplate);
+          }
+        });
+      },
+      replace_fields_values(row, data) {
         for (const g of row.research.groups) {
           for (const f of g.fields) {
             if (![3].includes(f.field_type)) {
@@ -517,19 +529,28 @@
           }
         }
       },
-      append_fields_values(row, data, fromTemplate = null) {
-        let vm = this
-        let msg = `Вы действительно хотите дописать значения из ${fromTemplate ? 'шаблона "' + fromTemplate + '"' : 'результата'}?`;
-        if (!confirm(msg)) {
-          return
-        }
+      append_fields_values(row, data) {
         for (const g of row.research.groups) {
           for (const f of g.fields) {
-            if (![3].includes(f.field_type)) {
-              this.append_value(f, data[f.pk] || '');
+            if (![3, 1].includes(f.field_type) && data[f.pk]) {
+              this.append_value(f, data[f.pk]);
             }
           }
         }
+      },
+      clear_vals(row) {
+        this.$dialog
+        .confirm('Вы действительно хотите очистить результаты?')
+        .then(() => {
+          okmessage('Очищено')
+          for (const g of row.research.groups) {
+            for (const f of g.fields) {
+              if (![3].includes(f.field_type)) {
+                this.clear_val(f);
+              }
+            }
+          }
+        });
       },
       clear_val(field) {
         field.value = ''
@@ -550,6 +571,10 @@
       }
     },
     computed: {
+      date_to_form() {
+        const date = this.date.split('.');
+        return date.join('');
+      },
       ca() {
         if (this.new_anamnesis !== null) {
           return this.new_anamnesis;
@@ -649,25 +674,28 @@
   .research-left {
     position: relative;
     text-align: left;
-    width: calc(100% - 385px);
+    width: calc(100% - 380px);
   }
 
   .research-right {
     text-align: right;
-    width: 385px;
+    width: 380px;
     margin-top: -5px;
     margin-right: -5px;
     margin-bottom: -5px;
     button {
       border-radius: 0;
+      padding: 5px 4px;
     }
   }
 
   .right-f {
-    width: 220px;
+    width: 140px;
     display: inline-block;
     /deep/ .btn {
       border-radius: 0;
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
   }
 
@@ -972,4 +1000,16 @@
     }
   }
 
+  .directions {
+    position: relative;
+    height: calc(100% - 68px);
+    padding-bottom: 34px;
+    .stat {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: 0;
+    }
+  }
 </style>

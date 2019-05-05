@@ -41,7 +41,7 @@
           }
         }
         try {
-          return new Function("return " + s + ";")();
+          return (new Function("return " + s + ";")()) || 0;
         } catch (e) {
           console.error(e);
           return 0;
