@@ -420,7 +420,9 @@
         let r = []
         for (let rpk of this.checked_researches) {
           let res = this.research_data(rpk)
-          if ((res.department_pk === pk && !this.is_doc_ref) || (this.is_doc_ref && res.site_type === pk)) {
+          if ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2)) ||
+            (this.is_doc_ref && res.site_type === pk && res.doc_refferal) ||
+            (!res.site_type && res.doc_refferal && pk === -2)) {
             r.push(rpk)
           }
         }
