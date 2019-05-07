@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div class="directions">
+      <div class="directions" :class="{noStat: !stat_btn}">
         <div class="inner">
           <div class="direction" v-for="direction in directions_history">
             <div>
@@ -38,8 +38,8 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-        </div>
-        <a v-if="directions_history.length > 0"
+        </div>purpose
+        <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
@@ -586,6 +586,9 @@
       fte() {
         return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
       },
+      stat_btn() {
+        return (this.$store.getters.user_data.modules || {}).stat_btn;
+      },
       pk_c() {
         let lpk = this.pk.trim()
         if (lpk === '')
@@ -1006,6 +1009,9 @@
     position: relative;
     height: calc(100% - 68px);
     padding-bottom: 34px;
+    &.noStat {
+      padding-bottom: 0;
+    }
     .inner {
       height: 100%;
       overflow-y: auto;
