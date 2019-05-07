@@ -3,9 +3,11 @@
     <span slot="header">Настройка шаблонов быстрого ввода ({{title}})</span>
     <div slot="body" style="min-height: 200px" class="directions-manage" v-if="loaded">
       <div class="directions-sidebar">
-        <div @click="select_template(d.pk)" class="direction" :class="{active: d.pk === selected_template, ishidden: d.hide}"
-             v-for="d in rows">
-          <div>{{d.title}}</div>
+        <div class="inner">
+          <div @click="select_template(d.pk)" class="direction" :class="{active: d.pk === selected_template, ishidden: d.hide}"
+               v-for="d in rows">
+            <div>{{d.title}}</div>
+          </div>
         </div>
         <button class="btn btn-blue-nb" @click="add"><i class="fa fa-plus"></i> добавить</button>
       </div>
@@ -50,7 +52,7 @@
             </div>
           </div>
           <div class="center" v-if="!template_data.readonly">
-            <button class="btn btn-blue-nb" @click="save()">Сохранить</button>
+            <button class="btn btn-blue-nb" @click="save()" :disabled="(template_data.title || '').length === 0">Сохранить</button>
           </div>
         </div>
       </div>
@@ -223,10 +225,14 @@
     width: 300px;
     background: rgba(0, 0, 0, .04);
     border-right: 1px solid rgba(0, 0, 0, .16);
-    overflow-y: auto;
-    overflow-x: hidden;
     position: relative;
     padding-bottom: 34px;
+    .inner {
+      height: 100%;
+      width: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
     .btn {
       position: absolute;
       bottom: 0;
