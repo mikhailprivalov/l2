@@ -436,6 +436,7 @@ class Patients(BaseRequester):
             "individualData": {
                 "patrName": individual.patronymic,
                 "surname": individual.family,
+                "name": individual.name,
                 "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
                 "birthDate": individual.birthday,
             }
