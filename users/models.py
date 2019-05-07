@@ -32,7 +32,7 @@ class DoctorProfile(models.Model):
         (2, "Лаборант"),
     )
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
-    specialities = models.ManyToManyField(Speciality, blank=True, default=None, help_text='Специальности пользователя')
+    specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя',on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
     isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')

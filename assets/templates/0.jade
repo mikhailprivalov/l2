@@ -74,6 +74,17 @@ input(type="hidden", value=research_pk)#research_pk
                         label(for="result_comment").labtitle Комментарий
                     td(colspan="3")
                         textarea(rows="3").lab_comment.form-control#result_comment
+            if laborants.length > 0
+                tr
+                    td(colspan="4")
+                        hr
+                tr
+                    td
+                        label(for="laborant").labtitle Лаборант
+                    td(colspan="3")
+                        select(data-live-search="true", data-width="100%", data-container="body").select-b#laborant
+                            each l in laborants
+                                option(value=l.pk)= l.fio
 script.
     var nums = {};
     var groups = {};

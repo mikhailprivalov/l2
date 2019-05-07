@@ -715,6 +715,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           await patients_point.updateCdu(this.card_pk, doc)
           this.load_data();
+          okmessage('Изменения сохранены');
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
@@ -725,6 +726,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           await patients_point.updateWIA(this.card_pk, key)
           this.load_data();
+          okmessage('Изменения сохранены');
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })

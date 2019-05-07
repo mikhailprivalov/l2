@@ -109,4 +109,5 @@ def make_menu(pages, groups, superuser, current_path=None):
 def profile(request):
     if not request.user.is_authenticated:
         return {}
-    return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
+    # return {"specialities": [x.title for x in request.user.doctorprofile.specialities.all() if not x.hide]}
+    return {"specialities": [] if not request.user.doctorprofile.specialities else [request.user.doctorprofile.specialities.title]}

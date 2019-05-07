@@ -4,11 +4,7 @@
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз">
         <span>&times;</span>
       </button>
-      <TypeAhead src="/api/mkb10?keyword=:keyword" :getResponse="getResponse" :onHit="onHit" ref="d" placeholder="Диагноз (МКБ 10)"
-                 v-model="diagnos" maxlength="36" :delayTime="delayTime" :minChars="minChars"
-                 :render="renderItems"
-                 :limit="limit" :highlighting="highlighting" :selectFirst="selectFirst"
-      />
+      <m-k-b-field v-model="diagnos" />
       <div class="vich-code" v-if="need_vich_code">
         <TypeAhead src="/api/vich_code?keyword=:keyword" :getResponse="getResponse" :onHit="onHitVich" ref="v" placeholder="Код"
                    v-model="vich_code" maxlength="12" :delayTime="delayTime" :minChars="minChars"
@@ -101,6 +97,7 @@
   import Modal from './ui-cards/Modal'
   import vSelect from 'vue-select'
   import TypeAhead from 'vue2-typeahead'
+  import MKBField from './MKBField'
 
   export default {
     name: 'selected-researches',
@@ -109,6 +106,7 @@
       Modal,
       vSelect,
       TypeAhead,
+      MKBField,
     },
     props: {
       simple: {
@@ -216,7 +214,7 @@
 
           const search = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\[', '\\]',
             'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
-            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '\\.']
+            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.']
 
           for (let i = 0; i < replace.length; i++) {
             let reg = new RegExp(replace[i], 'mig')

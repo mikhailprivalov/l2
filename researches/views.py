@@ -31,6 +31,7 @@ def researches_get_one(request):
             if not isresearch:
                 iss = Issledovaniya.objects.get(pk=i)
                 res["res_id"] = i
+                res["co_executor"] = str(iss.co_executor_id or -1)
                 if not iss.doc_save:
                     res["saved"] = False
                 if not iss.doc_confirmation:

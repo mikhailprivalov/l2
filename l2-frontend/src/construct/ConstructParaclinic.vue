@@ -103,7 +103,7 @@
           }
         }
         if (d.length === 0)
-          return;
+          return [];
         return [...d, {value: -2, label: 'Консультации'}];
       },
       department_int() {

@@ -40,3 +40,7 @@ class AgeCacheAdmin(admin.ModelAdmin):
 @admin.register(models.District)
 class DistrictAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(models.DispensaryReg)
+class DispensaryRegAdmin(admin.ModelAdmin):
+    pass

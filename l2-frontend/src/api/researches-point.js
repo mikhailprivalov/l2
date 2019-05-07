@@ -44,4 +44,40 @@ async function getResearchesParams(pks) {
   return {researches: []}
 }
 
-export default {getTemplates, getResearches, getResearchesByDepartment, getResearchesParams}
+async function getFastTemplates(pk, all) {
+  try {
+    const response = await HTTP.post('researches/fast-templates', {pk, all})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {researches: []}
+}
+
+async function getTemplateData(pk) {
+  try {
+    const response = await HTTP.post('researches/fast-template-data', {pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {researches: []}
+}
+
+async function saveFastTemplate(pk, data, research_pk) {
+  try {
+    const response = await HTTP.post('researches/fast-template-save', {pk, data, research_pk})
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {researches: []}
+}
+
+export default {getTemplates, getResearches, getResearchesByDepartment,
+  getResearchesParams, getFastTemplates, getTemplateData,
+  saveFastTemplate,
+}
