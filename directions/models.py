@@ -14,6 +14,8 @@ from api.models import Application
 from laboratory.utils import strdate
 from users.models import DoctorProfile
 import contracts.models as contracts
+from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
+
 from appconf.manager import SettingManager
 
 
@@ -455,6 +457,10 @@ class Napravleniya(models.Model):
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
 
+                    #пользователю добавлять данные услуги в направления(не будут добавлены)
+                    if research in ofname.restricted_to_direct.all():
+                        continue
+
                     dir_group = -1
                     if research.direction:
                         dir_group = research.direction.pk
@@ -498,7 +504,6 @@ class Napravleniya(models.Model):
 
                     research_discount = discount_end * -1
                     research_howmany = count
-
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                   research=research, coast=research_coast, discount=research_discount,
@@ -572,9 +577,28 @@ class Napravleniya(models.Model):
     def rmis_referral_title(self) -> str:
         return self.doc.podrazdeleniye.rmis_department_title
 
+    def get_attr(self):
+        """
+        Получает на входе объект Направление
+        возвращает словарь атрибутов направлению
+        :return:
+        """
+        napr_data = {}
+        ind_data = self.client.get_data_individual()
+        napr_data['client_fio'] = ind_data['fio']
+        napr_data['client_bd'] = ind_data['born']
+        napr_data['card_num'] = ind_data['card_num']
+        napr_data['polis_n'] = self.polis_n
+        napr_data['polis_who_give'] = self.polis_who_give
+        napr_data['istochnik_f'] = self.istochnik_f.title.lower()
+
+        return napr_data
+
+
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
+
 
 class PersonContract(models.Model):
     """
@@ -603,6 +627,7 @@ class PersonContract(models.Model):
                                        patient_card = p_card, payer_card=p_payer,agent_card=p_agent)
         pers_contract.save()
 
+
 class Issledovaniya(models.Model):
     """
     Направления на исследования
@@ -622,6 +647,15 @@ class Issledovaniya(models.Model):
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
 
+    purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
+    first_time = models.BooleanField(default=False, help_text="Впервые")
+    result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
+    outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")
+    diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
+    maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
+
+    def get_stat_diagnosis(self):
+        pass
 
     def __str__(self):
         return "%d %s" % (self.napravleniye.pk, self.research.title)

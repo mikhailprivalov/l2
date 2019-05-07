@@ -77,28 +77,25 @@ def statistic_xls(request):
     borders.top = xlwt.Borders.THIN
     borders.bottom = xlwt.Borders.THIN
 
-#Отчет по динамике анализов
+    # Отчет по динамике анализов
     if tp == "directions_list":
         from collections import OrderedDict
         pk = json.loads(pk)
         dn = Napravleniya.objects.filter(pk__in=pk)
-
-        #Фильтровать направления только для типа-лабораторные
-        tmp_nap = []
-        for nap in dn:
-            if  (nap.department()!= None) and (nap.department().p_type == 2):
-                tmp_nap.append(nap)
+        cards = {}
 
         napr_client = set()
         depart_napr = OrderedDict()
         depart_fraction = OrderedDict()
         one_param = "one_param"
 
-        for d in tmp_nap:
+        for d in dn:
+            if d.department()==None or d.department().p_type != 2:
+                continue
             c = d.client
             napr_client.add(c.pk)
             # Проверить, что все направления относятся к одной карте. И тип "Лаборатория"
-            if len(napr_client) > 1 or d.department().p_type != 2:
+            if len(napr_client) > 1:
                 response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
                 ws = wb.add_sheet("Вакцинация")
                 row_num = 0
@@ -158,8 +155,8 @@ def statistic_xls(request):
                         depart_fraction[department_id].update({research_iss: dict_research_fraction})
                         depart_fraction[department_id].update({one_param: {}})
 
-        # Все возможные анализы в направлениях - стр-ра А
-        # направления по лабораториям (тип лаборатории, [номера направлений])
+    # Все возможные анализы в направлениях - стр-ра А
+    # направления по лабораториям (тип лаборатории, [номера направлений])
         obj = []
         import datetime
         for type_lab, l_napr in depart_napr.items():
@@ -175,56 +172,54 @@ def statistic_xls(request):
                 j.append(result_k)
 
         finish_obj = []
-
         for i in obj:
             for j in i:
                 j.pop(0)
                 finish_obj.append(j)
 
-    # Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
+        # Строим стр-ру {тип лаборатория: id-анализа:{(направление, дата):{id-фракции:результат,id-фракции:результат}}}
         finish_ord = OrderedDict()
         for t_lab, name_iss in depart_fraction.items():
             finish_ord[t_lab] = {}
             for iss_id, fract_dict in name_iss.items():
                 if fract_dict:
-                   frac = True
+                    frac = True
                 else:
                     frac = False
                 finish_ord[t_lab][iss_id] = {}
-                opinion_dict = {('напр','дата',):fract_dict}
+                opinion_dict = {('напр', 'дата',): fract_dict}
                 val_dict = fract_dict.copy()
                 finish_ord[t_lab][iss_id].update(opinion_dict)
                 for k, v in fract_dict.items():
                     val_dict[k] = ''
 
-# Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
-# one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
-            if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
-                for d in finish_obj:
-                    tmp_dict = {}
-                    if iss_id == d[0]:
-                        for i,j in d[3].items():
-                            val_dict[i] = j
-                        tmp_dict[(d[1],d[2],)] = deepcopy(val_dict)
-                        finish_ord[t_lab][iss_id].update(tmp_dict)
-
-# Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
-# one_param - это анализы у которых только один параметр-фракции (холестерин, глюкоза и др.)
-            key_tuple = (0,0,),
-            if iss_id == 'one_param' and frac:
-                tmp_dict = {}
-                for d in finish_obj:
-                    if key_tuple != (d[1], d[2],):
-                        for k, v in fract_dict.items():
-                            val_dict[k] = ''
-                    for u,s in val_dict.items():
-                        if d[3].get(u):
-                            val_dict[u] = d[3].get(u)
+                # Строим стр-ру {id-анализа:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+                # one_param - это анализы у которых несколько параметров-фракции (ОАК, ОАМ)
+                if (iss_id != 'one_param') or (iss_id != '') or (iss_id != None):
+                    for d in finish_obj:
+                        tmp_dict = {}
+                        if iss_id == d[0]:
+                            for i, j in d[3].items():
+                                val_dict[i] = j
                             tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
-                            key_tuple = (d[1], d[2],)
+                            finish_ord[t_lab][iss_id].update(tmp_dict)
 
-                finish_ord[t_lab][iss_id].update(tmp_dict)
+                # Строим стр-ру {one_param:{(направление, дата,):{id-фракции:результат,id-фракции:результат}}}
+                # one_param - это анализы у которых только один параметр-фракции (холестерин, глюкоза и др.)
+                key_tuple = (0, 0,),
+                if iss_id == 'one_param' and frac:
+                    tmp_dict = {}
+                    for d in finish_obj:
+                        if key_tuple != (d[1], d[2],):
+                            for k, v in fract_dict.items():
+                                val_dict[k] = ''
+                        for u, s in val_dict.items():
+                            if d[3].get(u):
+                                val_dict[u] = d[3].get(u)
+                                tmp_dict[(d[1], d[2],)] = deepcopy(val_dict)
+                                key_tuple = (d[1], d[2],)
 
+                    finish_ord[t_lab][iss_id].update(tmp_dict)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
         font_style = xlwt.XFStyle()
@@ -237,33 +232,33 @@ def statistic_xls(request):
         ws = wb.add_sheet("Динамика")
         row_num = 0
 
-        for k,v in finish_ord.items():
+        for k, v in finish_ord.items():
             col_num = 0
             ws.write(row_num, 0, label=Podrazdeleniya.objects.values_list('title').get(pk=k))
             row_num += 1
             col_num = 0
             for name_iss, fr_id in v.items():
-                if name_iss !='one_param':
+                if name_iss != 'one_param':
                     ws.write(row_num, 0, label=Researches.objects.values_list('title').get(pk=name_iss))
                 else:
                     ws.write(row_num, 0, label=name_iss)
                 row_num += 1
-                a,b='',''
-                for i,j in fr_id.items():
+                a, b = '', ''
+                for i, j in fr_id.items():
                     col_num = 0
                     a, b = i
                     ws.write(row_num, col_num, label=a)
                     col_num += 1
                     ws.write(row_num, col_num, label=b)
-                    ss=''
-                    for g,h in j.items():
+                    ss = ''
+                    for g, h in j.items():
                         col_num += 1
                         ss = str(h)
                         ws.write(row_num, col_num, label=ss)
                     row_num += 1
                     col_num += 1
                 row_num += 1
-            row_num+=1
+            row_num += 1
 
     # row = [
     #     ("Пациент", 7000),

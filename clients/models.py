@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 import simplejson
 from django.core.management.base import OutputWrapper
 from django.db import models
+from  users.models import Speciality, DoctorProfile
 
 import slog.models as slog
 
@@ -28,6 +29,7 @@ class Individual(models.Model):
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
     primary_for_rmis = models.BooleanField(default=False, blank=True)
+    rmis_uid = models.CharField(max_length=64, default=None, null=True, blank=True)
 
     def join_individual(self, b: 'Individual', out: OutputWrapper = None):
         if out:
@@ -227,7 +229,6 @@ class Individual(models.Model):
                     to_delete_pks.append(d.pk)
             Document.objects.filter(pk__in=to_delete_pks).delete()
         else:
-            print('Not founded in RMIS')
             self.primary_for_rmis = True
             self.save()
             self.reverse_sync()
@@ -239,16 +240,27 @@ class Individual(models.Model):
         from rmis_integration.client import Client
         c = Client(modules=['patients', 'individuals'])
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
-        if not cards.exists():
-            rmis_uid = c.individuals.createIndividual(self)
+        n = False
+        if not cards.exists() or not self.rmis_uid:
+            # ind_uid = c.individuals.createIndividual(self)
+            ind_uid, rmis_uid = c.patients.send_new_patient(self)
+            self.rmis_uid = ind_uid
+            self.save()
             c.patients.create_rmis_card(self, rmis_uid)
             cards = Card.objects.filter(number=rmis_uid)
-            rdp = c.patients.send_new_patient(cards[0])
-            print('rdp', rdp)
+            # print('rdp', rdp)
+            n = True
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
-        print('pat_data', pat_data)
-
+        if not n:
+            p = pat_data["patient"]
+            g = {"ж": "2"}.get(self.sex.lower(), "1")
+            if self.family != p["lastName"] or \
+                    self.name != p["firstName"] or \
+                    self.patronymic != p["middleName"] or \
+                    self.sex != g or \
+                    self.birthday != self.birthday:
+                c.patients.edit_patient(self)
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
@@ -424,6 +436,7 @@ class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
     check_priority = models.IntegerField(default=0,
                                          help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
+    rmis_type = models.CharField(max_length=10, default=None, blank=True, null=True)
 
     def __str__(self):
         return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
@@ -443,6 +456,7 @@ class Document(models.Model):
     date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
     who_give = models.TextField(default="", blank=True)
     from_rmis = models.BooleanField(default=True, blank=True)
+    rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
 
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
@@ -483,6 +497,51 @@ class Document(models.Model):
                 documents["bc"]["issued"] = d.who_give
 
         return documents
+
+    def sync_rmis(self):
+        if self.individual.primary_for_rmis and not self.from_rmis and self.individual.rmis_uid and self.document_type.rmis_type:
+            from rmis_integration.client import Client
+            c = Client(modules=['patients', 'individuals'])
+            cards = Card.objects.filter(individual=self.individual, base__is_rmis=True, is_archive=False)
+            if not cards.exists():
+                return
+            card = cards[0]
+            if self.rmis_uid:
+                d = c.individuals.client.getDocument(self.rmis_uid)
+                if d["series"] != self.serial or \
+                    d['number'] != self.number or \
+                    d['issuerText'] != self.who_give or \
+                    d['issueDate'] != self.date_start or \
+                    d['expireDate'] != self.date_end or \
+                    d['active'] != self.is_active:
+                    data = {
+                        "documentId": self.rmis_uid,
+                        "documentData": {
+                            "individualUid": self.individual.rmis_uid,
+                            "type": self.document_type.rmis_type,
+                            "issuerText": self.who_give,
+                            "series": self.serial,
+                            "number": self.number,
+                            "active": self.is_active,
+                            "issueDate": self.date_start,
+                            "expireDate": self.date_end,
+                        }
+                    }
+                    d = c.individuals.client.editDocument(**data)
+            else:
+                data = {
+                    "individualUid": self.individual.rmis_uid,
+                    "type": self.document_type.rmis_type,
+                    "issuerText": self.who_give,
+                    "series": self.serial,
+                    "number": self.number,
+                    "active": self.is_active,
+                    "issueDate": self.date_start,
+                    "expireDate": self.date_end,
+                }
+                d = c.individuals.client.createDocument(**data)
+                self.rmis_uid = d
+                self.save()
 
     class Meta:
         verbose_name = 'Документ'
@@ -525,6 +584,17 @@ class District(models.Model):
     class Meta:
         verbose_name = 'Участок'
         verbose_name_plural = 'Участки'
+
+class GinekologDistrict(models.Model):
+    title = models.CharField(max_length=128)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Участок для гинеколога'
+        verbose_name_plural = 'Участки гинекологические'
 
 
 class Card(models.Model):
@@ -570,6 +640,8 @@ class Card(models.Model):
     who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='',
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
+                                 on_delete=models.SET_NULL)
+    ginekolog_district = models.ForeignKey(GinekologDistrict, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
 
@@ -720,6 +792,19 @@ class AnamnesisHistory(models.Model):
     text = models.TextField(help_text='Анамнез жизни')
     who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class DispensaryReg(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+    illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
+    spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет',
+                                 on_delete=models.CASCADE)
+    date_start = models.DateTimeField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
+    doc_end_reg = models.ForeignKey(DoctorProfile,related_name='doc_end_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с учета',
+                                 on_delete=models.CASCADE)
+    date_end = models.DateTimeField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
+    why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
 
 
 class Phones(models.Model):

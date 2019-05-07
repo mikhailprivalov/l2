@@ -9,6 +9,7 @@ const state = {
 
 const getters = {
   user_data: state => state.data,
+  ex_dep: state => state.data.extended_departments || [],
   directive_from: state => state.directive_from,
 }
 

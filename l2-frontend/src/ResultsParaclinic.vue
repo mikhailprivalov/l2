@@ -9,43 +9,39 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto;overflow-x:hidden;">
-        <div class="direction" v-for="direction in directions_history">
-          <div>
-            Направление №<a href="#" @click.prevent="print_direction(direction.pk)">{{direction.pk}}</a> от
-            {{direction.date}}
-          </div>
-          <hr/>
-          <div>
-            {{direction.patient}}
-          </div>
-          <div>
-            Карта: {{direction.card}}
-          </div>
-          <div v-for="i in direction.iss" class="research-row">
+      <div class="directions" :class="{noStat: !stat_btn}">
+        <div class="inner">
+          <div class="direction" v-for="direction in directions_history">
+            <div>
+              {{direction.patient}}, {{direction.card}}
+            </div>
+            <div v-for="i in direction.iss" class="research-row">
+              <div class="row">
+                <div class="col-xs-8">
+                  {{i.title}}
+                </div>
+                <div class="col-xs-4 text-right">
+                  <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
+                  <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
+                  <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+                </div>
+              </div>
+            </div>
+            <hr/>
             <div class="row">
-              <div class="col-xs-8">
-                {{i.title}}
-              </div>
-              <div class="col-xs-4 text-right">
-                <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
-                <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
-                <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+              <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-7 text-right">
+                <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
               </div>
             </div>
           </div>
-          <hr/>
-          <div class="row">
-            <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-            <div class="col-xs-7 text-right">
-              <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать
-                результатов</a>
-            </div>
+          <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
+            Нет данных
           </div>
-        </div>
-        <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
-          Нет данных
-        </div>
+        </div>purpose
+        <a v-if="directions_history.length > 0 && stat_btn"
+           class="btn btn-blue-nb stat"
+           :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
@@ -78,7 +74,40 @@
       </div>
       <div class="results-editor">
         <div v-for="row in data.researches">
-          <div class="research-title">{{row.research.title}}</div>
+          <div class="research-title">
+            <div class="research-left">
+              {{row.research.title}}
+              <dropdown :visible="research_open_history === row.pk"
+                        :position='["left", "bottom", "left", "top"]'
+                        @clickout="hide_results">
+                <a style="font-weight: normal"
+                   href="#" @click.prevent="open_results(row.pk)">
+                  (другие результаты пациента)
+                </a>
+                <div class="results-history" slot="dropdown">
+                  <ul>
+                    <li v-for="r in research_history">
+                      Результат от {{r.date}}
+                      <a href="#" @click.prevent="print_results(r.direction)">печать</a>
+                      <a href="#" @click.prevent="copy_results(row, r.pk)" v-if="!row.confirmed">скопировать</a>
+                    </li>
+                    <li v-if="research_history.length === 0">результатов не найдено</li>
+                  </ul>
+                </div>
+              </dropdown>
+            </div>
+            <div class="research-right" v-if="!row.confirmed">
+              <button class="btn btn-blue-nb" @click="clear_vals(row)">Очистить</button>
+              <div class="right-f" v-if="fte">
+                <select-picker-m v-model="templates[row.pk]"
+                                 :search="true"
+                                 :options="row.templates.map(x => ({label: x.title, value: x.pk}))" />
+              </div>
+              <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                Загрузить шаблон
+              </button>
+            </div>
+          </div>
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
@@ -88,7 +117,7 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
+                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -107,6 +136,15 @@
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 1">
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
+                </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
+                  <m-k-b-field v-model="field.value" />
+                </div>
+                <div class="field-value mkb10" v-else-if="field.field_type === 3">
+                  <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
+                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
                 </div>
               </div>
             </div>
@@ -163,13 +201,18 @@
   import patients_point from './api/patients-point'
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
-  import DateFieldNav from './DateFieldNav'
+  import SelectPickerM from './SelectPickerM'
+  import researches_point from './api/researches-point'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
+  import MKBField from './MKBField'
+  import DateFieldNav from './DateFieldNav'
+  import FormulaField from './FormulaField'
+  import dropdown from 'vue-my-dropdown';
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM},
     data() {
       return {
         pk: '',
@@ -182,6 +225,9 @@
         anamnesis_edit: false,
         anamnesis_data: {},
         new_anamnesis: null,
+        research_open_history: null,
+        research_history: [],
+        templates: {},
       }
     },
     watch: {
@@ -213,6 +259,25 @@
       vm.load_history()
     },
     methods: {
+      open_results(pk) {
+        if (this.research_open_history) {
+          this.hide_results()
+          return;
+        }
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.research_history = [];
+        directions_point.paraclinicResultPatientHistory(pk).then(({data}) => {
+          vm.research_history = data
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.research_open_history = pk;
+        })
+      },
+      hide_results() {
+        this.research_history = [];
+        this.research_open_history = null;
+      },
       r(research) {
         if (research.confirmed) {
           return true;
@@ -320,6 +385,7 @@
         })
       },
       save(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -339,6 +405,7 @@
         })
       },
       save_and_confirm(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -361,6 +428,7 @@
         })
       },
       confirm(iss) {
+        this.hide_results();
         let vm = this
         vm.inserted = false
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -381,6 +449,7 @@
         })
       },
       reset_confirm(iss) {
+        this.hide_results();
         let vm = this
         let msg = `Сбросить подтверждение исследования ${iss.research.title}?`
         let doreset = confirm(msg)
@@ -415,12 +484,75 @@
         this.anamnesis_edit = false
         this.new_anamnesis = null
         this.data = {ok: false}
+        this.research_open_history = null;
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
       },
       print_results(pk) {
         this.$root.$emit('print:results', [pk])
+      },
+      copy_results(row, pk) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicDataByFields(pk).then(({data}) => {
+          this.hide_results();
+          this.replace_fields_values(row, data);
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      load_template(row, pk) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData(parseInt(pk)).then(({data: {fields: data, title}}) => {
+          this.template_fields_values(row, data, title);
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
+      template_fields_values(row, dataTemplate, title) {
+        this.$dialog.alert(title, {
+          view: 'replace-append-modal',
+        }).then(({data}) => {
+          if (data === 'append') {
+            this.append_fields_values(row, dataTemplate);
+          }  else {
+            this.replace_fields_values(row, dataTemplate);
+          }
+        });
+      },
+      replace_fields_values(row, data) {
+        for (const g of row.research.groups) {
+          for (const f of g.fields) {
+            if (![3].includes(f.field_type)) {
+              f.value = data[f.pk] || '';
+            }
+          }
+        }
+      },
+      append_fields_values(row, data) {
+        for (const g of row.research.groups) {
+          for (const f of g.fields) {
+            if (![3, 1].includes(f.field_type) && data[f.pk]) {
+              this.append_value(f, data[f.pk]);
+            }
+          }
+        }
+      },
+      clear_vals(row) {
+        this.$dialog
+        .confirm('Вы действительно хотите очистить результаты?')
+        .then(() => {
+          okmessage('Очищено')
+          for (const g of row.research.groups) {
+            for (const f of g.fields) {
+              if (![3].includes(f.field_type)) {
+                this.clear_val(f);
+              }
+            }
+          }
+        });
       },
       clear_val(field) {
         field.value = ''
@@ -441,11 +573,21 @@
       }
     },
     computed: {
+      date_to_form() {
+        const date = this.date.split('.');
+        return date.join('');
+      },
       ca() {
         if (this.new_anamnesis !== null) {
           return this.new_anamnesis;
         }
         return this.data.anamnesis;
+      },
+      fte() {
+        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+      },
+      stat_btn() {
+        return (this.$store.getters.user_data.modules || {}).stat_btn;
       },
       pk_c() {
         let lpk = this.pk.trim()
@@ -531,6 +673,63 @@
     padding: 5px;
     font-weight: bold;
     z-index: 2;
+    display: flex;
+  }
+
+  .research-left {
+    position: relative;
+    text-align: left;
+    width: calc(100% - 380px);
+  }
+
+  .research-right {
+    text-align: right;
+    width: 380px;
+    margin-top: -5px;
+    margin-right: -5px;
+    margin-bottom: -5px;
+    button {
+      border-radius: 0;
+      padding: 5px 4px;
+    }
+  }
+
+  .right-f {
+    width: 140px;
+    display: inline-block;
+    /deep/ .btn {
+      border-radius: 0;
+      padding-top: 5px;
+      padding-bottom: 5px;
+    }
+  }
+
+  .results-history {
+    margin-top: -95px;
+    margin-left: -295px;
+    margin-right: -100px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    ul {
+      padding-left: 20px;
+      margin: 0;
+      li {
+        font-weight: normal;
+        a {
+          font-weight: bold;
+          display: inline-block;
+          padding: 2px 4px;
+          background: rgba(#000, .03);
+          border-radius: 4px;
+          margin-left: 3px;
+          &:hover {
+            background: rgba(#000, .1);
+          }
+        }
+      }
+    }
   }
 
   .results-editor {
@@ -772,5 +971,58 @@
 
   .status-list {
     display: flex;
+  }
+
+  .mkb10 {
+    margin-right: -1px;
+    z-index: 0;
+  }
+
+  .mkb10 /deep/ .input-group {
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .mkb10 /deep/ input {
+    border-radius: 0!important;
+  }
+
+  .mkb10 /deep/ ul {
+    position: relative;
+    width: auto;
+    right: -250px;
+    font-size: 13px;
+    z-index: 1000;
+  }
+
+  .mkb10 /deep/ ul li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+    a {
+      padding: 2px 10px;
+    }
+  }
+
+  .directions {
+    position: relative;
+    height: calc(100% - 68px);
+    padding-bottom: 34px;
+    &.noStat {
+      padding-bottom: 0;
+    }
+    .inner {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x:hidden;
+    }
+    .stat {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-radius: 0;
+    }
   }
 </style>

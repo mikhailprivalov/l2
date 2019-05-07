@@ -8,7 +8,7 @@ async function getCurrentUserInfo() {
     }
   } catch (e) {
   }
-  return {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}}
+  return {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}, extended_departments: {}}
 }
 
 async function getDirectiveFrom() {

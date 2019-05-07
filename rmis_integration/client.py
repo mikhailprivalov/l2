@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
-from laboratory.utils import strdate, strtime, localtime
+from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings as l2settings
 
@@ -358,7 +358,7 @@ class Individuals(BaseRequester):
 class Patients(BaseRequester):
     def __init__(self, client: Client):
         super().__init__(client, "path_patients")
-        key = "zeep_pat"
+        key = "zeep_pat_v2"
         r = cache.get(key)
 
         if not r:
@@ -381,6 +381,9 @@ class Patients(BaseRequester):
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
                     r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
+                if t.rmis_type != r["local_types"][t.pk]:
+                    t.rmis_type = r["local_types"][t.pk]
+                    t.save()
             cache.set(key, pickle.dumps(r, protocol=4), 3600)
         else:
             r = pickle.loads(r, encoding="utf8")
@@ -406,11 +409,39 @@ class Patients(BaseRequester):
         }]
         return self.smart_client.sendPatient(patientCard=data)
 
-    def send_new_patient(self, card: clients_models.Card):
+    def send_new_patient(self, individual):
         data = {
-            "patientId": card.number,
+            "name": individual.name,
+            "patrName": individual.patronymic,
+            "surname": individual.family,
+            "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+            "birthDate": individual.birthday,
         }
-        # return self.smart_client.createPatient(**data)
+        iuid = self.client.createIndividual(**data)
+
+        ruid = self.smart_client.sendPatient(patientCard={
+            'patient': iuid,
+            'identifiers':{
+                'code': iuid,
+                'codeType': '7',
+                'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),
+            }
+        })
+
+        return iuid, ruid["patientUid"]
+
+    def edit_patient(self, individual):
+        data = {
+            "individualId": individual.rmis_uid,
+            "individualData": {
+                "patrName": individual.patronymic,
+                "surname": individual.family,
+                "name": individual.name,
+                "gender": {"ж": "2"}.get(individual.sex.lower(), "1"),
+                "birthDate": individual.birthday,
+            }
+        }
+        r = self.client.editIndividual(**data)
 
     def sync_card_data(self, card: clients_models.Card, out: OutputWrapper = None):
         if out:

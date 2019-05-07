@@ -264,7 +264,7 @@
 <style scoped lang="scss">
   .modal-mask {
     align-items: stretch !important;
-    justify-content: stretch !important;
+    justify-content: center !important;
   }
 
   /deep/ .panel-flt {
