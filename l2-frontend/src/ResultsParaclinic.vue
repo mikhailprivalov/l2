@@ -9,35 +9,37 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto;overflow-x:hidden;" class="directions">
-        <div class="direction" v-for="direction in directions_history">
-          <div>
-            {{direction.patient}}, {{direction.card}}
-          </div>
-          <div v-for="i in direction.iss" class="research-row">
+      <div class="directions">
+        <div class="inner">
+          <div class="direction" v-for="direction in directions_history">
+            <div>
+              {{direction.patient}}, {{direction.card}}
+            </div>
+            <div v-for="i in direction.iss" class="research-row">
+              <div class="row">
+                <div class="col-xs-8">
+                  {{i.title}}
+                </div>
+                <div class="col-xs-4 text-right">
+                  <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
+                  <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
+                  <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+                </div>
+              </div>
+            </div>
+            <hr/>
             <div class="row">
-              <div class="col-xs-8">
-                {{i.title}}
-              </div>
-              <div class="col-xs-4 text-right">
-                <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
-                <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
-                <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+              <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-7 text-right">
+                <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
               </div>
             </div>
           </div>
-          <hr/>
-          <div class="row">
-            <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-            <div class="col-xs-7 text-right">
-              <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
-            </div>
+          <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
+            Нет данных
           </div>
         </div>
-        <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
-          Нет данных
-        </div>
-        <a v-else
+        <a v-if="directions_history.length > 0"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
@@ -1004,6 +1006,11 @@
     position: relative;
     height: calc(100% - 68px);
     padding-bottom: 34px;
+    .inner {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x:hidden;
+    }
     .stat {
       position: absolute;
       bottom: 0;
