@@ -131,10 +131,14 @@ def form_01(request_data):
     styleTatr.firstLineIndent = 0
     styleTatr.fontSize = 11
 
+
+    doc_speciality = doc_confirm.specialities if doc_confirm.specialities else ''
+
+
     opinion = [
         [Paragraph('ФИО врача:', styleTatr), Paragraph('{}'.format(doc_confirm.fio), styleTatr),
          Paragraph('{}'.format(date_confirm.strftime('%d.%m.%Y')), styleTatr)],
-        [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_confirm.specialities), styleTatr),
+        [Paragraph('Специальность:', styleTatr), Paragraph('{}'.format(doc_speciality), styleTatr),
          Paragraph('', styleTatr)],
     ]
 
