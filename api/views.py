@@ -26,7 +26,8 @@ import users.models as users
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory
+from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory, \
+    GinekologDistrict
 from contracts.models import Company
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ParaclinicTemplateName, ParaclinicTemplateField, ResearchSite
 from laboratory import settings
@@ -2017,6 +2018,10 @@ def patients_get_card_data(request, card_id):
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
                                        *[{"id": x.pk, "title": x.title}
                                          for x in District.objects.all().order_by('-sort_weight', '-id')]],
+                         "gin_district": card.ginekolog_district_id or -1,
+                         "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
+                                       *[{"id": x.pk, "title": x.title}
+                                         for x in GinekologDistrict.objects.all().order_by('-sort_weight', '-id')]],
                          "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
                          "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
