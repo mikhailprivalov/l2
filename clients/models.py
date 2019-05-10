@@ -577,6 +577,7 @@ class CardBase(models.Model):
 class District(models.Model):
     title = models.CharField(max_length=128)
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
+    is_ginekolog = models.BooleanField(help_text="Гинекологический участок", default=False)
 
     def __str__(self):
         return self.title
@@ -584,17 +585,6 @@ class District(models.Model):
     class Meta:
         verbose_name = 'Участок'
         verbose_name_plural = 'Участки'
-
-class GinekologDistrict(models.Model):
-    title = models.CharField(max_length=128)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Участок для гинеколога'
-        verbose_name_plural = 'Участки гинекологические'
 
 
 class Card(models.Model):
@@ -641,7 +631,7 @@ class Card(models.Model):
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
-    ginekolog_district = models.ForeignKey(GinekologDistrict, default=None, null=True, blank=True, help_text="Участок",
+    ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
 
