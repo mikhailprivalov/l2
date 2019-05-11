@@ -786,6 +786,7 @@ class AnamnesisHistory(models.Model):
     who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class DispensaryReg(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)

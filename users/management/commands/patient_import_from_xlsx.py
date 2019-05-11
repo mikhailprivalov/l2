@@ -141,7 +141,3 @@ class Command(BaseCommand):
                     clients.Card.objects.create(individual=i, number=clients.Card.next_l2_n(), base=base_l2, number_poliklinika=cells[num_card],
                                     polis=document_polis, district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address,
                                                 fact_address=m_address)
-
-
-
-
