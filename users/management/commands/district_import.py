@@ -1,8 +1,5 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-import clients.models as clients
-from django.db.models import Q
-import datetime
 
 class Command(BaseCommand):
     def add_arguments(self, parser):

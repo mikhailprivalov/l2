@@ -115,15 +115,9 @@ class Command(BaseCommand):
                             district=add_dist[0], ginekolog_district = add_dist[1])
                     else:
                         #создать карту L2
-                        last_l2 = clients.Card.objects.filter(base__internal_type=True).extra(
-                            select={'numberInt': 'CAST(number AS INTEGER)'}
-                        ).order_by("-numberInt").first()
-                        n = 0
-                        if last_l2:
-                            n = int(last_l2.number)
                         m_address = str(cells[city]).strip() +', '+str(cells[street]).strip() +', д.' + \
                                     str(cells[house]).strip() + ', кв.' + str(cells[room]).strip()
-                        c = clients.Card.objects.create(number=n + 1, base=base_l2, individual=i, number_poliklinika=cells[num_card],
+                        c = clients.Card.objects.create(number=clients.Card.next_l2_n(), base=base_l2, individual=i, number_poliklinika=cells[num_card],
                             district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address, fact_address=m_address)
                 else:
                     #создать индивидуал, документы, карты в l2.
@@ -144,7 +138,7 @@ class Command(BaseCommand):
                     add_dist = get_district(cells[distict_num], cells[district_gin])
                     m_address = str(cells[city]).strip() + ', ' + str(cells[street]).strip() + ', д.' + str(cells[house]).strip() + \
                                 ', кв.' + str(cells[room]).strip()
-                    clients.Card.objects.create(individual=i, base=base_l2, number_poliklinika=cells[num_card],
+                    clients.Card.objects.create(individual=i, number=clients.Card.next_l2_n(), base=base_l2, number_poliklinika=cells[num_card],
                                     polis=document_polis, district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address,
                                                 fact_address=m_address)
 
