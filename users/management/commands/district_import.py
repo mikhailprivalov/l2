@@ -15,17 +15,21 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
+        u_dict = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
-                if "код" in cells and "название" in cells and "признак" in cells:
+                if "код" in cells and "название" in cells:
+                    print('зашел')
                     starts = True
                     code = cells.index("код")
                     district_name = cells.index("название")
-                    u_dict = {}
                     continue
             else:
-                u_dict[code] = district_name
+                print(cells[code])
+                print(cells[district_name])
+
+                u_dict[cells[code]] = cells[district_name]
 
         print(u_dict)
 
