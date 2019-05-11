@@ -121,10 +121,12 @@ class Command(BaseCommand):
                         n = 0
                         if last_l2:
                             n = int(last_l2.number)
+                        m_address = str(cells[city]).strip() +', '+str(cells[street]).strip() +', д.' + \
+                                    str(cells[house]).strip() + ', кв.' + str(cells[room]).strip()
                         c = clients.Card.objects.create(number=n + 1, base=base_l2, individual=i, number_poliklinika=cells[num_card],
-                            district=add_dist[0], ginekolog_district = add_dist[1])
+                            district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address, fact_address=m_address)
                 else:
-                    #создать индивидуал, докумнты, карты в l2.
+                    #создать индивидуал, документы, карты в l2.
                     ind = clients.Individual.objects.create(family=cells[lastname], name=cells[name], patronymic=cells[patronymic],
                                              birthday=datetime.datetime.strptime(cells[born_date], "%Y-%m-%d %H:%M:%S").date(),
                                              sex=cells[sex])
@@ -140,8 +142,11 @@ class Command(BaseCommand):
                                                                    individual=ind)
 
                     add_dist = get_district(cells[distict_num], cells[district_gin])
+                    m_address = str(cells[city]).strip() + ', ' + str(cells[street]).strip() + ', д.' + str(cells[house]).strip() + \
+                                ', кв.' + str(cells[room]).strip()
                     clients.Card.objects.create(individual=i, base=base_l2, number_poliklinika=cells[num_card],
-                                    polis=document_polis, district=add_dist[0], ginekolog_district = add_dist[1])
+                                    polis=document_polis, district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address,
+                                                fact_address=m_address)
 
 
 
