@@ -51,6 +51,7 @@ class Command(BaseCommand):
                  '19760000': 'Нейрохирургия', '19800000': 'Изосерол.лаборатория', '19810000': 'Лаб.полим.цепн.',
                  '19990000': 'Гистология', '19021200': 'Участок 16', '19011400': 'Участок 15'}
 
+
         def get_district(uch=None, gin_uch=None):
             """
             парам1 - код для обычного участка
@@ -58,20 +59,24 @@ class Command(BaseCommand):
             """
             uch.strip()
             gin_uch.strip()
-            obj_return = [None, None]
+            obj_return = []
+            obj_uch = None
+            obj_gin = None
+
             if uch:
                 title_uch = distr.get(uch)
                 if title_uch != None:
                     obj_uch, created = clients.District.objects.get_or_create(code_poliklinika=uch,
                         defaults={'title':title_uch, 'is_ginekolog':False, 'sort_weight':'0'})
-                    obj_return.insert(0, obj_uch)
+
             if gin_uch != None:
                 title_gin = distr.get(gin_uch)
                 if title_gin != None:
                     obj_gin, gin_created = clients.District.objects.get_or_create(code_poliklinika=gin_uch,
                         defaults={'title':title_gin,'is_ginekolog':True, 'sort_weight':'0'})
-                    obj_return.insert(1, obj_gin)
 
+            obj_return.append(obj_uch)
+            obj_return.append(obj_gin)
             return obj_return
 
 
