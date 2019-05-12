@@ -14,23 +14,20 @@ class Command(BaseCommand):
         fp = kwargs["path"]
         fd = kwargs["path_distr"]
         self.stdout.write("Path: " + fp)
-        self.stdout.write("Path: " + fd)
-        wb = load_workbook(filename=fd)
-        ws = wb[wb.sheetnames[0]]
+        wb1 = load_workbook(filename=fd)
+        ws1 = wb1[wb1.sheetnames[0]]
         distr = {}
-        for row in ws.rows:
+        starts = False
+        for row in ws1.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "код" in cells and "название" in cells:
-                    print('зашел')
                     starts = True
                     code = cells.index("код")
                     district_name = cells.index("название")
                     continue
             else:
                 distr[cells[code]] = cells[district_name]
-
-
 
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
