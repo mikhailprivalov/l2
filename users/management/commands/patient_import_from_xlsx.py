@@ -7,15 +7,35 @@ import datetime
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('path', type=str)
+        parser.add_argument('path_distr', type=str)
 
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
+        fd = kwargs["path_distr"]
         self.stdout.write("Path: " + fp)
+        self.stdout.write("Path: " + fd)
+        wb = load_workbook(filename=fd)
+        ws = wb[wb.sheetnames[0]]
+        distr = {}
+        for row in ws.rows:
+            cells = [str(x.value) for x in row]
+            if not starts:
+                if "код" in cells and "название" in cells:
+                    print('зашел')
+                    starts = True
+                    code = cells.index("код")
+                    district_name = cells.index("название")
+                    continue
+            else:
+                distr[cells[code]] = cells[district_name]
+
+
+
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        distr = {'19000000': 'ОГАУЗ Иркутская МСЧ 2', '19010000': 'Терапевтич. 1',
+        u_dict = {'19000000': 'ОГАУЗ Иркутская МСЧ 2', '19010000': 'Терапевтич. 1',
                  '19020000': 'Терапевтич. 2', '19030000': 'Терапевтич. 3', '19040000': 'Стоматологическ',
                  '19050000': 'Стомат.-ортопед', '19060000': 'Женская консуль', '19070000': 'Невропатолог',
                  '19080000': 'Эндоскопист', '19090000': 'Отоларинголог', '19100000': 'Окулист', '19110000': 'Кардиолог',

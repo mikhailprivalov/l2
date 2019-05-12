@@ -23,9 +23,6 @@ class Command(BaseCommand):
                     district_name = cells.index("название")
                     continue
             else:
-                print(cells[code])
-                print(cells[district_name])
-
                 u_dict[cells[code]] = cells[district_name]
 
         print(u_dict)
