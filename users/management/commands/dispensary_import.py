@@ -15,7 +15,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
-        fd = kwargs["path_distr"]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
@@ -32,7 +31,10 @@ class Command(BaseCommand):
             else:
                 if clients.Card.objects.filter(number_poliklinika=cells[num_card]).first():
                     card = clients.Card.objects.filter(number_poliklinika=cells[num_card]).first()
-                    print(card)
-                    # day_start = datetime.datetime.strptime(cells[date_start], "%Y-%m-%d %H:%M:%S").date()
-                    # clients.DispensaryReg.objects.update_or_create(card=card, diagnos=cells[diag],
-                    #                                                defaults={'date_start':'day_start'})
+                    day_start = datetime.datetime.strptime(cells[date_start], "%Y-%m-%d %H:%M:%S").date()
+                    clients.DispensaryReg.objects.update_or_create(card=card, diagnos=cells[diag],
+                            defaults={'date_start':day_start})
+                    print('добавлен/обновлен Д-учет:' + '\n', card, )
+                    print('Диагноз:дата постановки:' + '\n', cells[diag], day_start)
+
+

@@ -794,10 +794,10 @@ class DispensaryReg(models.Model):
     spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
     doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет',
                                  on_delete=models.CASCADE)
-    date_start = models.DateTimeField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
+    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
     doc_end_reg = models.ForeignKey(DoctorProfile,related_name='doc_end_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с учета',
                                  on_delete=models.CASCADE)
-    date_end = models.DateTimeField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
+    date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
 
     class Meta:
