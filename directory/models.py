@@ -162,6 +162,7 @@ class ParaclinicInputField(models.Model):
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
+    for_talon = models.BooleanField(default=False, blank=True)
 
 
 class ParaclinicTemplateName(models.Model):
