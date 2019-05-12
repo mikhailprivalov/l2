@@ -34,9 +34,6 @@ class Command(BaseCommand):
                 distr[cells[code]] = cells[district_name]
         print('загружены коды:участки' + '\n', distr)
 
-        wb = load_workbook(filename=fp)
-        ws = wb[wb.sheetnames[0]]
-        starts = False
 
         def get_district(uch=None, gin_uch=None):
             """
@@ -70,6 +67,9 @@ class Command(BaseCommand):
             return obj_return
 
 
+        wb = load_workbook(filename=fp)
+        ws = wb[wb.sheetnames[0]]
+        starts = False
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:

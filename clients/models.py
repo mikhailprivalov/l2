@@ -789,7 +789,7 @@ class AnamnesisHistory(models.Model):
 
 class DispensaryReg(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
     illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
     spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
     doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет',
@@ -799,6 +799,11 @@ class DispensaryReg(models.Model):
                                  on_delete=models.CASCADE)
     date_end = models.DateTimeField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
+
+    class Meta:
+        verbose_name = 'Д-учет'
+        verbose_name_plural = 'Д-учет'
+        unique_together = [['card', 'diagnos', 'date_end']]
 
 
 class Phones(models.Model):
