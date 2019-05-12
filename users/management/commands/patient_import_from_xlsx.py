@@ -18,11 +18,11 @@ class Command(BaseCommand):
         fp = kwargs["path"]
         fd = kwargs["path_distr"]
         self.stdout.write("Path: " + fp)
-        wb1 = load_workbook(filename=fd)
-        ws1 = wb1[wb1.sheetnames[0]]
+        wb = load_workbook(filename=fd)
+        ws = wb[wb.sheetnames[0]]
         distr = {}
         starts = False
-        for row in ws1.rows:
+        for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "код" in cells and "название" in cells:
