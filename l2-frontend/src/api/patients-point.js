@@ -47,12 +47,12 @@ async function getCard(card_pk) {
 async function sendCard(card_pk, family, name, patronymic,
                         birthday, sex, individual_pk, new_individual, base_pk,
                         fact_address, main_address, work_place, main_diagnosis, work_position,
-                        work_place_db, custom_workplace, district, gin_district) {
+                        work_place_db, custom_workplace, district, gin_district, phone) {
   try {
     const response = await HTTP.post('patients/card/save', {card_pk, family, name,
       patronymic, birthday, sex, individual_pk, new_individual, base_pk, work_position,
       fact_address, main_address, work_place, main_diagnosis, work_place_db, custom_workplace,
-      district, gin_district})
+      district, gin_district, phone})
     if (response.statusText === 'OK') {
       return response.data
     }

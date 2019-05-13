@@ -640,7 +640,7 @@ class Card(models.Model):
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
     number_poliklinika = models.CharField(max_length=20, blank=True, default='',
                                           help_text="Идетификатор карты поликлиника", db_index=True)
-
+    phone = models.CharField(max_length=20, blank=True, default='')
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -653,19 +653,12 @@ class Card(models.Model):
 
     def get_phones(self):
         return list(set([y for y in [x.normalize_number() for x in
-                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
-                         y != ""]))
-
-    # def full_type_card(self):
-    #     return "{}".format(self.base.title)
+                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)]
+                         + [Phones.nn(self.phone)]
+                         if y and len(y) > 1]))
 
     def short_type_card(self):
         return "{}".format(self.base.short_title)
-
-
-    class Meta:
-        verbose_name = 'Карта'
-        verbose_name_plural = 'Карты'
 
     def clear_phones(self, ts):
         to_delete = [x.pk for x in Phones.objects.filter(card=self) if x.number not in ts]
@@ -782,6 +775,10 @@ class Card(models.Model):
                  fact_address='' if not card_orig else card_orig.fact_address)
         c.save()
         return c
+
+    class Meta:
+        verbose_name = 'Карта'
+        verbose_name_plural = 'Карты'
 
 
 class AnamnesisHistory(models.Model):

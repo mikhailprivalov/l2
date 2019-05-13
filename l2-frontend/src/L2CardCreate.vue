@@ -280,6 +280,14 @@
           </tr>
           </tbody>
         </table>
+        <div class="row" style="margin-bottom: 10px">
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+                <div class="row-t">Телефон</div>
+                <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+            </div>
+          </div>
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
@@ -546,6 +554,7 @@
           agent: null,
           agent_doc: null,
           agent_pk: null,
+          phone: '',
         },
         individuals: [],
         document_to_edit: -2,
@@ -706,7 +715,7 @@
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
             this.card.work_position, this.card.work_place_db, this.card.custom_workplace,
-            this.card.district, this.card.ginekolog_district)
+            this.card.district, this.card.ginekolog_district, this.card.phone)
           if (data.result !== 'ok') {
             return
           }
