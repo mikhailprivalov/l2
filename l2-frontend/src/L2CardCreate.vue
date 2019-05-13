@@ -122,7 +122,7 @@
             </div>
             <div class="form-row sm-f" v-if="card.sex === 'ж'">
               <div class="row-t">Гинекологический участок</div>
-              <select v-model="card.gin_district" class="form-control"
+              <select v-model="card.ginekolog_district" class="form-control"
                       style="width: 65%;border: none;height: 26px;">
                 <option v-for="c in card.gin_districts" :value="c.id">
                   {{c.title}}
@@ -530,6 +530,8 @@
           main_docs: {},
           districts: [],
           district: -1,
+          gin_districts: [],
+          ginekolog_district: -1,
           agent_types: [],
           agent_need_doc: [],
           excluded_types: [],
@@ -599,10 +601,11 @@
         return this.card.sex
       },
       valid() {
-        if (!(this.card.family && this.card.name && this.card.birthday)) {
+        if (!this.card.family || !this.card.name || !this.card.birthday) {
           return false;
         }
-        return this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm)
+        return !!(this.card.family.length > 0
+          && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
       },
       birthday() {
         return this.card.birthday
@@ -702,7 +705,8 @@
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position, this.card.work_place_db, this.card.custom_workplace, this.card.district)
+            this.card.work_position, this.card.work_place_db, this.card.custom_workplace,
+            this.card.district, this.card.ginekolog_district)
           if (data.result !== 'ok') {
             return
           }

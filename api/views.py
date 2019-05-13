@@ -2004,6 +2004,7 @@ def patients_get_card_data(request, card_id):
             for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type",
                                                                                   "serial").order_by('pk')]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
+    d = District.objects.all().order_by('-sort_weight', '-id')
     return JsonResponse({**i, **c,
                          "docs": docs,
                          "main_docs": card.get_card_documents(),
@@ -2015,12 +2016,10 @@ def patients_get_card_data(request, card_id):
                          "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
                          "district": card.district_id or -1,
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                                       *[{"id": x.pk, "title": x.title}
-                                         for x in District.objects.all().order_by('-sort_weight', '-id')]],
-                         "gin_district": card.ginekolog_district_id or -1,
+                                       *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
+                         "ginekolog_district": card.ginekolog_district_id or -1,
                          "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                                       *[{"id": x.pk, "title": x.title}
-                                         for x in District.objects.filter(is_ginekolog=True).order_by('-sort_weight', '-id')]],
+                                           *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
                          "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
                          "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
@@ -2163,7 +2162,8 @@ def patients_card_save(request):
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
-    c.district = District.objects.filter(pk=request_data["district"]).first()
+    c.district_id = request_data["district"] if request_data["district"] != -1 else None
+    c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
     c.save()
     if c.individual.primary_for_rmis:
