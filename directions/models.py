@@ -655,6 +655,7 @@ class Issledovaniya(models.Model):
     outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
+    creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research", db_index=True, help_text='Профиль пользователя, добавившего услуги к созданному направлению', on_delete=models.SET_NULL)
 
     def get_stat_diagnosis(self):
         pass
@@ -700,7 +701,6 @@ class ParaclinicResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True,
                               help_text='Поле результата',
                               on_delete=models.CASCADE)
-
     value = models.TextField()
 
 
