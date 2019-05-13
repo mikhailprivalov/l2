@@ -105,11 +105,19 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
                 <div class="row-t">Адрес регистрации</div>
-                <input class="form-control" v-model="card.main_address">
+                <TypeAhead :delayTime="400" :getResponse="getResponse"
+                           :highlighting="highlighting" :limit="10"
+                           :minChars="4" :onHit="onHit('main_address', true)" :selectFirst="true" maxlength="110"
+                           ref="ar" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.main_address"
+                />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Адрес проживания</div>
-              <input class="form-control" v-model="card.fact_address">
+              <TypeAhead :delayTime="400" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         :minChars="4" :onHit="onHit('fact_address', true)" :selectFirst="true" maxlength="110"
+                         ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
+              />
             </div>
             <div class="form-row sm-f">
               <div class="row-t">Участок</div>
@@ -778,9 +786,9 @@
         }
         this.document.who_give = item
       },
-      onHit(name) {
+      onHit(name, no_next) {
         return (item, t) => {
-          if (t.$el) {
+          if (t.$el && !no_next) {
             let index = $('input', this.$el).index($('input', t.$el)) + 1;
             $('input', this.$el).eq(index).focus();
           }

@@ -11,7 +11,6 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -23,6 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
+from api import fias
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -2062,6 +2062,8 @@ def autocomplete(request):
     l = request.GET.get("limit", 10)
     data = []
     if v != "" and l > 0:
+        if t == "fias":
+            data = fias.suggest(v)
         if t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:l]
             if p.exists():
