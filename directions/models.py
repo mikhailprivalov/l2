@@ -646,6 +646,8 @@ class Issledovaniya(models.Model):
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+    co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
+                                    null=True, blank=True, on_delete=models.SET_NULL)
 
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
@@ -653,6 +655,8 @@ class Issledovaniya(models.Model):
     outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
+    creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research", db_index=True, help_text='Профиль пользователя, добавившего услуги к созданному направлению', on_delete=models.SET_NULL)
+    is_additional_services = models.BooleanField(default=False, blank=True)
 
     def get_stat_diagnosis(self):
         pass
@@ -698,7 +702,6 @@ class ParaclinicResult(models.Model):
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True,
                               help_text='Поле результата',
                               on_delete=models.CASCADE)
-
     value = models.TextField()
 
 

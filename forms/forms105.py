@@ -5,19 +5,29 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, portrait, landscape
 from reportlab.lib.units import mm
-from copy import deepcopy
+from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus import PageBreak
+from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
+
+from copy import deepcopy
 import os.path
+import locale
+import sys
 from io import BytesIO
 from . import forms_func
 from laboratory.settings import FONTS_FOLDER
 from datetime import *
 import datetime
+import simplejson as json
+from directions.models import Napravleniya
+from appconf.manager import SettingManager
+# from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
+
+
 
 def form_01(request_data):
     """
-    Печать статталона по амбулаторному приему. Входные параметры врач, дата.
+    Ведомость статталонов по амбулаторным приемам. Входные параметры врач, дата.
     Выходные: форма
     """
 
@@ -36,7 +46,7 @@ def form_01(request_data):
                             leftMargin=12 * mm,
                             rightMargin=5 * mm, topMargin=25 * mm,
                             bottomMargin=28 * mm, allowSplitting=1,
-                            title="Форма {}".format("Договор на оплату"))
+                            title="Форма {}".format("Ведомость по статталонам"))
 
     styleSheet = getSampleStyleSheet()
     styleSheet = getSampleStyleSheet()
@@ -161,3 +171,137 @@ def form_01(request_data):
 
     buffer.close()
     return pdf
+
+
+def form_02(request_data):
+    """
+    Отдельный статталон по отдельному амбулаторному приему.
+    Краткая форма - результата проткола. Учитываются те поля, к-рые имеют признак "для статталона"
+    -------------------------------
+    Вход: Направление.
+    Выходные: форма
+    """
+
+    #получить направления
+    ind_dir = json.loads(request_data["napr_id"])
+
+    hospital_name = SettingManager.get("rmis_orgname")
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            leftMargin=25 * mm,
+                            rightMargin=5 * mm, topMargin=6 * mm,
+                            bottomMargin=6 * mm, allowSplitting=1,
+                            title="Форма {}".format("Статталон пациента"))
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 10
+    style.leading = 12
+    style.spaceAfter = 0.5 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 10
+    styleCenter.spaceAfter = 1 * mm
+
+    styleCenterBold = deepcopy(styleBold)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.face = 'PTAstraSerifBold'
+    styleCenterBold.borderColor = black
+
+    styleJustified = deepcopy(style)
+    styleJustified.alignment = TA_JUSTIFY
+    styleJustified.spaceAfter = 4.5 * mm
+    styleJustified.fontSize = 12
+    styleJustified.leading = 4.5 * mm
+
+    objs = []
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    for dir in ind_dir:
+        obj_dir = Napravleniya.objects.get(pk=dir)
+        ind_card = obj_dir.client
+        patient_data = ind_card.get_data_individual()
+
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            patient_data['serial'] = patient_data['bc_serial']
+            patient_data['num'] = patient_data['bc_num']
+        else:
+            patient_data['serial'] = patient_data['passport_serial']
+            patient_data['num'] = patient_data['passport_num']
+
+        card_num_obj = patient_data['card_num'].split(' ')
+        p_card_num = card_num_obj[0]
+        if len(card_num_obj) == 2:
+            p_card_type = '(' + str(card_num_obj[1]) + ')'
+        else:
+            p_card_type = ''
+
+        space_symbol = '&nbsp;'
+
+        #Добавить сведения о пациента
+        content_title = [
+            Indenter(left=0 * mm),
+            Spacer(1, 1 * mm),
+            Paragraph('{}'.format(hospital_name), styleCenterBold),
+            Spacer(1, 2 * mm),
+            Paragraph('<u>Статистический талон пациента</u>', styleCenter),
+            Paragraph('{}<font size=10>Карта № </font><font fontname="PTAstraSerifBold" size=10>{}</font><font size=10> из {}</font>'.format(
+                    3 * space_symbol, p_card_num, p_card_type), styleCenter),
+            Spacer(1, 2 * mm),
+            Paragraph('<font size=11>Данные пациента:</font>', styleBold),
+            Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(
+                patient_data['fio']), style),
+            Paragraph(
+                '2. Пол: {} {} 3. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']),
+                style),
+            Paragraph('4. Место регистрации: {}'.format(patient_data['main_address']), style),
+            Paragraph('5. Полис ОМС: серия {} №: {} {}'
+                      '6. СНИЛС: {}'.format(patient_data['oms']['polis_serial'], patient_data['oms']['polis_num'],
+                                            13 * space_symbol, patient_data['snils']), style),
+            Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
+                      style),
+            Spacer(1, 3 * mm),
+            Paragraph('<font size=11>Данные об услуге:</font>', styleBold),
+        ]
+        objs.extend(content_title)
+
+        #добавить данные об услуге
+
+        #Добавить Заключительные положения
+
+        #Добавить Дополнительные услуги
+
+        #Добавить сведенрия о враче
+
+        objs.append(PageBreak())
+
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+
+

@@ -354,7 +354,7 @@ def form_02(request_data):
     print_district = ''
     if SettingManager.get("district", default='True', default_type='b'):
         if ind_card.district != None:
-            print_district = 'Участок: {}'.format(ind_card.district.title)
+            print_district = 'Уч: {}'.format(ind_card.district.title)
 
     opinion = [
         [Paragraph('<font size=11>{}<br/>Адрес: {}<br/>ОГРН: {} <br/><u>{}</u> </font>'.format(

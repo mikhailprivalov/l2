@@ -266,13 +266,18 @@ def get_finaldata_talon(doc_result_obj):
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
+    fin_medexam = 'медосмотр'
+
     fin_source = OrderedDict()
     fin_source[fin_oms] = OrderedDict()
     fin_source[fin_pay] = OrderedDict()
     fin_source[fin_dms] = OrderedDict()
+    fin_source[fin_medexam] = OrderedDict()
+
     oms_count = 0
     dms_count = 0
     pay_count = 0
+    medexam_count = 0
     empty = '-'
 
     for i in doc_result_obj:
@@ -292,6 +297,10 @@ def get_finaldata_talon(doc_result_obj):
             dms_count += 1
             dict_fsourcce = fin_dms
             order = dms_count
+        elif napr_attr['istochnik_f'] == 'медосмотр':
+            medexam_count += 1
+            dict_fsourcce = fin_medexam
+            order = medexam_count
         else:
             continue
         temp_dict['client_fio'] = napr_attr['client_fio']

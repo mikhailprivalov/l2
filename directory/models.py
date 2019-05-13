@@ -151,6 +151,11 @@ class ParaclinicInputField(models.Model):
         (1, 'Date'),
         (2, 'MKB'),
         (3, 'Calc'),
+        (4, 'purpose'),
+        (5, 'first_time'),
+        (6, 'result_reception'),
+        (7, 'outcome_illness'),
+        (8, 'maybe_onco'),
     )
 
     title = models.CharField(max_length=255, help_text='Название поля ввода')
@@ -162,6 +167,7 @@ class ParaclinicInputField(models.Model):
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
+    for_talon = models.BooleanField(default=False, blank=True)
 
 
 class ParaclinicTemplateName(models.Model):
