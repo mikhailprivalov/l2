@@ -112,6 +112,15 @@
                 </option>
               </select>
             </div>
+            <div class="form-row sm-f" v-if="card.sex === 'ж'">
+              <div class="row-t">Гинекологический участок</div>
+              <select v-model="card.gin_district" class="form-control"
+                      style="width: 65%;border: none;height: 26px;">
+                <option v-for="c in card.gin_districts" :value="c.id">
+                  {{c.title}}
+                </option>
+              </select>
+            </div>
             <div class="form-row sm-f">
                 <div class="row-t">Адрес регистрации</div>
                 <input class="form-control" v-model="card.main_address">

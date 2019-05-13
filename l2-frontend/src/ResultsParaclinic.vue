@@ -111,7 +111,9 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed, required: field.required}"
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed,
+                empty: r_list_pk(row).includes(field.pk),
+                required: field.required}"
                    :title="field.required && 'обязательно для заполнения'"
                    @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
@@ -304,6 +306,23 @@
             n++;
             if (f.required && (f.value === '' || !f.value)) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title));
+            }
+          }
+        }
+        return l.slice(0, 2);
+      },
+      r_list_pk(research) {
+        const l = [];
+        if (research.confirmed) {
+          return [];
+        }
+
+        for (const g of research.research.groups) {
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || !f.value)) {
+              l.push(f.pk);
             }
           }
         }
@@ -815,6 +834,12 @@
     &.required {
       background-color: #e6e6e6;
       border-right: 3px solid #00a1cb;
+      &.empty {
+        input, textarea, /deep/ input {
+          border-color: #f00;
+        }
+        border-right: 3px solid #f00;
+      }
     }
   }
 
@@ -971,6 +996,8 @@
 
   .status-list {
     display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mkb10 {
