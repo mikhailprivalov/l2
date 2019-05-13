@@ -578,7 +578,8 @@ class District(models.Model):
     title = models.CharField(max_length=128)
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     is_ginekolog = models.BooleanField(help_text="Гинекологический участок", default=False)
-    code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True)
+    code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True,
+                                        blank=True)
 
     def __str__(self):
         return self.title

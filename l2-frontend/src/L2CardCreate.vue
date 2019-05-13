@@ -104,6 +104,14 @@
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
+                <div class="row-t">Адрес регистрации</div>
+                <input class="form-control" v-model="card.main_address">
+            </div>
+            <div class="form-row sm-f">
+              <div class="row-t">Адрес проживания</div>
+              <input class="form-control" v-model="card.fact_address">
+            </div>
+            <div class="form-row sm-f">
               <div class="row-t">Участок</div>
               <select v-model="card.district" class="form-control"
                       style="width: 65%;border: none;height: 26px;">
@@ -120,14 +128,6 @@
                   {{c.title}}
                 </option>
               </select>
-            </div>
-            <div class="form-row sm-f">
-                <div class="row-t">Адрес регистрации</div>
-                <input class="form-control" v-model="card.main_address">
-            </div>
-            <div class="form-row sm-f">
-              <div class="row-t">Адрес проживания</div>
-              <input class="form-control" v-model="card.fact_address">
             </div>
             <div class="row">
               <div class="col-xs-6" style="padding-right: 0">
