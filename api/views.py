@@ -1782,9 +1782,9 @@ def directions_results_report(request):
 
 
 def mkb10(request):
-    kw = request.GET.get("keyword", "")
+    kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(code__istartswith=kw, d_type="mkb10.4").order_by("code")[:11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
 
@@ -2396,11 +2396,15 @@ def fast_template_save(request):
             pi.value = data["fields"][str(pi.input_field.pk)]
             pi.save()
             has.append(pi.input_field.pk)
+        if data["fields"][str(pi.input_field.pk)] == pi.value:
+            has.append(pi.input_field.pk)
     ParaclinicTemplateField.objects.filter(pk__in=to_delete).delete()
     for pk in data["fields"]:
         pki = int(pk)
         if pki not in has:
-            ParaclinicTemplateField(template_name=p, input_field_id=pki, value=data["fields"][pk]).save()
+            i = ParaclinicInputField.objects.get(pk=pki)
+            if i.field_type in [0, 2]:
+                ParaclinicTemplateField(template_name=p, input_field=i, value=data["fields"][pk]).save()
     return JsonResponse({"pk": p.pk})
 
 

@@ -140,7 +140,7 @@
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <m-k-b-field v-model="field.value" />
+                  <m-k-b-field v-model="field.value" :short="false" />
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 3">
                   <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
