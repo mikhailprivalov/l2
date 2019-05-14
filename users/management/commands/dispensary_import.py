@@ -1,14 +1,12 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 import clients.models as clients
-from django.db.models import Q
 import datetime
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
         """
-        :param path - файл с пациентами
-               path_distr - файл с участками
+        :param path - файл с картами пациентов + диагноз Д-учета
         """
         parser.add_argument('path', type=str)
 

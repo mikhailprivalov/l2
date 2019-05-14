@@ -35,7 +35,7 @@ class Command(BaseCommand):
         print('загружены коды:участки' + '\n', distr)
 
 
-        def get_district(uch=None, gin_uch=None):
+        def get_district(uch='', gin_uch=''):
             """
             парам1 - код для обычного участка
             парам2 - код для гинекологического участка
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                     if created:
                         print('Добавлен участок' + '\n', obj_uch)
 
-            if gin_uch != None:
+            if gin_uch:
                 title_gin = distr.get(gin_uch)
                 if title_gin != None:
                     obj_gin, gin_created = clients.District.objects.get_or_create(code_poliklinika=gin_uch,

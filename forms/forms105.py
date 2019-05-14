@@ -297,7 +297,6 @@ def form_02(request_data):
              [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
              [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
              [Paragraph('Через сколько часов доставлен от начала заболевания', styleT), Paragraph('{}'.format('Свыше 24 часов'), styleT)],
-
              ]
 
         tbl = Table(opinion,
@@ -309,14 +308,11 @@ def form_02(request_data):
 
         objs.append(tbl)
 
+        #TODO: Добавить Заключительные положения
 
+        #TODO: Добавить Дополнительные услуги
 
-
-        #Добавить Заключительные положения
-
-        #Добавить Дополнительные услуги
-
-        #Добавить сведенрия о враче
+        #TODO: Добавить сведенрия о враче
 
         objs.append(PageBreak())
 
