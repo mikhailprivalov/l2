@@ -308,9 +308,30 @@ def form_02(request_data):
 
         objs.append(tbl)
 
-        #TODO: Добавить Заключительные положения
+        #Заключительные положения
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+        opinion = [
+            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(''), styleT)],
+            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(''), styleT)],
+            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(''), styleT)],
+            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(''), styleT)],
+        ]
 
-        #TODO: Добавить Дополнительные услуги
+        tbl = Table(opinion,
+                    colWidths=(60 * mm, 123 * mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
+        objs.append(tbl)
+
+        #Добавить Дополнительные услуги
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+
 
         #TODO: Добавить сведенрия о враче
 

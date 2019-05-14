@@ -29,7 +29,7 @@
       },
       content() {
         if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.content)) {
-          this.content = this.content.toUpperCase()
+          this.content = this.content.toUpperCase();
           const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
             'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
             'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'];
@@ -39,10 +39,12 @@
             'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'];
 
           for (let i = 0; i < replace.length; i++) {
+            break;
             let reg = new RegExp(replace[i], 'mig');
             this.content = this.content.replace(reg, function (a) {
               return a === a.toLowerCase() ? search[i] : search[i].toUpperCase();
             })
+
           }
         }
         this.$emit('input', this.content);
@@ -50,7 +52,7 @@
     },
     methods: {
       onHit(item) {
-        this.content = item.split(' ')[0] || '';
+        this.content = item || '';
       }
     },
   }
