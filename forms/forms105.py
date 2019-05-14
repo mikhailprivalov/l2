@@ -19,9 +19,8 @@ from laboratory.settings import FONTS_FOLDER
 from datetime import *
 import datetime
 import simplejson as json
-from directions.models import Napravleniya
 from appconf.manager import SettingManager
-# from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
+from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
 
 
 
@@ -196,7 +195,7 @@ def form_02(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=25 * mm,
+                            leftMargin=18 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=6 * mm, allowSplitting=1,
                             title="Форма {}".format("Статталон пациента"))
@@ -281,12 +280,37 @@ def form_02(request_data):
                                             13 * space_symbol, patient_data['snils']), style),
             Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
                       style),
-            Spacer(1, 3 * mm),
-            Paragraph('<font size=11>Данные об услуге:</font>', styleBold),
+
+
         ]
         objs.extend(content_title)
 
         #добавить данные об услуге
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+
+        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir).first()
+        date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
+        opinion = [
+             [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
+             [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
+             [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
+             [Paragraph('Через сколько часов доставлен от начала заболевания', styleT), Paragraph('{}'.format('Свыше 24 часов'), styleT)],
+
+             ]
+
+        tbl = Table(opinion,
+                    colWidths=(60 * mm, 123* mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
+
+        objs.append(tbl)
+
+
+
 
         #Добавить Заключительные положения
 

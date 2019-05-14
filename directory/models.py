@@ -161,7 +161,7 @@ class ParaclinicInputField(models.Model):
     title = models.CharField(max_length=255, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
-    default_value = models.TextField()
+    default_value = models.TextField(blank=True, default='')
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
