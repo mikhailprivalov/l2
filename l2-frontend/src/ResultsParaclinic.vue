@@ -9,35 +9,37 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div style="overflow-y: auto;overflow-x:hidden;" class="directions">
-        <div class="direction" v-for="direction in directions_history">
-          <div>
-            {{direction.patient}}, {{direction.card}}
-          </div>
-          <div v-for="i in direction.iss" class="research-row">
+      <div class="directions" :class="{noStat: !stat_btn}">
+        <div class="inner">
+          <div class="direction" v-for="direction in directions_history">
+            <div>
+              {{direction.patient}}, {{direction.card}}
+            </div>
+            <div v-for="i in direction.iss" class="research-row">
+              <div class="row">
+                <div class="col-xs-8">
+                  {{i.title}}
+                </div>
+                <div class="col-xs-4 text-right">
+                  <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
+                  <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
+                  <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+                </div>
+              </div>
+            </div>
+            <hr/>
             <div class="row">
-              <div class="col-xs-8">
-                {{i.title}}
-              </div>
-              <div class="col-xs-4 text-right">
-                <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
-                <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
-                <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+              <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-7 text-right">
+                <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
               </div>
             </div>
           </div>
-          <hr/>
-          <div class="row">
-            <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-            <div class="col-xs-7 text-right">
-              <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
-            </div>
+          <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
+            Нет данных
           </div>
-        </div>
-        <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
-          Нет данных
-        </div>
-        <a v-else
+        </div>purpose
+        <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
@@ -109,7 +111,9 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed, required: field.required}"
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed,
+                empty: r_list_pk(row).includes(field.pk),
+                required: field.required}"
                    :title="field.required && 'обязательно для заполнения'"
                    @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
@@ -302,6 +306,23 @@
             n++;
             if (f.required && (f.value === '' || !f.value)) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title));
+            }
+          }
+        }
+        return l.slice(0, 2);
+      },
+      r_list_pk(research) {
+        const l = [];
+        if (research.confirmed) {
+          return [];
+        }
+
+        for (const g of research.research.groups) {
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || !f.value)) {
+              l.push(f.pk);
             }
           }
         }
@@ -584,6 +605,9 @@
       fte() {
         return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
       },
+      stat_btn() {
+        return (this.$store.getters.user_data.modules || {}).stat_btn;
+      },
       pk_c() {
         let lpk = this.pk.trim()
         if (lpk === '')
@@ -810,6 +834,12 @@
     &.required {
       background-color: #e6e6e6;
       border-right: 3px solid #00a1cb;
+      &.empty {
+        input, textarea, /deep/ input {
+          border-color: #f00;
+        }
+        border-right: 3px solid #f00;
+      }
     }
   }
 
@@ -966,6 +996,8 @@
 
   .status-list {
     display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mkb10 {
@@ -1004,6 +1036,14 @@
     position: relative;
     height: calc(100% - 68px);
     padding-bottom: 34px;
+    &.noStat {
+      padding-bottom: 0;
+    }
+    .inner {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x:hidden;
+    }
     .stat {
       position: absolute;
       bottom: 0;

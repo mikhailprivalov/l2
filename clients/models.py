@@ -578,6 +578,9 @@ class District(models.Model):
     title = models.CharField(max_length=128)
     sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
     is_ginekolog = models.BooleanField(help_text="Гинекологический участок", default=False)
+    code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True,
+                                        blank=True)
+
 
     def __str__(self):
         return self.title
@@ -585,6 +588,7 @@ class District(models.Model):
     class Meta:
         verbose_name = 'Участок'
         verbose_name_plural = 'Участки'
+
 
 class Card(models.Model):
     AGENT_CHOICES = (
@@ -622,7 +626,8 @@ class Card(models.Model):
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
     agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)",
                               blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='',
+                                      help_text="Документ-оснвоание представителя")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True,
                               default=None, on_delete=models.SET_NULL)
 
@@ -630,9 +635,15 @@ class Card(models.Model):
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
-    ginekolog_district = models.ForeignKey(District, related_name='ginek_district', default=None, null=True, blank=True, help_text="Участок",
-                                 on_delete=models.SET_NULL)
+
+    ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True,
+                                           blank=True, help_text="Участок",
+                                           on_delete=models.SET_NULL)
+
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
+    number_poliklinika = models.CharField(max_length=20, blank=True, default='',
+                                          help_text="Идетификатор карты поликлиника", db_index=True)
+    phone = models.CharField(max_length=20, blank=True, default='')
 
     def __str__(self):
         return "{0} - {1}, {2}, Архив - {3}".format(self.number, self.base, self.individual, self.is_archive)
@@ -645,19 +656,12 @@ class Card(models.Model):
 
     def get_phones(self):
         return list(set([y for y in [x.normalize_number() for x in
-                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)] if
-                         y != ""]))
-
-    # def full_type_card(self):
-    #     return "{}".format(self.base.title)
+                                     Phones.objects.filter(card__individual=self.individual, card__is_archive=False)]
+                         + [Phones.nn(self.phone)]
+                         if y and len(y) > 1]))
 
     def short_type_card(self):
         return "{}".format(self.base.short_title)
-
-
-    class Meta:
-        verbose_name = 'Карта'
-        verbose_name_plural = 'Карты'
 
     def clear_phones(self, ts):
         to_delete = [x.pk for x in Phones.objects.filter(card=self) if x.number not in ts]
@@ -775,6 +779,10 @@ class Card(models.Model):
         c.save()
         return c
 
+    class Meta:
+        verbose_name = 'Карта'
+        verbose_name_plural = 'Карты'
+
 
 class AnamnesisHistory(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
@@ -782,18 +790,24 @@ class AnamnesisHistory(models.Model):
     who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class DispensaryReg(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True)
+    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
     illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
     spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
     doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет',
                                  on_delete=models.CASCADE)
-    date_start = models.DateTimeField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
+    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
     doc_end_reg = models.ForeignKey(DoctorProfile,related_name='doc_end_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с учета',
                                  on_delete=models.CASCADE)
-    date_end = models.DateTimeField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
+    date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
+
+    class Meta:
+        verbose_name = 'Д-учет'
+        verbose_name_plural = 'Д-учет'
+        unique_together = [['card', 'diagnos', 'date_end']]
 
 
 class Phones(models.Model):

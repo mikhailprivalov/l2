@@ -11,7 +11,6 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -23,6 +22,7 @@ from django.views.decorators.csrf import csrf_exempt
 import api.models as models
 import directions.models as directions
 import users.models as users
+from api import fias
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
@@ -437,6 +437,7 @@ def current_user_info(request):
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
             "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b'),
             "l2_fast_templates": SettingManager.get("l2_fast_templates", default='false', default_type='b'),
+            "stat_btn": SettingManager.get("l2_stat_btn", default='false', default_type='b'),
         }}
     if ret["auth"]:
         ret["username"] = request.user.username
@@ -1294,6 +1295,8 @@ def directions_paraclinic_form(request):
                     "pk": i.pk,
                     "research": {
                         "title": i.research.title,
+                        "is_paraclinic": i.research.is_paraclinic,
+                        "is_doc_refferal": i.research.is_doc_refferal,
                         "groups": []
                     },
                     "templates": [],
@@ -2001,6 +2004,7 @@ def patients_get_card_data(request, card_id):
             for x in Document.objects.filter(individual=card.individual).distinct('pk', "number", "document_type",
                                                                                   "serial").order_by('pk')]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
+    d = District.objects.all().order_by('-sort_weight', '-id')
     return JsonResponse({**i, **c,
                          "docs": docs,
                          "main_docs": card.get_card_documents(),
@@ -2012,8 +2016,10 @@ def patients_get_card_data(request, card_id):
                          "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
                          "district": card.district_id or -1,
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                                       *[{"id": x.pk, "title": x.title}
-                                         for x in District.objects.all().order_by('-sort_weight', '-id')]],
+                                       *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
+                         "ginekolog_district": card.ginekolog_district_id or -1,
+                         "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
+                                           *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
                          "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
                          "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
@@ -2056,6 +2062,8 @@ def autocomplete(request):
     l = request.GET.get("limit", 10)
     data = []
     if v != "" and l > 0:
+        if t == "fias":
+            data = fias.suggest(v)
         if t == "name":
             p = Individual.objects.filter(name__istartswith=v).distinct('name')[:l]
             if p.exists():
@@ -2156,8 +2164,10 @@ def patients_card_save(request):
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
-    c.district = District.objects.filter(pk=request_data["district"]).first()
+    c.district_id = request_data["district"] if request_data["district"] != -1 else None
+    c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
+    c.phone = request_data["phone"]
     c.save()
     if c.individual.primary_for_rmis:
         c.individual.sync_with_rmis()
