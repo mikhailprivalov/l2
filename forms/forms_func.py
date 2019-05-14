@@ -307,7 +307,8 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
         temp_dict['polis_data'] = '<u>'+napr_attr['polis_n']+'</u>' + '<br/>' + napr_attr['polis_who_give']
-        temp_dict['purpose'] = empty if not i.purpose else i.purpose
+        temp_dict['purpose'] = empty
+        # temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
         temp_dict['first_time'] = 'Да' if i.first_time else 'Нет'

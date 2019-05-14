@@ -7,7 +7,8 @@ from reportlab.lib.pagesizes import A4, portrait, landscape
 from reportlab.lib.units import mm
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
+from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus.flowables import HRFlowable
 
 from copy import deepcopy
 import os.path
@@ -34,6 +35,7 @@ def form_01(request_data):
     str_date = request_data['date']
     date_confirm = datetime.datetime.strptime(str_date, "%d%m%Y")
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
+    print(doc_results)
     talon = forms_func.get_finaldata_talon(doc_results)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
@@ -290,7 +292,7 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
-        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir).first()
+        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=False).first()
         date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
         opinion = [
              [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
@@ -313,10 +315,10 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
         opinion = [
-            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(''), styleT)],
-            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(''), styleT)],
-            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(''), styleT)],
-            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(''), styleT)],
+            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(obj_iss.purpose), styleT)],
+            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(obj_iss.outcome_illness), styleT)],
+            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(obj_iss.result_reception), styleT)],
+            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(obj_iss.diagnos), styleT)],
         ]
 
         tbl = Table(opinion,
@@ -327,14 +329,25 @@ def form_02(request_data):
         ]))
         objs.append(tbl)
 
-        #Добавить Дополнительные услуги
-        objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
-        objs.append(Spacer(1, 1 * mm))
+        if Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True):
+            obj_iss_add = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True)
+            # Добавить Дополнительные услуги
+            objs.append(Spacer(1, 3 * mm))
+            objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
+            objs.append(Spacer(1, 1 * mm))
+
+            for i in obj_iss_add:
+                objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
 
 
         #TODO: Добавить сведенрия о враче
-
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(
+            HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+        objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
+             40 * space_symbol, obj_iss.doc_confirmation.personal_code ),style))
         objs.append(PageBreak())
 
 
