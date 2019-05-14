@@ -788,9 +788,13 @@
       },
       onHit(name, no_next) {
         return (item, t) => {
-          if (t.$el && !no_next) {
-            let index = $('input', this.$el).index($('input', t.$el)) + 1;
-            $('input', this.$el).eq(index).focus();
+          if (t.$el) {
+            if (no_next) {
+              $('input', t.$el).focus();
+            } else {
+              let index = $('input', this.$el).index($('input', t.$el)) + 1;
+              $('input', this.$el).eq(index).focus();
+            }
           }
           if (!item) {
             return;

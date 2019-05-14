@@ -41,7 +41,7 @@
                     <input v-model="template_data.fields[field.pk]" class="form-control" :readonly="template_data.readonly" v-else/>
                   </div>
                   <div class="field-value mkb10" v-else-if="field.field_type === 2 && !template_data.readonly">
-                    <m-k-b-field v-model="template_data.fields[field.pk]" />
+                    <m-k-b-field v-model="template_data.fields[field.pk]" :short="false" />
                   </div>
                   <div class="field-value" v-else-if="field.field_type === 2 && template_data.readonly">
                     <input v-model="template_data.fields[field.pk]" readonly class="form-control" :readonly="true" />
@@ -115,7 +115,7 @@
         if (this.selected_template !== -2) {
           for (const g of this.groups) {
             for (const f of g.fields) {
-              if (!this.template_data.fields[f.pk]) {
+              if (!this.template_data.fields[f.pk] && this.template_data.fields[f.pk] !== '') {
                 this.template_data.fields[f.pk] = f.default;
               }
             }

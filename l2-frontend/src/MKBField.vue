@@ -14,7 +14,13 @@
 
   export default {
     name: 'm-k-b-field',
-    props: ['value'],
+    props: {
+      value: String,
+      short: {
+        type: Boolean,
+        default: true,
+      }
+    },
     components: {
       TypeAhead,
     },
@@ -28,31 +34,32 @@
         this.content = this.value
       },
       content() {
-        if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.content)) {
-          this.content = this.content.toUpperCase();
+        let [s1, ...s2] = this.content.split(' ');
+        s2 = s2.join(' ');
+        if (/^[a-zA-Zа-яА-Я]\d.*/g.test(s1)) {
+          s1 = s1.toUpperCase()
           const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
             'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
-            'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'];
+            'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю'].map(x => x.toUpperCase());
 
           const search = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\[', '\\]',
             'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
-            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'];
+            'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.'].map(x => x.toUpperCase());
 
           for (let i = 0; i < replace.length; i++) {
-            break;
             let reg = new RegExp(replace[i], 'mig');
-            this.content = this.content.replace(reg, function (a) {
-              return a === a.toLowerCase() ? search[i] : search[i].toUpperCase();
+            s1 = s1.replace(reg, function (a) {
+              return search[i];
             })
-
           }
         }
+        this.content = s1 + (s2 !== '' ? ' ' + s2 : '');
         this.$emit('input', this.content);
       }
     },
     methods: {
       onHit(item) {
-        this.content = item || '';
+        this.content = this.short ? (item.split(' ')[0] || '') : item;
       }
     },
   }
