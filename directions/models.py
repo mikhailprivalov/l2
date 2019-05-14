@@ -660,7 +660,7 @@ class Issledovaniya(models.Model):
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
     creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research", db_index=True, help_text='Профиль пользователя, добавившего услуги к созданному направлению', on_delete=models.SET_NULL)
-    is_additional_services = models.BooleanField(default=False, blank=True)
+    is_additional_research = models.BooleanField(default=False, blank=True)
 
     def get_stat_diagnosis(self):
         pass
