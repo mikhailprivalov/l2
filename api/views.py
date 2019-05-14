@@ -435,9 +435,7 @@ class Researches(View):
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
-            "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b'),
-            "l2_fast_templates": SettingManager.get("l2_fast_templates", default='false', default_type='b'),
-            "stat_btn": SettingManager.get("l2_stat_btn", default='false', default_type='b'),
+            **SettingManager.l2_modules(),
         }}
     if ret["auth"]:
         ret["username"] = request.user.username

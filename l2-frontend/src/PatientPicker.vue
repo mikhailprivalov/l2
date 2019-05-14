@@ -318,7 +318,7 @@
         return this.normalized_query.length > 0
       },
       l2_cards() {
-        return (this.$store.getters.user_data.modules || {}).l2_cards;
+        return this.$store.getters.modules.l2_cards_module;
       },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {
