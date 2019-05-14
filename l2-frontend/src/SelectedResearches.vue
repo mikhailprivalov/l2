@@ -217,7 +217,6 @@
             'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.']
 
           for (let i = 0; i < replace.length; i++) {
-            break;
             let reg = new RegExp(replace[i], 'mig')
             this.diagnos = this.diagnos.replace(reg, function (a) {
               return a === a.toLowerCase() ? search[i] : search[i].toUpperCase()
