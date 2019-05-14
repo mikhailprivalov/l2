@@ -347,7 +347,7 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
         objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
-             40 * space_symbol, obj_iss.doc_confirmation.personal_code ),style))
+             42 * space_symbol, obj_iss.doc_confirmation.personal_code ),style))
         objs.append(PageBreak())
 
 
