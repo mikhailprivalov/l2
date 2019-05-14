@@ -95,7 +95,7 @@ def receive_db(request):
     snils_types = Clients.DocumentType.objects.filter(title__startswith="СНИЛС")
     districts = {}
     for x in District.objects.all():
-        districts[d.title] = x
+        districts[x.title] = x
 
     for x in d:
         polis = Clients.Document.objects.filter(
