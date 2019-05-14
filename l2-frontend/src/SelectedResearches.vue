@@ -207,7 +207,7 @@
       },
       diagnos() {
         if (/^[a-zA-Zа-яА-Я]\d.*/g.test(this.diagnos)) {
-          this.diagnos = this.diagnos.toUpperCase().split(' ')[0]
+          this.diagnos = this.diagnos.toUpperCase()
           const replace = ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ',
             'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э',
             'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю']
