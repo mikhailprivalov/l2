@@ -7,7 +7,7 @@
         {{selected_type.title}}
       </button>
       <ul v-if="types.length > 1" class="dropdown-menu">
-        <li v-for="row in types" :value="row.pk" v-if="row.pk !== selected_type.pk">
+        <li v-for="row in types" :value="row.pk">
           <a href="#" @click.prevent="select_type(row.pk)">{{row.title}}</a>
         </li>
       </ul>
@@ -200,6 +200,12 @@
         }
         return i
       },
+      t() {
+        return parseInt(this.type || 0);
+      },
+      rev_t() {
+        return this.is_doc_ref ? 2 - this.t : this.t;
+      },
       is_doc_ref() {
         return parseInt(this.type || 0) > 3
       },
@@ -229,19 +235,7 @@
         return this.$store.getters.templates
       },
       researches_display() {
-        let r = [];
-        if(this.is_doc_ref) {
-          for(const d of Object.keys(this.$store.getters.researches)) {
-            for(const row of this.$store.getters.researches[d]) {
-              if(row.doc_refferal && row.site_type === this.dep) {
-                r.push(row);
-              }
-            }
-          }
-        } else if (this.dep in this.$store.getters.researches) {
-          r = this.$store.getters.researches[this.dep];
-        }
-        return r
+        return this.researches_dep_display();
       },
       founded_n() {
         let r = 'Не найдено'
@@ -258,6 +252,27 @@
       },
     },
     methods: {
+      researches_dep_display(dep=this.dep) {
+        let r = [];
+        if(this.rev_t === -2) {
+          for(const d of Object.keys(this.$store.getters.researches)) {
+            for(const row of this.$store.getters.researches[d]) {
+              if(row.doc_refferal && row.site_type === dep) {
+                r.push(row);
+              }
+            }
+          }
+        } else if(this.rev_t < -2) {
+          for(const row of this.$store.getters.researches[this.rev_t]) {
+            if(row.site_type === dep) {
+              r.push(row);
+            }
+          }
+        } else if (this.dep in this.$store.getters.researches) {
+          r = this.$store.getters.researches[dep];
+        }
+        return r
+      },
       k(t) {
         let n = 0
         switch (t) {
@@ -376,7 +391,7 @@
         }
       },
       deselect_department(pk) {
-        for (let rpk of this.researches_selected_in_department(pk)) {
+        for (let rpk of this.researches_selected_in_department(pk, true)) {
           this.deselect_research_ignore(rpk)
         }
       },
@@ -416,14 +431,26 @@
         }
         return {}
       },
-      researches_selected_in_department(pk) {
-        let r = []
-        for (let rpk of this.checked_researches) {
-          let res = this.research_data(rpk)
-          if ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2)) ||
-            (this.is_doc_ref && res.site_type === pk && res.doc_refferal) ||
-            (!res.site_type && res.doc_refferal && pk === -2)) {
-            r.push(rpk)
+      researches_selected_in_department(pk, prim) {
+        let r = [];
+        if (prim) {
+          for (let rpk of this.checked_researches) {
+            let res = this.research_data(rpk)
+            if (res.department_pk === pk || (pk === -2 && res.doc_refferal)) {
+              r.push(rpk)
+            }
+          }
+        } else {
+          for (let rpk of this.checked_researches) {
+            let res = this.research_data(rpk)
+            if (this.rev_t < -2 && res.department_pk === this.rev_t && ((!res.site_type && !pk) || res.site_type === pk)) {
+              r.push(rpk)
+            } else if (this.rev_t >= -2 &&
+              ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2)) ||
+                (this.is_doc_ref && res.site_type === pk && res.doc_refferal) ||
+                (!res.site_type && res.doc_refferal && pk === -2))) {
+              r.push(rpk)
+            }
           }
         }
         return r
