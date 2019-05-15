@@ -161,7 +161,7 @@ def send(request):
                                 if fractionRel.full_round:
                                     val = round(val)
 
-                                if fractionRel.signs_after_point > 0:
+                                if fractionRel.signs_after_point != None:
                                     val = f'{val:.{fractionRel.signs_after_point}f}'
 
                                 fraction_result.value = fraction_result.value.replace(find[0], str(val))
