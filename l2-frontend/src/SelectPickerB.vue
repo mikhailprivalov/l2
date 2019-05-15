@@ -1,6 +1,8 @@
 <template>
   <div :class="{'no-border-left': noBorderLeft === 'true'}">
-    <select v-model="lv" ref="sel" class="selectpicker" data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
+    <select v-model="lv" ref="sel" class="selectpicker"
+            :disabled="disabled"
+            data-width="100%" data-container="body" data-none-selected-text="Ничего не выбрано">
       <option :value="option.value" v-for="option in options">{{ option.label }}</option>
     </select>
   </div>
@@ -18,6 +20,11 @@
       noBorderLeft: {
         type: String,
         default: 'false'
+      },
+      disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
       }
     },
     data() {
@@ -28,6 +35,11 @@
     },
     watch: {
       options() {
+        if (this.inited) {
+          this.resync()
+        }
+      },
+      disabled() {
         if (this.inited) {
           this.resync()
         }

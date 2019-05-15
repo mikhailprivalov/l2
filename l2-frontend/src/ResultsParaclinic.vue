@@ -155,14 +155,69 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="row.research.is_doc_refferal && stat_btn">
+            <div class="group-title">Данные статталона</div>
+            <div class="fields">
+              <div class="field">
+                <div class="field-title">
+                    Цель посещения
+                </div>
+                <div class="field-value">
+                  <select v-model="row.purpose" :disabled="row.confirmed">
+                    <option v-for="o in row.purpose_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Впервые
+                </div>
+                <label class="field-value">
+                  <input type="checkbox" v-model="row.first_time" :disabled="row.confirmed" />
+                </label>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Результат обращения
+                </div>
+                <div class="field-value">
+                  <select v-model="row.result" :disabled="row.confirmed">
+                    <option v-for="o in row.result_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Исход
+                </div>
+                <div class="field-value">
+                  <select v-model="row.outcome" :disabled="row.confirmed">
+                    <option v-for="o in row.outcome_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Подозрение на онко
+                </div>
+                <label class="field-value">
+                  <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
+                </label>
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed || !r(row)">Подтвердить
-            </button>
             <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
               подтвердить
             </button>
@@ -208,6 +263,7 @@
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
   import SelectPickerM from './SelectPickerM'
+  import SelectPickerB from './SelectPickerB'
   import researches_point from './api/researches-point'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
@@ -218,7 +274,7 @@
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM, SelectPickerB},
     data() {
       return {
         pk: '',
@@ -240,21 +296,6 @@
       date() {
         this.load_history()
       },
-      data: {
-        handler() {
-          if(this.data.ok) {
-            if (this.inserted) {
-              this.changed = true
-            } else {
-              this.inserted = true
-            }
-          } else {
-            this.changed = false
-            this.inserted = false
-          }
-        },
-        deep: true
-      }
     },
     mounted() {
       let vm = this
@@ -764,6 +805,7 @@
   .group {
     margin: 5px;
     border: 1px solid #c1c1c1;
+    background: #fff;
   }
 
   .group-title {
@@ -861,6 +903,13 @@
     .form-control {
       width: 100%;
       border-radius: 0;
+    }
+    select {
+      width: 100%;
+      max-width: 370px;
+    }
+    input[type="checkbox"] {
+      margin-top: 8px;
     }
   }
 

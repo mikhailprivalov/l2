@@ -117,10 +117,9 @@ def form_01(request_data):
         objs.append(Spacer(1, 1.5 * mm))
         t_opinion = opinion.copy()
         for u, s in v.items():
-            list_t = []
-            list_t.append(Paragraph(str(u), styleT))
+            list_t = [Paragraph(str(u), styleT)]
             for t, q in s.items():
-                list_t.append(Paragraph(q, styleT))
+                list_t.append(Paragraph(str(q), styleT))
             list_g.append(list_t)
         t_opinion.extend(list_g)
 
