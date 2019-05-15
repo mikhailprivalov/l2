@@ -31,7 +31,8 @@
             <div class="row">
               <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
               <div class="col-xs-4 text-center">
-                <a :href="`/forms/pdf?type=105.02&napr_id=[${direction.pk}]`" target="_blank" v-if="direction.all_confirmed">Статталон</a>
+                <a :href="`/forms/pdf?type=105.02&napr_id=[${direction.pk}]`"
+                   target="_blank" v-if="direction.all_confirmed && stat_btn">Статталон</a>
               </div>
               <div class="col-xs-4 text-right">
                 <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
