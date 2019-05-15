@@ -25,14 +25,13 @@ class Command(BaseCommand):
                     num_card = cells.index("карта")
                     diag = cells.index("диагноз")
                     date_start = cells.index("дата1")
-                    continue
             else:
                 if clients.Card.objects.filter(number_poliklinika=cells[num_card]).first():
                     card = clients.Card.objects.filter(number_poliklinika=cells[num_card]).first()
                     day_start = datetime.datetime.strptime(cells[date_start], "%Y-%m-%d %H:%M:%S").date()
                     clients.DispensaryReg.objects.update_or_create(card=card, diagnos=cells[diag],
                             defaults={'date_start':day_start})
-                    print('добавлен/обновлен Д-учет:' + '\n', card, )
-                    print('Диагноз:дата постановки:' + '\n', cells[diag], day_start)
+                    print('добавлен/обновлен Д-учет: \n', card, )
+                    print('Диагноз:дата постановки: \n', cells[diag], day_start)
 
 
