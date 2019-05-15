@@ -243,7 +243,7 @@
     },
     computed: {
       fte() {
-        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+        return this.$store.getters.modules.l2_fast_templates;
       },
       valid() {
         return this.norm_title.length > 0 && !this.cancel_do

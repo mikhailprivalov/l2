@@ -329,13 +329,11 @@ def departments(request):
     if request.method == "GET":
         deps = [{"pk": x.pk, "title": x.get_title(), "type": str(x.p_type), "updated": False} for
                 x in Podrazdeleniya.objects.all().order_by("pk")]
+        en = SettingManager.en()
         return JsonResponse(
             {"departments": deps,
              "can_edit": can_edit,
-             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if
-                       (x[0] == 3 and SettingManager.get("paraclinic_module", default='false', default_type='b'))
-                       or (x[0] == 4 and SettingManager.get("consults_module", default='false', default_type='b'))
-                       or x[0] not in [3, 4]]})
+             "types": [{"pk": str(x[0]), "title": x[1]} for x in Podrazdeleniya.TYPES if en.get(x[0], True)]})
     elif can_edit:
         ok = False
         message = ""
@@ -414,13 +412,15 @@ class Researches(View):
             autoadd = [x.b.pk for x in AutoAdd.objects.filter(a=r)]
             addto = [x.a.pk for x in AutoAdd.objects.filter(b=r)]
 
-            deps[-2 if not r.podrazdeleniye else r.podrazdeleniye.pk].append(
+            deps[r.reversed_type].append(
                 {"pk": r.pk,
                  "onlywith": -1 if not r.onlywith else r.onlywith.pk,
-                 "department_pk": -2 if not r.podrazdeleniye else r.podrazdeleniye.pk,
+                 "department_pk": r.reversed_type,
                  "title": r.get_title(),
                  "full_title": r.title,
                  "doc_refferal": r.is_doc_refferal,
+                 "treatment": r.is_treatment,
+                 "stom": r.is_stom,
                  "need_vich_code": r.need_vich_code,
                  "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
                  "autoadd": autoadd,
@@ -439,9 +439,7 @@ class Researches(View):
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
-            "l2_cards": SettingManager.get("l2_cards_module", default='false', default_type='b'),
-            "l2_fast_templates": SettingManager.get("l2_fast_templates", default='false', default_type='b'),
-            "stat_btn": SettingManager.get("l2_stat_btn", default='false', default_type='b'),
+            **SettingManager.l2_modules(),
         }}
     if ret["auth"]:
         ret["username"] = request.user.username
@@ -452,33 +450,41 @@ def current_user_info(request):
         ret["doc_pk"] = request.user.doctorprofile.pk
         ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
-        d = ResearchSite.objects.filter(hide=False).order_by('title')
-        e4 = []
-        if DResearches.objects.filter(hide=False, site_type__isnull=True):
-            e4 = [
-                {
-                    "pk": None,
-                    "title": 'По-умолчанию',
-                    'type': 0,
-                    "extended": True,
-                }
-            ]
-        ret["extended_departments"] = {
-            4: [*e4,
+
+        en = SettingManager.en()
+        ret["extended_departments"] = {}
+
+        st_base = ResearchSite.objects.filter(hide=False).order_by('title')
+        for e in en:
+            if e < 4 or not en[e]:
+                continue
+
+            t = e - 4
+            has_def = DResearches.objects.filter(hide=False, site_type__isnull=True,
+                                                 **DResearches.filter_type(e)).exists()
+
+            if has_def:
+                d = [
+                    {
+                        "pk": None,
+                        "title": 'По-умолчанию',
+                        'type': t,
+                        "extended": True,
+                    }
+                ]
+            else:
+                d = []
+
+            ret["extended_departments"][e] = [
+                *d,
                 *[{
                     "pk": x.pk,
                     "title": x.title,
-                    "type": 0,
+                    "type": t,
                     "extended": True,
-                } for x in d.filter(site_type=0)]
-            ],
-            1: [{
-                "pk": x.pk,
-                "title": x.title,
-                "type": 1,
-                "extended": True,
-            } for x in d.filter(site_type=1)],
-        }
+                    'e': e,
+                } for x in st_base.filter(site_type=t)]
+            ]
     return JsonResponse(ret)
 
 
