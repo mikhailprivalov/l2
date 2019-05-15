@@ -29,8 +29,11 @@
             </div>
             <hr/>
             <div class="row">
-              <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-              <div class="col-xs-7 text-right">
+              <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-4 text-center">
+                <a :href="`/forms/pdf?type=105.02&napr_id=[${direction.pk}]`" target="_blank" v-if="direction.all_confirmed">Статталон</a>
+              </div>
+              <div class="col-xs-4 text-right">
                 <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
               </div>
             </div>
@@ -603,10 +606,10 @@
         return this.data.anamnesis;
       },
       fte() {
-        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+        return this.$store.getters.modules.l2_fast_templates;
       },
       stat_btn() {
-        return (this.$store.getters.user_data.modules || {}).stat_btn;
+        return this.$store.getters.modules.l2_stat_btn;
       },
       pk_c() {
         let lpk = this.pk.trim()
