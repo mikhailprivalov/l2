@@ -2331,7 +2331,7 @@ def save_anamnesis(request):
 
 def laborants(request):
     data = []
-    if SettingManager.get("l2_results_laborants", default='false', default_type='b'):
+    if SettingManager.l2('results_laborants'):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
