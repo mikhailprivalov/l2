@@ -289,7 +289,9 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
+        print(obj_dir)
         obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, parent_id=None).first()
+        print(obj_iss.time_confirmation)
         date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
 
         opinion = [
