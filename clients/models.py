@@ -1,14 +1,13 @@
 import sys
-from datetime import datetime, date
-from dateutil.relativedelta import relativedelta
+from datetime import date
 
 import simplejson
+from dateutil.relativedelta import relativedelta
 from django.core.management.base import OutputWrapper
 from django.db import models
-from  users.models import Speciality, DoctorProfile
 
 import slog.models as slog
-
+from users.models import Speciality, DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -113,7 +112,8 @@ class Individual(models.Model):
 
         save_docs = []
 
-        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False).exists():
+        if ok and rmis_uid != "" and Card.objects.filter(individual=self, base__is_rmis=True,
+                                                         is_archive=False).exists():
             pat_data = c.patients.extended_data(rmis_uid)
             cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
             for card_i in cards:
@@ -143,13 +143,17 @@ class Individual(models.Model):
                                 number=document_object["number"] or "",
                                 date_start=document_object["issueDate"],
                                 date_end=document_object["expiryDate"],
-                                who_give=(document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})["name"] or "",
+                                who_give=
+                                (document_object["issueOrganization"] or {"name": document_object["issuerText"] or ""})[
+                                    "name"] or "",
                                 individual=self,
                                 is_active=True)
-                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True)
+                    rowss = Document.objects.filter(document_type=data['document_type'], individual=self,
+                                                    from_rmis=True)
                     if rowss.exclude(serial=data["serial"]).exclude(number=data["number"]).filter(
                             card__isnull=True).exists():
-                        Document.objects.filter(document_type=data['document_type'], individual=self, from_rmis=True).delete()
+                        Document.objects.filter(document_type=data['document_type'], individual=self,
+                                                from_rmis=True).delete()
                     docs = Document.objects.filter(document_type=data['document_type'],
                                                    serial=data['serial'],
                                                    number=data['number'], from_rmis=True)
@@ -274,7 +278,8 @@ class Individual(models.Model):
                 ((not iss.tubes.exists() or not iss.tubes.filter(
                     time_recive__isnull=False).exists()) and not iss.research.is_paraclinic and not iss.research.is_doc_refferal):
             today = date.today()
-        elif iss.time_confirmation and (iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
+        elif iss.time_confirmation and (
+                iss.research.is_paraclinic or iss.research.is_doc_refferal) or not iss.tubes.exists():
             today = iss.time_confirmation.date()
         else:
             today = iss.tubes.filter(time_recive__isnull=False).order_by("-time_recive")[0].time_recive.date()
@@ -390,7 +395,7 @@ class Individual(models.Model):
                 r = "{} {} {}".format(self.family, self.name, self.patronymic).strip()
             elif bd:
                 r = "{0} {1} {2}, {3:%d.%m.%Y}".format(self.family, self.name, self.patronymic,
-                                                                  self.birthday)
+                                                       self.birthday)
             else:
                 r = "{} {} {}".format(self.name, self.patronymic, self.family).strip()
         else:
@@ -509,11 +514,11 @@ class Document(models.Model):
             if self.rmis_uid:
                 d = c.individuals.client.getDocument(self.rmis_uid)
                 if d["series"] != self.serial or \
-                    d['number'] != self.number or \
-                    d['issuerText'] != self.who_give or \
-                    d['issueDate'] != self.date_start or \
-                    d['expireDate'] != self.date_end or \
-                    d['active'] != self.is_active:
+                        d['number'] != self.number or \
+                        d['issuerText'] != self.who_give or \
+                        d['issueDate'] != self.date_start or \
+                        d['expireDate'] != self.date_end or \
+                        d['active'] != self.is_active:
                     data = {
                         "documentId": self.rmis_uid,
                         "documentData": {
@@ -678,7 +683,8 @@ class Card(models.Model):
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
                 docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document.pk
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
-                d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by('-id')[0]
+                d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by(
+                    '-id')[0]
                 c = CardDocUsage(card=self, document=d)
                 c.save()
                 docs[t] = d.pk
@@ -747,7 +753,8 @@ class Card(models.Model):
         if not ind_data['oms']['polis_serial']:
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
-        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else \
+        ind_documents["polis"]["issued"]
 
         return ind_data
 
@@ -762,14 +769,15 @@ class Card(models.Model):
         return n + 1
 
     @staticmethod
-    def add_l2_card(individual: [Individual, None]=None, card_orig: ['Card', None]=None, distinct=True):
+    def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True):
         if distinct and card_orig \
                 and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
             return
         if not card_orig and not individual:
             return
         c = Card(number=Card.next_l2_n(), base=CardBase.objects.filter(internal_type=True).first(),
-                 individual=individual if individual else card_orig.individual, polis=None if not card_orig else card_orig.polis,
+                 individual=individual if individual else card_orig.individual,
+                 polis=None if not card_orig else card_orig.polis,
                  main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                  main_address='' if not card_orig else card_orig.main_address,
                  fact_address='' if not card_orig else card_orig.fact_address)
@@ -791,13 +799,18 @@ class AnamnesisHistory(models.Model):
 class DispensaryReg(models.Model):
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
-    illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='', blank=True)
-    spec_reg = models.ForeignKey(Speciality,related_name='doc_spec_start', default=None, blank=True, null=True, help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
-    doc_start_reg = models.ForeignKey(DoctorProfile,related_name='doc_start_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач кто поставил на учет',
-                                 on_delete=models.CASCADE)
-    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True, null=True)
-    doc_end_reg = models.ForeignKey(DoctorProfile,related_name='doc_end_reg', default=None, blank=True, null=True, db_index=True, help_text='Лечащий врач, кто снял с учета',
-                                 on_delete=models.CASCADE)
+    illnes = models.CharField(max_length=511, help_text='Заболевание по которому состоит на учете', default='',
+                              blank=True)
+    spec_reg = models.ForeignKey(Speciality, related_name='doc_spec_start', default=None, blank=True, null=True,
+                                 help_text="Профиль специальности", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_reg', default=None, blank=True, null=True,
+                                      db_index=True, help_text='Лечащий врач кто поставил на учет',
+                                      on_delete=models.CASCADE)
+    date_start = models.DateField(help_text='Дата постановки на Д-учет', db_index=True, default=None, blank=True,
+                                  null=True)
+    doc_end_reg = models.ForeignKey(DoctorProfile, related_name='doc_end_reg', default=None, blank=True, null=True,
+                                    db_index=True, help_text='Лечащий врач, кто снял с учета',
+                                    on_delete=models.CASCADE)
     date_end = models.DateField(help_text='Дата сняти с Д-учета', db_index=True, default=None, blank=True, null=True)
     why_stop = models.CharField(max_length=511, help_text='Причина снятия с Д-учета', default='', blank=True)
 

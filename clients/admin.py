@@ -41,6 +41,7 @@ class AgeCacheAdmin(admin.ModelAdmin):
 class DistrictAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(models.DispensaryReg)
 class DispensaryRegAdmin(admin.ModelAdmin):
-    pass
+    raw_id_fields = ('card',)

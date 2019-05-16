@@ -142,6 +142,7 @@
                 <div class="form-row nbt-i sm-f">
                   <div class="row-t" style="display: flex;width: 45%;flex: 0 45%;">
                     <input type="checkbox" v-model="card.custom_workplace" title="Ручной ввод названия"
+                           v-tippy="{ placement : 'bottom', arrow: true }"
                            style="height: auto;flex: 0 23px;" />
                     Место работы
                   </div>
@@ -200,7 +201,9 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="d in card.docs" :title="d.who_give" :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
+          <tr v-for="d in card.docs" :title="d.who_give"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
             prior: card.main_docs[d.document_type] === d.id}">
             <td>
               <input type="radio" :name="`card-doc${d.document_type}`"

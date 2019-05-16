@@ -148,6 +148,32 @@ async function syncRmis(card_pk) {
   return {}
 }
 
+async function loadDreg(card_pk) {
+  try {
+    const response = await HTTP.post('patients/individuals/load-dreg', {
+      card_pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function loadDregDetail(pk) {
+  try {
+    const response = await HTTP.post('patients/individuals/load-dreg-detail', {
+      pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 async function loadAnamnesis(card_pk) {
   try {
     const response = await HTTP.post('patients/individuals/load-anamnesis', {
@@ -174,7 +200,22 @@ async function saveAnamnesis(card_pk, text) {
   return {}
 }
 
+async function saveDreg(card_pk, pk, data) {
+  try {
+    const response = await HTTP.post('patients/individuals/save-dreg', {
+      data,
+      card_pk,
+      pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 export default {searchCard, searchIndividual, searchL2Card, syncRmis,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
-  editAgent, loadAnamnesis, saveAnamnesis,
+  editAgent, loadAnamnesis, saveAnamnesis, loadDreg, saveDreg, loadDregDetail,
 }
