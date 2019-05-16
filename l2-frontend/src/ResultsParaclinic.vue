@@ -42,7 +42,7 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-        </div>purpose
+        </div>
         <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
@@ -150,7 +150,7 @@
                   <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
+                  <input v-model="field.value" class="form-control" :readonly="true" />
                 </div>
               </div>
             </div>
@@ -200,6 +200,17 @@
                       {{o.title}}
                     </option>
                   </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Заключительный диагноз
+                </div>
+                <div class="field-value mkb10" v-if="!row.confirmed">
+                  <m-k-b-field v-model="row.diagnos" :short="false" />
+                </div>
+                <div class="field-value" v-else>
+                  <input v-model="row.diagnos" class="form-control" :readonly="true" />
                 </div>
               </div>
               <div class="field">

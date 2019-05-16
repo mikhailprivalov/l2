@@ -1322,6 +1322,7 @@ def directions_paraclinic_form(request):
                         "result": i.result_reception_id,
                         "outcome": i.outcome_illness_id,
                         "maybe_onco": i.maybe_onco,
+                        "diagnos": i.diagnos,
 
                         "purpose_list": [{"pk": x.pk, "title": x.title} for x in
                                         VisitPurpose.objects.filter(hide=False).order_by("pk")],
@@ -1422,6 +1423,7 @@ def directions_paraclinic_result(request):
         iss.result_reception_id = request_data.get("result")
         iss.outcome_illness_id = request_data.get("outcome")
         iss.maybe_onco = request_data.get("maybe_onco", False)
+        iss.diagnos = request_data.get("diagnos", "")
 
         iss.save()
         response["ok"] = True
@@ -1508,7 +1510,7 @@ def directions_paraclinic_history(request):
             "all_saved": True
         }
         for i in directions.Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
-            iss = {"title": i.research.title,
+            iss = {"title": i.research.get_title(),
                    "saved": i.time_save is not None,
                    "confirmed": i.time_confirmation is not None}
             d["iss"].append(iss)
