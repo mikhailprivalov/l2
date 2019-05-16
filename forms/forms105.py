@@ -98,7 +98,7 @@ def form_01(request_data):
     styleT.fontSize = 9
 
     opinion = [
-        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента', styleT), Paragraph('Дата рождения', styleT),
+        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
          Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
          Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
          Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
@@ -282,9 +282,8 @@ def form_02(request_data):
                                             13 * space_symbol, patient_data['snils']), style),
             Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
                       style),
-
-
         ]
+
         objs.extend(content_title)
 
         #добавить данные об услуге
