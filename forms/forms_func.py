@@ -313,6 +313,11 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['first_time'] = 'Да' if i.first_time else 'Нет'
         temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
         temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
+        temp_dict['d1'] = ''
+        temp_dict['d2'] = ''
+        temp_dict['d3'] = ''
+        temp_dict['d4'] = ''
+        temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
         fin_source[dict_fsourcce].update({order: temp_dict})
 
     return fin_source

@@ -463,7 +463,7 @@ def current_user_info(request):
                 d = [
                     {
                         "pk": None,
-                        "title": 'По-умолчанию',
+                        "title": 'Общие',
                         'type': t,
                         "extended": True,
                     }
@@ -1312,12 +1312,24 @@ def directions_paraclinic_form(request):
                                                     ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                 str(x) for x in
                                                 request.user.groups.all()]) and i.time_confirmation is not None,
-                    "purpose": i.purpose_id,
-                    "first_time": i.first_time,
-                    "result": i.result_reception_id,
-                    "outcome": i.outcome_illness_id,
-                    "maybe_onco": i.maybe_onco,
                 }
+
+                if iss["research"]["is_doc_refferal"]:
+                    iss = {
+                        **iss,
+                        "purpose": i.purpose_id,
+                        "first_time": i.first_time,
+                        "result": i.result_reception_id,
+                        "outcome": i.outcome_illness_id,
+                        "maybe_onco": i.maybe_onco,
+
+                        "purpose_list": [{"pk": x.pk, "title": x.title} for x in
+                                        VisitPurpose.objects.filter(hide=False).order_by("pk")],
+                        "result_list": [{"pk": x.pk, "title": x.title} for x in
+                                       ResultOfTreatment.objects.filter(hide=False).order_by("pk")],
+                        "outcome_list": [{"pk": x.pk, "title": x.title} for x in
+                                        Outcomes.objects.filter(hide=False).order_by("pk")]
+                    }
 
                 ParaclinicTemplateName.make_default(i.research)
 
@@ -1404,6 +1416,13 @@ def directions_paraclinic_result(request):
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
             iss.napravleniye.visit_date = timezone.now()
             iss.napravleniye.save()
+
+        iss.purpose_id = request_data.get("purpose")
+        iss.first_time = request_data.get("first_time", False)
+        iss.result_reception_id = request_data.get("result")
+        iss.outcome_illness_id = request_data.get("outcome")
+        iss.maybe_onco = request_data.get("maybe_onco", False)
+
         iss.save()
         response["ok"] = True
         slog.Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
@@ -2331,7 +2350,7 @@ def save_anamnesis(request):
 
 def laborants(request):
     data = []
-    if SettingManager.get("l2_results_laborants", default='false', default_type='b'):
+    if SettingManager.l2('results_laborants'):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
