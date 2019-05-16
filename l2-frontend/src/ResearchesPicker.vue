@@ -55,6 +55,7 @@
           <input type="text" placeholder="Поиск шаблона" id="template-search"
                  v-model="search_template" class="form-control" style="width: calc(100% - 35px);max-width: 300px;" />
           <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search_template"
+                  v-tippy="{ placement : 'top', arrow: true }"
                   style="width: 35px" title="Очистить поиск">
             <span>&times;</span>
           </button>
@@ -67,10 +68,14 @@
                @keyup.alt.39="k('right')"
                @keyup.alt.40="k('down')"
                v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
-        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select" title="Быстрый выбор найденного">
+        <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Быстрый выбор найденного">
           <span class="fa fa-circle"></span>
         </button>
-        <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search" title="Очистить поиск">
+        <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search"
+                v-tippy="{ placement : 'top', arrow: true }"
+                title="Очистить поиск">
           <span>&times;</span>
         </button>
       </div>

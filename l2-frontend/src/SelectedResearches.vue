@@ -1,7 +1,9 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && 'pay_source']">
     <div :class="['top-picker', need_vich_code && 'need-vich-code']" v-if="!simple">
-      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз">
+      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              title="Очистить диагноз">
         <span>&times;</span>
       </button>
       <m-k-b-field v-model="diagnos" />
@@ -47,8 +49,12 @@
       </table>
     </div>
     <div class="bottom-picker-inputs" v-if="pay_source">
-      <input v-model="count" placeholder="Количество" title="Количество" type="number" min="1" max="1000" class="form-control" />
-      <input v-model="discount" placeholder="Скидка" title="Скидка" type="number" min="0" max="100" class="form-control" />
+      <input v-model="count" placeholder="Количество" title="Количество"
+             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
+             type="number" min="1" max="1000" class="form-control" />
+      <input v-model="discount" placeholder="Скидка"
+             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
+             title="Скидка" type="number" min="0" max="100" class="form-control" />
       <div class="bottom-picker-inputs-over">
         кол.<br/>
         -%

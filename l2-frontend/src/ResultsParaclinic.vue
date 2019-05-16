@@ -42,7 +42,7 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-        </div>purpose
+        </div>
         <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
@@ -63,7 +63,20 @@
           </div>
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
-            <div>Карта: {{data.patient.card}} <a title="Анамнез жизни" href="#" v-if="data.card_internal && data.has_doc_referral" @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a></div>
+            <div>Карта: {{data.patient.card}}
+              <a title="Анамнез жизни"
+                 href="#"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <a title="Диспансерный учёт"
+                 style="margin-left: 3px"
+                 href="#"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
+                 @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
+            </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
             </div>
@@ -150,7 +163,7 @@
                   <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
+                  <input v-model="field.value" class="form-control" :readonly="true" />
                 </div>
               </div>
             </div>
@@ -204,6 +217,17 @@
               </div>
               <div class="field">
                 <div class="field-title">
+                    Заключительный диагноз
+                </div>
+                <div class="field-value mkb10" v-if="!row.confirmed">
+                  <m-k-b-field v-model="row.diagnos" :short="false" />
+                </div>
+                <div class="field-value" v-else>
+                  <input v-model="row.diagnos" class="form-control" :readonly="true" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
                     Подозрение на онко
                 </div>
                 <label class="field-value">
@@ -234,26 +258,27 @@
     </div>
     <div class="results-content" v-else></div>
     <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
-        <div slot="body" style="min-height: 140px" class="registry-body">
-            <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
-                      placeholder="Анамнез жизни"></textarea>
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Отмена
-              </button>
-            </div>
-            <div class="col-xs-4">
-              <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Сохранить
-              </button>
-            </div>
+      <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+      <div slot="body" style="min-height: 140px" class="registry-body">
+          <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
+                    placeholder="Анамнез жизни"></textarea>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Отмена
+            </button>
+          </div>
+          <div class="col-xs-4">
+            <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Сохранить
+            </button>
           </div>
         </div>
-      </modal>
+      </div>
+    </modal>
+    <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
   </div>
 </template>
 
@@ -270,11 +295,12 @@
   import MKBField from './MKBField'
   import DateFieldNav from './DateFieldNav'
   import FormulaField from './FormulaField'
+  import DReg from './DReg'
   import dropdown from 'vue-my-dropdown';
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM, SelectPickerB},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM, SelectPickerB, DReg},
     data() {
       return {
         pk: '',
@@ -290,6 +316,7 @@
         research_open_history: null,
         research_history: [],
         templates: {},
+        dreg: false,
       }
     },
     watch: {
@@ -304,6 +331,9 @@
           return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
       })
       vm.load_history()
+      this.$root.$on('hide_dreg', () => {
+        this.dreg = false;
+      })
     },
     methods: {
       open_results(pk) {
@@ -1104,5 +1134,13 @@
       right: 0;
       border-radius: 0;
     }
+  }
+
+  .dreg_nex {
+    color: #687282;
+  }
+  .dreg_ex {
+    color: #da3b6c;
+    text-shadow: 0 0 4px rgba(#da3b6c, .6);
   }
 </style>
