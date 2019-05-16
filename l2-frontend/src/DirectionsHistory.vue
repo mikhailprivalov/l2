@@ -67,7 +67,9 @@
           <td class="text-center">{{row.date}}</td>
           <td>{{row.pk}}</td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
-          <td class="text-center" :title="statuses[row.status]" :class="['status-' + row.status]">
+          <td class="text-center" :title="statuses[row.status]"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              :class="['status-' + row.status]">
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
             <div class="button-td-inner">

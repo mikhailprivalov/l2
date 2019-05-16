@@ -26,7 +26,8 @@ from api import fias
 from api.ws import emit
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory
+from clients.models import CardBase, Individual, Card, Document, DocumentType, CardDocUsage, District, AnamnesisHistory, \
+    DispensaryReg
 from contracts.models import Company
 from directory.models import AutoAdd, Fractions, ParaclinicInputGroups, ParaclinicInputField, ParaclinicTemplateName, ParaclinicTemplateField, ResearchSite
 from laboratory import settings
@@ -1278,6 +1279,7 @@ def directions_paraclinic_form(request):
                 "fio_age": d.client.individual.fio(full=True),
                 "card": d.client.number_with_type(),
                 "card_pk": d.client.pk,
+                "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
@@ -1322,6 +1324,7 @@ def directions_paraclinic_form(request):
                         "result": i.result_reception_id,
                         "outcome": i.outcome_illness_id,
                         "maybe_onco": i.maybe_onco,
+                        "diagnos": i.diagnos,
 
                         "purpose_list": [{"pk": x.pk, "title": x.title} for x in
                                         VisitPurpose.objects.filter(hide=False).order_by("pk")],
@@ -1422,6 +1425,7 @@ def directions_paraclinic_result(request):
         iss.result_reception_id = request_data.get("result")
         iss.outcome_illness_id = request_data.get("outcome")
         iss.maybe_onco = request_data.get("maybe_onco", False)
+        iss.diagnos = request_data.get("diagnos", "")
 
         iss.save()
         response["ok"] = True
@@ -1508,7 +1512,7 @@ def directions_paraclinic_history(request):
             "all_saved": True
         }
         for i in directions.Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
-            iss = {"title": i.research.title,
+            iss = {"title": i.research.get_title(),
                    "saved": i.time_save is not None,
                    "confirmed": i.time_confirmation is not None}
             d["iss"].append(iss)
@@ -2315,6 +2319,95 @@ def edit_agent(request):
     Log.log(parent_card.pk, 30005, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
+
+
+def load_dreg(request):
+    request_data = json.loads(request.body)
+    data = []
+    for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start'):
+        data.append({
+            "pk": a.pk,
+            "diagnos": a.diagnos,
+            "illnes": a.illnes,
+            "spec_reg": '' if not a.spec_reg else a.spec_reg.title,
+            "doc_start_reg": '' if not a.doc_start_reg else  a.doc_start_reg.get_fio(),
+            "doc_start_reg_id": a.doc_start_reg_id,
+            "date_start": '' if not a.date_start else strdate(a.date_start),
+            "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
+            "doc_end_reg_id": a.doc_end_reg_id,
+            "date_end": '' if not a.date_end else strdate(a.date_end),
+            "why_stop": a.why_stop,
+        })
+    return JsonResponse({"rows": data})
+
+
+def load_dreg_detail(request):
+    a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
+    data = {
+        "diagnos": a.diagnos,
+        "illnes": a.illnes,
+        "date_start": None if not a.date_start else strdate(a.date_start),
+        "date_end": None if not a.date_end else strdate(a.date_end),
+        "close": bool(a.date_end),
+        "why_stop": a.why_stop,
+    }
+    return JsonResponse(data)
+
+
+def save_dreg(request):
+    rd = json.loads(request.body)
+    d = rd["data"]
+    pk = rd["pk"]
+
+    if pk == -1:
+        a = DispensaryReg.objects.create(card_id=rd["card_pk"])
+        pk = a.pk
+    else:
+        pk = rd["pk"]
+        a = DispensaryReg.objects.get(pk=pk)
+
+    c = False
+
+    def fd(s):
+        if '.' in s:
+            s = s.split('.')
+            s = '{}-{}-{}'.format(s[2], s[1], s[0])
+        return s
+
+    if not a.date_start and d["date_start"]\
+            or str(a.date_start) != fd(d["date_start"]) \
+            or a.spec_reg != request.user.doctorprofile.specialities\
+            or a.doc_start_reg != request.user.doctorprofile:
+        a.date_start = fd(d["date_start"])
+        a.doc_start_reg = request.user.doctorprofile
+        a.spec_reg = request.user.doctorprofile.specialities
+        c = True
+
+    if not a.date_end and d["close"] \
+            or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+        a.date_end = fd(d["date_end"])
+        a.why_stop = d["why_stop"]
+        a.doc_end_reg = request.user.doctorprofile
+        c = True
+    elif d["close"] and a.why_stop != d["why_stop"]:
+        a.why_stop = d["why_stop"]
+        c = True
+
+    if not d["close"] and (a.date_end or a.why_stop):
+        a.date_end = None
+        a.why_stop = ''
+        a.doc_end_reg = None
+        c = True
+
+    if a.diagnos != d["diagnos"] or a.illnes != d["illnes"]:
+        a.diagnos = d["diagnos"]
+        a.illnes = d["illnes"]
+        c = True
+
+    if c:
+        a.save()
+
+    return JsonResponse({"ok": True, "pk": pk, "c": c})
 
 
 def load_anamnesis(request):
