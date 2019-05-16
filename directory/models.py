@@ -115,6 +115,7 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
 
     @staticmethod
     def filter_type(t):

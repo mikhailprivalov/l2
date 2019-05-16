@@ -35,9 +35,7 @@ def form_01(request_data):
     str_date = request_data['date']
     date_confirm = datetime.datetime.strptime(str_date, "%d%m%Y")
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
-    print(doc_results)
     talon = forms_func.get_finaldata_talon(doc_results)
-    print(talon)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))

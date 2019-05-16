@@ -96,7 +96,8 @@ def get_final_data(research_price_loc):
     x = ""
     tmp_napr = []
     for k, v in research_price_loc.items():
-        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
+        # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
+        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title','internal_code')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -107,7 +108,7 @@ def get_final_data(research_price_loc):
                         k = 0
                     else:
                         h.append("")
-                    h.extend(j)
+                    h.extend([j[2],j[1]])
                     h.append("{:,.2f}".format(research_coast[0]).replace(",", " "))
                     coast_with_discount = research_coast[0] + (research_coast[0] * research_coast[1] / 100)
                     if research_coast[1] != 0:
@@ -282,7 +283,6 @@ def get_finaldata_talon(doc_result_obj):
     medexam_count = 0
     empty = '-'
     today = datetime.datetime.now().date()
-    print(today)
 
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
