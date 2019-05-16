@@ -666,7 +666,6 @@ class Issledovaniya(models.Model):
     parent_id = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание", blank=True, null=True, default=None,
                       on_delete=models.SET_NULL)
 
-
     def get_stat_diagnosis(self):
         pass
 

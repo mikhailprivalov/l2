@@ -37,6 +37,7 @@ def form_01(request_data):
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
     print(doc_results)
     talon = forms_func.get_finaldata_talon(doc_results)
+    print(talon)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -292,7 +293,7 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
-        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=False).first()
+        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, parent_id=None).first()
         date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
         opinion = [
              [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
@@ -329,14 +330,18 @@ def form_02(request_data):
         ]))
         objs.append(tbl)
 
-        if Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True):
-            obj_iss_add = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True)
-            # Добавить Дополнительные услуги
-            objs.append(Spacer(1, 3 * mm))
-            objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
-            objs.append(Spacer(1, 1 * mm))
 
-            for i in obj_iss_add:
+        # if Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True):
+        #     obj_iss_add = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True)
+        #     # Добавить Дополнительные услуги
+
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+
+        add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
+        if add_research:
+            for i in add_research:
                 objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
 
 
