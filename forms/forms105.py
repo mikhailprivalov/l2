@@ -293,15 +293,22 @@ def form_02(request_data):
 
         obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, parent_id=None).first()
         date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
+
         opinion = [
              [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
              [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
              [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
-             [Paragraph('Через сколько часов доставлен от начала заболевания', styleT), Paragraph('{}'.format('Свыше 24 часов'), styleT)],
              ]
 
-        tbl = Table(opinion,
-                    colWidths=(60 * mm, 123* mm))
+        # Найти и добавить поля у к-рых флаг "for_talon". Отсортировано по 'order' (группа, поле)
+        field_iss = ParaclinicResult.objects.filter(issledovaniye=obj_iss, field__for_talon=True, ).order_by(
+            'field__group__order', 'field__order')
+
+        for f in field_iss:
+            list_f =[[Paragraph(f.field.title, styleT), Paragraph(f.value, styleT)]]
+            opinion.extend(list_f)
+
+        tbl = Table(opinion, colWidths=(60 * mm, 123* mm))
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
@@ -320,19 +327,14 @@ def form_02(request_data):
             [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(obj_iss.diagnos), styleT)],
         ]
 
-        tbl = Table(opinion,
-                    colWidths=(60 * mm, 123 * mm))
+        tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
         ]))
         objs.append(tbl)
 
-
-        # if Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True):
-        #     obj_iss_add = Issledovaniya.objects.filter(napravleniye=obj_dir, is_additional_research=True)
-        #     # Добавить Дополнительные услуги
-
+       # Добавить Дополнительные услуги
         objs.append(Spacer(1, 3 * mm))
         objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
@@ -342,8 +344,6 @@ def form_02(request_data):
             for i in add_research:
                 objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
 
-
-        #TODO: Добавить сведенрия о враче
         objs.append(Spacer(1, 5 * mm))
         objs.append(
             HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
