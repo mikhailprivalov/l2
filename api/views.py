@@ -1322,6 +1322,7 @@ def directions_paraclinic_form(request):
                                                     ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                 str(x) for x in
                                                 request.user.groups.all()]) and i.time_confirmation is not None,
+                    "more": [x.research.pk for x in directions.Issledovaniya.objects.filter(parent=i)]
                 }
 
                 if iss["research"]["is_doc_refferal"]:
