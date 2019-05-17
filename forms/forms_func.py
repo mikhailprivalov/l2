@@ -5,6 +5,7 @@ from copy import deepcopy
 from collections import OrderedDict
 from django.db.models import Q
 import datetime
+from laboratory import utils
 
 
 def get_all_doc(docs: [Document]):
@@ -282,7 +283,7 @@ def get_finaldata_talon(doc_result_obj):
     pay_count = 0
     medexam_count = 0
     empty = '-'
-    today = datetime.datetime.now().date()
+    today = utils.timezone.now().date()
 
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)

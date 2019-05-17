@@ -10,6 +10,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.graphics.barcode import code128, qr
 from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
+from laboratory import utils
 
 import os.path
 from io import BytesIO
@@ -151,7 +152,7 @@ def form_01(request_data):
     bstr = (qr_napr + protect_val).encode()
     protect_code = str(zlib.crc32(bstr))
 
-    today = datetime.datetime.now()
+    today = utils.timezone.now().date()
     date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
 

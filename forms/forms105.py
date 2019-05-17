@@ -22,7 +22,7 @@ import datetime
 import simplejson as json
 from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
-
+from laboratory import utils
 
 
 def form_01(request_data):
@@ -289,10 +289,8 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
-        print(obj_dir)
         obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, parent_id=None).first()
-        print(obj_iss.time_confirmation)
-        date_proto = datetime.datetime.strftime(obj_iss.time_confirmation, "%d.%m.%Y")
+        date_proto = utils.strfdatetime(obj_iss.time_confirmation, "%d.%m.%Y")
 
         opinion = [
              [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
