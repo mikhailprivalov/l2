@@ -1055,7 +1055,8 @@ def get_issledovaniya(request):
                                                            "pk")]
 
                             not_received_why = [x.notice for x in
-                                                issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")]
+                                                issledovaniye.tubes.exclude(doc_recive__isnull=False).all().order_by("pk")
+                                                if x.notice]
 
                             saved = True
                             confirmed = True

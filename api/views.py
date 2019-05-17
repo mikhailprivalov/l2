@@ -11,6 +11,7 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -751,7 +752,7 @@ def directions_history(request):
                 researches_pks = []
                 has_descriptive = False
                 for v in iss_list:
-                    if v.research.podrazdeleniye and v.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+                    if not has_descriptive and v.research.desc:
                         has_descriptive = True
                     researches_list.append(v.research.title)
                     researches_pks.append(v.research.pk)
@@ -920,6 +921,7 @@ def researches_update(request):
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
+                                f.for_talon = field.get("for_talon", False)
                             if f:
                                 f.save()
 
@@ -963,6 +965,7 @@ def researches_details(request):
                     "values_to_input": json.loads(field.input_templates),
                     "field_type": field.field_type,
                     "required": field.required,
+                    "for_talon": field.for_talon,
                     "new_value": ""
                 })
             response["groups"].append(g)
@@ -989,6 +992,7 @@ def paraclinic_details(request):
                 "values_to_input": json.loads(field.input_templates),
                 "field_type": field.field_type,
                 "required": field.required,
+                "for_talon": field.for_talon,
             })
         response["groups"].append(g)
     return JsonResponse(response)
@@ -2328,7 +2332,7 @@ def edit_agent(request):
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
-    for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start'):
+    for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
         data.append({
             "pk": a.pk,
             "diagnos": a.diagnos,
@@ -2348,27 +2352,30 @@ def load_dreg(request):
 def load_dreg_detail(request):
     a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
     data = {
-        "diagnos": a.diagnos,
-        "illnes": a.illnes,
-        "date_start": None if not a.date_start else strdate(a.date_start),
-        "date_end": None if not a.date_end else strdate(a.date_end),
+        "diagnos": a.diagnos + ' ' + a.illnes,
+        "date_start": None if not a.date_start else a.date_start,
+        "date_end": None if not a.date_end else a.date_end,
         "close": bool(a.date_end),
         "why_stop": a.why_stop,
     }
     return JsonResponse(data)
 
 
+@transaction.atomic
 def save_dreg(request):
     rd = json.loads(request.body)
     d = rd["data"]
     pk = rd["pk"]
-
+    n = False
     if pk == -1:
         a = DispensaryReg.objects.create(card_id=rd["card_pk"])
         pk = a.pk
+        n = True
     else:
         pk = rd["pk"]
         a = DispensaryReg.objects.get(pk=pk)
+
+    Log.log(pk, 40000 if n else 40001, request.user.doctorprofile, rd)
 
     c = False
 
@@ -2403,9 +2410,16 @@ def save_dreg(request):
         a.doc_end_reg = None
         c = True
 
-    if a.diagnos != d["diagnos"] or a.illnes != d["illnes"]:
-        a.diagnos = d["diagnos"]
-        a.illnes = d["illnes"]
+    i = d["diagnos"].split(' ')
+    ds = i.pop(0)
+    if len(i) == 0:
+        i = ''
+    else:
+        i = ' '.join(i)
+
+    if a.diagnos != ds or a.illnes != i:
+        a.diagnos = ds
+        a.illnes = i
         c = True
 
     if c:

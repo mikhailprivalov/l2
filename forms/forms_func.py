@@ -98,7 +98,8 @@ def get_final_data(research_price_loc):
     tmp_napr = []
     for k, v in research_price_loc.items():
         # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
-        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title','internal_code')])
+        research_attr = (
+        [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -109,7 +110,7 @@ def get_final_data(research_price_loc):
                         k = 0
                     else:
                         h.append("")
-                    h.extend([j[2],j[1]])
+                    h.extend([j[2], j[1]])
                     h.append("{:,.2f}".format(research_coast[0]).replace(",", " "))
                     coast_with_discount = research_coast[0] + (research_coast[0] * research_coast[1] / 100)
                     if research_coast[1] != 0:
@@ -312,7 +313,7 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['client_fio'] = napr_attr['client_fio'] + ', ' + str(i.napravleniye.pk)
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
-        temp_dict['polis_data'] = '<u>'+napr_attr['polis_n']+'</u>' + '<br/>' +  polis_who_giv
+        temp_dict['polis_data'] = '<u>' + napr_attr['polis_n'] + '</u>' + '<br/>' + polis_who_giv
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
@@ -320,17 +321,17 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
         temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
 
-        #Данные Д-учета
-        disp = DispensaryReg.objects.filter(Q(card=i.napravleniye.client),(Q(date_end=None)| Q(date_end=today)))
+        # Данные Д-учета
+        disp = DispensaryReg.objects.filter(Q(card=i.napravleniye.client), (Q(date_end=None) | Q(date_end=today)))
         d_stand = []
         d_take = []
         d_stop = []
         d_whystop = []
         if disp:
             for d in disp:
-                if d.date_end == None and d.date_start != i.time_confirmation.date():
+                if d.date_end is None and d.date_start != i.time_confirmation.date():
                     d_stand.append(d.diagnos)
-                elif d.date_end == None and d.date_start == i.time_confirmation.date():
+                elif d.date_end is None and d.date_start == i.time_confirmation.date():
                     d_take.append(d.diagnos)
                 elif d.date_end == i.time_confirmation.date():
                     d_stop.append(d.diagnos)

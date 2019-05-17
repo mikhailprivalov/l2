@@ -146,6 +146,7 @@ class TubesRegistration(models.Model):
         :param notice: текст замечания
         :return:
         """
+        notice = notice.strip()
         if notice != "":
             self.doc_recive = None
             self.time_recive = None

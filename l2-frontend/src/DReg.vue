@@ -58,13 +58,9 @@
                    :readonly="edit_data.close">
           </div>
           <div class="form-group mkb10" style="width: 100%">
-            <label>Диагноз по МКБ:</label>
-            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" />
+            <label>Диагноз в полной форме (код по МКБ и название):</label>
+            <m-k-bfield v-model="edit_data.diagnos" v-if="!edit_data.close" :short="false" />
             <input class="form-control" v-model="edit_data.diagnos" v-else readonly>
-          </div>
-          <div class="form-group">
-            <label for="de-f4">Диагноз:</label>
-            <input class="form-control" id="de-f4" v-model="edit_data.illnes" :readonly="edit_data.close">
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
@@ -151,8 +147,7 @@
     computed: {
       valid_reg() {
         return this.edit_pk > -2 &&
-          this.edit_data.diagnos !== '' &&
-          this.edit_data.illnes !== '' &&
+          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})? .+$/gm) &&
           this.edit_data.date_start !== '' &&
           (!this.edit_data.close || this.edit_data.date_end !== '');
       }

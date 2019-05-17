@@ -139,6 +139,10 @@ class Researches(models.Model):
             return -4
         return self.podrazdeleniye_id or -2
 
+    @property
+    def desc(self):
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic
+
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
 
