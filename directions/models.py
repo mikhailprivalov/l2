@@ -314,7 +314,6 @@ class Napravleniya(models.Model):
     parent = models.ForeignKey('self', related_name='parent_dir', help_text="Направление основание", blank=True,
                                    null=True, default=None, on_delete=models.SET_NULL)
 
-
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
             self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
@@ -339,22 +338,36 @@ class Napravleniya(models.Model):
         if c:
             self.save()
 
-
     @staticmethod
-    def gen_napravleniye(client_id: object, doc: object, istochnik_f: object, diagnos: object, historynum: object, doc_current: object, ofname_id: object, ofname: object,
-                         issledovaniya: object = None,
-                         save: object = True,
-                         for_rmis: object = None,
-                         rmis_data: object = None) -> object:
+    def gen_napravleniye(client_id: int,
+                         doc: DoctorProfile,
+                         istochnik_f: IstochnikiFinansirovaniya,
+                         diagnos: str,
+                         historynum: str,
+                         doc_current: DoctorProfile,
+                         ofname_id: [int, None],
+                         ofname: DoctorProfile,
+                         issledovaniya: [list, None] = None,
+                         save: bool = True,
+                         for_rmis: bool = False,
+                         rmis_data: [dict, None] = None,
+                         parent: ['Napravleniya', None] = None) -> 'Napravleniya':
         """
         Генерация направления
-        :param client_id: id пациента
-        :param doc: л/врач
-        :param istochnik_f: источник финансирования
-        :param diagnos: диагноз
-        :param patient_type: тип пациента (напр; поликлиника/стационар)
-        :param issledovaniya: исследования (reserved)
-        :return: созданое направление
+        :param client_id:
+        :param doc:
+        :param istochnik_f:
+        :param diagnos:
+        :param historynum:
+        :param doc_current:
+        :param ofname_id:
+        :param ofname:
+        :param issledovaniya:
+        :param save:
+        :param for_rmis:
+        :param rmis_data:
+        :param parent:
+        :return: Созданное направление
         """
         if rmis_data is None:
             rmis_data = {}
@@ -383,7 +396,7 @@ class Napravleniya(models.Model):
         return dir
 
     @staticmethod
-    def set_of_name(dir: object, doc_current: object, ofname_id: object, ofname: object) -> object:
+    def set_of_name(dir: 'Napravleniya', doc_current: DoctorProfile, ofname_id: int, ofname: DoctorProfile):
         """
         Проверка на выписывание направления от имени другого врача и установка этого имени в направление, если необходимо
         :rtype: Null
