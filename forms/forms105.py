@@ -321,11 +321,17 @@ def form_02(request_data):
         objs.append(Spacer(1, 4 * mm))
         objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
+        empty = '-'
+        purpose = empty if not obj_iss.purpose else obj_iss.purpose
+        outcome_illness = empty if not obj_iss.outcome_illness else obj_iss.outcome_illness
+        result_reception = empty if not obj_iss.result_reception else obj_iss.result_reception
+        diagnos = empty if not obj_iss.diagnos else obj_iss.diagnos
+
         opinion = [
-            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(obj_iss.purpose), styleT)],
-            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(obj_iss.outcome_illness), styleT)],
-            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(obj_iss.result_reception), styleT)],
-            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(obj_iss.diagnos), styleT)],
+            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(purpose), styleT)],
+            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(outcome_illness), styleT)],
+            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(result_reception), styleT)],
+            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(diagnos), styleT)],
         ]
 
         tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
@@ -349,8 +355,10 @@ def form_02(request_data):
             HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
         objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
+
+        personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
         objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
-             42 * space_symbol, obj_iss.doc_confirmation.personal_code ),style))
+             42 * space_symbol, personal_code),style))
         objs.append(PageBreak())
 
 
