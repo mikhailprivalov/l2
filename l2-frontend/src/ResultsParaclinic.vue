@@ -73,8 +73,10 @@
                  style="margin-left: 3px"
                  href="#"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-dreg' }"
                  :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
+                 @show="load_dreg_rows"
                  @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
@@ -157,7 +159,7 @@
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <m-k-b-field v-model="field.value" :short="false" />
+                  <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 3">
                   <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
@@ -220,7 +222,7 @@
                     Заключительный диагноз
                 </div>
                 <div class="field-value mkb10" v-if="!row.confirmed">
-                  <m-k-b-field v-model="row.diagnos" :short="false" />
+                  <m-k-b-field v-model="row.diagnos" />
                 </div>
                 <div class="field-value" v-else>
                   <input v-model="row.diagnos" class="form-control" :readonly="true" />
@@ -279,6 +281,16 @@
       </div>
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
+    <div id="template-dreg" v-show="data.ok">
+      <strong>Диспансерный учёт</strong><br/>
+      <span v-if="dreg_rows_loading">загрузка...</span>
+      <ul v-else style="padding-left: 25px;">
+        <li v-for="r in dreg_rows">
+          {{r.diagnos}} – {{r.date_start}} – {{r.illnes}}
+        </li>
+        <li v-if="dreg_rows.length === 0">нет активных записей</li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -317,6 +329,8 @@
         research_history: [],
         templates: {},
         dreg: false,
+        dreg_rows_loading: false,
+        dreg_rows: [],
       }
     },
     watch: {
@@ -332,10 +346,31 @@
       })
       vm.load_history()
       this.$root.$on('hide_dreg', () => {
+        this.load_dreg_rows();
         this.dreg = false;
       })
     },
     methods: {
+      async load_dreg_rows() {
+        if (!this.data.ok)
+          return;
+        this.dreg_rows_loading = true;
+        this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+        if (!this.data.ok)
+          return;
+        this.data.patient.has_dreg = this.dreg_rows.length > 0
+        this.dreg_rows_loading = false;
+      },
+      change_mkb(row, field) {
+        console.log(row, field);
+        if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
+          const ndiagnos = field.value.split(' ')[0] || '';
+          if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
+            okmessage('Диагноз в данных статталона обновлён', ndiagnos)
+            row.diagnos = ndiagnos;
+          }
+        }
+      },
       open_results(pk) {
         if (this.research_open_history) {
           this.hide_results()
@@ -579,6 +614,8 @@
         this.new_anamnesis = null
         this.data = {ok: false}
         this.research_open_history = null;
+        this.dreg_rows_loading = false;
+        this.dreg_rows = [];
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])

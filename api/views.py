@@ -747,7 +747,7 @@ def directions_history(request):
                 researches_pks = []
                 has_descriptive = False
                 for v in iss_list:
-                    if v.research.podrazdeleniye and v.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+                    if not has_descriptive and v.research.desc:
                         has_descriptive = True
                     researches_list.append(v.research.title)
                     researches_pks.append(v.research.pk)
