@@ -76,6 +76,10 @@ def researches_by_department(request):
     if department_pk != -1:
         if department_pk == -2:
             q = DResearches.objects.filter(is_doc_refferal=True).order_by("title")
+        elif department_pk == -3:
+            q = DResearches.objects.filter(is_treatment=True).order_by("title")
+        elif department_pk == -4:
+            q = DResearches.objects.filter(is_stom=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -124,24 +128,33 @@ def researches_update(request):
         code = request_data.get("code").strip()
         info = request_data.get("info").strip()
         hide = request_data.get("hide")
+        site_type = request_data.get("site_type", None)
         groups = request_data.get("groups")
-        if len(title) > 0 and (department_pk == -2 or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
-            department = None if department_pk == -2 else Podrazdeleniya.objects.filter(pk=department_pk)[0]
+        desc = department_pk in [-2, -3, -4]
+        if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
+            department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
             if pk == -1:
                 res = DResearches(title=title, short_title=short_title, podrazdeleniye=department, code=code,
-                                  is_paraclinic=department_pk != -2 and department.p_type == 3,
-                                  paraclinic_info=info, hide=hide, is_doc_refferal=department_pk == -2)
+                                  is_paraclinic=not desc and department.p_type == 3,
+                                  paraclinic_info=info, hide=hide,
+                                  is_doc_refferal=department_pk == -2,
+                                  is_treatment=department_pk == -3,
+                                  is_stom=department_pk == -4,
+                                  site_type_id=site_type)
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
                 res.title = title
                 res.short_title = short_title
                 res.podrazdeleniye = department
                 res.code = code
-                res.is_paraclinic = department_pk != -2 and department.p_type == 3
+                res.is_paraclinic = not desc and department.p_type == 3
                 res.is_doc_refferal = department_pk == -2
+                res.is_treatment = department_pk == -3
+                res.is_stom = department_pk == -4
                 res.paraclinic_info = info
                 res.hide = hide
+                res.site_type_id = site_type
             if res:
                 res.save()
                 templat_obj = ParaclinicTemplateName.make_default(res)
@@ -217,6 +230,7 @@ def researches_details(request):
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide
+        response["site_type"] = res.site_type_id
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                  "hide": group.hide, "fields": []}

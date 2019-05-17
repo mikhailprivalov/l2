@@ -1,8 +1,9 @@
 import {HTTP} from '../http-common'
 
-async function updateResearch(pk, department, title, short_title, code, info, hide, groups) {
+async function updateResearch(pk, department, title, short_title, code, info, hide, groups, site_type) {
   try {
-    const response = await HTTP.post('researches/update', {pk, department, title, short_title, code, info, hide, groups})
+    const response = await HTTP.post('researches/update', {pk, department, title, short_title,
+      code, info, hide, groups, site_type})
     if (response.statusText === 'OK') {
       return response.data
     }
