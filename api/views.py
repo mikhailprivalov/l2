@@ -2324,7 +2324,7 @@ def edit_agent(request):
 def load_dreg(request):
     request_data = json.loads(request.body)
     data = []
-    for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start'):
+    for a in DispensaryReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
         data.append({
             "pk": a.pk,
             "diagnos": a.diagnos,
@@ -2344,8 +2344,7 @@ def load_dreg(request):
 def load_dreg_detail(request):
     a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
     data = {
-        "diagnos": a.diagnos,
-        "illnes": a.illnes,
+        "diagnos": a.diagnos + ' ' + a.illnes,
         "date_start": None if not a.date_start else strdate(a.date_start),
         "date_end": None if not a.date_end else strdate(a.date_end),
         "close": bool(a.date_end),
@@ -2399,9 +2398,16 @@ def save_dreg(request):
         a.doc_end_reg = None
         c = True
 
-    if a.diagnos != d["diagnos"] or a.illnes != d["illnes"]:
-        a.diagnos = d["diagnos"]
-        a.illnes = d["illnes"]
+    i = d["diagnos"].split(' ')
+    ds = i.pop(0)
+    if len(i) == 0:
+        i = ''
+    else:
+        i = ' '.join(i)
+
+    if a.diagnos != ds or a.illnes != i:
+        a.diagnos = ds
+        a.illnes = i
         c = True
 
     if c:
