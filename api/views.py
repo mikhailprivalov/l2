@@ -161,6 +161,10 @@ def send(request):
                                 val = float(find[0]) * fractionRel.get_multiplier_display()
                                 if fractionRel.full_round:
                                     val = round(val)
+
+                                if fractionRel.signs_after_point:
+                                    val = f'{val:.{fractionRel.signs_after_point}f}'
+
                                 fraction_result.value = fraction_result.value.replace(find[0], str(val))
 
                             fraction_result.iteration = 1  # Установка итерации

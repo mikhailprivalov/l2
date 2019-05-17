@@ -586,6 +586,7 @@ class District(models.Model):
     code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True,
                                         blank=True)
 
+
     def __str__(self):
         return self.title
 
@@ -639,9 +640,11 @@ class Card(models.Model):
                                     help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок",
                                  on_delete=models.SET_NULL)
+
     ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True,
                                            blank=True, help_text="Участок",
                                            on_delete=models.SET_NULL)
+
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
     number_poliklinika = models.CharField(max_length=20, blank=True, default='',
                                           help_text="Идетификатор карты поликлиника", db_index=True)

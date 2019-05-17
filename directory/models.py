@@ -115,6 +115,7 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
 
     @staticmethod
     def filter_type(t):
@@ -183,7 +184,7 @@ class ParaclinicInputField(models.Model):
     title = models.CharField(max_length=255, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
-    default_value = models.TextField()
+    default_value = models.TextField(blank=True, default='')
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)

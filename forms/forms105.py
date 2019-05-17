@@ -7,7 +7,8 @@ from reportlab.lib.pagesizes import A4, portrait, landscape
 from reportlab.lib.units import mm
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
+from reportlab.platypus import PageBreak, Indenter
+from reportlab.platypus.flowables import HRFlowable
 
 from copy import deepcopy
 import os.path
@@ -19,10 +20,9 @@ from laboratory.settings import FONTS_FOLDER
 from datetime import *
 import datetime
 import simplejson as json
-from directions.models import Napravleniya
 from appconf.manager import SettingManager
-# from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
-
+from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
+from laboratory import utils
 
 
 def form_01(request_data):
@@ -96,7 +96,7 @@ def form_01(request_data):
     styleT.fontSize = 9
 
     opinion = [
-        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента', styleT), Paragraph('Дата рождения', styleT),
+        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
          Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
          Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
          Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
@@ -195,7 +195,7 @@ def form_02(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=25 * mm,
+                            leftMargin=18 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=6 * mm, allowSplitting=1,
                             title="Форма {}".format("Статталон пациента"))
@@ -280,19 +280,75 @@ def form_02(request_data):
                                             13 * space_symbol, patient_data['snils']), style),
             Paragraph('7. Наименование страховой медицинской организации: {}'.format(patient_data['oms']['polis_issued']),
                       style),
-            Spacer(1, 3 * mm),
-            Paragraph('<font size=11>Данные об услуге:</font>', styleBold),
         ]
+
         objs.extend(content_title)
 
         #добавить данные об услуге
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('<font size=11>Данные об услуге:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
 
-        #Добавить Заключительные положения
+        obj_iss = Issledovaniya.objects.filter(napravleniye=obj_dir, parent_id=None).first()
+        date_proto = utils.strfdatetime(obj_iss.time_confirmation, "%d.%m.%Y")
 
-        #Добавить Дополнительные услуги
+        opinion = [
+             [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
+             [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
+             [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
+             ]
 
-        #Добавить сведенрия о враче
+        # Найти и добавить поля у к-рых флаг "for_talon". Отсортировано по 'order' (группа, поле)
+        field_iss = ParaclinicResult.objects.filter(issledovaniye=obj_iss, field__for_talon=True, ).order_by(
+            'field__group__order', 'field__order')
 
+        for f in field_iss:
+            list_f =[[Paragraph(f.field.title, styleT), Paragraph(f.value, styleT)]]
+            opinion.extend(list_f)
+
+        tbl = Table(opinion, colWidths=(60 * mm, 123* mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
+
+        objs.append(tbl)
+
+        #Заключительные положения
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('<font size=11>Заключительные положения:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+        opinion = [
+            [Paragraph('Цель посещения', styleT), Paragraph('{}'.format(obj_iss.purpose), styleT)],
+            [Paragraph('Исход заболевания', styleT), Paragraph('{}'.format(obj_iss.outcome_illness), styleT)],
+            [Paragraph('Результат обращения', styleT), Paragraph('{}'.format(obj_iss.result_reception), styleT)],
+            [Paragraph('Основной диагноз', styleT), Paragraph('{}'.format(obj_iss.diagnos), styleT)],
+        ]
+
+        tbl = Table(opinion, colWidths=(60 * mm, 123 * mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
+        objs.append(tbl)
+
+       # Добавить Дополнительные услуги
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+
+        add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
+        if add_research:
+            for i in add_research:
+                objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
+
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(
+            HRFlowable(width=185 * mm, thickness=0.7 * mm, spaceAfter=1.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+        objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
+        objs.append(Spacer(1, 1 * mm))
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
+             42 * space_symbol, obj_iss.doc_confirmation.personal_code ),style))
         objs.append(PageBreak())
 
 
