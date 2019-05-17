@@ -377,7 +377,7 @@ class Napravleniya(models.Model):
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
-                           diagnos=diagnos, cancel=False)
+                           diagnos=diagnos, cancel=False, parent=parent)
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
