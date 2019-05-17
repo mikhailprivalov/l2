@@ -147,7 +147,7 @@
     computed: {
       valid_reg() {
         return this.edit_pk > -2 &&
-          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})? .+$/gm) &&
+          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm) &&
           this.edit_data.date_start !== '' &&
           (!this.edit_data.close || this.edit_data.date_end !== '');
       }
