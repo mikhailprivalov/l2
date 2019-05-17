@@ -1,3 +1,3 @@
-__version__ = (5, 0)
-__version_type__ = "beta 2"
+__version__ = (2019, 5, 17)
+__version_type__ = "pre-release"
 VERSION = ".".join(map(str, __version__)) + " " + __version_type__
