@@ -127,15 +127,20 @@
       },
       readonly: {
         default: false,
-        type: Boolean
+        type: Boolean,
+        required: false,
       },
       just_search: {
         default: false,
-        type: Boolean
+        type: Boolean,
+        required: false,
       },
       filter_types: {
-        default: [],
+        default(){
+          return [];
+        },
         type: Array,
+        required: false,
       }
     },
     data() {
