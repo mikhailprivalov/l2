@@ -11,6 +11,7 @@ import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -2352,25 +2353,29 @@ def load_dreg_detail(request):
     a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
     data = {
         "diagnos": a.diagnos + ' ' + a.illnes,
-        "date_start": None if not a.date_start else strdate(a.date_start),
-        "date_end": None if not a.date_end else strdate(a.date_end),
+        "date_start": None if not a.date_start else a.date_start,
+        "date_end": None if not a.date_end else a.date_end,
         "close": bool(a.date_end),
         "why_stop": a.why_stop,
     }
     return JsonResponse(data)
 
 
+@transaction.atomic
 def save_dreg(request):
     rd = json.loads(request.body)
     d = rd["data"]
     pk = rd["pk"]
-
+    n = False
     if pk == -1:
         a = DispensaryReg.objects.create(card_id=rd["card_pk"])
         pk = a.pk
+        n = True
     else:
         pk = rd["pk"]
         a = DispensaryReg.objects.get(pk=pk)
+
+    Log.log(pk, 40000 if n else 40001, request.user.doctorprofile, rd)
 
     c = False
 
