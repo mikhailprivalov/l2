@@ -420,9 +420,14 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     has_descriptive = False
     has_doc_refferal = False
     for i in issledovaniya:
-        if i.research.is_doc_refferal:
+        rtp = i.research.reversed_type
+        if rtp < -1:
             has_doc_refferal = True
-            rt = "Консультации"
+            rt = {
+                -2: 'Консультации',
+                -3: 'Лечение',
+                -4: 'Стоматология',
+            }[rtp]
         else:
             rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
@@ -476,7 +481,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         m = 8
     else:
         colWidths = [int(tw / 2), int(tw / 2)]
-        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 134) + (h / 2) * yn, "Наименования исследований: ")
+        c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 134) + (h / 2) * yn, "Назначения: ")
         c.setStrokeColorRGB(0, 0, 0)
         c.setLineWidth(1)
         values.sort(key=lambda l: (l["g"], l["sw"]))

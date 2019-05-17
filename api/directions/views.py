@@ -623,7 +623,8 @@ def directions_paraclinic_form(request):
     if dn.exists():
         d = dn[0]
         df = Issledovaniya.objects.filter(napravleniye=d)
-        df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True))
+        df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
+                       | Q(research__is_treatment=True) | Q(research__is_stom=True))
         df = df.distinct()
 
         if df.exists():
@@ -660,6 +661,8 @@ def directions_paraclinic_form(request):
                         "title": i.research.title,
                         "is_paraclinic": i.research.is_paraclinic,
                         "is_doc_refferal": i.research.is_doc_refferal,
+                        "is_treatment": i.research.is_treatment,
+                        "is_stom": i.research.is_stom,
                         "groups": []
                     },
                     "templates": [],
@@ -737,7 +740,8 @@ def directions_paraclinic_result(request):
     with_confirm = json.loads(request.body).get("with_confirm", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                   | Q(research__is_doc_refferal=True)).exists():
+                   | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                   | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
         for group in request_data["research"]["groups"]:
             for field in group["fields"]:
@@ -800,7 +804,8 @@ def directions_paraclinic_confirm(request):
     pk = request_data.get("iss_pk", -1)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                   | Q(research__is_doc_refferal=True)).exists():
+                   | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                   | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
         t = timezone.now()
         if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:

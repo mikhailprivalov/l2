@@ -297,7 +297,7 @@
       </div>
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
-    <div id="template-dreg" v-show="data.ok">
+    <div id="template-dreg" v-show="data.ok && data.has_doc_referral">
       <strong>Диспансерный учёт</strong><br/>
       <span v-if="dreg_rows_loading">загрузка...</span>
       <ul v-else style="padding-left: 25px;text-align: left">

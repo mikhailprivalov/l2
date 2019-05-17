@@ -301,14 +301,14 @@
         let r = [];
         if(this.rev_t === -2) {
           for(const d of Object.keys(this.$store.getters.researches)) {
-            for(const row of this.$store.getters.researches[d]) {
+            for(const row of (this.$store.getters.researches[d] || [])) {
               if(row.doc_refferal && row.site_type === dep) {
                 r.push(row);
               }
             }
           }
         } else if(this.rev_t < -2) {
-          for(const row of this.$store.getters.researches[this.rev_t]) {
+          for(const row of (this.$store.getters.researches[this.rev_t] || [])) {
             if(row.site_type === dep) {
               r.push(row);
             }
