@@ -101,10 +101,11 @@ def tubes(request, direction_implict_id=None):
                     if not v.tubes.filter(type=rel).exists():
                         ntube = TubesRegistration(type=rel)
                         ntube.save()
+                        v.tubes.add(ntube)
                     else:
-                        ntube = v.tubes.get(type=rel)
-                    v.tubes.add(ntube)
-                    tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(), "title": ntube.type.tube.title,
+                        ntube = v.tubes.filter(type=rel).first()
+                    tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(),
+                                          "title": ntube.type.tube.title,
                                           "short_title": ntube.type.tube.get_short_title()}
                     if not istubes:
                         tubes_id.add(ntube.pk)
