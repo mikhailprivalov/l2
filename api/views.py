@@ -920,6 +920,7 @@ def researches_update(request):
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
+                                f.for_talon = field.get("for_talon", False)
                             if f:
                                 f.save()
 
@@ -963,6 +964,7 @@ def researches_details(request):
                     "values_to_input": json.loads(field.input_templates),
                     "field_type": field.field_type,
                     "required": field.required,
+                    "for_talon": field.for_talon,
                     "new_value": ""
                 })
             response["groups"].append(g)
@@ -989,6 +991,7 @@ def paraclinic_details(request):
                 "values_to_input": json.loads(field.input_templates),
                 "field_type": field.field_type,
                 "required": field.required,
+                "for_talon": field.for_talon,
             })
         response["groups"].append(g)
     return JsonResponse(response)

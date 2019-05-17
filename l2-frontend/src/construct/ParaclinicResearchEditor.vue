@@ -130,10 +130,10 @@
                 <input type="checkbox" v-model="row.required"/> запрет пустого
               </label>
                <label>
-                <input type="checkbox" /> в талон
+                <input type="checkbox" v-model="row.for_talon" /> в талон
               </label>
               <label style="line-height: 1" v-show="row.field_type === 0">
-                Число строк<br/>для ввода:<br/>
+                Число строк:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
               </label>
               <label>
