@@ -284,9 +284,9 @@
     <div id="template-dreg" v-show="data.ok">
       <strong>Диспансерный учёт</strong><br/>
       <span v-if="dreg_rows_loading">загрузка...</span>
-      <ul v-else style="padding-left: 25px;">
+      <ul v-else style="padding-left: 25px;text-align: left">
         <li v-for="r in dreg_rows">
-          {{r.diagnos}} – {{r.date_start}} – {{r.illnes}}
+          {{r.diagnos}} – {{r.date_start}} <span v-if="r.illnes">– {{r.illnes}}</span>
         </li>
         <li v-if="dreg_rows.length === 0">нет активных записей</li>
       </ul>
@@ -352,7 +352,7 @@
     },
     methods: {
       async load_dreg_rows() {
-        if (!this.data.ok)
+        if (!this.data.patient || !this.data.patient.card_pk)
           return;
         this.dreg_rows_loading = true;
         this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
@@ -502,6 +502,8 @@
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
+            this.dreg_rows_loading = false;
+            this.dreg_rows = [];
             vm.pk = ''
             vm.data = data
             vm.changed = false
