@@ -192,6 +192,7 @@ def form_02(request_data):
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4,
@@ -293,10 +294,12 @@ def form_02(request_data):
         date_proto = utils.strfdatetime(obj_iss.time_confirmation, "%d.%m.%Y")
 
         opinion = [
-             [Paragraph('Основная услуга', styleT), Paragraph('<font fontname="PTAstraSerifBold">{}</font> -- {}'.format(obj_iss.research.code, obj_iss.research.title), styleT)],
-             [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
-             [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
-             ]
+            [Paragraph('Основная услуга', styleT), Paragraph(
+                '<font fontname="PTAstraSerifBold">{}</font> <font face="Symbola">\u2013</font> {}'.format(
+                    obj_iss.research.code, obj_iss.research.title), styleT)],
+            [Paragraph('Направление №', styleT), Paragraph('{}'.format(dir), styleT)],
+            [Paragraph('Дата протокола', styleT), Paragraph('{}'.format(date_proto), styleT)],
+        ]
 
         # Найти и добавить поля у к-рых флаг "for_talon". Отсортировано по 'order' (группа, поле)
         field_iss = ParaclinicResult.objects.filter(issledovaniye=obj_iss, field__for_talon=True, ).order_by(
@@ -333,14 +336,13 @@ def form_02(request_data):
         objs.append(tbl)
 
        # Добавить Дополнительные услуги
-
         add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
         if add_research:
             objs.append(Spacer(1, 3 * mm))
             objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
             objs.append(Spacer(1, 1 * mm))
             for i in add_research:
-                objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
+                objs.append(Paragraph('{} <font face="Symbola">\u2013</font> {}'.format(i.research.code, i.research.title), style))
 
         objs.append(Spacer(1, 5 * mm))
         objs.append(
@@ -356,7 +358,3 @@ def form_02(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
-
-
-
-
