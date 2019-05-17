@@ -60,7 +60,7 @@
             <span>&times;</span>
           </button>
         </div>
-        <input type="text" placeholder="Поиск исследования (Enter для быстрого выбора и очистки)" class="form-control"
+        <input type="text" placeholder="Поиск назначения (Enter для быстрого выбора и очистки)" class="form-control"
                v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc" id="fndsrc" style="max-width: 300px"
                @show="check_found_tip" @shown="check_found_tip"
                @keyup.alt.37="k('left')"
@@ -79,6 +79,27 @@
           <span>&times;</span>
         </button>
       </div>
+    </div>
+    <div class="bottom-picker" v-if="just_search" style="white-space: nowrap;">
+      <input type="text" placeholder="Поиск назначения (Enter для быстрого выбора и очистки)" class="form-control"
+             v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc"
+             style="width: calc(100% - 68px);max-width: 100%;"
+             @show="check_found_tip" @shown="check_found_tip"
+             @keyup.alt.37="k('left')"
+             @keyup.alt.38="k('up')"
+             @keyup.alt.39="k('right')"
+             @keyup.alt.40="k('down')"
+             v-tippy="{html: '#founded-n', trigger: 'mouseenter focus input', reactive: true, arrow: true, animation : 'fade', duration : 0}"/>
+      <button class="btn btn-blue-nb bottom-inner-btn" @click="founded_select"
+              v-tippy="{ placement : 'top', arrow: true }"
+              title="Быстрый выбор найденного">
+        <span class="fa fa-circle"></span>
+      </button>
+      <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search"
+              v-tippy="{ placement : 'top', arrow: true }"
+              title="Очистить поиск">
+        <span>&times;</span>
+      </button>
     </div>
   </div>
 </template>
@@ -104,6 +125,14 @@
         default: false,
         type: Boolean
       },
+      just_search: {
+        default: false,
+        type: Boolean
+      },
+      filter_types: {
+        default: [],
+        type: Array,
+      }
     },
     data() {
       return {
@@ -181,7 +210,7 @@
       types() {
         let t = []
         for (let row of this.$store.getters.allTypes) {
-          if (row.pk !== '0' && row.pk !== '1') {
+          if (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) {
             t.push(row)
           }
         }

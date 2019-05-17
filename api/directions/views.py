@@ -769,6 +769,25 @@ def directions_paraclinic_result(request):
         iss.diagnos = request_data.get("diagnos", "")
 
         iss.save()
+
+        more = request_data.get("more", [])
+        h = []
+        for m in more:
+            if not Issledovaniya.objects.filter(parent=iss, doc_confirmation=request.user.doctorprofile, research_id=m):
+                i = Issledovaniya.objects.create(parent=iss, research_id=m)
+                i.doc_save = request.user.doctorprofile
+                i.time_save = timezone.now()
+                i.doc_confirmation = request.user.doctorprofile
+                i.time_confirmation = timezone.now()
+                i.creator = request.user.doctorprofile
+                h.append(i.pk)
+            else:
+                for i2 in Issledovaniya.objects.filter(parent=iss, doc_confirmation=request.user.doctorprofile,
+                                                       research_id=m):
+                    h.append(i2)
+
+        Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
+
         response["ok"] = True
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
     return JsonResponse(response)
