@@ -162,8 +162,7 @@ def get_data_individual(card_object):
     :param card_object:
     :return:
     """
-    ind_data = {}
-    ind_data['ind'] = card_object.individual
+    ind_data = {'ind': card_object.individual}
     ind_data['age'] = ind_data['ind'].age()
     ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
     ind_data['fio'] = ind_data['ind'].fio()

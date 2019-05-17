@@ -702,8 +702,7 @@ class Card(models.Model):
         :param card_object:
         :return:
         """
-        ind_data = {}
-        ind_data['ind'] = self.individual
+        ind_data = {'ind': self.individual}
         ind_data['age'] = ind_data['ind'].age()
         docs = []
         cd = self.get_card_documents()

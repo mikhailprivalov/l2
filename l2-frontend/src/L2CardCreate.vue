@@ -439,7 +439,7 @@
   import forms from './forms'
 
   function validateSnils(snils, error = {}) {
-    var result = false;
+    let result = false
     if (typeof snils === 'number') {
       snils = snils.toString();
     } else if (typeof snils !== 'string') {
@@ -456,11 +456,11 @@
       error.code = 3;
       error.message = 'СНИЛС может состоять только из 11 цифр';
     } else {
-      var sum = 0;
-      for (var i = 0; i < 9; i++) {
+      let sum = 0
+      for (let i = 0; i < 9; i++) {
         sum += parseInt(snils[i]) * (9 - i);
       }
-      var checkDigit = 0;
+      let checkDigit = 0
       if (sum < 100) {
         checkDigit = sum;
       } else if (sum > 101) {
@@ -597,7 +597,7 @@
       },
       doc_edit_fields() {
         const tt = this.doc_edit_type_title;
-        const d = {
+        return {
           serial: tt !== 'СНИЛС',
           dates: tt !== 'СНИЛС',
           who_give: tt !== 'СНИЛС',
@@ -605,8 +605,6 @@
             number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
           }
         };
-
-        return d;
       },
       family() {
         return this.card.family
