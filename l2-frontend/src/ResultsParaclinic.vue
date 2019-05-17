@@ -180,7 +180,7 @@
                                    :just_search="true"
                                    :filter_types="[2]"/>
               </div>
-              <div class="col-xs-6" style="height: 200px">
+              <div class="col-xs-6" style="height: 200px;padding-left: 0;">
                 <selected-researches :researches="row.more"
                                      :readonly="row.confirmed" :simple="true"/>
               </div>
