@@ -333,12 +333,12 @@ def form_02(request_data):
         objs.append(tbl)
 
        # Добавить Дополнительные услуги
-        objs.append(Spacer(1, 3 * mm))
-        objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
-        objs.append(Spacer(1, 1 * mm))
 
         add_research = Issledovaniya.objects.filter(parent_id__napravleniye=obj_dir)
         if add_research:
+            objs.append(Spacer(1, 3 * mm))
+            objs.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
+            objs.append(Spacer(1, 1 * mm))
             for i in add_research:
                 objs.append(Paragraph('{}--{}'.format(i.research.code, i.research.title), style))
 
