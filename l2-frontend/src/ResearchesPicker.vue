@@ -125,6 +125,10 @@
         default: false,
         type: Boolean
       },
+      readonly: {
+        default: false,
+        type: Boolean
+      },
       just_search: {
         default: false,
         type: Boolean
@@ -146,28 +150,30 @@
       }
     },
     created() {
-      let vm = this
-      vm.$store.dispatch(action_types.INC_LOADING).then()
+      if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
 
-      this.$store.dispatch(action_types.GET_TEMPLATES).then().finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
-      })
-
-      vm.$store.dispatch(action_types.INC_LOADING).then()
-      this.$store.dispatch(action_types.GET_RESEARCHES).then().finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
-      })
-
-      if (this.types.length === 0) {
-        this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
-          this.checkType()
+        this.$store.dispatch(action_types.GET_TEMPLATES).then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
-      }
 
-      if (this.templates.length === 0) {
-        this.$store.watch(state => state.templates, (oldValue, newValue) => {
-          this.check_template()
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.GET_RESEARCHES).then().finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+
+        if (this.types.length === 0) {
+          this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
+            this.checkType()
+          })
+        }
+
+        if (this.templates.length === 0) {
+          this.$store.watch(state => state.templates, (oldValue, newValue) => {
+            this.check_template()
+          })
+        }
       }
 
       this.checkType()
@@ -372,6 +378,9 @@
         }
       },
       load_template(pk) {
+        if (this.readonly) {
+          return;
+        }
         let last_dep = -1
         let last_type = -1
         for (let v of this.get_template(pk).values) {
@@ -392,6 +401,9 @@
         return {title: 'Не выбран шаблон', pk: '-1', for_current_user: false, for_users_department: false, values: []}
       },
       select_research(pk) {
+        if (this.readonly) {
+          return;
+        }
         if(this.oneselect) {
           this.checked_researches = [pk]
           return;
@@ -403,6 +415,9 @@
         }
       },
       select_research_ignore(pk) {
+        if (this.readonly) {
+          return;
+        }
         if (!this.research_selected(pk)) {
           this.checked_researches.push(pk)
           let research = this.research_data(pk)
@@ -414,6 +429,9 @@
         }
       },
       deselect_research_ignore(pk) {
+        if (this.readonly) {
+          return;
+        }
         if (this.research_selected(pk)) {
           this.checked_researches = this.checked_researches.filter(item => item !== pk)
           let research = this.research_data(pk)
@@ -425,6 +443,9 @@
         }
       },
       deselect_department(pk) {
+        if (this.readonly) {
+          return;
+        }
         for (let rpk of this.researches_selected_in_department(pk, true)) {
           this.deselect_research_ignore(rpk)
         }

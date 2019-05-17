@@ -173,13 +173,16 @@
           <div class="group">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
-              <div class="col-xs-6" style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
+              <div class="col-xs-6"
+                   style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
                 <researches-picker v-model="row.more" :hidetemplates="true"
+                                   :readonly="row.confirmed"
                                    :just_search="true"
                                    :filter_types="[2]"/>
               </div>
               <div class="col-xs-6" style="height: 200px">
-                <selected-researches :researches="row.more" :simple="true"/>
+                <selected-researches :researches="row.more"
+                                     :readonly="row.confirmed" :simple="true"/>
               </div>
             </div>
           </div>

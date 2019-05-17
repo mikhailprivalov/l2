@@ -24,7 +24,7 @@
         <colgroup>
           <col width="130">
           <col>
-          <col width="101">
+          <col width="101" v-if="!readonly">
         </colgroup>
         <tbody>
         <tr v-if="researches.length === 0">
@@ -37,11 +37,11 @@
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
-          <td>
+          <td v-if="!readonly">
             <a href="#" @click.prevent="clear_department(parseInt(key))">очистить</a>
           </td>
         </tr>
-        <tr v-if="Object.keys(researches_departments).length > 1">
+        <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
           <td colspan="2"></td>
           <td><a href="#" @click.prevent="clear_all">очистить всё</a></td>
         </tr>
@@ -130,6 +130,10 @@
         type: Number
       },
       operator: {
+        type: Boolean,
+        default: false
+      },
+      readonly: {
         type: Boolean,
         default: false
       },
