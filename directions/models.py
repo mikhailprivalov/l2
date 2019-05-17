@@ -310,7 +310,7 @@ class Napravleniya(models.Model):
 
     polis_who_give = models.TextField(blank=True, null=True, default=None, help_text="Страховая компания")
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
-    parent_id = models.ForeignKey('self', related_name='parent_dir', help_text="Направление основание", blank=True,
+    parent = models.ForeignKey('self', related_name='parent_dir', help_text="Направление основание", blank=True,
                                    null=True, default=None, on_delete=models.SET_NULL)
 
 
@@ -663,7 +663,7 @@ class Issledovaniya(models.Model):
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
     creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research", db_index=True, help_text='Профиль пользователя, добавившего услуги к созданному направлению', on_delete=models.SET_NULL)
-    parent_id = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание", blank=True, null=True, default=None,
+    parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание", blank=True, null=True, default=None,
                       on_delete=models.SET_NULL)
 
     def get_stat_diagnosis(self):
