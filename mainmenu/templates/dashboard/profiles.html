@@ -1,0 +1,30 @@
+{% extends "dbase.html" %}
+{% block title %}Профили пользователей{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <profiles/>
+{% endblock %}
+
+{% block head_cn %}
+    <style>
+        body, html {
+            height: 100%;
+        }
+
+        body {
+            padding-bottom: 0;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        .navbar {
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}

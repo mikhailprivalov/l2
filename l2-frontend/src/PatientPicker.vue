@@ -294,7 +294,7 @@
     watch: {
       query() {
         this.query = this.query.split(' ')
-        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
         .join(' ');
       },
       bases() {

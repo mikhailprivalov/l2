@@ -22,7 +22,7 @@
         </div>
       </div>
     </div>
-    <div class="content-picker" :class="{hidetemplates: hidetemplates}" v-if="researches_display.length > 0">
+    <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}" v-if="researches_display.length > 0">
       <research-pick @click.native="select_research(row.pk)" class="research-select"
                      :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
                      v-for="row in researches_display" :research="row"/>
@@ -80,7 +80,7 @@
         </button>
       </div>
     </div>
-    <div class="bottom-picker" v-if="just_search" style="white-space: nowrap;">
+    <div class="bottom-picker" v-else-if="just_search" style="white-space: nowrap;">
       <input type="text" placeholder="Поиск назначения (Enter для быстрого выбора и очистки)" class="form-control"
              v-model="search" @keyup.enter="founded_select(true)" ref="fndsrc"
              style="width: calc(100% - 68px);max-width: 100%;"

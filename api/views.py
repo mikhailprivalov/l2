@@ -4,6 +4,7 @@ from collections import defaultdict
 import simplejson as json
 import yaml
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group, User
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
@@ -757,3 +758,105 @@ def laborants(request):
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
     return JsonResponse({"data": data})
+
+
+@login_required
+@group_required("Создание и редактирование пользователей")
+def users_view(request):
+    data = []
+
+    podr = Podrazdeleniya.objects.all().order_by("title")
+    for x in podr:
+        otd = {"pk": x.pk, "title": x.title, "users": []}
+        docs = users.DoctorProfile.objects.filter(podrazdeleniye=x).order_by('fio')
+        if not request.user.is_superuser:
+            docs = docs.filter(user__is_superuser=False)
+        for y in docs:
+            otd["users"].append({"pk": y.pk, "fio": y.get_fio(), "username": y.user.username})
+        data.append(otd)
+
+    return JsonResponse({"departments": data})
+
+
+@login_required
+@group_required("Создание и редактирование пользователей")
+def user_view(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    if pk == -1:
+        data = {
+            "fio": '',
+            "username": '',
+            "department": '',
+            "groups": [],
+            "restricted_to_direct": [],
+            "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "password": '',
+        }
+    else:
+        doc = users.DoctorProfile.objects.get(pk=pk)
+
+        data = {
+            "fio": doc.fio,
+            "username": doc.user.username,
+            "department": doc.podrazdeleniye_id,
+            "groups": [x.pk for x in doc.user.groups.all()],
+            "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
+            "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
+            "password": '',
+        }
+
+    return JsonResponse({"user": data})
+
+
+@login_required
+@group_required("Создание и редактирование пользователей")
+def user_save_view(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    ok = True
+    message = ""
+    ud = request_data["user_data"]
+    username = ud["username"]
+    npk = pk
+    if pk == -1:
+        if not User.objects.filter(username=username).exists():
+            user = User.objects.create_user(username)
+            user.is_active = True
+            user.save()
+            doc = users.DoctorProfile(user=user, fio=ud["fio"])
+            doc.save()
+            npk = doc.pk
+        else:
+            ok = False
+            message = "Имя пользователя уже занято"
+            doc = None
+    else:
+        doc = users.DoctorProfile.objects.get(pk=pk)
+    if pk and doc and (not doc.user.is_superuser or request.user.is_superuser):
+        if ud["password"] != '':
+            doc.user.set_password(ud["password"])
+            doc.user.save()
+        if pk != -1 and doc.user.username != ud['username']:
+            if not User.objects.filter(username=username).exists():
+                doc.user.username = username
+                doc.user.save()
+            else:
+                ok = False
+                message = "Имя пользователя уже занято"
+
+        if ok:
+            doc.user.groups.clear()
+            for g in ud["groups"]:
+                group = Group.objects.get(pk=g)
+                doc.user.groups.add(group)
+            doc.user.save()
+
+            doc.restricted_to_direct.clear()
+            for r in ud["restricted_to_direct"]:
+                doc.restricted_to_direct.add(DResearches.objects.get(pk=r))
+
+            doc.podrazdeleniye_id = ud['department']
+            doc.fio = ud["fio"]
+            doc.save()
+    return JsonResponse({"ok": ok, "npk": npk, "message": message})

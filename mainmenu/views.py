@@ -49,6 +49,12 @@ def view_log(request):
                   {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
 
 
+@login_required
+@group_required("Создание и редактирование пользователей")
+def profiles(request):
+    return render(request, 'dashboard/profiles.html')
+
+
 @csrf_exempt
 @login_required
 @group_required("Создание и редактирование пользователей")

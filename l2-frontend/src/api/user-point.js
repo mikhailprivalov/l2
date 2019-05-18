@@ -22,4 +22,41 @@ async function getDirectiveFrom() {
   return []
 }
 
-export default {getCurrentUserInfo, getDirectiveFrom}
+async function loadUsers() {
+  try {
+    const response = await HTTP.post('users')
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function loadUser(pk) {
+  try {
+    const response = await HTTP.post('user', {
+      pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function saveUser(pk, user_data) {
+  try {
+    const response = await HTTP.post('user-save', {
+      pk, user_data,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser}

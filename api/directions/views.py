@@ -777,13 +777,12 @@ def directions_paraclinic_result(request):
         more = request_data.get("more", [])
         h = []
         for m in more:
-            if not Issledovaniya.objects.filter(parent=iss, doc_confirmation=request.user.doctorprofile, research_id=m):
+            if not Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile, research_id=m):
                 i = Issledovaniya.objects.create(parent=iss, research_id=m)
                 i.doc_save = request.user.doctorprofile
                 i.time_save = timezone.now()
-                i.doc_confirmation = request.user.doctorprofile
-                i.time_confirmation = timezone.now()
                 i.creator = request.user.doctorprofile
+                i.save()
                 h.append(i.pk)
             else:
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_confirmation=request.user.doctorprofile,
@@ -815,6 +814,10 @@ def directions_paraclinic_confirm(request):
         iss.doc_confirmation = request.user.doctorprofile
         iss.time_confirmation = t
         iss.save()
+        for i in Issledovaniya.objects.filter(parent=iss):
+            i.doc_confirmation = request.user.doctorprofile
+            i.time_confirmation = t
+            i.save()
         response["ok"] = True
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
@@ -845,6 +848,10 @@ def directions_paraclinic_confirm_reset(request):
                 c = Client()
                 c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
             response["ok"] = True
+            for i in Issledovaniya.objects.filter(parent=iss):
+                i.doc_confirmation = None
+                i.time_confirmation = None
+                i.save()
             Log(key=pk, type=24, body=json.dumps(predoc), user=request.user.doctorprofile).save()
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
