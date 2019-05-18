@@ -4,7 +4,7 @@
       <input class="form-control" placeholder="Фильтр" v-model="filter"/>
       <div class="left-wrapper">
         <ul>
-          <li v-for="d in department_filter" v-if="filter === '' || d.users.length">
+          <li v-for="d in department_filter" v-if="filter === '' || d.users.length || d.title.toLowerCase().startsWith(filter.toLowerCase())">
             <strong>{{d.title}}</strong>
             <ul>
               <li :class="{selected: x.pk === open_pk}" v-for="x in d.users">
