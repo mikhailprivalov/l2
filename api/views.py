@@ -26,6 +26,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
+from directory.models import Researches as DResearches
 
 
 def translit(locallangstring):
@@ -366,13 +367,6 @@ def bases(request):
          } for x in CardBase.objects.all().order_by('-order_weight')]})
 
 
-
-from directory.models import Researches as DResearches
-
-
-
-
-
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
@@ -385,6 +379,7 @@ def current_user_info(request):
         if request.user.is_superuser:
             ret["groups"].append("Admin")
         ret["doc_pk"] = request.user.doctorprofile.pk
+        ret["rmis_location"] = request.user.doctorprofile.rmis_location
         ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
 
@@ -558,7 +553,8 @@ def get_reset_time_vars(n):
 def mkb10(request):
     kw = request.GET.get("keyword", "").split(' ')[0]
     data = []
-    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[:11]:
+    for d in directions.Diagnoses.objects.filter(d_type="mkb10.4", code__istartswith=kw).order_by("code").distinct()[
+             :11]:
         data.append({"pk": d.pk, "code": d.code, "title": d.title})
     return JsonResponse({"data": data})
 
@@ -755,7 +751,9 @@ def laborants(request):
     data = []
     if SettingManager.l2('results_laborants'):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
-        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант", podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by('fio'):
+        for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант",
+                                                    podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by(
+            'fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
     return JsonResponse({"data": data})
 
