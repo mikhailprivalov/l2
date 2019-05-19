@@ -32,7 +32,7 @@
             </div>
         </div>
     </div>
-    <div id="table_cont">
+    <div id="table_cont" style="overflow-y: auto">
         <table class="table table-bordered floatThead ct" id="log_table">
             <thead>
             <tr>
@@ -195,12 +195,12 @@
 
         function resize() {
             $('#table_cont').height($(window).height() - $('#table_cont').position().top)
-            if (first_resize) {
+            {% comment %}if (first_resize) {
                 $('#table_cont').perfectScrollbar()
                 first_resize = false
             } else {
                 $('#table_cont').perfectScrollbar('update')
-            }
+            }{% endcomment %}
 
             $('.floatThead').floatThead('reflow')
             $('.floatThead').floatThead({

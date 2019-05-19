@@ -47,6 +47,7 @@ new Vue({
     'RmqManagement': () => import('./RmqManagement'),
     'DirectionSteps': () => import('./DirectionSteps'),
     'RmisConfirm': () => import('./RmisConfirm'),
+    'Profiles': () => import('./Profiles'),
     // loading,
   },
   data: {

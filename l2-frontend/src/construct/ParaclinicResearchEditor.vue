@@ -12,7 +12,23 @@
         </div>
       </div>
       <div class="right">
-        <div class="input-group">
+        <div class="row" style="margin-right: 0;" v-if="department < -1">
+          <div class="col-xs-6" style="padding-right: 0">
+            <div class="input-group" style="margin-right: -1px">
+              <span class="input-group-addon">Код</span>
+              <input type="text" class="form-control" v-model="code">
+            </div>
+          </div>
+          <div class="col-xs-6" style="padding-left: 0;padding-right: 0;margin-right: 0;">
+            <div class="input-group">
+              <span class="input-group-addon">Подраздел</span>
+              <select v-model="site_type" class="form-control">
+                <option v-for="r in ex_deps" :value="r.pk">{{r.title}}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="input-group" v-else>
           <span class="input-group-addon">Код</span>
           <input type="text" class="form-control" v-model="code">
         </div>
@@ -129,8 +145,11 @@
               <label>
                 <input type="checkbox" v-model="row.required"/> запрет пустого
               </label>
+               <label>
+                <input type="checkbox" v-model="row.for_talon" /> в талон
+              </label>
               <label style="line-height: 1" v-show="row.field_type === 0">
-                Число строк<br/>для ввода:<br/>
+                Число строк:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
               </label>
               <label>
@@ -200,6 +219,7 @@
         hide: false,
         cancel_do: false,
         loaded_pk: -2,
+        site_type: null,
         groups: [],
         template_add_types: [
           {sep: ' ', title: 'Пробел'},
@@ -240,7 +260,7 @@
     },
     computed: {
       fte() {
-        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+        return this.$store.getters.modules.l2_fast_templates;
       },
       valid() {
         return this.norm_title.length > 0 && !this.cancel_do
@@ -265,6 +285,16 @@
           max = Math.max(max, row.order)
         }
         return {min, max}
+      },
+      ex_dep() {
+        return {
+          '-2': 4,
+          '-3': 5,
+          '-4': 6,
+        }[this.department] || this.department;
+      },
+      ex_deps() {
+        return this.$store.getters.ex_dep[this.ex_dep] || [];
       },
     },
     methods: {
@@ -422,6 +452,7 @@
         this.code = ''
         this.info = ''
         this.hide = false
+        this.site_type = null
         this.groups = []
         if (this.pk >= 0) {
           let vm = this
@@ -432,6 +463,7 @@
             vm.code = data.code
             vm.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
             vm.hide = data.hide
+            vm.site_type = data.site_type
             vm.loaded_pk = vm.pk
             vm.groups = data.groups
             if (vm.groups.length === 0) {
@@ -454,7 +486,8 @@
       save() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code, vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups).then(() => {
+        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code,
+          vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups, vm.site_type).then(() => {
           vm.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()

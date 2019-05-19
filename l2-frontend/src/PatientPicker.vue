@@ -72,12 +72,28 @@
             </td>
             <td>
               <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
-                <button class="btn last btn-blue-nb nbr" type="button" title="Анамнез жизни" @click="open_anamnesis()" v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"></i></button>
-                <button class="btn last btn-blue-nb nbr" type="button" title="Новая L2 карта" @click="open_editor(true)" v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
-                <button class="btn last btn-blue-nb nbr" type="button" title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()" v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Диспансерный учёт" @click="open_dreg()"
+                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-database"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Анамнез жизни" @click="open_anamnesis()"
+                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Новая L2 карта" @click="open_editor(true)"
+                        v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()"
+                        v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
               </div>
               <div class="internal_type" v-else-if="l2_cards">
-                <button class="btn last btn-blue-nb nbr" type="button" title="Открыть пациента в базе L2" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Открыть пациента в базе L2" style="margin-left: -1px"
+                        :disabled="!selected_card.pk" @click="open_as_l2_card()">L2</button>
               </div>
             </td>
           </tr>
@@ -124,6 +140,7 @@
       </div>
     </modal>
     <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
+    <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg" />
     <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top class="an">
         <span slot="header">Анамнез жизни – карта {{selected_card.num}}, {{selected_card.fio_age}}</span>
         <div slot="body" class="an-body">
@@ -159,6 +176,7 @@
 <script>
   import SelectPickerB from './SelectPickerB'
   import L2CardCreate from './L2CardCreate'
+  import DReg from './DReg'
   import LinkSelector from './LinkSelector'
   import PatientCard from './ui-cards/PatientCard'
   import Modal from './ui-cards/Modal'
@@ -167,7 +185,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate},
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg},
     props: {
       directive_from_need: {
         default: 'false',
@@ -209,7 +227,8 @@
         anamnesis_data: {},
         an_state: {
           tab: 'text',
-        }
+        },
+        dreg: false,
       }
     },
     created() {
@@ -268,11 +287,14 @@
       this.$root.$on('hide_l2_card_create', () => {
         vm.editor_pk = -2;
       })
+      this.$root.$on('hide_dreg', () => {
+        this.dreg = false;
+      })
     },
     watch: {
       query() {
         this.query = this.query.split(' ')
-        .map((s) => s.charAt(0).toUpperCase() + s.substring(1))
+        .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
         .join(' ');
       },
       bases() {
@@ -318,7 +340,7 @@
         return this.normalized_query.length > 0
       },
       l2_cards() {
-        return (this.$store.getters.user_data.modules || {}).l2_cards;
+        return this.$store.getters.modules.l2_cards_module;
       },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {
@@ -385,6 +407,9 @@
       },
       an_tab(tab) {
         this.an_state.tab = tab;
+      },
+      open_dreg() {
+        this.dreg = true;
       },
       open_editor(isnew) {
         if (isnew) {

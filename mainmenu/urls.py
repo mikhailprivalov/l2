@@ -29,6 +29,7 @@ urlpatterns = [
     path('utils', TemplateView.as_view(template_name="dashboard/utils.html")),
     path('results_history/search', views.results_history_search),
     path('change_password', views.change_password),
+    path('profiles', views.profiles),
     path('update_pass', views.update_pass),
     path('discharge', views.discharge),
     path('discharge/send', views.discharge_add),

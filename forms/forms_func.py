@@ -1,8 +1,11 @@
-from clients.models import Document
+from clients.models import Document, DispensaryReg
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
 from copy import deepcopy
 from collections import OrderedDict
+from django.db.models import Q
+import datetime
+from laboratory import utils
 
 
 def get_all_doc(docs: [Document]):
@@ -94,7 +97,9 @@ def get_final_data(research_price_loc):
     x = ""
     tmp_napr = []
     for k, v in research_price_loc.items():
-        research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
+        # research_attr = ([s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title')])
+        research_attr = (
+        [s for s in Researches.objects.filter(id__in=v.keys()).values_list('id', 'title', 'internal_code')])
         research_attr_list = [list(z) for z in research_attr]
         for research_id, research_coast in v.items():
             h = []
@@ -105,7 +110,7 @@ def get_final_data(research_price_loc):
                         k = 0
                     else:
                         h.append("")
-                    h.extend(j)
+                    h.extend([j[2], j[1]])
                     h.append("{:,.2f}".format(research_coast[0]).replace(",", " "))
                     coast_with_discount = research_coast[0] + (research_coast[0] * research_coast[1] / 100)
                     if research_coast[1] != 0:
@@ -157,8 +162,7 @@ def get_data_individual(card_object):
     :param card_object:
     :return:
     """
-    ind_data = {}
-    ind_data['ind'] = card_object.individual
+    ind_data = {'ind': card_object.individual}
     ind_data['age'] = ind_data['ind'].age()
     ind_data['doc'] = Document.objects.filter(individual=ind_data['ind'], is_active=True)
     ind_data['fio'] = ind_data['ind'].fio()
@@ -266,14 +270,20 @@ def get_finaldata_talon(doc_result_obj):
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
+    fin_medexam = 'медосмотр'
+
     fin_source = OrderedDict()
     fin_source[fin_oms] = OrderedDict()
     fin_source[fin_pay] = OrderedDict()
     fin_source[fin_dms] = OrderedDict()
+    fin_source[fin_medexam] = OrderedDict()
+
     oms_count = 0
     dms_count = 0
     pay_count = 0
+    medexam_count = 0
     empty = '-'
+    today = utils.timezone.now().date()
 
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
@@ -292,18 +302,45 @@ def get_finaldata_talon(doc_result_obj):
             dms_count += 1
             dict_fsourcce = fin_dms
             order = dms_count
+        elif napr_attr['istochnik_f'] == 'медосмотр':
+            medexam_count += 1
+            dict_fsourcce = fin_medexam
+            order = medexam_count
         else:
             continue
-        temp_dict['client_fio'] = napr_attr['client_fio']
+        polis_who_giv = empty if not napr_attr['polis_who_give'] else napr_attr['polis_who_give']
+        temp_dict['client_fio'] = napr_attr['client_fio'] + ', ' + str(i.napravleniye.pk)
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
-        temp_dict['polis_data'] = '<u>'+napr_attr['polis_n']+'</u>' + '<br/>' + napr_attr['polis_who_give']
+        temp_dict['polis_data'] = '<u>' + napr_attr['polis_n'] + '</u>' + '<br/>' + polis_who_giv
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
         temp_dict['first_time'] = 'Да' if i.first_time else 'Нет'
         temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
         temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
+
+        # Данные Д-учета
+        disp = DispensaryReg.objects.filter(Q(card=i.napravleniye.client), (Q(date_end=None) | Q(date_end=today)))
+        d_stand = []
+        d_take = []
+        d_stop = []
+        d_whystop = []
+        if disp:
+            for d in disp:
+                if d.date_end is None and d.date_start != i.time_confirmation.date():
+                    d_stand.append(d.diagnos)
+                elif d.date_end is None and d.date_start == i.time_confirmation.date():
+                    d_take.append(d.diagnos)
+                elif d.date_end == i.time_confirmation.date():
+                    d_stop.append(d.diagnos)
+                    d_whystop.append(d.why_stop)
+
+        temp_dict['d_stand'] = '' if not d_stand else ', '.join(d_stand)
+        temp_dict['d_take'] = '' if not d_take else ', '.join(d_take)
+        temp_dict['d_stop'] = '' if not d_stand else ', '.join(d_stop)
+        temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)
+        temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
         fin_source[dict_fsourcce].update({order: temp_dict})
 
     return fin_source

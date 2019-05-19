@@ -1,7 +1,9 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && 'pay_source']">
     <div :class="['top-picker', need_vich_code && 'need-vich-code']" v-if="!simple">
-      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos" title="Очистить диагноз">
+      <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              title="Очистить диагноз">
         <span>&times;</span>
       </button>
       <m-k-b-field v-model="diagnos" />
@@ -22,7 +24,7 @@
         <colgroup>
           <col width="130">
           <col>
-          <col width="101">
+          <col width="101" v-if="!readonly">
         </colgroup>
         <tbody>
         <tr v-if="researches.length === 0">
@@ -35,11 +37,11 @@
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
-          <td>
+          <td v-if="!readonly">
             <a href="#" @click.prevent="clear_department(parseInt(key))">очистить</a>
           </td>
         </tr>
-        <tr v-if="Object.keys(researches_departments).length > 1">
+        <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
           <td colspan="2"></td>
           <td><a href="#" @click.prevent="clear_all">очистить всё</a></td>
         </tr>
@@ -47,8 +49,12 @@
       </table>
     </div>
     <div class="bottom-picker-inputs" v-if="pay_source">
-      <input v-model="count" placeholder="Количество" title="Количество" type="number" min="1" max="1000" class="form-control" />
-      <input v-model="discount" placeholder="Скидка" title="Скидка" type="number" min="0" max="100" class="form-control" />
+      <input v-model="count" placeholder="Количество" title="Количество"
+             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
+             type="number" min="1" max="1000" class="form-control" />
+      <input v-model="discount" placeholder="Скидка"
+             v-tippy="{ placement : 'top', arrow: true, followCursor: true, distance : 15 }"
+             title="Скидка" type="number" min="0" max="100" class="form-control" />
       <div class="bottom-picker-inputs-over">
         кол.<br/>
         -%
@@ -124,6 +130,10 @@
         type: Number
       },
       operator: {
+        type: Boolean,
+        default: false
+      },
+      readonly: {
         type: Boolean,
         default: false
       },
@@ -355,7 +365,7 @@
       },
       researches_departments() {
         let r = {}
-        let deps = {"-2": {title: "Консультации"}}
+        let deps = {"-2": {title: "Консультации"}, "-3": {title: "Лечение"}, "-4": {title: "Стоматология"}}
         for (let dep of this.$store.getters.allDepartments) {
           deps[dep.pk] = dep
         }

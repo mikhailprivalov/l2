@@ -53,8 +53,13 @@ class RefFractions(admin.ModelAdmin):
     podr.short_description = "Лаборатория"
     podr.admin_order_field = 'research__podrazdeleniye'
 
+class RefSiteType(admin.ModelAdmin):
+    list_display = ('title', 'site_type',)
+    list_display_links = ('title', 'site_type',)
+    list_filter = ('site_type',)
 
-admin.site.register(models.ResearchSite)
+
+admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.ParaclinicInputGroups)

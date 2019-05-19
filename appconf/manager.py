@@ -5,10 +5,34 @@ class SettingManager:
 
     @staticmethod
     def get(key, default=None, default_type='s'):
-        if appconf.Setting.objects.filter(name=key).exists():
-            row = appconf.Setting.objects.get(name=key)
-        else:
-            row = appconf.Setting(name=key, value=key if default is None else default, value_type=default_type)
-            row.save()
+        row = appconf.Setting.objects.filter(name=key).first()
+        if not row:
+            row = appconf.Setting.objects.create(name=key, value=key if default is None else default,
+                                                 value_type=default_type)
         value = row.get_value()
         return value
+
+    @staticmethod
+    def l2(key):
+        return SettingManager.get('l2_{}'.format(key), default='false', default_type='b')
+
+    @staticmethod
+    def l2_modules():
+        return {'l2_{}'.format(x): SettingManager.l2(x) for x in [
+            "cards_module",
+            "fast_templates",
+            "stat_btn",
+            "treatment",
+            "stom",
+            "hosp",
+        ]}
+
+    @staticmethod
+    def en():
+        return {
+            3: SettingManager.get("paraclinic_module", default='false', default_type='b'),
+            4: SettingManager.get("consults_module", default='false', default_type='b'),
+            5: SettingManager.l2('treatment'),
+            6: SettingManager.l2('stom'),
+            7: SettingManager.l2('hosp'),
+        }

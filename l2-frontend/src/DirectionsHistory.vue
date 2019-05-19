@@ -46,7 +46,7 @@
         </tr>
         </thead>
       </table>
-      <table class="table table-responsive table-bordered no-first-border-top"
+      <table class="table table-responsive table-bordered no-first-border-top table-hover"
              style="table-layout: fixed;margin-bottom: 0">
         <colgroup>
           <col width="66">
@@ -67,7 +67,9 @@
           <td class="text-center">{{row.date}}</td>
           <td>{{row.pk}}</td>
           <td class="researches" :title="row.researches">{{row.researches}}</td>
-          <td class="text-center" :title="statuses[row.status]" :class="['status-' + row.status]">
+          <td class="text-center" :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status]"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              :class="['status-' + row.status]">
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
             <div class="button-td-inner">
@@ -139,6 +141,7 @@
         checked: [],
         all_checked: false,
         statuses: {
+          '-2': 'Посещение зарегистрировано',
           '-1': 'Направление отменено',
           '0': 'Направление только выписано',
           '1': 'Материал в лаборатории',

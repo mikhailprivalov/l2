@@ -29,8 +29,12 @@
             </div>
             <hr/>
             <div class="row">
-              <div class="col-xs-5"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
-              <div class="col-xs-7 text-right">
+              <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
+              <div class="col-xs-4 text-center">
+                <a :href="`/forms/pdf?type=105.02&napr_id=[${direction.pk}]`"
+                   target="_blank" v-if="direction.all_confirmed && stat_btn">Статталон</a>
+              </div>
+              <div class="col-xs-4 text-right">
                 <a href="#" @click.prevent="print_results(direction.pk)" v-if="direction.all_confirmed">Печать</a>
               </div>
             </div>
@@ -38,7 +42,7 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-        </div>purpose
+        </div>
         <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
            :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
@@ -59,7 +63,22 @@
           </div>
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
-            <div>Карта: {{data.patient.card}} <a title="Анамнез жизни" href="#" v-if="data.card_internal && data.has_doc_referral" @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a></div>
+            <div>Карта: {{data.patient.card}}
+              <a title="Анамнез жизни"
+                 href="#"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <a title="Диспансерный учёт"
+                 style="margin-left: 3px"
+                 href="#"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-dreg' }"
+                 :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
+                 @show="load_dreg_rows"
+                 @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
+            </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
             </div>
@@ -111,7 +130,9 @@
           <div class="group" v-for="group in row.research.groups">
             <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
             <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed, required: field.required}"
+              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed,
+                empty: r_list_pk(row).includes(field.pk),
+                required: field.required}"
                    :title="field.required && 'обязательно для заполнения'"
                    @mouseenter="enter_field" @mouseleave="leave_field">
                 <div v-if="field.title !== ''" class="field-title">
@@ -138,14 +159,98 @@
                   <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <m-k-b-field v-model="field.value" />
+                  <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 3">
                   <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                  <input v-model="field.value" readonly class="form-control" :readonly="true" />
+                  <input v-model="field.value" class="form-control" :readonly="true" />
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="group">
+            <div class="group-title">Дополнительные услуги</div>
+            <div class="row">
+              <div class="col-xs-6"
+                   style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
+                <researches-picker v-model="row.more" :hidetemplates="true"
+                                   :readonly="row.confirmed"
+                                   :just_search="true"
+                                   :filter_types="[2]"/>
+              </div>
+              <div class="col-xs-6" style="height: 200px;padding-left: 0;">
+                <selected-researches :researches="row.more"
+                                     :readonly="row.confirmed" :simple="true"/>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal && stat_btn">
+            <div class="group-title">Данные статталона</div>
+            <div class="fields">
+              <div class="field">
+                <div class="field-title">
+                    Цель посещения
+                </div>
+                <div class="field-value">
+                  <select v-model="row.purpose" :disabled="row.confirmed">
+                    <option v-for="o in row.purpose_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Впервые
+                </div>
+                <label class="field-value">
+                  <input type="checkbox" v-model="row.first_time" :disabled="row.confirmed" />
+                </label>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Результат обращения
+                </div>
+                <div class="field-value">
+                  <select v-model="row.result" :disabled="row.confirmed">
+                    <option v-for="o in row.result_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Исход
+                </div>
+                <div class="field-value">
+                  <select v-model="row.outcome" :disabled="row.confirmed">
+                    <option v-for="o in row.outcome_list" :value="o.pk">
+                      {{o.title}}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Заключительный диагноз
+                </div>
+                <div class="field-value mkb10" v-if="!row.confirmed">
+                  <m-k-b-field v-model="row.diagnos" />
+                </div>
+                <div class="field-value" v-else>
+                  <input v-model="row.diagnos" class="form-control" :readonly="true" />
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title">
+                    Подозрение на онко
+                </div>
+                <label class="field-value">
+                  <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
+                </label>
               </div>
             </div>
           </div>
@@ -155,8 +260,6 @@
             <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
             <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="confirm(row)" v-if="row.saved && !row.confirmed" :disabled="changed || !r(row)">Подтвердить
-            </button>
             <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
               подтвердить
             </button>
@@ -173,26 +276,37 @@
     </div>
     <div class="results-content" v-else></div>
     <modal v-if="anamnesis_edit" ref="modalAnamnesisEdit" @close="hide_modal_anamnesis_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
-        <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
-        <div slot="body" style="min-height: 140px" class="registry-body">
-            <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
-                      placeholder="Анамнез жизни"></textarea>
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Отмена
-              </button>
-            </div>
-            <div class="col-xs-4">
-              <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
-                Сохранить
-              </button>
-            </div>
+      <span slot="header">Редактор анамнеза жизни – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+      <div slot="body" style="min-height: 140px" class="registry-body">
+          <textarea v-model="anamnesis_data.text" rows="14" class="form-control"
+                    placeholder="Анамнез жизни"></textarea>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_anamnesis_edit" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Отмена
+            </button>
+          </div>
+          <div class="col-xs-4">
+            <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Сохранить
+            </button>
           </div>
         </div>
-      </modal>
+      </div>
+    </modal>
+    <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
+    <div id="template-dreg" v-show="data.ok && data.has_doc_referral">
+      <strong>Диспансерный учёт</strong><br/>
+      <span v-if="dreg_rows_loading">загрузка...</span>
+      <ul v-else style="padding-left: 25px;text-align: left">
+        <li v-for="r in dreg_rows">
+          {{r.diagnos}} – {{r.date_start}} <span v-if="r.illnes">– {{r.illnes}}</span>
+        </li>
+        <li v-if="dreg_rows.length === 0">нет активных записей</li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -202,17 +316,22 @@
   import * as action_types from './store/action-types'
   import directions_point from './api/directions-point'
   import SelectPickerM from './SelectPickerM'
+  import SelectPickerB from './SelectPickerB'
   import researches_point from './api/researches-point'
   import Longpress from 'vue-longpress'
   import Modal from './ui-cards/Modal'
   import MKBField from './MKBField'
   import DateFieldNav from './DateFieldNav'
   import FormulaField from './FormulaField'
+  import DReg from './DReg'
   import dropdown from 'vue-my-dropdown';
+  import ResearchesPicker from './ResearchesPicker'
+  import SelectedResearches from './SelectedResearches'
 
   export default {
     name: 'results-paraclinic',
-    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, dropdown, SelectPickerM},
+    components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
+      dropdown, SelectPickerM, SelectPickerB, DReg},
     data() {
       return {
         pk: '',
@@ -228,27 +347,15 @@
         research_open_history: null,
         research_history: [],
         templates: {},
+        dreg: false,
+        dreg_rows_loading: false,
+        dreg_rows: [],
       }
     },
     watch: {
       date() {
         this.load_history()
       },
-      data: {
-        handler() {
-          if(this.data.ok) {
-            if (this.inserted) {
-              this.changed = true
-            } else {
-              this.inserted = true
-            }
-          } else {
-            this.changed = false
-            this.inserted = false
-          }
-        },
-        deep: true
-      }
     },
     mounted() {
       let vm = this
@@ -257,8 +364,32 @@
           return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
       })
       vm.load_history()
+      this.$root.$on('hide_dreg', () => {
+        this.load_dreg_rows();
+        this.dreg = false;
+      })
     },
     methods: {
+      async load_dreg_rows() {
+        if (!this.data.patient || !this.data.patient.card_pk)
+          return;
+        this.dreg_rows_loading = true;
+        this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+        if (!this.data.ok)
+          return;
+        this.data.patient.has_dreg = this.dreg_rows.length > 0
+        this.dreg_rows_loading = false;
+      },
+      change_mkb(row, field) {
+        console.log(row, field);
+        if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
+          const ndiagnos = field.value.split(' ')[0] || '';
+          if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
+            okmessage('Диагноз в данных статталона обновлён', ndiagnos)
+            row.diagnos = ndiagnos;
+          }
+        }
+      },
       open_results(pk) {
         if (this.research_open_history) {
           this.hide_results()
@@ -304,6 +435,23 @@
             n++;
             if (f.required && (f.value === '' || !f.value)) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title));
+            }
+          }
+        }
+        return l.slice(0, 2);
+      },
+      r_list_pk(research) {
+        const l = [];
+        if (research.confirmed) {
+          return [];
+        }
+
+        for (const g of research.research.groups) {
+          let n = 0;
+          for (const f of g.fields) {
+            n++;
+            if (f.required && (f.value === '' || !f.value)) {
+              l.push(f.pk);
             }
           }
         }
@@ -373,6 +521,8 @@
         vm.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
+            this.dreg_rows_loading = false;
+            this.dreg_rows = [];
             vm.pk = ''
             vm.data = data
             vm.changed = false
@@ -485,6 +635,8 @@
         this.new_anamnesis = null
         this.data = {ok: false}
         this.research_open_history = null;
+        this.dreg_rows_loading = false;
+        this.dreg_rows = [];
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
@@ -584,10 +736,10 @@
         return this.data.anamnesis;
       },
       fte() {
-        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+        return this.$store.getters.modules.l2_fast_templates;
       },
       stat_btn() {
-        return (this.$store.getters.user_data.modules || {}).stat_btn;
+        return this.$store.getters.modules.l2_stat_btn;
       },
       pk_c() {
         let lpk = this.pk.trim()
@@ -741,6 +893,7 @@
   .group {
     margin: 5px;
     border: 1px solid #c1c1c1;
+    background: #fff;
   }
 
   .group-title {
@@ -815,6 +968,12 @@
     &.required {
       background-color: #e6e6e6;
       border-right: 3px solid #00a1cb;
+      &.empty {
+        input, textarea, /deep/ input {
+          border-color: #f00;
+        }
+        border-right: 3px solid #f00;
+      }
     }
   }
 
@@ -832,6 +991,13 @@
     .form-control {
       width: 100%;
       border-radius: 0;
+    }
+    select {
+      width: 100%;
+      max-width: 370px;
+    }
+    input[type="checkbox"] {
+      margin-top: 8px;
     }
   }
 
@@ -971,6 +1137,8 @@
 
   .status-list {
     display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .mkb10 {
@@ -1024,5 +1192,13 @@
       right: 0;
       border-radius: 0;
     }
+  }
+
+  .dreg_nex {
+    color: #687282;
+  }
+  .dreg_ex {
+    color: #da3b6c;
+    text-shadow: 0 0 4px rgba(#da3b6c, .6);
   }
 </style>

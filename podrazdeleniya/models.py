@@ -7,12 +7,19 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     LABORATORY = 2
     PARACLINIC = 3
     DOCREFFERALS = 4
+    TREATMENT = 5
+    STOM = 6
+    HOSP = 7
+
     TYPES = (
         (HIDDEN, "Скрыто"),
         (DEPARTMENT, "Направляющее отделение"),
         (LABORATORY, "Лаборатория"),
         (PARACLINIC, "Параклиника"),
         (DOCREFFERALS, "Консультации"),
+        (TREATMENT, "Лечение"),
+        (STOM, "Стоматология"),
+        (HOSP, "Стационар"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения

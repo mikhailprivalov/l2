@@ -29,6 +29,7 @@ const getters = {
   },
   canEditDepartments: state => state.can_edit,
   allTypes: state => state.department_types,
+  okDep: state => state.department_types.length > 0,
 }
 
 const actions = {

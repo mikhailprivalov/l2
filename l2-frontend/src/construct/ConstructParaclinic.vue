@@ -104,7 +104,8 @@
         }
         if (d.length === 0)
           return [];
-        return [...d, {value: -2, label: 'Консультации'}];
+        return [...d, {value: -2, label: 'Консультации'},
+          {value: -3, label: 'Лечение'}, {value: -4, label: 'Стоматология'}];
       },
       department_int() {
         return parseInt(this.department)

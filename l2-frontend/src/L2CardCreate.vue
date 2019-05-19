@@ -104,6 +104,22 @@
         <div class="row" style="margin-bottom: 10px">
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
+                <div class="row-t">Адрес регистрации</div>
+                <TypeAhead :delayTime="400" :getResponse="getResponse"
+                           :highlighting="highlighting" :limit="10"
+                           :minChars="4" :onHit="onHit('main_address', true)" :selectFirst="true" maxlength="110"
+                           ref="ar" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.main_address"
+                />
+            </div>
+            <div class="form-row sm-f">
+              <div class="row-t">Адрес проживания</div>
+              <TypeAhead :delayTime="400" :getResponse="getResponse"
+                         :highlighting="highlighting" :limit="10"
+                         :minChars="4" :onHit="onHit('fact_address', true)" :selectFirst="true" maxlength="110"
+                         ref="af" :src="`/api/autocomplete?value=:keyword&type=fias`" v-model="card.fact_address"
+              />
+            </div>
+            <div class="form-row sm-f">
               <div class="row-t">Участок</div>
               <select v-model="card.district" class="form-control"
                       style="width: 65%;border: none;height: 26px;">
@@ -112,19 +128,21 @@
                 </option>
               </select>
             </div>
-            <div class="form-row sm-f">
-                <div class="row-t">Адрес регистрации</div>
-                <input class="form-control" v-model="card.main_address">
-            </div>
-            <div class="form-row sm-f">
-              <div class="row-t">Адрес проживания</div>
-              <input class="form-control" v-model="card.fact_address">
+            <div class="form-row sm-f" v-if="card.sex === 'ж'">
+              <div class="row-t">Гинекологический участок</div>
+              <select v-model="card.ginekolog_district" class="form-control"
+                      style="width: 65%;border: none;height: 26px;">
+                <option v-for="c in card.gin_districts" :value="c.id">
+                  {{c.title}}
+                </option>
+              </select>
             </div>
             <div class="row">
               <div class="col-xs-6" style="padding-right: 0">
                 <div class="form-row nbt-i sm-f">
                   <div class="row-t" style="display: flex;width: 45%;flex: 0 45%;">
                     <input type="checkbox" v-model="card.custom_workplace" title="Ручной ввод названия"
+                           v-tippy="{ placement : 'bottom', arrow: true }"
                            style="height: auto;flex: 0 23px;" />
                     Место работы
                   </div>
@@ -183,7 +201,9 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="d in card.docs" :title="d.who_give" :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
+          <tr v-for="d in card.docs" :title="d.who_give"
+              v-tippy="{ placement : 'bottom', arrow: true }"
+              :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
             prior: card.main_docs[d.document_type] === d.id}">
             <td>
               <input type="radio" :name="`card-doc${d.document_type}`"
@@ -271,6 +291,14 @@
           </tr>
           </tbody>
         </table>
+        <div class="row" style="margin-bottom: 10px">
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+                <div class="row-t">Телефон</div>
+                <input class="form-control" v-model="card.phone" v-mask="'8 999 9999999'">
+            </div>
+          </div>
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
@@ -411,7 +439,7 @@
   import forms from './forms'
 
   function validateSnils(snils, error = {}) {
-    var result = false;
+    let result = false
     if (typeof snils === 'number') {
       snils = snils.toString();
     } else if (typeof snils !== 'string') {
@@ -428,11 +456,11 @@
       error.code = 3;
       error.message = 'СНИЛС может состоять только из 11 цифр';
     } else {
-      var sum = 0;
-      for (var i = 0; i < 9; i++) {
+      let sum = 0
+      for (let i = 0; i < 9; i++) {
         sum += parseInt(snils[i]) * (9 - i);
       }
-      var checkDigit = 0;
+      let checkDigit = 0
       if (sum < 100) {
         checkDigit = sum;
       } else if (sum > 101) {
@@ -521,6 +549,8 @@
           main_docs: {},
           districts: [],
           district: -1,
+          gin_districts: [],
+          ginekolog_district: -1,
           agent_types: [],
           agent_need_doc: [],
           excluded_types: [],
@@ -535,6 +565,7 @@
           agent: null,
           agent_doc: null,
           agent_pk: null,
+          phone: '',
         },
         individuals: [],
         document_to_edit: -2,
@@ -566,7 +597,7 @@
       },
       doc_edit_fields() {
         const tt = this.doc_edit_type_title;
-        const d = {
+        return {
           serial: tt !== 'СНИЛС',
           dates: tt !== 'СНИЛС',
           who_give: tt !== 'СНИЛС',
@@ -574,8 +605,6 @@
             number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
           }
         };
-
-        return d;
       },
       family() {
         return this.card.family
@@ -590,10 +619,11 @@
         return this.card.sex
       },
       valid() {
-        if (!(this.card.family && this.card.name && this.card.birthday)) {
+        if (!this.card.family || !this.card.name || !this.card.birthday) {
           return false;
         }
-        return this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm)
+        return !!(this.card.family.length > 0
+          && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
       },
       birthday() {
         return this.card.birthday
@@ -693,7 +723,8 @@
             this.card.patronymic, this.card.birthday, this.card.sex,
             this.card.individual, this.card.new_individual, this.base_pk,
             this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position, this.card.work_place_db, this.card.custom_workplace, this.card.district)
+            this.card.work_position, this.card.work_place_db, this.card.custom_workplace,
+            this.card.district, this.card.ginekolog_district, this.card.phone)
           if (data.result !== 'ok') {
             return
           }
@@ -756,11 +787,15 @@
         }
         this.document.who_give = item
       },
-      onHit(name) {
+      onHit(name, no_next) {
         return (item, t) => {
           if (t.$el) {
-            let index = $('input', this.$el).index($('input', t.$el)) + 1;
-            $('input', this.$el).eq(index).focus();
+            if (no_next) {
+              $('input', t.$el).focus();
+            } else {
+              let index = $('input', this.$el).index($('input', t.$el)) + 1;
+              $('input', this.$el).eq(index).focus();
+            }
           }
           if (!item) {
             return;

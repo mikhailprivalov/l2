@@ -56,8 +56,8 @@ class ResearchSite(models.Model):
     """
     TYPES = (
         (0, 'Консультация врача'),
-        (1, 'Стоматалогия'),
-        (2, 'Лечение'),
+        (1, 'Лечение'),
+        (2, 'Стоматалогия'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -102,9 +102,9 @@ class Researches(models.Model):
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
+    is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение")
     is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
-    is_physio = models.BooleanField(default=False, blank=True, help_text="Это Физио")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -115,10 +115,33 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
+
+    @staticmethod
+    def filter_type(t):
+        ts = {
+            4: dict(is_paraclinic=True),
+            5: dict(is_doc_refferal=True),
+            6: dict(is_treatment=True),
+            7: dict(is_stom=True),
+        }
+        return ts.get(t, {})
 
     @property
     def is_doc_referral(self):
         return self.is_doc_refferal
+
+    @property
+    def reversed_type(self):
+        if self.is_treatment:
+            return -3
+        if self.is_stom:
+            return -4
+        return self.podrazdeleniye_id or -2
+
+    @property
+    def desc(self):
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
@@ -151,17 +174,23 @@ class ParaclinicInputField(models.Model):
         (1, 'Date'),
         (2, 'MKB'),
         (3, 'Calc'),
+        (4, 'purpose'),
+        (5, 'first_time'),
+        (6, 'result_reception'),
+        (7, 'outcome_illness'),
+        (8, 'maybe_onco'),
     )
 
     title = models.CharField(max_length=255, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
-    default_value = models.TextField()
+    default_value = models.TextField(blank=True, default='')
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
+    for_talon = models.BooleanField(default=False, blank=True)
 
 
 class ParaclinicTemplateName(models.Model):
