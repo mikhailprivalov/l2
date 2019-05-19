@@ -282,23 +282,28 @@
             </select>
             <span v-else>{{document.type_title}}</span>
           </div>
-          <div class="form-group">
+          <div class="form-group" v-show="doc_edit_fields.serial">
             <label for="de-f2">Серия (при наличии):</label>
             <input class="form-control" id="de-f2" v-model="document.serial">
           </div>
-          <div class="form-group">
-            <label for="de-f3">Номер:</label>
-            <input class="form-control" id="de-f3" v-model="document.number">
+          <div class="form-group" v-show="is_snils">
+            <label for="de-f3">Номер СНИЛС:</label>
+            <input class="form-control" id="de-f3" v-model="document.number" v-if="is_snils"
+                   v-mask="doc_edit_fields.masks.number">
           </div>
-          <div class="form-group">
+          <div class="form-group" v-show="!is_snils">
+            <label for="de-f3-2">Номер:</label>
+            <input class="form-control" id="de-f3-2" v-model="document.number">
+          </div>
+          <div class="form-group" v-show="doc_edit_fields.dates">
             <label for="de-f4">Дата выдачи:</label>
             <input class="form-control" type="date" id="de-f4" v-model="document.date_start">
           </div>
-          <div class="form-group">
+          <div class="form-group" v-show="doc_edit_fields.dates">
             <label for="de-f5">Дата окончания:</label>
             <input class="form-control" type="date" id="de-f5" v-model="document.date_end">
           </div>
-          <div class="form-group str">
+          <div class="form-group str" v-show="doc_edit_fields.who_give">
             <label>Выдал:</label>
             <TypeAhead :delayTime="100" :getResponse="getResponse"
                        :highlighting="highlighting" :limit="10"
@@ -405,6 +410,47 @@
   import moment from 'moment'
   import forms from './forms'
 
+  function validateSnils(snils, error = {}) {
+    var result = false;
+    if (typeof snils === 'number') {
+      snils = snils.toString();
+    } else if (typeof snils !== 'string') {
+      snils = '';
+    }
+    snils = snils.replace(/-/g, '').replace(/ /g, '')
+    if (!snils.length) {
+      error.code = 1;
+      error.message = 'СНИЛС пуст';
+    } else if (/[^0-9]/.test(snils)) {
+      error.code = 2;
+      error.message = 'СНИЛС может состоять только из цифр';
+    } else if (snils.length !== 11) {
+      error.code = 3;
+      error.message = 'СНИЛС может состоять только из 11 цифр';
+    } else {
+      var sum = 0;
+      for (var i = 0; i < 9; i++) {
+        sum += parseInt(snils[i]) * (9 - i);
+      }
+      var checkDigit = 0;
+      if (sum < 100) {
+        checkDigit = sum;
+      } else if (sum > 101) {
+        checkDigit = parseInt(sum % 101);
+        if (checkDigit === 100) {
+          checkDigit = 0;
+        }
+      }
+      if (checkDigit === parseInt(snils.slice(-2))) {
+        result = true;
+      } else {
+        error.code = 4;
+        error.message = 'Неправильное контрольное число';
+      }
+    }
+    return result;
+  }
+
   function capitalizeFirstLetter(string) {
     string = SwapLayouts(string)
     return (string.charAt(0).toUpperCase() + string.slice(1)).trim()
@@ -508,6 +554,29 @@
       })
     },
     computed: {
+      doc_edit_type_title() {
+        const t = this.document.document_type;
+        if (!t)
+          return '';
+        return (this.card.doc_types.find(x => x.pk === t) || {}).title || '';
+      },
+      is_snils() {
+        const tt = this.doc_edit_type_title;
+        return tt === 'СНИЛС'
+      },
+      doc_edit_fields() {
+        const tt = this.doc_edit_type_title;
+        const d = {
+          serial: tt !== 'СНИЛС',
+          dates: tt !== 'СНИЛС',
+          who_give: tt !== 'СНИЛС',
+          masks: {
+            number: tt === 'СНИЛС' ? '999-999-999 99' : undefined,
+          }
+        };
+
+        return d;
+      },
       family() {
         return this.card.family
       },
@@ -530,6 +599,9 @@
         return this.card.birthday
       },
       valid_doc() {
+        if (this.doc_edit_type_title === 'СНИЛС') {
+          return /^\d\d\d-\d\d\d-\d\d\d \d\d$/gm.test(this.document.number) && validateSnils(this.document.number);
+        }
         return this.document.number.length > 0;
       },
       valid_agent() {
@@ -643,6 +715,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           await patients_point.updateCdu(this.card_pk, doc)
           this.load_data();
+          okmessage('Изменения сохранены');
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
@@ -653,6 +726,7 @@
           await vm.$store.dispatch(action_types.INC_LOADING)
           await patients_point.updateWIA(this.card_pk, key)
           this.load_data();
+          okmessage('Изменения сохранены');
         })().then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
@@ -796,6 +870,11 @@
 </script>
 
 <style scoped lang="scss">
+  select.form-control {
+    padding: 0;
+    overflow: visible;
+  }
+
   .nonPrior {
     opacity: .7;
     &:hover {

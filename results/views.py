@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.colors import white, black
 
 import directory.models as directory
 import slog.models as slog
@@ -237,6 +238,7 @@ def results_save(request):
 
             issledovaniye.time_save = timezone.now()  # Время сохранения
             issledovaniye.lab_comment = request.POST.get("comment", "")
+            issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(request.POST["co_executor"])
             issledovaniye.save()
             result = {"ok": True}
 
@@ -620,6 +622,7 @@ def result_print(request):
 
         ]))
         fwb.append(t)
+        fwb.append(Spacer(1, 5 * mm))
         if not has_paraclinic:
             tw = pw
 
@@ -1127,14 +1130,17 @@ def result_print(request):
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
+                                v = r.value.replace("\n", "<br/>")
+                                if r.field.field_type == 1:
+                                    vv = v.split('-')
+                                    if len(vv) == 3:
+                                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
                                     fwb.append(Paragraph(
-                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title,
-                                                                                           r.value.replace("\n",
-                                                                                                           "<br/>")),
+                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, v),
                                         style_ml if group_title else style))
                                 else:
-                                    fwb.append(Paragraph(r.value.replace("\n", "<br/>"), style))
+                                    fwb.append(Paragraph(v, style))
                 else:
                     txt = ""
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
@@ -1146,10 +1152,15 @@ def result_print(request):
                                 txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title)
                             vals = []
                             for r in results:
+                                v = r.value.replace("\n", "<br/>")
+                                if r.field.field_type == 1:
+                                    vv = v.split('-')
+                                    if len(vv) == 3:
+                                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
-                                    vals.append("{}:&nbsp;{}".format(r.field.title, r.value))
+                                    vals.append("{}:&nbsp;{}".format(r.field.title, v))
                                 else:
-                                    vals.append(r.value)
+                                    vals.append(v)
                             txt += "; ".join(vals)
                             txt = txt.strip()
                             if len(txt) > 0 and txt.strip()[-1] != ".":
@@ -1171,6 +1182,11 @@ def result_print(request):
                     fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
                                                                        iss.doc_confirmation.podrazdeleniye.title),
                                          styleBold))
+
+                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
+                        fwb.append(Spacer(1, 3.5 * mm))
+                        fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
+
                 fwb.append(Spacer(1, 2.5 * mm))
 
         if client_prev == direction.client.individual.pk and not split:
@@ -1180,7 +1196,17 @@ def result_print(request):
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual.pk
 
-    doc.build(naprs)
+    def first_pages(canvas, document):
+        canvas.saveState()
+        # вывести интерактивную форму "текст"
+        form = canvas.acroForm
+        # canvas.drawString(25, 780, '')
+        form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
+                       x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
+                       width=470, height=18, textColor=black, forceBorder=False)
+        canvas.restoreState()
+
+    doc.build(naprs, onFirstPage=first_pages)
 
     pdf = buffer.getvalue()
     buffer.close()

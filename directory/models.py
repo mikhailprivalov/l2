@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from podrazdeleniya.models import Podrazdeleniya
 from jsonfield import JSONField
 from researches.models import Tubes
@@ -45,6 +45,33 @@ class ResearchGroup(models.Model):
         verbose_name_plural = 'Группы исследований'
 
 
+class ResearchSite(models.Model):
+    """
+    Определяем абстрактные в РАЗДЕЛАХ - подразделы для размещения услуг
+    в Консультации: первичные, повторные, медосмотры, др
+    в Стоматология: терапевтическая, хирургическая, ортопедическая, др
+    в Стационар: круглосуточный, дневной, др
+    в Физиотерапевт: ЛФК, ФИЗИО, др.
+    если в модели Research отсутствует ссылка на ResearchSite. То услуги выводить в корне
+    """
+    TYPES = (
+        (0, 'Консультация врача'),
+        (1, 'Стоматалогия'),
+        (2, 'Лечение'),
+    )
+
+    site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
+    title = models.CharField(max_length=255, help_text='Подраздел')
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Подраздел'
+        verbose_name_plural = 'Подразделы'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -75,11 +102,19 @@ class Researches(models.Model):
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?")
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу")
+    is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
+    is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
+    is_physio = models.BooleanField(default=False, blank=True, help_text="Это Физио")
+    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
+
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
     not_grouping = models.BooleanField(default=False, blank=True, help_text="Нельзя группировать в направления?")
     direction_form = models.IntegerField(default=0, blank=True, choices=DIRECTION_FORMS, help_text="Форма направления")
+    def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
+    prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
+    is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
 
     @property
     def is_doc_referral(self):
@@ -111,6 +146,13 @@ class ParaclinicInputGroups(models.Model):
 
 
 class ParaclinicInputField(models.Model):
+    TYPES = (
+        (0, 'Text'),
+        (1, 'Date'),
+        (2, 'MKB'),
+        (3, 'Calc'),
+    )
+
     title = models.CharField(max_length=255, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
@@ -118,6 +160,41 @@ class ParaclinicInputField(models.Model):
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
+    field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
+    required = models.BooleanField(default=False, blank=True)
+
+
+class ParaclinicTemplateName(models.Model):
+    DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
+
+    title = models.CharField(max_length=255, help_text='Название шаблона запонение полей')
+    research = models.ForeignKey(Researches, on_delete=models.CASCADE, db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрыть шаблон")
+
+    def __str__(self):
+        return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.research, self.hide)
+
+    @staticmethod
+    def make_default(research: Researches) -> 'ParaclinicTemplateName':
+        if not ParaclinicTemplateName.objects.filter(research=research,
+                                                     title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE).exists():
+            with transaction.atomic():
+                p = ParaclinicTemplateName(research=research,
+                                           title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+                p.save()
+                for f in ParaclinicInputField.objects.filter(group__research=research):
+                    ParaclinicTemplateField(template_name=p, input_field=f, value=f.default_value).save()
+        return ParaclinicTemplateName.objects.get(research=research,
+                                                  title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
+
+
+class ParaclinicTemplateField(models.Model):
+    template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE, db_index=True)
+    input_field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE)
+    value = models.TextField(help_text='Значение')
+
+    def __str__(self):
+        return "%s (Лаб. %s, Скрыт=%s)" % (self.template_name, self.input_field.title, self.value)
 
 
 class AutoAdd(models.Model):
@@ -192,7 +269,6 @@ class MaterialVariants(models.Model):
 #     title = models.CharField(max_length=255, help_text='Название параметра')
 
 
-
 class Fractions(models.Model):
     """
     Фракции для исследований
@@ -241,6 +317,7 @@ class Absorption(models.Model):
         verbose_name = 'Поглощение фракции'
         verbose_name_plural = 'Поглощения фракций'
 
+
 class NameRouteSheet(models.Model):
     """
     Route list for research. Маршрутный лист для исследований
@@ -257,6 +334,7 @@ class NameRouteSheet(models.Model):
     class Meta:
         verbose_name = 'Cписки маршрутов'
         verbose_name_plural = 'Списки маршрутов'
+
 
 class RouteSheet(models.Model):
     name_route_sheet = models.ForeignKey(NameRouteSheet, db_index=True, help_text='Наименование перечня',on_delete=models.CASCADE)

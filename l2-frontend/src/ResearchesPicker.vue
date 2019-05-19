@@ -200,7 +200,13 @@
         }
         return i
       },
+      is_doc_ref() {
+        return parseInt(this.type || 0) > 3
+      },
       departments_of_type() {
+        if (this.is_doc_ref) {
+          return this.$store.getters.ex_dep[this.type]
+        }
         let r = []
         for (let row of this.$store.getters.allDepartments) {
           if (row.type === this.type) {
@@ -224,10 +230,10 @@
       },
       researches_display() {
         let r = [];
-        if(this.type.toString() === '4') {
+        if(this.is_doc_ref) {
           for(const d of Object.keys(this.$store.getters.researches)) {
             for(const row of this.$store.getters.researches[d]) {
-              if(row.doc_refferal) {
+              if(row.doc_refferal && row.site_type === this.dep) {
                 r.push(row);
               }
             }
@@ -414,7 +420,9 @@
         let r = []
         for (let rpk of this.checked_researches) {
           let res = this.research_data(rpk)
-          if (res.department_pk === pk) {
+          if ((res.department_pk === pk && (!res.doc_refferal || !this.is_doc_ref || pk === -2)) ||
+            (this.is_doc_ref && res.site_type === pk && res.doc_refferal) ||
+            (!res.site_type && res.doc_refferal && pk === -2)) {
             r.push(rpk)
           }
         }

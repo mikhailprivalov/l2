@@ -20,6 +20,15 @@
           <label class="input-group-addon" style="height: 34px;text-align: left;">
             <input type="checkbox" v-model="hide"/> Скрытие исследования
           </label>
+          <span class="input-group-btn" v-if="fte">
+            <button class="btn btn-blue-nb"
+                    type="button"
+                    style="border-radius: 0;width: 100%;"
+                    :disabled="has_unsaved || loaded_pk < 0"
+                    @click="f_templates()">
+              Шаблоны быстрого ввода
+            </button>
+          </span>
         </div>
       </div>
     </div>
@@ -62,15 +71,19 @@
             </div>
             <div>
               <div class="input-group">
-                <span class="input-group-addon">Название поля</span>
+                <span class="input-group-addon">Название поля ({{row.pk === -1 ? 'новое' : row.pk}})</span>
                 <input type="text" class="form-control" v-model="row.title">
               </div>
-              <div>
+              <div v-if="row.field_type === 0">
                 <strong>Значение по умолчанию:</strong>
                 <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
                 <input v-model="row.default" class="form-control" v-else/>
               </div>
-              <v-collapse-wrapper>
+              <div v-else-if="row.field_type === 3">
+                <strong>Формула:</strong>
+                <input v-model="row.default" class="form-control"/>
+              </div>
+              <v-collapse-wrapper v-show="row.field_type === 0">
                 <div class="header" v-collapse-toggle>
                   <a href="#" @click.prevent>
                     Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -114,8 +127,20 @@
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
               <label>
+                <input type="checkbox" v-model="row.required"/> запрет пустого
+              </label>
+              <label style="line-height: 1" v-show="row.field_type === 0">
                 Число строк<br/>для ввода:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
+              </label>
+              <label>
+                Тип поля:<br/>
+                <select v-model="row.field_type" class="form-control">
+                  <option value="0">Строка</option>
+                  <option value="1">Дата</option>
+                  <option value="2">Диагноз по МКБ</option>
+                  <option value="3">Расчётное</option>
+                </select>
               </label>
             </div>
           </div>
@@ -132,11 +157,17 @@
       <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
       <button class="btn btn-blue-nb" :disabled="!valid" @click="save">Сохранить</button>
     </div>
+    <fast-templates-editor v-if="f_templates_open"
+                           :title="title"
+                           :research_pk="loaded_pk"
+                           :groups="groups"
+    />
   </div>
 </template>
 
 <script>
   import construct_point from '../api/construct-point'
+  import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
   import VueCollapse from 'vue2-collapse'
 
@@ -146,6 +177,7 @@
 
   export default {
     name: 'paraclinic-research-editor',
+    components: {FastTemplatesEditor},
     props: {
       pk: {
         type: Number,
@@ -176,7 +208,10 @@
           {sep: '. ', title: 'Точка и пробел'},
           {sep: '\n', title: 'Перенос строки'},
         ],
-        has_unsaved: false
+        has_unsaved: false,
+        f_templates_open: false,
+        templates: [],
+        opened_template_data: {},
       }
     },
     watch: {
@@ -201,8 +236,12 @@
         if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
+      this.$root.$on('hide_fte', () => this.f_templates_hide())
     },
     computed: {
+      fte() {
+        return (this.$store.getters.user_data.modules || {}).l2_fast_templates;
+      },
       valid() {
         return this.norm_title.length > 0 && !this.cancel_do
       },
@@ -229,6 +268,12 @@
       },
     },
     methods: {
+      f_templates() {
+        this.f_templates_open = true;
+      },
+      f_templates_hide() {
+        this.f_templates_open = false;
+      },
       is_first_in_template(i) {
         return i === 0
       },
@@ -358,7 +403,8 @@
           values_to_input: [],
           new_value: '',
           hide: false,
-          lines: 3
+          lines: 3,
+          field_type: 0,
         })
       },
       add_group() {
@@ -421,6 +467,26 @@
 </script>
 
 <style scoped lang="scss">
+  .modal-mask {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  /deep/ .panel-flt {
+    margin: 41px;
+    align-self: stretch !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /deep/ .panel-body {
+    flex: 1;
+    padding: 0;
+    height: calc(100% - 91px);
+    min-height: 200px;
+  }
+
   .top-editor {
     display: flex;
     flex: 0 0 68px;

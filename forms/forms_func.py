@@ -1,6 +1,8 @@
 from clients.models import Document
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches
+from copy import deepcopy
+from collections import OrderedDict
 
 
 def get_all_doc(docs: [Document]):
@@ -112,8 +114,8 @@ def get_final_data(research_price_loc):
                             x = "+"
                         else:
                             x = ""
-                        h.append(x + str(research_coast[1]))
-                        h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
+                    h.append(x + str(research_coast[1]))
+                    h.append("{:,.2f}".format(coast_with_discount).replace(",", " "))
                     h.append(research_coast[2])
                     research_sum = coast_with_discount * research_coast[2]
                     h.append("{:,.2f}".format(research_sum).replace(",", " "))
@@ -241,3 +243,67 @@ def form_notfound():
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def get_doc_results(doc_obj, date_result):
+    """
+    возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
+    """
+    doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result)
+    return doc_results
+
+
+def get_finaldata_talon(doc_result_obj):
+    """
+    Вход результаты врача за определенную дату
+    Выход: стр-ра данных {'№п.п':'номер',	'ФИО пациента':'Иванов Иван Иванович',	'№ карты (тип)':'1212 (L2)',
+                          'Данные полиса':'номер;Компаня', 'цель посещения': '(код)', 'первичны прием':'Нет',
+                          'Диагноз по МКБ': '(код)',	'Впервые':'Да',	'Результат обращения':'код',
+                          'Исход':'Код',	'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
+						  'причина снятия':'', 'Онкоподозрение':'Да'
+
+    """
+    fin_oms = 'омс'
+    fin_dms = 'дмс'
+    fin_pay = 'платно'
+    fin_source = OrderedDict()
+    fin_source[fin_oms] = OrderedDict()
+    fin_source[fin_pay] = OrderedDict()
+    fin_source[fin_dms] = OrderedDict()
+    oms_count = 0
+    dms_count = 0
+    pay_count = 0
+    empty = '-'
+
+    for i in doc_result_obj:
+        napr_attr = Napravleniya.get_attr(i.napravleniye)
+        temp_dict = OrderedDict()
+        dict_fsourcce = ''
+        order = ''
+        if napr_attr['istochnik_f'] == 'омс':
+            oms_count += 1
+            dict_fsourcce = fin_oms
+            order = oms_count
+        elif napr_attr['istochnik_f'] == 'платно':
+            pay_count += 1
+            dict_fsourcce = fin_pay
+            order = pay_count
+        elif napr_attr['istochnik_f'] == 'дмс':
+            dms_count += 1
+            dict_fsourcce = fin_dms
+            order = dms_count
+        else:
+            continue
+        temp_dict['client_fio'] = napr_attr['client_fio']
+        temp_dict['client_bd'] = napr_attr['client_bd']
+        temp_dict['card_num'] = napr_attr['card_num']
+        temp_dict['polis_data'] = '<u>'+napr_attr['polis_n']+'</u>' + '<br/>' + napr_attr['polis_who_give']
+        temp_dict['purpose'] = empty if not i.purpose else i.purpose
+        temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
+        temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
+        temp_dict['first_time'] = 'Да' if i.first_time else 'Нет'
+        temp_dict['result_reception'] = empty if not i.result_reception else i.result_reception
+        temp_dict['outcome_illness'] = empty if not i.outcome_illness else i.outcome_illness
+        fin_source[dict_fsourcce].update({order: temp_dict})
+
+    return fin_source

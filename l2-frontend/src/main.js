@@ -9,13 +9,24 @@ import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
 import VueAutosize from 'vue-autosize';
+const VueInputMask = require('vue-inputmask').default;
+import VuejsDialog from 'vuejs-dialog';
+import 'vuejs-dialog/dist/vuejs-dialog.min.css';
+import ReplaceAppendModal from './ReplaceAppendModal';
 
+Vue.use(VuejsDialog, {
+    okText: 'Подтвердить',
+    cancelText: 'Отмена',
+    animation: 'fade'
+});
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
 Vue.use(Steps)
 Vue.use(Step)
+Vue.use(VueInputMask)
 
 const promiseFinally = require('promise.prototype.finally');
+Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
 promiseFinally.shim()
 
 new Vue({
