@@ -69,8 +69,7 @@
                  v-if="data.card_internal && data.has_doc_referral"
                  v-tippy="{ placement : 'bottom', arrow: true }"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
-              <a title="Диспансерный учёт"
-                 style="margin-left: 3px"
+              <a style="margin-left: 3px"
                  href="#"
                  v-if="data.card_internal && data.has_doc_referral"
                  v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
@@ -78,6 +77,16 @@
                  :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
                  @show="load_dreg_rows"
                  @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
+              <div id="template-dreg" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Диспансерный учёт</strong><br/>
+                <span v-if="dreg_rows_loading">загрузка...</span>
+                <ul v-else style="padding-left: 25px;text-align: left">
+                  <li v-for="r in dreg_rows">
+                    {{r.diagnos}} – {{r.date_start}} <span v-if="r.illnes">– {{r.illnes}}</span>
+                  </li>
+                  <li v-if="dreg_rows.length === 0">нет активных записей</li>
+                </ul>
+              </div>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -297,16 +306,6 @@
       </div>
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
-    <div id="template-dreg" v-show="data.ok && data.has_doc_referral">
-      <strong>Диспансерный учёт</strong><br/>
-      <span v-if="dreg_rows_loading">загрузка...</span>
-      <ul v-else style="padding-left: 25px;text-align: left">
-        <li v-for="r in dreg_rows">
-          {{r.diagnos}} – {{r.date_start}} <span v-if="r.illnes">– {{r.illnes}}</span>
-        </li>
-        <li v-if="dreg_rows.length === 0">нет активных записей</li>
-      </ul>
-    </div>
   </div>
 </template>
 
@@ -370,15 +369,13 @@
       })
     },
     methods: {
-      async load_dreg_rows() {
-        if (!this.data.patient || !this.data.patient.card_pk)
-          return;
-        this.dreg_rows_loading = true;
-        this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
-        if (!this.data.ok)
-          return;
-        this.data.patient.has_dreg = this.dreg_rows.length > 0
-        this.dreg_rows_loading = false;
+      load_dreg_rows() {
+        (async() => {
+          this.dreg_rows_loading = true;
+          this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.data.patient.has_dreg = this.dreg_rows.length > 0
+          this.dreg_rows_loading = false;
+        })().then();
       },
       change_mkb(row, field) {
         console.log(row, field);

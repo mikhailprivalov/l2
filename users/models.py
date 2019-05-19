@@ -41,6 +41,7 @@ class DoctorProfile(models.Model):
 
     restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
     personal_code = models.IntegerField(default=0, blank=True, help_text='Код врача')
+    rmis_location = models.IntegerField(default=None, blank=True, null=True)
 
     def get_login_id(self):
         if not self.login_id:
