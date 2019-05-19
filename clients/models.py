@@ -776,9 +776,10 @@ class Card(models.Model):
         if distinct and card_orig \
                 and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
             return
-        if not card_orig and not individual:
+        cb = CardBase.objects.filter(internal_type=True).first()
+        if (not card_orig and not individual) or not cb:
             return
-        c = Card(number=Card.next_l2_n(), base=CardBase.objects.filter(internal_type=True).first(),
+        c = Card(number=Card.next_l2_n(), base=cb,
                  individual=individual if individual else card_orig.individual, polis=None if not card_orig else card_orig.polis,
                  main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                  main_address='' if not card_orig else card_orig.main_address,
