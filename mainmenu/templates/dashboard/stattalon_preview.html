@@ -1,0 +1,92 @@
+{% extends "dbase.html" %}
+{% block title %}Предварительный просмотр стататлона{% endblock %}
+{% block container %}container-fluid" style="display: flex;flex-direction: column;height: 100%;margin:0;padding:0{% endblock %}
+
+{% block nav %}{#  Скрытие шапки #}{% endblock %}
+
+{% block content %}
+    <div style="flex: 0 0 48px;background-color: rgb(50, 54, 57);color:#fff;border-bottom: 1px solid #049372;padding-left: 17px;padding-right: 17px">
+        <div style="height: 100%;width: 100%;display: flex;flex-direction: row; justify-content: space-between;align-items:center">
+            <div class="logo">L<sup>2</sup></div>
+            <div style="text-align: center;flex-basis: 20%">
+                <label><input id="margin" type="checkbox"> Большой отступ слева</label>
+            </div>
+            <div style="text-align: center;flex-basis: 20%">
+                <label><input id="protocol_plain_text" type="checkbox"> Описание сплошным текстом</label>
+            </div>
+            <div style="text-align: right;flex-basis: 20%">
+                <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
+            </div>
+        </div>
+    </div>
+    <div style="flex: 1">
+        <div id="previewContainer" style="height: 100%"></div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {% load static %}
+    <script src="{% static 'js/pdfobject.js' %}"></script>
+    <script>
+        const pks = {{ request.GET.date|safe }};
+        $(document).ready(function () {
+            $(window).bind('keydown', function(event) {
+                if (event.ctrlKey || event.metaKey) {
+                    switch (String.fromCharCode(event.which).toLowerCase()) {
+                        case 's':
+                            event.preventDefault();
+                            window.open(get_url(false), '_blank');
+                            break;
+                    }
+                }
+            });
+
+            if(!localStorage.getItem("print_results_margin")){
+                $("#margin").prop("checked", true);
+                localStorage.setItem("print_results_margin", "true");
+            } else {
+                $("#margin").prop("checked", JSON.parse(localStorage.getItem("print_results_margin")));
+            }
+            if(!localStorage.getItem("print_results_protocol_plain_text")){
+                $("#protocol_plain_text").prop("checked", false);
+                localStorage.setItem("print_results_protocol_plain_text", "false");
+            } else {
+                $("#protocol_plain_text").prop("checked", JSON.parse(localStorage.getItem("print_results_protocol_plain_text")));
+            }
+            updatePreview();
+        });
+        function get_url(inline){
+            let margin = $("#margin").is(":checked");
+            localStorage.setItem("print_results_margin", margin + "");
+            let protocol_plain_text = $("#protocol_plain_text").is(":checked");
+            localStorage.setItem("print_results_protocol_plain_text", protocol_plain_text + "");
+            return `/forms/pdf?type=105.01&date=${JSON.stringify(pks)}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}`;
+        }
+        function updatePreview(){
+            PDFObject.embed(get_url(true), '#previewContainer')
+        }
+    </script>
+    <style>
+        body, html {
+            height: 100%;
+        }
+        body{
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+        .pdfobject-container {
+            height: 100%;
+            margin-bottom: -3px;
+        }
+        .logo{
+            font-weight: 500;
+            font-style: italic;
+            font-size: 32px;
+            flex-basis: 15%
+        }
+        .logo sup{
+            font-size: 17px;
+            top: -.15em;
+        }
+    </style>
+{% endblock %}
