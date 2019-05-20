@@ -1116,7 +1116,7 @@ def result_print(request):
                 elif iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Вакцина: " + iss.research.title, styleBold))
                 else:
-                    fwb.append(Paragraph("Исследование: " + iss.research.title, styleBold))
+                    fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
                 if not protocol_plain_text:
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
                             "order"):
