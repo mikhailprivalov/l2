@@ -35,7 +35,7 @@ def form_01(request_data):
     str_date = request_data['date']
     date_confirm = datetime.datetime.strptime(str_date, "%d%m%Y")
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
-    talon = forms_func.get_finaldata_talon(doc_results)
+    data_talon = forms_func.get_finaldata_talon(doc_results)
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
@@ -95,19 +95,34 @@ def form_01(request_data):
     styleT.firstLineIndent = 0
     styleT.fontSize = 9
 
-    opinion = [
-        [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
-         Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
-         Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
-         Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
-         Paragraph('Д-учет<br/>Стоит', styleT),
-         Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT),
-         Paragraph('Причина снятия', styleT),
-         Paragraph('Онко<br/> подозрение', styleT), ]
-    ]
+    if request_data['param'] == '1':
+        opinion = [
+            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT),
+             Paragraph('Дата рождения', styleT),
+             Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT),
+             Paragraph('Код услуги', styleT),
+             Paragraph('Наименование услуги', styleT), ]
+        ]
+    else:
+        opinion = [
+            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
+             Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
+             Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
+             Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
+             Paragraph('Д-учет<br/>Стоит', styleT),
+             Paragraph('Д-учет<br/>Взят', styleT), Paragraph('Д-учет<br/>Снят', styleT),
+             Paragraph('Причина снятия', styleT),
+             Paragraph('Онко<br/> подозрение', styleT), ]
+        ]
 
     new_page = False
     list_g = []
+
+    if request_data['param']=='1':
+        talon = data_talon[1]
+    else:
+        talon = data_talon[0]
+
     for k, v in talon.items():
         if len(talon.get(k)) == 0:
             continue
@@ -123,9 +138,15 @@ def form_01(request_data):
             list_g.append(list_t)
         t_opinion.extend(list_g)
 
-        tbl = Table(t_opinion,
-                    colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
+        if request_data['param']=='1':
+            tbl = Table(t_opinion,
+                        colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm, ))
+        else:
+            tbl = Table(t_opinion,
+                        colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
                                20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
+
+
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
