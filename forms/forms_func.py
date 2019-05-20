@@ -278,6 +278,12 @@ def get_finaldata_talon(doc_result_obj):
     fin_source[fin_dms] = OrderedDict()
     fin_source[fin_medexam] = OrderedDict()
 
+    fin_source_iss = OrderedDict()
+    fin_source_iss[fin_oms] = OrderedDict()
+    fin_source_iss[fin_pay] = OrderedDict()
+    fin_source_iss[fin_dms] = OrderedDict()
+    fin_source_iss[fin_medexam] = OrderedDict()
+
     oms_count = 0
     dms_count = 0
     pay_count = 0
@@ -288,6 +294,7 @@ def get_finaldata_talon(doc_result_obj):
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
         temp_dict = OrderedDict()
+        temp_dict_iss = OrderedDict()
         dict_fsourcce = ''
         order = ''
         if napr_attr['istochnik_f'] == 'омс':
@@ -313,6 +320,11 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
         temp_dict['polis_data'] = '<u>' + napr_attr['polis_n'] + '</u>' + '<br/>' + polis_who_giv
+
+        temp_dict_iss = temp_dict.copy()
+        temp_dict_iss['research_code'] = i.research.code
+        temp_dict_iss['research_title'] = i.research.title
+
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
@@ -342,5 +354,6 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)
         temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
         fin_source[dict_fsourcce].update({order: temp_dict})
+        fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
 
-    return fin_source
+    return [fin_source, fin_source_iss]
