@@ -94,8 +94,9 @@ def form_01(request_data):
     styleT.alignment = TA_LEFT
     styleT.firstLineIndent = 0
     styleT.fontSize = 9
+    param = request_data.get('param', '0') == '1'
 
-    if request_data['param'] == '1':
+    if param:
         opinion = [
             [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT),
              Paragraph('Дата рождения', styleT),
@@ -118,7 +119,7 @@ def form_01(request_data):
     new_page = False
     list_g = []
 
-    if request_data['param']=='1':
+    if param:
         talon = data_talon[1]
     else:
         talon = data_talon[0]
@@ -138,14 +139,13 @@ def form_01(request_data):
             list_g.append(list_t)
         t_opinion.extend(list_g)
 
-        if request_data['param']=='1':
+        if param:
             tbl = Table(t_opinion,
                         colWidths=(10 * mm, 60 * mm, 19 * mm, 15 * mm, 75 * mm, 30 * mm, 70 * mm, ))
         else:
             tbl = Table(t_opinion,
                         colWidths=(10 * mm, 30 * mm, 19 * mm, 15 * mm, 46 * mm, 20 * mm, 10 * mm, 13 * mm, 11 * mm,
                                20 * mm, 20 * mm, 14 * mm, 14 * mm, 14 * mm, 17 * mm, 13 * mm))
-
 
         tbl.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
