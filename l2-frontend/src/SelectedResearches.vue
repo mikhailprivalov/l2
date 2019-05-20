@@ -24,7 +24,7 @@
         <colgroup>
           <col width="130">
           <col>
-          <col width="101" v-if="!readonly">
+          <col width="38" v-if="!readonly">
         </colgroup>
         <tbody>
         <tr v-if="researches.length === 0">
@@ -32,18 +32,28 @@
         </tr>
         <tr v-else v-for="(row, key) in researches_departments">
           <td>{{row.title}}</td>
-          <td>
+          <td class="pb0">
               <research-display v-for="(res, idx) in row.researches" :simple="simple"
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
-          <td v-if="!readonly">
-            <a href="#" @click.prevent="clear_department(parseInt(key))">очистить</a>
+          <td v-if="!readonly" class="cl-td">
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    :title="`Очистить категорию ${row.title}`" @click.prevent="clear_department(parseInt(key))">
+              <i class="fa fa-times"></i>
+            </button>
           </td>
         </tr>
         <tr v-if="Object.keys(researches_departments).length > 1 && !readonly">
           <td colspan="2"></td>
-          <td><a href="#" @click.prevent="clear_all">очистить всё</a></td>
+          <td class="cl-td">
+            <button class="btn last btn-blue-nb nbr" type="button"
+                    v-tippy="{ placement : 'bottom', arrow: true }"
+                    title="Очистить всё" @click.prevent="clear_all">
+              <i class="fa fa-times-circle"></i>
+            </button>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -70,7 +80,7 @@
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
-           v-show="need_update_comment.length > 0 && !hide_window_update">
+           v-show="need_update_comment.length > 0 && !hide_window_update && !simple">
       <span slot="header">Настройка коментариев для биоматериала</span>
       <div slot="body">
         <table class="table table-bordered table-responsive"
@@ -629,5 +639,15 @@
     align-content: center;
     align-items: stretch;
     overflow-y: auto;
+  }
+  .cl-td {
+    padding: 0;
+    button {
+      border-radius: 0;
+    }
+  }
+  .pb0 {
+    padding-bottom: 0;
+    padding-top: 4px;
   }
 </style>

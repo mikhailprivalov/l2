@@ -16,7 +16,9 @@
         {{selected_type.title}}
       </button>
       <div class="top-inner">
-        <div @click="select_dep(row.pk)" class="top-inner-select" :class="{ active: row.pk === dep}"
+        <div @click="select_dep(row.pk)" class="top-inner-select" :class="{active: row.pk === dep}"
+                :title="row.title"
+                v-tippy="{ placement : 'bottom', arrow: true }"
                 v-for="row in departments_of_type"><span>{{ row.title }}<span
           v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span>
         </div>

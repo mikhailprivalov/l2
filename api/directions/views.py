@@ -785,9 +785,11 @@ def directions_paraclinic_result(request):
                 i.save()
                 h.append(i.pk)
             else:
-                for i2 in Issledovaniya.objects.filter(parent=iss, doc_confirmation=request.user.doctorprofile,
+                for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile,
                                                        research_id=m):
-                    h.append(i2)
+                    i2.time_save = timezone.now()
+                    i2.save()
+                    h.append(i2.pk)
 
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
 

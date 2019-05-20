@@ -1,5 +1,7 @@
 <template>
-  <div class="root-c" @click.left="remove" @click.right.prevent="update_comment">
+  <div class="root-c" @click.left="remove"
+       :title="title" v-tippy="{ placement : 'bottom', arrow: true }"
+       @click.right.prevent="update_comment">
     <div class="root-in">{{title}}<span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span></div>
     <div v-if="n + 1 < nof" class="root-div"></div>
   </div>
@@ -47,6 +49,9 @@
   .root-c {
     display: inline-block;
     white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .root-in, .root-div {
