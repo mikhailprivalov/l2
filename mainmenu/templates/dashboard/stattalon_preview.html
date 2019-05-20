@@ -1,6 +1,6 @@
 {% extends "dbase.html" %}
 {% block title %}Предварительный просмотр стататлона{% endblock %}
-{% block container %}container-fluid" style="display: flex;flex-direction: column;height: 100%;margin:0;padding:0{% endblock %}
+{% block container %}container-fluid" style="display: flex;flex-direction: column;height: 100%;dispesary:0;padding:0{% endblock %}
 
 {% block nav %}{#  Скрытие шапки #}{% endblock %}
 
@@ -9,10 +9,7 @@
         <div style="height: 100%;width: 100%;display: flex;flex-direction: row; justify-content: space-between;align-items:center">
             <div class="logo">L<sup>2</sup></div>
             <div style="text-align: center;flex-basis: 20%">
-                <label><input id="margin" type="checkbox"> Большой отступ слева</label>
-            </div>
-            <div style="text-align: center;flex-basis: 20%">
-                <label><input id="protocol_plain_text" type="checkbox"> Описание сплошным текстом</label>
+                <label><input id="dispesary" type="checkbox"> Услуги (код наименование)</label>
             </div>
             <div style="text-align: right;flex-basis: 20%">
                 <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
@@ -41,26 +38,19 @@
                 }
             });
 
-            if(!localStorage.getItem("print_results_margin")){
-                $("#margin").prop("checked", true);
-                localStorage.setItem("print_results_margin", "true");
+            if(!localStorage.getItem("print_results_dispesary")){
+                $("#dispesary").prop("checked", false);
+                localStorage.setItem("print_results_dispesary", "false");
             } else {
-                $("#margin").prop("checked", JSON.parse(localStorage.getItem("print_results_margin")));
-            }
-            if(!localStorage.getItem("print_results_protocol_plain_text")){
-                $("#protocol_plain_text").prop("checked", false);
-                localStorage.setItem("print_results_protocol_plain_text", "false");
-            } else {
-                $("#protocol_plain_text").prop("checked", JSON.parse(localStorage.getItem("print_results_protocol_plain_text")));
+                $("#dispesary").prop("checked", JSON.parse(localStorage.getItem("print_results_dispesary")));
             }
             updatePreview();
         });
         function get_url(inline){
-            let margin = $("#margin").is(":checked");
-            localStorage.setItem("print_results_margin", margin + "");
-            let protocol_plain_text = $("#protocol_plain_text").is(":checked");
-            localStorage.setItem("print_results_protocol_plain_text", protocol_plain_text + "");
-            return `/forms/pdf?type=105.01&date=${JSON.stringify(pks)}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}`;
+            let dispesary = $("#dispesary").is(":checked");
+            localStorage.setItem("print_results_dispesary", dispesary + "");
+            return `/forms/pdf?type=105.01&date=${JSON.stringify(pks)}&param=${dispesary? 1 : 0}&inline=${inline? 1: 0}`;
+
         }
         function updatePreview(){
             PDFObject.embed(get_url(true), '#previewContainer')
@@ -76,7 +66,7 @@
         }
         .pdfobject-container {
             height: 100%;
-            margin-bottom: -3px;
+            dispesary-bottom: -3px;
         }
         .logo{
             font-weight: 500;

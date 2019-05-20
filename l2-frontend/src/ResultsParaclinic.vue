@@ -45,7 +45,7 @@
         </div>
         <a v-if="directions_history.length > 0 && stat_btn"
            class="btn btn-blue-nb stat"
-           :href="`/forms/pdf?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
+           :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
