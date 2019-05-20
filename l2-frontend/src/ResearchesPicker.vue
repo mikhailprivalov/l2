@@ -1,14 +1,15 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative">
     <div class="top-picker">
-      <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-              style="width: 135px;text-align: left!important;border-radius: 0">
+      <button v-if="types.length > 1" class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
+              type="button" data-toggle="dropdown">
         <span class="caret"></span>
         {{selected_type.title}}
+        {{researches_selected_in_type(selected_type.pk)}}
       </button>
-      <ul v-if="types.length > 1" class="dropdown-menu">
+      <ul v-if="types.length > 1" class="dropdown-menu" style="margin-top: 1px">
         <li v-for="row in types" :value="row.pk">
-          <a href="#" @click.prevent="select_type(row.pk)">{{row.title}}</a>
+          <a href="#" @click.prevent="select_type(row.pk)">{{row.title}} {{researches_selected_in_type(row.pk)}}</a>
         </li>
       </ul>
       <button v-if="types.length === 1" class="btn btn-blue-nb btn-ell" type="button"
@@ -19,8 +20,11 @@
         <div @click="select_dep(row.pk)" class="top-inner-select" :class="{active: row.pk === dep}"
                 :title="row.title"
                 v-tippy="{ placement : 'bottom', arrow: true }"
-                v-for="row in departments_of_type"><span>{{ row.title }}<span
-          v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span></span>
+                v-for="row in departments_of_type">
+          <span>
+            {{ row.title }}
+            <span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span>
+          </span>
         </div>
       </div>
     </div>
@@ -517,6 +521,21 @@
         }
         return r
       },
+      researches_selected_in_type(pk) {
+        let l = 0;
+        for (let rpk of this.checked_researches) {
+          let res = this.research_data(rpk)
+          if (
+            (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
+            (pk === "4" && res.doc_refferal) ||
+            (pk === "5" && res.treatment) ||
+            (pk === "6" && res.stom)
+          ) {
+            l++;
+          }
+        }
+        return l > 0 ? ` (${l})` : '';
+      },
       do_search_template(nv) {
         this.founded_templates = []
         const t = this
@@ -585,7 +604,7 @@
 
   .top-inner {
     position: absolute;
-    left: 135px;
+    left: 139px;
     top: 0;
     right: 0;
     height: 34px;
@@ -705,5 +724,13 @@
       background: #049372;
       color: #fff;
     }
+  }
+
+  .bt1 {
+    width: 139px;
+    text-align: left !important;
+    border-radius: 0;
+    padding: 7px 5px;
+    font-size: 13px;
   }
 </style>
