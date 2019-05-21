@@ -6,6 +6,7 @@ from collections import OrderedDict
 from django.db.models import Q
 import datetime
 from laboratory import utils
+from decimal import *
 
 
 def get_all_doc(docs: [Document]):
@@ -265,8 +266,8 @@ def get_finaldata_talon(doc_result_obj):
                           'Диагноз по МКБ': '(код)',	'Впервые':'Да',	'Результат обращения':'код',
                           'Исход':'Код',	'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
 						  'причина снятия':'', 'Онкоподозрение':'Да'
-
     """
+
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
@@ -353,7 +354,19 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['d_stop'] = '' if not d_stand else ', '.join(d_stop)
         temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)
         temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
+
         fin_source[dict_fsourcce].update({order: temp_dict})
         fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
+
+        add_iss = [[x.research.code, x.research.title] for x in Issledovaniya.objects.filter(parent=i)]
+        if add_iss:
+            temp_dict_iss_copy = deepcopy(temp_dict_iss)
+            add_iss_dict = OrderedDict()
+            for iss in add_iss:
+                temp_dict_iss_copy['research_code'] = iss[0]
+                temp_dict_iss_copy['research_title'] = iss[1]
+                order = Decimal(str(order))+Decimal('0.1')
+                add_iss_dict[order] = deepcopy(temp_dict_iss_copy)
+            fin_source_iss[dict_fsourcce].update(add_iss_dict)
 
     return [fin_source, fin_source_iss]
