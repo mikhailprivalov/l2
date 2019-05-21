@@ -6,6 +6,7 @@ from collections import OrderedDict
 from django.db.models import Q
 import datetime
 from laboratory import utils
+from decimal import Decimal
 
 
 def get_all_doc(docs: [Document]):
@@ -253,7 +254,7 @@ def get_doc_results(doc_obj, date_result):
     """
     возвращает результаты врача за определенную дату. ***** Ни в коем случае не переделывать на диапозон дат
     """
-    doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result)
+    doc_results = Issledovaniya.objects.filter(doc_confirmation=doc_obj, time_confirmation__date=date_result, napravleniye__isnull=False)
     return doc_results
 
 
@@ -265,8 +266,8 @@ def get_finaldata_talon(doc_result_obj):
                           'Диагноз по МКБ': '(код)',	'Впервые':'Да',	'Результат обращения':'код',
                           'Исход':'Код',	'Д-стоит':'коды', 'Д-взят':'коды', 'Д-снят':'коды'
 						  'причина снятия':'', 'Онкоподозрение':'Да'
-
     """
+
     fin_oms = 'омс'
     fin_dms = 'дмс'
     fin_pay = 'платно'
@@ -278,6 +279,12 @@ def get_finaldata_talon(doc_result_obj):
     fin_source[fin_dms] = OrderedDict()
     fin_source[fin_medexam] = OrderedDict()
 
+    fin_source_iss = OrderedDict()
+    fin_source_iss[fin_oms] = OrderedDict()
+    fin_source_iss[fin_pay] = OrderedDict()
+    fin_source_iss[fin_dms] = OrderedDict()
+    fin_source_iss[fin_medexam] = OrderedDict()
+
     oms_count = 0
     dms_count = 0
     pay_count = 0
@@ -288,6 +295,7 @@ def get_finaldata_talon(doc_result_obj):
     for i in doc_result_obj:
         napr_attr = Napravleniya.get_attr(i.napravleniye)
         temp_dict = OrderedDict()
+        temp_dict_iss = OrderedDict()
         dict_fsourcce = ''
         order = ''
         if napr_attr['istochnik_f'] == 'омс':
@@ -313,6 +321,11 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['client_bd'] = napr_attr['client_bd']
         temp_dict['card_num'] = napr_attr['card_num']
         temp_dict['polis_data'] = '<u>' + napr_attr['polis_n'] + '</u>' + '<br/>' + polis_who_giv
+
+        temp_dict_iss = temp_dict.copy()
+        temp_dict_iss['research_code'] = i.research.code
+        temp_dict_iss['research_title'] = i.research.title
+
         temp_dict['purpose'] = empty if not i.purpose else i.purpose
         temp_dict['is_first_reception'] = 'Да' if i.research.is_first_reception else 'Нет'
         temp_dict['diagnos'] = empty if not i.diagnos else i.diagnos
@@ -341,6 +354,18 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict['d_stop'] = '' if not d_stand else ', '.join(d_stop)
         temp_dict['d_whystop'] = '' if not d_whystop else ', '.join(d_whystop)
         temp_dict['maybe_onco'] = 'Да' if i.maybe_onco else ''
-        fin_source[dict_fsourcce].update({order: temp_dict})
 
-    return fin_source
+        fin_source[dict_fsourcce].update({order: temp_dict})
+        fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
+
+        if Issledovaniya.objects.filter(parent=i).exists():
+            temp_dict_iss_copy = deepcopy(temp_dict_iss)
+            add_iss_dict = OrderedDict()
+            for iss in Issledovaniya.objects.filter(parent=i):
+                temp_dict_iss_copy['research_code'] = iss.research.code
+                temp_dict_iss_copy['research_title'] = iss.research.title
+                order = Decimal(str(order)) + Decimal('0.1')
+                add_iss_dict[order] = deepcopy(temp_dict_iss_copy)
+            fin_source_iss[dict_fsourcce].update(add_iss_dict)
+
+    return [fin_source, fin_source_iss]

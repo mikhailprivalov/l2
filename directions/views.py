@@ -254,13 +254,14 @@ def gen_pdf_dir(request):
     fin_ist_set = set()
     card_pk_set = set()
     for n in dn:
-        fin_ist_set.add(n.istochnik_f)
+        if n.istochnik_f:
+            fin_ist_set.add(n.istochnik_f)
         card_pk_set.add(n.client_id)
 
     internal_type = n.client.base.internal_type
 
     fin_status = None
-    if len(fin_ist_set) == 1 and fin_ist_set.pop().title.lower() == 'платно':
+    if fin_ist_set and fin_ist_set.pop().title.lower() == 'платно':
         fin_status = True
 
     def save(form, filename: str):
