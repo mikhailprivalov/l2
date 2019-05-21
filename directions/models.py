@@ -216,15 +216,16 @@ class IstochnikiFinansirovaniya(models.Model):
         price_modifier = None
         price_contract = set(SettingManager.get("price_contract").split(','))
         price_company = set(SettingManager.get("price_company").split(','))
-
-        if finsource.title.upper() in price_contract:
-            contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id').filter(pk=finsource.pk).first()
-            if contract_l[0]:
-                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
-        elif finsource.title.upper() in price_company and work_place_link:
-            contract_l = work_place_link.contract_id
-            if contract_l:
-                price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l)
+        if finsource:
+            if finsource.title.upper() in price_contract:
+                contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id')\
+                    .filter(pk=finsource.pk).first()
+                if contract_l[0]:
+                    price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
+            elif finsource.title.upper() in price_company and work_place_link:
+                contract_l = work_place_link.contract_id
+                if contract_l:
+                    price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l)
 
         return price_modifier
 
@@ -475,7 +476,7 @@ class Napravleniya(models.Model):
                     research_coast = None
 
                     #пользователю добавлять данные услуги в направления(не будут добавлены)
-                    if research in ofname.restricted_to_direct.all():
+                    if ofname and research in ofname.restricted_to_direct.all():
                         continue
 
                     dir_group = -1

@@ -536,6 +536,21 @@
         }
         return l > 0 ? ` (${l})` : '';
       },
+      researches_selected_in_type_list(pk) {
+        let l = [];
+        for (let rpk of this.checked_researches) {
+          let res = this.research_data(rpk)
+          if (
+            (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
+            (pk === "4" && res.doc_refferal) ||
+            (pk === "5" && res.treatment) ||
+            (pk === "6" && res.stom)
+          ) {
+            l.push(res);
+          }
+        }
+        return l;
+      },
       do_search_template(nv) {
         this.founded_templates = []
         const t = this
