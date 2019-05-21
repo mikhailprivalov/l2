@@ -85,8 +85,6 @@ def form_01(request_data):
     styleJustified.fontSize = 12
     styleJustified.leading = 4.5 * mm
 
-    title = 'Ведомость статистических талонов по пациентам'
-
     objs = []
     objs.append(Spacer(1, 1 * mm))
 
@@ -97,6 +95,7 @@ def form_01(request_data):
     param = request_data.get('param', '0') == '1'
 
     if param:
+        title = 'Ведомость статистических талонов по услугам пациентов'
         opinion = [
             [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT),
              Paragraph('Дата рождения', styleT),
@@ -105,6 +104,7 @@ def form_01(request_data):
              Paragraph('Наименование услуги', styleT), ]
         ]
     else:
+        title = 'Ведомость статистических талонов по посещениям пациентов'
         opinion = [
             [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
              Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
