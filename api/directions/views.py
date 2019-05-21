@@ -783,8 +783,8 @@ def directions_paraclinic_result(request):
                 i.time_save = timezone.now()
                 i.creator = request.user.doctorprofile
                 if with_confirm:
-                    iss.doc_confirmation = request.user.doctorprofile
-                    iss.time_confirmation = timezone.now()
+                    i.doc_confirmation = request.user.doctorprofile
+                    i.time_confirmation = timezone.now()
                 i.save()
                 h.append(i.pk)
             else:
