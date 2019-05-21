@@ -782,12 +782,18 @@ def directions_paraclinic_result(request):
                 i.doc_save = request.user.doctorprofile
                 i.time_save = timezone.now()
                 i.creator = request.user.doctorprofile
+                if with_confirm:
+                    i.doc_confirmation = request.user.doctorprofile
+                    i.time_confirmation = timezone.now()
                 i.save()
                 h.append(i.pk)
             else:
                 for i2 in Issledovaniya.objects.filter(parent=iss, doc_save=request.user.doctorprofile,
                                                        research_id=m):
                     i2.time_save = timezone.now()
+                    if with_confirm:
+                        i2.doc_confirmation = request.user.doctorprofile
+                        i2.time_confirmation = timezone.now()
                     i2.save()
                     h.append(i2.pk)
 
