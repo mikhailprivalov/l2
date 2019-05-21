@@ -6,7 +6,7 @@ from collections import OrderedDict
 from django.db.models import Q
 import datetime
 from laboratory import utils
-from decimal import *
+from decimal import Decimal
 
 
 def get_all_doc(docs: [Document]):
@@ -358,14 +358,13 @@ def get_finaldata_talon(doc_result_obj):
         fin_source[dict_fsourcce].update({order: temp_dict})
         fin_source_iss[dict_fsourcce].update({order:temp_dict_iss})
 
-        add_iss = [[x.research.code, x.research.title] for x in Issledovaniya.objects.filter(parent=i)]
-        if add_iss:
+        if Issledovaniya.objects.filter(parent=i).exists():
             temp_dict_iss_copy = deepcopy(temp_dict_iss)
             add_iss_dict = OrderedDict()
-            for iss in add_iss:
-                temp_dict_iss_copy['research_code'] = iss[0]
-                temp_dict_iss_copy['research_title'] = iss[1]
-                order = Decimal(str(order))+Decimal('0.1')
+            for iss in Issledovaniya.objects.filter(parent=i):
+                temp_dict_iss_copy['research_code'] = iss.research.code
+                temp_dict_iss_copy['research_title'] = iss.research.title
+                order = Decimal(str(order)) + Decimal('0.1')
                 add_iss_dict[order] = deepcopy(temp_dict_iss_copy)
             fin_source_iss[dict_fsourcce].update(add_iss_dict)
 
