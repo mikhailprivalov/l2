@@ -865,7 +865,7 @@ class BenefitType(models.Model):
 
 class BenefitRoster(models.Model):
     type_benefit = models.ForeignKey(BenefitType, help_text="Категория льготы", db_index=True, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255, help_text='Наименование льготы')
+    title = models.CharField(max_length=255, blank=True, default='', help_text='Наименование льготы')
     hide = models.BooleanField(help_text="Скрыть категорию", default=False)
 
     class Meta:
