@@ -852,3 +852,43 @@ class Phones(models.Model):
     class Meta:
         verbose_name = 'Телефон'
         verbose_name_plural = 'Телефоны'
+
+
+class BenefitType(models.Model):
+    title = models.CharField(max_length=255, help_text='Каегория льготы')
+    hide = models.BooleanField(help_text="Скрыть категорию", default=False)
+
+    class Meta:
+        verbose_name = 'Категория льготы'
+        verbose_name_plural = 'Категории льготы'
+
+
+class BenefitRoster(models.Model):
+    type_benefit = models.ForeignKey(BenefitType, help_text="Категория льготы", db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, help_text='Наименование льготы')
+    hide = models.BooleanField(help_text="Скрыть категорию", default=False)
+
+    class Meta:
+        verbose_name = 'Наименование льготы'
+        verbose_name_plural = 'Перечень льготы'
+
+
+class BenefitReg(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    benefit = models.ForeignKey(BenefitRoster, related_name='benefit', help_text="Льгота", db_index=True, on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_benefit', default=None, blank=True, null=True,
+                                      db_index=True, help_text='Лечащий врач кто поставил на льготу',
+                                      on_delete=models.CASCADE)
+    date_start = models.DateField(help_text='Дата постановки на Льготу', db_index=True, default=None, blank=True,
+                                  null=True)
+    doc_end_reg = models.ForeignKey(DoctorProfile, related_name='doc_end_benefit', default=None, blank=True, null=True,
+                                    db_index=True, help_text='Лечащий врач, кто снял с льготы',
+                                    on_delete=models.CASCADE)
+    date_end = models.DateField(help_text='Дата сняти с льготы', db_index=True, default=None, blank=True, null=True)
+    receipt = models.TextField(default="", blank=True)
+
+
+
+
+
+
