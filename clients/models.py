@@ -874,6 +874,9 @@ class BenefitRoster(models.Model):
 
 
 class BenefitReg(models.Model):
+    """
+    Учет пациентов по льготам, стоящим на текущий момент
+    """
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
     benefit = models.ForeignKey(BenefitRoster, related_name='benefit', help_text="Льгота", db_index=True, on_delete=models.CASCADE)
     doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_benefit', default=None, blank=True, null=True,
@@ -888,6 +891,12 @@ class BenefitReg(models.Model):
     receipt = models.TextField(default="", blank=True)
 
 
+class Reception(models.Model):
+    """
+    Учет выписанных рецептов фактически. Когда кем кому, дозировка, по мнн и т.д.
+    с последующм формированием печатных форм. ии Выгрузка ОАЗИС.
+    """
+    pass
 
 
 
