@@ -1,9 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-import clients.models as clients
 from directory.models import Researches, ResearchSite
-from django.db.models import Q
-import datetime
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
@@ -30,7 +28,6 @@ class Command(BaseCommand):
 
         for row in ws.rows:
             cells = [str(x.value) for x in row]
-            x += 1
             if not starts:
                 if "код_внутренний" in cells and "услуга" in cells and "тип" in cells and "место" in cells and "id" in cells:
                     starts = True
@@ -41,6 +38,7 @@ class Command(BaseCommand):
                     place_research = cells.index("место")
                     podr = cells.index("подразделение")
                     pay = cells.index("платно")
+
 
                     def insert_data(ins):
                         c1 = ws1.cell(row=x, column=1)
@@ -58,6 +56,8 @@ class Command(BaseCommand):
                         c5.value = cells[place_research]
                         c6.value = cells[podr]
                         c6.value = cells[pay]
+
+
             else:
                 if cells[identify] == '-1':
                     if Researches.objects.filter(internal_code=cells[int_code]).exists():
