@@ -31,13 +31,10 @@ class ResNameRouteSheet(admin.ModelAdmin):
 
 
 class ResAdmin(admin.ModelAdmin):
-    list_filter = ('podrazdeleniye', 'groups', 'hide')
-    # list_display = ('title', 'podrazdeleniye',)
-    # list_display_links = ('title',)
-    list_display = ('title', 'internal_code', 'podrazdeleniye',)
-    list_display_links = ('title', 'internal_code', 'podrazdeleniye',)
+    list_display = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
+    list_display_links = ('title', 'internal_code', 'pk', 'podrazdeleniye',)
     list_filter = ('podrazdeleniye','groups', 'hide', 'is_doc_refferal', 'is_paraclinic', 'is_treatment',)
-    search_fields = ('title', 'internal_code',)
+    search_fields = ('title', 'internal_code','pk',)
 
 
 class RefAdmin(admin.ModelAdmin):

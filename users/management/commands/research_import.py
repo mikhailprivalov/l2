@@ -28,7 +28,6 @@ class Command(BaseCommand):
         starts = False
         x = 0
 
-
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             x += 1
@@ -60,16 +59,28 @@ class Command(BaseCommand):
                         c6.value = cells[podr]
                         c6.value = cells[pay]
             else:
-                if Researches.objects.filter(internal_code=cells[int_code]).exists():
-                    r_o = Researches.objects.values_list('pk').get(internal_code=cells[int_code])
-                    insert_data(int(r_o[0]))
-                    continue
+                if cells[identify] == '-1':
+                    if Researches.objects.filter(internal_code=cells[int_code]).exists():
+                        r_o = Researches.objects.values_list('pk').get(internal_code=cells[int_code])
+                        insert_data(int(r_o[0]))
+                        continue
+                    else:
+                        treatment = True if cells[type_research] == 'is_treatment' else False
+                        doc_refferal = True if cells[type_research] == 'is_doc_refferal' else False
+                        stom = True if cells[type_research] == 'is_stom' else False
+                        hospital = True if cells[type_research] == 'is_hospital' else False
+                        s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
+                        c = Researches.objects.create(title=cells[research], site_type=s_t, internal_code=cells[int_code],
+                            is_treatment=treatment, is_doc_refferal=doc_refferal, is_hospital=hospital, is_stom=stom)
+                        insert_data(int(c.pk))
+                        print('добавлен услуга:', c.title, c.pk, c.internal_code)
                 else:
-                    ws = wb[wb.sheetnames[0]]
-                    s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
-                    c = Researches.objects.create(title=cells[research], site_type=s_t, internal_code=cells[int_code],
-                    is_treatment=True)
-                    insert_data(int(c.pk))
-                    print('добавлен услуга:', c.title, c.pk, c.internal_code)
+                    pk_research = int(cells[identify])
+                    res = Researches.objects.get(pk=pk_research)
+                    if res:
+                        Researches.objects.filter(pk=pk_research).update(internal_code=cells[int_code])
+                        print('обновлена услуга (title, pk, internal_code):', res.title, res.pk, cells[int_code])
+                        insert_data(int(res.pk))
+
 
         wb.save(fp + 'import')
