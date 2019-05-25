@@ -82,5 +82,4 @@ class Command(BaseCommand):
                         print('обновлена услуга (title, pk, internal_code):', res.title, res.pk, cells[int_code])
                         insert_data(int(res.pk))
 
-
         wb.save(fp + 'import')
