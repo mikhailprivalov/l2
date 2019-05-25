@@ -61,7 +61,7 @@ class Command(BaseCommand):
                         c6.value = cells[pay]
             else:
                 if Researches.objects.filter(internal_code=cells[int_code]).exists():
-                    r_o = Researches.objects.values_list('pk').filter(internal_code=cells[int_code]).first()
+                    r_o = Researches.objects.values_list('pk').get(internal_code=cells[int_code])
                     insert_data(int(r_o[0]))
                     continue
                 else:
