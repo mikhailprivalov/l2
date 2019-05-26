@@ -1193,6 +1193,12 @@ def result_print(request):
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
+
+        if len(pk) == 1:
+            naprs.append(fwb)
+            client_prev = direction.client.individual.pk
+            continue
+
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
         client_prev = direction.client.individual.pk
 
@@ -1206,7 +1212,10 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.restoreState()
 
-    doc.build(naprs, onFirstPage=first_pages)
+    if len(pk) == 1:
+        doc.build(fwb, onFirstPage=first_pages)
+    else:
+        doc.build(naprs, onFirstPage=first_pages)
 
     pdf = buffer.getvalue()
     buffer.close()
