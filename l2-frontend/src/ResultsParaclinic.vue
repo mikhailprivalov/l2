@@ -1,6 +1,6 @@
 <template>
   <div ref="root" class="results-root">
-    <div class="results-sidebar">
+    <div :class="{has_loc}" class="results-sidebar">
       <div class="sidebar-top">
         <input type="text" class="form-control" v-model="pk" @keyup.enter="load" autofocus
                placeholder="Номер направления"/>
@@ -41,6 +41,41 @@
           </div>
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
+          </div>
+          <div class="rmis_loc" v-if="has_loc">
+            <div class="title">Очередь за {{td.format('DD.MM.YYYY')}}</div>
+            <div class="inner">
+              <table class="table table-bordered table-hover">
+                <colgroup>
+                  <col width="38"/>
+                  <col/>
+                  <col width="16"/>
+                </colgroup>
+                <tbody>
+                <tr v-for="r in location.data"
+                    :class="{current: r.slot === slot.id}"
+                    @click="open_slot(r)"
+                    v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
+                    :title="{
+                    1: 'Направление зарегистрировано',
+                    2: 'Результат подтверждён'}[r.status.code] || 'Не обработано'">
+                  <td>{{r.timeStart}}</td>
+                  <td>{{r.patient}}</td>
+                  <td>
+                    <span class="slot"
+                          :class="`slot-${r.status.code}`">
+                      <i class="fa fa-circle"></i>
+                    </span>
+                  </td>
+                </tr>
+                <tr v-if="!location.init">
+                  <td colspan="3" style="text-align: center">
+                    загрузка...
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
         <a v-if="directions_history.length > 0 && stat_btn"
@@ -305,6 +340,24 @@
         </div>
       </div>
     </modal>
+    <modal v-if="!!slot.id" ref="modalSlot" @close="close_slot"
+           margin-top="50px"
+           show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto">
+      <span slot="header">Слот {{slot.id}}</span>
+      <div slot="body" style="min-height: 140px" class="registry-body">
+        <div class="text-center" v-if="Object.keys(slot.data).length === 0">загрузка...</div>
+        <div class="text-center" v-else>{{JSON.stringify(slot.data)}}</div>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="close_slot" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
   </div>
 </template>
@@ -326,6 +379,8 @@
   import dropdown from 'vue-my-dropdown';
   import ResearchesPicker from './ResearchesPicker'
   import SelectedResearches from './SelectedResearches'
+  import {mapGetters} from 'vuex'
+  import users_point from './api/user-point'
 
   export default {
     name: 'results-paraclinic',
@@ -336,6 +391,7 @@
         pk: '',
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
+        td: moment().subtract(3, 'days'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -349,11 +405,29 @@
         dreg: false,
         dreg_rows_loading: false,
         dreg_rows: [],
+        location: {
+          loading: false,
+          init: false,
+          data: [],
+        },
+        slot: {
+          id: null,
+          data: {},
+        },
       }
     },
     watch: {
       date() {
         this.load_history()
+      },
+      user_data: {
+        async handler({rmis_location}) {
+          if (!this.location.init && rmis_location) {
+            await this.load_location()
+            this.location.init = true;
+          }
+        },
+        immediate: true,
       },
     },
     mounted() {
@@ -369,6 +443,11 @@
       })
     },
     methods: {
+      async load_location() {
+        this.location.loading = true
+        this.location.data = (await users_point.loadLocation(this.td.format('YYYY-MM-DD'))).data
+        this.location.loading = false
+      },
       load_dreg_rows() {
         (async() => {
           this.dreg_rows_loading = true;
@@ -660,6 +739,17 @@
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      async open_slot(row) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        this.slot.id = row.slot;
+        this.slot.data = await users_point.getReserve(row.slot, row.uid);
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      async close_slot() {
+        this.$refs.modalSlot.$el.style.display = 'none';
+        this.slot.id = null;
+        this.slot.data = {};
+      },
       template_fields_values(row, dataTemplate, title) {
         this.$dialog.alert(title, {
           view: 'replace-append-modal',
@@ -751,6 +841,15 @@
       has_changed() {
         return this.changed && this.data && this.data.ok && this.inserted
       },
+      ...mapGetters({
+        user_data: 'user_data',
+      }),
+      has_loc() {
+        if (!this.user_data) {
+          return false
+        }
+        return !!this.user_data.rmis_location
+      },
     }
   }
 </script>
@@ -768,7 +867,7 @@
   }
 
   .results-sidebar {
-    width: 294px;
+    width: 304px;
     border-right: 1px solid #b1b1b1;
     display: flex;
     flex-direction: column;
@@ -777,7 +876,7 @@
   .results-content {
     display: flex;
     flex-direction: column;
-    width: calc(100% - 294px);
+    width: calc(100% - 304px);
   }
 
   .results-top {
@@ -1180,7 +1279,53 @@
     .inner {
       height: 100%;
       overflow-y: auto;
-      overflow-x:hidden;
+      overflow-x: hidden;
+    }
+
+    &.has_loc {
+      .inner {
+        height: 50%;
+      }
+    }
+
+    .rmis_loc {
+      position: absolute;
+      height: 50%;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #b1b1b1;
+
+      .title {
+        height: 20px;
+        background: #eaeaea;
+        text-align: center;
+      }
+
+      .inner {
+        height: calc(100% - 20px);
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        table {
+          margin-bottom: 0;
+        }
+
+        th, td {
+          font-size: 12px;
+          padding: 2px;
+        }
+
+        tr {
+          cursor: pointer;
+          &.current {
+            td {
+              background-color: #687282;
+              color: #fff;
+            }
+          }
+        }
+      }
     }
     .stat {
       position: absolute;
@@ -1197,5 +1342,15 @@
   .dreg_ex {
     color: #da3b6c;
     text-shadow: 0 0 4px rgba(#da3b6c, .6);
+  }
+
+  .slot {
+    &-1 {
+      color: #F4D03F;
+    }
+
+    &-2 {
+      color: #049372;
+    }
   }
 </style>

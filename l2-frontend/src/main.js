@@ -13,6 +13,7 @@ const VueInputMask = require('vue-inputmask').default;
 import VuejsDialog from 'vuejs-dialog';
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ReplaceAppendModal';
+import RmisLocation from './RmisLocation'
 
 Vue.use(VuejsDialog, {
     okText: 'Подтвердить',
@@ -48,6 +49,7 @@ new Vue({
     'DirectionSteps': () => import('./DirectionSteps'),
     'RmisConfirm': () => import('./RmisConfirm'),
     'Profiles': () => import('./Profiles'),
+    RmisLocation,
     // loading,
   },
   data: {

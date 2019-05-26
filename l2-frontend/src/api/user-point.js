@@ -59,4 +59,30 @@ async function saveUser(pk, user_data) {
   return {}
 }
 
-export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser}
+async function loadLocation(date) {
+  try {
+    const response = await HTTP.post('user-location', {
+      date,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function getReserve(pk, patient) {
+  try {
+    const response = await HTTP.post('user-get-reserve', {
+      pk, patient,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser, loadLocation, getReserve}

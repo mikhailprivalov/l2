@@ -13,6 +13,8 @@ urlpatterns = [
     path('users', views.users_view),
     path('user', views.user_view),
     path('user-save', views.user_save_view),
+    path('user-location', views.user_location),
+    path('user-get-reserve', views.user_get_reserve),
     path('statistics-tickets/types', views.statistics_tickets_types),
     path('statistics-tickets/send', views.statistics_tickets_send),
     path('statistics-tickets/get', views.statistics_tickets_get),
