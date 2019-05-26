@@ -23,6 +23,7 @@ from directions.models import Napravleniya, Result, Issledovaniya, RmisServices,
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
+from mq.views import dt
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory import settings as l2settings
 
@@ -391,6 +392,27 @@ class Patients(BaseRequester):
         self.local_types = r["local_types"]
         self.local_reverse_types = r["reverse_types"]
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
+        self.appointment_client = self.main_client.get_client("path_appointment", "appointment-ws/appointment?wsdl").service
+
+    def get_reserves(self, date: datetime.date, location: int):
+        d = self.appointment_client.getReserveFiltered(date=date, location=location)
+        r = []
+        for dd in d:
+            s = dd["status"]
+            if s in ['0', '1', '4', '7']:
+                continue
+            r.append({
+                'uid': dd["patient"]["patientId"],
+                'patient': dd["patient"]["patientName"],
+                'slot': dd["slot"],
+                'timeStart': dd["timePeriod"]["from"].strftime('%H:%M'),
+                'timeEnd': dd["timePeriod"]["to"].strftime('%H:%M'),
+            })
+        return sorted(r, key=lambda k: k['timeStart'])
+
+    def get_slot(self, pk: [int, str]):
+        d = self.appointment_client.getSlot(pk)
+        return d
 
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)

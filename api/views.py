@@ -858,3 +858,43 @@ def user_save_view(request):
             doc.fio = ud["fio"]
             doc.save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
+
+
+@login_required
+def user_location(request):
+    request_data = json.loads(request.body)
+    date = request_data["date"]
+    d = {}
+    rl = request.user.doctorprofile.rmis_location
+    if rl:
+        from rmis_integration.client import Client
+        c = Client(modules=['patients'])
+        d = c.patients.get_reserves(date, rl)
+
+        def slot_status(x):
+            s = 0
+            pk = None
+            n = directions.Napravleniya.objects.filter(rmis_slot_id=x).first()
+            if n:
+                pk = n.pk
+                s = 1
+                if n.is_all_confirm():
+                    s = 2
+            return {"code": s, "direction": pk}
+
+        d = list(map(lambda x: {**x, "status": slot_status(x)}, d))
+    return JsonResponse({"data": d})
+
+
+@login_required
+def user_get_reserve(request):
+    request_data = json.loads(request.body)
+    pk = request_data["pk"]
+    patient_uid = request_data["patient"]
+    rl = request.user.doctorprofile.rmis_location
+    if rl:
+        from rmis_integration.client import Client
+        c = Client(modules=['patients'])
+        d = c.patients.get_slot(pk)
+        return JsonResponse(d)
+    return JsonResponse({})

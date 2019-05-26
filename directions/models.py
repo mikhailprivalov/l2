@@ -314,6 +314,7 @@ class Napravleniya(models.Model):
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
     parent = models.ForeignKey('self', related_name='parent_dir', help_text="Направление основание", blank=True,
                                    null=True, default=None, on_delete=models.SET_NULL)
+    rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
