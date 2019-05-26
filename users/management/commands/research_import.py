@@ -13,7 +13,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """
-        Испорт консультацй, Лечения, Стоматологии, Стационар
+        Испорт услуг консультацй, Лечения, Стоматологии, Стационар
+        Если услуга(id) существует обновиться внутренний код, иначе создать новую
         :param args:
         :param kwargs:
         :return:
@@ -39,7 +40,6 @@ class Command(BaseCommand):
                     podr = cells.index("подразделение")
                     pay = cells.index("платно")
 
-
                     def insert_data(ins):
                         c1 = ws1.cell(row=x, column=1)
                         c2 = ws1.cell(row=x, column=2)
@@ -57,7 +57,6 @@ class Command(BaseCommand):
                         c6.value = cells[podr]
                         c6.value = cells[pay]
 
-
             else:
                 if cells[identify] == '-1':
                     if Researches.objects.filter(internal_code=cells[int_code]).exists():
@@ -70,8 +69,10 @@ class Command(BaseCommand):
                         stom = True if cells[type_research] == 'is_stom' else False
                         hospital = True if cells[type_research] == 'is_hospital' else False
                         s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
-                        c = Researches.objects.create(title=cells[research], site_type=s_t, internal_code=cells[int_code],
-                            is_treatment=treatment, is_doc_refferal=doc_refferal, is_hospital=hospital, is_stom=stom)
+                        c = Researches.objects.create(title=cells[research], site_type=s_t,
+                                                      internal_code=cells[int_code],
+                                                      is_treatment=treatment, is_doc_refferal=doc_refferal,
+                                                      is_hospital=hospital, is_stom=stom)
                         insert_data(int(c.pk))
                         print('добавлен услуга:', c.title, c.pk, c.internal_code)
                 else:
