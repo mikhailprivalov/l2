@@ -14,8 +14,7 @@ from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.colors import white, black
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
-
+from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 import slog.models as slog
 import users.models as users
@@ -1220,13 +1219,13 @@ def result_print(request):
     def later_pages(canvas, document):
         canvas.saveState()
         #вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
-        canvas.setFont('PTAstraSerifBold', 7.5)
+        canvas.setFont('PTAstraSerifBold', 8)
         line = '_'
         canvas.drawString(55 * mm, 16 * mm, '{}'.format(150 * line))
         canvas.drawString(55 * mm, 12 * mm, '№ карты : {}             Номер: {}'.format(direction.client.number_with_type(),
                                                                                       pk[0]))
         canvas.drawString(55 * mm, 9 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
-        canvas.drawString(55 * mm, 5 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas.drawString(55 * mm, 6 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.restoreState()
 
     if len(pk) == 1:
