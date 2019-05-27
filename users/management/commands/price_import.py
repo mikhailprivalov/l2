@@ -40,12 +40,9 @@ class Command(BaseCommand):
             else:
                 price_obj = PriceName.objects.filter(pk = int(cells[price_code])).first()
                 research_obj = Researches.objects.filter(pk = int(cells[identify])).first()
-                if price_obj and research_obj:
-                    price_obj(price_obj)
-                    print(research_obj)
-                    # PriceCoast.objects.update_or_create(price_name=price_obj[0], research=research_obj[0],
-                    #                                     defaults={'coast': cells[coast]})
-
-
-
-
+                if cells[coast]:
+                    coast_value = Decimal(cells[coast])
+                    if price_obj and research_obj:
+                        pr_o, created = PriceCoast.objects.update_or_create(price_name=price_obj, research=research_obj,
+                                                        defaults={'coast': coast_value})
+                        print(pr_o.research, pr_o.coast)

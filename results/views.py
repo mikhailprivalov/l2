@@ -14,6 +14,7 @@ from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.colors import white, black
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
 import directory.models as directory
 import slog.models as slog
@@ -27,6 +28,7 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
+from utils.pagenum import PageNumCanvas
 
 
 @login_required
@@ -419,6 +421,8 @@ def result_print(request):
         TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
     pdfmetrics.registerFont(
         TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
 
     buffer = BytesIO()
 
@@ -436,7 +440,7 @@ def result_print(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
                             rightMargin=5 * mm, topMargin=5 * mm,
-                            bottomMargin=5 * mm, allowSplitting=1,
+                            bottomMargin=15 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
     naprs = []
@@ -444,6 +448,7 @@ def result_print(request):
     style = styleSheet["Normal"]
     style.fontName = "OpenSans"
     style.fontSize = 9
+    style.alignment = TA_JUSTIFY
     style_ml = deepcopy(style)
     style_ml.leftIndent = 5 * mm
     styleBold = deepcopy(style)
@@ -1212,8 +1217,20 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.restoreState()
 
+    def later_pages(canvas, document):
+        canvas.saveState()
+        #вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
+        canvas.setFont('PTAstraSerifBold', 7.5)
+        line = '_'
+        canvas.drawString(55 * mm, 16 * mm, '{}'.format(150 * line))
+        canvas.drawString(55 * mm, 12 * mm, '№ карты : {}             Номер: {}'.format(direction.client.number_with_type(),
+                                                                                      pk[0]))
+        canvas.drawString(55 * mm, 9 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
+        canvas.drawString(55 * mm, 5 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas.restoreState()
+
     if len(pk) == 1:
-        doc.build(fwb, onFirstPage=first_pages)
+        doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
         doc.build(naprs, onFirstPage=first_pages)
 
