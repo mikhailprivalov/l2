@@ -422,6 +422,7 @@ def result_print(request):
         TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBoldItalic', os.path.join(FONTS_FOLDER, 'PTAstraSerif-BoldItalic.ttf')))
 
     buffer = BytesIO()
 
@@ -439,7 +440,7 @@ def result_print(request):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
                             rightMargin=5 * mm, topMargin=5 * mm,
-                            bottomMargin=15 * mm, allowSplitting=1,
+                            bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
 
     naprs = []
@@ -1214,18 +1215,24 @@ def result_print(request):
         form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
                        x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
                        width=470, height=18, textColor=black, forceBorder=False)
+        canvas.setFont('PTAstraSerifBoldItalic', 8)
+        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
+        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
+        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+
         canvas.restoreState()
 
     def later_pages(canvas, document):
         canvas.saveState()
         #вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
-        canvas.setFont('PTAstraSerifBold', 8)
-        line = '_'
-        canvas.drawString(55 * mm, 16 * mm, '{}'.format(150 * line))
-        canvas.drawString(55 * mm, 12 * mm, '№ карты : {}             Номер: {}'.format(direction.client.number_with_type(),
-                                                                                      pk[0]))
-        canvas.drawString(55 * mm, 9 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
-        canvas.drawString(55 * mm, 6 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas.setFont('PTAstraSerifBoldItalic', 8)
+        canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(),pk[0]))
+        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
+        canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
+        canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
         canvas.restoreState()
 
     if len(pk) == 1:

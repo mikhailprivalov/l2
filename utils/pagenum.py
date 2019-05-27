@@ -46,4 +46,4 @@ class PageNumCanvas(canvas.Canvas):
         pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
         page = "Лист {} из {}".format(self._pageNumber, page_count)
         self.setFont("PTAstraSerifReg", 9)
-        self.drawRightString(200 * mm, 10 * mm, page)
+        self.drawRightString(200 * mm, 8 * mm, page)
