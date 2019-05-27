@@ -43,6 +43,5 @@ class Command(BaseCommand):
                 if cells[coast]:
                     coast_value = Decimal(cells[coast])
                     if price_obj and research_obj:
-                        pr_o, created = PriceCoast.objects.update_or_create(price_name=price_obj, research=research_obj,
+                        PriceCoast.objects.update_or_create(price_name=price_obj, research=research_obj,
                                                         defaults={'coast': coast_value})
-                        print(pr_o.research, pr_o.coast)
