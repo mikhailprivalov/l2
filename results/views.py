@@ -1215,7 +1215,7 @@ def result_print(request):
         form.textfield(name='comment', tooltip='comment', fontName='Times-Bold', fontSize=12,
                        x=107, y=698, borderStyle='underlined', borderColor=white, fillColor=white,
                        width=470, height=18, textColor=black, forceBorder=False)
-        canvas.setFont('PTAstraSerifBoldItalic', 8)
+        canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
@@ -1227,7 +1227,7 @@ def result_print(request):
     def later_pages(canvas, document):
         canvas.saveState()
         #вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
-        canvas.setFont('PTAstraSerifBoldItalic', 8)
+        canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(),pk[0]))
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
@@ -1238,7 +1238,7 @@ def result_print(request):
     if len(pk) == 1:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
-        doc.build(naprs, onFirstPage=first_pages)
+        doc.build(naprs)
 
     pdf = buffer.getvalue()
     buffer.close()
