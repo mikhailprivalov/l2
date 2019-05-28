@@ -3,14 +3,19 @@ from .models import PriceName, PriceCoast, Contract, Company
 # Register your models here.
 
 class ResPriceCoast(admin.ModelAdmin):
-    list_filter = ('price_name','price_name__active_status',)
-    list_display = ('price_name','research', 'coast','status',)
-    list_display_links = ('price_name','research', 'coast',)
+    list_filter = ('price_name', 'price_name__active_status', 'research__podrazdeleniye', 'research__is_doc_refferal',
+                   'research__is_treatment', 'research__is_stom')
+    list_display = ('price_name','research', 'internal_code', 'coast','status',)
+    list_display_links = ('price_name','research', 'internal_code', 'coast',)
+    search_fields = ('research__internal_code', 'research__title')
 
     def status(self, obj):
         return obj.price_name.status()
 
     status.short_description = 'Статус прайса'
+
+    def internal_code(self, obj):
+        return obj.research.internal_code
 
 class ResCompany(admin.ModelAdmin):
     list_filter = ('active_status','contract__price',)

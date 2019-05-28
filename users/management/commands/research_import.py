@@ -25,8 +25,14 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         ws1 = wb[wb.sheetnames[1]]
         starts = False
-        x = 0
-
+        identify = 0
+        int_code = 0
+        research = ''
+        type_research = 0
+        place_research = 0
+        podr = ''
+        pay = ''
+        r = 0
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -41,13 +47,13 @@ class Command(BaseCommand):
                     pay = cells.index("платно")
 
                     def insert_data(ins):
-                        c1 = ws1.cell(row=x, column=1)
-                        c2 = ws1.cell(row=x, column=2)
-                        c3 = ws1.cell(row=x, column=3)
-                        c4 = ws1.cell(row=x, column=4)
-                        c5 = ws1.cell(row=x, column=5)
-                        c6 = ws1.cell(row=x, column=6)
-                        c6 = ws1.cell(row=x, column=7)
+                        c1 = ws1.cell(row=r, column=1)
+                        c2 = ws1.cell(row=r, column=2)
+                        c3 = ws1.cell(row=r, column=3)
+                        c4 = ws1.cell(row=r, column=4)
+                        c5 = ws1.cell(row=r, column=5)
+                        c6 = ws1.cell(row=r, column=6)
+                        c6 = ws1.cell(row=r, column=7)
 
                         c1.value = ins
                         c2.value = cells[int_code]
