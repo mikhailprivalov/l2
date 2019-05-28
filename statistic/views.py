@@ -35,12 +35,18 @@ def statistic_page(request):
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов',
                                                                                     'Лечащий врач']).distinct()
+    statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
                                               "getters_material": json.dumps(
                                                   [{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
                                               "statistics_tickets_users": json.dumps(
                                                   [{"pk": str(x.pk), "fio": str(x)} for x in
-                                                   statistics_tickets_users])})
+                                                   statistics_tickets_users]),
+                                              "statistics_tickets_deps": json.dumps(
+                                                  [{"pk": -1, "title": 'Не выбрано подразделение'},
+                                                   *[{"pk": str(x.pk), "title": x.title} for x in
+                                                    statistics_tickets_deps]])
+                                              })
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
