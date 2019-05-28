@@ -147,7 +147,14 @@
         },
         type: Array,
         required: false,
-      }
+      },
+      filter_researches: {
+        default(){
+          return [];
+        },
+        type: Array,
+        required: false,
+      },
     },
     data() {
       return {
@@ -322,7 +329,7 @@
         } else if (this.dep in this.$store.getters.researches) {
           r = this.$store.getters.researches[dep];
         }
-        return r
+        return r.filter(x => !this.filter_researches.includes(x.pk))
       },
       k(t) {
         let n = 0

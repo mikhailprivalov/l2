@@ -828,6 +828,9 @@
       stat_btn() {
         return this.$store.getters.modules.l2_stat_btn;
       },
+      rmis_queue() {
+        return this.$store.getters.modules.l2_rmis_queue;
+      },
       pk_c() {
         let lpk = this.pk.trim()
         if (lpk === '')
@@ -845,7 +848,7 @@
         user_data: 'user_data',
       }),
       has_loc() {
-        if (!this.user_data) {
+        if (!this.user_data || !this.rmis_queue) {
           return false
         }
         return !!this.user_data.rmis_location

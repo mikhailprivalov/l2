@@ -25,6 +25,7 @@ class SettingManager:
             "treatment",
             "stom",
             "hosp",
+            "rmis_queue",
         ]}
 
     @staticmethod
