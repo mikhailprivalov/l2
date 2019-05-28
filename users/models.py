@@ -40,6 +40,7 @@ class DoctorProfile(models.Model):
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
 
     restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
+    users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True, help_text='Услуги, оказываемые пользователем')
     personal_code = models.IntegerField(default=0, blank=True, help_text='Код врача')
     rmis_location = models.IntegerField(default=None, blank=True, null=True)
 

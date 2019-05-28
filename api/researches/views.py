@@ -124,10 +124,11 @@ def researches_update(request):
     pk = request_data.get("pk", -2)
     if pk > -2:
         department_pk = request_data.get("department")
-        title = request_data.get("title").strip()
-        short_title = request_data.get("short_title").strip()
-        code = request_data.get("code").strip()
-        info = request_data.get("info").strip()
+        title = request_data.get("title", "").strip()
+        short_title = request_data.get("short_title", "").strip()
+        code = request_data.get("code", "").strip()
+        internal_code = request_data.get("internal_code", "").strip()
+        info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups")
@@ -142,7 +143,7 @@ def researches_update(request):
                                   is_doc_refferal=department_pk == -2,
                                   is_treatment=department_pk == -3,
                                   is_stom=department_pk == -4,
-                                  site_type_id=site_type)
+                                  site_type_id=site_type, internal_code=internal_code)
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
                 res.title = title
@@ -156,6 +157,7 @@ def researches_update(request):
                 res.paraclinic_info = info
                 res.hide = hide
                 res.site_type_id = site_type
+                res.internal_code = internal_code
             if res:
                 res.save()
                 templat_obj = ParaclinicTemplateName.make_default(res)
@@ -232,6 +234,7 @@ def researches_details(request):
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide
         response["site_type"] = res.site_type_id
+        response["internal_code"] = res.internal_code
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
                  "hide": group.hide, "fields": []}

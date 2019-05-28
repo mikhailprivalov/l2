@@ -788,6 +788,7 @@ def user_view(request):
             "department": '',
             "groups": [],
             "restricted_to_direct": [],
+            "users_services": [],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
         }
@@ -800,6 +801,7 @@ def user_view(request):
             "department": doc.podrazdeleniye_id,
             "groups": [x.pk for x in doc.user.groups.all()],
             "restricted_to_direct": [x.pk for x in doc.restricted_to_direct.all()],
+            "users_services": [x.pk for x in doc.users_services.all()],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
         }
@@ -853,6 +855,10 @@ def user_save_view(request):
             doc.restricted_to_direct.clear()
             for r in ud["restricted_to_direct"]:
                 doc.restricted_to_direct.add(DResearches.objects.get(pk=r))
+
+            doc.users_services.clear()
+            for r in ud["users_services"]:
+                doc.users_services.add(DResearches.objects.get(pk=r))
 
             doc.podrazdeleniye_id = ud['department']
             doc.fio = ud["fio"]

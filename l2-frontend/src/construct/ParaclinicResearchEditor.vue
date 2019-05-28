@@ -15,8 +15,10 @@
         <div class="row" style="margin-right: 0;" v-if="department < -1">
           <div class="col-xs-6" style="padding-right: 0">
             <div class="input-group" style="margin-right: -1px">
-              <span class="input-group-addon">Код</span>
-              <input type="text" class="form-control" v-model="code">
+              <span class="input-group-addon">Код (ОМС)</span>
+              <input type="text" class="form-control f-code" v-model="code">
+              <span class="input-group-addon">Код (внутр)</span>
+              <input type="text" class="form-control f-code" v-model="internal_code">
             </div>
           </div>
           <div class="col-xs-6" style="padding-left: 0;padding-right: 0;margin-right: 0;">
@@ -29,8 +31,10 @@
           </div>
         </div>
         <div class="input-group" v-else>
-          <span class="input-group-addon">Код</span>
-          <input type="text" class="form-control" v-model="code">
+          <span class="input-group-addon">Код (ОМС)</span>
+          <input type="text" class="form-control f-code" v-model="code">
+          <span class="input-group-addon">Код (внутр)</span>
+          <input type="text" class="form-control f-code" v-model="internal_code">
         </div>
         <div class="input-group">
           <label class="input-group-addon" style="height: 34px;text-align: left;">
@@ -215,6 +219,7 @@
         title: '',
         short_title: '',
         code: '',
+        internal_code: '',
         info: '',
         hide: false,
         cancel_do: false,
@@ -461,6 +466,7 @@
             vm.title = data.title
             vm.short_title = data.short_title
             vm.code = data.code
+            vm.internal_code = data.internal_code
             vm.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
             vm.hide = data.hide
             vm.site_type = data.site_type
@@ -487,7 +493,8 @@
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
         construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code,
-          vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups, vm.site_type).then(() => {
+          vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups, vm.site_type,
+          vm.internal_code).then(() => {
           vm.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
@@ -524,8 +531,12 @@
     display: flex;
     flex: 0 0 68px;
 
-    .left, .right {
-      flex: 0 0 50%
+    .left {
+      flex: 0 0 45%
+    }
+
+    .right {
+      flex: 0 0 55%
     }
 
     .left {
@@ -535,6 +546,7 @@
     .input-group-addon {
       border-top: none;
       border-left: none;
+      border-right: none;
       border-radius: 0;
     }
 
@@ -545,6 +557,10 @@
 
     .input-group > .form-control:last-child {
       border-right: none;
+    }
+
+    .f-code {
+      padding: 6px;
     }
   }
 

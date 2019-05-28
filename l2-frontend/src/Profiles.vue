@@ -76,10 +76,23 @@
           <div class="row" style="margin-right: 0">
             <div class="col-xs-6"
                  style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
-              <researches-picker :hidetemplates="true" :just_search="true" v-model="user.restricted_to_direct"/>
+              <researches-picker :hidetemplates="true"
+                                 :just_search="true" v-model="user.restricted_to_direct"/>
             </div>
             <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
               <selected-researches :researches="user.restricted_to_direct" :simple="true"/>
+            </div>
+          </div>
+          <div class="more-title" v-if="rmis_queue">Услуги, оказываемые пользователем:</div>
+          <div class="row" style="margin-right: 0" v-if="rmis_queue">
+            <div class="col-xs-6"
+                 style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
+              <researches-picker :hidetemplates="true"
+                                 :filter_types="[2]"
+                                 :just_search="true" v-model="user.users_services"/>
+            </div>
+            <div class="col-xs-6" style="height: 300px;padding-left: 0;padding-right: 0;">
+              <selected-researches :researches="user.users_services" :simple="true"/>
             </div>
           </div>
         </div>
@@ -218,6 +231,7 @@
           groups: [],
           groups_list: [],
           restricted_to_direct: [],
+          users_services: [],
           username: '',
           password: '',
           department: null,
@@ -225,6 +239,9 @@
       },
     },
     computed: {
+      rmis_queue() {
+        return this.$store.getters.modules.l2_rmis_queue;
+      },
       department_filter() {
         const r = []
         for (let x of this.departments) {
