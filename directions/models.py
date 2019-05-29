@@ -723,7 +723,7 @@ class TypeJob(models.Model):
     title = models.CharField(max_length=255)
     hide = models.BooleanField(help_text="Скрыть тип", default=False)
     value = models.DecimalField(max_digits=5, decimal_places=2,
-                                help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
+                                help_text="Ценность работы-абсолютное значение (в УЕТ или минутах-зависит от названия работы)")
 
 
 class EmployeeJob(models.Model):
@@ -733,8 +733,6 @@ class EmployeeJob(models.Model):
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
     date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения/корректировки')
-
-
 
 
 class ParaclinicResult(models.Model):
