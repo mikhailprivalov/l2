@@ -672,6 +672,8 @@ class Issledovaniya(models.Model):
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
 
+    co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None,
+                                    null=True, blank=True, on_delete=models.SET_NULL)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
@@ -729,9 +731,10 @@ class TypeJob(models.Model):
 class EmployeeJob(models.Model):
     type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
     count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
-    date = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True, db_index=True)
     doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
+    date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
+    time_save = models.DateTimeField(null=True, blank=True, help_text='Время сохранения/корректировки')
 
 
 class ParaclinicResult(models.Model):
