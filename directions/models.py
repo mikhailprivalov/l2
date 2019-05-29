@@ -719,6 +719,21 @@ class Issledovaniya(models.Model):
         verbose_name_plural = 'Назначения на исследования'
 
 
+class TypeJob(models.Model):
+    title = models.CharField(max_length=255)
+    hide = models.BooleanField(help_text="Скрыть тип", default=False)
+    value = models.DecimalField(max_digits=5, decimal_places=2,
+                                help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
+
+
+class EmployeeJob(models.Model):
+    type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
+    count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
+    date = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True, db_index=True)
+    doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
+                                    help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
+
+
 class ParaclinicResult(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
                                       help_text='Направление на исследование, для которого сохранен результат',
