@@ -734,7 +734,7 @@ class EmployeeJob(models.Model):
     doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
     date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
-    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения/корректировки')
+    time_save = models.DateTimeField(null=True, blank=True, help_text='Время сохранения/корректировки')
 
 
 class ParaclinicResult(models.Model):
