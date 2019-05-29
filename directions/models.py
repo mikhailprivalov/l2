@@ -671,7 +671,7 @@ class Issledovaniya(models.Model):
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
-    co_executor_esr = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель СОЭ", default=None,
+    co_executor_esr = models.ForeignKey(DoctorProfile, related_name="co_executor_esr", help_text="Со-исполнитель СОЭ", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
 
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
