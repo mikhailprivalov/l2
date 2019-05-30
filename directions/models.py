@@ -669,11 +669,13 @@ class Issledovaniya(models.Model):
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+    def_uet = models.DecimalField(max_digits=6,null=True, help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True, default=None, decimal_places=3)
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
-
+    co_executor_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
     co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
+    co_executor2_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
