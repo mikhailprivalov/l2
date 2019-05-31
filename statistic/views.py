@@ -23,6 +23,7 @@ from copy import deepcopy
 
 # from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
+from laboratory import utils
 
 
 @csrf_exempt
@@ -56,6 +57,7 @@ def statistic_xls(request):
     """ Генерация XLS """
     from directions.models import Issledovaniya
     import xlwt
+    import openpyxl
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
@@ -68,6 +70,7 @@ def statistic_xls(request):
     users_o = request_data.get("users", "[]")
     date_values_o = request_data.get("values", "{}")
     date_type = request_data.get("date_type", "d")
+    depart_o = request_data.get("department")
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
@@ -530,82 +533,152 @@ def statistic_xls(request):
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
+    # elif tp == "statistics-tickets-print":
+    #     date_start, date_end = try_parse_range(date_start_o, date_end_o)
+    #
+    #     access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
+    #                                                                               flat=True)) or request.user.is_superuser
+    #
+    #     users_o = json.loads(users_o)
+    #     if not isinstance(users_o, list):
+    #         users_o = []
+    #     users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
+    #
+    #     users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
+    #
+    #     response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
+    #     font_style = xlwt.XFStyle()
+    #     font_style.alignment.wrap = 1
+    #     font_style.borders = borders
+    #
+    #     font_style_b = xlwt.XFStyle()
+    #     font_style_b.alignment.wrap = 1
+    #     font_style_b.font.bold = True
+    #     font_style_b.borders = borders
+    #
+    #     ws = wb.add_sheet("Статталоны")
+    #     row_num = 0
+    #     row = [
+    #         ("№", 1200),
+    #         ("Дата и время создания", 3500),
+    #         ("Дата талона", 3500),
+    #         ("Подразделение", 7200),
+    #         ("Врач", 7000),
+    #         ("Карта", 3200),
+    #         ("Цель посещения", 4000),
+    #         ("Пациент", 7200),
+    #         ("Первичный приём", 2800),
+    #         ("Код диагноза (МКБ 10), виды услуг, виды травм", 6000),
+    #         ("Впервые", 2800),
+    #         ("Результат обращения", 4500),
+    #         ("Исход", 4500),
+    #         ("Диспансерный учёт", 4200),
+    #         ("Диагноз диспансерного учёта", 4200),
+    #         ("Создатель талона", 7000),
+    #     ]
+    #     for col_num in range(len(row)):
+    #         ws.write(row_num, col_num, row[col_num][0], font_style_b)
+    #         ws.col(col_num).width = row[col_num][1]
+    #     row_num += 1
+    #
+    #     for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
+    #             Q(doctor__pk__in=users) | Q(creator__pk__in=users)).order_by("card__individual__family", "doctor__fio",
+    #                                                                          "doctor__podrazdeleniye__title").order_by("date"):
+    #         if not ticket.creator:
+    #             ticket.creator = ticket.doctor
+    #             ticket.save()
+    #         row = [
+    #             str(row_num),
+    #             ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+    #             ticket.get_date(),
+    #             ticket.doctor.podrazdeleniye.title,
+    #             ticket.doctor.fio,
+    #             ticket.card.number_with_type(),
+    #             "" if not ticket.purpose else ticket.purpose.title,
+    #             ticket.card.individual.fio(full=True),
+    #             "первич." if ticket.primary_visit else "повторн.",
+    #             ticket.info,
+    #             "впервые" if ticket.first_time else "",
+    #             "" if not ticket.result else ticket.result.title,
+    #             "" if not ticket.outcome else ticket.outcome.title,
+    #             ticket.get_dispensary_registration_display()
+    #             + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
+    #             ticket.dispensary_diagnos,
+    #             ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
+    #         ]
+    #         for col_num in range(len(row)):
+    #             ws.write(row_num, col_num, row[col_num], font_style)
+    #         row_num += 1
+
     elif tp == "statistics-tickets-print":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
-
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
-
         users_o = json.loads(users_o)
-        if not isinstance(users_o, list):
-            users_o = []
-        users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
+        if users_o[0]:
+            us = int(users_o[0])
+            us_o = DoctorProfile.objects.get(pk=us)
+        elif depart_o:
+            depart = Podrazdeleniya.objects.get(pk=depart_o)
+            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
 
-        users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
+        #Колнки: список и размеры
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
 
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 1
-        font_style.borders = borders
+        def dimens(ws1, i_obj):
+            """
+            Назначить ширину колонок. Вход worksheet выход worksheen с размерами
+            """
+            ws1.column_dimensions['A'].width = 13
+            ws1.column_dimensions['B'].width = 9
+            ws1.column_dimensions['C'].width = 8
+            ws1.column_dimensions['D'].width = 31
+            ws1.column_dimensions['E'].width = 13
+            ws1.column_dimensions['F'].width = 12
+            ws1.column_dimensions['G'].width = 21
+            ws1.column_dimensions['H'].width = 16
+            ws1.column_dimensions['I'].width = 21
+            ws1.column_dimensions['J'].width = 8
+            ws1.column_dimensions['K'].width = 16
+            ws1.column_dimensions['L'].width = 4
+            ws1.column_dimensions['M'].width = 8
+            ws1.column_dimensions['N'].width = 13
 
-        font_style_b = xlwt.XFStyle()
-        font_style_b.alignment.wrap = 1
-        font_style_b.font.bold = True
-        font_style_b.borders = borders
+            ws1.cell(row=1, column=1).value = 'Сотрудник'
+            ws1.cell(row=1, column=2).value = i_obj.fio
+            ws1.cell(row=2, column=1).value = 'Должность'
+            ws1.cell(row=3, column=1).value = 'с'
+            ws1.cell(row=4, column=1).value = date_start_o
+            ws1.cell(row=3, column=2).value = 'по'
+            ws1.cell(row=4, column=2).value = date_end_o
+            ws1.cell(row=1, column=5).value = 'Код'
+            ws1.cell(row=1, column=6).value = i_obj.personal_code
+            ws1.merge_cells(start_row=1, start_column=2, end_row=1, end_column=4)
+            ws1.merge_cells(start_row=2, start_column=2, end_row=2, end_column=4)
+            return ws1
 
-        ws = wb.add_sheet("Статталоны")
-        row_num = 0
-        row = [
-            ("№", 1200),
-            ("Дата и время создания", 3500),
-            ("Дата талона", 3500),
-            ("Подразделение", 7200),
-            ("Врач", 7000),
-            ("Карта", 3200),
-            ("Цель посещения", 4000),
-            ("Пациент", 7200),
-            ("Первичный приём", 2800),
-            ("Код диагноза (МКБ 10), виды услуг, виды травм", 6000),
-            ("Впервые", 2800),
-            ("Результат обращения", 4500),
-            ("Исход", 4500),
-            ("Диспансерный учёт", 4200),
-            ("Диагноз диспансерного учёта", 4200),
-            ("Создатель талона", 7000),
-        ]
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_b)
-            ws.col(col_num).width = row[col_num][1]
-        row_num += 1
 
-        for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
-                Q(doctor__pk__in=users) | Q(creator__pk__in=users)).order_by("card__individual__family", "doctor__fio",
-                                                                             "doctor__podrazdeleniye__title").order_by("date"):
-            if not ticket.creator:
-                ticket.creator = ticket.doctor
-                ticket.save()
-            row = [
-                str(row_num),
-                ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
-                ticket.get_date(),
-                ticket.doctor.podrazdeleniye.title,
-                ticket.doctor.fio,
-                ticket.card.number_with_type(),
-                "" if not ticket.purpose else ticket.purpose.title,
-                ticket.card.individual.fio(full=True),
-                "первич." if ticket.primary_visit else "повторн.",
-                ticket.info,
-                "впервые" if ticket.first_time else "",
-                "" if not ticket.result else ticket.result.title,
-                "" if not ticket.outcome else ticket.outcome.title,
-                ticket.get_dispensary_registration_display()
-                + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
-                ticket.dispensary_diagnos,
-                ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
-            ]
-            for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], font_style)
-            row_num += 1
+        #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
+        users_obj = []
+        for i in us_o:
+            if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
+                ws = wb.create_sheet(i.get_fio())
+                ws = dimens(ws, i)
+
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
+        # font_style = xlwt.XFStyle()
+        # font_style.alignment.wrap = 1
+        # font_style.borders = borders
+        #
+        # font_style_b = xlwt.XFStyle()
+        # font_style_b.alignment.wrap = 1
+        # font_style_b.font.bold = True
+        # font_style_b.borders = borders
+        wb.save(response)
+        return response
+
     elif tp == "journal-get-material":
         import datetime
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',

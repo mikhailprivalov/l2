@@ -329,7 +329,7 @@ class Fractions(models.Model):
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
     type_coexecutor = models.SmallIntegerField(default=0, choices=TYPES, blank=True,
-                                               help_text='Отношение исполнителей к фракциям деление')
+                                               help_text='Отношение исполнителей к фракциям дл уета ует')
 
     def __str__(self):
         return self.research.title + " | " + self.title
