@@ -626,7 +626,7 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
 
-        def dimens(ws1, i_obj):
+        def structure(ws1, i_obj):
             """
             Назначить ширину колонок. Вход worksheet выход worksheen с размерами
             """
@@ -648,6 +648,7 @@ def statistic_xls(request):
             ws1.cell(row=1, column=1).value = 'Сотрудник'
             ws1.cell(row=1, column=2).value = i_obj.fio
             ws1.cell(row=2, column=1).value = 'Должность'
+            ws1.cell(row=2, column=2).value = i_obj.specialities.title if i_obj.specialities else ""
             ws1.cell(row=3, column=1).value = 'с'
             ws1.cell(row=4, column=1).value = date_start_o
             ws1.cell(row=3, column=2).value = 'по'
@@ -664,18 +665,9 @@ def statistic_xls(request):
         for i in us_o:
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
-                ws = dimens(ws, i)
-
+                ws = structure(ws, i)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
-        # font_style = xlwt.XFStyle()
-        # font_style.alignment.wrap = 1
-        # font_style.borders = borders
-        #
-        # font_style_b = xlwt.XFStyle()
-        # font_style_b.alignment.wrap = 1
-        # font_style_b.font.bold = True
-        # font_style_b.borders = borders
         wb.save(response)
         return response
 
