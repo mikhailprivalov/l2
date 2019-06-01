@@ -614,6 +614,7 @@ def statistic_xls(request):
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
+        type_fin ='омс'
         users_o = json.loads(users_o)
         if users_o[0]:
             us = int(users_o[0])
@@ -626,46 +627,142 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
 
+        from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle
+        style_o = NamedStyle(name="style_o")
+        style_o.font = Font(bold=True, size=11)
+        wb.add_named_style(style_o)
+
+        style_border = NamedStyle(name="style_border")
+        bd = Side(style='thin', color="000000")
+        style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+        style_border.font = Font(bold=True, size=11)
+        style_border.alignment = Alignment(wrap_text=True)
+        wb.add_named_style(style_border)
+
         def structure(ws1, i_obj):
             """
             Назначить ширину колонок. Вход worksheet выход worksheen с размерами
             """
             ws1.column_dimensions['A'].width = 13
-            ws1.column_dimensions['B'].width = 9
-            ws1.column_dimensions['C'].width = 8
+            ws1.column_dimensions['B'].width = 10
+            ws1.column_dimensions['C'].width = 9
             ws1.column_dimensions['D'].width = 31
             ws1.column_dimensions['E'].width = 13
             ws1.column_dimensions['F'].width = 12
             ws1.column_dimensions['G'].width = 21
             ws1.column_dimensions['H'].width = 16
-            ws1.column_dimensions['I'].width = 21
-            ws1.column_dimensions['J'].width = 8
-            ws1.column_dimensions['K'].width = 16
-            ws1.column_dimensions['L'].width = 4
-            ws1.column_dimensions['M'].width = 8
+            ws1.column_dimensions['I'].width = 12
+            ws1.column_dimensions['J'].width = 18
+            ws1.column_dimensions['K'].width = 13
+            ws1.column_dimensions['L'].width = 13
+            ws1.column_dimensions['M'].width = 12
+            ws1.column_dimensions['N'].width = 13
+            ws1.column_dimensions['O'].width = 13
+            ws1.column_dimensions['P'].width = 13
+            ws1.column_dimensions['Q'].width = 13
+            ws1.column_dimensions['R'].width = 13
+            ws1.column_dimensions['S'].width = 13
+            ws1.column_dimensions['T'].width = 13
+            ws1.column_dimensions['U'].width = 13
             ws1.column_dimensions['N'].width = 13
 
+            # Закголовки столбцов
             ws1.cell(row=1, column=1).value = 'Сотрудник'
+            ws1.cell(row=1, column=1).style = style_o
             ws1.cell(row=1, column=2).value = i_obj.fio
             ws1.cell(row=2, column=1).value = 'Должность'
+            ws1.cell(row=2, column=1).style = style_o
             ws1.cell(row=2, column=2).value = i_obj.specialities.title if i_obj.specialities else ""
-            ws1.cell(row=3, column=1).value = 'с'
-            ws1.cell(row=4, column=1).value = date_start_o
-            ws1.cell(row=3, column=2).value = 'по'
-            ws1.cell(row=4, column=2).value = date_end_o
-            ws1.cell(row=1, column=5).value = 'Код'
+            ws1.cell(row=4, column=1).value = 'Период:'
+            ws1.cell(row=4, column=1).style = style_o
+            ws1.cell(row=5, column=1).value = date_start_o
+            ws1.cell(row=5, column=2).value = '-'
+            ws1.cell(row=5, column=2).value = date_end_o
+            ws1.cell(row=1, column=5).value = 'Код врача'
+            ws1.cell(row=1, column=5).style = style_o
             ws1.cell(row=1, column=6).value = i_obj.personal_code
-            ws1.merge_cells(start_row=1, start_column=2, end_row=1, end_column=4)
-            ws1.merge_cells(start_row=2, start_column=2, end_row=2, end_column=4)
+            ws1.cell(row=3, column=5).value = 'Источник'
+            ws1.cell(row=3, column=5).style = style_o
+            ws1.cell(row=3, column=6).value = 'ОМС'
+
+            #Заголовки данных
+            ws1.cell(row=7, column=1).value = 'Дата'
+            ws1.cell(row=7, column=1).style = style_border
+            ws1.cell(row=7, column=2).value = 'Услуга'
+            ws1.cell(row=7, column=2).style = style_border
+            ws1.cell(row=7, column=3).value = 'Соисполнитель'
+            ws1.cell(row=7, column=3).style = style_border
+            ws1.cell(row=7, column=4).value = 'ФИО пациента,\n№ направления'
+            ws1.cell(row=7, column=4).style = style_border
+            ws1.cell(row=7, column=5).value = 'Дата рождения'
+            ws1.cell(row=7, column=5).style = style_border
+            ws1.cell(row=7, column=6).value = '№ карты'
+            ws1.cell(row=7, column=6).style = style_border
+            ws1.cell(row=7, column=7).value = 'Данные полиса'
+            ws1.cell(row=7, column=7).style = style_border
+            ws1.cell(row=7, column=8).value = 'Код услуги'
+            ws1.cell(row=7, column=8).style = style_border
+            ws1.cell(row=7, column=9).value = 'Услуга \n (ует/мин)'
+            ws1.cell(row=7, column=9).style = style_border
+            ws1.cell(row=7, column=10).value = 'ДатаВремя \n подтверждения'
+            ws1.cell(row=7, column=10).style = style_border
+            ws1.cell(row=7, column=12).value = 'Первичный прием'
+            ws1.cell(row=7, column=12).style = style_border
+            if type_fin == 'омс':
+                ws1.cell(row=7, column=11).value = 'Онкоподозрение'
+                ws1.cell(row=7, column=11).style = style_border
+                ws1.cell(row=7, column=13).value = 'Цель \n посещения\n(код)'
+                ws1.cell(row=7, column=13).style = style_border
+                ws1.cell(row=7, column=14).value = 'Диагноз \n МКБ'
+                ws1.cell(row=7, column=14).style = style_border
+                ws1.cell(row=7, column=15).value = 'Впервые'
+                ws1.cell(row=7, column=15).style = style_border
+                ws1.cell(row=7, column=16).value = 'Результат \n обращения \n(код)'
+                ws1.cell(row=7, column=16).style = style_border
+                ws1.cell(row=7, column=17).value = 'Исход(код)'
+                ws1.cell(row=7, column=17).style = style_border
+                ws1.cell(row=7, column=18).value = 'Д-учет\nСтоит'
+                ws1.cell(row=7, column=18).style = style_border
+                ws1.cell(row=7, column=19).value = 'Д-учет\nСтоит'
+                ws1.cell(row=7, column=19).style = style_border
+                ws1.cell(row=7, column=20).value = 'Д-учет\nВзят'
+                ws1.cell(row=7, column=20).style = style_border
+                ws1.cell(row=7, column=21).value = 'Д-учет\nСнят'
+                ws1.cell(row=7, column=21).style = style_border
+                ws1.cell(row=7, column=22).value = 'Причина\nснятия'
+                ws1.cell(row=7, column=22).style = style_border
+            elif type_fin == 'платно':
+                ws1.cell(row=7, column=11).value = 'Стоимость'
+                ws1.cell(row=7, column=11).style = style_border
             return ws1
 
+        def get_research(doc_confirm):
+            from laboratory import utils
+            iss_obj = Issledovaniya.objects.filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
+            date_s = None
+            x = 0
+            if iss_obj:
+                for iss in iss_obj:
+                    date_o = utils.strfdatetime(iss.time_confirmation, "%d.%m.%Y")
+                    if date_s == date_o:
+                        print(iss.research, utils.strtime(iss.time_confirmation))
+                        x = x + 1
+                    else:
+                        print ('Итого', x)
+                        x = 0
+                        print(date_o, doc_confirm)
+                        print(iss.research, iss.time_confirmation)
+                        x = x + 1
+                    date_s = date_o
+                print('Итого', x)
+            return iss_obj
 
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
-        users_obj = []
         for i in us_o:
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
                 ws = structure(ws, i)
+                get_research(i)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
