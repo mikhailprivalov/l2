@@ -745,7 +745,9 @@ def statistic_xls(request):
                 for iss in iss_obj:
                     date_o = utils.strfdatetime(iss.time_confirmation, "%d.%m.%Y")
                     if date_s == date_o:
-                        print(iss.research, utils.strtime(iss.time_confirmation))
+                        napr = Napravleniya.objects.get(pk=iss.napravleniye_id)
+                        print(napr)
+                        print(iss.research, napr.client, napr.istochnik_f, utils.strtime(iss.time_confirmation))
                         x = x + 1
                     else:
                         print ('Итого', x)
