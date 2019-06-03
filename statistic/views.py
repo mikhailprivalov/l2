@@ -69,6 +69,7 @@ def statistic_xls(request):
     date_start_o = request_data.get("date-start", "")
     date_end_o = request_data.get("date-end", "")
     users_o = request_data.get("users", "[]")
+    user_o = request_data.get("user")
     date_values_o = request_data.get("values", "{}")
     date_type = request_data.get("date_type", "d")
     depart_o = request_data.get("department")
@@ -612,17 +613,22 @@ def statistic_xls(request):
     #         row_num += 1
 
     elif tp == "statistics-tickets-print":
+
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
+        data_date = request_data.get("date_values")
+        data_date = json.loads(data_date)
+        import datetime
+        d = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
         type_fin ='омс'
-        users_o = json.loads(users_o)
-        if users_o[0]:
-            us = int(users_o[0])
+        users_o = json.loads(user_o)
+        if users_o:
+            us = int(users_o)
             us_o = [DoctorProfile.objects.get(pk=us)]
         elif depart_o:
             depart = Podrazdeleniya.objects.get(pk=depart_o)
-            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart,)
+            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
 
         #Колнки: список и размеры
         wb = openpyxl.Workbook()
@@ -640,12 +646,12 @@ def statistic_xls(request):
         style_border.alignment = Alignment(wrap_text=True)
         wb.add_named_style(style_border)
 
-        def structure(ws1, i_obj):
+        def structure(ws1, i_obj, issl_obj):
             """
             Назначить ширину колонок. Вход worksheet выход worksheen с размерами
             """
             ws1.column_dimensions['A'].width = 13
-            ws1.column_dimensions['B'].width = 10
+            ws1.column_dimensions['B'].width = 15
             ws1.column_dimensions['C'].width = 9
             ws1.column_dimensions['D'].width = 31
             ws1.column_dimensions['E'].width = 13
@@ -735,12 +741,33 @@ def statistic_xls(request):
             elif type_fin == 'платно':
                 ws1.cell(row=7, column=11).value = 'Стоимость'
                 ws1.cell(row=7, column=11).style = style_border
+
+            r = 7
+            style_border1 = NamedStyle(name="style_border1")
+            bd = Side(style='thin', color="000000")
+            style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+            style_border1.font = Font(bold=False, size=11)
+            style_border1.alignment = Alignment(wrap_text=True)
+            wb.add_named_style(style_border1)
+            for issled in issl_obj:
+                r = r + 1
+                ws1.cell(row=r, column=1).value = utils.strfdatetime(issled.time_confirmation, "%d.%m.%Y")
+                ws1.cell(row=r, column=1).style = style_border1
+                ws1.cell(row=r, column=2).value = issled.research.title
+                ws1.cell(row=r, column=2).style = style_border1
+                ws1.cell(row=r, column=4).value = issled.napravleniye.client.get_fio_w_card()
+                ws1.cell(row=r, column=4).style = style_border1
+                ws1.cell(row=r, column=8).value = issled.research.code
+                ws1.cell(row=r, column=8).style = style_border1
+
             return ws1
+
+        start_date = datetime.datetime.combine(d, datetime.time.min)
+        end_date = datetime.datetime.combine(d, datetime.time.max)
 
         def get_research(doc_confirm):
             from laboratory import utils
-            iss_obj = Issledovaniya.objects.select_related('napravleniye__client','napravleniye__istochnik_f').filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
-            # iss_obj = Issledovaniya.objects.select_related('napravleniye__client','napravleniye__istochnik_f').filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
+            iss_obj = Issledovaniya.objects.select_related('napravleniye__client','napravleniye__istochnik_f').filter(time_confirmation__range=(start_date, end_date), doc_confirmation=doc_confirm).order_by('time_confirmation')
             date_s = None
             x = 0
             if iss_obj:
@@ -748,7 +775,6 @@ def statistic_xls(request):
                     date_o = utils.strfdatetime(iss.time_confirmation, "%d.%m.%Y")
                     if date_s == date_o:
                         print(iss.research, iss.napravleniye.client, iss.napravleniye.istochnik_f, utils.strtime(iss.time_confirmation))
-                        # print(iss.research, utils.strtime(iss.time_confirmation))
                         x = x + 1
                     else:
                         print ('Итого', x)
@@ -764,8 +790,8 @@ def statistic_xls(request):
         for i in us_o:
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
-                ws = structure(ws, i)
-                get_research(i)
+                res_o = get_research(i)
+                ws = structure(ws, i, res_o)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
