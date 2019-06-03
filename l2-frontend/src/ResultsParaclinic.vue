@@ -606,7 +606,7 @@
         let oh = $('.results-editor > div')[0].offsetHeight
         let sh = $('.results-editor > div')[0].scrollHeight
         if (sh > oh)
-          $('.results-editor').scrollTo(this.prev_scroll)
+          $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
         let $elem = $($e.target)
         $elem.removeClass('open-field')
       },
@@ -1081,9 +1081,6 @@
     height: calc(100% - 68px);
     overflow-y: auto;
     overflow-x: hidden;
-    & > div {
-      overflow: hidden;
-    }
   }
 
   .group {
