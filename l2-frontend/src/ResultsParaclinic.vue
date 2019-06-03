@@ -1082,7 +1082,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     & > div {
-      overflow-x: hidden;
+      overflow: hidden;
     }
   }
 
