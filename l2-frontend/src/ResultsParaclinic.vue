@@ -182,7 +182,9 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
+                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field"
+                           :on-confirm="clear_val" :confirm-time="0"
+                           :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -206,7 +208,8 @@
                   <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                  <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
+                  <formula-field v-model="field.value" :formula="field.default_value"
+                                 :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
                   <input v-model="field.value" class="form-control" :readonly="true" />
@@ -1078,6 +1081,9 @@
     height: calc(100% - 68px);
     overflow-y: auto;
     overflow-x: hidden;
+    & > div {
+      overflow-x: hidden;
+    }
   }
 
   .group {
