@@ -618,10 +618,10 @@ def statistic_xls(request):
         users_o = json.loads(users_o)
         if users_o[0]:
             us = int(users_o[0])
-            us_o = DoctorProfile.objects.get(pk=us)
+            us_o = [DoctorProfile.objects.get(pk=us)]
         elif depart_o:
             depart = Podrazdeleniya.objects.get(pk=depart_o)
-            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
+            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart,)
 
         #Колнки: список и размеры
         wb = openpyxl.Workbook()
@@ -738,16 +738,16 @@ def statistic_xls(request):
 
         def get_research(doc_confirm):
             from laboratory import utils
-            iss_obj = Issledovaniya.objects.filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
+            iss_obj = Issledovaniya.objects.select_related('napravleniye__client','napravleniye__istochnik_f').filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
+            # iss_obj = Issledovaniya.objects.select_related('napravleniye__client','napravleniye__istochnik_f').filter(time_confirmation__range=(date_start, date_end), doc_confirmation=doc_confirm).order_by('time_confirmation')
             date_s = None
             x = 0
             if iss_obj:
                 for iss in iss_obj:
                     date_o = utils.strfdatetime(iss.time_confirmation, "%d.%m.%Y")
                     if date_s == date_o:
-                        napr = Napravleniya.objects.get(pk=iss.napravleniye_id)
-                        print(napr)
-                        print(iss.research, napr.client, napr.istochnik_f, utils.strtime(iss.time_confirmation))
+                        print(iss.research, iss.napravleniye.client, iss.napravleniye.istochnik_f, utils.strtime(iss.time_confirmation))
+                        # print(iss.research, utils.strtime(iss.time_confirmation))
                         x = x + 1
                     else:
                         print ('Итого', x)

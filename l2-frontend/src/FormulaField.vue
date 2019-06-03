@@ -27,19 +27,37 @@
     computed: {
       func_formula() {
         let s = this.formula;
-        let necessary = s.match(/{(\d+)}/g);
+        // let necessary = s.match(/{(\d+)}/g);
+        //
+        // if (necessary) {
+        //   for (const n of necessary) {
+        //     let v = null;
+        //     if (this.f_obj[n.replace(/[{}]/g, "")]) {
+        //       v = parseFloat(this.f_obj[n.replace(/[{}]/g, "")].value.trim().replace(",", "."));
+        //     }
+        //     v = v || 0;
+        //     v = isFinite(v) ? v : 0;
+        //     s = s.replace(new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g'), v);
+        //   }
+        // }
+
+        let necessary = s.match(/{([\wа-я0-9]+)}/g);
 
         if (necessary) {
           for (const n of necessary) {
             let v = null;
             if (this.f_obj[n.replace(/[{}]/g, "")]) {
-              v = parseFloat(this.f_obj[n.replace(/[{}]/g, "")].value.trim().replace(",", "."));
+              v = this.f_obj[n.replace(/[{}]/g, "")].value.trim();
             }
             v = v || 0;
-            v = isFinite(v) ? v : 0;
+            // v = isFinite(v) ? v : 0;
+            v = v
             s = s.replace(new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g'), v);
           }
         }
+
+
+
         try {
           return (new Function("return " + s + ";")()) || 0;
         } catch (e) {
