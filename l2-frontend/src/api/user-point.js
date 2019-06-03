@@ -85,4 +85,17 @@ async function getReserve(pk, patient) {
   return {}
 }
 
-export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser, loadLocation, getReserve}
+async function fillSlot(slot) {
+  try {
+    const response = await HTTP.post('user-fill-slot', {
+      slot,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser, loadLocation, getReserve, fillSlot}

@@ -513,6 +513,7 @@
                 this.base = row.pk
                 this.query = rmis_uid
                 this.search_after_loading = true
+                has_internal = true
                 break
               }
             }
@@ -617,16 +618,16 @@
         })
       },
       search() {
-        this.search_after_loading = false
         if (!this.query_valid || this.inLoading)
           return
+        const q = this.query
         this.check_base()
         $('input').each(function () {
           $(this).trigger('blur')
         })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
+        patients_point.searchCard(this.base, q, false, this.inc_rmis || this.search_after_loading).then((result) => {
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
@@ -639,6 +640,10 @@
             }
           } else {
             errmessage('Ошибка на сервере')
+          }
+          if (this.search_after_loading) {
+            this.search_after_loading = false
+            this.query = ''
           }
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
