@@ -41,10 +41,11 @@ def statistic_page(request):
                                               "getters_material": json.dumps(
                                                   [{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
                                               "statistics_tickets_users": json.dumps(
-                                                  [{"pk": str(x.pk), "fio": str(x)} for x in
-                                                   statistics_tickets_users]),
+                                                  [{"pk": -1, "fio": 'Пользователь не выбран'},
+                                                   *[{"pk": str(x.pk), "fio": str(x)} for x in
+                                                   statistics_tickets_users]]),
                                               "statistics_tickets_deps": json.dumps(
-                                                  [{"pk": -1, "title": 'Не выбрано подразделение'},
+                                                  [{"pk": -1, "title": 'Подразделение не выбрано'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
                                                     statistics_tickets_deps]])
                                               })

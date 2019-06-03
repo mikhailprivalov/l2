@@ -344,9 +344,35 @@
            margin-top="50px"
            show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto">
       <span slot="header">Слот {{slot.id}}</span>
-      <div slot="body" style="min-height: 140px" class="registry-body">
+      <div slot="body" style="min-height: 200px;background-color: #fff" class="registry-body">
         <div class="text-center" v-if="Object.keys(slot.data).length === 0">загрузка...</div>
-        <div class="text-center" v-else>{{JSON.stringify(slot.data)}}</div>
+        <div class="text-left" v-else>
+          <h3 style="margin-top: 0;">Талон № {{slot.data.pk}}</h3>
+          <h5>{{slot.data.datetime}}</h5>
+          РМИС UID пациента: <a :href="`/mainmenu/directions?rmis_uid=${slot.data.patient_uid}`"
+                                target="_blank">{{slot.data.patient_uid}}</a><br/>
+          <div v-if="!slot.data.direction">Нет связанного назначения. Выберите ниже:</div>
+          <div v-else>Выбранное назначение для талона:</div>
+          <div class="content-picker">
+            <research-pick :class="{ active: row.pk === slot.data.direction_service }" :research="row"
+                           @click.native="select_research(row.pk)"
+                           class="research-select"
+                           v-for="row in user_services"
+                           v-if="!slot.data.direction || row.pk === slot.data.direction_service"/>
+            <div v-if="user_services.length === 0">нет данных</div>
+          </div>
+          <div class="text-center" style="margin-top: 10px;">
+            <button @click="fill_slot"
+                    :disabled="slot.data.direction_service === -1"
+                    v-if="!slot.data.direction"
+                    class="btn btn-primary-nb btn-blue-nb" type="button">
+              Сохранить назначение и заполнить протокол
+            </button>
+            <button @click="open_fill_slot" v-else class="btn btn-primary-nb btn-blue-nb" type="button">
+              Перейти к протоколу
+            </button>
+          </div>
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
@@ -381,17 +407,19 @@
   import SelectedResearches from './SelectedResearches'
   import {mapGetters} from 'vuex'
   import users_point from './api/user-point'
+  import ResearchPick from './ResearchPick'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg},
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick
+    },
     data() {
       return {
         pk: '',
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
-        td: moment().subtract(3, 'days'),
+        td: moment().add(1, 'days'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -429,6 +457,16 @@
         },
         immediate: true,
       },
+      has_loc: {
+        async handler(h) {
+          if (h) {
+            await this.$store.dispatch(action_types.INC_LOADING)
+            await this.$store.dispatch(action_types.GET_RESEARCHES)
+            await this.$store.dispatch(action_types.DEC_LOADING)
+          }
+        },
+        immediate: true,
+      }
     },
     mounted() {
       let vm = this
@@ -750,6 +788,29 @@
         this.slot.id = null;
         this.slot.data = {};
       },
+      async fill_slot() {
+        let s = '';
+        for (const r of this.user_services) {
+          if (r.pk === this.slot.data.direction_service) {
+            s = r.title;
+            break;
+          }
+        }
+        try {
+          await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`);
+          await this.$store.dispatch(action_types.INC_LOADING)
+          let card_pk = -1;
+          const cards = await patients_point.searchCard(this.internal_base, this.slot.data.patient_uid, false, true);
+          const {direction} = await users_point.fillSlot({...this.slot, card_pk});
+          await this.$store.dispatch(action_types.DEC_LOADING)
+          this.open_fill_slot(direction);
+        } catch (_) {
+          await this.$store.dispatch(action_types.DEC_LOADING)
+        }
+      },
+      open_fill_slot(direction) {
+        this.load_pk(direction)
+      },
       template_fields_values(row, dataTemplate, title) {
         this.$dialog.alert(title, {
           view: 'replace-append-modal',
@@ -809,7 +870,13 @@
           }
         }
         field.value += add_val
-      }
+      },
+      select_research(pk) {
+        if (this.slot.data.direction) {
+          return
+        }
+        this.slot.data.direction_service = pk
+      },
     },
     computed: {
       date_to_form() {
@@ -846,12 +913,36 @@
       },
       ...mapGetters({
         user_data: 'user_data',
+        researches: 'researches',
+        bases: 'bases',
       }),
+      internal_base() {
+        for (let b of this.bases) {
+          if (b.internal_type) {
+            return b.pk
+          }
+        }
+        return -1
+      },
       has_loc() {
         if (!this.user_data || !this.rmis_queue) {
           return false
         }
         return !!this.user_data.rmis_location
+      },
+      user_services() {
+        if (!this.user_data || !this.user_data.user_services) {
+          return []
+        }
+        const r = [{pk: -1, title: 'Не выбрано', full_title: 'Не выбрано'}]
+        for (const d of Object.keys(this.researches)) {
+          for (const row of (this.$store.getters.researches[d] || [])) {
+            if (this.user_data.user_services.includes(row.pk)) {
+              r.push(row)
+            }
+          }
+        }
+        return r
       },
     }
   }
@@ -1354,6 +1445,44 @@
 
     &-2 {
       color: #049372;
+    }
+  }
+
+  .content-picker {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-items: stretch;
+    align-content: flex-start;
+  }
+
+  .research-select {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 1px 2px 1px;
+    color: #000;
+    background-color: #fff;
+    text-decoration: none;
+    transition: .15s linear all;
+    margin: 0;
+    font-size: 12px;
+    min-width: 0;
+    flex: 0 1 auto;
+    width: 25%;
+    height: 34px;
+    border: 1px solid #6C7A89 !important;
+    cursor: pointer;
+    text-align: left;
+    outline: transparent;
+
+    &.active {
+      background: #049372 !important;
+      color: #fff;
+    }
+
+    &:hover {
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
     }
   }
 </style>

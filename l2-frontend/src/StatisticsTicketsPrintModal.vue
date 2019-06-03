@@ -1,6 +1,6 @@
 <template>
   <div class="modal fade" tabindex="-1">
-    <div class="modal-dialog" style="width: 680px">
+    <div class="modal-dialog" style="max-width: 800px;width: 100%">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
@@ -9,16 +9,15 @@
         <div class="modal-body">
           <div class="row">
             <div class="col-xs-5 text-right">
-              <date-range style="width: auto" v-model="date_range"/>
+              <date-selector :date_type.sync="date_type" :values.sync="values"/>
             </div>
             <div class="col-xs-7">
-              <select-picker :val="user" :options="users_list" :func="change_user" :multiple="users.length > 1"
-                             :actions_box="users.length > 1"/>
-              <br/>
-              <div class="text-center">или</div>
-              <select-picker :val="dep" :options="deps_list" :func="change_dep" v-if="deps_list.length > 0" />
-              <div class="text-center text-muted" style="font-size: 70%">
-                при выборе подразделения выбор пользователей будет проигнорирован
+              <select-picker :val="user" :options="users_list" :func="change_user"
+                             :disabled="dep !== '-1' && dep !== ''" />
+              <div v-if="deps_list.length > 0">
+                <div class="text-center">или</div>
+                <select-picker :val="dep" :options="deps_list" :func="change_dep"
+                               :disabled="user !== '-1' && user !== ''" />
               </div>
             </div>
           </div>
@@ -44,14 +43,13 @@
 </template>
 
 <script>
-  import moment from 'moment'
-  import DateRange from './ui-cards/DateRange'
+  import DateSelector from './DateSelector.vue'
   import SelectPicker from './SelectPicker'
 
   export default {
     name: 'statistics-tickets-print-modal',
     components: {
-      DateRange,
+      DateSelector,
       SelectPicker
     },
     props: {
@@ -68,7 +66,12 @@
     },
     data() {
       return {
-        date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+        date_type: 'd',
+        values: {
+          date: '',
+          month: '',
+          year: ''
+        },
         user: '-1',
         dep: '-1',
       }
@@ -112,7 +115,7 @@
         this.dep = v
       },
       make_report() {
-        window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify(this.selected_users))}&department=${this.dep}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}`, '_blank')
+        window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}`, '_blank')
       }
     },
   }

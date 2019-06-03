@@ -15,6 +15,7 @@ urlpatterns = [
     path('user-save', views.user_save_view),
     path('user-location', views.user_location),
     path('user-get-reserve', views.user_get_reserve),
+    path('user-fill-slot', views.user_fill_slot),
     path('statistics-tickets/types', views.statistics_tickets_types),
     path('statistics-tickets/send', views.statistics_tickets_send),
     path('statistics-tickets/get', views.statistics_tickets_get),
