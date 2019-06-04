@@ -880,8 +880,7 @@
     },
     computed: {
       date_to_form() {
-        const date = `"${this.date}"`;
-        return date;
+        return `"${this.date}"`;
       },
       ca() {
         if (this.new_anamnesis !== null) {
