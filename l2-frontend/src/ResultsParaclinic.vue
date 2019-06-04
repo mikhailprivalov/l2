@@ -880,8 +880,6 @@
     },
     computed: {
       date_to_form() {
-        // const date = this.date.split('.');
-        // return date.join('')
         const date = '"' + this.date +'"';
         return date;
       },
