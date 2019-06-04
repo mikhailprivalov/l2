@@ -880,8 +880,10 @@
     },
     computed: {
       date_to_form() {
-        const date = this.date.split('.');
-        return date.join('');
+        // const date = this.date.split('.');
+        // return date.join('')
+        const date = '"' + this.date +'"';
+        return date;
       },
       ca() {
         if (this.new_anamnesis !== null) {
