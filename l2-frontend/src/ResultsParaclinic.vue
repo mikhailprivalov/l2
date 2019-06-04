@@ -880,7 +880,7 @@
     },
     computed: {
       date_to_form() {
-        const date = '"' + this.date +'"';
+        const date = `"${this.date}"`;
         return date;
       },
       ca() {
