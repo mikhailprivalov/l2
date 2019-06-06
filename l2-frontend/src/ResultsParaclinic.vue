@@ -99,11 +99,19 @@
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
             <div>Карта: {{data.patient.card}}
-              <a title="Анамнез жизни"
-                 href="#"
+              <a href="#"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-anamnesis' }"
+                 @show="load_anamnesis"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <div id="template-anamnesis" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Анамнез жизни</strong><br/>
+                <span v-if="anamnesis_loading">загрузка...</span>
+                <pre v-else
+                     style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
+                >{{anamnesis_data.text || 'нет данных'}}</pre>
+              </div>
               <a style="margin-left: 3px"
                  href="#"
                  v-if="data.card_internal && data.has_doc_referral"
@@ -123,12 +131,23 @@
                 </ul>
               </div>
               <a style="margin-left: 3px"
-                 title="Льготы пациента"
-                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
                  href="#"
+                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-benefit' }"
+                 @show="load_benefit_rows"
                  @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
+              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Льготы пациента</strong><br/>
+                <span v-if="benefit_rows_loading">загрузка...</span>
+                <ul v-else style="padding-left: 25px;text-align: left">
+                  <li v-for="r in benefit_rows">
+                    {{r.benefit}} – {{r.date_start}} – {{r.registration_basis}}
+                  </li>
+                  <li v-if="benefit_rows.length === 0">нет активных записей</li>
+                </ul>
+              </div>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -490,12 +509,17 @@
         changed: false,
         inserted: false,
         anamnesis_edit: false,
-        anamnesis_data: {},
+        anamnesis_data: {
+          text: '',
+        },
+        anamnesis_loading: false,
         new_anamnesis: null,
         research_open_history: null,
         research_history: [],
         templates: {},
         benefit: false,
+        benefit_rows_loading: false,
+        benefit_rows: [],
         dreg: false,
         dreg_rows_loading: false,
         dreg_rows: [],
@@ -549,6 +573,7 @@
         this.dreg = false;
       })
       this.$root.$on('hide_benefit', () => {
+        this.load_benefit_rows();
         this.benefit = false;
       })
     },
@@ -564,6 +589,21 @@
           this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
           this.data.patient.has_dreg = this.dreg_rows.length > 0
           this.dreg_rows_loading = false;
+        })().then();
+      },
+      load_benefit_rows() {
+        (async() => {
+          this.benefit_rows_loading = true;
+          this.benefit_rows = (await patients_point.loadBenefit(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.data.patient.has_benefit = this.benefit_rows.length > 0
+          this.benefit_rows_loading = false;
+        })().then();
+      },
+      load_anamnesis() {
+        (async() => {
+          this.anamnesis_loading = true
+          this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient.card_pk)
+          this.anamnesis_loading = false
         })().then();
       },
       change_mkb(row, field) {
@@ -708,7 +748,9 @@
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
             this.dreg_rows_loading = false;
+            this.benefit_rows_loading = false;
             this.dreg_rows = [];
+            this.benefit_rows = [];
             vm.pk = ''
             vm.data = data
             vm.changed = false
@@ -833,6 +875,8 @@
         this.research_open_history = null;
         this.dreg_rows_loading = false;
         this.dreg_rows = [];
+        this.benefit_rows_loading = false;
+        this.benefit_rows = [];
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
