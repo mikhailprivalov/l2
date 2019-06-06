@@ -41,7 +41,8 @@ def directions_generate(request):
                                                             p.get("rmis_data", {}),
                                                             vich_code=p.get("vich_code", ""),
                                                             count=p.get("count", 1),
-                                                            discount=p.get("discount", 0))
+                                                            discount=p.get("discount", 0),
+                                                            parent_iss=p.get("parent_iss", None))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:
@@ -56,11 +57,14 @@ def directions_history(request):
 
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
+    iss_pk = request_data.get("iss_pk", None)
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     try:
-        if pk >= 0 or req_status == 4:
-            if req_status != 4:
+        if pk >= 0 or req_status == 4 or iss_pk:
+            if iss_pk:
+                rows = Napravleniya.objects.filter(parent_id=iss_pk).order_by("data_sozdaniya").prefetch_related()
+            elif req_status != 4:
                 rows = Napravleniya.objects.filter(data_sozdaniya__range=(date_start, date_end),
                                                    client__pk=pk).order_by(
                     "-data_sozdaniya").prefetch_related()
@@ -102,7 +106,7 @@ def directions_history(request):
                     status = min(iss_status, status)
                 if status == 2 and not has_conf:
                     status = 1
-                if req_status in [3, 4] or req_status == status:
+                if req_status in [3, 4] or req_status == status or iss_pk:
                     res["directions"].append(
                         {"pk": napr["pk"], "status": -1 if status == 0 and napr["cancel"] else status,
                          "researches": ' | '.join(researches_list),
@@ -640,13 +644,16 @@ def directions_paraclinic_form(request):
                 "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
+                "base": d.client.base_id,
             }
             response["direction"] = {
                 "pk": d.pk,
                 "date": strdate(d.data_sozdaniya),
                 "diagnos": d.diagnos,
-                "fin_source": "" if not d.istochnik_f else d.istochnik_f.title
+                "fin_source": "" if not d.istochnik_f else d.istochnik_f.title,
+                "fin_source_id": d.istochnik_f_id,
             }
+
             response["researches"] = []
             for i in df:
                 if i.research.is_doc_refferal:
@@ -673,8 +680,18 @@ def directions_paraclinic_form(request):
                                                     ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                 str(x) for x in
                                                 request.user.groups.all()]) and i.time_confirmation is not None,
-                    "more": [x.research.pk for x in Issledovaniya.objects.filter(parent=i)]
+                    "more": [x.research.pk for x in Issledovaniya.objects.filter(parent=i)],
+                    "sub_directions": [],
                 }
+
+                for sd in Napravleniya.objects.filter(parent=i):
+                    iss["sub_directions"].append({
+                        "pk": sd.pk,
+                        "cancel": sd.cancel,
+                        "researches": [
+                            x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)
+                        ],
+                    })
 
                 if iss["research"]["is_doc_refferal"]:
                     iss = {

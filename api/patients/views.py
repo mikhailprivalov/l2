@@ -662,7 +662,9 @@ def save_benefit(request):
             a.benefit_id = d["benefit_id"]
             c = True
 
-    Log.log(pk, 50000 if n else 50001, request.user.doctorprofile, rd)
+    Log.log(pk, 50000 if n else 50001, request.user.doctorprofile, {**rd, "data": {
+        **{k: v for k, v in rd["data"].items() if k not in ['types']}
+    }})
 
     def fd(s):
         if '.' in s:

@@ -99,11 +99,19 @@
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
             <div>Карта: {{data.patient.card}}
-              <a title="Анамнез жизни"
-                 href="#"
+              <a href="#"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-anamnesis' }"
+                 @show="load_anamnesis"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <div id="template-anamnesis" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Анамнез жизни</strong><br/>
+                <span v-if="anamnesis_loading">загрузка...</span>
+                <pre v-else
+                     style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
+                >{{anamnesis_data.text || 'нет данных'}}</pre>
+              </div>
               <a style="margin-left: 3px"
                  href="#"
                  v-if="data.card_internal && data.has_doc_referral"
@@ -123,12 +131,23 @@
                 </ul>
               </div>
               <a style="margin-left: 3px"
-                 title="Льготы пациента"
-                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
                  href="#"
+                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-benefit' }"
+                 @show="load_benefit_rows"
                  @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
+              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Льготы пациента</strong><br/>
+                <span v-if="benefit_rows_loading">загрузка...</span>
+                <ul v-else style="padding-left: 25px;text-align: left">
+                  <li v-for="r in benefit_rows">
+                    {{r.benefit}} – {{r.date_start}} – {{r.registration_basis}}
+                  </li>
+                  <li v-if="benefit_rows.length === 0">нет активных записей</li>
+                </ul>
+              </div>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -308,6 +327,22 @@
               </div>
             </div>
           </div>
+          <div class="group">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
@@ -345,6 +380,42 @@
           <div class="col-xs-4">
             <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
               Сохранить
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
+    <modal @close="hide_modal_create_directions" margin-top marginLeftRight="auto"
+           max-width="1400px" ref="modalCD" show-footer="true" v-if="create_directions_for > -1" white-bg="true" width="100%">
+      <span slot="header">Создание направлений – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+      <div class="registry-body" slot="body" style="min-height: 140px">
+        <div class="row">
+          <div class="col-xs-6"
+               style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <researches-picker v-model="create_directions_data"
+              kk="cd" style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"/>
+          </div>
+          <div class="col-xs-6" style="height: 450px;padding-left: 0;">
+            <selected-researches
+              kk="cd"
+              :base="bases_obj[data.patient.base]"
+              :researches="create_directions_data"
+              :main_diagnosis="create_directions_diagnosis"
+              :valid="true"
+              :card_pk="data.patient.card_pk"
+              :initial_fin="data.direction.fin_source_id"
+              :parent_iss="create_directions_for"
+              :clear_after_gen="true"
+              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+            />
+          </div>
+        </div>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Закрыть
             </button>
           </div>
         </div>
@@ -420,11 +491,12 @@
   import users_point from './api/user-point'
   import ResearchPick from './ResearchPick'
   import Benefit from './Benefit'
+  import DirectionsHistory from './DirectionsHistory'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit,
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory,
     },
     data() {
       return {
@@ -437,12 +509,17 @@
         changed: false,
         inserted: false,
         anamnesis_edit: false,
-        anamnesis_data: {},
+        anamnesis_data: {
+          text: '',
+        },
+        anamnesis_loading: false,
         new_anamnesis: null,
         research_open_history: null,
         research_history: [],
         templates: {},
         benefit: false,
+        benefit_rows_loading: false,
+        benefit_rows: [],
         dreg: false,
         dreg_rows_loading: false,
         dreg_rows: [],
@@ -455,6 +532,9 @@
           id: null,
           data: {},
         },
+        create_directions_for: -1,
+        create_directions_data: [],
+        create_directions_diagnosis: '',
       }
     },
     watch: {
@@ -493,6 +573,7 @@
         this.dreg = false;
       })
       this.$root.$on('hide_benefit', () => {
+        this.load_benefit_rows();
         this.benefit = false;
       })
     },
@@ -508,6 +589,21 @@
           this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
           this.data.patient.has_dreg = this.dreg_rows.length > 0
           this.dreg_rows_loading = false;
+        })().then();
+      },
+      load_benefit_rows() {
+        (async() => {
+          this.benefit_rows_loading = true;
+          this.benefit_rows = (await patients_point.loadBenefit(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.data.patient.has_benefit = this.benefit_rows.length > 0
+          this.benefit_rows_loading = false;
+        })().then();
+      },
+      load_anamnesis() {
+        (async() => {
+          this.anamnesis_loading = true
+          this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient.card_pk)
+          this.anamnesis_loading = false
         })().then();
       },
       change_mkb(row, field) {
@@ -652,7 +748,9 @@
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
             this.dreg_rows_loading = false;
+            this.benefit_rows_loading = false;
             this.dreg_rows = [];
+            this.benefit_rows = [];
             vm.pk = ''
             vm.data = data
             vm.changed = false
@@ -663,6 +761,16 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      hide_modal_create_directions() {
+        this.$refs.modalCD.$el.style.display = 'none'
+        this.create_directions_for = -1
+        this.create_directions_data = []
+        this.create_directions_diagnosis = ''
+      },
+      create_directions(iss) {
+        this.create_directions_diagnosis = iss.diagnos
+        this.create_directions_for = iss.pk
       },
       save(iss) {
         this.hide_results();
@@ -767,6 +875,8 @@
         this.research_open_history = null;
         this.dreg_rows_loading = false;
         this.dreg_rows = [];
+        this.benefit_rows_loading = false;
+        this.benefit_rows = [];
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
@@ -938,6 +1048,12 @@
           }
         }
         return -1
+      },
+      bases_obj() {
+        return this.bases.reduce((a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }), {})
       },
       has_loc() {
         if (!this.user_data || !this.rmis_queue) {
@@ -1295,7 +1411,7 @@
     color: #049372
   }
 
-  .direction {
+  .direction, .sd {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;

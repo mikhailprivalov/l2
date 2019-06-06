@@ -1,6 +1,8 @@
 import {HTTP} from '../http-common'
 
-async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_pk, researches, comments, for_rmis, rmis_data, vich_code, count, discount) {
+async function sendDirections(card_pk, diagnos, fin_source, history_num,
+                              ofname_pk, researches, comments, for_rmis,
+                              rmis_data, vich_code, count, discount, parent_iss) {
   try {
     const response = await HTTP.post('directions/generate', {
       card_pk,
@@ -15,6 +17,7 @@ async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_
       vich_code,
       count,
       discount,
+      parent_iss,
     })
     if (response.statusText === 'OK') {
       return response.data
@@ -24,13 +27,14 @@ async function sendDirections(card_pk, diagnos, fin_source, history_num, ofname_
   return {ok: false, directions: [], message: ''}
 }
 
-async function getHistory(type, patient, date_from, date_to) {
+async function getHistory(type, patient, date_from, date_to, iss_pk) {
   try {
     const response = await HTTP.post('directions/history', {
       type,
       patient,
       date_from,
-      date_to
+      date_to,
+      iss_pk,
     })
     if (response.statusText === 'OK') {
       return response.data
