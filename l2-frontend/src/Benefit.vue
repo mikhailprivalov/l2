@@ -10,11 +10,11 @@
       <table class="table table-bordered table-condensed table-sm-pd"
              style="table-layout: fixed; font-size: 12px">
         <colgroup>
-          <col width="100"/>
+          <col width="130"/>
           <col/>
           <col/>
           <col/>
-          <col width="45"/>
+          <col width="45" v-if="!readonly"/>
         </colgroup>
         <thead>
         <tr>
@@ -22,7 +22,7 @@
           <th>Основание</th>
           <th>Постановка на льготу</th>
           <th>Снятие со льготы</th>
-          <th></th>
+          <th v-if="!readonly"></th>
         </tr>
         </thead>
         <tbody>
@@ -31,7 +31,7 @@
           <td>{{r.registration_basis}}</td>
           <td>{{r.doc_start_reg}}<br/>{{r.date_start}}</td>
           <td>{{r.doc_end_reg}}<br v-if="!!r.date_end"/>{{r.date_end}}</td>
-          <td>
+          <td v-if="!readonly">
             <button @click="edit(r.pk)" class="btn last btn-blue-nb nbr"
                     style="margin-left: -1px"
                     title="Редактирование" type="button" v-tippy="{ placement : 'bottom', arrow: true }">
@@ -41,7 +41,7 @@
         </tr>
         </tbody>
       </table>
-      <div style="margin: 0 auto; width: 200px">
+      <div style="margin: 0 auto; width: 200px" v-if="!readonly">
         <button @click="edit(-1)"
                 class="btn btn-primary-nb btn-blue-nb"
                 type="button"><i class="fa fa-plus"></i> Создать запись
@@ -53,7 +53,7 @@
         <span slot="header" v-else>Создание льготы</span>
         <div class="registry-body" slot="body" style="min-height: 200px;padding: 10px">
           <div class="form-group">
-            <label>Вид льготы</label>
+            <label>Вид льготы:</label>
             <select :readonly="edit_data.close" class="form-control" v-model="edit_data.benefit_id">
               <option :value="x.pk" v-for="x in edit_data.types">{{x.title}}</option>
             </select>
@@ -63,9 +63,10 @@
             <input :max="td" :readonly="edit_data.close" class="form-control" id="de-f3" type="date"
                    v-model="edit_data.date_start">
           </div>
-          <div class="form-group" v-if="edit_data.close">
+          <div class="form-group">
             <label for="de-f6">Основание:</label>
-            <textarea class="form-control" id="de-f6" v-model="edit_data.registration_basis"></textarea>
+            <textarea class="form-control" id="de-f6" :readonly="edit_data.close"
+                      v-model="edit_data.registration_basis"></textarea>
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
@@ -126,19 +127,17 @@
         type: Object,
         required: true,
       },
+      readonly: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
     },
     data() {
       return {
         td: moment().format('YYYY-MM-DD'),
         rows: [],
-        edit_data: {
-          date_start: '',
-          date_end: '',
-          why_stop: '',
-          close: false,
-          diagnos: '',
-          illnes: '',
-        },
+        edit_data: {},
         edit_pk: -2,
       }
     },
@@ -148,8 +147,8 @@
     computed: {
       valid_reg() {
         return this.edit_pk > -2 &&
-          this.edit_data.diagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?.*/gm) &&
           this.edit_data.date_start !== '' &&
+          this.edit_data.registration_basis !== '' &&
           (!this.edit_data.close || this.edit_data.date_end !== '')
       }
     },
@@ -159,6 +158,7 @@
         this.edit_data = {
           ...this.edit_data,
           ...d,
+          date_start: d.date_start || this.td,
           date_end: d.date_end || this.td,
         }
         this.edit_pk = pk
@@ -173,7 +173,7 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.saveDreg(this.card_pk, this.edit_pk, this.edit_data)
+        const data = await patients_point.saveBenefit(this.card_pk, this.edit_pk, this.edit_data)
         this.$store.dispatch(action_types.DEC_LOADING).then()
         okmessage('Сохранено')
         this.hide_edit()

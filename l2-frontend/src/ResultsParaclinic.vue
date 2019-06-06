@@ -122,6 +122,13 @@
                   <li v-if="dreg_rows.length === 0">нет активных записей</li>
                 </ul>
               </div>
+              <a style="margin-left: 3px"
+                 title="Льготы пациента"
+                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
+                 href="#"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -388,6 +395,7 @@
       </div>
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
+    <benefit :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="benefit" :readonly="true" />
   </div>
 </template>
 
@@ -411,11 +419,12 @@
   import {mapGetters} from 'vuex'
   import users_point from './api/user-point'
   import ResearchPick from './ResearchPick'
+  import Benefit from './Benefit'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit,
     },
     data() {
       return {
@@ -433,6 +442,7 @@
         research_open_history: null,
         research_history: [],
         templates: {},
+        benefit: false,
         dreg: false,
         dreg_rows_loading: false,
         dreg_rows: [],
@@ -481,6 +491,9 @@
       this.$root.$on('hide_dreg', () => {
         this.load_dreg_rows();
         this.dreg = false;
+      })
+      this.$root.$on('hide_benefit', () => {
+        this.benefit = false;
       })
     },
     methods: {
