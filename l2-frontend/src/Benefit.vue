@@ -53,27 +53,28 @@
         <span slot="header" v-else>Создание льготы</span>
         <div class="registry-body" slot="body" style="min-height: 200px;padding: 10px">
           <div class="form-group">
-            <label for="de-f3">Дата начала:</label>
+            <label>Вид льготы</label>
+            <select :readonly="edit_data.close" class="form-control" v-model="edit_data.benefit_id">
+              <option :value="x.pk" v-for="x in edit_data.types">{{x.title}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="de-f3">Дата постановки на льготу:</label>
             <input :max="td" :readonly="edit_data.close" class="form-control" id="de-f3" type="date"
                    v-model="edit_data.date_start">
           </div>
-          <div class="form-group mkb10" style="width: 100%">
-            <label>Диагноз в полной форме (код по МКБ и название):</label>
-            <m-k-bfield :short="false" v-if="!edit_data.close" v-model="edit_data.diagnos"/>
-            <input class="form-control" readonly v-else v-model="edit_data.diagnos">
+          <div class="form-group" v-if="edit_data.close">
+            <label for="de-f6">Основание:</label>
+            <textarea class="form-control" id="de-f6" v-model="edit_data.registration_basis"></textarea>
           </div>
           <div class="checkbox" style="padding-left: 15px;">
             <label>
-              <input type="checkbox" v-model="edit_data.close"> прекращён
+              <input type="checkbox" v-model="edit_data.close"> снят с льготы
             </label>
           </div>
           <div class="form-group" v-if="edit_data.close">
-            <label for="de-f5">Дата прекращения:</label>
+            <label for="de-f5">Дата снятия:</label>
             <input :min="td" class="form-control" id="de-f5" type="date" v-model="edit_data.date_end">
-          </div>
-          <div class="form-group" v-if="edit_data.close">
-            <label for="de-f6">Причина прекращения:</label>
-            <input class="form-control" id="de-f6" v-model="edit_data.why_stop">
           </div>
         </div>
         <div slot="footer">

@@ -568,7 +568,7 @@ def load_benefit_detail(request):
         "types": [
             {"pk": -1, "title": 'Не выбрано'},
             *[
-                str(x) for x in BenefitType.objects.filter(hide=False).order_by('pk')
+                {"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')
             ]
         ],
         **data,
