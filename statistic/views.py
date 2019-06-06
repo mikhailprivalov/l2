@@ -818,17 +818,60 @@ def statistic_xls(request):
         return response
 
     elif tp == "statistics-research":
-        pk = request_data.get("pk", "")
-        tp = request_data.get("type", "")
-        date_start_o = request_data.get("date-start", "")
-        date_end_o = request_data.get("date-end", "")
-
-
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
-        wb.save(response)
-        return response
+        pk = request_data.get("pk", "")
+        pk = int(pk)
+        date_start_o = request_data.get("date-start")
+        date_start_o = json.loads(date_start_o)
+        date_end_o = request_data.get("date-end")
+        date_end_o = json.loads(date_end_o)
 
+        from openpyxl.styles import Font, NamedStyle
+        style_o = NamedStyle(name="style_o")
+        style_o.font = Font(bold=True, size=11)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        wb.add_named_style(style_o)
+        ws = wb.create_sheet("Отчет")
+        from openpyxl.utils.cell import get_column_letter
+        col = 1
+        ws.column_dimensions[get_column_letter(1)].width = 15
+        ws.cell(row=1, column=1).value = 'Дата рождения'
+        ws.cell(row=1, column=1).style = style_o
+        ws.column_dimensions[get_column_letter(col + 1)].width = 8
+        ws.cell(row=1, column=(col+1)).value = 'Возраст'
+        ws.cell(row=1, column=(col+1)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 2)].width = 35
+        ws.cell(row=1, column=(col + 2)).value = 'Физлицо'
+        ws.cell(row=1, column=(col + 2)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 3)].width = 35
+        ws.cell(row=1, column=(col + 3)).value = 'Исследование'
+        ws.cell(row=1, column=(col + 3)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 4)].width = 35
+        ws.cell(row=1, column=(col + 4)).value = 'Дата подтверждения'
+        ws.cell(row=1, column=(col + 4)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 5)].width = 20
+        ws.cell(row=1, column=(col + 5)).value = 'Карта'
+        ws.cell(row=1, column=(col + 5)).style = style_o
 
+        import datetime
+        res_o = Researches.objects.get(pk=pk)
+        d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d_e = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        list_o = Issledovaniya.objects.select_related('napravleniye__client').filter(time_confirmation__date__range=(d_s, d_e), research=res_o,
+                napravleniye__isnull=False).order_by('time_confirmation')
+
+        r = 1
+        for i in list_o:
+            r = r + 1
+            patient_data = i.napravleniye.client.get_data_individual()
+            date_o = utils.strfdatetime(i.time_confirmation, "%d.%m.%Y")
+            ws.cell(row=r, column=1).value = patient_data['born']
+            ws.cell(row=r, column=col + 1).value = patient_data['age']
+            ws.cell(row=r, column=col + 2).value = patient_data['fio']
+            ws.cell(row=r, column=col + 3).value = res_o.title
+            ws.cell(row=r, column=col + 4).value = date_o
+            ws.cell(row=r, column=col + 5).value = patient_data['card_num']
 
     elif tp == "journal-get-material":
         import datetime
