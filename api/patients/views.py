@@ -12,7 +12,7 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 
 from clients.models import CardBase, Individual, Card, Document, DocumentType, District, AnamnesisHistory, \
-    DispensaryReg, CardDocUsage
+    DispensaryReg, CardDocUsage, BenefitReg, BenefitType
 from contracts.models import Company
 from laboratory import settings
 from laboratory.utils import strdate
@@ -515,6 +515,24 @@ def load_dreg(request):
     return JsonResponse({"rows": data})
 
 
+def load_benefit(request):
+    request_data = json.loads(request.body)
+    data = []
+    for a in BenefitReg.objects.filter(card__pk=request_data["card_pk"]).order_by('date_start', 'pk'):
+        data.append({
+            "pk": a.pk,
+            "benefit": str(a.benefit),
+            "registration_basis": a.registration_basis,
+            "doc_start_reg": '' if not a.doc_start_reg else a.doc_start_reg.get_fio(),
+            "doc_start_reg_id": a.doc_start_reg_id,
+            "date_start": '' if not a.date_start else strdate(a.date_start),
+            "doc_end_reg": '' if not a.doc_end_reg else a.doc_end_reg.get_fio(),
+            "doc_end_reg_id": a.doc_end_reg_id,
+            "date_end": '' if not a.date_end else strdate(a.date_end),
+        })
+    return JsonResponse({"rows": data})
+
+
 def load_dreg_detail(request):
     a = DispensaryReg.objects.get(pk=json.loads(request.body)["pk"])
     data = {
@@ -525,6 +543,36 @@ def load_dreg_detail(request):
         "why_stop": a.why_stop,
     }
     return JsonResponse(data)
+
+
+def load_benefit_detail(request):
+    pk = json.loads(request.body)["pk"]
+    if pk > -1:
+        a = BenefitReg.objects.get(pk=pk)
+        data = {
+            "benefit_id": a.benefit_id,
+            "registration_basis": a.registration_basis,
+            "date_start": '' if not a.date_start else strdate(a.date_start),
+            "date_end": '' if not a.date_end else strdate(a.date_end),
+            "close": bool(a.date_end),
+        }
+    else:
+        data = {
+            "benefit_id": -1,
+            "registration_basis": "",
+            "date_start": '',
+            "date_end": '',
+            "close": False,
+        }
+    return JsonResponse({
+        "types": [
+            {"pk": -1, "title": 'Не выбрано'},
+            *[
+                str(x) for x in BenefitType.objects.filter(hide=False).order_by('pk')
+            ]
+        ],
+        **data,
+    })
 
 
 @transaction.atomic

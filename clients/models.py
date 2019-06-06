@@ -857,15 +857,18 @@ class Phones(models.Model):
 class BenefitType(models.Model):
     TYPES = (
         (0, ''),
-        (1, 'Federal'),
-        (2, 'Region'),
-        (3, 'Municipal'),
-        (3, 'VZN'),
+        (1, 'Федеральная'),
+        (2, 'Региональная'),
+        (3, 'Муниципальная'),
+        (4, 'ВЗН'),
     )
 
     title = models.CharField(max_length=255, help_text='Каегория льготы')
     hide = models.BooleanField(help_text="Скрыть категорию", default=False)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
+
+    def __str__(self):
+        return "{} – {}".format(self.get_field_type_display(), self.title)
 
     class Meta:
         verbose_name = 'Категория льготы'
@@ -877,9 +880,10 @@ class BenefitReg(models.Model):
     Учет пациентов по льготам, стоящим на текущий момент
     """
     card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
-    benefit = models.ForeignKey(BenefitType, related_name='benefit', help_text="Льгота", db_index=True, on_delete=models.CASCADE)
-    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_benefit', default=None, blank=True, null=True,
-                                      db_index=True, help_text='Лечащий врач кто поставил на льготу',
+    benefit = models.ForeignKey(BenefitType, related_name='benefit', help_text="Льгота", db_index=True,
+                                on_delete=models.CASCADE)
+    doc_start_reg = models.ForeignKey(DoctorProfile, related_name='doc_start_benefit', default=None, blank=True,
+                                      null=True, db_index=True, help_text='Лечащий врач кто поставил на льготу',
                                       on_delete=models.CASCADE)
     date_start = models.DateField(help_text='Дата постановки на Льготу', db_index=True, default=None, blank=True,
                                   null=True)
@@ -887,7 +891,7 @@ class BenefitReg(models.Model):
                                     db_index=True, help_text='Лечащий врач, кто снял с льготы',
                                     on_delete=models.CASCADE)
     date_end = models.DateField(help_text='Дата сняти с льготы', db_index=True, default=None, blank=True, null=True)
-    receipt = models.TextField(default="", blank=True)
+    registration_basis = models.TextField(default="", blank=True)
 
 
 class Reception(models.Model):
