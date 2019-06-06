@@ -241,8 +241,23 @@ async function saveDreg(card_pk, pk, data) {
   return {}
 }
 
+async function saveBenefit(card_pk, pk, data) {
+  try {
+    const response = await HTTP.post('patients/individuals/save-benefit', {
+      data,
+      card_pk,
+      pk,
+    })
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 export default {searchCard, searchIndividual, searchL2Card, syncRmis,
   getCard, sendCard, individualsSearch, individualSex, editDoc, updateCdu, updateWIA,
   editAgent, loadAnamnesis, saveAnamnesis, loadDreg, saveDreg, loadDregDetail,
-  loadBenefit, loadBenefitDetail,
+  loadBenefit, loadBenefitDetail, saveBenefit,
 }

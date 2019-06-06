@@ -10,7 +10,7 @@ from django.utils import dateformat, timezone
 
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
-from clients.models import Card, Individual, DispensaryReg
+from clients.models import Card, Individual, DispensaryReg, BenefitReg
 from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
@@ -636,6 +636,7 @@ def directions_paraclinic_form(request):
                 "card": d.client.number_with_type(),
                 "card_pk": d.client.pk,
                 "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
+                "has_benefit": BenefitReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,

@@ -15,7 +15,7 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate
+from laboratory.utils import strdate, strdateiso
 from rmis_integration.client import Client
 from slog.models import Log
 
@@ -552,8 +552,8 @@ def load_benefit_detail(request):
         data = {
             "benefit_id": a.benefit_id,
             "registration_basis": a.registration_basis,
-            "date_start": '' if not a.date_start else strdate(a.date_start),
-            "date_end": '' if not a.date_end else strdate(a.date_end),
+            "date_start": '' if not a.date_start else a.date_start,
+            "date_end": '' if not a.date_end else a.date_end,
             "close": bool(a.date_end),
         }
     else:
@@ -568,7 +568,7 @@ def load_benefit_detail(request):
         "types": [
             {"pk": -1, "title": 'Не выбрано'},
             *[
-                str(x) for x in BenefitType.objects.filter(hide=False).order_by('pk')
+                {"pk": x.pk, "title": str(x)} for x in BenefitType.objects.filter(hide=False).order_by('pk')
             ]
         ],
         **data,
@@ -634,6 +634,63 @@ def save_dreg(request):
     if a.diagnos != ds or a.illnes != i:
         a.diagnos = ds
         a.illnes = i
+        c = True
+
+    if c:
+        a.save()
+
+    return JsonResponse({"ok": True, "pk": pk, "c": c})
+
+
+@transaction.atomic
+def save_benefit(request):
+    rd = json.loads(request.body)
+    d = rd["data"]
+    pk = rd["pk"]
+    n = False
+
+    c = False
+
+    if pk == -1:
+        a = BenefitReg.objects.create(card_id=rd["card_pk"], benefit_id=d["benefit_id"])
+        pk = a.pk
+        n = True
+    else:
+        pk = rd["pk"]
+        a = BenefitReg.objects.get(pk=pk)
+        if a.benefit_id != d["benefit_id"]:
+            a.benefit_id = d["benefit_id"]
+            c = True
+
+    Log.log(pk, 50000 if n else 50001, request.user.doctorprofile, rd)
+
+    def fd(s):
+        if '.' in s:
+            s = s.split('.')
+            s = '{}-{}-{}'.format(s[2], s[1], s[0])
+        return s
+
+    if not a.date_start and d["date_start"] \
+            or str(a.date_start) != fd(d["date_start"]) \
+            or a.doc_start_reg != request.user.doctorprofile:
+        a.date_start = fd(d["date_start"])
+        a.doc_start_reg = request.user.doctorprofile
+        c = True
+
+    if a.registration_basis != d["registration_basis"]:
+        a.registration_basis = d["registration_basis"]
+        c = True
+
+    if not a.date_end and d["close"] \
+            or (d["close"] and a.doc_end_reg != request.user.doctorprofile) \
+            or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+        a.date_end = fd(d["date_end"])
+        a.doc_end_reg = request.user.doctorprofile
+        c = True
+
+    if not d["close"] and a.date_end:
+        a.date_end = None
+        a.doc_end_reg = None
         c = True
 
     if c:

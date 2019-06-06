@@ -20,5 +20,6 @@ urlpatterns = [
     path('individuals/load-dreg-detail', views.load_dreg_detail),
     path('individuals/load-benefit-detail', views.load_benefit_detail),
     path('individuals/save-dreg', views.save_dreg),
+    path('individuals/save-benefit', views.save_benefit),
     path('individuals/save-anamnesis', views.save_anamnesis),
 ]
