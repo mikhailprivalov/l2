@@ -1,6 +1,6 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative">
-    <div class="top-picker">
+  <div style="height: 100%;width: 100%;position: relative" :class="[!!iss_pk && 'no_abs']">
+    <div class="top-picker" v-if="!iss_pk">
       <div style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
       flex: 1;margin: 0;font-size: 12px;width: 87px;color:#fff">
         <span
@@ -32,8 +32,8 @@
           <col width="70">
           <col>
           <col width="65">
-          <col width="150">
-          <col width="28">
+          <col :width="!!iss_pk ? 200 : 150">
+          <col width="28" v-if="!iss_pk">
         </colgroup>
         <thead>
         <tr>
@@ -42,7 +42,7 @@
           <th>Назначения</th>
           <th class="text-center">Статус</th>
           <th></th>
-          <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
+          <th class="nopd" v-if="!iss_pk"><input type="checkbox" v-model="all_checked"/></th>
         </tr>
         </thead>
       </table>
@@ -53,15 +53,15 @@
           <col width="70">
           <col>
           <col width="65">
-          <col width="150">
-          <col width="28">
+          <col :width="!!iss_pk ? 200 : 150">
+          <col width="28" v-if="!iss_pk">
         </colgroup>
         <tbody>
         <tr v-if="directions.length === 0 && is_created">
-          <td class="text-center" colspan="6">Не найдено</td>
+          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Не найдено</td>
         </tr>
         <tr v-if="directions.length === 0 && !is_created">
-          <td class="text-center" colspan="6">Загрузка...</td>
+          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Загрузка...</td>
         </tr>
         <tr v-for="row in directions">
           <td class="text-center">{{row.date}}</td>
@@ -78,12 +78,12 @@
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
-          <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
+          <td class="nopd" v-if="!iss_pk"><input v-model="row.checked" type="checkbox"/></td>
         </tr>
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker">
+    <div class="bottom-picker" v-if="!iss_pk">
       <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
       </div>
       <div class="bottom-inner">
@@ -121,8 +121,18 @@
     props: {
       patient_pk: {
         type: Number,
-        default: -1
-      }
+        default: -1,
+        required: false,
+      },
+      iss_pk: {
+        type: Number,
+        default: null,
+        required: false,
+      },
+      kk: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
@@ -170,9 +180,7 @@
     mounted() {
       this.is_created = true
       this.load_history()
-    },
-    created() {
-      this.$root.$on('researches-picker:directions_created', this.load_history)
+      this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
     },
     methods: {
       show_results(row) {
@@ -247,7 +255,8 @@
         vm.$store.dispatch(action_types.INC_LOADING).then()
         vm.directions = []
         vm.all_checked = false
-        directions_point.getHistory(this.active_type, this.patient_pk, this.date_range[0], this.date_range[1]).then((data) => {
+        directions_point.getHistory(this.active_type, this.patient_pk,
+          this.date_range[0], this.date_range[1], this.iss_pk).then((data) => {
           vm.directions = data.directions
         }).finally(() => {
           vm.is_created = true
@@ -366,6 +375,9 @@
     left: 0;
     right: 0;
     overflow-y: auto;
+    .no_abs & {
+      position: static;
+    }
   }
 
   .bottom-picker {

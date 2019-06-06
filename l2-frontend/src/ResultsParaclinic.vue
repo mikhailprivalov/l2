@@ -308,6 +308,22 @@
               </div>
             </div>
           </div>
+          <div class="group">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
@@ -345,6 +361,42 @@
           <div class="col-xs-4">
             <button @click="save_anamnesis()" class="btn btn-primary-nb btn-blue-nb" type="button">
               Сохранить
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
+    <modal @close="hide_modal_create_directions" margin-top marginLeftRight="auto"
+           max-width="1400px" ref="modalCD" show-footer="true" v-if="create_directions_for > -1" white-bg="true" width="100%">
+      <span slot="header">Создание направлений – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+      <div class="registry-body" slot="body" style="min-height: 140px">
+        <div class="row">
+          <div class="col-xs-6"
+               style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <researches-picker v-model="create_directions_data"
+              kk="cd" style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"/>
+          </div>
+          <div class="col-xs-6" style="height: 450px;padding-left: 0;">
+            <selected-researches
+              kk="cd"
+              :base="bases_obj[data.patient.base]"
+              :researches="create_directions_data"
+              :main_diagnosis="create_directions_diagnosis"
+              :valid="true"
+              :card_pk="data.patient.card_pk"
+              :initial_fin="data.direction.fin_source_id"
+              :parent_iss="create_directions_for"
+              :clear_after_gen="true"
+              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+            />
+          </div>
+        </div>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Закрыть
             </button>
           </div>
         </div>
@@ -420,11 +472,12 @@
   import users_point from './api/user-point'
   import ResearchPick from './ResearchPick'
   import Benefit from './Benefit'
+  import DirectionsHistory from './DirectionsHistory'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit,
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory,
     },
     data() {
       return {
@@ -455,6 +508,9 @@
           id: null,
           data: {},
         },
+        create_directions_for: -1,
+        create_directions_data: [],
+        create_directions_diagnosis: '',
       }
     },
     watch: {
@@ -663,6 +719,16 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      hide_modal_create_directions() {
+        this.$refs.modalCD.$el.style.display = 'none'
+        this.create_directions_for = -1
+        this.create_directions_data = []
+        this.create_directions_diagnosis = ''
+      },
+      create_directions(iss) {
+        this.create_directions_diagnosis = iss.diagnos
+        this.create_directions_for = iss.pk
       },
       save(iss) {
         this.hide_results();
@@ -939,6 +1005,12 @@
           }
         }
         return -1
+      },
+      bases_obj() {
+        return this.bases.reduce((a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }), {})
       },
       has_loc() {
         if (!this.user_data || !this.rmis_queue) {
@@ -1296,7 +1368,7 @@
     color: #049372
   }
 
-  .direction {
+  .direction, .sd {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
