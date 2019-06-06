@@ -574,7 +574,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic or iss.research.is_doc_refferal:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
         maxdate = ""
         if dates != {}:

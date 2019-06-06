@@ -669,9 +669,13 @@ class Issledovaniya(models.Model):
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+    def_uet = models.DecimalField(max_digits=6,null=True, help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True, default=None, decimal_places=3)
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
-
+    co_executor_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
+    co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None,
+                                    null=True, blank=True, on_delete=models.SET_NULL)
+    co_executor2_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
@@ -717,6 +721,22 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+class TypeJob(models.Model):
+    title = models.CharField(max_length=255)
+    hide = models.BooleanField(help_text="Скрыть тип", default=False)
+    value = models.DecimalField(max_digits=5, decimal_places=2,
+                                help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
+
+
+class EmployeeJob(models.Model):
+    type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
+    count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
+    doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
+                                    help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
+    date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
+    time_save = models.DateTimeField(null=True, blank=True, help_text='Время сохранения/корректировки')
 
 
 class ParaclinicResult(models.Model):

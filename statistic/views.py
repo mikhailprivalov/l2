@@ -23,6 +23,7 @@ from copy import deepcopy
 
 # from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
+from laboratory import utils
 
 
 @csrf_exempt
@@ -57,6 +58,7 @@ def statistic_xls(request):
     """ Генерация XLS """
     from directions.models import Issledovaniya
     import xlwt
+    import openpyxl
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
@@ -67,8 +69,10 @@ def statistic_xls(request):
     date_start_o = request_data.get("date-start", "")
     date_end_o = request_data.get("date-end", "")
     users_o = request_data.get("users", "[]")
+    user_o = request_data.get("user")
     date_values_o = request_data.get("values", "{}")
     date_type = request_data.get("date_type", "d")
+    depart_o = request_data.get("department")
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}),
@@ -531,82 +535,344 @@ def statistic_xls(request):
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
-    elif tp == "statistics-tickets-print":
-        date_start, date_end = try_parse_range(date_start_o, date_end_o)
+    # elif tp == "statistics-tickets-print":
+    #     date_start, date_end = try_parse_range(date_start_o, date_end_o)
+    #
+    #     access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
+    #                                                                               flat=True)) or request.user.is_superuser
+    #
+    #     users_o = json.loads(users_o)
+    #     if not isinstance(users_o, list):
+    #         users_o = []
+    #     users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
+    #
+    #     users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
+    #
+    #     response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
+    #     font_style = xlwt.XFStyle()
+    #     font_style.alignment.wrap = 1
+    #     font_style.borders = borders
+    #
+    #     font_style_b = xlwt.XFStyle()
+    #     font_style_b.alignment.wrap = 1
+    #     font_style_b.font.bold = True
+    #     font_style_b.borders = borders
+    #
+    #     ws = wb.add_sheet("Статталоны")
+    #     row_num = 0
+    #     row = [
+    #         ("№", 1200),
+    #         ("Дата и время создания", 3500),
+    #         ("Дата талона", 3500),
+    #         ("Подразделение", 7200),
+    #         ("Врач", 7000),
+    #         ("Карта", 3200),
+    #         ("Цель посещения", 4000),
+    #         ("Пациент", 7200),
+    #         ("Первичный приём", 2800),
+    #         ("Код диагноза (МКБ 10), виды услуг, виды травм", 6000),
+    #         ("Впервые", 2800),
+    #         ("Результат обращения", 4500),
+    #         ("Исход", 4500),
+    #         ("Диспансерный учёт", 4200),
+    #         ("Диагноз диспансерного учёта", 4200),
+    #         ("Создатель талона", 7000),
+    #     ]
+    #     for col_num in range(len(row)):
+    #         ws.write(row_num, col_num, row[col_num][0], font_style_b)
+    #         ws.col(col_num).width = row[col_num][1]
+    #     row_num += 1
+    #
+    #     for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
+    #             Q(doctor__pk__in=users) | Q(creator__pk__in=users)).order_by("card__individual__family", "doctor__fio",
+    #                                                                          "doctor__podrazdeleniye__title").order_by("date"):
+    #         if not ticket.creator:
+    #             ticket.creator = ticket.doctor
+    #             ticket.save()
+    #         row = [
+    #             str(row_num),
+    #             ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+    #             ticket.get_date(),
+    #             ticket.doctor.podrazdeleniye.title,
+    #             ticket.doctor.fio,
+    #             ticket.card.number_with_type(),
+    #             "" if not ticket.purpose else ticket.purpose.title,
+    #             ticket.card.individual.fio(full=True),
+    #             "первич." if ticket.primary_visit else "повторн.",
+    #             ticket.info,
+    #             "впервые" if ticket.first_time else "",
+    #             "" if not ticket.result else ticket.result.title,
+    #             "" if not ticket.outcome else ticket.outcome.title,
+    #             ticket.get_dispensary_registration_display()
+    #             + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
+    #             ticket.dispensary_diagnos,
+    #             ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
+    #         ]
+    #         for col_num in range(len(row)):
+    #             ws.write(row_num, col_num, row[col_num], font_style)
+    #         row_num += 1
 
+    elif tp == "statistics-tickets-print":
+
+        date_start, date_end = try_parse_range(date_start_o, date_end_o)
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
+        data_date = request_data.get("date_values")
+        data_date = json.loads(data_date)
+        import datetime
+        d = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+        type_fin ='омс'
+        users_o = json.loads(user_o)
+        if users_o:
+            us = int(users_o)
+            us_o = [DoctorProfile.objects.get(pk=us)]
+        elif depart_o:
+            depart = Podrazdeleniya.objects.get(pk=depart_o)
+            us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
 
-        users_o = json.loads(users_o)
-        if not isinstance(users_o, list):
-            users_o = []
-        users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
+        #Колнки: список и размеры
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
 
-        users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
+        from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle, Color, Fill, colors
+        style_o = NamedStyle(name="style_o")
+        style_o.font = Font(bold=True, size=11)
+        wb.add_named_style(style_o)
 
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
-        font_style = xlwt.XFStyle()
-        font_style.alignment.wrap = 1
-        font_style.borders = borders
+        style_border = NamedStyle(name="style_border")
+        bd = Side(style='thin', color="000000")
+        style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+        style_border.font = Font(bold=True, size=11)
+        style_border.alignment = Alignment(wrap_text=True)
+        wb.add_named_style(style_border)
 
-        font_style_b = xlwt.XFStyle()
-        font_style_b.alignment.wrap = 1
-        font_style_b.font.bold = True
-        font_style_b.borders = borders
+        def structure(ws1, i_obj, issl_obj):
+            """
+            Назначить ширину колонок. Вход worksheet выход worksheen с размерами
+            """
+            from openpyxl.utils.cell import get_column_letter
+            col = 1
+            ws1.column_dimensions[get_column_letter(1)].width = 13
+            ws1.column_dimensions[get_column_letter(col+1)].width = 7
+            ws1.column_dimensions[get_column_letter(col+2)].width = 15
+            ws1.column_dimensions[get_column_letter(col+3)].width = 9
+            ws1.column_dimensions[get_column_letter(col+4)].width = 31
+            ws1.column_dimensions[get_column_letter(col+5)].width = 13
+            ws1.column_dimensions[get_column_letter(col+6)].width = 12
+            ws1.column_dimensions[get_column_letter(col+7)].width = 27
+            ws1.column_dimensions[get_column_letter(col+8)].width = 16
+            ws1.column_dimensions[get_column_letter(col+9)].width = 12
+            ws1.column_dimensions[get_column_letter(col+10)].width = 18
+            ws1.column_dimensions[get_column_letter(col+11)].width = 13
+            ws1.column_dimensions[get_column_letter(col+12)].width = 12
+            ws1.column_dimensions[get_column_letter(col+13)].width = 13
+            ws1.column_dimensions[get_column_letter(col+14)].width = 13
+            ws1.column_dimensions[get_column_letter(col+15)].width = 13
+            ws1.column_dimensions[get_column_letter(col+16)].width = 13
+            ws1.column_dimensions[get_column_letter(col+17)].width = 13
+            ws1.column_dimensions[get_column_letter(col+18)].width = 13
+            ws1.column_dimensions[get_column_letter(col+19)].width = 13
+            ws1.column_dimensions[get_column_letter(col+20)].width = 13
+            ws1.column_dimensions[get_column_letter(col+21)].width = 13
 
-        ws = wb.add_sheet("Статталоны")
-        row_num = 0
-        row = [
-            ("№", 1200),
-            ("Дата и время создания", 3500),
-            ("Дата талона", 3500),
-            ("Подразделение", 7200),
-            ("Врач", 7000),
-            ("Карта", 3200),
-            ("Цель посещения", 4000),
-            ("Пациент", 7200),
-            ("Первичный приём", 2800),
-            ("Код диагноза (МКБ 10), виды услуг, виды травм", 6000),
-            ("Впервые", 2800),
-            ("Результат обращения", 4500),
-            ("Исход", 4500),
-            ("Диспансерный учёт", 4200),
-            ("Диагноз диспансерного учёта", 4200),
-            ("Создатель талона", 7000),
-        ]
-        for col_num in range(len(row)):
-            ws.write(row_num, col_num, row[col_num][0], font_style_b)
-            ws.col(col_num).width = row[col_num][1]
-        row_num += 1
+            # Закголовки столбцов
+            ws1.cell(row=1, column=1).value = 'Сотрудник'
+            ws1.cell(row=1, column=1).style = style_o
+            ws1.cell(row=1, column=2).value = i_obj.fio
+            ws1.cell(row=2, column=1).value = 'Должность'
+            ws1.cell(row=2, column=1).style = style_o
+            ws1.cell(row=2, column=2).value = i_obj.specialities.title if i_obj.specialities else ""
+            ws1.cell(row=4, column=1).value = 'Период:'
+            ws1.cell(row=4, column=1).style = style_o
+            ws1.cell(row=5, column=1).value = date_start_o
+            ws1.cell(row=5, column=2).value = '-'
+            ws1.cell(row=5, column=2).value = date_end_o
+            ws1.cell(row=1, column=5).value = 'Код врача'
+            ws1.cell(row=1, column=5).style = style_o
+            ws1.cell(row=1, column=6).value = i_obj.personal_code
+            ws1.cell(row=3, column=5).value = 'Источник'
+            ws1.cell(row=3, column=5).style = style_o
+            ws1.cell(row=3, column=6).value = 'ОМС'
 
-        for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
-                Q(doctor__pk__in=users) | Q(creator__pk__in=users)).order_by("card__individual__family", "doctor__fio",
-                                                                             "doctor__podrazdeleniye__title").order_by("date"):
-            if not ticket.creator:
-                ticket.creator = ticket.doctor
-                ticket.save()
-            row = [
-                str(row_num),
-                ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
-                ticket.get_date(),
-                ticket.doctor.podrazdeleniye.title,
-                ticket.doctor.fio,
-                ticket.card.number_with_type(),
-                "" if not ticket.purpose else ticket.purpose.title,
-                ticket.card.individual.fio(full=True),
-                "первич." if ticket.primary_visit else "повторн.",
-                ticket.info,
-                "впервые" if ticket.first_time else "",
-                "" if not ticket.result else ticket.result.title,
-                "" if not ticket.outcome else ticket.outcome.title,
-                ticket.get_dispensary_registration_display()
-                + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
-                ticket.dispensary_diagnos,
-                ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
-            ]
-            for col_num in range(len(row)):
-                ws.write(row_num, col_num, row[col_num], font_style)
-            row_num += 1
+            #Заголовки данных
+
+            ws1.cell(row=7, column=1).value = 'Дата'
+            ws1.cell(row=7, column=1).style = style_border
+            ws1.cell(row=7, column=col + 1).value = 'Кол-во'
+            ws1.cell(row=7, column=col + 1).style = style_border
+            ws1.cell(row=7, column=col+2).value = 'Услуга'
+            ws1.cell(row=7, column=col+2).style = style_border
+            ws1.cell(row=7, column=col+3).value = 'Соисполнитель'
+            ws1.cell(row=7, column=col+3).style = style_border
+            ws1.cell(row=7, column=col+4).value = 'ФИО пациента,\n№ направления'
+            ws1.cell(row=7, column=col+4).style = style_border
+            ws1.cell(row=7, column=col+5).value = 'Дата рождения'
+            ws1.cell(row=7, column=col+5).style = style_border
+            ws1.cell(row=7, column=col+6).value = '№ карты'
+            ws1.cell(row=7, column=col+6).style = style_border
+            ws1.cell(row=7, column=col+7).value = 'Данные полиса'
+            ws1.cell(row=7, column=col+7).style = style_border
+            ws1.cell(row=7, column=col+8).value = 'Код услуги'
+            ws1.cell(row=7, column=col+8).style = style_border
+            ws1.cell(row=7, column=col+9).value = 'Услуга \n (ует/мин)'
+            ws1.cell(row=7, column=col+9).style = style_border
+            ws1.cell(row=7, column=col+10).value = 'Время \n подтверждения'
+            ws1.cell(row=7, column=col+10).style = style_border
+            ws1.cell(row=7, column=col+12).value = 'Первичный прием'
+            ws1.cell(row=7, column=col+12).style = style_border
+            if type_fin == 'омс':
+                ws1.cell(row=7, column=col+11).value = 'Онкоподозрение'
+                ws1.cell(row=7, column=col+11).style = style_border
+                ws1.cell(row=7, column=col+13).value = 'Цель \n посещения\n(код)'
+                ws1.cell(row=7, column=col+13).style = style_border
+                ws1.cell(row=7, column=col+14).value = 'Диагноз \n МКБ'
+                ws1.cell(row=7, column=col+14).style = style_border
+                ws1.cell(row=7, column=col+15).value = 'Впервые'
+                ws1.cell(row=7, column=col+15).style = style_border
+                ws1.cell(row=7, column=col+16).value = 'Результат \n обращения \n(код)'
+                ws1.cell(row=7, column=col+16).style = style_border
+                ws1.cell(row=7, column=col+17).value = 'Исход(код)'
+                ws1.cell(row=7, column=col+17).style = style_border
+                ws1.cell(row=7, column=col+18).value = 'Д-учет\nСтоит'
+                ws1.cell(row=7, column=col+18).style = style_border
+                ws1.cell(row=7, column=col+19).value = 'Д-учет\nСтоит'
+                ws1.cell(row=7, column=col+19).style = style_border
+                ws1.cell(row=7, column=col+20).value = 'Д-учет\nВзят'
+                ws1.cell(row=7, column=col+20).style = style_border
+                ws1.cell(row=7, column=col+21).value = 'Д-учет\nСнят'
+                ws1.cell(row=7, column=col+21).style = style_border
+                ws1.cell(row=7, column=col+22).value = 'Причина\nснятия'
+                ws1.cell(row=7, column=col+22).style = style_border
+            elif type_fin == 'платно':
+                ws1.cell(row=7, column=col+11).value = 'Стоимость'
+                ws1.cell(row=7, column=col+11).style = style_border
+
+            r = 7
+            style_border1 = NamedStyle(name="style_border1")
+            bd = Side(style='thin', color="000000")
+            style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+            style_border1.font = Font(bold=False, size=11)
+            style_border1.alignment = Alignment(wrap_text=True)
+            wb.add_named_style(style_border1)
+            date_s = None
+            x = 0
+            for issled in issl_obj:
+                date_o = utils.strfdatetime(issled.time_confirmation, "%d.%m.%Y")
+                if date_s == date_o:
+                    x = x + 1
+                else:
+                    if r != 7:
+                        ws1.row_dimensions.group(8, r+x, hidden=True)
+                    x = 0
+                    x = x + 1
+                date_s = date_o
+                r = r + 1
+                # ws1.cell(row=r, column=1).value = utils.strfdatetime(issled.time_confirmation, "%d.%m.%Y")
+                ws1.cell(row=r, column=1).value = date_o
+                ws1.cell(row=r, column=col+1).value = 1
+                ws1.cell(row=r, column=col+2).value = issled.research.title
+                #получить данные пациента
+                patient_data = issled.napravleniye.client.get_data_individual()
+                patient_fio_napr = patient_data['fio']
+                ws1.cell(row=r, column=col+4).value = patient_fio_napr
+                ws1.cell(row=r, column=col+5).value = patient_data['born']
+                ws1.cell(row=r, column=col+6).value = patient_data['card_num']
+                ws1.cell(row=r, column=col+7).value = patient_data['oms']['polis_num'] +';\n' + patient_data['oms']['polis_issued']
+                ws1.cell(row=r, column=col+8).value = issled.research.code
+                ws1.cell(row=r, column=col+10).value = utils.strtime(issled.time_confirmation)
+                rows = ws1[f'A{r}:V{r}']
+                for row in rows:
+                    for cell in row:
+                        cell.style = style_border1
+
+            ws1.cell(row=r+1, column=1).value = 'Итого'
+            ws1.cell(row=r + 1, column=2).value = "=SUM(B8:B{})".format(r)
+            rows = ws1[f'A{r+1}:V{r+1}']
+            my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
+            for row in rows:
+                for cell in row:
+                    cell.fill = my_fill
+
+            return ws1
+
+        start_date = datetime.datetime.combine(d, datetime.time.min)
+        end_date = datetime.datetime.combine(d, datetime.time.max)
+
+        def get_research(doc_confirm):
+            from laboratory import utils
+            iss_obj = Issledovaniya.objects.select_related('napravleniye__client', 'napravleniye__istochnik_f').filter(
+                time_confirmation__range=(start_date, end_date), doc_confirmation=doc_confirm,
+                napravleniye__isnull=False).order_by('time_confirmation')
+
+            return iss_obj
+
+        #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
+        for i in us_o:
+            if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
+                ws = wb.create_sheet(i.get_fio())
+                res_o = get_research(i)
+                ws = structure(ws, i, res_o)
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
+        wb.save(response)
+        return response
+
+    elif tp == "statistics-research":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
+        pk = request_data.get("pk", "")
+        pk = int(pk)
+        date_start_o = request_data.get("date-start")
+        date_start_o = json.loads(date_start_o)
+        date_end_o = request_data.get("date-end")
+        date_end_o = json.loads(date_end_o)
+
+        from openpyxl.styles import Font, NamedStyle
+        style_o = NamedStyle(name="style_o")
+        style_o.font = Font(bold=True, size=11)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        wb.add_named_style(style_o)
+        ws = wb.create_sheet("Отчет")
+        from openpyxl.utils.cell import get_column_letter
+        col = 1
+        ws.column_dimensions[get_column_letter(1)].width = 15
+        ws.cell(row=1, column=1).value = 'Дата рождения'
+        ws.cell(row=1, column=1).style = style_o
+        ws.column_dimensions[get_column_letter(col + 1)].width = 8
+        ws.cell(row=1, column=(col+1)).value = 'Возраст'
+        ws.cell(row=1, column=(col+1)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 2)].width = 35
+        ws.cell(row=1, column=(col + 2)).value = 'Физлицо'
+        ws.cell(row=1, column=(col + 2)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 3)].width = 35
+        ws.cell(row=1, column=(col + 3)).value = 'Исследование'
+        ws.cell(row=1, column=(col + 3)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 4)].width = 35
+        ws.cell(row=1, column=(col + 4)).value = 'Дата подтверждения'
+        ws.cell(row=1, column=(col + 4)).style = style_o
+        ws.column_dimensions[get_column_letter(col + 5)].width = 20
+        ws.cell(row=1, column=(col + 5)).value = 'Карта'
+        ws.cell(row=1, column=(col + 5)).style = style_o
+
+        import datetime
+        res_o = Researches.objects.get(pk=pk)
+        d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d_e = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        list_o = Issledovaniya.objects.select_related('napravleniye__client').filter(time_confirmation__date__range=(d_s, d_e), research=res_o,
+                napravleniye__isnull=False).order_by('time_confirmation')
+
+        r = 1
+        for i in list_o:
+            r = r + 1
+            patient_data = i.napravleniye.client.get_data_individual()
+            date_o = utils.strfdatetime(i.time_confirmation, "%d.%m.%Y")
+            ws.cell(row=r, column=1).value = patient_data['born']
+            ws.cell(row=r, column=col + 1).value = patient_data['age']
+            ws.cell(row=r, column=col + 2).value = patient_data['fio']
+            ws.cell(row=r, column=col + 3).value = res_o.title
+            ws.cell(row=r, column=col + 4).value = date_o
+            ws.cell(row=r, column=col + 5).value = patient_data['card_num']
+
     elif tp == "journal-get-material":
         import datetime
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',

@@ -302,6 +302,11 @@ class Fractions(models.Model):
     """
     Фракции для исследований
     """
+    TYPES = (
+        (0, ''),
+        (1, 'co_executor'),
+        (2, 'co_executo2'),
+    )
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция', on_delete=models.CASCADE)
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
@@ -323,6 +328,8 @@ class Fractions(models.Model):
     print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
+    type_coexecutor = models.SmallIntegerField(default=0, choices=TYPES, blank=True,
+                                               help_text='Отношение исполнителей к фракциям дл уета ует')
 
     def __str__(self):
         return self.research.title + " | " + self.title
