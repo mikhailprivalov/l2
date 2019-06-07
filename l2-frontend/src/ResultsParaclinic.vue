@@ -43,7 +43,13 @@
             Нет данных
           </div>
           <div class="rmis_loc" v-if="has_loc">
-            <div class="title">Очередь за {{td.format('DD.MM.YYYY')}}</div>
+            <div class="title">
+              <div class="loader" v-if="location.loading"><i class="fa fa-spinner"></i></div>
+              Очередь за <input :readonly="location.loading"
+                                class="inline-form"
+                                required
+                                type="date" v-model="td"/>
+            </div>
             <div class="inner">
               <table class="table table-bordered table-hover">
                 <colgroup>
@@ -73,6 +79,9 @@
                     загрузка...
                   </td>
                 </tr>
+                <td colspan="3" style="text-align: center" v-else-if="location.data.length === 0">
+                  нет данных на дату
+                </td>
                 </tbody>
               </table>
             </div>
@@ -327,7 +336,7 @@
               </div>
             </div>
           </div>
-          <div class="group">
+          <div class="group" v-if="row.research.is_doc_refferal">
             <div class="group-title">Направления в рамках приёма</div>
             <div class="row">
               <div class="col-xs-12">
@@ -503,7 +512,7 @@
         pk: '',
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
-        td: moment().add(1, 'days'),
+        td: moment().format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -559,7 +568,12 @@
           }
         },
         immediate: true,
-      }
+      },
+      td: {
+        handler() {
+          this.load_location()
+        },
+      },
     },
     mounted() {
       let vm = this
@@ -580,7 +594,7 @@
     methods: {
       async load_location() {
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation(this.td.format('YYYY-MM-DD'))).data
+        this.location.data = (await users_point.loadLocation(this.td)).data
         this.location.loading = false
       },
       load_dreg_rows() {
@@ -1495,6 +1509,15 @@
     }
   }
 
+  @keyframes rotating {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .directions {
     position: relative;
     height: calc(100% - 68px);
@@ -1526,6 +1549,14 @@
         height: 20px;
         background: #eaeaea;
         text-align: center;
+        position: relative;
+
+        .loader {
+          position: absolute;
+          right: 2px;
+          top: 1px;
+          animation: rotating 1.5s linear infinite;
+        }
       }
 
       .inner {
@@ -1615,6 +1646,18 @@
 
     &:hover {
       box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+    }
+  }
+
+  .inline-form {
+    background: none;
+    border: none;
+    padding: 0;
+    display: inline-block;
+    width: 140px;
+    margin-right: -50px;
+    &:focus{
+      outline: none;
     }
   }
 </style>
