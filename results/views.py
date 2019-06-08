@@ -1200,11 +1200,11 @@ def result_print(request):
                         add_research = Issledovaniya.objects.filter(parent_id__napravleniye=pk[0])
                         if add_research:
                             fwb.append(Spacer(1, 3 * mm))
-                            fwb.append(Paragraph('<font size=11>Дополнительные услуги:</font>', styleBold))
-                            fwb.append(Spacer(1, 1 * mm))
+                            fwb.append(Paragraph('Дополнительные услуги:', styleBold))
                             for i in add_research:
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title),style))
 
+                fwb.append(Spacer(1, 3 * mm))
                 fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
                 if iss.doc_confirmation.podrazdeleniye.vaccine:

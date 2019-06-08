@@ -535,82 +535,6 @@ def statistic_xls(request):
             for col_num in range(len(row)):
                 ws.write(row_num, col_num, row[col_num], font_style)
             row_num += 1
-    # elif tp == "statistics-tickets-print":
-    #     date_start, date_end = try_parse_range(date_start_o, date_end_o)
-    #
-    #     access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
-    #                                                                               flat=True)) or request.user.is_superuser
-    #
-    #     users_o = json.loads(users_o)
-    #     if not isinstance(users_o, list):
-    #         users_o = []
-    #     users_o = [int(x) for x in users_o if isinstance(x, int) or (isinstance(x, str) and x.isdigit())]
-    #
-    #     users = [x for x in users_o if DoctorProfile.objects.filter(pk=x).exists() and (access_to_all or x == request.user.doctorprofile.pk)]
-    #
-    #     response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xls\"", tr)
-    #     font_style = xlwt.XFStyle()
-    #     font_style.alignment.wrap = 1
-    #     font_style.borders = borders
-    #
-    #     font_style_b = xlwt.XFStyle()
-    #     font_style_b.alignment.wrap = 1
-    #     font_style_b.font.bold = True
-    #     font_style_b.borders = borders
-    #
-    #     ws = wb.add_sheet("Статталоны")
-    #     row_num = 0
-    #     row = [
-    #         ("№", 1200),
-    #         ("Дата и время создания", 3500),
-    #         ("Дата талона", 3500),
-    #         ("Подразделение", 7200),
-    #         ("Врач", 7000),
-    #         ("Карта", 3200),
-    #         ("Цель посещения", 4000),
-    #         ("Пациент", 7200),
-    #         ("Первичный приём", 2800),
-    #         ("Код диагноза (МКБ 10), виды услуг, виды травм", 6000),
-    #         ("Впервые", 2800),
-    #         ("Результат обращения", 4500),
-    #         ("Исход", 4500),
-    #         ("Диспансерный учёт", 4200),
-    #         ("Диагноз диспансерного учёта", 4200),
-    #         ("Создатель талона", 7000),
-    #     ]
-    #     for col_num in range(len(row)):
-    #         ws.write(row_num, col_num, row[col_num][0], font_style_b)
-    #         ws.col(col_num).width = row[col_num][1]
-    #     row_num += 1
-    #
-    #     for ticket in StatisticsTicket.objects.filter(date__range=(date_start, date_end,), invalid_ticket=False).filter(
-    #             Q(doctor__pk__in=users) | Q(creator__pk__in=users)).order_by("card__individual__family", "doctor__fio",
-    #                                                                          "doctor__podrazdeleniye__title").order_by("date"):
-    #         if not ticket.creator:
-    #             ticket.creator = ticket.doctor
-    #             ticket.save()
-    #         row = [
-    #             str(row_num),
-    #             ticket.date.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
-    #             ticket.get_date(),
-    #             ticket.doctor.podrazdeleniye.title,
-    #             ticket.doctor.fio,
-    #             ticket.card.number_with_type(),
-    #             "" if not ticket.purpose else ticket.purpose.title,
-    #             ticket.card.individual.fio(full=True),
-    #             "первич." if ticket.primary_visit else "повторн.",
-    #             ticket.info,
-    #             "впервые" if ticket.first_time else "",
-    #             "" if not ticket.result else ticket.result.title,
-    #             "" if not ticket.outcome else ticket.outcome.title,
-    #             ticket.get_dispensary_registration_display()
-    #             + (" (" + ticket.dispensary_exclude_purpose.title + ")" if ticket.dispensary_exclude_purpose else ""),
-    #             ticket.dispensary_diagnos,
-    #             ticket.creator.fio + ", " + ticket.creator.podrazdeleniye.get_title()
-    #         ]
-    #         for col_num in range(len(row)):
-    #             ws.write(row_num, col_num, row[col_num], font_style)
-    #         row_num += 1
 
     elif tp == "statistics-tickets-print":
 
@@ -630,7 +554,6 @@ def statistic_xls(request):
             depart = Podrazdeleniya.objects.get(pk=depart_o)
             us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
 
-        #Колнки: список и размеры
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
 
@@ -695,57 +618,37 @@ def statistic_xls(request):
             ws1.cell(row=3, column=6).value = 'ОМС'
 
             #Заголовки данных
-
             ws1.cell(row=7, column=1).value = 'Дата'
-            ws1.cell(row=7, column=1).style = style_border
             ws1.cell(row=7, column=col + 1).value = 'Кол-во'
-            ws1.cell(row=7, column=col + 1).style = style_border
             ws1.cell(row=7, column=col+2).value = 'Услуга'
-            ws1.cell(row=7, column=col+2).style = style_border
             ws1.cell(row=7, column=col+3).value = 'Соисполнитель'
-            ws1.cell(row=7, column=col+3).style = style_border
             ws1.cell(row=7, column=col+4).value = 'ФИО пациента,\n№ направления'
-            ws1.cell(row=7, column=col+4).style = style_border
             ws1.cell(row=7, column=col+5).value = 'Дата рождения'
-            ws1.cell(row=7, column=col+5).style = style_border
             ws1.cell(row=7, column=col+6).value = '№ карты'
-            ws1.cell(row=7, column=col+6).style = style_border
             ws1.cell(row=7, column=col+7).value = 'Данные полиса'
-            ws1.cell(row=7, column=col+7).style = style_border
             ws1.cell(row=7, column=col+8).value = 'Код услуги'
-            ws1.cell(row=7, column=col+8).style = style_border
             ws1.cell(row=7, column=col+9).value = 'Услуга \n (ует/мин)'
-            ws1.cell(row=7, column=col+9).style = style_border
             ws1.cell(row=7, column=col+10).value = 'Время \n подтверждения'
-            ws1.cell(row=7, column=col+10).style = style_border
             ws1.cell(row=7, column=col+12).value = 'Первичный прием'
-            ws1.cell(row=7, column=col+12).style = style_border
             if type_fin == 'омс':
                 ws1.cell(row=7, column=col+11).value = 'Онкоподозрение'
-                ws1.cell(row=7, column=col+11).style = style_border
                 ws1.cell(row=7, column=col+13).value = 'Цель \n посещения\n(код)'
-                ws1.cell(row=7, column=col+13).style = style_border
                 ws1.cell(row=7, column=col+14).value = 'Диагноз \n МКБ'
-                ws1.cell(row=7, column=col+14).style = style_border
                 ws1.cell(row=7, column=col+15).value = 'Впервые'
-                ws1.cell(row=7, column=col+15).style = style_border
                 ws1.cell(row=7, column=col+16).value = 'Результат \n обращения \n(код)'
-                ws1.cell(row=7, column=col+16).style = style_border
                 ws1.cell(row=7, column=col+17).value = 'Исход(код)'
-                ws1.cell(row=7, column=col+17).style = style_border
                 ws1.cell(row=7, column=col+18).value = 'Д-учет\nСтоит'
-                ws1.cell(row=7, column=col+18).style = style_border
                 ws1.cell(row=7, column=col+19).value = 'Д-учет\nСтоит'
-                ws1.cell(row=7, column=col+19).style = style_border
                 ws1.cell(row=7, column=col+20).value = 'Д-учет\nВзят'
-                ws1.cell(row=7, column=col+20).style = style_border
                 ws1.cell(row=7, column=col+21).value = 'Д-учет\nСнят'
-                ws1.cell(row=7, column=col+21).style = style_border
                 ws1.cell(row=7, column=col+22).value = 'Причина\nснятия'
-                ws1.cell(row=7, column=col+22).style = style_border
             elif type_fin == 'платно':
                 ws1.cell(row=7, column=col+11).value = 'Стоимость'
-                ws1.cell(row=7, column=col+11).style = style_border
+
+            rows = ws1[f'A{7}:V{7}']
+            for row in rows:
+                for cell in row:
+                    cell.style = style_border
 
             r = 7
             style_border1 = NamedStyle(name="style_border1")
@@ -772,12 +675,12 @@ def statistic_xls(request):
                 ws1.cell(row=r, column=col+1).value = 1
                 ws1.cell(row=r, column=col+2).value = issled.research.title
                 #получить данные пациента
-                patient_data = issled.napravleniye.client.get_data_individual()
-                patient_fio_napr = patient_data['fio']
-                ws1.cell(row=r, column=col+4).value = patient_fio_napr
-                ws1.cell(row=r, column=col+5).value = patient_data['born']
-                ws1.cell(row=r, column=col+6).value = patient_data['card_num']
-                ws1.cell(row=r, column=col+7).value = patient_data['oms']['polis_num'] +';\n' + patient_data['oms']['polis_issued']
+                # patient_data = issled.napravleniye.client.get_data_individual()
+                # patient_fio_napr = patient_data['fio']
+                # ws1.cell(row=r, column=col+4).value = patient_fio_napr
+                # ws1.cell(row=r, column=col+5).value = patient_data['born']
+                # ws1.cell(row=r, column=col+6).value = patient_data['card_num']
+                # ws1.cell(row=r, column=col+7).value = patient_data['oms']['polis_num'] +';\n' + patient_data['oms']['polis_issued']
                 ws1.cell(row=r, column=col+8).value = issled.research.code
                 ws1.cell(row=r, column=col+10).value = utils.strtime(issled.time_confirmation)
                 rows = ws1[f'A{r}:V{r}']
@@ -792,18 +695,23 @@ def statistic_xls(request):
             for row in rows:
                 for cell in row:
                     cell.fill = my_fill
-
             return ws1
 
         start_date = datetime.datetime.combine(d, datetime.time.min)
         end_date = datetime.datetime.combine(d, datetime.time.max)
+
+        d1 = datetime.datetime.strptime('01.12.2018', '%d.%m.%Y')
+        d2 = datetime.datetime.strptime('15.12.2018', '%d.%m.%Y')
+
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+
 
         def get_research(doc_confirm):
             from laboratory import utils
             iss_obj = Issledovaniya.objects.select_related('napravleniye__client', 'napravleniye__istochnik_f').filter(
                 time_confirmation__range=(start_date, end_date), doc_confirmation=doc_confirm,
                 napravleniye__isnull=False).order_by('time_confirmation')
-
             return iss_obj
 
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
