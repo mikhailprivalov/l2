@@ -2,7 +2,7 @@ openpyxl
 requests
 django-ratelimit2
 PyYAML
-django<2.2
+django<2.3
 selenium
 psycopg2
 django-debug-toolbar
