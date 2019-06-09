@@ -660,66 +660,84 @@ def statistic_xls(request):
             date_s = None
             x = 0
             for issled in issl_obj:
-                date_o = utils.strfdatetime(issled.time_confirmation, "%d.%m.%Y")
-                if date_s == date_o:
-                    x = x + 1
-                else:
-                    if r != 7:
-                        ws1.row_dimensions.group(8, r+x, hidden=True)
-                    x = 0
-                    x = x + 1
-                date_s = date_o
                 r = r + 1
-                # ws1.cell(row=r, column=1).value = utils.strfdatetime(issled.time_confirmation, "%d.%m.%Y")
-                ws1.cell(row=r, column=1).value = date_o
+                ws1.cell(row=r, column=1).value = utils.strfdatetime(issled[7], "%d.%m.%Y")
+                # ws1.cell(row=r, column=1).value = issl_obj[7]
                 ws1.cell(row=r, column=col+1).value = 1
-                ws1.cell(row=r, column=col+2).value = issled.research.title
-                #получить данные пациента
-                # patient_data = issled.napravleniye.client.get_data_individual()
-                # patient_fio_napr = patient_data['fio']
-                # ws1.cell(row=r, column=col+4).value = patient_fio_napr
-                # ws1.cell(row=r, column=col+5).value = patient_data['born']
-                # ws1.cell(row=r, column=col+6).value = patient_data['card_num']
-                # ws1.cell(row=r, column=col+7).value = patient_data['oms']['polis_num'] +';\n' + patient_data['oms']['polis_issued']
-                ws1.cell(row=r, column=col+8).value = issled.research.code
-                ws1.cell(row=r, column=col+10).value = utils.strtime(issled.time_confirmation)
+                ws1.cell(row=r, column=col+2).value = issled[1]
+                f = issled[10] if issled[10] else ''
+                n = issled[11] if issled[11] else ''
+                p = issled[12] if issled[12] else ''
+                ws1.cell(row=r, column=col+4).value = f + n + p
+                ws1.cell(row=r, column=col+5).value = utils.strdate(issled[13])
+                ws1.cell(row=r, column=col+6).value = issled[0]
+                polis_n = issled[14] if issled[14] else ''
+                polis_who = issled[16] if issled[16] else ''
+                ws1.cell(row=r, column=col+7).value = polis_n +';\n' + polis_who
+                ws1.cell(row=r, column=col+8).value = ''
+                ws1.cell(row=r, column=col+10).value = utils.strtime(issled[7])
                 rows = ws1[f'A{r}:V{r}']
-                for row in rows:
-                    for cell in row:
-                        cell.style = style_border1
+                # for row in rows:
+                #     for cell in row:
+                #         cell.style = style_border1
 
-            ws1.cell(row=r+1, column=1).value = 'Итого'
-            ws1.cell(row=r + 1, column=2).value = "=SUM(B8:B{})".format(r)
-            rows = ws1[f'A{r+1}:V{r+1}']
-            my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
-            for row in rows:
-                for cell in row:
-                    cell.fill = my_fill
+            # ws1.cell(row=r+1, column=1).value = 'Итого'
+            # ws1.cell(row=r + 1, column=2).value = "=SUM(B8:B{})".format(r)
+            # rows = ws1[f'A{r+1}:V{r+1}']
+            # my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
+            # for row in rows:
+            #     for cell in row:
+            #         cell.fill = my_fill
             return ws1
 
         start_date = datetime.datetime.combine(d, datetime.time.min)
         end_date = datetime.datetime.combine(d, datetime.time.max)
 
         d1 = datetime.datetime.strptime('01.12.2018', '%d.%m.%Y')
-        d2 = datetime.datetime.strptime('15.12.2018', '%d.%m.%Y')
+        d2 = datetime.datetime.strptime('31.12.2018', '%d.%m.%Y')
 
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
 
+        from django.db import connection
+        def my_custom_sql(d_conf):
+            with connection.cursor() as cursor:
+                cursor.execute("""with 
+                t_iss AS 
+                    (SELECT directions_napravleniya.client_id, title, 
+                    directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
+                     directions_issledovaniya.id as iss_id, napravleniye_id, doc_confirmation_id, 
+                    time_confirmation
+                    FROM directions_issledovaniya 
+                    LEFT JOIN directory_researches
+                    ON directions_issledovaniya.research_id = directory_researches.Id
+                    LEFT JOIN directions_napravleniya 
+                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id 
+                    where doc_confirmation_id=%(d_confirms)s and time_confirmation between %(d_start)s and %(d_end)s
+                    order by time_confirmation),
+                t_card AS 
+                    (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,clients_individual.name,
+                    clients_individual.patronymic,clients_individual.birthday, 
+                    clients_document.number, clients_document.serial, clients_document.who_give  
+                    FROM clients_individual
+                    LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
+                    LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id
+                    where clients_document.document_type_id=3
+                    order by clients_card.id
+                    )
+                Select * from t_iss
+                left join t_card ON t_iss.client_id=t_card.id
+                order by time_confirmation""",params={'d_confirms':d_conf, 'd_start':'2018-12-01', 'd_end':'2018-12-31'})
 
-        def get_research(doc_confirm):
-            from laboratory import utils
-            iss_obj = Issledovaniya.objects.select_related('napravleniye__client', 'napravleniye__istochnik_f').filter(
-                time_confirmation__range=(start_date, end_date), doc_confirmation=doc_confirm,
-                napravleniye__isnull=False).order_by('time_confirmation')
-            return iss_obj
+                row = cursor.fetchall()
+            return row
 
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
         for i in us_o:
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
-                res_o = get_research(i)
-                ws = structure(ws, i, res_o)
+                res_oq = my_custom_sql('1107')
+                ws = structure(ws, i, res_oq)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
