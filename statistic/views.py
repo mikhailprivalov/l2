@@ -555,6 +555,7 @@ def statistic_xls(request):
 
         type_fin ='омс'
         users_o = json.loads(user_o)
+        us_o = None
         if users_o != -1:
             us = int(users_o)
             us_o = [DoctorProfile.objects.get(pk=us)]
@@ -678,10 +679,11 @@ def statistic_xls(request):
             for issled in issl_obj:
                 current_date = issled[8]
                 d_result = utils.strfdatetime(current_date, "%d.%m.%Y")
-                if r!=7 and r!=8:
+                if r != 7 and r != 8:
                     if d_result != ws1.cell(row=r, column=1).value and not (ws1.cell(row=r, column=1).value).istitle():
                         r = r + 1
-                        ws1.cell(row=r, column=1).value = 'Итого за ' + (utils.strfdatetime(current_date-one_days, "%d"))
+                        ws1.cell(row=r, column=1).value = 'Итого за ' + (
+                            utils.strfdatetime(current_date - one_days, "%d"))
                         ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
                         total_sum.append(r)
                         ws1.row_dimensions.group(r1, r - 1, hidden=True)
@@ -690,7 +692,6 @@ def statistic_xls(request):
                             for cell in row:
                                 cell.fill = my_fill
                         r1 = r + 1
-
 
                 r = r + 1
                 ws1.cell(row=r, column=1).value = d_result
@@ -724,7 +725,7 @@ def statistic_xls(request):
 
             t_s = '=SUM('
             for ts in total_sum:
-                t_s = t_s + f'(B{ts})' +','
+                t_s = t_s + f'(B{ts})' + ','
             t_s = t_s + ')'
             r = r + 1
             ws1.cell(row=r, column=1).value = 'Итого Всего'
@@ -771,11 +772,12 @@ def statistic_xls(request):
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
-        for i in us_o:
-            if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
-                ws = wb.create_sheet(i.get_fio())
-                res_oq = my_custom_sql(i.pk, start_date, end_date)
-                ws = structure(ws, i, res_oq, d1, d2)
+        if us_o:
+            for i in us_o:
+                if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
+                    ws = wb.create_sheet(i.get_fio())
+                    res_oq = my_custom_sql(i.pk, start_date, end_date)
+                    ws = structure(ws, i, res_oq, d1, d2)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
