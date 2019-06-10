@@ -542,7 +542,7 @@ def statistic_xls(request):
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
         import datetime
-        from datetime import  date
+        from datetime import  timedelta
         import calendar
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -586,8 +586,10 @@ def statistic_xls(request):
 
         my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094',
                                                     end_color='a9d094')
+        total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66',
+                                                    end_color='ffcc66')
 
-        def structure(ws1, i_obj, issl_obj):
+        def structure(ws1, i_obj, issl_obj, d1, d2):
             """
             Назначить ширину колонок. Вход worksheet выход worksheen с размерами
             """
@@ -625,9 +627,9 @@ def statistic_xls(request):
             ws1.cell(row=2, column=2).value = i_obj.specialities.title if i_obj.specialities else ""
             ws1.cell(row=4, column=1).value = 'Период:'
             ws1.cell(row=4, column=1).style = style_o
-            ws1.cell(row=5, column=1).value = date_start_o
-            ws1.cell(row=5, column=2).value = '-'
-            ws1.cell(row=5, column=2).value = date_end_o
+            ws1.cell(row=5, column=1).value = d1
+            ws1.cell(row=5, column=2).value = 'по'
+            ws1.cell(row=5, column=3).value = d2
             ws1.cell(row=1, column=5).value = 'Код врача'
             ws1.cell(row=1, column=5).style = style_o
             ws1.cell(row=1, column=6).value = i_obj.personal_code
@@ -671,44 +673,49 @@ def statistic_xls(request):
             r = 7
             r1 = r + 1
             total_sum = []
+            one_days = timedelta(1)
+            current_date = ''
             for issled in issl_obj:
-                d_result = utils.strfdatetime(issled[7], "%d.%m.%Y")
+                current_date = issled[8]
+                d_result = utils.strfdatetime(current_date, "%d.%m.%Y")
                 if r!=7 and r!=8:
-                    if d_result != ws1.cell(row=r, column=1).value and ws1.cell(row=r, column=1).value != 'Итого':
+                    if d_result != ws1.cell(row=r, column=1).value and not (ws1.cell(row=r, column=1).value).istitle():
                         r = r + 1
-                        ws1.cell(row=r, column=1).value = 'Итого'
+                        ws1.cell(row=r, column=1).value = 'Итого за ' + (utils.strfdatetime(current_date-one_days, "%d"))
                         ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
                         total_sum.append(r)
+                        ws1.row_dimensions.group(r1, r - 1, hidden=True)
                         rows = ws1[f'A{r}:V{r}']
                         for row in rows:
                             for cell in row:
                                 cell.fill = my_fill
                         r1 = r + 1
 
+
                 r = r + 1
                 ws1.cell(row=r, column=1).value = d_result
                 ws1.cell(row=r, column=col+1).value = 1
                 ws1.cell(row=r, column=col+2).value = issled[1]
-                f = issled[10] if issled[10] else ''
-                n = issled[11] if issled[11] else ''
-                p = issled[12] if issled[12] else ''
+                f = issled[11] if issled[11] else ''
+                n = issled[12] if issled[12] else ''
+                p = issled[13] if issled[13] else ''
                 ws1.cell(row=r, column=col+4).value = f + n + p
-                ws1.cell(row=r, column=col+5).value = utils.strdate(issled[13])
+                ws1.cell(row=r, column=col+5).value = utils.strdate(issled[14])
                 ws1.cell(row=r, column=col+6).value = issled[0]
-                polis_n = issled[14] if issled[14] else ''
-                polis_who = issled[16] if issled[16] else ''
+                polis_n = issled[15] if issled[15] else ''
+                polis_who = issled[17] if issled[17] else ''
                 ws1.cell(row=r, column=col+7).value = polis_n +';\n' + polis_who
                 ws1.cell(row=r, column=col+8).value = ''
-                ws1.cell(row=r, column=col+10).value = utils.strtime(issled[7])
+                ws1.cell(row=r, column=col+10).value = utils.strtime(issled[8])
                 rows = ws1[f'A{r}:V{r}']
                 for row in rows:
                     for cell in row:
                         cell.style = style_border1
 
-
             r = r + 1
-            ws1.cell(row=r, column=1).value = 'Итого'
+            ws1.cell(row=r, column=1).value = 'Итого за ' + (utils.strfdatetime(current_date, "%d"))
             ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
+            ws1.row_dimensions.group(r1, r-1, hidden=True)
             total_sum.append(r)
             rows = ws1[f'A{r}:V{r}']
             for row in rows:
@@ -721,8 +728,12 @@ def statistic_xls(request):
             t_s = t_s + ')'
             r = r + 1
             ws1.cell(row=r, column=1).value = 'Итого Всего'
-            print(t_s)
             ws1.cell(row=r, column=2).value = t_s
+            rows = ws1[f'A{r}:V{r}']
+            for row in rows:
+                for cell in row:
+                    cell.fill = total_fill
+
             return ws1
 
         from django.db import connection
@@ -730,10 +741,10 @@ def statistic_xls(request):
             with connection.cursor() as cursor:
                 cursor.execute("""with 
                 t_iss AS 
-                    (SELECT directions_napravleniya.client_id, title, 
-                    directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
-                     directions_issledovaniya.id as iss_id, napravleniye_id, doc_confirmation_id, 
-                    time_confirmation
+                    (SELECT directions_napravleniya.client_id, directory_researches.title, directory_researches.code, 
+                        directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
+                         directions_issledovaniya.id as iss_id, directions_issledovaniya.napravleniye_id, 
+                         directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.time_confirmation
                     FROM directions_issledovaniya 
                     LEFT JOIN directory_researches
                     ON directions_issledovaniya.research_id = directory_researches.Id
@@ -754,7 +765,6 @@ def statistic_xls(request):
                 Select * from t_iss
                 left join t_card ON t_iss.client_id=t_card.id
                 order by time_confirmation""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e})
-
                 row = cursor.fetchall()
             return row
 
@@ -765,7 +775,7 @@ def statistic_xls(request):
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
                 res_oq = my_custom_sql(i.pk, start_date, end_date)
-                ws = structure(ws, i, res_oq)
+                ws = structure(ws, i, res_oq, d1, d2)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
