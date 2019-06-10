@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div class="directions" :class="{noStat: !stat_btn}">
+      <div class="directions" :class="{noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d}">
         <div class="inner">
           <div class="direction" v-for="direction in directions_history">
             <div>
@@ -42,49 +42,49 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-          <div class="rmis_loc" v-if="has_loc">
-            <div class="title">
-              <div class="loader" v-if="location.loading"><i class="fa fa-spinner"></i></div>
-              Очередь за <input :readonly="location.loading"
-                                class="inline-form"
-                                required
-                                type="date" v-model="td"/>
-            </div>
-            <div class="inner">
-              <table class="table table-bordered table-hover">
-                <colgroup>
-                  <col width="38"/>
-                  <col/>
-                  <col width="16"/>
-                </colgroup>
-                <tbody>
-                <tr v-for="r in location.data"
-                    :class="{current: r.slot === slot.id}"
-                    @click="open_slot(r)"
-                    v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
-                    :title="{
-                    1: 'Направление зарегистрировано',
-                    2: 'Результат подтверждён'}[r.status.code] || 'Не обработано'">
-                  <td>{{r.timeStart}}</td>
-                  <td>{{r.patient}}</td>
-                  <td>
-                    <span class="slot"
-                          :class="`slot-${r.status.code}`">
-                      <i class="fa fa-circle"></i>
-                    </span>
-                  </td>
-                </tr>
-                <tr v-if="!location.init">
-                  <td colspan="3" style="text-align: center">
-                    загрузка...
-                  </td>
-                </tr>
-                <td colspan="3" style="text-align: center" v-else-if="location.data.length === 0">
-                  нет данных на дату
+        </div>
+        <div class="rmis_loc" v-if="has_loc">
+          <div class="title">
+            <div class="loader" v-if="location.loading"><i class="fa fa-spinner"></i></div>
+            Очередь за <input :readonly="location.loading"
+                              class="inline-form"
+                              required
+                              type="date" v-model="td"/>
+          </div>
+          <div class="inner" :class="{stat_btn: stat_btn_d}">
+            <table class="table table-bordered table-hover">
+              <colgroup>
+                <col width="38"/>
+                <col/>
+                <col width="16"/>
+              </colgroup>
+              <tbody>
+              <tr v-for="r in location.data"
+                  :class="{current: r.slot === slot.id}"
+                  @click="open_slot(r)"
+                  v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
+                  :title="{
+                  1: 'Направление зарегистрировано',
+                  2: 'Результат подтверждён'}[r.status.code] || 'Не обработано'">
+                <td>{{r.timeStart}}</td>
+                <td>{{r.patient}}</td>
+                <td>
+                  <span class="slot"
+                        :class="`slot-${r.status.code}`">
+                    <i class="fa fa-circle"></i>
+                  </span>
                 </td>
-                </tbody>
-              </table>
-            </div>
+              </tr>
+              <tr v-if="!location.init">
+                <td colspan="3" style="text-align: center">
+                  загрузка...
+                </td>
+              </tr>
+              <td colspan="3" style="text-align: center" v-else-if="location.data.length === 0">
+                нет данных на дату
+              </td>
+              </tbody>
+            </table>
           </div>
         </div>
         <a v-if="directions_history.length > 0 && stat_btn"
@@ -476,6 +476,7 @@
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
     <benefit :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="benefit" :readonly="true" />
+    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
   </div>
 </template>
 
@@ -501,11 +502,12 @@
   import ResearchPick from './ResearchPick'
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
+  import ResultsViewer from './ResultsViewer'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory,
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
     },
     data() {
       return {
@@ -544,6 +546,7 @@
         create_directions_for: -1,
         create_directions_data: [],
         create_directions_diagnosis: '',
+        show_results_pk: -1,
       }
     },
     watch: {
@@ -589,6 +592,14 @@
       this.$root.$on('hide_benefit', () => {
         this.load_benefit_rows();
         this.benefit = false;
+      })
+
+      this.$root.$on('show_results', (pk) => {
+        this.show_results_pk = pk
+      })
+
+      this.$root.$on('hide_results', () => {
+        this.show_results_pk = -1
       })
     },
     methods: {
@@ -1034,6 +1045,9 @@
       },
       stat_btn() {
         return this.$store.getters.modules.l2_stat_btn;
+      },
+      stat_btn_d() {
+        return this.stat_btn && this.directions_history.length;
       },
       rmis_queue() {
         return this.$store.getters.modules.l2_rmis_queue;
@@ -1533,7 +1547,7 @@
 
     &.has_loc {
       .inner {
-        height: 50%;
+        height: calc(50% + 17px);
       }
     }
 
@@ -1563,6 +1577,10 @@
         height: calc(100% - 20px);
         overflow-y: auto;
         overflow-x: hidden;
+
+        &.stat_btn {
+          height: calc(100% - 54px);
+        }
 
         table {
           margin-bottom: 0;
