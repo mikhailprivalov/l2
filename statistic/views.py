@@ -669,16 +669,21 @@ def statistic_xls(request):
                     cell.style = style_border
 
             r = 7
+            r1 = r + 1
+            total_sum = []
             for issled in issl_obj:
                 d_result = utils.strfdatetime(issled[7], "%d.%m.%Y")
                 if r!=7 and r!=8:
                     if d_result != ws1.cell(row=r, column=1).value and ws1.cell(row=r, column=1).value != 'Итого':
                         r = r + 1
                         ws1.cell(row=r, column=1).value = 'Итого'
+                        ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
+                        total_sum.append(r)
                         rows = ws1[f'A{r}:V{r}']
                         for row in rows:
                             for cell in row:
                                 cell.fill = my_fill
+                        r1 = r + 1
 
                 r = r + 1
                 ws1.cell(row=r, column=1).value = d_result
@@ -703,11 +708,21 @@ def statistic_xls(request):
 
             r = r + 1
             ws1.cell(row=r, column=1).value = 'Итого'
+            ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
+            total_sum.append(r)
             rows = ws1[f'A{r}:V{r}']
             for row in rows:
                 for cell in row:
                     cell.fill = my_fill
 
+            t_s = '=SUM('
+            for ts in total_sum:
+                t_s = t_s + f'(B{ts})' +','
+            t_s = t_s + ')'
+            r = r + 1
+            ws1.cell(row=r, column=1).value = 'Итого Всего'
+            print(t_s)
+            ws1.cell(row=r, column=2).value = t_s
             return ws1
 
         from django.db import connection
