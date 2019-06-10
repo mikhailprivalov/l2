@@ -537,20 +537,28 @@ def statistic_xls(request):
             row_num += 1
 
     elif tp == "statistics-tickets-print":
-
-        date_start, date_end = try_parse_range(date_start_o, date_end_o)
         access_to_all = ('Просмотр статистики' in request.user.groups.values_list('name',
                                                                                   flat=True)) or request.user.is_superuser
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
         import datetime
-        d = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+        from datetime import  date
+        import calendar
+        if request_data.get("date_type") == 'd':
+            d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+            d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+        else:
+            month_obj = int(data_date['month']) + 1
+            _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
+            d1 = datetime.date(int(data_date['year']), month_obj, 1)
+            d2 = datetime.date(int(data_date['year']),month_obj, num_days)
+
         type_fin ='омс'
         users_o = json.loads(user_o)
-        if users_o:
+        if users_o != -1:
             us = int(users_o)
             us_o = [DoctorProfile.objects.get(pk=us)]
-        elif depart_o:
+        elif depart_o != -1:
             depart = Podrazdeleniya.objects.get(pk=depart_o)
             us_o = DoctorProfile.objects.filter(podrazdeleniye=depart)
 
@@ -568,6 +576,16 @@ def statistic_xls(request):
         style_border.font = Font(bold=True, size=11)
         style_border.alignment = Alignment(wrap_text=True)
         wb.add_named_style(style_border)
+
+        style_border1 = NamedStyle(name="style_border1")
+        bd = Side(style='thin', color="000000")
+        style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+        style_border1.font = Font(bold=False, size=11)
+        style_border1.alignment = Alignment(wrap_text=True)
+        wb.add_named_style(style_border1)
+
+        my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094',
+                                                    end_color='a9d094')
 
         def structure(ws1, i_obj, issl_obj):
             """
@@ -651,18 +669,19 @@ def statistic_xls(request):
                     cell.style = style_border
 
             r = 7
-            style_border1 = NamedStyle(name="style_border1")
-            bd = Side(style='thin', color="000000")
-            style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-            style_border1.font = Font(bold=False, size=11)
-            style_border1.alignment = Alignment(wrap_text=True)
-            wb.add_named_style(style_border1)
-            date_s = None
-            x = 0
             for issled in issl_obj:
+                d_result = utils.strfdatetime(issled[7], "%d.%m.%Y")
+                if r!=7 and r!=8:
+                    if d_result != ws1.cell(row=r, column=1).value and ws1.cell(row=r, column=1).value != 'Итого':
+                        r = r + 1
+                        ws1.cell(row=r, column=1).value = 'Итого'
+                        rows = ws1[f'A{r}:V{r}']
+                        for row in rows:
+                            for cell in row:
+                                cell.fill = my_fill
+
                 r = r + 1
-                ws1.cell(row=r, column=1).value = utils.strfdatetime(issled[7], "%d.%m.%Y")
-                # ws1.cell(row=r, column=1).value = issl_obj[7]
+                ws1.cell(row=r, column=1).value = d_result
                 ws1.cell(row=r, column=col+1).value = 1
                 ws1.cell(row=r, column=col+2).value = issled[1]
                 f = issled[10] if issled[10] else ''
@@ -677,30 +696,22 @@ def statistic_xls(request):
                 ws1.cell(row=r, column=col+8).value = ''
                 ws1.cell(row=r, column=col+10).value = utils.strtime(issled[7])
                 rows = ws1[f'A{r}:V{r}']
-                # for row in rows:
-                #     for cell in row:
-                #         cell.style = style_border1
+                for row in rows:
+                    for cell in row:
+                        cell.style = style_border1
 
-            # ws1.cell(row=r+1, column=1).value = 'Итого'
-            # ws1.cell(row=r + 1, column=2).value = "=SUM(B8:B{})".format(r)
-            # rows = ws1[f'A{r+1}:V{r+1}']
-            # my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094', end_color='a9d094')
-            # for row in rows:
-            #     for cell in row:
-            #         cell.fill = my_fill
+
+            r = r + 1
+            ws1.cell(row=r, column=1).value = 'Итого'
+            rows = ws1[f'A{r}:V{r}']
+            for row in rows:
+                for cell in row:
+                    cell.fill = my_fill
+
             return ws1
 
-        start_date = datetime.datetime.combine(d, datetime.time.min)
-        end_date = datetime.datetime.combine(d, datetime.time.max)
-
-        d1 = datetime.datetime.strptime('01.12.2018', '%d.%m.%Y')
-        d2 = datetime.datetime.strptime('31.12.2018', '%d.%m.%Y')
-
-        start_date = datetime.datetime.combine(d1, datetime.time.min)
-        end_date = datetime.datetime.combine(d2, datetime.time.max)
-
         from django.db import connection
-        def my_custom_sql(d_conf):
+        def my_custom_sql(d_conf, d_s, d_e):
             with connection.cursor() as cursor:
                 cursor.execute("""with 
                 t_iss AS 
@@ -727,16 +738,18 @@ def statistic_xls(request):
                     )
                 Select * from t_iss
                 left join t_card ON t_iss.client_id=t_card.id
-                order by time_confirmation""",params={'d_confirms':d_conf, 'd_start':'2018-12-01', 'd_end':'2018-12-31'})
+                order by time_confirmation""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e})
 
                 row = cursor.fetchall()
             return row
 
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
         for i in us_o:
             if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                 ws = wb.create_sheet(i.get_fio())
-                res_oq = my_custom_sql('1107')
+                res_oq = my_custom_sql(i.pk, start_date, end_date)
                 ws = structure(ws, i, res_oq)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
