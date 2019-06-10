@@ -353,7 +353,8 @@ class Napravleniya(models.Model):
                          save: bool = True,
                          for_rmis: bool = False,
                          rmis_data: [dict, None] = None,
-                         parent_id=None) -> 'Napravleniya':
+                         parent_id=None,
+                         rmis_slot=None) -> 'Napravleniya':
         """
         Генерация направления
         :param client_id:
@@ -379,7 +380,7 @@ class Napravleniya(models.Model):
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
-                           diagnos=diagnos, cancel=False, parent_id=parent_id)
+                           diagnos=diagnos, cancel=False, parent_id=parent_id, rmis_slot_id=rmis_slot)
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
@@ -416,7 +417,7 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
-                                          count=1, discount=0, parent_iss=None):
+                                          count=1, discount=0, parent_iss=None, rmis_slot=None):
 
         #импорт для получения прайса и цены по услугам
         from forms import forms_func
@@ -495,7 +496,8 @@ class Napravleniya(models.Model):
                                                                                              ofname,
                                                                                              for_rmis=for_rmis,
                                                                                              rmis_data=rmis_data,
-                                                                                             parent_id=parent_iss)
+                                                                                             parent_id=parent_iss,
+                                                                                             rmis_slot=rmis_slot)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -510,7 +512,8 @@ class Napravleniya(models.Model):
                                                                                              ofname,
                                                                                              for_rmis=for_rmis,
                                                                                              rmis_data=rmis_data,
-                                                                                             parent_id=parent_iss)
+                                                                                             parent_id=parent_iss,
+                                                                                             rmis_slot=rmis_slot)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 

@@ -759,7 +759,7 @@ def directions_paraclinic_result(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                   | Q(research__is_stom=True)).exists():
+                   | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         for group in request_data["research"]["groups"]:
             for field in group["fields"]:

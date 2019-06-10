@@ -887,7 +887,7 @@ def user_location(request):
         def slot_status(x):
             s = 0
             pk = None
-            n = directions.Napravleniya.objects.filter(rmis_slot_id=x).first()
+            n = directions.Napravleniya.objects.filter(rmis_slot_id=x["slot"]).first()
             if n:
                 pk = n.pk
                 s = 1
@@ -927,9 +927,23 @@ def user_get_reserve(request):
 def user_fill_slot(request):
     slot = json.loads(request.body).get('slot', {})
     slot_data = slot.get('data', {})
-    direction = -1
     if directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"]).exists():
         direction = directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"])[0].pk
     else:
-        res = DResearches.objects.get(pk=slot_data["direction_service"])
+        result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(slot["card_pk"],
+                                                                           "",
+                                                                           None,
+                                                                           "",
+                                                                           None,
+                                                                           request.user.doctorprofile,
+                                                                           {-1: [slot_data["direction_service"]]},
+                                                                           {},
+                                                                           False,
+                                                                           {},
+                                                                           vich_code="",
+                                                                           count=1,
+                                                                           discount=0,
+                                                                           parent_iss=None,
+                                                                           rmis_slot=slot["id"])
+        direction = result["list_id"][0]
     return JsonResponse({"direction": direction})
