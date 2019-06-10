@@ -1031,8 +1031,7 @@
     },
     computed: {
       date_to_form() {
-        const date = this.date.split('.');
-        return date.join('');
+        return `"${this.date}"`;
       },
       ca() {
         if (this.new_anamnesis !== null) {
