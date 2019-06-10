@@ -412,7 +412,10 @@ class Patients(BaseRequester):
 
     def get_slot(self, pk: [int, str]):
         d = self.appointment_client.getSlot(pk)
-        return d
+        return {
+            "status": d["status"],
+            "datetime": d["date"],
+        } if d else {}
 
     def extended_data(self, uid):
         d = self.smart_client.getPatient(uid)

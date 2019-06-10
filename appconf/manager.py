@@ -26,6 +26,7 @@ class SettingManager:
             "stom",
             "hosp",
             "rmis_queue",
+            "benefit",
         ]}
 
     @staticmethod

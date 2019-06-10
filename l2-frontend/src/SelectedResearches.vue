@@ -1,13 +1,14 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[pay_source && 'pay_source']">
-    <div :class="['top-picker', need_vich_code && 'need-vich-code']" v-if="!simple">
+    <div :class="['top-picker', need_vich_code && 'need-vich-code', hide_diagnosis && 'hide_diagnosis']" v-if="!simple">
       <button class="btn btn-blue-nb top-inner-btn" @click="clear_diagnos"
+              v-if="!hide_diagnosis"
               v-tippy="{ placement : 'bottom', arrow: true }"
               title="Очистить диагноз">
         <span>&times;</span>
       </button>
-      <m-k-b-field v-model="diagnos" />
-      <div class="vich-code" v-if="need_vich_code">
+      <m-k-b-field v-model="diagnos" v-if="!hide_diagnosis" />
+      <div class="vich-code" v-if="need_vich_code && !hide_diagnosis">
         <TypeAhead src="/api/vich_code?keyword=:keyword" :getResponse="getResponse" :onHit="onHitVich" ref="v" placeholder="Код"
                    v-model="vich_code" maxlength="12" :delayTime="delayTime" :minChars="minChars"
                    :render="renderItems"
@@ -35,6 +36,7 @@
           <td class="pb0">
               <research-display v-for="(res, idx) in row.researches" :simple="simple"
                                 :title="res.title" :pk="res.pk" :n="idx"
+                                :kk="kk"
                                 :nof="row.researches.length" :comment="comments[res.pk]"/>
           </td>
           <td v-if="!readonly" class="cl-td">
@@ -147,6 +149,10 @@
         type: Boolean,
         default: false
       },
+      hide_diagnosis: {
+        type: Boolean,
+        default: false
+      },
       ofname: {
         type: Number,
         default: -1
@@ -158,6 +164,20 @@
       main_diagnosis: {
         type: String,
         default: ''
+      },
+      kk: {
+        type: String,
+        default: '',
+      },
+      initial_fin: {
+        default: null,
+      },
+      parent_iss: {
+        default: null,
+      },
+      clear_after_gen: {
+        type: Boolean,
+        default: false
       },
     },
     data() {
@@ -249,10 +269,13 @@
         this.$root.$emit('update_fin', this.fin)
       }
     },
-    created() {
-      this.$root.$on('researches-picker:clear_all', this.clear_all)
-      this.$root.$on('researches-picker:update-comment', this.update_comment)
-      this.$root.$on('patient-picker:select_card', this.clear_diagnos)
+    mounted() {
+      this.$root.$on('researches-picker:clear_all' + this.kk, this.clear_all)
+      this.$root.$on('researches-picker:update-comment' + this.kk, this.update_comment)
+      this.$root.$on('patient-picker:select_card' + this.kk, this.clear_diagnos)
+      if (this.initial_fin) {
+        this.select_fin(this.initial_fin);
+      }
     },
     methods: {
       update_comment(pk) {
@@ -328,7 +351,7 @@
         }
       },
       clear_department(pk) {
-        this.$root.$emit('researches-picker:deselect_department', pk)
+        this.$root.$emit('researches-picker:deselect_department' + this.kk, pk)
       },
       generate(type) {
         if (this.diagnos === '' && this.current_fin !== 'Платно' && !this.pay_source) {
@@ -355,11 +378,13 @@
           vich_code: this.need_vich_code ? this.vich_code : '',
           count: this.count,
           discount: this.discount,
-          need_contract: this.pay_source
+          need_contract: this.pay_source,
+          parent_iss: this.parent_iss,
+          kk: this.kk,
         })
       },
       clear_all() {
-        this.$root.$emit('researches-picker:deselect_all')
+        this.$root.$emit('researches-picker:deselect_all' + this.kk)
         this.clear_fin()
       },
       clear_fin() {
@@ -469,6 +494,10 @@
 
   .need-vich-code .top-inner {
     left: 305px;
+  }
+
+  .hide_diagnosis .top-inner {
+    left: 0;
   }
 
   .top-picker /deep/ .form-control {

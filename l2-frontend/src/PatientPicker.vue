@@ -62,7 +62,7 @@
             <td class="table-header-row">
               <span class="hospital" style="display: block;line-height: 1.2;" v-if="history_n === 'true'">Номер истории:</span>
             </td>
-            <td class="table-content-row" colspan="2">
+            <td class="table-content-row">
               <div style="height: 34px" v-if="history_n === 'true'">
                 <span class="hospital">
                   <input type="text" class="form-control" maxlength="11" v-model="history_num"
@@ -70,8 +70,12 @@
                 </span>
               </div>
             </td>
-            <td>
+            <td colspan="2">
               <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
+                <button class="btn last btn-blue-nb nbr" type="button"
+                        v-tippy="{ placement : 'bottom', arrow: true }"
+                        title="Льготы пациента" @click="open_benefit()"
+                        v-if="l2_benefit && selected_card.pk"><i class="fa fa-cubes"></i></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Диспансерный учёт" @click="open_dreg()"
@@ -141,6 +145,7 @@
     </modal>
     <l2-card-create :card_pk="editor_pk" v-if="editor_pk !== -2" :base_pk="base" />
     <d-reg :card_pk="selected_card.pk" :card_data="selected_card" v-if="dreg" />
+    <benefit :card_pk="selected_card.pk" :card_data="selected_card" v-if="benefit" :readonly="false" />
     <modal v-if="anamnesis" ref="modalAnamnesis" @close="hide_modal_anamnesis" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top class="an">
         <span slot="header">Анамнез жизни – карта {{selected_card.num}}, {{selected_card.fio_age}}</span>
         <div slot="body" class="an-body">
@@ -177,6 +182,7 @@
   import SelectPickerB from './SelectPickerB'
   import L2CardCreate from './L2CardCreate'
   import DReg from './DReg'
+  import Benefit from './Benefit'
   import LinkSelector from './LinkSelector'
   import PatientCard from './ui-cards/PatientCard'
   import Modal from './ui-cards/Modal'
@@ -185,7 +191,7 @@
 
   export default {
     name: 'patient-picker',
-    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg},
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
     props: {
       directive_from_need: {
         default: 'false',
@@ -229,6 +235,7 @@
           tab: 'text',
         },
         dreg: false,
+        benefit: false,
       }
     },
     created() {
@@ -290,6 +297,9 @@
       this.$root.$on('hide_dreg', () => {
         this.dreg = false;
       })
+      this.$root.$on('hide_benefit', () => {
+        this.benefit = false;
+      })
     },
     watch: {
       query() {
@@ -342,6 +352,9 @@
       l2_cards() {
         return this.$store.getters.modules.l2_cards_module;
       },
+      l2_benefit() {
+        return this.$store.getters.modules.l2_benefit;
+      },
       is_operator() {
         if ('groups' in this.$store.getters.user_data) {
           for (let g of this.$store.getters.user_data.groups) {
@@ -355,7 +368,7 @@
       is_l2_cards() {
         if ('groups' in this.$store.getters.user_data) {
           for (let g of this.$store.getters.user_data.groups) {
-            if (g === 'Картотека L2' || g === "Admin") {
+            if (g === 'Картотека L2' || g === "Admin" || g === "Лечащий врач" || g === "Оператор лечащего врача") {
               return true
             }
           }
@@ -410,6 +423,9 @@
       },
       open_dreg() {
         this.dreg = true;
+      },
+      open_benefit() {
+        this.benefit = true;
       },
       open_editor(isnew) {
         if (isnew) {
@@ -513,6 +529,7 @@
                 this.base = row.pk
                 this.query = rmis_uid
                 this.search_after_loading = true
+                has_internal = true
                 break
               }
             }
@@ -617,16 +634,16 @@
         })
       },
       search() {
-        this.search_after_loading = false
         if (!this.query_valid || this.inLoading)
           return
+        const q = this.query
         this.check_base()
         $('input').each(function () {
           $(this).trigger('blur')
         })
         let vm = this
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
+        patients_point.searchCard(this.base, q, false, this.inc_rmis || this.search_after_loading).then((result) => {
           vm.clear()
           if (result.results) {
             vm.founded_cards = result.results
@@ -639,6 +656,10 @@
             }
           } else {
             errmessage('Ошибка на сервере')
+          }
+          if (this.search_after_loading) {
+            this.search_after_loading = false
+            this.query = ''
           }
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
@@ -901,7 +922,16 @@
   }
 
   .internal_type {
-    text-align: right;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: stretch;
+    .btn {
+      align-self: stretch;
+      flex: 1;
+      padding: 6px 0;
+    }
   }
 
   .founded {

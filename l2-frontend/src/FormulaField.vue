@@ -1,6 +1,6 @@
 <template>
   <div class="input-group">
-      <input class="form-control" v-model="content" readonly placeholder="Расчётное поле" />
+      <input class="form-control" :value="content" readonly placeholder="Расчётное поле" />
   </div>
 </template>
 
@@ -21,7 +21,7 @@
         this.$emit('input', this.content);
       },
       func_formula() {
-        this.content = this.func_formula;
+        this.content = this.func_formula.toString();
       },
     },
     computed: {
@@ -32,19 +32,24 @@
         if (necessary) {
           for (const n of necessary) {
             let v = null;
-            if (this.f_obj[n.replace(/[{}]/g, "")]) {
-              v = parseFloat(this.f_obj[n.replace(/[{}]/g, "")].value.trim().replace(",", "."));
+            let vOrig = ((this.f_obj[n.replace(/[{}]/g, "")] || {}).value || '').trim();
+            if ((/^\d+([,.]\d+)?$/).test(vOrig)) {
+              if (this.f_obj[n.replace(/[{}]/g, "")]) {
+                v = parseFloat(vOrig.trim().replace(",", "."));
+              }
+              v = v || 0;
+              v = isFinite(v) ? v : 0;
+            } else {
+              v = vOrig;
             }
-            v = v || 0;
-            v = isFinite(v) ? v : 0;
-            s = s.replace(new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g'), v);
+            s = s.replace(new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g'), v || '');
           }
         }
+        s = `return (${s});`
         try {
-          return (new Function("return " + s + ";")()) || 0;
+          return (new Function(s)()) || 0;
         } catch (e) {
-          console.error(e);
-          return 0;
+          return '';
         }
 
       },

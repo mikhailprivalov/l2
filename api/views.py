@@ -1,5 +1,5 @@
 import time
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 import simplejson as json
 import yaml
@@ -20,6 +20,7 @@ from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
 from directory.models import Fractions, ParaclinicInputField, ResearchSite
 from laboratory.decorators import group_required
+from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from slog import models as slog
 from slog.models import Log
@@ -369,9 +370,8 @@ def bases(request):
 
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
-           "department": {"pk": -1, "title": ""}, "groups": [], "modules": {
-            **SettingManager.l2_modules(),
-        }}
+           "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
+           "user_services": []}
     if ret["auth"]:
         ret["username"] = request.user.username
         ret["fio"] = request.user.doctorprofile.fio
@@ -382,6 +382,9 @@ def current_user_info(request):
         ret["rmis_location"] = request.user.doctorprofile.rmis_location
         ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
+        ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
+        ret["user_services"] = [x.pk for x in
+                                request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
 
         en = SettingManager.en()
         ret["extended_departments"] = {}
@@ -791,6 +794,7 @@ def user_view(request):
             "users_services": [],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
+            "rmis_location": '',
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -804,6 +808,7 @@ def user_view(request):
             "users_services": [x.pk for x in doc.users_services.all()],
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
+            "rmis_location": doc.rmis_location or '',
         }
 
     return JsonResponse({"user": data})
@@ -818,6 +823,7 @@ def user_save_view(request):
     message = ""
     ud = request_data["user_data"]
     username = ud["username"]
+    rmis_location = ud["rmis_location"].strip() or None
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -862,6 +868,7 @@ def user_save_view(request):
 
             doc.podrazdeleniye_id = ud['department']
             doc.fio = ud["fio"]
+            doc.rmis_location = rmis_location
             doc.save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 
@@ -902,5 +909,27 @@ def user_get_reserve(request):
         from rmis_integration.client import Client
         c = Client(modules=['patients'])
         d = c.patients.get_slot(pk)
-        return JsonResponse(d)
+        n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
+        d["direction"] = n.pk if n else None
+        ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
+        d['direction_service'] = ds.research.pk if ds else -1
+        if d:
+            return JsonResponse({
+                **d,
+                "datetime": strdatetime(d["datetime"])[:-3],
+                "patient_uid": patient_uid,
+                "pk": int(str(pk)[1:]),
+            })
     return JsonResponse({})
+
+
+@login_required
+def user_fill_slot(request):
+    slot = json.loads(request.body).get('slot', {})
+    slot_data = slot.get('data', {})
+    direction = -1
+    if directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"]).exists():
+        direction = directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"])[0].pk
+    else:
+        res = DResearches.objects.get(pk=slot_data["direction_service"])
+    return JsonResponse({"direction": direction})

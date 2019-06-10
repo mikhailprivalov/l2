@@ -32,8 +32,9 @@ def form_01(request_data):
     """
 
     doc_confirm = request_data['user'].doctorprofile
-    str_date = request_data['date']
-    date_confirm = datetime.datetime.strptime(str_date, "%d%m%Y")
+    req_date = request_data['date']
+    str_date = json.loads(req_date)
+    date_confirm = datetime.datetime.strptime(str_date, "%d.%m.%Y")
     doc_results = forms_func.get_doc_results(doc_confirm, date_confirm)
     data_talon = forms_func.get_finaldata_talon(doc_results)
 

@@ -16,7 +16,10 @@ urlpatterns = [
     path('individuals/sync-rmis', views.sync_rmis),
     path('individuals/load-anamnesis', views.load_anamnesis),
     path('individuals/load-dreg', views.load_dreg),
+    path('individuals/load-benefit', views.load_benefit),
     path('individuals/load-dreg-detail', views.load_dreg_detail),
+    path('individuals/load-benefit-detail', views.load_benefit_detail),
     path('individuals/save-dreg', views.save_dreg),
+    path('individuals/save-benefit', views.save_benefit),
     path('individuals/save-anamnesis', views.save_anamnesis),
 ]

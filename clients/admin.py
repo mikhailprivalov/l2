@@ -45,3 +45,14 @@ class DistrictAdmin(admin.ModelAdmin):
 @admin.register(models.DispensaryReg)
 class DispensaryRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
+
+
+@admin.register(models.BenefitType)
+class DispensaryRegAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.BenefitReg)
+class DispensaryRegAdmin(admin.ModelAdmin):
+    raw_id_fields = ('card',)
+

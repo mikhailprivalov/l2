@@ -9,7 +9,7 @@
       <div class="sidebar-bottom-top"><span>Результаты за</span>
         <date-field-nav :brn="false" :val.sync="date" :def="date"/>
       </div>
-      <div class="directions" :class="{noStat: !stat_btn}">
+      <div class="directions" :class="{noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d}">
         <div class="inner">
           <div class="direction" v-for="direction in directions_history">
             <div>
@@ -42,40 +42,49 @@
           <div class="text-center" style="margin: 5px" v-if="directions_history.length === 0">
             Нет данных
           </div>
-          <div class="rmis_loc" v-if="has_loc">
-            <div class="title">Очередь за {{td.format('DD.MM.YYYY')}}</div>
-            <div class="inner">
-              <table class="table table-bordered table-hover">
-                <colgroup>
-                  <col width="38"/>
-                  <col/>
-                  <col width="16"/>
-                </colgroup>
-                <tbody>
-                <tr v-for="r in location.data"
-                    :class="{current: r.slot === slot.id}"
-                    @click="open_slot(r)"
-                    v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
-                    :title="{
-                    1: 'Направление зарегистрировано',
-                    2: 'Результат подтверждён'}[r.status.code] || 'Не обработано'">
-                  <td>{{r.timeStart}}</td>
-                  <td>{{r.patient}}</td>
-                  <td>
-                    <span class="slot"
-                          :class="`slot-${r.status.code}`">
-                      <i class="fa fa-circle"></i>
-                    </span>
-                  </td>
-                </tr>
-                <tr v-if="!location.init">
-                  <td colspan="3" style="text-align: center">
-                    загрузка...
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
+        </div>
+        <div class="rmis_loc" v-if="has_loc">
+          <div class="title">
+            <div class="loader" v-if="location.loading"><i class="fa fa-spinner"></i></div>
+            Очередь за <input :readonly="location.loading"
+                              class="inline-form"
+                              required
+                              type="date" v-model="td"/>
+          </div>
+          <div class="inner" :class="{stat_btn: stat_btn_d}">
+            <table class="table table-bordered table-hover">
+              <colgroup>
+                <col width="38"/>
+                <col/>
+                <col width="16"/>
+              </colgroup>
+              <tbody>
+              <tr v-for="r in location.data"
+                  :class="{current: r.slot === slot.id}"
+                  @click="open_slot(r)"
+                  v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
+                  :title="{
+                  1: 'Направление зарегистрировано',
+                  2: 'Результат подтверждён'}[r.status.code] || 'Не обработано'">
+                <td>{{r.timeStart}}</td>
+                <td>{{r.patient}}</td>
+                <td>
+                  <span class="slot"
+                        :class="`slot-${r.status.code}`">
+                    <i class="fa fa-circle"></i>
+                  </span>
+                </td>
+              </tr>
+              <tr v-if="!location.init">
+                <td colspan="3" style="text-align: center">
+                  загрузка...
+                </td>
+              </tr>
+              <td colspan="3" style="text-align: center" v-else-if="location.data.length === 0">
+                нет данных на дату
+              </td>
+              </tbody>
+            </table>
           </div>
         </div>
         <a v-if="directions_history.length > 0 && stat_btn"
@@ -99,11 +108,19 @@
           <div class="col-xs-5">
             <div v-if="!data.patient.imported_from_rmis">Источник финансирования: {{data.direction.fin_source}}</div>
             <div>Карта: {{data.patient.card}}
-              <a title="Анамнез жизни"
-                 href="#"
+              <a href="#"
                  v-if="data.card_internal && data.has_doc_referral"
-                 v-tippy="{ placement : 'bottom', arrow: true }"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-anamnesis' }"
+                 @show="load_anamnesis"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
+              <div id="template-anamnesis" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Анамнез жизни</strong><br/>
+                <span v-if="anamnesis_loading">загрузка...</span>
+                <pre v-else
+                     style="padding: 5px;text-align: left;white-space: pre-wrap;word-break: keep-all;max-width:600px"
+                >{{anamnesis_data.text || 'нет данных'}}</pre>
+              </div>
               <a style="margin-left: 3px"
                  href="#"
                  v-if="data.card_internal && data.has_doc_referral"
@@ -120,6 +137,24 @@
                     {{r.diagnos}} – {{r.date_start}} <span v-if="r.illnes">– {{r.illnes}}</span>
                   </li>
                   <li v-if="dreg_rows.length === 0">нет активных записей</li>
+                </ul>
+              </div>
+              <a style="margin-left: 3px"
+                 href="#"
+                 :class="{dreg_nex: !data.patient.has_benefit, dreg_ex: data.patient.has_benefit }"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                   interactive : true, html: '#template-benefit' }"
+                 @show="load_benefit_rows"
+                 @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
+              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral}">
+                <strong>Льготы пациента</strong><br/>
+                <span v-if="benefit_rows_loading">загрузка...</span>
+                <ul v-else style="padding-left: 25px;text-align: left">
+                  <li v-for="r in benefit_rows">
+                    {{r.benefit}} – {{r.date_start}} – {{r.registration_basis}}
+                  </li>
+                  <li v-if="benefit_rows.length === 0">нет активных записей</li>
                 </ul>
               </div>
             </div>
@@ -182,7 +217,9 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field" :on-confirm="clear_val" :confirm-time="0" :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
+                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field"
+                           :on-confirm="clear_val" :confirm-time="0"
+                           :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
                 <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
@@ -206,7 +243,8 @@
                   <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
                 </div>
                 <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                  <formula-field v-model="field.value" :formula="field.default_value" :fields="group.fields" />
+                  <formula-field v-model="field.value" :formula="field.default_value"
+                                 :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])" />
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
                   <input v-model="field.value" class="form-control" :readonly="true" />
@@ -298,6 +336,22 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="row.research.is_doc_refferal">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
@@ -340,13 +394,75 @@
         </div>
       </div>
     </modal>
+    <modal @close="hide_modal_create_directions" margin-top marginLeftRight="auto"
+           max-width="1400px" ref="modalCD" show-footer="true" v-if="create_directions_for > -1" white-bg="true" width="100%">
+      <span slot="header">Создание направлений – карта {{data.patient.card}}, {{data.patient.fio_age}}</span>
+      <div class="registry-body" slot="body" style="min-height: 140px">
+        <div class="row">
+          <div class="col-xs-6"
+               style="height: 450px;border-right: 1px solid #eaeaea;padding-right: 0;">
+            <researches-picker v-model="create_directions_data"
+              kk="cd" style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"/>
+          </div>
+          <div class="col-xs-6" style="height: 450px;padding-left: 0;">
+            <selected-researches
+              kk="cd"
+              :base="bases_obj[data.patient.base]"
+              :researches="create_directions_data"
+              :main_diagnosis="create_directions_diagnosis"
+              :valid="true"
+              :card_pk="data.patient.card_pk"
+              :initial_fin="data.direction.fin_source_id"
+              :parent_iss="create_directions_for"
+              :clear_after_gen="true"
+              style="border-top: 1px solid #eaeaea;border-bottom: 1px solid #eaeaea;"
+            />
+          </div>
+        </div>
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button @click="hide_modal_create_directions" class="btn btn-primary-nb btn-blue-nb" type="button">
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </modal>
     <modal v-if="!!slot.id" ref="modalSlot" @close="close_slot"
            margin-top="50px"
            show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto">
       <span slot="header">Слот {{slot.id}}</span>
-      <div slot="body" style="min-height: 140px" class="registry-body">
+      <div slot="body" style="min-height: 200px;background-color: #fff" class="registry-body">
         <div class="text-center" v-if="Object.keys(slot.data).length === 0">загрузка...</div>
-        <div class="text-center" v-else>{{JSON.stringify(slot.data)}}</div>
+        <div class="text-left" v-else>
+          <h3 style="margin-top: 0;">Талон № {{slot.data.pk}}</h3>
+          <h5>{{slot.data.datetime}}</h5>
+          РМИС UID пациента: <a :href="`/mainmenu/directions?rmis_uid=${slot.data.patient_uid}`"
+                                target="_blank">{{slot.data.patient_uid}}</a><br/>
+          <div v-if="!slot.data.direction">Нет связанного назначения. Выберите ниже:</div>
+          <div v-else>Выбранное назначение для талона:</div>
+          <div class="content-picker">
+            <research-pick :class="{ active: row.pk === slot.data.direction_service }" :research="row"
+                           @click.native="select_research(row.pk)"
+                           class="research-select"
+                           v-for="row in user_services"
+                           v-if="!slot.data.direction || row.pk === slot.data.direction_service"/>
+            <div v-if="user_services.length === 0">нет данных</div>
+          </div>
+          <div class="text-center" style="margin-top: 10px;">
+            <button @click="fill_slot"
+                    :disabled="slot.data.direction_service === -1"
+                    v-if="!slot.data.direction"
+                    class="btn btn-primary-nb btn-blue-nb" type="button">
+              Сохранить назначение и заполнить протокол
+            </button>
+            <button @click="open_fill_slot" v-else class="btn btn-primary-nb btn-blue-nb" type="button">
+              Перейти к протоколу
+            </button>
+          </div>
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
@@ -359,6 +475,8 @@
       </div>
     </modal>
     <d-reg :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="dreg" />
+    <benefit :card_pk="data.patient.card_pk" :card_data="data.patient" v-if="benefit" :readonly="true" />
+    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
   </div>
 </template>
 
@@ -381,27 +499,38 @@
   import SelectedResearches from './SelectedResearches'
   import {mapGetters} from 'vuex'
   import users_point from './api/user-point'
+  import ResearchPick from './ResearchPick'
+  import Benefit from './Benefit'
+  import DirectionsHistory from './DirectionsHistory'
+  import ResultsViewer from './ResultsViewer'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
-      dropdown, SelectPickerM, SelectPickerB, DReg},
+      dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
+    },
     data() {
       return {
         pk: '',
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
-        td: moment().subtract(3, 'days'),
+        td: moment().format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
         inserted: false,
         anamnesis_edit: false,
-        anamnesis_data: {},
+        anamnesis_data: {
+          text: '',
+        },
+        anamnesis_loading: false,
         new_anamnesis: null,
         research_open_history: null,
         research_history: [],
         templates: {},
+        benefit: false,
+        benefit_rows_loading: false,
+        benefit_rows: [],
         dreg: false,
         dreg_rows_loading: false,
         dreg_rows: [],
@@ -414,6 +543,10 @@
           id: null,
           data: {},
         },
+        create_directions_for: -1,
+        create_directions_data: [],
+        create_directions_diagnosis: '',
+        show_results_pk: -1,
       }
     },
     watch: {
@@ -429,6 +562,21 @@
         },
         immediate: true,
       },
+      has_loc: {
+        async handler(h) {
+          if (h) {
+            await this.$store.dispatch(action_types.INC_LOADING)
+            await this.$store.dispatch(action_types.GET_RESEARCHES)
+            await this.$store.dispatch(action_types.DEC_LOADING)
+          }
+        },
+        immediate: true,
+      },
+      td: {
+        handler() {
+          this.load_location()
+        },
+      },
     },
     mounted() {
       let vm = this
@@ -441,11 +589,23 @@
         this.load_dreg_rows();
         this.dreg = false;
       })
+      this.$root.$on('hide_benefit', () => {
+        this.load_benefit_rows();
+        this.benefit = false;
+      })
+
+      this.$root.$on('show_results', (pk) => {
+        this.show_results_pk = pk
+      })
+
+      this.$root.$on('hide_results', () => {
+        this.show_results_pk = -1
+      })
     },
     methods: {
       async load_location() {
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation(this.td.format('YYYY-MM-DD'))).data
+        this.location.data = (await users_point.loadLocation(this.td)).data
         this.location.loading = false
       },
       load_dreg_rows() {
@@ -454,6 +614,21 @@
           this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
           this.data.patient.has_dreg = this.dreg_rows.length > 0
           this.dreg_rows_loading = false;
+        })().then();
+      },
+      load_benefit_rows() {
+        (async() => {
+          this.benefit_rows_loading = true;
+          this.benefit_rows = (await patients_point.loadBenefit(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.data.patient.has_benefit = this.benefit_rows.length > 0
+          this.benefit_rows_loading = false;
+        })().then();
+      },
+      load_anamnesis() {
+        (async() => {
+          this.anamnesis_loading = true
+          this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient.card_pk)
+          this.anamnesis_loading = false
         })().then();
       },
       change_mkb(row, field) {
@@ -565,7 +740,7 @@
         let oh = $('.results-editor > div')[0].offsetHeight
         let sh = $('.results-editor > div')[0].scrollHeight
         if (sh > oh)
-          $('.results-editor').scrollTo(this.prev_scroll)
+          $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
         let $elem = $($e.target)
         $elem.removeClass('open-field')
       },
@@ -598,7 +773,9 @@
         directions_point.getParaclinicForm(vm.pk_c).then(data => {
           if (data.ok) {
             this.dreg_rows_loading = false;
+            this.benefit_rows_loading = false;
             this.dreg_rows = [];
+            this.benefit_rows = [];
             vm.pk = ''
             vm.data = data
             vm.changed = false
@@ -609,6 +786,16 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
+      },
+      hide_modal_create_directions() {
+        this.$refs.modalCD.$el.style.display = 'none'
+        this.create_directions_for = -1
+        this.create_directions_data = []
+        this.create_directions_diagnosis = ''
+      },
+      create_directions(iss) {
+        this.create_directions_diagnosis = iss.diagnos
+        this.create_directions_for = iss.pk
       },
       save(iss) {
         this.hide_results();
@@ -713,6 +900,8 @@
         this.research_open_history = null;
         this.dreg_rows_loading = false;
         this.dreg_rows = [];
+        this.benefit_rows_loading = false;
+        this.benefit_rows = [];
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
@@ -749,6 +938,29 @@
         this.$refs.modalSlot.$el.style.display = 'none';
         this.slot.id = null;
         this.slot.data = {};
+      },
+      async fill_slot() {
+        let s = '';
+        for (const r of this.user_services) {
+          if (r.pk === this.slot.data.direction_service) {
+            s = r.title;
+            break;
+          }
+        }
+        try {
+          await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`);
+          await this.$store.dispatch(action_types.INC_LOADING)
+          let card_pk = -1;
+          const cards = await patients_point.searchCard(this.internal_base, this.slot.data.patient_uid, false, true);
+          const {direction} = await users_point.fillSlot({...this.slot, card_pk});
+          await this.$store.dispatch(action_types.DEC_LOADING)
+          this.open_fill_slot(direction);
+        } catch (_) {
+          await this.$store.dispatch(action_types.DEC_LOADING)
+        }
+      },
+      open_fill_slot(direction) {
+        this.load_pk(direction)
       },
       template_fields_values(row, dataTemplate, title) {
         this.$dialog.alert(title, {
@@ -809,12 +1021,17 @@
           }
         }
         field.value += add_val
-      }
+      },
+      select_research(pk) {
+        if (this.slot.data.direction) {
+          return
+        }
+        this.slot.data.direction_service = pk
+      },
     },
     computed: {
       date_to_form() {
-        const date = this.date.split('.');
-        return date.join('');
+        return `"${this.date}"`;
       },
       ca() {
         if (this.new_anamnesis !== null) {
@@ -827,6 +1044,9 @@
       },
       stat_btn() {
         return this.$store.getters.modules.l2_stat_btn;
+      },
+      stat_btn_d() {
+        return this.stat_btn && this.directions_history.length;
       },
       rmis_queue() {
         return this.$store.getters.modules.l2_rmis_queue;
@@ -846,12 +1066,42 @@
       },
       ...mapGetters({
         user_data: 'user_data',
+        researches: 'researches',
+        bases: 'bases',
       }),
+      internal_base() {
+        for (let b of this.bases) {
+          if (b.internal_type) {
+            return b.pk
+          }
+        }
+        return -1
+      },
+      bases_obj() {
+        return this.bases.reduce((a, b) => ({
+          ...a,
+          [b.pk]: b,
+        }), {})
+      },
       has_loc() {
         if (!this.user_data || !this.rmis_queue) {
           return false
         }
         return !!this.user_data.rmis_location
+      },
+      user_services() {
+        if (!this.user_data || !this.user_data.user_services) {
+          return []
+        }
+        const r = [{pk: -1, title: 'Не выбрано', full_title: 'Не выбрано'}]
+        for (const d of Object.keys(this.researches)) {
+          for (const row of (this.$store.getters.researches[d] || [])) {
+            if (this.user_data.user_services.includes(row.pk)) {
+              r.push(row)
+            }
+          }
+        }
+        return r
       },
     }
   }
@@ -1189,7 +1439,7 @@
     color: #049372
   }
 
-  .direction {
+  .direction, .sd {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
@@ -1272,6 +1522,15 @@
     }
   }
 
+  @keyframes rotating {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .directions {
     position: relative;
     height: calc(100% - 68px);
@@ -1287,7 +1546,7 @@
 
     &.has_loc {
       .inner {
-        height: 50%;
+        height: calc(50% + 17px);
       }
     }
 
@@ -1303,12 +1562,24 @@
         height: 20px;
         background: #eaeaea;
         text-align: center;
+        position: relative;
+
+        .loader {
+          position: absolute;
+          right: 2px;
+          top: 1px;
+          animation: rotating 1.5s linear infinite;
+        }
       }
 
       .inner {
         height: calc(100% - 20px);
         overflow-y: auto;
         overflow-x: hidden;
+
+        &.stat_btn {
+          height: calc(100% - 54px);
+        }
 
         table {
           margin-bottom: 0;
@@ -1354,6 +1625,56 @@
 
     &-2 {
       color: #049372;
+    }
+  }
+
+  .content-picker {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-items: stretch;
+    align-content: flex-start;
+  }
+
+  .research-select {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 1px 2px 1px;
+    color: #000;
+    background-color: #fff;
+    text-decoration: none;
+    transition: .15s linear all;
+    margin: 0;
+    font-size: 12px;
+    min-width: 0;
+    flex: 0 1 auto;
+    width: 25%;
+    height: 34px;
+    border: 1px solid #6C7A89 !important;
+    cursor: pointer;
+    text-align: left;
+    outline: transparent;
+
+    &.active {
+      background: #049372 !important;
+      color: #fff;
+    }
+
+    &:hover {
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, .8) !important;
+    }
+  }
+
+  .inline-form {
+    background: none;
+    border: none;
+    padding: 0;
+    display: inline-block;
+    width: 140px;
+    margin-right: -50px;
+    &:focus{
+      outline: none;
     }
   }
 </style>

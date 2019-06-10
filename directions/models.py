@@ -312,8 +312,8 @@ class Napravleniya(models.Model):
 
     polis_who_give = models.TextField(blank=True, null=True, default=None, help_text="Страховая компания")
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
-    parent = models.ForeignKey('self', related_name='parent_dir', help_text="Направление основание", blank=True,
-                                   null=True, default=None, on_delete=models.SET_NULL)
+    parent = models.ForeignKey('Issledovaniya', related_name='parent_iss', help_text="Протокол-основание", blank=True,
+                               null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
 
     def __str__(self):
@@ -353,7 +353,7 @@ class Napravleniya(models.Model):
                          save: bool = True,
                          for_rmis: bool = False,
                          rmis_data: [dict, None] = None,
-                         parent: ['Napravleniya', None] = None) -> 'Napravleniya':
+                         parent_id=None) -> 'Napravleniya':
         """
         Генерация направления
         :param client_id:
@@ -368,7 +368,7 @@ class Napravleniya(models.Model):
         :param save:
         :param for_rmis:
         :param rmis_data:
-        :param parent:
+        :param parent_id:
         :return: Созданное направление
         """
         if rmis_data is None:
@@ -379,7 +379,7 @@ class Napravleniya(models.Model):
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
-                           diagnos=diagnos, cancel=False, parent=parent)
+                           diagnos=diagnos, cancel=False, parent_id=parent_id)
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
@@ -416,7 +416,7 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
-                                          count=1, discount=0):
+                                          count=1, discount=0, parent_iss=None):
 
         #импорт для получения прайса и цены по услугам
         from forms import forms_func
@@ -494,7 +494,8 @@ class Napravleniya(models.Model):
                                                                                              ofname_id,
                                                                                              ofname,
                                                                                              for_rmis=for_rmis,
-                                                                                             rmis_data=rmis_data)
+                                                                                             rmis_data=rmis_data,
+                                                                                             parent_id=parent_iss)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
                     if dir_group == -1:
@@ -508,7 +509,8 @@ class Napravleniya(models.Model):
                                                                                              ofname_id,
                                                                                              ofname,
                                                                                              for_rmis=for_rmis,
-                                                                                             rmis_data=rmis_data)
+                                                                                             rmis_data=rmis_data,
+                                                                                             parent_id=parent_iss)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
 
@@ -669,9 +671,13 @@ class Issledovaniya(models.Model):
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+    def_uet = models.DecimalField(max_digits=6,null=True, help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True, default=None, decimal_places=3)
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
-
+    co_executor_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
+    co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None,
+                                    null=True, blank=True, on_delete=models.SET_NULL)
+    co_executor2_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
     result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
@@ -717,6 +723,22 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+class TypeJob(models.Model):
+    title = models.CharField(max_length=255)
+    hide = models.BooleanField(help_text="Скрыть тип", default=False)
+    value = models.DecimalField(max_digits=5, decimal_places=2,
+                                help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
+
+
+class EmployeeJob(models.Model):
+    type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
+    count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
+    doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
+                                    help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
+    date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
+    time_save = models.DateTimeField(null=True, blank=True, help_text='Время сохранения/корректировки')
 
 
 class ParaclinicResult(models.Model):

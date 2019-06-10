@@ -23,6 +23,10 @@ def strdate(d, short_year=False):
     return strfdatetime(d, '%d.%m.%' + {True: "y", False: "Y"}[short_year])
 
 
+def strdateiso(d):
+    return strfdatetime(d, '%Y.%m.%d')
+
+
 def strtime(d):
     return strfdatetime(d, '%X')
 

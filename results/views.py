@@ -574,7 +574,7 @@ def result_print(request):
                 dates[dt] += 1
             if iss.tubes.exists() and iss.tubes.first().time_get:
                 date_t = strdate(iss.tubes.first().time_get)
-            if iss.research.is_paraclinic or iss.research.is_doc_refferal:
+            if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
         maxdate = ""
         if dates != {}:
@@ -1177,6 +1177,34 @@ def result_print(request):
                 fwb.append(Spacer(1, 2.5 * mm))
                 t1 = iss.get_visit_date()
                 t2 = strdate(iss.time_confirmation)
+                #Добавить выписанные направления врачом
+                if iss.research.is_doc_refferal:
+                    # Найти все направления где данное исследование родитель
+                    napr_child = Napravleniya.objects.filter(parent=iss)
+                    br = ""
+                    if not protocol_plain_text:
+                        br = '<br/>'
+                    if napr_child:
+                        fwb.append(Paragraph("Направления:".format(t1), styleBold))
+                        s_napr = ""
+                        for n_child in napr_child:
+                            iss_research = [s.research.title for s in Issledovaniya.objects.filter(napravleniye=n_child)]
+                            iss_research_str = ', '.join(iss_research)
+                            n = "<font face=\"OpenSansBold\">№{}:&nbsp;</font>".format(n_child.pk)
+                            n += "{}; {} ".format(iss_research_str, br)
+                            s_napr = s_napr + n + '\n'
+                            n = ""
+                        fwb.append(Paragraph("{}".format(s_napr), style))
+
+                        # Добавить Дополнительные услуги
+                        add_research = Issledovaniya.objects.filter(parent_id__napravleniye=pk[0])
+                        if add_research:
+                            fwb.append(Spacer(1, 3 * mm))
+                            fwb.append(Paragraph('Дополнительные услуги:', styleBold))
+                            for i in add_research:
+                                fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title),style))
+
+                fwb.append(Spacer(1, 3 * mm))
                 fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
                 if iss.doc_confirmation.podrazdeleniye.vaccine:

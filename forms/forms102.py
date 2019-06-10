@@ -89,6 +89,7 @@ def form_01(request_data):
 
     patient_data = ind_card.get_data_individual()
 
+    agent_status = None
     p_agent = None
     if ind_card.who_is_agent:
         p_agent = getattr(ind_card, ind_card.who_is_agent)

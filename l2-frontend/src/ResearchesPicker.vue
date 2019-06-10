@@ -155,6 +155,10 @@
         type: Array,
         required: false,
       },
+      kk: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
@@ -197,14 +201,15 @@
       this.checkType()
       this.check_template()
 
-      this.$root.$on('researches-picker:deselect', this.deselect_research_ignore)
-      this.$root.$on('researches-picker:deselect_department', this.deselect_department)
-      this.$root.$on('researches-picker:deselect_all', this.clear)
-      this.$root.$on('researches-picker:add_research', this.select_research_ignore)
-
       if (this.value instanceof Array) {
         this.checked_researches = this.value
       }
+    },
+    mounted() {
+      this.$root.$on('researches-picker:deselect' + this.kk, this.deselect_research_ignore)
+      this.$root.$on('researches-picker:deselect_department' + this.kk, this.deselect_department)
+      this.$root.$on('researches-picker:deselect_all' + this.kk, this.clear)
+      this.$root.$on('researches-picker:add_research' + this.kk, this.select_research_ignore)
     },
     watch: {
       value(v) {

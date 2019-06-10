@@ -27,6 +27,10 @@
         type: String,
         default: ''
       },
+      kk: {
+        type: String,
+        default: ''
+      },
       simple: {
         type: Boolean,
         default: false,
@@ -34,12 +38,12 @@
     },
     methods: {
       remove() {
-        this.$root.$emit('researches-picker:deselect', this.pk)
+        this.$root.$emit('researches-picker:deselect' + this.kk, this.pk)
       },
       update_comment() {
         if (this.simple)
           return
-        this.$root.$emit('researches-picker:update-comment', this.pk)
+        this.$root.$emit('researches-picker:update-comment' + this.kk, this.pk)
       }
     }
   }

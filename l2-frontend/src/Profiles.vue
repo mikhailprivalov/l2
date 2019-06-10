@@ -22,47 +22,65 @@
     <div class="right" v-if="open_pk > -2">
       <div class="right-wrapper">
         <div class="main-data">
-          <div class="input-group" style="margin-right: -1px;">
-            <span class="input-group-addon">ФИО</span>
-            <input class="form-control" style="margin-right: -1px;" type="text" v-model="user.fio"/>
-          </div>
-          <div class="input-group">
-            <span class="input-group-addon">Имя пользователя</span>
-            <input class="form-control" type="text" v-model="user.username"/>
-            <div class="input-group-btn">
-              <button @click="gen_username"
-                      class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
-                      title="Генерация имени пользователя на основе ФИО"
-                      type="button"
-                      v-tippy="{ placement : 'bottom', arrow: true }">
-                <i class="fa fa-dot-circle-o"></i>
-              </button>
+          <div class="row">
+            <div class="col-xs-6" style="padding-right: 0">
+              <div class="input-group">
+                <span class="input-group-addon">ФИО</span>
+                <input class="form-control" style="margin-right: -1px;" type="text" v-model="user.fio"/>
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0">
+              <div class="input-group" style="margin-right: -1px;">
+                <span class="input-group-addon">Имя пользователя</span>
+                <input class="form-control" type="text" v-model="user.username"/>
+                <div class="input-group-btn">
+                  <button @click="gen_username"
+                          class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                          title="Генерация имени пользователя на основе ФИО"
+                          type="button"
+                          v-tippy="{ placement : 'bottom', arrow: true }">
+                    <i class="fa fa-dot-circle-o"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="input-group">
-            <span class="input-group-addon">Пароль</span>
-            <input :placeholder="'Минимальная длина пароля – 6 символов. '
+          <div class="row">
+            <div class="col-xs-6" style="padding-right: 0">
+              <div class="input-group">
+                <span class="input-group-addon">Пароль</span>
+                <input :placeholder="'Минимальная длина пароля – 6 символов. '
                    + (open_pk === -1 ? '' : 'Для смены пароля введите новый')"
-                   class="form-control"
-                   type="text"
-                   v-model="user.password"/>
-            <div class="input-group-btn">
-              <button @click="gen_passwd"
-                      class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
-                      title="Генерация пароля"
-                      type="button"
-                      v-tippy="{ placement : 'bottom', arrow: true }">
-                <i class="fa fa-dot-circle-o"></i>
-              </button>
+                       class="form-control"
+                       type="text"
+                       v-model="user.password"/>
+                <div class="input-group-btn">
+                  <button @click="gen_passwd"
+                          class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                          title="Генерация пароля"
+                          type="button"
+                          v-tippy="{ placement : 'bottom', arrow: true }">
+                    <i class="fa fa-dot-circle-o"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 0">
+              <div class="input-group">
+                <span class="input-group-addon">Подразделение</span>
+                <select class="form-control" v-model="user.department">
+                  <option :value="d.pk" v-for="d in departments">
+                    {{d.title}}
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="input-group">
-            <span class="input-group-addon">Подразделение</span>
-            <select class="form-control" v-model="user.department">
-              <option :value="d.pk" v-for="d in departments">
-                {{d.title}}
-              </option>
-            </select>
+        </div>
+        <div class="more-data">
+          <div class="input-group" style="width: 100%" v-if="rmis_queue">
+            <span class="input-group-addon">РМИС location</span>
+            <input class="form-control" v-model="user.rmis_location" />
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
@@ -70,8 +88,6 @@
               <option v-for="g in user.groups_list" :value="g.pk">{{ g.title }}</option>
             </select>
           </div>
-        </div>
-        <div class="more-data">
           <div class="more-title">Запрет на создание направлений с назначениями:</div>
           <div class="row" style="margin-right: 0">
             <div class="col-xs-6"
@@ -150,6 +166,7 @@
         departments: [],
         user: {
           username: '',
+          rmis_location: '',
         },
         open_pk: -2,
       }
@@ -292,7 +309,20 @@
 
   .right {
     width: calc(100% - 321px);
+    overflow: hidden;
     position: relative;
+
+    .input-group-addon, input, select {
+      border-radius: 0;
+      border-top: none;
+      border-right: none;
+      border-left: none;
+    }
+
+    .input-group-addon {
+      width: 155px;
+      text-align: left;
+    }
   }
 
   .right-wrapper {
@@ -335,18 +365,6 @@
       border-radius: 0;
       width: 50px;
       margin-right: -1px;
-    }
-
-    .input-group-addon, input, select {
-      border-radius: 0;
-      border-top: none;
-      border-right: none;
-      border-left: none;
-    }
-
-    .input-group-addon {
-      width: 155px;
-      text-align: left;
     }
   }
 
@@ -395,7 +413,7 @@
 
   .more {
     &-data {
-      height: calc(100% - 272px);
+      height: calc(100% - 68px);
       overflow-y: auto;
 
       .col-xs-6 {
@@ -408,5 +426,9 @@
       padding: 5px;
       width: 100%;
     }
+  }
+
+  .rinp {
+    width: 30%;
   }
 </style>
