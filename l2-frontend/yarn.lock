@@ -5933,10 +5933,10 @@ vue-resize@^0.4.5:
   resolved "https://registry.yarnpkg.com/vue-resize/-/vue-resize-0.4.5.tgz#4777a23042e3c05620d9cbda01c0b3cc5e32dcea"
   integrity sha512-bhP7MlgJQ8TIkZJXAfDf78uJO+mEI3CaLABLjv0WNzr4CcGRGPIAItyWYnP6LsPA4Oq0WE+suidNs6dgpO4RHg==
 
-vue-select@^2.4.0:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-2.5.1.tgz#9886e7123150a52dc8dbfe3202d0387268835aaa"
-  integrity sha512-Hs+arh7+0gLJoYiM3r9V/5CRn5XsAT8tVkouTkpDAWb923KFgraWrKDLSqz3ROedZUkuVIwkFuYq8+baHUf+bg==
+vue-select@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.1.0.tgz#ccebbc17e48f1e3be5f082224a0c45ceb07b8551"
+  integrity sha512-DDC4W3s/wLlJ/oeR7tqwaN+Fw9CXQc4zNnOD8Lr8J2cyWgQOWnHuYAUvpGrWIt7PRea4jSu6quixEv5yTInpuQ==
 
 vue-style-loader@^3.0.0:
   version "3.1.2"
