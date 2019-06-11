@@ -476,14 +476,17 @@ def directions_last_result(request):
             if v and v.napravleniye.visit_date > i.time_confirmation:
                 response["type"] = "visit"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                    "is_desc": i.research.desc,
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
                 response["has_last_result"] = True
                 response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
                                            "ts": tsdatetime(i.time_confirmation),
+                                           "is_desc": i.research.desc,
                                            "is_doc_referral": i.research.is_doc_referral,
                                            "is_paraclinic": i.research.is_paraclinic}
             else:
                 response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                    "is_desc": i.research.desc,
                                     "is_doc_referral": i.research.is_doc_referral,
                                     "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
         elif u:
@@ -491,10 +494,12 @@ def directions_last_result(request):
             if v and v.napravleniye.visit_date > u.napravleniye.data_sozdaniya:
                 response["type"] = "visit"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                   "is_desc": i.research.desc,
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
             else:
                 response["type"] = "direction"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                                   "is_desc": i.research.desc,
                                     "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
             response["has_last_result"] = True
             response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
