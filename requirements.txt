@@ -63,7 +63,7 @@ PyYAML==3.13
 redis==3.2.1
 relatorio==0.8.1
 reportlab==3.5.23
-requests==2.21.0
+requests==2.22.0
 requests-toolbelt==0.9.1
 selenium==3.141.0
 simplejson==3.16.0
