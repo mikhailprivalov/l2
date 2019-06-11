@@ -68,7 +68,6 @@ def menu(request):
             {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
             # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
             {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
-            # {"url": "/silk/", "title": "Профилирование", "nt": False, "access": []},
             {"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций"], "module": "paraclinic_module"},
             {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Врач консультаций"], "module": "paraclinic_module"},
             {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
@@ -80,6 +79,8 @@ def menu(request):
             pages.append({"url": "/mainmenu/ldap_sync", "title": "Синхронизация с LDAP", "nt": False, "access": []})
         if settings.RMQ_ENABLED:
             pages.append({"url": "/mainmenu/rmq", "title": "Rabbit MQ", "nt": False, "access": []})
+        if settings.PROFILING:
+            pages.append({"url": "/silk/", "title": "Профилирование", "nt": False, "access": []})
         pages.append({"url": "/mainmenu/utils", "title": "Инструменты", "nt": False, "access": []})
 
         if SettingManager.get("home_page", default="false") != "false":

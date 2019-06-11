@@ -429,9 +429,6 @@ class Napravleniya(models.Model):
         result = {"r": False, "list_id": []}
         ofname_id = ofname_id or -1
         ofname = None
-        if not doc_current.is_member(["Лечащий врач", "Оператор лечащего врача"]):
-            result["message"] = "Недостаточно прав для создания направлений"
-            return result
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
@@ -478,7 +475,7 @@ class Napravleniya(models.Model):
                     research_coast = None
 
                     #пользователю добавлять данные услуги в направления(не будут добавлены)
-                    if ofname and research in ofname.restricted_to_direct.all():
+                    if research in doc_current.restricted_to_direct.all():
                         continue
 
                     dir_group = -1

@@ -3,6 +3,8 @@ import os
 import sys
 from collections import OrderedDict
 
+PROFILING = False
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
@@ -216,6 +218,7 @@ SESSION_COOKIE_AGE = 15 * 60 * 60
 
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
+
 class DisableMigrations(object):
     def __contains__(self, item):
         return True
@@ -256,10 +259,16 @@ WS_BASE = "localhost"
 WS_PORT = 8822
 WS_ENABLED = False
 
+SILKY_INTERCEPT_FUNC = lambda request: request.path not in ['/mainmenu/']
+
 try:
     from laboratory.local_settings import *
 except ImportError:
     pass
+
+if PROFILING:
+    INSTALLED_APPS += ('silk',)
+    MIDDLEWARE += ('silk.middleware.SilkyMiddleware',)
 
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
@@ -267,7 +276,6 @@ INSTALLED_APPS += INSTALLED_APPS_ADD
 INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS))
 
 WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
-
 
 WEBPACK_LOADER = {
     'DEFAULT': {
