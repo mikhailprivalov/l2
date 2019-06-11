@@ -56,6 +56,11 @@
       },
       research: {
         type: Number
+      },
+      noScroll: {
+        default: false,
+        type: Boolean,
+        required: false,
       }
     },
     data() {
@@ -108,7 +113,7 @@
         this.$root.$emit('print:directions', [this.direction])
       },
       load() {
-        $('.scrolldown').scrollDown()
+        !this.noScroll && $('.scrolldown').scrollDown()
         let vm = this
         directions_point.lastResult(this.individual, this.research).then(data => {
           vm.in_load = false
@@ -129,7 +134,7 @@
             vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
             vm.direction = data.data.direction
           }
-          setTimeout(() => {
+          !this.noScroll && setTimeout(() => {
             $('.scrolldown').scrollDown()
           }, 10)
         })

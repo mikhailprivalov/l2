@@ -419,7 +419,7 @@
             />
           </div>
         </div>
-        <div v-if="selected_researches.length > 0"
+        <div v-if="create_directions_data.length > 0"
              style="margin-top: 5px;text-align: left">
           <table class="table table-bordered lastresults">
             <colgroup>
@@ -429,7 +429,8 @@
               <col width="110">
             </colgroup>
               <tbody>
-              <last-result :individual="selected_card.individual_pk" v-for="p in create_directions_data" :key="p"
+              <last-result :individual="data.patient.individual_pk" :key="p" v-for="p in create_directions_data"
+                           :noScroll="true"
                            :research="p"/>
               </tbody>
             </table>
@@ -1712,6 +1713,28 @@
     margin-right: -50px;
     &:focus{
       outline: none;
+    }
+  }
+
+  .lastresults {
+    table-layout: fixed;
+    padding: 0;
+    margin: 0;
+    color: #000;
+    background-color: #ffdb4d;
+    border-color: #000;
+
+    /deep/ th, /deep/ td {
+      border-color: #000;
+    }
+
+    /deep/ a {
+      color: #000;
+      text-decoration: dotted underline;
+    }
+
+    /deep/ a:hover {
+      text-decoration: none;
     }
   }
 </style>
