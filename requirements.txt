@@ -21,7 +21,7 @@ django-logtail==0.3.0
 django-ratelimit==2.0.0
 django-ratelimit2==0.4.2
 django-redis==4.10.0
-django-silk==3.0.1
+django-silk==3.0.2
 django-webpack-loader==0.6.0
 djangorestframework==3.9.4
 docopt==0.6.2
