@@ -32,7 +32,7 @@ gprof2dot==2016.10.13
 gunicorn==19.9.0
 idna==2.8
 isodate==0.6.0
-jdcal==1.4
+jdcal==1.4.1
 Jinja2==2.10.1
 jsonfield==2.0.2
 jsonpickle==1.1
