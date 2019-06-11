@@ -59,7 +59,7 @@ python-dateutil==2.8.0
 python3-memcached==1.51
 pytils==0.3
 pytz==2018.9
-PyYAML==3.13
+PyYAML==5.1.1
 redis==3.1.0
 relatorio==0.8.1
 reportlab==3.5.13
