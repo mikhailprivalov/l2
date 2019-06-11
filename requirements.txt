@@ -60,7 +60,7 @@ python3-memcached==1.51
 pytils==0.3
 pytz==2019.1
 PyYAML==3.13
-redis==3.1.0
+redis==3.2.1
 relatorio==0.8.1
 reportlab==3.5.13
 requests==2.21.0
