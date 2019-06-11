@@ -139,7 +139,7 @@ def patients_search_card(request):
             cards = cards.filter(number=query)
 
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
-        docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
+        docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
                                        document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
             .distinct("pk", "number", "document_type", "serial").order_by('pk')
         data.append({"type_title": card_type.title,
@@ -152,7 +152,7 @@ def patients_search_card(request):
                      "age": row.individual.age_s(),
                      "fio_age": row.individual.fio(full=True),
                      "sex": row.individual.sex,
-                     "individual_pk": row.individual.pk,
+                     "individual_pk": row.individual_id,
                      "pk": row.pk,
                      "phones": row.get_phones(),
                      "main_diagnosis": row.main_diagnosis,
@@ -218,7 +218,7 @@ def patients_search_l2_card(request):
         l2_cards = Card.objects.filter(individual=card_orig.individual, base__internal_type=True)
 
         for row in l2_cards.filter(is_archive=False):
-            docs = Document.objects.filter(individual__pk=row.individual.pk, is_active=True,
+            docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
                                            document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
                 .distinct("pk", "number", "document_type", "serial").order_by('pk')
             data.append({"type_title": row.base.title,
@@ -230,8 +230,8 @@ def patients_search_l2_card(request):
                          "birthday": row.individual.bd(),
                          "age": row.individual.age_s(),
                          "sex": row.individual.sex,
-                         "individual_pk": row.individual.pk,
-                         "base_pk": row.base.pk,
+                         "individual_pk": row.individual_id,
+                         "base_pk": row.base_id,
                          "pk": row.pk,
                          "phones": row.get_phones(),
                          "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
@@ -256,7 +256,7 @@ def patients_get_card_data(request, card_id):
                                           *[model_to_dict(x) for x in
                                             Company.objects.filter(active_status=True).order_by('title')]],
                          "custom_workplace": card.work_place != "",
-                         "work_place_db": card.work_place_db.pk if card.work_place_db else -1,
+                         "work_place_db": card.work_place_db_id or -1,
                          "district": card.district_id or -1,
                          "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
                                        *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
@@ -267,15 +267,15 @@ def patients_get_card_data(request, card_id):
                          "excluded_types": Card.AGENT_CANT_SELECT,
                          "agent_need_doc": Card.AGENT_NEED_DOC,
                          "mother": None if not card.mother else card.mother.get_fio_w_card(),
-                         "mother_pk": None if not card.mother else card.mother.pk,
+                         "mother_pk": card.mother_id,
                          "father": None if not card.father else card.father.get_fio_w_card(),
-                         "father_pk": None if not card.father else card.father.pk,
+                         "father_pk": card.father_id,
                          "curator": None if not card.curator else card.curator.get_fio_w_card(),
-                         "curator_pk": None if not card.curator else card.curator.pk,
+                         "curator_pk": card.curator_id,
                          "agent": None if not card.agent else card.agent.get_fio_w_card(),
-                         "agent_pk": None if not card.agent else card.agent.pk,
+                         "agent_pk": card.agent_id,
                          "payer": None if not card.payer else card.payer.get_fio_w_card(),
-                         "payer_pk": None if not card.payer else card.payer.pk,
+                         "payer_pk": card.payer_id,
                          "rmis_uid": rc[0].number if rc.exists() else None,
                          "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
 
@@ -300,7 +300,7 @@ def patients_card_save(request):
         changed = False
         i = Individual.objects.get(
             pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(
-                pk=request_data["card_pk"]).individual.pk)
+                pk=request_data["card_pk"]).individual_id)
         if i.family != request_data["family"] \
                 or i.name != request_data["name"] \
                 or i.patronymic != request_data["patronymic"] \

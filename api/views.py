@@ -380,7 +380,7 @@ def current_user_info(request):
             ret["groups"].append("Admin")
         ret["doc_pk"] = request.user.doctorprofile.pk
         ret["rmis_location"] = request.user.doctorprofile.rmis_location
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
         ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
         ret["user_services"] = [x.pk for x in
@@ -666,7 +666,7 @@ def get_template(request):
     if pk:
         t = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
-        researches = [x.research.pk for x in
+        researches = [x.research_id for x in
                       users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
     return JsonResponse({"title": title, "researches": researches, "global_template": global_template})

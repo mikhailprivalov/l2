@@ -23,7 +23,7 @@ class ResearchesTemplates(View):
                 .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) |
                         Q(doc=request.user.doctorprofile) |
                         Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye)):
-            templates.append({"values": [x.research.pk for x in users.AssignmentResearches.objects.filter(template=t)],
+            templates.append({"values": [x.research_id for x in users.AssignmentResearches.objects.filter(template=t)],
                               "pk": t.pk,
                               "title": t.title,
                               "for_current_user": t.doc is not None,
@@ -227,7 +227,7 @@ def researches_details(request):
     if DResearches.objects.filter(pk=pk).exists():
         res = DResearches.objects.filter(pk=pk)[0]
         response["pk"] = res.pk
-        response["department"] = -2 if not res.podrazdeleniye else res.podrazdeleniye.pk
+        response["department"] = res.podrazdeleniye_id or -2
         response["title"] = res.title
         response["short_title"] = res.short_title
         response["code"] = res.code
@@ -316,7 +316,7 @@ def fast_template_data(request):
     }
 
     for pi in ParaclinicTemplateField.objects.filter(template_name=p).order_by('pk'):
-        data["fields"][pi.input_field.pk] = pi.value
+        data["fields"][pi.input_field_id] = pi.value
 
     return JsonResponse({"data": data})
 
@@ -339,15 +339,15 @@ def fast_template_save(request):
     to_delete = []
     has = []
     for pi in ParaclinicTemplateField.objects.filter(template_name=p):
-        if str(pi.input_field.pk) not in data["fields"]:
+        if str(pi.input_field_id) not in data["fields"]:
             to_delete.append(pi.pk)
-            has.append(pi.input_field.pk)
-        elif data["fields"][str(pi.input_field.pk)] != pi.value:
-            pi.value = data["fields"][str(pi.input_field.pk)]
+            has.append(pi.input_field_id)
+        elif data["fields"][str(pi.input_field_id)] != pi.value:
+            pi.value = data["fields"][str(pi.input_field_id)]
             pi.save()
-            has.append(pi.input_field.pk)
-        if data["fields"][str(pi.input_field.pk)] == pi.value:
-            has.append(pi.input_field.pk)
+            has.append(pi.input_field_id)
+        if data["fields"][str(pi.input_field_id)] == pi.value:
+            has.append(pi.input_field_id)
     ParaclinicTemplateField.objects.filter(pk__in=to_delete).delete()
     for pk in data["fields"]:
         pki = int(pk)

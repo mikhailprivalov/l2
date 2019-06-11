@@ -419,6 +419,21 @@
             />
           </div>
         </div>
+        <div v-if="selected_researches.length > 0"
+             style="margin-top: 5px;text-align: left">
+          <table class="table table-bordered lastresults">
+            <colgroup>
+              <col width="180">
+              <col>
+              <col width="110">
+              <col width="110">
+            </colgroup>
+              <tbody>
+              <last-result :individual="selected_card.individual_pk" v-for="p in create_directions_data" :key="p"
+                           :research="p"/>
+              </tbody>
+            </table>
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
@@ -503,11 +518,13 @@
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
+  import LastResult from './LastResult'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
+      LastResult,
     },
     data() {
       return {

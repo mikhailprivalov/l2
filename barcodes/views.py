@@ -66,7 +66,7 @@ def tubes(request, direction_implict_id=None):
     c = canvas.Canvas(buffer, pagesize=(pw * mm, ph * mm), bottomup=barcode_type == "std")
     c.setTitle(doctitle)
     if istubes:
-        direction_id = set([x.napravleniye.pk for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
+        direction_id = set([x.napravleniye_id for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
 
     for d in direction_id:
         tmp2 = Napravleniya.objects.get(pk=int(d))
@@ -82,19 +82,19 @@ def tubes(request, direction_implict_id=None):
                 absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
                     fuppers.add(fr.pk)
-                    fresearches.add(fr.research.pk)
+                    fresearches.add(fr.research_id)
                     for absor_obj in absor:
-                        flowers.add(absor_obj.flower.pk)
-                        fresearches.add(absor_obj.flower.research.pk)
+                        flowers.add(absor_obj.flower_id)
+                        fresearches.add(absor_obj.flower.research_id)
 
         for v in tmp:
             for val in directory.Fractions.objects.filter(research=v.research):
-                vrpk = val.relation.pk
+                vrpk = val.relation_id
                 rel = val.relation
-                if val.research.pk in fresearches and val.pk in flowers:
+                if val.research_id in fresearches and val.pk in flowers:
                     absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
-                    if absor.fupper.pk in fuppers:
-                        vrpk = absor.fupper.relation.pk
+                    if absor.fupper_id in fuppers:
+                        vrpk = absor.fupper.relation_id
                         rel = absor.fupper.relation
 
                 if vrpk not in tubes_buffer.keys():

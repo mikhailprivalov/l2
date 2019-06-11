@@ -42,7 +42,7 @@ def results_search(request):
         for r in Result.objects.filter(fraction__research_id=result["research_id"],
                                        issledovaniye__napravleniye__client_id=result["client_id"],
                                        issledovaniye__doc_confirmation__isnull=False):
-            dirs.add(r.issledovaniye.napravleniye.pk)
+            dirs.add(r.issledovaniye.napravleniye_id)
         for d in Napravleniya.objects.filter(client_id=result["client_id"],
                                              issledovaniya__research_id=result["research_id"]):
             tmp_d = {"pk": d.pk}
@@ -76,7 +76,7 @@ def results_search(request):
 def enter(request):
     """ Представление для страницы ввода результатов """
     from podrazdeleniya.models import Podrazdeleniya
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
@@ -100,12 +100,12 @@ def loadready(request):
         date_start = request.POST["datestart"]
         date_end = request.POST["dateend"]
         deff = int(request.POST["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazdeleniye.pk))
+        lab = Podrazdeleniya.objects.get(pk=request.POST.get("lab", request.user.doctorprofile.podrazdeleniye_id))
     else:
         date_start = request.GET["datestart"]
         date_end = request.GET["dateend"]
         deff = int(request.GET["def"])
-        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazdeleniye.pk))
+        lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab", request.user.doctorprofile.podrazdeleniye_id))
 
     date_start, date_end = try_parse_range(date_start, date_end)
     # with connection.cursor() as cursor:
@@ -162,7 +162,7 @@ def loadready(request):
                                  "color": tube.type.tube.color}}  # Временный словарь с информацией о пробирке
             result["tubes"].append(dicttube)  # Добавление временного словаря к ответу
 
-        if tube.issledovaniya_set.first().napravleniye.pk not in dirs:
+        if tube.issledovaniya_set.first().napravleniye_id not in dirs:
             if not direction:
                 direction = tube.issledovaniya_set.first().napravleniye
             if direction.data_sozdaniya.date() not in dates_cache:
@@ -264,7 +264,7 @@ def result_confirm(request):
                 r.get_ref()
             issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
             issledovaniye.save()
-            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye.pk}),
+            slog.Log(key=request.POST["pk"], type=14, body=json.dumps({"dir": issledovaniye.napravleniye_id}),
                      user=request.user.doctorprofile).save()
 
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -556,7 +556,7 @@ def result_print(request):
     client_prev = -1
     # cl = Client()
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
-                            key=lambda dir: dir.client.individual.pk * 100000000 + Result.objects.filter(
+                            key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
         dpk = direction.pk
         if not direction.is_all_confirm():
@@ -684,7 +684,7 @@ def result_print(request):
             prev_date_conf = ""
 
             has0 = directory.Fractions.objects.filter(
-                research__pk__in=[x.research.pk for x in Issledovaniya.objects.filter(napravleniye=direction)],
+                research__pk__in=[x.research_id for x in Issledovaniya.objects.filter(napravleniye=direction)],
                 hide=False,
                 render_type=0).exists()
 
@@ -1222,18 +1222,18 @@ def result_print(request):
 
                 fwb.append(Spacer(1, 2.5 * mm))
 
-        if client_prev == direction.client.individual.pk and not split:
+        if client_prev == direction.client.individual_id and not split:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
         elif client_prev > -1:
             naprs.append(PageBreak())
 
         if len(pk) == 1:
             naprs.append(fwb)
-            client_prev = direction.client.individual.pk
+            client_prev = direction.client.individual_id
             continue
 
         naprs.append(KeepTogether([KeepInFrame(content=fwb, maxWidth=pw, maxHeight=ph - 6 * mm, hAlign='RIGHT')]))
-        client_prev = direction.client.individual.pk
+        client_prev = direction.client.individual_id
 
     def first_pages(canvas, document):
         canvas.saveState()
@@ -1476,7 +1476,7 @@ def result_journal_table_print(request):
     onlyjson = False
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     iss_list = Issledovaniya.objects.filter(time_confirmation__gte=date, time_confirmation__lt=end_date,
                                             research__podrazdeleniye=lab,
@@ -1492,20 +1492,20 @@ def result_journal_table_print(request):
         k = "%d_%s" % (otd.pk, iss.napravleniye.istochnik_f.title)
         if k not in patients:
             patients[k] = {"title": otd.title, "ist_f": iss.napravleniye.istochnik_f.title, "patients": {}}
-        if d.client.pk not in patients[k]["patients"]:
-            patients[k]["patients"][d.client.pk] = {"fio": d.client.individual.fio(short=True, dots=True),
+        if d.client_id not in patients[k]["patients"]:
+            patients[k]["patients"][d.client_id] = {"fio": d.client.individual.fio(short=True, dots=True),
                                                     "card": d.client.number_with_type(),
                                                     "history": d.history_num,
                                                     "researches": {}}
-        if iss.research.pk not in patients[k]["patients"][d.client.pk]["researches"]:
-            patients[k]["patients"][d.client.pk]["researches"][iss.research.pk] = {"title": iss.research.title,
+        if iss.research_id not in patients[k]["patients"][d.client_id]["researches"]:
+            patients[k]["patients"][d.client_id]["researches"][iss.research_id] = {"title": iss.research.title,
                                                                                    "fractions": {}}
             # researches_pks.add(iss.research.pk)
         for fr in iss.research.fractions_set.all():
             fres = Result.objects.filter(issledovaniye=iss, fraction=fr)
             if fres.exists():
                 fres = fres.first()
-                patients[k]["patients"][d.client.pk]["researches"][iss.research.pk]["fractions"][fr.pk] = {
+                patients[k]["patients"][d.client_id]["researches"][iss.research_id]["fractions"][fr.pk] = {
                     "title": fr.title, "result": result_normal(fres.value)}
     if onlyjson:
         return HttpResponse(json.dumps(patients), content_type="application/json")
@@ -1613,7 +1613,7 @@ def result_journal_table_print(request):
                                                                             research__hide=True,
                                                                             research__pk__in=researches_pks)):
         k = (
-                9999 if not f.research.direction else f.research.direction.pk) * 1000000 + f.relation.pk * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
+                9999 if not f.research.direction else f.research.direction_id) * 1000000 + f.relation_id * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
         d = dict(pk=f.pk, title=f.title)
         ordered[k] = d
 
@@ -1693,7 +1693,7 @@ def result_journal_print(request):
     import datetime
     dateo = request.GET["date"]
     date = datetime.date(int(dateo.split(".")[2]), int(dateo.split(".")[1]), int(dateo.split(".")[0]))
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
 
     ist_f = json.loads(request.GET.get("ist_f", "[]"))
     group = int(request.GET.get("group", "-2"))
@@ -1793,7 +1793,7 @@ def result_journal_print(request):
     otds = defaultdict(dict)
     clientresults = {}
     for iss in iss_list.order_by("napravleniye__client__individual__family"):
-        key = iss.napravleniye.client.individual.family + "-" + str(iss.napravleniye.client.pk)
+        key = iss.napravleniye.client.individual.family + "-" + str(iss.napravleniye.client_id)
         if key not in clientresults.keys():
             clientresults[key] = {"directions": {},
                                   "ist_f": iss.napravleniye.istochnik_f.title,
@@ -1801,11 +1801,11 @@ def result_journal_print(request):
                                                                                 dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
                                          ((
                                                   "<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")}
-        if iss.napravleniye.pk not in clientresults[key]["directions"]:
-            clientresults[key]["directions"][iss.napravleniye.pk] = {"researches": {}}
+        if iss.napravleniye_id not in clientresults[key]["directions"]:
+            clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}
         # results = Result.objects.filter(issledovaniye=iss)
-        if iss.research.pk not in clientresults[key]["directions"][iss.napravleniye.pk]["researches"]:
-            clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk] = {
+        if iss.research_id not in clientresults[key]["directions"][iss.napravleniye_id]["researches"]:
+            clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id] = {
                 "title": iss.research.title, "res": [], "code": iss.research.code, "fail": False}
         # for result in results:
         #    pass
@@ -1822,9 +1822,9 @@ def result_journal_print(request):
                     if tmpval == "":
                         tres["v"] = "пустой результат"
                     if tres["fail"]:
-                        clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk][
+                        clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id][
                             "fail"] = True
-                clientresults[key]["directions"][iss.napravleniye.pk]["researches"][iss.research.pk]["res"].append(tres)
+                clientresults[key]["directions"][iss.napravleniye_id]["researches"][iss.research_id]["res"].append(tres)
         if not group_to_otd:
             otds[iss.napravleniye.doc.podrazdeleniye.title + " - " + iss.napravleniye.istochnik_f.title][key] = \
                 clientresults[key]
@@ -1959,9 +1959,9 @@ def result_get(request):
         issledovaniye = Issledovaniya.objects.get(pk=int(request.GET["iss_id"]))
         results = Result.objects.filter(issledovaniye=issledovaniye)
         for v in results:
-            result["results"][str(v.fraction.pk)] = v.value
-            result["norms"][str(v.fraction.pk)] = v.get_is_norm(recalc=True)
-            result["refs"][str(v.fraction.pk)] = v.get_ref(full=True)
+            result["results"][str(v.fraction_id)] = v.value
+            result["norms"][str(v.fraction_id)] = v.get_is_norm(recalc=True)
+            result["refs"][str(v.fraction_id)] = v.get_ref(full=True)
         if issledovaniye.lab_comment:
             result["comment"] = issledovaniye.lab_comment.strip()
     return HttpResponse(json.dumps(result), content_type="application/json")
@@ -2054,7 +2054,7 @@ def result_filter(request):
                 if dir_pk.isnumeric():
                     status = status_v
                 res = {"status": status_v, "pk": v.pk, "title": v.research.title, "date": "",
-                       "direction": v.napravleniye.pk,
+                       "direction": v.napravleniye_id,
                        "tubes": " | ".join(map(str, v.tubes.values_list('pk', flat=True)))}
                 if status == 0 and v.tubes.filter(time_recive__isnull=False).exists():  # Не обработаные
                     res["date"] = str(dateformat.format(
@@ -2207,7 +2207,7 @@ def results_search_directions(request):
             continue
         datec = str(dateformat.format(direction.issledovaniya_set.filter(time_confirmation__isnull=False).order_by(
             "-time_confirmation").first().time_confirmation.date(), settings.DATE_FORMAT))
-        key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base.pk)
+        key = "%s_%s@%s" % (datec, direction.client.number, direction.client.base_id)
         if key not in rows:
             if n - offset >= on_page or key in filtered:
                 if key not in filtered:

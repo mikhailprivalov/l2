@@ -112,7 +112,7 @@ def gen_pdf_execlist(request):
                                                                                                        dots=True) + ", " +
                                     inobj.issledovaniya_set.first().napravleniye.client.individual.age_s(
                                         iss=inobj.issledovaniya_set.first()) + "<br/>№ напр.: " + str(
-                        inobj.issledovaniya_set.first().napravleniye.pk) + "<br/>" + "№ ёмкости: " + str(
+                        inobj.issledovaniya_set.first().napravleniye_id) + "<br/>" + "№ ёмкости: " + str(
                         inobj.pk) + "<br/>" + Truncator(
                         inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19) + "<br/><br/>")
             if len(data) < ysize:
@@ -462,7 +462,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     for v in issledovaniya:
         values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
                        "comment": v.comment,
-                       "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation.pk,
+                       "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                        "info": v.research.paraclinic_info})
     tw = w / 2 - paddingx * 2
     m = 0
@@ -610,19 +610,19 @@ def get_one_dir(request):
                         absor = directory.Absorption.objects.filter(fupper=fr)
                         if absor.exists():
                             fuppers.add(fr.pk)
-                            fresearches.add(fr.research.pk)
+                            fresearches.add(fr.research_id)
                             for absor_obj in absor:
-                                flowers.add(absor_obj.flower.pk)
-                                fresearches.add(absor_obj.flower.research.pk)
+                                flowers.add(absor_obj.flower_id)
+                                fresearches.add(absor_obj.flower.research_id)
 
                 for v in tmp:
                     for val in directory.Fractions.objects.filter(research=v.research):
-                        vrpk = val.relation.pk
+                        vrpk = val.relation_id
                         rel = val.relation
-                        if val.research.pk in fresearches and val.pk in flowers:
+                        if val.research_id in fresearches and val.pk in flowers:
                             absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
                             if absor.fupper.pk in fuppers:
-                                vrpk = absor.fupper.relation.pk
+                                vrpk = absor.fupper.relation_id
                                 rel = absor.fupper.relation
 
                         if vrpk not in tubes_buffer.keys():
@@ -734,7 +734,7 @@ def update_direction(request):
             if v and not val.doc_get and not val.time_get:  # Если статус выполнения забора установлен в True
                 val.set_get(request.user.doctorprofile)
                 res["o"].append(val.id)
-            res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye.pk
+            res["dn"] = Issledovaniya.objects.filter(tubes__id=k).first().napravleniye_id
         res["r"] = True
 
     return JsonResponse(res)
@@ -768,7 +768,7 @@ def load_history(request):
             iss_list.append(val.research.title)  # Добавление в список исследований по пробирке
         res["rows"].append({"type": v.type.tube.title, "researches": ', '.join(str(x) for x in iss_list),
                             "time": strtime(v.time_get),
-                            "dir_id": iss[0].napravleniye.pk,
+                            "dir_id": iss[0].napravleniye_id,
                             "tube_id": v.id})  # Добавление пробирки с исследованиями в вывод
     return JsonResponse(res)
 
@@ -850,7 +850,7 @@ def print_history(request):
                  "client-type": iss[0].napravleniye.client.base.short_title,
                  "lab_title": iss[0].research.get_podrazdeleniye().title,
                  "time": strtime(v.time_get),
-                 "dir_id": iss[0].napravleniye.pk,
+                 "dir_id": iss[0].napravleniye_id,
                  "podr": v.doc_get.podrazdeleniye.title,
                  "reciver": None,
                  "tube_id": str(v.id),
@@ -1075,9 +1075,9 @@ def get_issledovaniya(request):
                             if not issledovaniye.doc_save:
                                 saved = False
                             else:
-                                doc_save_id = issledovaniye.doc_save.pk
+                                doc_save_id = issledovaniye.doc_save_id
                                 doc_save_fio = issledovaniye.doc_save.get_fio()
-                                if doc_save_id == request.user.doctorprofile.pk:
+                                if doc_save_id == request.user.doctorprofile_id:
                                     current_doc_save = 1
                                 else:
                                     current_doc_save = 0
@@ -1100,7 +1100,7 @@ def get_issledovaniya(request):
                             ctp = int(0 if not issledovaniye.time_confirmation else int(
                                 time.mktime(timezone.localtime(issledovaniye.time_confirmation).timetuple())))
                             ctime = int(time.time())
-                            cdid = -1 if not issledovaniye.doc_confirmation else issledovaniye.doc_confirmation.pk
+                            cdid = issledovaniye.doc_confirmation_id or -1
                             rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                             res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
                                                          "research_pk": issledovaniye.research.pk,
