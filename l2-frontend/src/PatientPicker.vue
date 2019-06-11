@@ -320,7 +320,7 @@
         this.emit_input()
       },
       history_num() {
-        this.emit_input()
+        this.emit_input(true)
       },
       inLoading() {
         if (!this.inLoading  && (this.directive_department === '-1' || this.directive_doc === '-1')) {
@@ -575,7 +575,7 @@
           this.emit_input()
         }
       },
-      emit_input() {
+      emit_input(from_hn=false) {
         let pk = -1
         if ('pk' in this.selected_card)
           pk = this.selected_card.pk
@@ -598,7 +598,7 @@
           age: this.selected_card.age,
           main_diagnosis: this.selected_card.main_diagnosis,
         })
-        if(pk !== -1) {
+        if(pk !== -1 && !from_hn) {
           $("#fndsrc").focus()
         }
       },

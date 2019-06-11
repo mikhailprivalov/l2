@@ -10,6 +10,14 @@
           <div class="row">
             <div class="col-xs-5 text-right">
               <date-selector :date_type.sync="date_type" :values.sync="values"/>
+              <label style="width: 100%;text-align: left;">
+                Источник финансирования:
+                <select v-model="fin" class="form-control">
+                  <optgroup :label="b.title" v-for="b in bases">
+                    <option v-for="f in b.fin_sources.filter(x => !x.hide)" :value="f.pk">{{b.title}} – {{f.title}}</option>
+                  </optgroup>
+                </select>
+              </label>
             </div>
             <div class="col-xs-7">
               <select-picker :val="user" :options="users_list" :func="change_user"
@@ -74,9 +82,24 @@
         },
         user: '-1',
         dep: '-1',
+        fin: '-1',
       }
     },
+    watch: {
+      bases: {
+        immediate: true,
+        deep: true,
+        handler() {
+          if (this.fin === '-1' && this.bases.length > 0 && this.bases[0].fin_sources.length > 0) {
+            this.fin = this.bases[0].fin_sources[0].pk;
+          }
+        },
+      },
+    },
     computed: {
+      bases() {
+        return this.$store.getters.bases.filter(b => !b.hide)
+      },
       users_list() {
         let u = []
         for (let u_row of this.users) {
@@ -115,7 +138,7 @@
         this.dep = v
       },
       make_report() {
-        window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}`, '_blank')
+        window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
       }
     },
   }

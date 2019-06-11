@@ -89,7 +89,7 @@ def directions_history(request):
                     if not has_descriptive and v.research.desc:
                         has_descriptive = True
                     researches_list.append(v.research.title)
-                    researches_pks.append(v.research.pk)
+                    researches_pks.append(v.research_id)
                     iss_status = 1
                     if not v.doc_confirmation and not v.doc_save and not v.deferred:
                         iss_status = 1
@@ -216,9 +216,9 @@ def directions_results(request):
                 isses.append(issledovaniye.pk)
                 t += 1
                 kint = "%s_%s_%s_%s" % (t,
-                                        "-1" if not issledovaniye.research.direction else issledovaniye.research.direction.pk,
+                                        "-1" if not issledovaniye.research.direction else issledovaniye.research.direction_id,
                                         issledovaniye.research.sort_weight,
-                                        issledovaniye.research.pk)
+                                        issledovaniye.research_id)
                 result["results"][kint] = {"title": issledovaniye.research.title,
                                            "fractions": collections.OrderedDict(),
                                            "sort": issledovaniye.research.sort_weight,
@@ -237,7 +237,7 @@ def directions_results(request):
                     for res in results:  # Перебор результатов
                         pk = res.fraction.sort_weight
                         if not pk or pk <= 0:
-                            pk = res.fraction.pk
+                            pk = res.fraction_id
                         if res.fraction.render_type == 0:
                             if pk not in result["results"][kint]["fractions"].keys():
                                 result["results"][kint]["fractions"][pk] = {}
@@ -370,10 +370,10 @@ def directions_services(request):
             response["loaded_pk"] = pk
             response["visit_status"] = n.visit_date is not None
             response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
-            response["allow_reset_confirm"] = bool(((
-                                                            ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                        str(x) for x in
-                                                        request.user.groups.all()]) and n.visit_date)
+            response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile_id)
+                                                     or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                     str(x) for x in
+                                                     request.user.groups.all()]) and n.visit_date)
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -476,14 +476,17 @@ def directions_last_result(request):
             if v and v.napravleniye.visit_date > i.time_confirmation:
                 response["type"] = "visit"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                    "is_desc": i.research.desc,
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
                 response["has_last_result"] = True
                 response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
                                            "ts": tsdatetime(i.time_confirmation),
+                                           "is_desc": i.research.desc,
                                            "is_doc_referral": i.research.is_doc_referral,
                                            "is_paraclinic": i.research.is_paraclinic}
             else:
                 response["data"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
+                                    "is_desc": i.research.desc,
                                     "is_doc_referral": i.research.is_doc_referral,
                                     "ts": tsdatetime(i.time_confirmation), "is_paraclinic": i.research.is_paraclinic}
         elif u:
@@ -491,10 +494,12 @@ def directions_last_result(request):
             if v and v.napravleniye.visit_date > u.napravleniye.data_sozdaniya:
                 response["type"] = "visit"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
+                                   "is_desc": i.research.desc,
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
             else:
                 response["type"] = "direction"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
+                                   "is_desc": i.research.desc,
                                     "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
             response["has_last_result"] = True
             response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
@@ -544,7 +549,7 @@ def directions_results_report(request):
                         if len(res) == 0:
                             continue
 
-                        paramdata = {"research": i.research.pk,
+                        paramdata = {"research": i.research_id,
                                      "pk": ppk,
                                      "order": g.order,
                                      "date": strdate(i.time_confirmation),
@@ -555,7 +560,7 @@ def directions_results_report(request):
                                      "not_norm_dir": "",
                                      "delta": 0,
                                      "active_ref": {},
-                                     "direction": i.napravleniye.pk}
+                                     "direction": i.napravleniye_id}
                         data.append(paramdata)
             else:
                 if Fractions.objects.filter(pk=ppk).exists():
@@ -589,7 +594,7 @@ def directions_results_report(request):
                                         not_norm_dir = "n_up"
                                     delta = nx
 
-                        paramdata = {"research": f.research.pk,
+                        paramdata = {"research": f.research_id,
                                      "pk": ppk,
                                      "order": f.sort_weight,
                                      "date": strdate(r.issledovaniye.time_confirmation),
@@ -600,7 +605,7 @@ def directions_results_report(request):
                                      "not_norm_dir": not_norm_dir,
                                      "delta": delta,
                                      "active_ref": active_ref,
-                                     "direction": r.issledovaniye.napravleniye.pk}
+                                     "direction": r.issledovaniye.napravleniye_id}
                         data.append(paramdata)
     data.sort(key=itemgetter("timestamp"), reverse=True)
     data.sort(key=itemgetter("pk"))
@@ -638,7 +643,8 @@ def directions_paraclinic_form(request):
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "card": d.client.number_with_type(),
-                "card_pk": d.client.pk,
+                "card_pk": d.client_id,
+                "individual_pk": d.client.individual_id,
                 "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "has_benefit": BenefitReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
@@ -661,7 +667,7 @@ def directions_paraclinic_form(request):
                 ctp = int(0 if not i.time_confirmation else int(
                     time.mktime(timezone.localtime(i.time_confirmation).timetuple())))
                 ctime = int(time.time())
-                cdid = -1 if not i.doc_confirmation else i.doc_confirmation.pk
+                cdid = -1 if not i.doc_confirmation else i.doc_confirmation_id
                 rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                 iss = {
                     "pk": i.pk,
@@ -676,11 +682,11 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": ((
-                                                    ctime - ctp < rt and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                str(x) for x in
-                                                request.user.groups.all()]) and i.time_confirmation is not None,
-                    "more": [x.research.pk for x in Issledovaniya.objects.filter(parent=i)],
+                    "allow_reset_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile_id)
+                                             or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                             str(x) for x in
+                                             request.user.groups.all()]) and i.time_confirmation is not None,
+                    "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                 }
 
@@ -759,7 +765,7 @@ def directions_paraclinic_result(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                   | Q(research__is_stom=True)).exists():
+                   | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         for group in request_data["research"]["groups"]:
             for field in group["fields"]:
@@ -862,12 +868,12 @@ def directions_paraclinic_confirm_reset(request):
         ctp = int(
             0 if not iss.time_confirmation else int(time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
         ctime = int(time.time())
-        cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
+        cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation_id
         if (ctime - ctp < SettingManager.get(
                 "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
             str(x) for x in request.user.groups.all()]:
-            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation.pk,
-                      "direction": iss.napravleniye.pk}
+            predoc = {"fio": iss.doc_confirmation.get_fio(), "pk": iss.doc_confirmation_id,
+                      "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.time_confirmation = None
             iss.save()
             if iss.napravleniye.result_rmis_send:
@@ -933,7 +939,7 @@ def directions_patient_history(request):
         '-time_confirmation').exclude(pk=request_data["pk"]):
         data.append({
             "pk": i.pk,
-            "direction": i.napravleniye.pk,
+            "direction": i.napravleniye_id,
             "date": strdate(i.time_confirmation)
         })
 

@@ -510,8 +510,8 @@ class Patients(BaseRequester):
     def search_by_document(self, document: clients_models.Document = None, doc_type_id: str = "", doc_serial: str = "",
                            doc_number: str = ""):
         if document is not None:
-            if document.document_type.pk in self.local_types:
-                doc_type_id = str(self.local_types[document.document_type.pk])
+            if document.document_type_id in self.local_types:
+                doc_type_id = str(self.local_types[document.document_type_id])
                 doc_serial = document.serial
                 doc_number = document.number
             else:
@@ -958,11 +958,11 @@ class Directions(BaseRequester):
                                 sended_codes.append(code)
                                 send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
                                                                               service_rend_id, stdout, x)
-                                if ssd is not None and x.field.group.research.pk not in sended_researches:
+                                if ssd is not None and x.field.group.research_id not in sended_researches:
                                     RmisServices.objects.filter(napravleniye=direction,
                                                                 rmis_id=service_rend_id).delete()
                                     self.main_client.rendered_services.delete_service(service_rend_id)
-                                    sended_researches.append(x.field.group.research.pk)
+                                    sended_researches.append(x.field.group.research_id)
                                     if stdout:
                                         stdout.write("DATA: " + str(send_data))
                                     ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)
@@ -1000,11 +1000,11 @@ class Directions(BaseRequester):
                                     sended_codes.append(code)
                                     send_data, ssd = self.gen_rmis_direction_data(code, direction, rid, rindiv,
                                                                                   service_rend_id, stdout, x)
-                                    if ssd is not None and x.fraction.research.pk not in sended_researches:
+                                    if ssd is not None and x.fraction.research_id not in sended_researches:
                                         RmisServices.objects.filter(napravleniye=direction,
                                                                     rmis_id=service_rend_id).delete()
                                         self.main_client.rendered_services.delete_service(service_rend_id)
-                                        sended_researches.append(x.fraction.research.pk)
+                                        sended_researches.append(x.fraction.research_id)
                                         if stdout:
                                             stdout.write("DATA: " + str(send_data))
                                         ss = self.main_client.rendered_services.client.sendServiceRend(**send_data)

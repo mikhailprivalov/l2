@@ -380,7 +380,7 @@ def current_user_info(request):
             ret["groups"].append("Admin")
         ret["doc_pk"] = request.user.doctorprofile.pk
         ret["rmis_location"] = request.user.doctorprofile.rmis_location
-        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye.pk,
+        ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
         ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
         ret["user_services"] = [x.pk for x in
@@ -666,7 +666,7 @@ def get_template(request):
     if pk:
         t = users.AssignmentTemplates.objects.get(pk=pk)
         title = t.title
-        researches = [x.research.pk for x in
+        researches = [x.research_id for x in
                       users.AssignmentResearches.objects.filter(template=t, research__hide=False)]
         global_template = t.global_template
     return JsonResponse({"title": title, "researches": researches, "global_template": global_template})
@@ -887,7 +887,7 @@ def user_location(request):
         def slot_status(x):
             s = 0
             pk = None
-            n = directions.Napravleniya.objects.filter(rmis_slot_id=x).first()
+            n = directions.Napravleniya.objects.filter(rmis_slot_id=x["slot"]).first()
             if n:
                 pk = n.pk
                 s = 1
@@ -912,11 +912,11 @@ def user_get_reserve(request):
         n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
         d["direction"] = n.pk if n else None
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
-        d['direction_service'] = ds.research.pk if ds else -1
+        d['direction_service'] = ds.research_id if ds else -1
         if d:
             return JsonResponse({
                 **d,
-                "datetime": strdatetime(d["datetime"])[:-3],
+                "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'),
                 "patient_uid": patient_uid,
                 "pk": int(str(pk)[1:]),
             })
@@ -927,9 +927,23 @@ def user_get_reserve(request):
 def user_fill_slot(request):
     slot = json.loads(request.body).get('slot', {})
     slot_data = slot.get('data', {})
-    direction = -1
     if directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"]).exists():
         direction = directions.Napravleniya.objects.filter(rmis_slot_id=slot["id"])[0].pk
     else:
-        res = DResearches.objects.get(pk=slot_data["direction_service"])
+        result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(slot["card_pk"],
+                                                                           "",
+                                                                           None,
+                                                                           "",
+                                                                           None,
+                                                                           request.user.doctorprofile,
+                                                                           {-1: [slot_data["direction_service"]]},
+                                                                           {},
+                                                                           False,
+                                                                           {},
+                                                                           vich_code="",
+                                                                           count=1,
+                                                                           discount=0,
+                                                                           parent_iss=None,
+                                                                           rmis_slot=slot["id"])
+        direction = result["list_id"][0]
     return JsonResponse({"direction": direction})

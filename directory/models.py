@@ -179,6 +179,7 @@ class ParaclinicInputField(models.Model):
         (6, 'result_reception'),
         (7, 'outcome_illness'),
         (8, 'maybe_onco'),
+        (9, 'List'),
     )
 
     title = models.CharField(max_length=255, help_text='Название поля ввода')

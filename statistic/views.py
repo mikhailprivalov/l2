@@ -844,7 +844,7 @@ def statistic_xls(request):
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',
                                                                                  flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
-                 (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(
+                 (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile_id)) and DoctorProfile.objects.filter(
                      pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
@@ -937,14 +937,14 @@ def statistic_xls(request):
                 "napravleniye__client__individual__family").distinct()
             patients = {}
             for iss in iss_list:
-                k = iss.napravleniye.client.individual.pk
+                k = iss.napravleniye.client.individual_id
                 if k not in patients:
                     client = iss.napravleniye.client.individual
                     patients[k] = {"fio": client.fio(short=True, dots=True),
                                    "age": client.age_s(direction=iss.napravleniye), "directions": [], "researches": [],
                                    "cards": []}
-                if iss.napravleniye.pk not in patients[k]["directions"]:
-                    patients[k]["directions"].append(iss.napravleniye.pk)
+                if iss.napravleniye_id not in patients[k]["directions"]:
+                    patients[k]["directions"].append(iss.napravleniye_id)
                 kn = iss.napravleniye.client.number_with_type()
                 if kn not in patients[k]["cards"]:
                     patients[k]["cards"].append(kn)
@@ -1067,7 +1067,7 @@ def statistic_xls(request):
                         if n:
                             continue
                         otd_pk = "external-" + str(
-                            researches.napravleniye.imported_org.pk) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
+                            researches.napravleniye.imported_org_id) if not researches.napravleniye.doc else researches.napravleniye.doc.podrazdeleniye_id
                         if otd_pk not in otds:
                             otds[otd_pk] = defaultdict(lambda: 0)
                         otds[otd_pk][obj.pk] += 1
@@ -1331,7 +1331,7 @@ def statistic_xls(request):
         researches = Issledovaniya.objects.filter(napravleniye__doc__podrazdeleniye=otd,
                                                   napravleniye__data_sozdaniya__range=(date_start_o, date_end_o),
                                                   time_confirmation__isnull=False)
-        naprs = len(set([v.napravleniye.pk for v in researches]))
+        naprs = len(set([v.napravleniye_id for v in researches]))
         row = [
             u"Завершенных",
             str(naprs)

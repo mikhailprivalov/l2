@@ -33,7 +33,7 @@
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
-          <col width="28" v-if="!iss_pk">
+          <col width="28">
         </colgroup>
         <thead>
         <tr>
@@ -42,7 +42,7 @@
           <th>Назначения</th>
           <th class="text-center">Статус</th>
           <th></th>
-          <th class="nopd" v-if="!iss_pk"><input type="checkbox" v-model="all_checked"/></th>
+          <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
         </tr>
         </thead>
       </table>
@@ -54,7 +54,7 @@
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
-          <col width="28" v-if="!iss_pk">
+          <col width="28">
         </colgroup>
         <tbody>
         <tr v-if="directions.length === 0 && is_created">
@@ -78,12 +78,12 @@
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
-          <td class="nopd" v-if="!iss_pk"><input v-model="row.checked" type="checkbox"/></td>
+          <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
         </tr>
         </tbody>
       </table>
     </div>
-    <div class="bottom-picker" v-if="!iss_pk">
+    <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
       <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
       </div>
       <div class="bottom-inner">
@@ -97,7 +97,9 @@
                 <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
             <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
-            <li><a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a></li>
+            <li v-if="!iss_pk">
+              <a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
+            </li>
             <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
             <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
@@ -384,6 +386,9 @@
     bottom: 0;
     display: flex;
     align-items: center;
+    .no_abs & {
+      position: relative;
+    }
   }
 
   .bottom-inner {

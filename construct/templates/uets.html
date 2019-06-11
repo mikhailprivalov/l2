@@ -80,6 +80,10 @@
     .btn-td:hover{
         border: 0!important;
     }
+
+    td input, th input {
+        width: 100%;
+    }
     </style>
     <script>
         $(document).ready(function () {
@@ -108,15 +112,15 @@
                 let div1 = $("<div></div>").appendTo("#research-form");
                 $(div1).append("<h5>{0}</h5>".f(data.title));
                 let table = $("<table></table>");
-                $(table).append("<thead><th style='width: 50%'><input value='Фракция' readonly style='width: 100%'/></th><th style='width: 25%'><input value='УЕТ врач' readonly style='width: 100%'/></th><th style='width: 25%'><input value='УЕТ лабрант' readonly style='width: 100%'/></th></thead>");
+                $(table).append("<thead><th style='width: 50%'><input value='Фракция' readonly /></th><th style='width: 25%'><input value='УЕТ врач' readonly /></th><th style='width: 25%'><input value='УЕТ лабрант' readonly /></th></thead>");
                 let tbody = $("<tbody></tbody>").appendTo(table);
                 $("[pk='{0}']".f(pk)).addClass("active");
                 $.each(data.fractiontubes, function(k,v){
                     $.each(v.fractions, function(ke, ve){
-                       $(tbody).append("<tr class='fraction' pk='{3}'><td><input value='{0}' title='{0}' readonly style='width: 100%'/></td><td><input value='{1}' class='uet_doc' /></td><td><input value='{2}' class='uet_lab' /></td></tr>".f(ve.title, data.uet_doc[ve.pk], data.uet_lab[ve.pk], ve.pk))
+                       $(tbody).append("<tr class='fraction' pk='{3}'><td><input value='{0}' title='{0}' readonly /></td><td><input value='{1}' class='uet_doc' /></td><td><input value='{2}' class='uet_lab' /></td></tr>".f(ve.title, data.uet_doc[ve.pk], data.uet_lab[ve.pk], ve.pk))
                     });
                 });
-               $(tbody).append("<tr><td><input readonly style='width: 100%'/></td><td><input readonly style='width: 100%'/></td><td class='btn btn-primary-nb btn-td' id='save-btn' onclick='save()'>Сохранить</td></tr>");
+               $(tbody).append("<tr><td><input readonly /></td><td><input readonly /></td><td class='btn btn-primary-nb btn-td' id='save-btn' onclick='save()'>Сохранить</td></tr>");
 
                 $(table).appendTo(div1);
             });

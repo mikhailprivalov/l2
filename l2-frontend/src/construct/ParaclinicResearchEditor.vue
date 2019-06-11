@@ -163,6 +163,7 @@
                   <option value="1">Дата</option>
                   <option value="2">Диагноз по МКБ</option>
                   <option value="3">Расчётное</option>
+                  <option value="9">Список значений</option>
                 </select>
               </label>
             </div>

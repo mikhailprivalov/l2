@@ -75,7 +75,7 @@ def researches_get_one(request):
                            "references": {
                                "m": ref_m,
                                "f": ref_f,
-                               "default": -1 if not val.default_ref else val.default_ref.pk,
+                               "default": -1 if not val.default_ref else val.default_ref_id,
                                "available": av,
                                           },
                            "num": val.sort_weight,

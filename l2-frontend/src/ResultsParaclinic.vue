@@ -60,8 +60,8 @@
               </colgroup>
               <tbody>
               <tr v-for="r in location.data"
-                  :class="{current: r.slot === slot.id}"
-                  @click="open_slot(r)"
+                  :class="{current: r.slot === slot.id || (data.ok && r.status.direction && r.status.direction === data.direction.pk && !slot.id)}"
+                  @click="r.status.code > 0 ? open_fill_slot(r.status.direction) : open_slot(r)"
                   v-tippy="{ placement : 'top', arrow: true, animation: 'fade' }"
                   :title="{
                   1: 'Направление зарегистрировано',
@@ -419,6 +419,22 @@
             />
           </div>
         </div>
+        <div v-if="create_directions_data.length > 0"
+             style="margin-top: 5px;text-align: left">
+          <table class="table table-bordered lastresults">
+            <colgroup>
+              <col width="180">
+              <col>
+              <col width="110">
+              <col width="110">
+            </colgroup>
+              <tbody>
+              <last-result :individual="data.patient.individual_pk" :key="p" v-for="p in create_directions_data"
+                           :noScroll="true"
+                           :research="p"/>
+              </tbody>
+            </table>
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
@@ -458,7 +474,7 @@
                     class="btn btn-primary-nb btn-blue-nb" type="button">
               Сохранить назначение и заполнить протокол
             </button>
-            <button @click="open_fill_slot" v-else class="btn btn-primary-nb btn-blue-nb" type="button">
+            <button @click="open_fill_slot(slot.data.direction)" v-else class="btn btn-primary-nb btn-blue-nb" type="button">
               Перейти к протоколу
             </button>
           </div>
@@ -503,11 +519,13 @@
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
+  import LastResult from './LastResult'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
+      LastResult,
     },
     data() {
       return {
@@ -547,6 +565,7 @@
         create_directions_data: [],
         create_directions_diagnosis: '',
         show_results_pk: -1,
+        loc_timer: null,
       }
     },
     watch: {
@@ -604,6 +623,12 @@
     },
     methods: {
       async load_location() {
+        if (!this.has_loc) {
+          return;
+        }
+        if (!this.loc_timer) {
+          this.loc_timer = setInterval(() => this.load_location(), 120000);
+        }
         this.location.loading = true
         this.location.data = (await users_point.loadLocation(this.td)).data
         this.location.loading = false
@@ -815,6 +840,7 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
           vm.inserted = true
+          this.load_location();
         })
       },
       save_and_confirm(iss) {
@@ -838,6 +864,7 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
           vm.inserted = true
+          this.load_location();
         })
       },
       confirm(iss) {
@@ -859,6 +886,7 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
           vm.inserted = true
+          this.load_location();
         })
       },
       reset_confirm(iss) {
@@ -884,6 +912,7 @@
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
           vm.inserted = true
+          this.load_location();
         })
       },
       clear(ignore) {
@@ -935,9 +964,12 @@
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async close_slot() {
-        this.$refs.modalSlot.$el.style.display = 'none';
-        this.slot.id = null;
-        this.slot.data = {};
+        if (!this.$refs.modalSlot) {
+          return
+        }
+        this.$refs.modalSlot.$el.style.display = 'none'
+        this.slot.id = null
+        this.slot.data = {}
       },
       async fill_slot() {
         let s = '';
@@ -950,16 +982,18 @@
         try {
           await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`);
           await this.$store.dispatch(action_types.INC_LOADING)
-          let card_pk = -1;
           const cards = await patients_point.searchCard(this.internal_base, this.slot.data.patient_uid, false, true);
+          let card_pk = cards.results[0].pk
           const {direction} = await users_point.fillSlot({...this.slot, card_pk});
-          await this.$store.dispatch(action_types.DEC_LOADING)
+          await this.$store.dispatch(action_types.DEC_LOADING);
+          this.load_location();
           this.open_fill_slot(direction);
         } catch (_) {
           await this.$store.dispatch(action_types.DEC_LOADING)
         }
       },
       open_fill_slot(direction) {
+        this.close_slot();
         this.load_pk(direction)
       },
       template_fields_values(row, dataTemplate, title) {
@@ -1619,6 +1653,10 @@
   }
 
   .slot {
+    &-0 {
+    color: #e1f2fe;
+    }
+
     &-1 {
       color: #F4D03F;
     }
@@ -1675,6 +1713,28 @@
     margin-right: -50px;
     &:focus{
       outline: none;
+    }
+  }
+
+  .lastresults {
+    table-layout: fixed;
+    padding: 0;
+    margin: 0;
+    color: #000;
+    background-color: #ffdb4d;
+    border-color: #000;
+
+    /deep/ th, /deep/ td {
+      border-color: #000;
+    }
+
+    /deep/ a {
+      color: #000;
+      text-decoration: dotted underline;
+    }
+
+    /deep/ a:hover {
+      text-decoration: none;
     }
   }
 </style>
