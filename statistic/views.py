@@ -706,7 +706,7 @@ def statistic_xls(request):
                 polis_n = issled[15] if issled[15] else ''
                 polis_who = issled[17] if issled[17] else ''
                 ws1.cell(row=r, column=col+7).value = polis_n +';\n' + polis_who
-                ws1.cell(row=r, column=col+8).value = ''
+                ws1.cell(row=r, column=col+8).value = issled[2]
                 ws1.cell(row=r, column=col+10).value = utils.strtime(issled[8])
                 rows = ws1[f'A{r}:V{r}']
                 for row in rows:
