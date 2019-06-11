@@ -27,7 +27,7 @@ djangorestframework==3.9.1
 docopt==0.6.2
 docutils==0.14
 et-xmlfile==1.0.1
-Genshi==0.7.2
+Genshi==0.7.3
 gprof2dot==2016.10.13
 gunicorn==19.9.0
 idna==2.8
