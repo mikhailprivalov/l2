@@ -916,7 +916,7 @@ def user_get_reserve(request):
         if d:
             return JsonResponse({
                 **d,
-                "datetime": strdatetime(d["datetime"])[:-3],
+                "datetime": d["datetime"].strftime('%d.%m.%Y %H:%M'),
                 "patient_uid": patient_uid,
                 "pk": int(str(pk)[1:]),
             })
