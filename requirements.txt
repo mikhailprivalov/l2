@@ -8,7 +8,7 @@ certifi==2018.11.29
 chardet==3.0.4
 DAWG==0.7.8
 DAWG-Python==0.7.2
-defusedxml==0.5.0
+defusedxml==0.6.0
 Django==2.1.8
 django-ajax-selects==1.7.1
 django-cachalot==2.1.0
