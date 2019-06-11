@@ -38,7 +38,7 @@ jsonfield==2.0.2
 jsonpickle==1.1
 ldap3==2.5.2
 lxml==4.3.4
-Markdown==3.1
+Markdown==3.1.1
 MarkupSafe==1.1.0
 numpy==1.16.1
 openpyxl==2.6.0
