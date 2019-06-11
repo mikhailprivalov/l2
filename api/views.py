@@ -912,7 +912,7 @@ def user_get_reserve(request):
         n = directions.Napravleniya.objects.filter(rmis_slot_id=pk).first()
         d["direction"] = n.pk if n else None
         ds = directions.Issledovaniya.objects.filter(napravleniye=n, napravleniye__isnull=False).first()
-        d['direction_service'] = ds.research.pk if ds else -1
+        d['direction_service'] = ds.research_id if ds else -1
         if d:
             return JsonResponse({
                 **d,
