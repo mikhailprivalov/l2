@@ -952,4 +952,7 @@
   .b {
     font-weight: bold;
   }
+  .hospital input {
+    border-radius: 0;
+  }
 </style>

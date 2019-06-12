@@ -1077,7 +1077,7 @@ def get_issledovaniya(request):
                             else:
                                 doc_save_id = issledovaniye.doc_save_id
                                 doc_save_fio = issledovaniye.doc_save.get_fio()
-                                if doc_save_id == request.user.doctorprofile_id:
+                                if doc_save_id == request.user.doctorprofile.pk:
                                     current_doc_save = 1
                                 else:
                                     current_doc_save = 0

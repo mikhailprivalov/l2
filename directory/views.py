@@ -141,17 +141,14 @@ def directory_researches_update_uet(request):
     """POST: обновление УЕТов"""
     return_result = {"ok": False}
     if request.method == "POST":
-        name = request.POST["name"]
-        pk = request.POST["pk"]
-        value = request.POST["value"]
-        if value != "":
-            fraction = Fractions.objects.get(pk=pk)
-            if name == "lab-uet":
-                fraction.uet_lab = value
-            else:
-                fraction.uet_doc = value
-            fraction.save()
-            return_result["ok"] = True
+        b = json.loads(request.body)
+        pk = b["pk"]
+        fraction = Fractions.objects.get(pk=pk)
+        fraction.uet_doc = b["doc"]
+        fraction.uet_co_executor_1 = b["co1"]
+        fraction.uet_co_executor_2 = b["co2"]
+        fraction.save()
+        return_result["ok"] = True
     return JsonResponse(return_result)
 
 
@@ -242,8 +239,10 @@ def directory_research(request):
         return_result["hide"] = research.hide
         return_result["onlywith"] = research.onlywith_id or -1
         return_result["fractiontubes"] = OrderedDict()
+        return_result["co_executor_mode"] = research.co_executor_mode
         return_result["uet_doc"] = {}
-        return_result["uet_lab"] = {}
+        return_result["uet_co_executor_1"] = {}
+        return_result["uet_co_executor_2"] = {}
         fractions = Fractions.objects.filter(research=research).order_by("pk", "relation__tube__id", "sort_weight")
         for fraction in fractions:
             if "tube-" + str(fraction.relation_id) not in return_result["fractiontubes"].keys():
@@ -253,7 +252,8 @@ def directory_research(request):
                                                                                        "sel": "tube-" + str(
                                                                                            fraction.relation_id)}
             return_result["uet_doc"][fraction.pk] = fraction.uet_doc
-            return_result["uet_lab"][fraction.pk] = fraction.uet_lab
+            return_result["uet_co_executor_1"][fraction.pk] = fraction.uet_co_executor_1
+            return_result["uet_co_executor_2"][fraction.pk] = fraction.uet_co_executor_2
             ref_m = fraction.ref_m
             ref_f = fraction.ref_f
             if isinstance(ref_m, str):
