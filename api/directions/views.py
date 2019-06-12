@@ -370,7 +370,7 @@ def directions_services(request):
             response["loaded_pk"] = pk
             response["visit_status"] = n.visit_date is not None
             response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
-            response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile_id)
+            response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                                                      or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                                      str(x) for x in
                                                      request.user.groups.all()]) and n.visit_date)
@@ -682,7 +682,7 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile_id)
+                    "allow_reset_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
                                              or request.user.is_superuser or "Сброс подтверждений результатов" in [
                                              str(x) for x in
                                              request.user.groups.all()]) and i.time_confirmation is not None,

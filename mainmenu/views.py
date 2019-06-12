@@ -213,7 +213,7 @@ def confirm_reset(request):
             ctime = int(time.time())
             cdid = iss.doc_confirmation_id or -1
             if (ctime - ctp < SettingManager.get(
-                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile_id) or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                    "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                 str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
