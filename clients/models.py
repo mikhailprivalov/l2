@@ -162,7 +162,7 @@ class Individual(models.Model):
                         doc.save()
                         if out:
                             out.write("Добавление докумена: %s" % doc)
-                        kk = "%s_%s_%s" % (doc.document_type.pk, doc.serial, doc.number)
+                        kk = "%s_%s_%s" % (doc.document_type_id, doc.serial, doc.number)
                         save_docs.append(kk)
                         continue
                     else:
@@ -170,7 +170,7 @@ class Individual(models.Model):
                         has = []
                         ndocs = {}
                         for d in docs:
-                            kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
+                            kk = "%s_%s_%s" % (d.document_type_id, d.serial, d.number)
                             if out:
                                 out.write("Checking: %s" % kk)
                             if kk in has:
@@ -226,7 +226,7 @@ class Individual(models.Model):
 
             to_delete_pks = []
             for d in Document.objects.filter(individual=self, from_rmis=True):
-                kk = "%s_%s_%s" % (d.document_type.pk, d.serial, d.number)
+                kk = "%s_%s_%s" % (d.document_type_id, d.serial, d.number)
                 if out:
                     out.write("TD %s %s %s" % (kk, kk not in save_docs, save_docs,))
                 if kk not in save_docs:
@@ -684,7 +684,7 @@ class Card(models.Model):
         for t in types:
             CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=False).delete()
             if CardDocUsage.objects.filter(card=self, document__document_type__pk=t, document__is_active=True).exists():
-                docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document.pk
+                docs[t] = CardDocUsage.objects.filter(card=self, document__document_type__pk=t)[0].document_id
             elif Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).exists():
                 d = Document.objects.filter(document_type__pk=t, individual=self.individual, is_active=True).order_by(
                     '-id')[0]

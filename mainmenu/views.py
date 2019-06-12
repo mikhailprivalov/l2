@@ -156,7 +156,7 @@ def load_logs(request):
     for row in rows:
         tmp_object = {"id": row.pk,
                       "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-                      "user_pk": "" if not row.user else row.user.pk, "key": row.key, "body": row.body,
+                      "user_pk": row.user_id or "", "key": row.key, "body": row.body,
                       "type": row.get_type_display(),
                       "time": strdatetime(row.time)}
         result["data"].append(tmp_object)
@@ -178,7 +178,7 @@ def researches_control(request):
 def receive_journal_form(request):
     p = request.GET.get("lab_pk")
     if p != '-2':
-        lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye.pk)
+        lab = Podrazdeleniya.objects.get(pk=p or request.user.doctorprofile.podrazdeleniye_id)
     else:
         lab = None
     labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
@@ -211,13 +211,13 @@ def confirm_reset(request):
                 0 if not iss.time_confirmation else int(
                     time.mktime(timezone.localtime(iss.time_confirmation).timetuple())))
             ctime = int(time.time())
-            cdid = -1 if not iss.doc_confirmation else iss.doc_confirmation.pk
+            cdid = iss.doc_confirmation_id or -1
             if (ctime - ctp < SettingManager.get(
                     "lab_reset_confirm_time_min") * 60 and cdid == request.user.doctorprofile.pk) or request.user.is_superuser or "Сброс подтверждений результатов" in [
                 str(x) for x in request.user.groups.all()]:
                 predoc = {"fio": 'не подтверждено' if cdid == -1 else iss.doc_confirmation.get_fio(),
                           "pk": cdid,
-                          "direction": iss.napravleniye.pk}
+                          "direction": iss.napravleniye_id}
                 iss.doc_confirmation = iss.time_confirmation = None
                 iss.save()
                 if iss.napravleniye.result_rmis_send:
@@ -687,7 +687,7 @@ def researches_from_directions(request):
     pk = json.loads(request.GET.get("pk", "[]"))
     data = defaultdict(list)
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk, research__hide=False):
-        data[-2 if not i.research.podrazdeleniye else i.research.podrazdeleniye.pk].append(i.research.pk)
+        data[i.research.podrazdeleniye_id or -2].append(i.research.pk)
     return JsonResponse(data)
 
 

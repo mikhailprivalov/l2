@@ -90,7 +90,7 @@ def directory_researches(request):
             for fraction in fractions:
                 if fraction.relation.pk not in resdict["tubes"].keys():
                     resdict["tubes_c"] += 1
-                    resdict["tubes"][fraction.relation.pk] = {"id": fraction.relation.pk,
+                    resdict["tubes"][fraction.relation_id] = {"id": fraction.relation_id,
                                                               "color": fraction.relation.tube.color,
                                                               "title": fraction.relation.tube.title,
                                                               "num": fraction.sort_weight}
@@ -141,17 +141,14 @@ def directory_researches_update_uet(request):
     """POST: обновление УЕТов"""
     return_result = {"ok": False}
     if request.method == "POST":
-        name = request.POST["name"]
-        pk = request.POST["pk"]
-        value = request.POST["value"]
-        if value != "":
-            fraction = Fractions.objects.get(pk=pk)
-            if name == "lab-uet":
-                fraction.uet_lab = value
-            else:
-                fraction.uet_doc = value
-            fraction.save()
-            return_result["ok"] = True
+        b = json.loads(request.body)
+        pk = b["pk"]
+        fraction = Fractions.objects.get(pk=pk)
+        fraction.uet_doc = b["doc"]
+        fraction.uet_co_executor_1 = b["co1"]
+        fraction.uet_co_executor_2 = b["co2"]
+        fraction.save()
+        return_result["ok"] = True
     return JsonResponse(return_result)
 
 
@@ -240,29 +237,32 @@ def directory_research(request):
         return_result["edit_mode"] = research.edit_mode
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())
         return_result["hide"] = research.hide
-        return_result["onlywith"] = -1 if not research.onlywith else research.onlywith.pk
+        return_result["onlywith"] = research.onlywith_id or -1
         return_result["fractiontubes"] = OrderedDict()
+        return_result["co_executor_mode"] = research.co_executor_mode
         return_result["uet_doc"] = {}
-        return_result["uet_lab"] = {}
+        return_result["uet_co_executor_1"] = {}
+        return_result["uet_co_executor_2"] = {}
         fractions = Fractions.objects.filter(research=research).order_by("pk", "relation__tube__id", "sort_weight")
         for fraction in fractions:
-            if "tube-" + str(fraction.relation.pk) not in return_result["fractiontubes"].keys():
-                return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)] = {"fractions": [],
+            if "tube-" + str(fraction.relation_id) not in return_result["fractiontubes"].keys():
+                return_result["fractiontubes"]["tube-" + str(fraction.relation_id)] = {"fractions": [],
                                                                                        "color": fraction.relation.tube.color,
                                                                                        "title": fraction.relation.tube.title,
                                                                                        "sel": "tube-" + str(
-                                                                                           fraction.relation.pk)}
+                                                                                           fraction.relation_id)}
             return_result["uet_doc"][fraction.pk] = fraction.uet_doc
-            return_result["uet_lab"][fraction.pk] = fraction.uet_lab
+            return_result["uet_co_executor_1"][fraction.pk] = fraction.uet_co_executor_1
+            return_result["uet_co_executor_2"][fraction.pk] = fraction.uet_co_executor_2
             ref_m = fraction.ref_m
             ref_f = fraction.ref_f
             if isinstance(ref_m, str):
                 ref_m = json.loads(ref_m)
             if isinstance(ref_f, str):
                 ref_f = json.loads(ref_f)
-            return_result["fractiontubes"]["tube-" + str(fraction.relation.pk)]["fractions"].append(
+            return_result["fractiontubes"]["tube-" + str(fraction.relation_id)]["fractions"].append(
                 {"title": fraction.title, "units": fraction.units, "ref_m": ref_m,
-                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants.pk, "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
+                 "ref_f": ref_f, "pk": fraction.pk, "type": 1 if not fraction.variants else fraction.variants_id, "type_values": [] if not fraction.variants else fraction.variants.get_variants(), "num": fraction.sort_weight})
         for key in return_result["fractiontubes"].keys():
             return_result["fractiontubes"][key]["fractions"] = sorted(return_result["fractiontubes"][key]["fractions"],
                                                                       key=lambda k: k['num'])
@@ -292,7 +292,7 @@ def directory_researches_group(request):
                 if not research.direction:
                     return_result["researches"].append(resdict)
             else:
-                if research.direction and research.direction.pk == gid:
+                if research.direction and research.direction_id == gid:
                     return_result["researches"].append(resdict)
 
     elif request.method == "POST":
@@ -337,9 +337,9 @@ def directory_get_directions(request):
         for research in researches:
             if not research.direction:
                 continue
-            if research.direction.pk not in return_result["directions"].keys():
-                return_result["directions"][research.direction.pk] = []
-            return_result["directions"][research.direction.pk].append(research.title)
+            if research.direction_id not in return_result["directions"].keys():
+                return_result["directions"][research.direction_id] = []
+            return_result["directions"][research.direction_id].append(research.title)
 
     return JsonResponse(return_result)
 
@@ -354,7 +354,7 @@ def researches_get_details(request):
         research_obj = Researches.objects.get(pk=pk)
         return_result["title"] = research_obj.title
         return_result["instructions"] = research_obj.instructions
-        return_result["comment_template"] = "-1" if research_obj.comment_variants is None else research_obj.comment_variants.pk
+        return_result["comment_template"] = research_obj.comment_variants_id or "-1"
         return_result["edit_mode"] = research_obj.edit_mode
         return_result["fractions"] = []
         return_result["template"] = research_obj.template

@@ -349,7 +349,7 @@ def tubes_get(request):
             if len(issledovaniya_tmp) > 0:
                 k.add(tube.getbc())
                 result.append({"researches": ' | '.join(issledovaniya_tmp),
-                               "direction": tube.issledovaniya_set.first().napravleniye.pk,
+                               "direction": tube.issledovaniya_set.first().napravleniye_id,
                                "tube": {"type": tube.type.tube.title, "id": tube.getbc(), "status": tube.rstatus(),
                                         "color": tube.type.tube.color, "notice": tube.notice}})
 
@@ -364,7 +364,7 @@ w, h = A4
 @login_required
 def receive_journal(request):
     """Печать истории принятия материала за день"""
-    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye.pk))
+    lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import Table, TableStyle
@@ -432,9 +432,9 @@ def receive_journal(request):
 
         iss_list = collections.OrderedDict()  # Список исследований
         if v.doc_get:
-            k = str(v.doc_get.podrazdeleniye.pk) + "@" + str(v.doc_get.podrazdeleniye)
+            k = str(v.doc_get.podrazdeleniye_id) + "@" + str(v.doc_get.podrazdeleniye)
         else:
-            k = str(iss.first().napravleniye.doc.podrazdeleniye.pk) + "@" + str(iss.first().napravleniye.doc.podrazdeleniye)
+            k = str(iss.first().napravleniye.doc.podrazdeleniye_id) + "@" + str(iss.first().napravleniye.doc.podrazdeleniye)
         if k not in n_dict.keys():
             n_dict[k] = 0
         for val in iss.order_by("research__sort_weight"):  # Цикл перевода полученных исследований в список
@@ -463,17 +463,17 @@ def receive_journal(request):
                          "client-type": iss[0].napravleniye.client.base.short_title,
                          "lab_title": iss[0].research.get_podrazdeleniye().title,
                          "time": strtime(v.time_recive),
-                         "dir_id": iss[0].napravleniye.pk,
+                         "dir_id": iss[0].napravleniye_id,
                          "podr": iss[0].napravleniye.doc.podrazdeleniye.title,
                          "receive_n": str(n),
                          "tube_id": str(v.id),
-                         "direction": str(iss[0].napravleniye.pk),
+                         "direction": str(iss[0].napravleniye_id),
                          "history_num": iss[0].napravleniye.history_num,
                          "n": n_dict[k],
                          "fio": iss[
                              0].napravleniye.client.individual.fio(short=True, dots=True)})  # Добавление в список исследований и пробирок по ключу k в словарь labs
-        elif iss[0].napravleniye.pk not in directions:
-            directions += [iss[0].napravleniye.pk]
+        elif iss[0].napravleniye_id not in directions:
+            directions += [iss[0].napravleniye_id]
         n += 1
     if return_type == "directions":
         return JsonResponse(directions, safe=False)

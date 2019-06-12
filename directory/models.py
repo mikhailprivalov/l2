@@ -81,6 +81,13 @@ class Researches(models.Model):
 
         (38001, '38001. ИО - Направление на ВИЧ'),
     )
+
+    CO_EXECUTOR_MODES = (
+        (0, 'Нет'),
+        (1, '1 со-исполнитель'),
+        (2, '2 со-исполнителя'),
+    )
+
     direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
     title = models.CharField(max_length=255, default="", help_text='Название исследования')
     short_title = models.CharField(max_length=255, default='', blank=True)
@@ -116,6 +123,7 @@ class Researches(models.Model):
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
+    co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
 
     @staticmethod
     def filter_type(t):
@@ -179,6 +187,7 @@ class ParaclinicInputField(models.Model):
         (6, 'result_reception'),
         (7, 'outcome_illness'),
         (8, 'maybe_onco'),
+        (9, 'List'),
     )
 
     title = models.CharField(max_length=255, help_text='Название поля ввода')
@@ -302,11 +311,6 @@ class Fractions(models.Model):
     """
     Фракции для исследований
     """
-    TYPES = (
-        (0, ''),
-        (1, 'co_executor'),
-        (2, 'co_executo2'),
-    )
     title = models.CharField(max_length=255, help_text='Название фракции')
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, к которому относится фракция', on_delete=models.CASCADE)
     units = models.CharField(max_length=255, help_text='Еденицы измерения', blank=True, default='')
@@ -315,7 +319,8 @@ class Fractions(models.Model):
     ref_f = JSONField(help_text='Референсы (Ж)', blank=True, default="{}")
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)', db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
     uet_doc = models.FloatField(default=0, help_text='УЕТы для врача', blank=True)
-    uet_lab = models.FloatField(default=0, help_text='УЕТы для лаборанта', blank=True)
+    uet_co_executor_1 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 1', blank=True)
+    uet_co_executor_2 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 2', blank=True)
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций', blank=True)
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, help_text='Варианты подсказок результатов', on_delete=models.SET_NULL)
     variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, help_text='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
@@ -328,8 +333,6 @@ class Fractions(models.Model):
     print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
-    type_coexecutor = models.SmallIntegerField(default=0, choices=TYPES, blank=True,
-                                               help_text='Отношение исполнителей к фракциям дл уета ует')
 
     def __str__(self):
         return self.research.title + " | " + self.title

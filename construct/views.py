@@ -113,7 +113,7 @@ def refs(request):
             rows.append({'pk': r.pk, 'title': r.title, 'about': r.about,
                          'ref_m': json.loads(r.ref_m) if isinstance(r.ref_m, str) else r.ref_m,
                          'ref_f': json.loads(r.ref_f) if isinstance(r.ref_f, str) else r.ref_f, 'del': False,
-                         'hide': False, 'isdefault': r.pk == fraction.default_ref.pk})
+                         'hide': False, 'isdefault': r.pk == fraction.default_ref_id})
         return JsonResponse(rows, safe=False)
     elif request.method == "POST":
         pk = int(request.POST["pk"])

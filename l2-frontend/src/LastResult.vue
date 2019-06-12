@@ -56,6 +56,11 @@
       },
       research: {
         type: Number
+      },
+      noScroll: {
+        default: false,
+        type: Boolean,
+        required: false,
       }
     },
     data() {
@@ -108,7 +113,7 @@
         this.$root.$emit('print:directions', [this.direction])
       },
       load() {
-        $('.scrolldown').scrollDown()
+        !this.noScroll && $('.scrolldown').scrollDown()
         let vm = this
         directions_point.lastResult(this.individual, this.research).then(data => {
           vm.in_load = false
@@ -120,8 +125,7 @@
               vm.last_result = data.last_result
               vm.has_last_result = data.has_last_result
             }
-            vm.is_paraclinic = data.data.is_paraclinic || data.data.is_doc_referral ||
-              (data.last_result ? data.last_result.is_paraclinic : false)
+            vm.is_paraclinic = data.data.is_desc
             let m = moment.unix(data.data.ts)
             let n = moment()
             vm.ms = n.diff(m)
@@ -129,7 +133,7 @@
             vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
             vm.direction = data.data.direction
           }
-          setTimeout(() => {
+          !this.noScroll && setTimeout(() => {
             $('.scrolldown').scrollDown()
           }, 10)
         })

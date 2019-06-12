@@ -660,12 +660,6 @@ blockquote {
     border-color: #aab2bd;
 }
 
-.form-control, .form-control:focus {
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-}
-
 .form-control:focus {
     border-color: #3bafda;
 }
