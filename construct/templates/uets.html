@@ -111,16 +111,28 @@
                 $(".active").removeClass("active");
                 let div1 = $("<div></div>").appendTo("#research-form");
                 $(div1).append("<h5>{0}</h5>".f(data.title));
-                let table = $("<table></table>");
-                $(table).append("<thead><th style='width: 50%'><input value='Фракция' readonly /></th><th style='width: 25%'><input value='УЕТ врач' readonly /></th><th style='width: 25%'><input value='УЕТ лабрант' readonly /></th></thead>");
+                let table = $('<table style=\'table-layout:fixed;width:100%\'></table>')
+                table.append($('<colgroup><col/><col width="80"/><col width="80"/><col width="80"/></colgroup>'))
+                let $thead = $('<thead></thead>')
+                let $ttr = $('<tr></tr>')
+
+                $ttr.append('<th><input value=\'Фракция\' readonly /></th><th><input value=\'Врач\' readonly /></th>')
+                $ttr.append(`<th><input value='1 со-исполнитель' readonly /></th>`)
+                $ttr.append(`<th><input value='2 со-исполнитель' readonly /></th>`)
+                table.append($thead.append($ttr))
+
                 let tbody = $("<tbody></tbody>").appendTo(table);
                 $("[pk='{0}']".f(pk)).addClass("active");
                 $.each(data.fractiontubes, function(k,v){
                     $.each(v.fractions, function(ke, ve){
-                       $(tbody).append("<tr class='fraction' pk='{3}'><td><input value='{0}' title='{0}' readonly /></td><td><input value='{1}' class='uet_doc' /></td><td><input value='{2}' class='uet_lab' /></td></tr>".f(ve.title, data.uet_doc[ve.pk], data.uet_lab[ve.pk], ve.pk))
+                        let $tr = $(`<tr class='fraction' pk='${ve.pk}'></tr>`)
+                        $tr.append(`<td><input tabindex='-1' value='${ve.title}' title='${ve.title}' readonly /></td><td><input value='${data.uet_doc[ve.pk]}' class='uet_doc' /></td>`)
+                        $tr.append(`<td><input value='${data.uet_co_executor_1[ve.pk]}' class='uet_co_executor_1' /></td>`)
+                        $tr.append(`<td><input value='${data.uet_co_executor_2[ve.pk]}' class='uet_co_executor_2' /></td>`)
+                        $(tbody).append($tr)
                     });
                 });
-               $(tbody).append("<tr><td><input readonly /></td><td><input readonly /></td><td class='btn btn-primary-nb btn-td' id='save-btn' onclick='save()'>Сохранить</td></tr>");
+                $(tbody).append('<tr><td><input readonly /></td><td colspan="3" class=\'btn btn-primary-nb btn-td\' id=\'save-btn\' onclick=\'save()\'>Сохранить</td></tr>')
 
                 $(table).appendTo(div1);
             });
@@ -136,13 +148,22 @@
             allres = 0;
             cres = 0;
             $.each($(".fraction"), function(k,v){
-                $.ajax({url: "/directory/researches/update_uet", method: "POST", data: {name: "doc-uet", pk: $(v).attr("pk"), value: $(".uet_doc", v).val()}}).done(function(){
+                allres++;
+                fetch("/directory/researches/update_uet", {
+                    method: 'POST',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pk: $(v).attr("pk"),
+                        doc: $(".uet_doc", v).val(),
+                        co1: $(".uet_co_executor_1", v).val(),
+                        co2: $(".uet_co_executor_2", v).val(),
+                    })
+                }).then(() => {
                     complete();
-                    $.ajax({url: "/directory/researches/update_uet", method: "POST", data: {name: "lab-uet", pk: $(v).attr("pk"), value: $(".uet_lab", v).val()}}).done(function(){
-                        complete();
-                    });
-                });
-                allres += 2;
+                })
             });
         }
     function complete(){
