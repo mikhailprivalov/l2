@@ -6,7 +6,7 @@
             .btn-group
                 button(onclick="restore_values();save();", type="button")#save-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Сохранить
             .btn-group
-                button(onclick="confirm_result();", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Подтвердить
+                button(onclick="restore_values();save(true,confirm_result);", type="button")#confirm-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Подтвердить
             .btn-group
                 button(onclick="restore_values();save(true,confirm_result);", type="button")#confirm-andsave-btn.btn.btn-sm.btn-primary.btn-blue-nb.btn-ell Сохранить и подтвердить
 h4(style="margin-top: 2px") #{title}

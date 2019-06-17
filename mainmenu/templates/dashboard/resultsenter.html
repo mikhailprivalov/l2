@@ -1165,6 +1165,9 @@
             display: none;
         }
 
+        .form-control.result-enter[readonly] {
+            background-color: #fff;
+        }
     </style>
 {% endblock %}
 
@@ -1886,6 +1889,7 @@
                         $("#save-btn").attr("disabled", 1);
                         $("#ref-settings-btn").prop("disabled", true);
                         $("#confirm-andsave-btn").attr("disabled", 1);
+                        $(".result-enter").prop("readonly", true);
                         if ($l.length) {
                             $l.prop("disabled", true);
                         }
