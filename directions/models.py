@@ -657,36 +657,52 @@ class Issledovaniya(models.Model):
     """
     Направления на исследования
     """
-    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
-    research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление',
+                                     db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(directory.Researches, null=True, blank=True,
+                                 help_text='Вид исследования из справочника', db_index=True, on_delete=models.CASCADE)
     tubes = models.ManyToManyField(TubesRegistration, help_text='Ёмкости, необходимые для исследования', db_index=True)
-    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True, help_text='Профиль пользователя, сохранившего результат', on_delete=models.SET_NULL)
+    doc_save = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_save", db_index=True,
+                                 help_text='Профиль пользователя, сохранившего результат', on_delete=models.SET_NULL)
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения результата')
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation", db_index=True, help_text='Профиль пользователя, подтвердившего результат', on_delete=models.SET_NULL)
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_confirmation",
+                                         db_index=True, help_text='Профиль пользователя, подтвердившего результат',
+                                         on_delete=models.SET_NULL)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
+                                             help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
     comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
-    api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
+    api_app = models.ForeignKey(Application, null=True, blank=True, default=None,
+                                help_text='Приложение API, через которое результаты были сохранены',
+                                on_delete=models.SET_NULL)
     coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
     how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
-    def_uet = models.DecimalField(max_digits=6,null=True, help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True, default=None, decimal_places=3)
+    def_uet = models.DecimalField(max_digits=6, null=True,
+                                  help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True,
+                                  default=None, decimal_places=3)
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
     co_executor_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
-    co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2", default=None,
-                                    null=True, blank=True, on_delete=models.SET_NULL)
+    co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2",
+                                     default=None, null=True, blank=True, on_delete=models.SET_NULL)
     co_executor2_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
-    purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Цель посещения")
+    purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL,
+                                help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
-    result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Результат обращения")
-    outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL, help_text="Исход")
+    result_reception = models.ForeignKey(ResultOfTreatment, default=None, blank=True, null=True,
+                                         on_delete=models.SET_NULL, help_text="Результат обращения")
+    outcome_illness = models.ForeignKey(Outcomes, default=None, blank=True, null=True, on_delete=models.SET_NULL,
+                                        help_text="Исход")
     diagnos = models.CharField(blank=True, help_text="Заключительный Диагноз приема", default="", max_length=255)
     maybe_onco = models.BooleanField(default=False, help_text="Подозрение на онко")
-    creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research", db_index=True, help_text='Профиль пользователя, добавившего услуги к созданному направлению', on_delete=models.SET_NULL)
-    parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание", blank=True, null=True, default=None,
-                      on_delete=models.SET_NULL)
+    creator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, related_name="doc_add_research",
+                                db_index=True,
+                                help_text='Профиль пользователя, добавившего услуги к созданному направлению',
+                                on_delete=models.SET_NULL)
+    parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание",
+                               blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
     def get_stat_diagnosis(self):
         pass

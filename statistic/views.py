@@ -844,7 +844,7 @@ def statistic_xls(request):
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name',
                                                                                  flat=True) or request.user.is_superuser
         users = [x for x in json.loads(users_o) if
-                 (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile_id)) and DoctorProfile.objects.filter(
+                 (access_to_all or (x.isdigit() and int(x) == request.user.doctorprofile.pk)) and DoctorProfile.objects.filter(
                      pk=x).exists()]
         date_values = json.loads(date_values_o)
         monthes = {
