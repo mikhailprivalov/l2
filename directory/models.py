@@ -124,6 +124,7 @@ class Researches(models.Model):
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
+    co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
 
     @staticmethod
     def filter_type(t):
