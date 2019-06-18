@@ -240,6 +240,7 @@ def directory_research(request):
         return_result["onlywith"] = research.onlywith_id or -1
         return_result["fractiontubes"] = OrderedDict()
         return_result["co_executor_mode"] = research.co_executor_mode
+        return_result["co_executor_title"] = research.co_executor_2_title
         return_result["uet_doc"] = {}
         return_result["uet_co_executor_1"] = {}
         return_result["uet_co_executor_2"] = {}

@@ -609,9 +609,9 @@ class Napravleniya(models.Model):
         napr_data['client_fio'] = ind_data['fio']
         napr_data['client_bd'] = ind_data['born']
         napr_data['card_num'] = ind_data['card_num']
-        napr_data['polis_n'] = self.polis_n
+        napr_data['polis_n'] = self.polis_n if self.polis_n else ''
         napr_data['polis_who_give'] = self.polis_who_give
-        napr_data['istochnik_f'] = self.istochnik_f.title.lower()
+        napr_data['istochnik_f'] = self.istochnik_f.title.lower() if self.istochnik_f else ''
 
         return napr_data
 

@@ -7,6 +7,7 @@
           <div @click="select_template(d.pk)" class="direction" :class="{active: d.pk === selected_template, ishidden: d.hide}"
                v-for="d in rows">
             <div>{{d.title}}</div>
+            <a href="#" @click.prevent.stop="copy_template(d.pk)"><i class="fa fa-copy"></i></a>
           </div>
         </div>
         <button class="btn btn-blue-nb" @click="add"><i class="fa fa-plus"></i> добавить</button>
@@ -172,6 +173,17 @@
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      copy_template(pk) {
+        this.clear();
+        let vm = this
+        vm.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData(pk).then(({data}) => {
+          vm.template_data = {...data, title: '', hide: false, readonly: false}
+          vm.selected_template = -1
+        }).finally(() => {
+          vm.$store.dispatch(action_types.DEC_LOADING).then()
+        })
+      },
       save() {
         let vm = this
         vm.loaded = false
@@ -273,7 +285,7 @@
     border: 1px solid rgba(0, 0, 0, 0.14);
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
     &.ishidden {
-      opacity: .6;
+      opacity: .5;
       &:hover {
         opacity: 1;
       }
@@ -304,6 +316,21 @@
       box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
       z-index: 1;
       transform: scale(1.008);
+    }
+
+    a {
+      position: absolute;
+      display: inline-block;
+      right: 2px;
+      top: 2px;
+      padding: 2px;
+      &:hover {
+        text-shadow: 0 1px 3px;
+      }
+    }
+
+    &:not(.active) {
+      padding-right: 14px;
     }
   }
 
