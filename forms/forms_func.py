@@ -298,7 +298,7 @@ def get_finaldata_talon(doc_result_obj):
         temp_dict_iss = OrderedDict()
         dict_fsourcce = ''
         order = ''
-        if napr_attr['istochnik_f'] == 'омс' or napr_attr['istochnik_f'] == '' :
+        if napr_attr['istochnik_f'] in ['омс', '']:
             oms_count += 1
             dict_fsourcce = fin_oms
             order = oms_count
