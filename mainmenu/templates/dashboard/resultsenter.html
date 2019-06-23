@@ -1165,6 +1165,9 @@
             display: none;
         }
 
+        .form-control.result-enter[readonly] {
+            background-color: #fff;
+        }
     </style>
 {% endblock %}
 
@@ -1194,6 +1197,7 @@
         let researches_cache = {};
         let rendered_form_cache = {};
         let laborants = [];
+        let isDoc = false;
 
         let dir_active = -1;
         let tubes_active = [];
@@ -1278,7 +1282,7 @@
                         reconnection: true,
                         reconnectionDelay: 1000,
                         reconnectionDelayMax: 5000,
-                        reconnectionAttempts: Infinity
+                        reconnectionAttempts: 10
                     })
 
                     socket.on('results_save', (data) => {
@@ -1316,9 +1320,9 @@
             $.ajax({
                 url: "/api/laborants",
                 dataType: 'json'
-            }).done(function ({data = []}) {
+            }).done(function ({data = [], doc}) {
                 laborants = data;
-                console.log(data);
+                isDoc = doc || su;
             }).always(dechl);
             nn++;
             $.ajax({ // AJAX запрос
@@ -1343,10 +1347,12 @@
                 }).done(function (data2) {
                     for (let v of data2) {
                         researches_cache[v.i] = {
-                            "title": v.title,
-                            "fractions": v.fractions,
-                            "can_comment": v.can_comment,
-                            "no_units_and_ref": v.no_units_and_ref
+                            title: v.title,
+                            fractions: v.fractions,
+                            can_comment: v.can_comment,
+                            no_units_and_ref: v.no_units_and_ref,
+                            co_executor_mode: v.co_executor_mode,
+                            co_executor_title: v.co_executor_title,
                         };
                     }
                 }).always(dechl);
@@ -1745,13 +1751,17 @@
                             "title": data2.title,
                             "fractions": data2.fractions,
                             "can_comment": data2.can_comment,
-                            "no_units_and_ref": data2.no_units_and_ref
+                            "no_units_and_ref": data2.no_units_and_ref,
+                            "co_executor_mode": data2.co_executor_mode,
+                            co_executor_title: data2.co_executor_title,
                         }
                     } else {
                         data2.title = researches_cache[research_pk].title;
                         data2.fractions = researches_cache[research_pk].fractions;
                         data2.can_comment = researches_cache[research_pk].can_comment;
                         data2.no_units_and_ref = researches_cache[research_pk].no_units_and_ref;
+                        data2.co_executor_mode = researches_cache[research_pk].co_executor_mode;
+                        data2.co_executor_title = researches_cache[research_pk].co_executor_title;
                     }
                     data2.sex = dir_data.client_sex;
                     data2.age = dir_data.client_vozrast;
@@ -1766,8 +1776,12 @@
                     });
 
                     let rendered = !!rendered_form_cache[research_pk];
-                    if (!rendered)
-                        rendered_form_cache[research_pk] = jade.compile(template)({...data2, laborants});
+                    if (!rendered) {
+                        const rd = {...data2, laborants, isDoc};
+                        console.log(researches_cache[research_pk]);
+                        console.log(rd);
+                        rendered_form_cache[research_pk] = jade.compile(template)(rd);
+                    }
 
                     $("#result-form").html(rendered_form_cache[research_pk]);
                     $("#result-form").removeClass("no_units_and_ref");
@@ -1862,13 +1876,26 @@
                     resize();
                     loaded_research = id;
                     datatype = -1;
-                    $('#laborant').val(data2.co_executor);
+                    const $l = $("#laborant");
+                    const $c = $("#coexecutor");
+                    if ($l.length) {
+                        $l.val(data2.co_executor);
+                    }
+                    if ($c.length) {
+                        $c.val(data2.co_executor2);
+                    }
                     if (data2.confirmed) {
                         $("#confirm-btn").attr("disabled", 1);
                         $("#save-btn").attr("disabled", 1);
                         $("#ref-settings-btn").prop("disabled", true);
                         $("#confirm-andsave-btn").attr("disabled", 1);
-                        $('#laborant').prop("disabled", true);
+                        $(".result-enter").prop("readonly", true);
+                        if ($l.length) {
+                            $l.prop("disabled", true);
+                        }
+                        if ($c.length) {
+                            $c.prop("disabled", true);
+                        }
                         datatype = 2;
                     }
                     else if (data2.saved) {
@@ -1884,7 +1911,12 @@
                         $("#ref-settings-btn").prop("disabled", false);
                         $("#confirm-andsave-btn").removeAttr("disabled");
                     }
-                    $('#laborant').selectpicker('refresh');
+                    if ($l.length) {
+                        $l.selectpicker('refresh');
+                    }
+                    if ($c.length) {
+                        $c.selectpicker('refresh');
+                    }
                     hl();
                     $('#result-jade-form').scrollTop(0);
                 }
@@ -2243,6 +2275,7 @@
             result.fractions = JSON.stringify(result.fractions);
             result.fractions_ref = JSON.stringify(result.fractions_ref);
             result.co_executor = $('#laborant').length ? $('#laborant').val(): '-1';
+            result.co_executor2 = $('#coexecutor').length ? $('#coexecutor').val(): '-1';
             $(this).disabled = false;
             $.ajax({url: "/results/save", method: "POST", data: result}).done(function () {
                 emit_event('results_save', {pk: result.issledovaniye, user: user_pk, dir: dir_active})

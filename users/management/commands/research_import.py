@@ -46,6 +46,7 @@ class Command(BaseCommand):
                     podr = cells.index("подразделение")
                     pay = cells.index("платно")
 
+
                     def insert_data(ins):
                         c1 = ws1.cell(row=r, column=1)
                         c2 = ws1.cell(row=r, column=2)
@@ -53,7 +54,7 @@ class Command(BaseCommand):
                         c4 = ws1.cell(row=r, column=4)
                         c5 = ws1.cell(row=r, column=5)
                         c6 = ws1.cell(row=r, column=6)
-                        c6 = ws1.cell(row=r, column=7)
+                        c7 = ws1.cell(row=r, column=7)
 
                         c1.value = ins
                         c2.value = cells[int_code]
@@ -61,9 +62,10 @@ class Command(BaseCommand):
                         c4.value = cells[type_research]
                         c5.value = cells[place_research]
                         c6.value = cells[podr]
-                        c6.value = cells[pay]
+                        c7.value = cells[pay]
 
             else:
+                r = r + 1
                 if cells[identify] == '-1':
                     if Researches.objects.filter(internal_code=cells[int_code]).exists():
                         r_o = Researches.objects.values_list('pk').get(internal_code=cells[int_code])
@@ -74,7 +76,10 @@ class Command(BaseCommand):
                         doc_refferal = True if cells[type_research] == 'is_doc_refferal' else False
                         stom = True if cells[type_research] == 'is_stom' else False
                         hospital = True if cells[type_research] == 'is_hospital' else False
-                        s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
+                        if cells[place_research] == '-1':
+                            s_t == None
+                        else:
+                            s_t = ResearchSite.objects.get(pk=int(cells[place_research]))
                         c = Researches.objects.create(title=cells[research], site_type=s_t,
                                                       internal_code=cells[int_code],
                                                       is_treatment=treatment, is_doc_refferal=doc_refferal,

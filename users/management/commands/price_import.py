@@ -45,3 +45,4 @@ class Command(BaseCommand):
                     if price_obj and research_obj:
                         PriceCoast.objects.update_or_create(price_name=price_obj, research=research_obj,
                                                         defaults={'coast': coast_value})
+
