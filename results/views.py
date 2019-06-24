@@ -244,7 +244,6 @@ def results_save(request):
             issledovaniye.co_executor_uet = 0
 
             if not request.user.doctorprofile.has_group("Врач-лаборант"):
-                issledovaniye.co_executor = request.user.doctorprofile
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
                     issledovaniye.def_uet += r.fraction.uet_co_executor_1
             else:
