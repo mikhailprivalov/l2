@@ -756,9 +756,10 @@ def laborants(request):
         data = [{"pk": '-1', "fio": 'Не выбрано'}]
         for d in users.DoctorProfile.objects.filter(user__groups__name="Лаборант",
                                                     podrazdeleniye__p_type=users.Podrazdeleniya.LABORATORY).order_by(
-            'fio'):
+                                                    'fio'):
             data.append({"pk": str(d.pk), "fio": d.fio})
-    return JsonResponse({"data": data})
+    return JsonResponse({"data": data,
+                         "doc": request.user.doctorprofile.has_group("Врач-лаборант")})
 
 
 @login_required

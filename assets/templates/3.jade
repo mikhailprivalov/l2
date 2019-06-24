@@ -3,7 +3,7 @@ div.col-md-2
     button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
 div.col-md-2
     .row
-        button(onclick="confirm_result();")#confirm-btn.btn.btn-primary-nb Подтвердить
+        button(onclick="save(true,confirm_result);")#confirm-btn.btn.btn-primary-nb Подтвердить
 div.col-md-4
     button(onclick="save(true,confirm_result);")#confirm-andsave-btn.btn.btn-primary-nb Сохранить и подтвердить
 h4(style="margin-top: 0") #{title}
@@ -42,17 +42,26 @@ form(onsubmit="return false;")
                                         td= index
                                         td.col-md-5
                                             !{norm}
-            if laborants.length > 0
+            if laborants.length > 0 && co_executor_mode > 0 && (isDoc || co_executor_mode > 1)
                 tr
                     td(colspan="4")
                         hr
+                if isDoc
+                    tr
+                        td
+                            label(for="laborant").labtitle Лаборант
+                        td(colspan="3")
+                            select(data-live-search="true", data-width="100%", data-container="body").select-b#laborant
+                                each l in laborants
+                                    option(value=l.pk)= l.fio
                 tr
                     td
-                        label(for="laborant").labtitle Лаборант
+                        label(for="coexecutor").labtitle= co_executor_title
                     td(colspan="3")
-                        select(data-live-search="true", data-width="100%", data-container="body").select-b#laborant
+                        select(data-live-search="true", data-width="100%", data-container="body").select-b#coexecutor
                             each l in laborants
                                 option(value=l.pk)= l.fio
+
 script.
     var k = -1;
     var group = -1;

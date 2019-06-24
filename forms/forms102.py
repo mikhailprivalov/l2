@@ -153,10 +153,9 @@ def form_01(request_data):
     bstr = (qr_napr + protect_val).encode()
     protect_code = str(zlib.crc32(bstr))
 
-    today = utils.timezone.now().date()
-    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    today = utils.timezone.now()
+    date_now1 = datetime.datetime.strftime(today, '%y%m%d%H%M%S%f')[:-3]
     date_now_str = str(ind_card.pk) + str(date_now1)
-
 
     # Проверить записан ли номер контракта в направлениях, и контрольная сумма
     # ПереЗаписать номер контракта Если в наборе направлений значение None, или в направлениях разные контракты,

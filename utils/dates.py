@@ -22,3 +22,7 @@ def try_parse_range(f, t=None, formats=('%d.%m.%Y',)):
     if not ok:
         pf = pt = timezone.now() + timedelta(730)
     return pf, pt
+
+
+def now():
+    return timezone.now()

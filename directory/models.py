@@ -124,6 +124,7 @@ class Researches(models.Model):
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием")
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
+    co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
 
     @staticmethod
     def filter_type(t):
@@ -318,7 +319,7 @@ class Fractions(models.Model):
     ref_m = JSONField(help_text='Референсы (М)', blank=True, default="{}")
     ref_f = JSONField(help_text='Референсы (Ж)', blank=True, default="{}")
     relation = models.ForeignKey(ReleationsFT, help_text='Пробирка (пробирки)', db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
-    uet_doc = models.FloatField(default=0, help_text='УЕТы для врача', blank=True)
+    uet_doc = models.FloatField(default=0, help_text='УЕТы врача', blank=True)
     uet_co_executor_1 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 1', blank=True)
     uet_co_executor_2 = models.FloatField(default=0, help_text='УЕТы со-исполнителя 2', blank=True)
     max_iterations = models.IntegerField(default=1, help_text='Максимальное число итераций', blank=True)

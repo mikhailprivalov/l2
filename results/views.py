@@ -240,6 +240,25 @@ def results_save(request):
             issledovaniye.time_save = timezone.now()  # Время сохранения
             issledovaniye.lab_comment = request.POST.get("comment", "")
             issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(request.POST["co_executor"])
+            issledovaniye.def_uet = 0
+            issledovaniye.co_executor_uet = 0
+
+            if not request.user.doctorprofile.has_group("Врач-лаборант"):
+                issledovaniye.co_executor = request.user.doctorprofile
+                for r in Result.objects.filter(issledovaniye=issledovaniye):
+                    issledovaniye.def_uet += r.fraction.uet_co_executor_1
+            else:
+                for r in Result.objects.filter(issledovaniye=issledovaniye):
+                    issledovaniye.def_uet += r.fraction.uet_doc
+                if issledovaniye.co_executor_id:
+                    for r in Result.objects.filter(issledovaniye=issledovaniye):
+                        issledovaniye.co_executor_uet += r.fraction.uet_co_executor_1
+
+            issledovaniye.co_executor2_id = None if request.POST.get("co_executor2", '-1') == '-1' else int(request.POST["co_executor2"])
+            issledovaniye.co_executor2_uet = 0
+            if issledovaniye.co_executor2_id:
+                for r in Result.objects.filter(issledovaniye=issledovaniye):
+                    issledovaniye.co_executor2_uet += r.fraction.uet_co_executor_2
             issledovaniye.save()
             result = {"ok": True}
 
@@ -286,6 +305,10 @@ def result_confirm_list(request):
                 issledovaniye.doc_confirmation = request.user.doctorprofile  # Кто подтвердил
                 from django.utils import timezone
                 issledovaniye.time_confirmation = timezone.now()  # Время подтверждения
+                if not request.user.doctorprofile.has_group("Врач-лаборант"):
+                    issledovaniye.co_executor = request.user.doctorprofile
+                    for r in Result.objects.filter(issledovaniye=issledovaniye):
+                        issledovaniye.def_uet += r.fraction.uet_co_executor_1
                 issledovaniye.save()
                 slog.Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         result["ok"] = True

@@ -32,6 +32,9 @@ def researches_get_one(request):
                 iss = Issledovaniya.objects.get(pk=i)
                 res["res_id"] = i
                 res["co_executor"] = str(iss.co_executor_id or -1)
+                res["co_executor2"] = str(iss.co_executor2_id or -1)
+                res["co_executor_mode"] = iss.research.co_executor_mode or 0
+                res["co_executor_title"] = iss.research.co_executor_2_title
                 if not iss.doc_save:
                     res["saved"] = False
                 if not iss.doc_confirmation:
@@ -47,6 +50,8 @@ def researches_get_one(request):
                 res["i"] = i
                 res["can_comment"] = research.can_lab_result_comment
                 res["no_units_and_ref"] = research.no_units_and_ref
+                res["co_executor_mode"] = research.co_executor_mode or 0
+                res["co_executor_title"] = research.co_executor_2_title
                 for val in fractions:
                     ref_m = val.ref_m
                     ref_f = val.ref_f
