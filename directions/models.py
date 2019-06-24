@@ -742,19 +742,31 @@ class Issledovaniya(models.Model):
 
 
 class TypeJob(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, db_index=True)
     hide = models.BooleanField(help_text="Скрыть тип", default=False)
     value = models.DecimalField(max_digits=5, decimal_places=2,
                                 help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
 
+    def __str__(self):
+        return "%s" % (self.title)
+
+    class Meta:
+        verbose_name = 'Тип работы'
+        verbose_name_plural = 'Типы работ'
+
 
 class EmployeeJob(models.Model):
+    from datetime import date
     type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
     count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
     doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
-    date_job = models.DateField(help_text="Дата работ", blank=True, null=True, db_index=True)
-    time_save = models.DateTimeField(null=True, blank=True, help_text='Время сохранения/корректировки')
+    date_job = models.DateField(default=date.today, help_text="Дата работ", blank=True, null=True, db_index=True)
+    time_save = models.DateTimeField(default=timezone.now, null=True, blank=True, help_text='Время сохранения/корректировки')
+
+    class Meta:
+        verbose_name = 'Нагрузка сотрудника'
+        verbose_name_plural = 'Учет нагрзки'
 
 
 class ParaclinicResult(models.Model):
