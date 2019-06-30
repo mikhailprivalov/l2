@@ -823,6 +823,30 @@ def statistic_xls(request):
                 row = cursor.fetchall()
             return row
 
+        def total_report_sql(d_conf, d_s, d_e):
+            """
+            Возврат (нагрузку) в порядке:
+            research_id, date_confirm, doc_confirmation_id, def_uet, co_executor_id, co_executor_uet,
+            co_executor2_id, co_executor2_uet, research_id, research_title, research-co_executor_2_title
+            :return:
+            """
+            with connection.cursor() as cursor:
+                cursor.execute("""with iss_doc as
+                       (SELECT d_iss.id, d_iss.research_id, date(d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
+                       d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet
+                       FROM public.directions_issledovaniya d_iss where 
+                       (%(d_confirms)s in (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
+                       and d_iss.time_confirmation between  %(d_start)s and %(d_end)s
+                       Order by date_confirm),  
+                       t_res as (SELECT d_res.id, d_res.title, co_executor_2_title
+                       FROM public.directory_researches d_res)
+
+                       select * from iss_doc
+                       left join t_res ON iss_doc.research_id = t_res.id
+                       order by iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e})
+                row = cursor.fetchall()
+            return row
+
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
@@ -837,11 +861,48 @@ def statistic_xls(request):
                         key_type_job = r_j[1]
                         key_date = utils.strfdatetime(r_j[0], "%d.%m.%Y")
                         value_total = r_j[2]
-                        temp_dict = dict_job.get(key_date) if dict_job.get(key_date) else {}
+                        temp_dict = dict_job.get(key_date,{})
                         temp_dict.update({key_type_job : value_total})
                         dict_job[key_date] = temp_dict
 
                     ws = structure(ws, i, res_oq, d1, d2, dict_job)
+
+                    if month_obj:
+                        date, res, title, title2 = None, None, None, None
+                        # issledovaniye_id(0), research_id(1), date_confirm(2), doc_confirmation_id(3), def_uet(4),
+                        # co_executor_id(5), co_executor_uet(6), co_executor2_id(7), co_executor2_uet(8), research_id(9),
+                        # research_title(10), research - co_executor_2_title(11)
+                        # строим стр-ру {дата:{наименование анализа:УЕТ за дату, СО2:УЕТ за дату}}
+                        total_report_dict = {}
+                        r_sql = total_report_sql(i.pk, start_date, end_date)
+                        from _collections import OrderedDict
+                        titles_set = OrderedDict()
+                        for n in r_sql:
+                            titles_set[n[10]] = ''
+                            titles_set[n[11]] =''
+                            temp_dict = {}
+                            temp_uet, temp_uet2 = 0, 0
+                            if (i.pk == n[3]):
+                                temp_uet = n[4] if n[4] else 0
+                            if (i.pk == n[5]) and (n[5] != n[3]):
+                                temp_uet = n[6] if n[6] else 0
+                            if i.pk == n[7]:
+                                temp_uet2 = n[8] if n[8] else 0
+                            #попытка получить значения за дату
+                            if total_report_dict.get(n[2]):
+                                temp_d = total_report_dict.get(n[2])
+                                # попытка получить такие же анализы
+                                current_uet = temp_d.get(n[10]) if temp_d.get(n[10]) else 0
+                                current_uet2 = temp_d.get(n[11]) if temp_d.get(n[11]) else 0
+                                current_uet = current_uet + temp_uet
+                                current_uet2 = current_uet2 + temp_uet2
+                                temp_dict = {n[10]:current_uet, n[11]:current_uet2}
+                                total_report_dict[n[2]].update(temp_dict)
+                            else:
+                                total_report_dict[n[2]] = {n[10]:temp_uet, n[11]:temp_uet2}
+
+                        titles_list = [tk for tk in titles_set.keys()]
+
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
