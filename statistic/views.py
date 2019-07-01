@@ -674,6 +674,31 @@ def statistic_xls(request):
             current_date = ''
             for issled in issl_obj:
                 current_date = issled[9]
+                current_count = 1
+                current_research = issled[1]
+                current_coexec = ''
+                f = issled[17] if issled[17] else ''
+                n = issled[18] if issled[18] else ''
+                p = issled[19] if issled[19] else ''
+                current_patient_napr = f +' ' + n + ' ' + p + '\n' + str(issled[7])
+                current_born = utils.strdate(issled[20])
+                current_card = issled[16]
+                current_card = issled[16]
+                polis_n = issled[4] if issled[4] else ''
+                polis_who = issled[5] if issled[5] else ''
+                current_polis = polis_n +';\n' + polis_who
+                current_code_reserch = issled[2]
+                current_uet = '???'
+                current_confirm = utils.strtime(issled[9])
+                current_isfirst = issled[3]
+                current_onko = issled[10]
+                current_purpose = issled[11]
+                current_diagnos = issled[12]
+                current_firsttime = issled[6]
+                current_result = issled[13]
+                current_octome = issled[14]
+                current_price = ''
+
                 d_result = utils.strfdatetime(current_date, "%d.%m.%Y")
                 if r != 7 and r != 8:
                     befor_date = ws1.cell(row=r, column=1).value
@@ -708,14 +733,10 @@ def statistic_xls(request):
                 ws1.cell(row=r, column=1).value = d_result
                 ws1.cell(row=r, column=col+1).value = 1
                 ws1.cell(row=r, column=col+2).value = issled[1]
-                f = issled[17] if issled[17] else ''
-                n = issled[18] if issled[18] else ''
-                p = issled[19] if issled[19] else ''
                 ws1.cell(row=r, column=col+4).value = f +' ' + n + ' ' + p + '\n' + str(issled[7])
                 ws1.cell(row=r, column=col+5).value = utils.strdate(issled[20])
                 ws1.cell(row=r, column=col+6).value = issled[16]
-                polis_n = issled[4] if issled[4] else ''
-                polis_who = issled[5] if issled[5] else ''
+
                 ws1.cell(row=r, column=col+7).value = polis_n +';\n' + polis_who
                 ws1.cell(row=r, column=col+8).value = issled[2]
                 ws1.cell(row=r, column=col+9).value = ''
@@ -768,7 +789,10 @@ def statistic_xls(request):
                     directory_researches.is_first_reception, 
                     directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
                     directions_issledovaniya.first_time, directions_issledovaniya.napravleniye_id, 
-                    directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.time_confirmation,
+                    directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.def_uet,
+                    directions_issledovaniya.co_executor_id, directions_issledovaniya.co_executor_uet, 
+                    directions_issledovaniya.co_executor2_id, directions_issledovaniya.co_executor2_uet,
+                    directions_issledovaniya.time_confirmation,
                     directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title as purpose,
 	                directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result,
 	                statistics_tickets_outcomes.title as outcome
@@ -783,7 +807,9 @@ def statistic_xls(request):
                     ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
                     LEFT JOIN statistics_tickets_outcomes
                     ON directions_issledovaniya.outcome_illness_id=statistics_tickets_outcomes.id
-                    where doc_confirmation_id=%(d_confirms)s and time_confirmation between %(d_start)s and %(d_end)s
+                    where (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
+                    directions_issledovaniya.co_executor2_id))
+                    and time_confirmation between %(d_start)s and %(d_end)s
                     and directions_napravleniya.istochnik_f_id=%(ist_fin)s
                     order by time_confirmation),
                 t_card AS 
@@ -815,7 +841,7 @@ def statistic_xls(request):
                 left join public.directions_typejob tj on ej.type_job_id=tj.id
                 where ej.doc_execute_id=%(d_confirms)s and ej.date_job between %(d_start)s and %(d_end)s
                 Order by ej.date_job, ej.type_job_id)
-                
+      
                 select t_j.date_job, t_j.title, sum(t_j.total) from t_j
                 group by t_j.title, t_j.date_job
                 order by date_job 
@@ -832,7 +858,7 @@ def statistic_xls(request):
             """
             with connection.cursor() as cursor:
                 cursor.execute("""with iss_doc as
-                       (SELECT d_iss.id, d_iss.research_id, date(d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
+                       (SELECT d_iss.id, d_iss.research_id, EXTRACT(DAY FROM d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
                        d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet
                        FROM public.directions_issledovaniya d_iss where 
                        (%(d_confirms)s in (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
@@ -899,9 +925,10 @@ def statistic_xls(request):
                                 temp_dict = {n[10]:current_uet, n[11]:current_uet2}
                                 total_report_dict[n[2]].update(temp_dict)
                             else:
-                                total_report_dict[n[2]] = {n[10]:temp_uet, n[11]:temp_uet2}
+                                total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
                         titles_list = [tk for tk in titles_set.keys()]
+                        ws = wb.create_sheet(i.get_fio() + 'Итог')
 
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
