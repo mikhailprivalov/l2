@@ -40,6 +40,7 @@ def menu(request):
             {"url": "/mainmenu/receive/one_by_one", "title": "Приём биоматериала по одному", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/mainmenu/receive/journal_form", "title": "Журнал приёма", "nt": False, "access": ["Получатель биоматериала"]},
             {"url": "/results/enter", "title": "Ввод результатов", "nt": False, "access": ["Врач-лаборант", "Лаборант", "Сброс подтверждений результатов"]},
+            {"url": "/results/employee-job", "title": "Учёт косвенных услуг по лаборатории", "nt": False, "access": ["Врач-лаборант", "Лаборант"]},
             {"url": "/construct/menu", "title": "Конструктор справочника", "nt": False,
              "access": ["Конструктор: Лабораторные исследования",
                         "Конструктор: Параклинические (описательные) исследования",
