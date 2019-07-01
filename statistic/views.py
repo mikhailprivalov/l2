@@ -929,6 +929,11 @@ def statistic_xls(request):
 
                         titles_list = [tk for tk in titles_set.keys()]
                         ws = wb.create_sheet(i.get_fio() + 'Итог')
+                        from lq.models import WindowL2, ResourceL2, VoiceDo, StatusQueueL2
+                        a = StatusQueueL2.next_talon_num(3)
+                        print('##########')
+                        print(a)
+
 
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)

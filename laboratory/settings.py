@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'cases.apps.CasesConfig',
     'forms',
     'contracts',
+    'lq',
 )
 
 MIDDLEWARE = [
