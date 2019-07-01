@@ -202,7 +202,6 @@
           </thead>
           <tbody>
           <tr v-for="d in card.docs" :title="d.who_give"
-              v-tippy="{ placement : 'bottom', arrow: true }"
               :class="{nonPrior: card.main_docs[d.document_type] !== d.id,
             prior: card.main_docs[d.document_type] === d.id}">
             <td>
