@@ -114,7 +114,9 @@
                    interactive : true, html: '#template-anamnesis' }"
                  @show="load_anamnesis"
                  @click.prevent="edit_anamnesis"><i class="fa fa-book"></i></a>
-              <div id="template-anamnesis" :class="{hidden: !data.ok || !data.has_doc_referral}">
+              <div id="template-anamnesis"
+                   v-if="data.card_internal"
+                   :class="{hidden: !data.ok || !data.has_doc_referral}">
                 <strong>Анамнез жизни</strong><br/>
                 <span v-if="anamnesis_loading">загрузка...</span>
                 <pre v-else
@@ -129,7 +131,9 @@
                  :class="{dreg_nex: !data.patient.has_dreg, dreg_ex: data.patient.has_dreg }"
                  @show="load_dreg_rows"
                  @click.prevent="dreg = true"><i class="fa fa-database"></i></a>
-              <div id="template-dreg" :class="{hidden: !data.ok || !data.has_doc_referral}">
+              <div id="template-dreg"
+                   v-if="data.card_internal"
+                   :class="{hidden: !data.ok || !data.has_doc_referral}">
                 <strong>Диспансерный учёт</strong><br/>
                 <span v-if="dreg_rows_loading">загрузка...</span>
                 <ul v-else style="padding-left: 25px;text-align: left">
@@ -147,7 +151,8 @@
                    interactive : true, html: '#template-benefit' }"
                  @show="load_benefit_rows"
                  @click.prevent="benefit = true"><i class="fa fa-cubes"></i></a>
-              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral}">
+              <div id="template-benefit" :class="{hidden: !data.ok || !data.has_doc_referral}"
+                   v-if="data.card_internal">
                 <strong>Льготы пациента</strong><br/>
                 <span v-if="benefit_rows_loading">загрузка...</span>
                 <ul v-else style="padding-left: 25px;text-align: left">
