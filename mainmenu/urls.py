@@ -51,4 +51,5 @@ urlpatterns = [
     path('rmq/messages', views.rmq_messages),
     path('rmq/count', views.rmq_count),
     path('rmq/send', views.rmq_send),
+    path('l2queue', views.l2queue),
 ]

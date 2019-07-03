@@ -49,6 +49,8 @@ new Vue({
     'DirectionSteps': () => import('./DirectionSteps'),
     'RmisConfirm': () => import('./RmisConfirm'),
     'Profiles': () => import('./Profiles'),
+    'L2queue': () => import('./L2queue'),
+
     RmisLocation,
     // loading,
   },

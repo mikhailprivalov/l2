@@ -4,7 +4,7 @@ from .models import WindowL2, ResourceL2, VoiceDo, StatusQueueL2
 
 class ResResourceL2(admin.ModelAdmin):
     list_filter = ('windows_obj__title',)
-    list_display = ('title', 'windows_obj', 'letter','max_number', 'disable',)
+    list_display = ('title', 'pk', 'windows_obj', 'letter','max_number', 'disable',)
 
 
 class ResStatusQueueL2(admin.ModelAdmin):
