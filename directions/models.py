@@ -1,5 +1,7 @@
 import re
 import unicodedata
+from datetime import date
+
 import simplejson as json
 from django.db import models
 from django.utils import timezone
@@ -197,7 +199,7 @@ class IstochnikiFinansirovaniya(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
     rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    contracts = models.ForeignKey(contracts.Contract, null=True,blank=True,default='', on_delete=models.CASCADE)
+    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True,default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
 
     def __str__(self):
@@ -748,7 +750,7 @@ class TypeJob(models.Model):
                                 help_text="Ценность работы (в УЕТ или минутах-зависит от названия работы)")
 
     def __str__(self):
-        return "%s" % (self.title)
+        return self.title
 
     class Meta:
         verbose_name = 'Тип работы'
@@ -756,7 +758,6 @@ class TypeJob(models.Model):
 
 
 class EmployeeJob(models.Model):
-    from datetime import date
     type_job = models.ForeignKey(TypeJob, db_index=True, help_text='Тип косвенных работ', on_delete=models.CASCADE)
     count = models.SmallIntegerField(default=0, help_text="Количество данного типа", blank=True)
     doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
