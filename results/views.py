@@ -28,6 +28,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
+from forms.forms_func import demo_func
 
 
 @login_required
@@ -577,6 +578,7 @@ def result_print(request):
 
     client_prev = -1
     # cl = Client()
+    not_lab = False
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
@@ -598,6 +600,7 @@ def result_print(request):
                 date_t = strdate(iss.tubes.first().time_get)
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
+                not_lab = True
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
@@ -1267,10 +1270,13 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        if not_lab:
+            demo_func(canvas)
 
         canvas.restoreState()
 
@@ -1283,12 +1289,19 @@ def result_print(request):
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
+        if not_lab:
+            demo_func(canvas)
+
+    def demo_protect(canvas, document):
+        canvas.saveState()
+        if not_lab:
+            demo_func(canvas)
         canvas.restoreState()
 
     if len(pk) == 1:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
-        doc.build(naprs)
+        doc.build(naprs, onFirstPage=demo_protect, onLaterPages=demo_protect)
 
     pdf = buffer.getvalue()
     buffer.close()

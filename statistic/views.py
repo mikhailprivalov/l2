@@ -547,6 +547,7 @@ def statistic_xls(request):
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
             d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+            month_obj = ''
         else:
             month_obj = int(data_date['month']) + 1
             _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
@@ -673,30 +674,30 @@ def statistic_xls(request):
             one_days = timedelta(1)
             current_date = ''
             for issled in issl_obj:
-                current_date = issled[9]
+                current_date = issled[14]
                 current_count = 1
                 current_research = issled[1]
                 current_coexec = ''
-                f = issled[17] if issled[17] else ''
-                n = issled[18] if issled[18] else ''
-                p = issled[19] if issled[19] else ''
-                current_patient_napr = f +' ' + n + ' ' + p + '\n' + str(issled[7])
-                current_born = utils.strdate(issled[20])
-                current_card = issled[16]
-                current_card = issled[16]
+                f = issled[22] if issled[22] else ''
+                n = issled[23] if issled[23] else ''
+                p = issled[24] if issled[24] else ''
+                current_napr = str(issled[7])
+                current_patient_napr = f +' ' + n + ' ' + p + '\n' + current_napr
+                current_born = utils.strdate(issled[25])
+                current_card = issled[21]
                 polis_n = issled[4] if issled[4] else ''
                 polis_who = issled[5] if issled[5] else ''
                 current_polis = polis_n +';\n' + polis_who
                 current_code_reserch = issled[2]
-                current_uet = '???'
-                current_confirm = utils.strtime(issled[9])
+                current_doc_conf = us.pk
+                current_confirm = utils.strtime(issled[14])
                 current_isfirst = issled[3]
-                current_onko = issled[10]
-                current_purpose = issled[11]
-                current_diagnos = issled[12]
+                current_onko = issled[15]
+                current_purpose = issled[16]
+                current_diagnos = issled[17]
                 current_firsttime = issled[6]
-                current_result = issled[13]
-                current_octome = issled[14]
+                current_result = issled[17]
+                current_octome = issled[18]
                 current_price = ''
 
                 d_result = utils.strfdatetime(current_date, "%d.%m.%Y")
@@ -732,23 +733,24 @@ def statistic_xls(request):
                 r = r + 1
                 ws1.cell(row=r, column=1).value = d_result
                 ws1.cell(row=r, column=col+1).value = 1
-                ws1.cell(row=r, column=col+2).value = issled[1]
-                ws1.cell(row=r, column=col+4).value = f +' ' + n + ' ' + p + '\n' + str(issled[7])
-                ws1.cell(row=r, column=col+5).value = utils.strdate(issled[20])
-                ws1.cell(row=r, column=col+6).value = issled[16]
+                ws1.cell(row=r, column=col+2).value = current_research
+                ws1.cell(row=r, column=col+3).value = current_doc_conf
+                ws1.cell(row=r, column=col+4).value = current_patient_napr
+                ws1.cell(row=r, column=col+5).value = current_born
+                ws1.cell(row=r, column=col+6).value = current_card
 
-                ws1.cell(row=r, column=col+7).value = polis_n +';\n' + polis_who
-                ws1.cell(row=r, column=col+8).value = issled[2]
+                ws1.cell(row=r, column=col+7).value = current_polis
+                ws1.cell(row=r, column=col+8).value = current_code_reserch
                 ws1.cell(row=r, column=col+9).value = ''
-                ws1.cell(row=r, column=col+10).value = utils.strtime(issled[9])
+                ws1.cell(row=r, column=col+10).value = current_confirm
 
-                ws1.cell(row=r, column=col+11).value = issled[10]
-                ws1.cell(row=r, column=col+12).value = issled[3]
-                ws1.cell(row=r, column=col+13).value = issled[11]
-                ws1.cell(row=r, column=col+14).value = issled[12]
-                ws1.cell(row=r, column=col+15).value = issled[6]
-                ws1.cell(row=r, column=col+16).value = issled[13]
-                ws1.cell(row=r, column=col+17).value = issled[14]
+                ws1.cell(row=r, column=col+11).value = current_onko
+                ws1.cell(row=r, column=col+12).value = current_isfirst
+                ws1.cell(row=r, column=col+13).value = current_purpose
+                ws1.cell(row=r, column=col+14).value = current_diagnos
+                ws1.cell(row=r, column=col+15).value = current_firsttime
+                ws1.cell(row=r, column=col+16).value = current_result
+                ws1.cell(row=r, column=col+17).value = current_octome
                 ws1.cell(row=r, column=col+18).value = ''
 
                 rows = ws1[f'A{r}:V{r}']
@@ -929,12 +931,6 @@ def statistic_xls(request):
 
                         titles_list = [tk for tk in titles_set.keys()]
                         ws = wb.create_sheet(i.get_fio() + 'Итог')
-                        from lq.models import WindowL2, ResourceL2, VoiceDo, StatusQueueL2
-                        a = StatusQueueL2.next_talon_num(3)
-                        print('##########')
-                        print(a)
-
-
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)

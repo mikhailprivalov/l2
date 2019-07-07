@@ -17,6 +17,7 @@ class WindowL2(models.Model):
 
 class ResourceL2(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text='Наименование ресурса-очереди',db_index=True)
+    short_title = models.CharField(max_length=255, default='', help_text='Короткое наименование очереди',db_index=True)
     windows_obj = models.ForeignKey(WindowL2, blank=False, null=False, db_index=True, on_delete=models.CASCADE)
     letter = models.CharField(max_length=511, help_text='Буквы для счетчика, через запятую',db_index=True)
     max_number = models.SmallIntegerField(default=0, help_text='Максимальное число для буквы')

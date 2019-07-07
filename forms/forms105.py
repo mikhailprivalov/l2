@@ -183,6 +183,7 @@ def form_01(request_data):
         ]))
         tbl.wrapOn(canvas, width, height)
         tbl.drawOn(canvas, 30, 530)
+        forms_func.demo_func_landscope(canvas)
 
         canvas.restoreState()
 

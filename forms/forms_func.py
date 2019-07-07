@@ -7,6 +7,59 @@ from django.db.models import Q
 import datetime
 from laboratory import utils
 from decimal import Decimal
+from appconf.manager import SettingManager
+from reportlab.lib.colors import HexColor
+from reportlab.lib.units import mm
+
+
+def demo_func(canvas):
+    canvas.saveState()
+    demo = SettingManager.get("operation_mode", default='True', default_type='b')
+    demo_text = ""
+    demo_text2 = ""
+    l2_text = ""
+    if demo:
+        demo_text = "Для демонстрации         "
+        demo_text2 = "Для лзнакомнения с функционалом      "
+        l2_text = "L2 "
+
+    canvas.rotate(45)
+    # canvas.setFillColor(HexColor(0xfc5749))
+    canvas.setFillColor(HexColor(0x049372))
+    canvas.setFont('PTAstraSerifReg', 25.2)
+    canvas.drawString(149 * mm, 147 * mm, '{}'.format(2 * demo_text))
+    canvas.drawString(50 * mm, 40 * mm, '{}'.format(2 * demo_text2))
+    canvas.drawString(40 * mm, -30 * mm, '{}'.format(2 * demo_text))
+    canvas.setFillColor(HexColor(0x049372))
+    canvas.rotate(-45)
+    canvas.setFont('PTAstraSerifReg', 30)
+    canvas.drawString(80 * mm, 287 * mm, '{}'.format(l2_text))
+
+    canvas.restoreState()
+
+
+def demo_func_landscope(canvas):
+    canvas.saveState()
+    demo = SettingManager.get("operation_mode", default='True', default_type='b')
+    demo_text = ""
+    demo_text2 = ""
+    if demo:
+        demo_text = " "
+        demo_text2 = " "
+        l2_text = ""
+
+    canvas.rotate(45)
+    canvas.setFillColor(HexColor(0x049372))
+    canvas.setFont('PTAstraSerifReg', 25.2)
+    canvas.drawString(80 * mm, -80 * mm, '{}'.format(2 * demo_text))
+    canvas.drawString(50 * mm, 40 * mm, '{}'.format(2 * demo_text2))
+    canvas.drawString(40 * mm, -30 * mm, '{}'.format(2 * demo_text))
+    canvas.setFillColor(HexColor(0x049372))
+    canvas.rotate(-45)
+    canvas.setFont('PTAstraSerifReg', 30)
+    canvas.drawString(80 * mm, 200 * mm, '{}'.format(l2_text))
+
+    canvas.restoreState()
 
 
 def get_all_doc(docs: [Document]):

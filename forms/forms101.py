@@ -317,7 +317,17 @@ def form_02(request_data):
     objs.append(Paragraph('', style))
     objs.append(Paragraph('', style))
 
-    doc.build(objs)
+    def first_pages(canvas, document):
+        canvas.saveState()
+        forms_func.demo_func(canvas)
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        forms_func.demo_func(canvas)
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
@@ -544,7 +554,17 @@ def form_03(request_data):
         HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
 
-    doc.build(objs)
+    def first_pages(canvas, document):
+        canvas.saveState()
+        forms_func.demo_func(canvas)
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        forms_func.demo_func(canvas)
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
