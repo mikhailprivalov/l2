@@ -29,6 +29,7 @@ urlpatterns = [
     path('templates/update', views.update_template),
     path('modules', views.modules_view),
     path('autocomplete', views.autocomplete),
+    path('job-types', views.job_types),
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),

@@ -948,3 +948,8 @@ def user_fill_slot(request):
                                                                            rmis_slot=slot["id"])
         direction = result["list_id"][0]
     return JsonResponse({"direction": direction})
+
+
+def job_types(request):
+    data = [{"pk": x.pk, "title": x.title} for x in directions.TypeJob.objects.filter(hide=False)]
+    return JsonResponse({"data": data})
