@@ -13,7 +13,7 @@ import slog.models as slog
 import users.models as umodels
 import cases.models as cases
 from api.models import Application
-from laboratory.utils import strdate
+from laboratory.utils import strdate, localtime
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
@@ -79,6 +79,14 @@ class TubesRegistration(models.Model):
     daynum = models.IntegerField(default=0, blank=True, null=True,
                                  help_text='Номер принятия ёмкости среди дня в лаборатории')
 
+    @property
+    def time_get_local(self):
+        return localtime(self.time_get)
+
+    @property
+    def time_recive_local(self):
+        return localtime(self.time_recive)
+
     def __str__(self):
         return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
 
@@ -122,7 +130,7 @@ class TubesRegistration(models.Model):
         Получение статуса взятия
         :return:
         """
-        return (self.time_get is not None and self.doc_get is not None) or (self.type.receive_in_lab and one_by_one)
+        return (self.time_get_local is not None and self.doc_get is not None) or (self.type.receive_in_lab and one_by_one)
 
     def set_r(self, doc_r):
         """
@@ -317,6 +325,14 @@ class Napravleniya(models.Model):
     parent = models.ForeignKey('Issledovaniya', related_name='parent_iss', help_text="Протокол-основание", blank=True,
                                null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
+
+    @property
+    def data_sozdaniya_local(self):
+        return localtime(self.data_sozdaniya)
+
+    @property
+    def visit_date_local(self):
+        return localtime(self.visit_date)
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
@@ -706,6 +722,14 @@ class Issledovaniya(models.Model):
     parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание",
                                blank=True, null=True, default=None, on_delete=models.SET_NULL)
 
+    @property
+    def time_save_local(self):
+        return localtime(self.time_save)
+
+    @property
+    def time_confirmation_local(self):
+        return localtime(self.time_confirmation)
+
     def get_stat_diagnosis(self):
         pass
 
@@ -764,6 +788,10 @@ class EmployeeJob(models.Model):
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
     date_job = models.DateField(default=date.today, help_text="Дата работ", blank=True, null=True, db_index=True)
     time_save = models.DateTimeField(default=timezone.now, null=True, blank=True, help_text='Время сохранения/корректировки')
+
+    @property
+    def time_save_local(self):
+        return localtime(self.time_save)
 
     class Meta:
         verbose_name = 'Нагрузка сотрудника'

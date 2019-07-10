@@ -26,7 +26,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strtime
+from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from utils.dates import try_parse_range
@@ -377,7 +377,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
 
     c.setFont('OpenSans', 9)
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 70) + (h / 2) * yn,
-                 "Дата: " + str(dateformat.format(dir.data_sozdaniya.date(), settings.DATE_FORMAT)))
+                 "Дата: " + strdate(dir.data_sozdaniya))
     if dir.history_num and len(dir.history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn,
                           "№ истории: " + dir.history_num)
