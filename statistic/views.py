@@ -24,6 +24,9 @@ from copy import deepcopy
 # from ratelimit.decorators import ratelimit
 from utils.dates import try_parse_range
 from laboratory import utils
+from . import sql_func
+from . import structure_sheet
+
 
 
 @csrf_exempt
@@ -601,27 +604,27 @@ def statistic_xls(request):
             from openpyxl.utils.cell import get_column_letter
             col = 1
             ws1.column_dimensions[get_column_letter(1)].width = 13
-            ws1.column_dimensions[get_column_letter(col+1)].width = 7
-            ws1.column_dimensions[get_column_letter(col+2)].width = 15
-            ws1.column_dimensions[get_column_letter(col+3)].width = 9
-            ws1.column_dimensions[get_column_letter(col+4)].width = 31
-            ws1.column_dimensions[get_column_letter(col+5)].width = 13
-            ws1.column_dimensions[get_column_letter(col+6)].width = 12
-            ws1.column_dimensions[get_column_letter(col+7)].width = 27
-            ws1.column_dimensions[get_column_letter(col+8)].width = 16
-            ws1.column_dimensions[get_column_letter(col+9)].width = 12
-            ws1.column_dimensions[get_column_letter(col+10)].width = 18
-            ws1.column_dimensions[get_column_letter(col+11)].width = 13
-            ws1.column_dimensions[get_column_letter(col+12)].width = 12
-            ws1.column_dimensions[get_column_letter(col+13)].width = 13
-            ws1.column_dimensions[get_column_letter(col+14)].width = 13
-            ws1.column_dimensions[get_column_letter(col+15)].width = 13
-            ws1.column_dimensions[get_column_letter(col+16)].width = 13
-            ws1.column_dimensions[get_column_letter(col+17)].width = 13
-            ws1.column_dimensions[get_column_letter(col+18)].width = 13
-            ws1.column_dimensions[get_column_letter(col+19)].width = 13
-            ws1.column_dimensions[get_column_letter(col+20)].width = 13
-            ws1.column_dimensions[get_column_letter(col+21)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 1)].width = 7
+            ws1.column_dimensions[get_column_letter(col + 2)].width = 15
+            ws1.column_dimensions[get_column_letter(col + 3)].width = 9
+            ws1.column_dimensions[get_column_letter(col + 4)].width = 31
+            ws1.column_dimensions[get_column_letter(col + 5)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 6)].width = 12
+            ws1.column_dimensions[get_column_letter(col + 7)].width = 27
+            ws1.column_dimensions[get_column_letter(col + 8)].width = 16
+            ws1.column_dimensions[get_column_letter(col + 9)].width = 12
+            ws1.column_dimensions[get_column_letter(col + 10)].width = 18
+            ws1.column_dimensions[get_column_letter(col + 11)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 12)].width = 12
+            ws1.column_dimensions[get_column_letter(col + 13)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 14)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 15)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 16)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 17)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 18)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 19)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 20)].width = 13
+            ws1.column_dimensions[get_column_letter(col + 21)].width = 13
 
             # Закголовки столбцов
             ws1.cell(row=1, column=1).value = 'Сотрудник'
@@ -689,7 +692,12 @@ def statistic_xls(request):
                 polis_who = issled[5] if issled[5] else ''
                 current_polis = polis_n +';\n' + polis_who
                 current_code_reserch = issled[2]
-                current_doc_conf = us.pk
+                current_doc_conf = issled[8]
+                current_def_uet = issled[9] if issled[9] else 0
+                current_co_exec1 = issled[10]
+                current_uet1 = issled[11] if issled[11] else 0
+                current_co_exec2 = issled[12]
+                current_uet2 = issled[13] if issled[13] else 0
                 current_confirm = utils.strtime(issled[14])
                 current_isfirst = issled[3]
                 current_onko = issled[15]
@@ -734,14 +742,31 @@ def statistic_xls(request):
                 ws1.cell(row=r, column=1).value = d_result
                 ws1.cell(row=r, column=col+1).value = 1
                 ws1.cell(row=r, column=col+2).value = current_research
-                ws1.cell(row=r, column=col+3).value = current_doc_conf
+                sum_uet = 0
+                co_exec = ''
+                if (current_doc_conf == i_obj.pk) and (current_co_exec1 == i_obj.pk):
+                    sum_uet = sum_uet + current_def_uet
+                    co_exec = co_exec + 'ОСН'
+
+                if (current_doc_conf == i_obj.pk) and (current_co_exec1 != i_obj.pk):
+                    sum_uet = sum_uet + current_def_uet
+                    co_exec = co_exec + 'ОСН'
+
+                if (current_doc_conf != i_obj.pk) and (current_co_exec1 == i_obj.pk):
+                    sum_uet = sum_uet + current_co_exec1
+                    co_exec = co_exec + 'СО-1'
+
+                if current_co_exec2 == i_obj.pk:
+                    sum_uet = sum_uet + current_uet2
+                    co_exec = co_exec + ', СО-2'
+                ws1.cell(row=r, column=col+3).value = co_exec
                 ws1.cell(row=r, column=col+4).value = current_patient_napr
                 ws1.cell(row=r, column=col+5).value = current_born
                 ws1.cell(row=r, column=col+6).value = current_card
 
                 ws1.cell(row=r, column=col+7).value = current_polis
                 ws1.cell(row=r, column=col+8).value = current_code_reserch
-                ws1.cell(row=r, column=col+9).value = ''
+                ws1.cell(row=r, column=col+9).value = sum_uet
                 ws1.cell(row=r, column=col+10).value = current_confirm
 
                 ws1.cell(row=r, column=col+11).value = current_onko
@@ -782,99 +807,6 @@ def statistic_xls(request):
 
             return ws1
 
-        from django.db import connection
-        def my_custom_sql(d_conf, d_s, d_e, fin):
-            with connection.cursor() as cursor:
-                cursor.execute("""with 
-                t_iss AS 
-                    (SELECT directions_napravleniya.client_id, directory_researches.title, directory_researches.code,
-                    directory_researches.is_first_reception, 
-                    directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
-                    directions_issledovaniya.first_time, directions_issledovaniya.napravleniye_id, 
-                    directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.def_uet,
-                    directions_issledovaniya.co_executor_id, directions_issledovaniya.co_executor_uet, 
-                    directions_issledovaniya.co_executor2_id, directions_issledovaniya.co_executor2_uet,
-                    directions_issledovaniya.time_confirmation,
-                    directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title as purpose,
-	                directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result,
-	                statistics_tickets_outcomes.title as outcome
-                    FROM directions_issledovaniya 
-                    LEFT JOIN directory_researches
-                    ON directions_issledovaniya.research_id = directory_researches.Id
-                    LEFT JOIN directions_napravleniya 
-                    ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
-                    LEFT JOIN statistics_tickets_visitpurpose
-                    ON directions_issledovaniya.purpose_id=statistics_tickets_visitpurpose.id 
-                    LEFT JOIN statistics_tickets_resultoftreatment
-                    ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
-                    LEFT JOIN statistics_tickets_outcomes
-                    ON directions_issledovaniya.outcome_illness_id=statistics_tickets_outcomes.id
-                    where (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
-                    directions_issledovaniya.co_executor2_id))
-                    and time_confirmation between %(d_start)s and %(d_end)s
-                    and directions_napravleniya.istochnik_f_id=%(ist_fin)s
-                    order by time_confirmation),
-                t_card AS 
-                    (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,clients_individual.name,
-                    clients_individual.patronymic,clients_individual.birthday, 
-                    clients_document.number, clients_document.serial, clients_document.who_give  
-                    FROM clients_individual
-                    LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
-                    LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id
-                    where clients_document.document_type_id=3
-                    order by clients_card.id
-                    )
-                Select * from t_iss
-                left join t_card ON t_iss.client_id=t_card.id
-                order by time_confirmation""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin})
-                row = cursor.fetchall()
-            return row
-
-        def indirect_job_sql(d_conf, d_s, d_e):
-            """
-            Вернуть:
-            дата, вид работы, всего(УЕТ за дату)
-            :return:
-            """
-            with connection.cursor() as cursor:
-                cursor.execute("""with t_j as (SELECT ej.type_job_id, ej.count, ej.date_job, tj.value, tj.title, 
-                (ej.count*tj.value) as total
-                FROM public.directions_employeejob ej
-                left join public.directions_typejob tj on ej.type_job_id=tj.id
-                where ej.doc_execute_id=%(d_confirms)s and ej.date_job between %(d_start)s and %(d_end)s
-                Order by ej.date_job, ej.type_job_id)
-      
-                select t_j.date_job, t_j.title, sum(t_j.total) from t_j
-                group by t_j.title, t_j.date_job
-                order by date_job 
-                """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e})
-                row = cursor.fetchall()
-            return row
-
-        def total_report_sql(d_conf, d_s, d_e):
-            """
-            Возврат (нагрузку) в порядке:
-            research_id, date_confirm, doc_confirmation_id, def_uet, co_executor_id, co_executor_uet,
-            co_executor2_id, co_executor2_uet, research_id, research_title, research-co_executor_2_title
-            :return:
-            """
-            with connection.cursor() as cursor:
-                cursor.execute("""with iss_doc as
-                       (SELECT d_iss.id, d_iss.research_id, EXTRACT(DAY FROM d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
-                       d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet
-                       FROM public.directions_issledovaniya d_iss where 
-                       (%(d_confirms)s in (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
-                       and d_iss.time_confirmation between  %(d_start)s and %(d_end)s
-                       Order by date_confirm),  
-                       t_res as (SELECT d_res.id, d_res.title, co_executor_2_title
-                       FROM public.directory_researches d_res)
-
-                       select * from iss_doc
-                       left join t_res ON iss_doc.research_id = t_res.id
-                       order by iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e})
-                row = cursor.fetchall()
-            return row
-
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
@@ -882,8 +814,8 @@ def statistic_xls(request):
             for i in us_o:
                 if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
                     ws = wb.create_sheet(i.get_fio())
-                    res_oq = my_custom_sql(i.pk, start_date, end_date, type_fin)
-                    res_job = indirect_job_sql(i.pk, start_date, end_date)
+                    res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin)
+                    res_job = sql_func.indirect_job_sql(i.pk, start_date, end_date)
                     dict_job = {}
                     for r_j in res_job:
                         key_type_job = r_j[1]
@@ -902,7 +834,7 @@ def statistic_xls(request):
                         # research_title(10), research - co_executor_2_title(11)
                         # строим стр-ру {дата:{наименование анализа:УЕТ за дату, СО2:УЕТ за дату}}
                         total_report_dict = {}
-                        r_sql = total_report_sql(i.pk, start_date, end_date)
+                        r_sql = sql_func.total_report_sql(i.pk, start_date, end_date)
                         from _collections import OrderedDict
                         titles_set = OrderedDict()
                         for n in r_sql:
@@ -930,7 +862,10 @@ def statistic_xls(request):
                                 total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
                         titles_list = [tk for tk in titles_set.keys()]
+                        print(titles_list)
+                        print(total_report_dict)
                         ws = wb.create_sheet(i.get_fio() + 'Итог')
+                        ws = structure_sheet.job_total_base(ws, month_obj)
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
