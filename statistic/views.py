@@ -753,7 +753,7 @@ def statistic_xls(request):
                     co_exec = co_exec + 'ОСН'
 
                 if (current_doc_conf != i_obj.pk) and (current_co_exec1 == i_obj.pk):
-                    sum_uet = sum_uet + current_co_exec1
+                    sum_uet = sum_uet + current_uet1
                     co_exec = co_exec + 'СО-1'
 
                 if current_co_exec2 == i_obj.pk:
@@ -838,8 +838,9 @@ def statistic_xls(request):
                         from _collections import OrderedDict
                         titles_set = OrderedDict()
                         for n in r_sql:
+                            print(n)
                             titles_set[n[10]] = ''
-                            titles_set[n[11]] =''
+                            titles_set[n[11]] = ''
                             temp_dict = {}
                             temp_uet, temp_uet2 = 0, 0
                             if (i.pk == n[3]):
@@ -862,10 +863,13 @@ def statistic_xls(request):
                                 total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
                         titles_list = [tk for tk in titles_set.keys()]
+                        print(titles_set)
                         print(titles_list)
                         print(total_report_dict)
                         ws = wb.create_sheet(i.get_fio() + 'Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj)
+
+
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
