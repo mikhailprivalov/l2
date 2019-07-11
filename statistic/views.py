@@ -174,7 +174,7 @@ def statistic_xls(request):
         obj = []
         import datetime
         for type_lab, l_napr in depart_napr.items():
-            a = ([[p, r, n, datetime.datetime.strftime(t, "%d.%m.%y")] for p, r, n, t in
+            a = ([[p, r, n, datetime.datetime.strftime(utils.localtime(t), "%d.%m.%y")] for p, r, n, t in
                   Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
                       napravleniye_id__in=l_napr)])
             obj.append(a)

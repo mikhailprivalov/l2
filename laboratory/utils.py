@@ -4,6 +4,8 @@ from django.utils import timezone
 
 
 def localtime(d: datetime):
+    if not d:
+        return None
     return timezone.localtime(d)
 
 

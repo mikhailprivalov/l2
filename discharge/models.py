@@ -1,6 +1,7 @@
 from django.db import models
 import podrazdeleniya.models as pod
 import users.models as users
+from laboratory.utils import localtime
 
 
 class Discharge(models.Model):
@@ -19,6 +20,10 @@ class Discharge(models.Model):
     file = models.FileField(upload_to='discharges/%Y/%m/%d/')
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def created_at_local(self):
+        return localtime(self.created_at)
 
     class Meta:
         verbose_name = 'Выписка'

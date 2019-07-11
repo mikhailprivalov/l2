@@ -834,7 +834,7 @@ class Directions(BaseRequester):
                                 typeId=self.main_client.get_directory(
                                     "md_referral_type").get_first("ID",
                                                                   search_data=direction.rmis_direction_type()),
-                                referralDate=ndate(direction.data_sozdaniya),
+                                referralDate=ndate(direction.data_sozdaniya_local),
                                 referralOrganizationId=self.main_client.search_organization_id(),
                                 referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(),
                                                                                      org_id=self.main_client.search_organization_id()),

@@ -7,6 +7,7 @@ from django.core.management.base import OutputWrapper
 from django.db import models
 
 import slog.models as slog
+from laboratory.utils import localtime
 from users.models import Speciality, DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
@@ -463,6 +464,14 @@ class Document(models.Model):
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
 
+    @property
+    def date_start_local(self):
+        return localtime(self.date_start)
+
+    @property
+    def date_end_local(self):
+        return localtime(self.date_end)
+
     def __str__(self):
         return "{0} {1} {2}, Активен - {3}, {4}".format(self.document_type, self.serial, self.number,
                                                         self.is_active, self.individual)
@@ -797,6 +806,10 @@ class AnamnesisHistory(models.Model):
     text = models.TextField(help_text='Анамнез жизни')
     who_save = models.ForeignKey('users.DoctorProfile', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def created_at_local(self):
+        return localtime(self.created_at)
 
 
 class DispensaryReg(models.Model):

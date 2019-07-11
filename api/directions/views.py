@@ -15,7 +15,7 @@ from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicRes
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime, strdate, tsdatetime
+from laboratory.utils import strdatetime, strdate, tsdatetime, localtime
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
@@ -111,7 +111,7 @@ def directions_history(request):
                         {"pk": napr["pk"], "status": -1 if status == 0 and napr["cancel"] else status,
                          "researches": ' | '.join(researches_list),
                          "researches_pks": researches_pks,
-                         "date": str(dateformat.format(napr["data_sozdaniya"].date(), settings.DATE_FORMAT_SHORT)),
+                         "date": str(dateformat.format(localtime(napr["data_sozdaniya"]).date(), settings.DATE_FORMAT_SHORT)),
                          "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[
                              0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
