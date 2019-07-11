@@ -714,7 +714,6 @@ def statistic_xls(request):
                     if d_result != befor_date and not (ws1.cell(row=r, column=1).value).istitle():
                         indirect_job = dict_job_l.get(befor_date)
                         if indirect_job:
-                            print(indirect_job)
                             for k_job,v_job in indirect_job.items():
                                 r = r + 1
                                 ws1.cell(row=r, column=1).value = befor_date
@@ -833,9 +832,10 @@ def statistic_xls(request):
                         # co_executor_id(5), co_executor_uet(6), co_executor2_id(7), co_executor2_uet(8), research_id(9),
                         # research_title(10), research - co_executor_2_title(11)
                         # строим стр-ру {дата:{наименование анализа:УЕТ за дату, СО2:УЕТ за дату}}
-                        total_report_dict = {}
-                        r_sql = sql_func.total_report_sql(i.pk, start_date, end_date)
                         from _collections import OrderedDict
+                        total_report_dict = OrderedDict()
+                        r_sql = sql_func.total_report_sql(i.pk, start_date, end_date, type_fin)
+                        print(r_sql)
                         titles_set = OrderedDict()
                         for n in r_sql:
                             print(n)
@@ -863,12 +863,10 @@ def statistic_xls(request):
                                 total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
                         titles_list = [tk for tk in titles_set.keys()]
-                        print(titles_set)
-                        print(titles_list)
-                        print(total_report_dict)
                         ws = wb.create_sheet(i.get_fio() + 'Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj)
-
+                        ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
+                        ws = structure_sheet.job_total_data(ws, cell_research, total_report_dict)
 
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)

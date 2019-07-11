@@ -70,7 +70,7 @@ def indirect_job_sql(d_conf, d_s, d_e):
     return row
 
 
-def total_report_sql(d_conf, d_s, d_e):
+def total_report_sql(d_conf, d_s, d_e, fin):
     """
     Возврат (нагрузку) в порядке:
     research_id, date_confirm, doc_confirmation_id, def_uet, co_executor_id, co_executor_uet,
@@ -79,17 +79,23 @@ def total_report_sql(d_conf, d_s, d_e):
     """
     with connection.cursor() as cursor:
         cursor.execute("""with iss_doc as
-               (SELECT d_iss.id, d_iss.research_id, EXTRACT(DAY FROM d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
-               d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet
-               FROM public.directions_issledovaniya d_iss where 
+               (SELECT directions_napravleniya.id, d_iss.id as iss_id, d_iss.research_id, EXTRACT(DAY FROM d_iss.time_confirmation) as date_confirm, d_iss.doc_confirmation_id, d_iss.def_uet,
+               d_iss.co_executor_id, d_iss.co_executor_uet, d_iss.co_executor2_id, d_iss.co_executor2_uet, d_iss.napravleniye_id
+               FROM public.directions_issledovaniya d_iss
+               LEFT JOIN directions_napravleniya 
+               ON d_iss.napravleniye_id=directions_napravleniya.id
+               where 
                (%(d_confirms)s in (d_iss.doc_confirmation_id, d_iss.co_executor_id, d_iss.co_executor2_id)) 
-               and d_iss.time_confirmation between  %(d_start)s and %(d_end)s
+               and d_iss.time_confirmation between  %(d_start)s and %(d_end)s and directions_napravleniya.istochnik_f_id=%(ist_fin)s
                Order by date_confirm),  
                t_res as (SELECT d_res.id, d_res.title, co_executor_2_title
                FROM public.directory_researches d_res)
 
-               select * from iss_doc
+               select iss_doc.iss_id, iss_doc.research_id, iss_doc.date_confirm, iss_doc.doc_confirmation_id, iss_doc.def_uet,
+               iss_doc.co_executor_id, iss_doc.co_executor_uet, iss_doc.co_executor2_id, iss_doc.co_executor2_uet,
+               t_res.id, t_res.title, t_res.co_executor_2_title
+               from iss_doc
                left join t_res ON iss_doc.research_id = t_res.id
-               order by iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e})
+               order by iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin':fin})
         row = cursor.fetchall()
     return row
