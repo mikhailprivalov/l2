@@ -835,10 +835,8 @@ def statistic_xls(request):
                         from _collections import OrderedDict
                         total_report_dict = OrderedDict()
                         r_sql = sql_func.total_report_sql(i.pk, start_date, end_date, type_fin)
-                        print(r_sql)
                         titles_set = OrderedDict()
                         for n in r_sql:
-                            print(n)
                             titles_set[n[10]] = ''
                             titles_set[n[11]] = ''
                             temp_dict = {}
@@ -867,7 +865,6 @@ def statistic_xls(request):
                         ws = structure_sheet.job_total_base(ws, month_obj)
                         ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
                         ws = structure_sheet.job_total_data(ws, cell_research, total_report_dict)
-
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
