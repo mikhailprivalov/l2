@@ -102,4 +102,50 @@ def total_report_sql(d_conf, d_s, d_e, fin):
     return row
 
 
+def passed_research(d_conf, d_s, d_e, fin):
+    with connection.cursor() as cursor:
+        cursor.execute(""" with
+        t_iss AS
+        (SELECT directions_napravleniya.client_id, directory_researches.title,
+        directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
+        directions_issledovaniya.napravleniye_id, directions_issledovaniya.time_confirmation,
+        directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result,
+        directions_issledovaniya.id as iss_id
+        FROM directions_issledovaniya
+        LEFT JOIN directory_researches 
+            ON directions_issledovaniya.research_id = directory_researches.Id
+        LEFT JOIN directions_napravleniya 
+            ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+        LEFT JOIN statistics_tickets_resultoftreatment 
+            ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
+        where directions_issledovaniya.time_confirmation between '2019-01-09' and '2019-07-10'
+        and True in (directory_researches.is_paraclinic, directory_researches.is_doc_refferal, 
+        directory_researches.is_stom, directory_researches.is_hospital)
+        ),
+        t_card AS
+        (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,
+        clients_individual.name, clients_individual.patronymic, clients_individual.birthday,
+        clients_document.number, clients_document.serial, clients_document.who_give, clients_card.main_address,
+        clients_card.fact_address
+        FROM clients_individual
+        LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
+        LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id
+        where clients_document.document_type_id = (Select id as polis_id from clients_documenttype 
+        where title = 'Полис ОМС')
+        order by clients_card.id),
+        t_field AS
+        (Select id as f_is from directory_paraclinicinputfield
+        where directory_paraclinicinputfield.title='Кем направлен')
+
+        Select * from t_iss
+        left join t_card ON t_iss.client_id = t_card.id
+        left join directions_paraclinicresult ON t_iss.iss_id = directions_paraclinicresult.issledovaniye_id
+        and (directions_paraclinicresult.field_id in (select * from t_field))
+        order by client_id, time_confirmation""", params={'d_start': d_s, 'd_end': d_e})
+        row = cursor.fetchall()
+    return row
+
+
+
+
 
