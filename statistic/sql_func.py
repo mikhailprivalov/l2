@@ -34,11 +34,12 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
         t_card AS 
             (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,clients_individual.name,
             clients_individual.patronymic,clients_individual.birthday, 
-            clients_document.number, clients_document.serial, clients_document.who_give  
+            clients_document.number, clients_document.serial, clients_document.who_give 
             FROM clients_individual
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
-            LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id
-            where clients_document.document_type_id=3
+            LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id          
+            where clients_document.document_type_id=(Select id as polis_id from clients_documenttype 
+        where title = 'Полис ОМС')
             order by clients_card.id
             )
         Select * from t_iss
@@ -99,3 +100,6 @@ def total_report_sql(d_conf, d_s, d_e, fin):
                order by iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin':fin})
         row = cursor.fetchall()
     return row
+
+
+

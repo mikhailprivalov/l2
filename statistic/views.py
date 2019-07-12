@@ -643,7 +643,8 @@ def statistic_xls(request):
             ws1.cell(row=1, column=6).value = i_obj.personal_code
             ws1.cell(row=3, column=5).value = 'Источник'
             ws1.cell(row=3, column=5).style = style_o
-            ws1.cell(row=3, column=6).value = 'ОМС'
+            fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
+            ws1.cell(row=3, column=6).value = fin_obj[0]
 
             #Заголовки данных
             ws1.cell(row=7, column=1).value = 'Дата'
