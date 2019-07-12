@@ -102,7 +102,8 @@ def total_report_sql(d_conf, d_s, d_e, fin):
     return row
 
 
-def passed_research(d_conf, d_s, d_e, fin):
+def passed_research(d_s, d_e
+                    ):
     with connection.cursor() as cursor:
         cursor.execute(""" with
         t_iss AS

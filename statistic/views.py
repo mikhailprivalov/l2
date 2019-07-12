@@ -26,6 +26,7 @@ from utils.dates import try_parse_range
 from laboratory import utils
 from . import sql_func
 from . import structure_sheet
+import datetime
 
 
 
@@ -862,7 +863,7 @@ def statistic_xls(request):
                                 total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
                         titles_list = [tk for tk in titles_set.keys()]
-                        ws = wb.create_sheet(i.get_fio() + 'Итог')
+                        ws = wb.create_sheet(i.get_fio() + ' - Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj)
                         ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
                         ws = structure_sheet.job_total_data(ws, cell_research, total_report_dict)
@@ -870,6 +871,29 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
         wb.save(response)
         return response
+
+    elif tp == "statistics-passed":
+        import datetime
+
+        data_date = request_data.get("date")
+        data_date = json.loads(data_date)
+        print(data_date)
+        d1 = datetime.datetime.strptime(data_date, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d1, datetime.time.max)
+        passed_oq = sql_func.passed_research(start_date, end_date)
+
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet('Движение за ' + data_date)
+        ws = structure_sheet.passed_research_base(ws)
+
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Движения.xlsx\"", tr)
+        wb.save(response)
+        return response
+
+
 
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
