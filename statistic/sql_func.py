@@ -1,4 +1,5 @@
 from django.db import connection
+from laboratory.settings import TIME_ZONE
 
 def direct_job_sql(d_conf, d_s, d_e, fin):
     with connection.cursor() as cursor:
@@ -109,7 +110,8 @@ def passed_research(d_s, d_e
         t_iss AS
         (SELECT directions_napravleniya.client_id, directory_researches.title,
         directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
-        directions_issledovaniya.napravleniye_id, directions_issledovaniya.time_confirmation,
+        directions_issledovaniya.napravleniye_id, directions_issledovaniya.time_confirmation at time zone %(tz)s as t_confirm,
+        to_char(directions_issledovaniya.time_confirmation at time zone %(tz)s, 'HH24:MI:SS') as time_confirm,
         directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result,
         directions_issledovaniya.id as iss_id
         FROM directions_issledovaniya
@@ -119,7 +121,7 @@ def passed_research(d_s, d_e
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
         LEFT JOIN statistics_tickets_resultoftreatment 
             ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
-        where directions_issledovaniya.time_confirmation between '2019-01-09' and '2019-07-10'
+        where directions_issledovaniya.time_confirmation between %(d_start)s and %(d_end)s
         and True in (directory_researches.is_paraclinic, directory_researches.is_doc_refferal, 
         directory_researches.is_stom, directory_researches.is_hospital)
         ),
@@ -142,7 +144,7 @@ def passed_research(d_s, d_e
         left join t_card ON t_iss.client_id = t_card.id
         left join directions_paraclinicresult ON t_iss.iss_id = directions_paraclinicresult.issledovaniye_id
         and (directions_paraclinicresult.field_id in (select * from t_field))
-        order by client_id, time_confirmation""", params={'d_start': d_s, 'd_end': d_e})
+        order by client_id, t_confirm""", params={'d_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
         row = cursor.fetchall()
     return row
 

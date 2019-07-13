@@ -877,16 +877,15 @@ def statistic_xls(request):
 
         data_date = request_data.get("date")
         data_date = json.loads(data_date)
-        # print(data_date)
         d1 = datetime.datetime.strptime(data_date, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d1, datetime.time.max)
         passed_oq = sql_func.passed_research(start_date, end_date)
-
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet('Движение за ' + data_date)
         ws = structure_sheet.passed_research_base(ws, data_date)
+        ws = structure_sheet.passed_research_data(ws, passed_oq)
 
 
         response['Content-Disposition'] = str.translate("attachment; filename=\"Движения.xlsx\"", tr)

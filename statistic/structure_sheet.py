@@ -51,22 +51,30 @@ def job_total_data(ws1, titles, data):
 
 def passed_research_base(ws1, data_date):
     """
-
     :param ws1:
     :return:
     """
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    # style_border1 = NamedStyle(name="style_border1")
+    # bd = Side(style='thin', color="000000")
+    # style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    # style_border1.font = Font(bold=False, size=11)
+    # style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
     ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=19)
     ws1.cell(row=1, column=1).value = 'ЖУРНАЛ учета приема и отказов в госпитализации за ' + data_date +  \
                                       'г.(мед.документация Ф№001/У утв. МИНЗДРАВОМ СССР 04.10.1980г. №1030)'
+    ws1.cell(row=1, column=1).style = style_border
 
-    ws1.cell(row=1, column=1).alignment = Alignment(horizontal='center')
     ws1.cell(row=2, column=1).value = '№ п/п'
     ws1.cell(row=2, column=2).value = 'Время поступления'
-    ws1.cell(row=2, column=2).alignment = Alignment(textRotation=90)
     ws1.cell(row=2, column=3).value = 'Услуга'
-    ws1.cell(row=2, column=3).alignment = Alignment(textRotation=90)
     ws1.cell(row=2, column=4).value = 'Направление'
-    ws1.cell(row=2, column=4).alignment = Alignment(textRotation=90)
     ws1.cell(row=2, column=5).value = 'Фамилия, имя, отчество больного'
     ws1.cell(row=2, column=6).value = 'Дата рождения'
     ws1.cell(row=2, column=7).value = 'Постоянное место жительства или адрес родственников, близких и N телефона'
@@ -83,11 +91,54 @@ def passed_research_base(ws1, data_date):
     ws1.cell(row=2, column=18).value = 'Если не был госпитализирован указать причину и принятые меры '
     ws1.cell(row=2, column=19).value = 'отказ в приеме первичный, повторный (вписать)'
     for i in range(20):
-        ws1.cell(row=2, column=i+1).alignment = Alignment(wrapText=True)
+        ws1.cell(row=2, column=i+1).style = style_border
 
     #габариты ячеек
     ws1.row_dimensions[2].height = 115
     # ws1.column_dimensions[get_column_letter(1)].width = 22
+    ws1.column_dimensions[get_column_letter(1)].width = 5
+    ws1.column_dimensions[get_column_letter(2)].width = 8
+    ws1.column_dimensions[get_column_letter(3)].width = 14
+    ws1.column_dimensions[get_column_letter(4)].width = 8
+    ws1.column_dimensions[get_column_letter(5)].width = 20
+    ws1.column_dimensions[get_column_letter(6)].width = 10
+    ws1.column_dimensions[get_column_letter(7)].width = 23
+    ws1.column_dimensions[get_column_letter(8)].width = 15
+    ws1.column_dimensions[get_column_letter(9)].width = 12
+    ws1.column_dimensions[get_column_letter(10)].width = 10
+    ws1.column_dimensions[get_column_letter(11)].width = 7
+    ws1.column_dimensions[get_column_letter(12)].width = 7
+    ws1.column_dimensions[get_column_letter(13)].width = 16
+    ws1.column_dimensions[get_column_letter(14)].width = 10
+    ws1.column_dimensions[get_column_letter(15)].width = 10
+    ws1.column_dimensions[get_column_letter(16)].width = 20
+    ws1.column_dimensions[get_column_letter(17)].width = 11
+    ws1.column_dimensions[get_column_letter(18)].width = 11
+    ws1.column_dimensions[get_column_letter(19)].width = 11
+
+    return ws1
+
+
+def passed_research_data(ws1, data):
+    for i in data:
+        current_client_id = i[0]
+        current_research_title = i[1]
+        current_polis_n = i[2]
+        current_polis_who_give = i[3]
+        current_napravlen = i[4]
+        current_datatime_confirn = i[5]
+        current_time_cofirm = i[6]
+        current_diagnoz = i[7]
+        current_result = i[8]
+        current_num_card = i[11]
+        current_family = i[12]
+        current_name = i[13]
+        current_patronymic = i[14]
+        current_birthday = i[15]
+        current_main_address = i[19]
+        current_fact_address = i[20]
+        current_kem_napravlen = i[22]
+
 
 
     return ws1
