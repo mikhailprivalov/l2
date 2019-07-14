@@ -109,7 +109,7 @@ def passed_research_base(ws1, data_date):
     ws1.column_dimensions[get_column_letter(11)].width = 7
     ws1.column_dimensions[get_column_letter(12)].width = 7
     ws1.column_dimensions[get_column_letter(13)].width = 16
-    ws1.column_dimensions[get_column_letter(14)].width = 10
+    ws1.column_dimensions[get_column_letter(14)].width = 21
     ws1.column_dimensions[get_column_letter(15)].width = 10
     ws1.column_dimensions[get_column_letter(16)].width = 20
     ws1.column_dimensions[get_column_letter(17)].width = 11
@@ -120,25 +120,57 @@ def passed_research_base(ws1, data_date):
 
 
 def passed_research_data(ws1, data):
+    r = 2
+    n = 0
+    empty = ' '
+
+    style_border1 = NamedStyle(name="style_border1")
+    bd = Side(style='thin', color="000000")
+    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True, horizontal='left', vertical='center')
+
     for i in data:
         current_client_id = i[0]
         current_research_title = i[1]
-        current_polis_n = i[2]
-        current_polis_who_give = i[3]
+        current_polis_n = i[2] if i[2] else empty
+        current_polis_who_give = i[3] if i[3] else empty
         current_napravlen = i[4]
         current_datatime_confirn = i[5]
         current_time_cofirm = i[6]
-        current_diagnoz = i[7]
-        current_result = i[8]
+        current_diagnoz = i[7] if i[7] else empty
+        current_result = i[8] if i[8] else empty
         current_num_card = i[11]
-        current_family = i[12]
-        current_name = i[13]
-        current_patronymic = i[14]
-        current_birthday = i[15]
-        current_main_address = i[19]
-        current_fact_address = i[20]
-        current_kem_napravlen = i[22]
-
-
+        current_family = i[12] if i[12] else empty
+        current_name = i[13] if i[13] else empty
+        current_patronymic = i[14] if i[14] else empty
+        current_birthday = i[15] if i[15] else empty
+        current_main_address = i[19] if i[19] else ''
+        current_fact_address = i[20] if i[20] else empty
+        current_address = current_main_address if current_main_address else current_fact_address
+        current_kem_napravlen = i[22] if i[22] else empty
+        r = r + 1
+        n =n + 1
+        ws1.cell(row=r, column=1).value = n
+        ws1.cell(row=r, column=2).value = current_time_cofirm
+        ws1.cell(row=r, column=3).value = current_research_title
+        ws1.cell(row=r, column=4).value = current_napravlen
+        ws1.cell(row=r, column=5).value = current_family +' ' + current_name + ' ' + current_patronymic
+        ws1.cell(row=r, column=6).value = current_birthday
+        ws1.cell(row=r, column=7).value = current_address
+        ws1.cell(row=r, column=8).value = current_kem_napravlen
+        ws1.cell(row=r, column=9).value = 'Приемное'
+        ws1.cell(row=r, column=10).value = current_num_card
+        ws1.cell(row=r, column=11).value = ' '
+        ws1.cell(row=r, column=12).value = current_diagnoz
+        ws1.cell(row=r, column=13).value = ' '
+        ws1.cell(row=r, column=14).value = current_polis_n +', ' + current_polis_who_give
+        ws1.cell(row=r, column=15).value = ' '
+        ws1.cell(row=r, column=16).value = current_result
+        ws1.cell(row=r, column=17).value = ' '
+        ws1.cell(row=r, column=18).value = ' '
+        ws1.cell(row=r, column=19).value = ' '
+        for j in range(20):
+            ws1.cell(row=r, column=j + 1).style = style_border1
 
     return ws1

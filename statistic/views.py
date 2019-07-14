@@ -875,16 +875,19 @@ def statistic_xls(request):
     elif tp == "statistics-passed":
         import datetime
 
-        data_date = request_data.get("date")
-        data_date = json.loads(data_date)
-        d1 = datetime.datetime.strptime(data_date, '%d.%m.%Y')
+        d_s = request_data.get("date-start")
+        print(type(d_s))
+        # d_e = json.loads(data_date)
+        d_e = request_data.get("date-end")
+        d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)
-        end_date = datetime.datetime.combine(d1, datetime.time.max)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
         passed_oq = sql_func.passed_research(start_date, end_date)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet('Движение за ' + data_date)
-        ws = structure_sheet.passed_research_base(ws, data_date)
+        ws = wb.create_sheet('Движение за ' + d_s)
+        ws = structure_sheet.passed_research_base(ws, d_s)
         ws = structure_sheet.passed_research_data(ws, passed_oq)
 
 

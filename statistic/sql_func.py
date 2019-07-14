@@ -112,7 +112,7 @@ def passed_research(d_s, d_e
         directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
         directions_issledovaniya.napravleniye_id, directions_issledovaniya.time_confirmation at time zone %(tz)s as t_confirm,
         to_char(directions_issledovaniya.time_confirmation at time zone %(tz)s, 'HH24:MI:SS') as time_confirm,
-        directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result,
+        directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result, 
         directions_issledovaniya.id as iss_id
         FROM directions_issledovaniya
         LEFT JOIN directory_researches 
