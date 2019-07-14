@@ -105,7 +105,7 @@
                         <li class="list-group-item" onclick="$('#statistics-ticket-print-modal').modal('show')">
                             Статталоны
                         </li>
-                        <li class="list-group-item" onclick="gen_stat('statistics-passed')">Посещения</li>
+                        <li class="list-group-item" onclick="gen_passed('statistics-passed')">Посещения</li>
 
                     </ul>
                 </div>
@@ -140,6 +140,10 @@
 
         function gen_stat(stype, pk) {
             window.open('/statistic/xls?type=' + stype + '&pk=' + pk + '&date-start=' + $('[name=\'date-start\']').val() + '&date-end=' + $('[name=\'date-end\']').val(), '_blank')
+        }
+
+        function gen_passed(stype) {
+            window.open('/statistic/xls?type=' + stype + '&date-start=' + $('[name=\'date-start\']').val() + '&date-end=' + $('[name=\'date-end\']').val(), '_blank')
         }
     </script>
 {% endblock %}
