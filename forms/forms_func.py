@@ -14,7 +14,7 @@ from reportlab.lib.units import mm
 
 def demo_func(canvas):
     canvas.saveState()
-    demo = SettingManager.get("operation_mode", default='True', default_type='b')
+    demo = SettingManager.get("operation_mode", default='False', default_type='b')
     demo_text = ""
     demo_text2 = ""
     l2_text = ""
