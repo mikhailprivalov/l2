@@ -98,4 +98,16 @@ async function fillSlot(slot) {
   return {}
 }
 
-export default {getCurrentUserInfo, getDirectiveFrom, loadUsers, loadUser, saveUser, loadLocation, getReserve, fillSlot}
+async function loadJobTypes() {
+  try {
+    const response = await HTTP.post('job-types')
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+export default {getCurrentUserInfo, getDirectiveFrom, loadUsers,
+  loadUser, saveUser, loadLocation, getReserve, fillSlot, loadJobTypes}
