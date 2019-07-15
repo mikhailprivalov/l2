@@ -86,6 +86,9 @@ class DoctorProfile(models.Model):
     def has_group(self, group) -> bool:
         return self.is_member([group])
 
+    def get_data(self):
+        return {"pk": self.pk, "fio": self.get_fio(), "username": self.user.username}
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.fio + ', ' + self.podrazdeleniye.title

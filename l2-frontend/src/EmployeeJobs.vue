@@ -6,7 +6,26 @@
         <date-field-nav :brn="false" :right="true" :val.sync="date" :def="date"/>
       </div>
       <div class="left-wrapper">
-
+          <div class="form-group">
+            <label>Исполнитель:
+              <select v-model="executor" class="form-control">
+                <option v-for="user in users" :value="user.pk">{{user.fio}} – {{user.username}}</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Тип работ:
+              <select v-model="type" class="form-control">
+                <option v-for="t in types" :value="t.pk">{{t.title}}</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Количество:
+              <input type="number" min="1" v-model="count" class="form-control" />
+            </label>
+          </div>
+          <button class="btn btn-primary-nb btn-blue-nb" @click="save">Создать запись</button>
       </div>
     </div>
     <div class="right">
@@ -19,8 +38,8 @@
             <col/>
             <col/>
             <col width="60"/>
-            <col width="80"/>
-            <col width="60"/>
+            <col width="160"/>
+            <col width="70"/>
           </colgroup>
           <thead>
           <tr>
@@ -32,6 +51,16 @@
           </tr>
           </thead>
           <tbody>
+            <tr v-for="row in rows" :class="{canceled: row.canceled}">
+              <td>{{row.executor}}</td>
+              <td>{{row.type}}</td>
+              <td>{{row.count}}</td>
+              <td>{{row.saved}}</td>
+              <td>
+                <button @click="cancel(row.pk, true)" v-if="!row.canceled" class="btn btn-default btn-blue2-nb">отмена</button>
+                <button @click="cancel(row.pk, false)" v-else class="btn btn-default btn-blue2-nb">вернуть</button>
+              </td>
+            </tr>
             <tr v-if="rows.length === 0">
               <td colspan="5" style="text-align: center">нет данных</td>
             </tr>
@@ -54,19 +83,59 @@
     data() {
       return {
         date: moment().format('DD.MM.YYYY'),
+        users: [],
         types: [],
         rows: [],
+        executor: null,
+        type: null,
+        count: 1,
+      }
+    },
+    watch: {
+      date() {
+        this.loadRows()
       }
     },
     created() {
       (async() => {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        const {types} = await users_point.loadJobTypes()
+        const {types, users} = await users_point.loadJobTypes()
         this.types = types
+        this.users = users
+        this.type = types[0].pk
+        this.executor = users[0].pk
+        await this.loadRows()
         this.$store.dispatch(action_types.DEC_LOADING).then()
       })().then();
     },
     methods: {
+      async save() {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        await users_point.saveJob({
+          date: this.date,
+          type: this.type,
+          executor: this.executor,
+          count: this.count,
+        })
+        await this.loadRows()
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
+      async loadRows() {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        const {list} = await users_point.loadJobs({
+          date: this.date,
+        })
+        this.rows = list;
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
+      async cancel(pk, cancel) {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        await users_point.jobCancel({
+          pk, cancel,
+        })
+        await this.loadRows()
+        this.$store.dispatch(action_types.DEC_LOADING).then()
+      },
     },
   }
 </script>
@@ -76,6 +145,10 @@
     height: calc(100% - 36px);
     display: flex;
     margin-right: -11px;
+
+    .btn:focus {
+      background-color: #aab2bd;
+    }
   }
 
   .left, .right {
@@ -92,8 +165,12 @@
       height: 34px;
     }
 
-    input {
+    input, select, button {
       border-radius: 0;
+      width: 100%;
+    }
+
+    label {
       width: 100%;
     }
   }
@@ -242,5 +319,13 @@
       padding-left: 5px;
       width: 160px;
     }
+  }
+
+  .canceled:not(:hover) {
+    text-decoration: line-through;
+    color: #999;
+  }
+  .canceled:hover {
+    color: #7a7a7a;
   }
 </style>

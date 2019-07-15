@@ -787,7 +787,11 @@ class EmployeeJob(models.Model):
     doc_execute = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_execute", db_index=True,
                                     help_text='Профиль пользователя, выполневший работы', on_delete=models.SET_NULL)
     date_job = models.DateField(default=date.today, help_text="Дата работ", blank=True, null=True, db_index=True)
-    time_save = models.DateTimeField(default=timezone.now, null=True, blank=True, help_text='Время сохранения/корректировки')
+    time_save = models.DateTimeField(default=timezone.now, null=True, blank=True,
+                                     help_text='Время сохранения/корректировки')
+    canceled_at = models.DateTimeField(default=None, null=True, blank=True, help_text='Время отмены')
+    who_do_cancel = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="who_do_cancel", db_index=True,
+                                      help_text='Профиль пользователя, выполневший отмену', on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):

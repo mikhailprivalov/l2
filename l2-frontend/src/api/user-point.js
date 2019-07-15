@@ -109,5 +109,38 @@ async function loadJobTypes() {
   return {}
 }
 
+async function saveJob(data) {
+  try {
+    const response = await HTTP.post('job-save', data)
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function loadJobs(data) {
+  try {
+    const response = await HTTP.post('job-list', data)
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
+async function jobCancel(data) {
+  try {
+    const response = await HTTP.post('job-cancel', data)
+    if (response.statusText === 'OK') {
+      return response.data
+    }
+  } catch (e) {
+  }
+  return {}
+}
+
 export default {getCurrentUserInfo, getDirectiveFrom, loadUsers,
-  loadUser, saveUser, loadLocation, getReserve, fillSlot, loadJobTypes}
+  loadUser, saveUser, loadLocation, getReserve, fillSlot, loadJobTypes, saveJob, loadJobs, jobCancel}
