@@ -646,24 +646,24 @@ def statistic_xls(request):
 
             #Заголовки данных
             ws1.cell(row=7, column=1).value = 'Дата'
-            ws1.cell(row=7, column=col + 1).value = 'Кол-во'
-            ws1.cell(row=7, column=col+2).value = 'Услуга'
-            ws1.cell(row=7, column=col+3).value = 'Соисполнитель'
-            ws1.cell(row=7, column=col+4).value = 'ФИО пациента,\n№ направления'
-            ws1.cell(row=7, column=col+5).value = 'Дата рождения'
-            ws1.cell(row=7, column=col+6).value = '№ карты'
-            ws1.cell(row=7, column=col+7).value = 'Данные полиса'
-            ws1.cell(row=7, column=col+8).value = 'Код услуги'
-            ws1.cell(row=7, column=col+9).value = 'Услуга \n (ует/мин)'
-            ws1.cell(row=7, column=col+10).value = 'Время \n подтверждения'
-            ws1.cell(row=7, column=col+12).value = 'Первичный прием'
-            ws1.cell(row=7, column=col+11).value = 'Онкоподозрение'
-            ws1.cell(row=7, column=col+13).value = 'Цель \n посещения\n(код)'
-            ws1.cell(row=7, column=col+14).value = 'Диагноз \n МКБ'
-            ws1.cell(row=7, column=col+15).value = 'Впервые'
-            ws1.cell(row=7, column=col+16).value = 'Результат \n обращения \n(код)'
-            ws1.cell(row=7, column=col+17).value = 'Исход(код)'
-            ws1.cell(row=7, column=col+18).value = 'Стоимость'
+            ws1.cell(row=7, column=2).value = 'Кол-во'
+            ws1.cell(row=7, column=3).value = 'Услуга'
+            ws1.cell(row=7, column=4).value = 'Соисполнитель'
+            ws1.cell(row=7, column=5).value = 'ФИО пациента,\n№ направления'
+            ws1.cell(row=7, column=6).value = 'Дата рождения'
+            ws1.cell(row=7, column=7).value = '№ карты'
+            ws1.cell(row=7, column=8).value = 'Данные полиса'
+            ws1.cell(row=7, column=9).value = 'Код услуги'
+            ws1.cell(row=7, column=10).value = 'Услуга \n (ует/мин)'
+            ws1.cell(row=7, column=11).value = 'Время \n подтверждения'
+            ws1.cell(row=7, column=12).value = 'Онкоподозрение'
+            ws1.cell(row=7, column=13).value = 'Первичный прием'
+            ws1.cell(row=7, column=14).value = 'Цель \n посещения\n(код)'
+            ws1.cell(row=7, column=15).value = 'Диагноз \n МКБ'
+            ws1.cell(row=7, column=16).value = 'Впервые'
+            ws1.cell(row=7, column=17).value = 'Результат \n обращения \n(код)'
+            ws1.cell(row=7, column=18).value = 'Исход(код)'
+            ws1.cell(row=7, column=19).value = 'Стоимость'
 
             rows = ws1[f'A{7}:V{7}']
             for row in rows:
@@ -716,8 +716,8 @@ def statistic_xls(request):
                             for k_job,v_job in indirect_job.items():
                                 r = r + 1
                                 ws1.cell(row=r, column=1).value = befor_date
-                                ws1.cell(row=r, column=col + 2).value = k_job
-                                ws1.cell(row=r, column=col + 9).value = v_job
+                                ws1.cell(row=r, column=3).value = k_job
+                                ws1.cell(row=r, column=10).value = v_job
                                 rows = ws1[f'A{r}:V{r}']
                                 for row in rows:
                                     for cell in row:
@@ -738,8 +738,8 @@ def statistic_xls(request):
 
                 r = r + 1
                 ws1.cell(row=r, column=1).value = d_result
-                ws1.cell(row=r, column=col+1).value = 1
-                ws1.cell(row=r, column=col+2).value = current_research
+                ws1.cell(row=r, column=2).value = 1
+                ws1.cell(row=r, column=3).value = current_research
                 sum_uet = 0
                 co_exec = ''
                 if (current_doc_conf == i_obj.pk) and (current_co_exec1 == i_obj.pk):
@@ -757,24 +757,24 @@ def statistic_xls(request):
                 if current_co_exec2 == i_obj.pk:
                     sum_uet = sum_uet + current_uet2
                     co_exec = co_exec + ', СО-2'
-                ws1.cell(row=r, column=col+3).value = co_exec
-                ws1.cell(row=r, column=col+4).value = current_patient_napr
-                ws1.cell(row=r, column=col+5).value = current_born
-                ws1.cell(row=r, column=col+6).value = current_card
+                ws1.cell(row=r, column=4).value = co_exec
+                ws1.cell(row=r, column=5).value = current_patient_napr
+                ws1.cell(row=r, column=6).value = current_born
+                ws1.cell(row=r, column=7).value = current_card
 
-                ws1.cell(row=r, column=col+7).value = current_polis
-                ws1.cell(row=r, column=col+8).value = current_code_reserch
-                ws1.cell(row=r, column=col+9).value = sum_uet
-                ws1.cell(row=r, column=col+10).value = current_confirm
+                ws1.cell(row=r, column=8).value = current_polis
+                ws1.cell(row=r, column=9).value = current_code_reserch
+                ws1.cell(row=r, column=10).value = sum_uet
+                ws1.cell(row=r, column=11).value = current_confirm
 
-                ws1.cell(row=r, column=col+11).value = current_onko
-                ws1.cell(row=r, column=col+12).value = current_isfirst
-                ws1.cell(row=r, column=col+13).value = current_purpose
-                ws1.cell(row=r, column=col+14).value = current_diagnos
-                ws1.cell(row=r, column=col+15).value = current_firsttime
-                ws1.cell(row=r, column=col+16).value = current_result
-                ws1.cell(row=r, column=col+17).value = current_octome
-                ws1.cell(row=r, column=col+18).value = ''
+                ws1.cell(row=r, column=12).value = current_onko
+                ws1.cell(row=r, column=13).value = current_isfirst
+                ws1.cell(row=r, column=14).value = current_purpose
+                ws1.cell(row=r, column=15).value = current_diagnos
+                ws1.cell(row=r, column=16).value = current_firsttime
+                ws1.cell(row=r, column=17).value = current_result
+                ws1.cell(row=r, column=18).value = current_octome
+                ws1.cell(row=r, column=19).value = ''
 
                 rows = ws1[f'A{r}:V{r}']
                 for row in rows:
@@ -904,25 +904,24 @@ def statistic_xls(request):
         wb.add_named_style(style_o)
         ws = wb.create_sheet("Отчет")
         from openpyxl.utils.cell import get_column_letter
-        col = 1
         ws.column_dimensions[get_column_letter(1)].width = 15
         ws.cell(row=1, column=1).value = 'Дата рождения'
         ws.cell(row=1, column=1).style = style_o
-        ws.column_dimensions[get_column_letter(col + 1)].width = 8
-        ws.cell(row=1, column=(col+1)).value = 'Возраст'
-        ws.cell(row=1, column=(col+1)).style = style_o
-        ws.column_dimensions[get_column_letter(col + 2)].width = 35
-        ws.cell(row=1, column=(col + 2)).value = 'Физлицо'
-        ws.cell(row=1, column=(col + 2)).style = style_o
-        ws.column_dimensions[get_column_letter(col + 3)].width = 35
-        ws.cell(row=1, column=(col + 3)).value = 'Исследование'
-        ws.cell(row=1, column=(col + 3)).style = style_o
-        ws.column_dimensions[get_column_letter(col + 4)].width = 35
-        ws.cell(row=1, column=(col + 4)).value = 'Дата подтверждения'
-        ws.cell(row=1, column=(col + 4)).style = style_o
-        ws.column_dimensions[get_column_letter(col + 5)].width = 20
-        ws.cell(row=1, column=(col + 5)).value = 'Карта'
-        ws.cell(row=1, column=(col + 5)).style = style_o
+        ws.column_dimensions[get_column_letter(2)].width = 8
+        ws.cell(row=1, column=(2)).value = 'Возраст'
+        ws.cell(row=1, column=(2)).style = style_o
+        ws.column_dimensions[get_column_letter(3)].width = 35
+        ws.cell(row=1, column=(3)).value = 'Физлицо'
+        ws.cell(row=1, column=(3)).style = style_o
+        ws.column_dimensions[get_column_letter(4)].width = 35
+        ws.cell(row=1, column=(4)).value = 'Исследование'
+        ws.cell(row=1, column=(4)).style = style_o
+        ws.column_dimensions[get_column_letter(5)].width = 35
+        ws.cell(row=1, column=(5)).value = 'Дата подтверждения'
+        ws.cell(row=1, column=(5)).style = style_o
+        ws.column_dimensions[get_column_letter(6)].width = 20
+        ws.cell(row=1, column=(6)).value = 'Карта'
+        ws.cell(row=1, column=(6)).style = style_o
 
         res_o = Researches.objects.get(pk=pk)
         d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
@@ -936,11 +935,11 @@ def statistic_xls(request):
             patient_data = i.napravleniye.client.get_data_individual()
             date_o = utils.strfdatetime(i.time_confirmation, "%d.%m.%Y")
             ws.cell(row=r, column=1).value = patient_data['born']
-            ws.cell(row=r, column=col + 1).value = patient_data['age']
-            ws.cell(row=r, column=col + 2).value = patient_data['fio']
-            ws.cell(row=r, column=col + 3).value = res_o.title
-            ws.cell(row=r, column=col + 4).value = date_o
-            ws.cell(row=r, column=col + 5).value = patient_data['card_num']
+            ws.cell(row=r, column=2).value = patient_data['age']
+            ws.cell(row=r, column=3).value = patient_data['fio']
+            ws.cell(row=r, column=4).value = res_o.title
+            ws.cell(row=r, column=5).value = date_o
+            ws.cell(row=r, column=6).value = patient_data['card_num']
 
     elif tp == "journal-get-material":
         import datetime
