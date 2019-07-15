@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import WindowL2, ResourceL2, VoiceDo, StatusQueueL2
-# Register your models here.
+
 
 class ResResourceL2(admin.ModelAdmin):
     list_filter = ('windows_obj__title',)

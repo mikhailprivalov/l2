@@ -17,8 +17,6 @@ from laboratory.utils import strdate, localtime
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
-from datetime import date
-
 from appconf.manager import SettingManager
 
 

@@ -77,18 +77,6 @@
             </div>
             <journal-get-material-modal id="journal-get-material-modal"
                                         :users='{{ getters_material|safe }}'></journal-get-material-modal>
-{#            <div class="col-xs-6">#}
-{#                <div class="panel panel-default panel-flt">#}
-{#                    <div class="panel-heading">#}
-{#                        <h3 class="panel-title">Статталоны</h3>#}
-{#                    </div>#}
-{#                    <ul class="list-group">#}
-{#                        <li class="list-group-item" onclick="$('#statistics-ticket-print-modal').modal('show')">#}
-{#                            Печать статталонов#}
-{#                        </li>#}
-{#                    </ul>#}
-{#                </div>#}
-{#            </div>#}
             <statistics-tickets-print-modal id="statistics-ticket-print-modal"
                                             :deps='{{ statistics_tickets_deps|safe }}'
                                             :users='{{ statistics_tickets_users|safe }}'>

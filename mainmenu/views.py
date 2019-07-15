@@ -855,6 +855,5 @@ def rmis_confirm(request):
     return render(request, 'dashboard/rmis_confirm.html')
 
 
-
 def l2queue(request):
     return render(request, 'dashboard/l2queue.html')

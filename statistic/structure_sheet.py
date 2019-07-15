@@ -4,8 +4,10 @@ from collections import OrderedDict
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle, Color, Fill, colors
 import openpyxl
 
-month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август', 9: 'Сентябрь',
+month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
+              9: 'Сентябрь',
               10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
+
 
 def job_total_base(ws1, month):
     """
@@ -13,9 +15,9 @@ def job_total_base(ws1, month):
     :return:
     """
     ws1.column_dimensions[get_column_letter(1)].width = 22
-    for i in range(31):
-        ws1.column_dimensions[get_column_letter(2+i)].width = 4
-        ws1.cell(row=3, column=2 + i).value = 1 + i
+    for i in range(1, 32):
+        ws1.column_dimensions[get_column_letter(1 + i)].width = 4
+        ws1.cell(row=3, column=2 + i).value = i
 
     ws1.cell(row=1, column=1).value = 'Месяц'
     ws1.cell(row=1, column=2).value = month_dict.get(month)
@@ -33,7 +35,7 @@ def jot_total_titles(ws1, titles):
     """
     cel_res = OrderedDict()
     for i in range(len(titles)):
-        cell_row = 4+i
+        cell_row = 4 + i
         ws1.cell(row=cell_row, column=1).value = titles[i]
         cel_res[titles[i]] = cell_row
 
@@ -41,11 +43,9 @@ def jot_total_titles(ws1, titles):
 
 
 def job_total_data(ws1, titles, data):
-    for k,v in data.items():
-        for res,uet in v.items():
-            print(res, '-', uet)
+    for k, v in data.items():
+        for res, uet in v.items():
             r = titles.get(res)
-            print(r)
             ws1.cell(row=r, column=k + 1).value = uet
 
 
@@ -60,14 +60,8 @@ def passed_research_base(ws1, data_date):
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    # style_border1 = NamedStyle(name="style_border1")
-    # bd = Side(style='thin', color="000000")
-    # style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    # style_border1.font = Font(bold=False, size=11)
-    # style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-
     ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=19)
-    ws1.cell(row=1, column=1).value = 'ЖУРНАЛ учета приема и отказов в госпитализации за ' + data_date +  \
+    ws1.cell(row=1, column=1).value = 'ЖУРНАЛ учета приема и отказов в госпитализации за ' + data_date + \
                                       'г.(мед.документация Ф№001/У утв. МИНЗДРАВОМ СССР 04.10.1980г. №1030)'
     ws1.cell(row=1, column=1).style = style_border
 
@@ -86,16 +80,16 @@ def passed_research_base(ws1, data_date):
     ws1.cell(row=2, column=13).value = '№ ДДУ'
     ws1.cell(row=2, column=14).value = 'Полис'
     ws1.cell(row=2, column=15).value = 'Примечания'
-    ws1.cell(row=2, column=16).value = 'Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен'
+    ws1.cell(row=2,
+             column=16).value = 'Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен'
     ws1.cell(row=2, column=17).value = 'Отметка о сообщении родственникам или учреждению'
     ws1.cell(row=2, column=18).value = 'Если не был госпитализирован указать причину и принятые меры '
     ws1.cell(row=2, column=19).value = 'отказ в приеме первичный, повторный (вписать)'
     for i in range(20):
-        ws1.cell(row=2, column=i+1).style = style_border
+        ws1.cell(row=2, column=i + 1).style = style_border
 
-    #габариты ячеек
+    # габариты ячеек
     ws1.row_dimensions[2].height = 115
-    # ws1.column_dimensions[get_column_letter(1)].width = 22
     ws1.column_dimensions[get_column_letter(1)].width = 5
     ws1.column_dimensions[get_column_letter(2)].width = 8
     ws1.column_dimensions[get_column_letter(3)].width = 14
@@ -150,12 +144,12 @@ def passed_research_data(ws1, data):
         current_address = current_main_address if current_main_address else current_fact_address
         current_kem_napravlen = i[22] if i[22] else empty
         r = r + 1
-        n =n + 1
+        n = n + 1
         ws1.cell(row=r, column=1).value = n
         ws1.cell(row=r, column=2).value = current_time_cofirm
         ws1.cell(row=r, column=3).value = current_research_title
         ws1.cell(row=r, column=4).value = current_napravlen
-        ws1.cell(row=r, column=5).value = current_family +' ' + current_name + ' ' + current_patronymic
+        ws1.cell(row=r, column=5).value = current_family + ' ' + current_name + ' ' + current_patronymic
         ws1.cell(row=r, column=6).value = current_birthday
         ws1.cell(row=r, column=7).value = current_address
         ws1.cell(row=r, column=8).value = current_kem_napravlen
@@ -164,13 +158,13 @@ def passed_research_data(ws1, data):
         ws1.cell(row=r, column=11).value = ' '
         ws1.cell(row=r, column=12).value = current_diagnoz
         ws1.cell(row=r, column=13).value = ' '
-        ws1.cell(row=r, column=14).value = current_polis_n +', ' + current_polis_who_give
+        ws1.cell(row=r, column=14).value = current_polis_n + ', ' + current_polis_who_give
         ws1.cell(row=r, column=15).value = ' '
         ws1.cell(row=r, column=16).value = current_result
         ws1.cell(row=r, column=17).value = ' '
         ws1.cell(row=r, column=18).value = ' '
         ws1.cell(row=r, column=19).value = ' '
-        for j in range(20):
-            ws1.cell(row=r, column=j + 1).style = style_border1
+        for j in range(1, 21):
+            ws1.cell(row=r, column=j).style = style_border1
 
     return ws1

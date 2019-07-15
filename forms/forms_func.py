@@ -20,11 +20,10 @@ def demo_func(canvas):
     l2_text = ""
     if demo:
         demo_text = "Для демонстрации         "
-        demo_text2 = "Для лзнакомнения с функционалом      "
+        demo_text2 = "Для ознакомнения с функционалом      "
         l2_text = "L2 "
 
     canvas.rotate(45)
-    # canvas.setFillColor(HexColor(0xfc5749))
     canvas.setFillColor(HexColor(0x049372))
     canvas.setFont('PTAstraSerifReg', 25.2)
     canvas.drawString(149 * mm, 147 * mm, '{}'.format(2 * demo_text))
@@ -44,9 +43,9 @@ def demo_func_landscope(canvas):
     demo_text = ""
     demo_text2 = ""
     if demo:
-        demo_text = " "
-        demo_text2 = " "
-        l2_text = ""
+        demo_text = "Для демонстрации         "
+        demo_text2 = "Для ознакомнения с функционалом      "
+        l2_text = "L2 "
 
     canvas.rotate(45)
     canvas.setFillColor(HexColor(0x049372))

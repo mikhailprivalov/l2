@@ -26,8 +26,6 @@ from utils.dates import try_parse_range
 from laboratory import utils
 from . import sql_func
 from . import structure_sheet
-import datetime
-
 
 
 @csrf_exempt
@@ -63,6 +61,8 @@ def statistic_xls(request):
     from directions.models import Issledovaniya
     import xlwt
     import openpyxl
+    import datetime
+    from collections import  OrderedDict
 
     wb = xlwt.Workbook(encoding='utf-8')
     response = HttpResponse(content_type='application/ms-excel')
@@ -173,7 +173,6 @@ def statistic_xls(request):
     # Все возможные анализы в направлениях - стр-ра А
     # направления по лабораториям (тип лаборатории, [номера направлений])
         obj = []
-        import datetime
         for type_lab, l_napr in depart_napr.items():
             a = ([[p, r, n, datetime.datetime.strftime(utils.localtime(t), "%d.%m.%y")] for p, r, n, t in
                   Issledovaniya.objects.values_list('pk', 'research_id', 'napravleniye_id', 'time_confirmation').filter(
@@ -545,7 +544,6 @@ def statistic_xls(request):
                                                                                   flat=True)) or request.user.is_superuser
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-        import datetime
         from datetime import  timedelta
         import calendar
         if request_data.get("date_type") == 'd':
@@ -603,29 +601,28 @@ def statistic_xls(request):
             Назначить ширину колонок. Вход worksheet выход worksheen с размерами
             """
             from openpyxl.utils.cell import get_column_letter
-            col = 1
             ws1.column_dimensions[get_column_letter(1)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 1)].width = 7
-            ws1.column_dimensions[get_column_letter(col + 2)].width = 15
-            ws1.column_dimensions[get_column_letter(col + 3)].width = 9
-            ws1.column_dimensions[get_column_letter(col + 4)].width = 31
-            ws1.column_dimensions[get_column_letter(col + 5)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 6)].width = 12
-            ws1.column_dimensions[get_column_letter(col + 7)].width = 27
-            ws1.column_dimensions[get_column_letter(col + 8)].width = 16
-            ws1.column_dimensions[get_column_letter(col + 9)].width = 12
-            ws1.column_dimensions[get_column_letter(col + 10)].width = 18
-            ws1.column_dimensions[get_column_letter(col + 11)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 12)].width = 12
-            ws1.column_dimensions[get_column_letter(col + 13)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 14)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 15)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 16)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 17)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 18)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 19)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 20)].width = 13
-            ws1.column_dimensions[get_column_letter(col + 21)].width = 13
+            ws1.column_dimensions[get_column_letter(2)].width = 7
+            ws1.column_dimensions[get_column_letter(3)].width = 15
+            ws1.column_dimensions[get_column_letter(4)].width = 9
+            ws1.column_dimensions[get_column_letter(5)].width = 31
+            ws1.column_dimensions[get_column_letter(6)].width = 13
+            ws1.column_dimensions[get_column_letter(7)].width = 12
+            ws1.column_dimensions[get_column_letter(8)].width = 27
+            ws1.column_dimensions[get_column_letter(9)].width = 16
+            ws1.column_dimensions[get_column_letter(10)].width = 12
+            ws1.column_dimensions[get_column_letter(11)].width = 18
+            ws1.column_dimensions[get_column_letter(12)].width = 13
+            ws1.column_dimensions[get_column_letter(13)].width = 12
+            ws1.column_dimensions[get_column_letter(14)].width = 13
+            ws1.column_dimensions[get_column_letter(15)].width = 13
+            ws1.column_dimensions[get_column_letter(16)].width = 13
+            ws1.column_dimensions[get_column_letter(17)].width = 13
+            ws1.column_dimensions[get_column_letter(18)].width = 13
+            ws1.column_dimensions[get_column_letter(19)].width = 13
+            ws1.column_dimensions[get_column_letter(20)].width = 13
+            ws1.column_dimensions[get_column_letter(21)].width = 13
+            ws1.column_dimensions[get_column_letter(22)].width = 13
 
             # Закголовки столбцов
             ws1.cell(row=1, column=1).value = 'Сотрудник'
@@ -687,19 +684,19 @@ def statistic_xls(request):
                 n = issled[23] if issled[23] else ''
                 p = issled[24] if issled[24] else ''
                 current_napr = str(issled[7])
-                current_patient_napr = f +' ' + n + ' ' + p + '\n' + current_napr
+                current_patient_napr = f'{f} {n} {p}\n{current_napr}'
                 current_born = utils.strdate(issled[25])
                 current_card = issled[21]
-                polis_n = issled[4] if issled[4] else ''
-                polis_who = issled[5] if issled[5] else ''
+                polis_n = issled[4] or ''
+                polis_who = issled[5] or ''
                 current_polis = polis_n +';\n' + polis_who
                 current_code_reserch = issled[2]
                 current_doc_conf = issled[8]
-                current_def_uet = issled[9] if issled[9] else 0
+                current_def_uet = issled[9] or 0
                 current_co_exec1 = issled[10]
-                current_uet1 = issled[11] if issled[11] else 0
+                current_uet1 = issled[11] or 0
                 current_co_exec2 = issled[12]
-                current_uet2 = issled[13] if issled[13] else 0
+                current_uet2 = issled[13] or 0
                 current_confirm = utils.strtime(issled[14])
                 current_isfirst = issled[3]
                 current_onko = issled[15]
@@ -834,7 +831,6 @@ def statistic_xls(request):
                         # co_executor_id(5), co_executor_uet(6), co_executor2_id(7), co_executor2_uet(8), research_id(9),
                         # research_title(10), research - co_executor_2_title(11)
                         # строим стр-ру {дата:{наименование анализа:УЕТ за дату, СО2:УЕТ за дату}}
-                        from _collections import OrderedDict
                         total_report_dict = OrderedDict()
                         r_sql = sql_func.total_report_sql(i.pk, start_date, end_date, type_fin)
                         titles_set = OrderedDict()
@@ -853,16 +849,17 @@ def statistic_xls(request):
                             if total_report_dict.get(n[2]):
                                 temp_d = total_report_dict.get(n[2])
                                 # попытка получить такие же анализы
-                                current_uet = temp_d.get(n[10]) if temp_d.get(n[10]) else 0
-                                current_uet2 = temp_d.get(n[11]) if temp_d.get(n[11]) else 0
+                                current_uet = temp_d.get(n[10], 0)
+                                current_uet2 = temp_d.get(n[11], 0)
                                 current_uet = current_uet + temp_uet
                                 current_uet2 = current_uet2 + temp_uet2
                                 temp_dict = {n[10]:current_uet, n[11]:current_uet2}
-                                total_report_dict[n[2]].update(temp_dict)
+                                total_report_dict[int(n[2])].update(temp_dict)
                             else:
                                 total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
 
-                        titles_list = [tk for tk in titles_set.keys()]
+                        # titles_list = [tk for tk in titles_set.keys()]
+                        titles_list = list(titles_set.keys())
                         ws = wb.create_sheet(i.get_fio() + ' - Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj)
                         ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
@@ -873,11 +870,7 @@ def statistic_xls(request):
         return response
 
     elif tp == "statistics-passed":
-        import datetime
-
         d_s = request_data.get("date-start")
-        print(type(d_s))
-        # d_e = json.loads(data_date)
         d_e = request_data.get("date-end")
         d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
         d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
@@ -890,12 +883,9 @@ def statistic_xls(request):
         ws = structure_sheet.passed_research_base(ws, d_s)
         ws = structure_sheet.passed_research_data(ws, passed_oq)
 
-
         response['Content-Disposition'] = str.translate("attachment; filename=\"Движения.xlsx\"", tr)
         wb.save(response)
         return response
-
-
 
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
@@ -934,7 +924,6 @@ def statistic_xls(request):
         ws.cell(row=1, column=(col + 5)).value = 'Карта'
         ws.cell(row=1, column=(col + 5)).style = style_o
 
-        import datetime
         res_o = Researches.objects.get(pk=pk)
         d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
         d_e = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')

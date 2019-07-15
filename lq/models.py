@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from users.models import DoctorProfile
 
-# Create your models here.
+
 class WindowL2(models.Model):
     title = models.CharField(max_length=511,unique=True, help_text='Наименование экрана для очередей',db_index=True)
     active_status = models.BooleanField(default=True, help_text='Статус активности',db_index=True)
