@@ -42,6 +42,7 @@ def demo_func_landscope(canvas):
     demo = SettingManager.get("operation_mode", default='True', default_type='b')
     demo_text = ""
     demo_text2 = ""
+    l2_text = ""
     if demo:
         demo_text = "Для демонстрации         "
         demo_text2 = "Для ознакомнения с функционалом      "

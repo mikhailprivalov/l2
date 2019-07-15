@@ -116,14 +116,14 @@ def total_report_sql(d_conf, d_s, d_e, fin):
            (SELECT d_res.id, d_res.title, co_executor_2_title
            FROM public.directory_researches d_res)
 
-       SELECT iss_doc.iss_id, iss_doc.research_id, iss_doc.date_confirm, iss_doc.doc_confirmation_id, iss_doc.def_uet,
-       iss_doc.co_executor_id, iss_doc.co_executor_uet, iss_doc.co_executor2_id, iss_doc.co_executor2_uet,
-       t_res.id, t_res.title, t_res.co_executor_2_title
-       FROM iss_doc
-       LEFT JOIN t_res ON iss_doc.research_id = t_res.id
-       ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin':fin})
+        SELECT iss_doc.iss_id, iss_doc.research_id, iss_doc.date_confirm, iss_doc.doc_confirmation_id, iss_doc.def_uet,
+        iss_doc.co_executor_id, iss_doc.co_executor_uet, iss_doc.co_executor2_id, iss_doc.co_executor2_uet,
+        t_res.id, t_res.title, t_res.co_executor_2_title
+        FROM iss_doc
+        LEFT JOIN t_res ON iss_doc.research_id = t_res.id
+        ORDER BY iss_doc.date_confirm""", params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'ist_fin':fin})
 
-       row = cursor.fetchall()
+        row = cursor.fetchall()
     return row
 
 
