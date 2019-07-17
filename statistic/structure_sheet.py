@@ -12,7 +12,7 @@ month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апр�
               10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
 
 
-def job_total_base(ws1, month):
+def job_total_base(ws1, month, type_fin):
     """
     Основа(каркас) для итоговых данных
     :return:
@@ -20,11 +20,13 @@ def job_total_base(ws1, month):
     ws1.column_dimensions[get_column_letter(1)].width = 22
     for i in range(1, 32):
         ws1.column_dimensions[get_column_letter(1 + i)].width = 4
-        ws1.cell(row=3, column=2 + i).value = i
+        ws1.cell(row=4, column=1 + i).value = i
 
     ws1.cell(row=1, column=1).value = 'Месяц'
     ws1.cell(row=1, column=2).value = month_dict.get(month)
-    ws1.cell(row=3, column=1).value = 'Вид работы'
+    ws1.cell(row=4, column=1).value = 'Вид работы'
+    fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
+    ws1.cell(row=2, column=1).value = fin_obj[0]
 
     return ws1
 
@@ -38,7 +40,7 @@ def jot_total_titles(ws1, titles):
     """
     cel_res = OrderedDict()
     for i in range(len(titles)):
-        cell_row = 4 + i
+        cell_row = 5 + i
         ws1.cell(row=cell_row, column=1).value = titles[i]
         cel_res[titles[i]] = cell_row
 
@@ -410,24 +412,32 @@ def statistics_tickets_data(ws1, issl_obj, i_obj):
 
 
 def inderect_job_base(ws1, doc_obj, d1, d2):
-    pass
+    pink_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='FCD5B4', end_color='FCD5B4')
+    rows = ws1[f'A{1}:V{1}']
+    for row in rows:
+        for cell in row:
+            cell.fill = pink_fill
+
+    ws1.column_dimensions[get_column_letter(1)].width = 15
+    ws1.column_dimensions[get_column_letter(2)].width = 30
+    ws1.column_dimensions[get_column_letter(3)].width = 15
+
+    ws1.cell(row=1, column=1).value = "Косвенные услуги"
+    ws1.cell(row=2, column=1).value = "Сотрудник"
+    ws1.cell(row=2, column=2).value = doc_obj.fio
+    ws1.cell(row=3, column=1).value = f'c {d1}'
+    ws1.cell(row=3, column=2).value = f'по {d2}'
+
+    return ws1
 
 
-def inderect_job_data(ws1, indirect_job):
+def inderect_job_data(ws1, indirect_job, i_obj, d1, d2):
 
-
-    pink_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='FCD5B4',
-                                                  end_color='FCD5B4')
-    r = 5
+    r = 4
     for k,v in indirect_job.items():
         for k_job, v_job in v.items():
+            r = r + 1
             ws1.cell(row=r, column=1).value = k
-            ws1.cell(row=r, column=3).value = k_job
-            ws1.cell(row=r, column=10).value = v_job
-            rows = ws1[f'A{r}:V{r}']
-            for row in rows:
-                for cell in row:
-                    cell.fill = pink_fill
-
-
+            ws1.cell(row=r, column=2).value = k_job
+            ws1.cell(row=r, column=3).value = v_job
 

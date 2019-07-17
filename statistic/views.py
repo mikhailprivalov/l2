@@ -588,7 +588,7 @@ def statistic_xls(request):
                             temp_dict = dict_job.get(key_date,{})
                             temp_dict.update({key_type_job : value_total})
                             dict_job[key_date] = temp_dict
-                        structure_sheet.inderect_job_data(dict_job, i, d1, d2)
+                        structure_sheet.inderect_job_data(ws, dict_job, i, d1, d2)
 
                     # ws = structure(ws, i, res_oq, d1, d2, dict_job)
                     ws = wb.create_sheet(i.get_fio())
@@ -631,7 +631,7 @@ def statistic_xls(request):
                         # titles_list = [tk for tk in titles_set.keys()]
                         titles_list = list(titles_set.keys())
                         ws = wb.create_sheet(i.get_fio() + ' - Итог')
-                        ws = structure_sheet.job_total_base(ws, month_obj)
+                        ws = structure_sheet.job_total_base(ws, month_obj, type_fin)
                         ws, cell_research = structure_sheet.jot_total_titles(ws, titles_list)
                         ws = structure_sheet.job_total_data(ws, cell_research, total_report_dict)
 
