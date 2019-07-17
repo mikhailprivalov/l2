@@ -760,13 +760,6 @@ def form_01(request_data):
     if npf != p_npf:
         qr_value = protect_code + ',' + npf + '-' +p_npf + '(' + qr_napr + ')' + protect_val
 
-    demo = SettingManager.get("operation_mode", default='True', default_type='b')
-    demo_text = ""
-    demo_text2 = ""
-    if demo:
-        demo_text = "Демонстрационный режим       "
-        demo_text2 = "Для ознакомления с функционалом      "
-
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont("PTAstraSerifReg", 9)
@@ -802,8 +795,6 @@ def form_01(request_data):
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
         canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
 
-        forms_func.demo_func(canvas)
-
         #вывестии защитны вертикальный мелкий текст
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
@@ -837,7 +828,6 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg', 8)
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
         canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-        forms_func.demo_func(canvas)
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)

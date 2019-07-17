@@ -28,7 +28,6 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
-from forms.forms_func import demo_func
 from collections import OrderedDict
 
 
@@ -580,7 +579,6 @@ def result_print(request):
 
     client_prev = -1
     # cl = Client()
-    not_lab = False
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
@@ -1304,9 +1302,6 @@ def result_print(request):
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-        if not_lab:
-            demo_func(canvas)
-
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -1319,19 +1314,10 @@ def result_print(request):
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
-        if not_lab:
-            demo_func(canvas)
-
-    def demo_protect(canvas, document):
-        canvas.saveState()
-        if not_lab:
-            demo_func(canvas)
-        canvas.restoreState()
-
     if len(pk) == 1:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
-        doc.build(naprs, onFirstPage=demo_protect, onLaterPages=demo_protect)
+        doc.build(naprs)
 
     pdf = buffer.getvalue()
     buffer.close()

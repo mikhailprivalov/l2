@@ -285,12 +285,10 @@ def form_01(request_data):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        forms_func.demo_func_landscope(canvas)
         canvas.restoreState()
 
     def later_pages(canvas, document):
         canvas.saveState()
-        forms_func.demo_func_landscope(canvas)
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
@@ -466,12 +464,10 @@ def form_02(request_data):
 
     def first_pages(canvas, document):
         canvas.saveState()
-        forms_func.demo_func(canvas)
         canvas.restoreState()
 
     def later_pages(canvas, document):
         canvas.saveState()
-        forms_func.demo_func(canvas)
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
