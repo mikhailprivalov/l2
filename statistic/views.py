@@ -544,7 +544,7 @@ def statistic_xls(request):
                                                                                   flat=True)) or request.user.is_superuser
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
-        from datetime import  timedelta
+
         import calendar
         if request_data.get("date_type") == 'd':
             d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
@@ -569,261 +569,31 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
 
-        from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle, Color, Fill, colors
-        style_o = NamedStyle(name="style_o")
-        style_o.font = Font(bold=True, size=11)
-        wb.add_named_style(style_o)
-
-        style_border = NamedStyle(name="style_border")
-        bd = Side(style='thin', color="000000")
-        style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-        style_border.font = Font(bold=True, size=11)
-        style_border.alignment = Alignment(wrap_text=True)
-        wb.add_named_style(style_border)
-
-        style_border1 = NamedStyle(name="style_border1")
-        bd = Side(style='thin', color="000000")
-        style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-        style_border1.font = Font(bold=False, size=11)
-        style_border1.alignment = Alignment(wrap_text=True)
-        wb.add_named_style(style_border1)
-
-        my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094',
-                                                    end_color='a9d094')
-        total_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='ffcc66',
-                                                    end_color='ffcc66')
-
-        pink_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='FCD5B4',
-                                                    end_color='FCD5B4')
-
-        def structure(ws1, i_obj, issl_obj, d1, d2, dict_job_l):
-            """
-            Назначить ширину колонок. Вход worksheet выход worksheen с размерами
-            """
-            from openpyxl.utils.cell import get_column_letter
-            ws1.column_dimensions[get_column_letter(1)].width = 13
-            ws1.column_dimensions[get_column_letter(2)].width = 7
-            ws1.column_dimensions[get_column_letter(3)].width = 15
-            ws1.column_dimensions[get_column_letter(4)].width = 9
-            ws1.column_dimensions[get_column_letter(5)].width = 31
-            ws1.column_dimensions[get_column_letter(6)].width = 13
-            ws1.column_dimensions[get_column_letter(7)].width = 12
-            ws1.column_dimensions[get_column_letter(8)].width = 27
-            ws1.column_dimensions[get_column_letter(9)].width = 16
-            ws1.column_dimensions[get_column_letter(10)].width = 12
-            ws1.column_dimensions[get_column_letter(11)].width = 18
-            ws1.column_dimensions[get_column_letter(12)].width = 13
-            ws1.column_dimensions[get_column_letter(13)].width = 12
-            ws1.column_dimensions[get_column_letter(14)].width = 13
-            ws1.column_dimensions[get_column_letter(15)].width = 13
-            ws1.column_dimensions[get_column_letter(16)].width = 13
-            ws1.column_dimensions[get_column_letter(17)].width = 13
-            ws1.column_dimensions[get_column_letter(18)].width = 13
-            ws1.column_dimensions[get_column_letter(19)].width = 13
-            ws1.column_dimensions[get_column_letter(20)].width = 13
-            ws1.column_dimensions[get_column_letter(21)].width = 13
-            ws1.column_dimensions[get_column_letter(22)].width = 13
-
-            # Закголовки столбцов
-            ws1.cell(row=1, column=1).value = 'Сотрудник'
-            ws1.cell(row=1, column=1).style = style_o
-            ws1.cell(row=1, column=2).value = i_obj.fio
-            ws1.cell(row=2, column=1).value = 'Должность'
-            ws1.cell(row=2, column=1).style = style_o
-            ws1.cell(row=2, column=2).value = i_obj.specialities.title if i_obj.specialities else ""
-            ws1.cell(row=4, column=1).value = 'Период:'
-            ws1.cell(row=4, column=1).style = style_o
-            ws1.cell(row=5, column=1).value = d1
-            ws1.cell(row=5, column=2).value = 'по'
-            ws1.cell(row=5, column=3).value = d2
-            ws1.cell(row=1, column=5).value = 'Код врача'
-            ws1.cell(row=1, column=5).style = style_o
-            ws1.cell(row=1, column=6).value = i_obj.personal_code
-            ws1.cell(row=3, column=5).value = 'Источник'
-            ws1.cell(row=3, column=5).style = style_o
-            fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
-            ws1.cell(row=3, column=6).value = fin_obj[0]
-
-            #Заголовки данных
-            ws1.cell(row=7, column=1).value = 'Дата'
-            ws1.cell(row=7, column=2).value = 'Кол-во'
-            ws1.cell(row=7, column=3).value = 'Услуга'
-            ws1.cell(row=7, column=4).value = 'Соисполнитель'
-            ws1.cell(row=7, column=5).value = 'ФИО пациента,\n№ направления'
-            ws1.cell(row=7, column=6).value = 'Дата рождения'
-            ws1.cell(row=7, column=7).value = '№ карты'
-            ws1.cell(row=7, column=8).value = 'Данные полиса'
-            ws1.cell(row=7, column=9).value = 'Код услуги'
-            ws1.cell(row=7, column=10).value = 'Услуга \n (ует/мин)'
-            ws1.cell(row=7, column=11).value = 'Время \n подтверждения'
-            ws1.cell(row=7, column=12).value = 'Онкоподозрение'
-            ws1.cell(row=7, column=13).value = 'Первичный прием'
-            ws1.cell(row=7, column=14).value = 'Цель \n посещения\n(код)'
-            ws1.cell(row=7, column=15).value = 'Диагноз \n МКБ'
-            ws1.cell(row=7, column=16).value = 'Впервые'
-            ws1.cell(row=7, column=17).value = 'Результат \n обращения \n(код)'
-            ws1.cell(row=7, column=18).value = 'Исход(код)'
-            ws1.cell(row=7, column=19).value = 'Стоимость'
-
-            rows = ws1[f'A{7}:V{7}']
-            for row in rows:
-                for cell in row:
-                    cell.style = style_border
-
-            r = 7
-            r1 = r + 1
-            total_sum = []
-            one_days = timedelta(1)
-            current_date = ''
-            for issled in issl_obj:
-                current_date = issled[14]
-                current_count = 1
-                current_research = issled[1]
-                current_coexec = ''
-                f = issled[22] if issled[22] else ''
-                n = issled[23] if issled[23] else ''
-                p = issled[24] if issled[24] else ''
-                current_napr = str(issled[7])
-                current_patient_napr = f'{f} {n} {p}\n{current_napr}'
-                current_born = utils.strdate(issled[25])
-                current_card = issled[21]
-                polis_n = issled[4] or ''
-                polis_who = issled[5] or ''
-                current_polis = polis_n +';\n' + polis_who
-                current_code_reserch = issled[2]
-                current_doc_conf = issled[8]
-                current_def_uet = issled[9] or 0
-                current_co_exec1 = issled[10]
-                current_uet1 = issled[11] or 0
-                current_co_exec2 = issled[12]
-                current_uet2 = issled[13] or 0
-                current_confirm = utils.strtime(issled[14])
-                current_isfirst = issled[3]
-                current_onko = issled[15]
-                current_purpose = issled[16]
-                current_diagnos = issled[17]
-                current_firsttime = issled[6]
-                current_result = issled[17]
-                current_octome = issled[18]
-                current_price = ''
-
-                d_result = utils.strfdatetime(current_date, "%d.%m.%Y")
-                if r != 7 and r != 8:
-                    befor_date = ws1.cell(row=r, column=1).value
-                    if d_result != befor_date and not (ws1.cell(row=r, column=1).value).istitle():
-                        indirect_job = dict_job_l.get(befor_date)
-                        if indirect_job:
-                            for k_job,v_job in indirect_job.items():
-                                r = r + 1
-                                ws1.cell(row=r, column=1).value = befor_date
-                                ws1.cell(row=r, column=3).value = k_job
-                                ws1.cell(row=r, column=10).value = v_job
-                                rows = ws1[f'A{r}:V{r}']
-                                for row in rows:
-                                    for cell in row:
-                                        cell.fill = pink_fill
-                        r = r + 1
-                        ws1.cell(row=r, column=1).value = 'Итого за ' + (
-                            utils.strfdatetime(current_date - one_days, "%d"))
-                        ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
-                        ws1.cell(row=r, column=10).value = f'=SUM(J{r1}:J{r-1})'
-
-                        total_sum.append(r)
-                        ws1.row_dimensions.group(r1, r - 1, hidden=True)
-                        rows = ws1[f'A{r}:V{r}']
-                        for row in rows:
-                            for cell in row:
-                                cell.fill = my_fill
-                        r1 = r + 1
-
-                r = r + 1
-                ws1.cell(row=r, column=1).value = d_result
-                ws1.cell(row=r, column=2).value = 1
-                ws1.cell(row=r, column=3).value = current_research
-                sum_uet = 0
-                co_exec = ''
-                if (current_doc_conf == i_obj.pk) and (current_co_exec1 == i_obj.pk):
-                    sum_uet = sum_uet + current_def_uet
-                    co_exec = co_exec + 'ОСН'
-
-                if (current_doc_conf == i_obj.pk) and (current_co_exec1 != i_obj.pk):
-                    sum_uet = sum_uet + current_def_uet
-                    co_exec = co_exec + 'ОСН'
-
-                if (current_doc_conf != i_obj.pk) and (current_co_exec1 == i_obj.pk):
-                    sum_uet = sum_uet + current_uet1
-                    co_exec = co_exec + 'СО-1'
-
-                if current_co_exec2 == i_obj.pk:
-                    sum_uet = sum_uet + current_uet2
-                    co_exec = co_exec + ', СО-2'
-                ws1.cell(row=r, column=4).value = co_exec
-                ws1.cell(row=r, column=5).value = current_patient_napr
-                ws1.cell(row=r, column=6).value = current_born
-                ws1.cell(row=r, column=7).value = current_card
-
-                ws1.cell(row=r, column=8).value = current_polis
-                ws1.cell(row=r, column=9).value = current_code_reserch
-                ws1.cell(row=r, column=10).value = sum_uet
-                ws1.cell(row=r, column=11).value = current_confirm
-
-                ws1.cell(row=r, column=12).value = current_onko
-                ws1.cell(row=r, column=13).value = current_isfirst
-                ws1.cell(row=r, column=14).value = current_purpose
-                ws1.cell(row=r, column=15).value = current_diagnos
-                ws1.cell(row=r, column=16).value = current_firsttime
-                ws1.cell(row=r, column=17).value = current_result
-                ws1.cell(row=r, column=18).value = current_octome
-                ws1.cell(row=r, column=19).value = ''
-
-                rows = ws1[f'A{r}:V{r}']
-                for row in rows:
-                    for cell in row:
-                        cell.style = style_border1
-
-            r = r + 1
-            ws1.cell(row=r, column=1).value = 'Итого за ' + (utils.strfdatetime(current_date, "%d"))
-            ws1.cell(row=r, column=2).value = f'=SUM(B{r1}:B{r-1})'
-            ws1.row_dimensions.group(r1, r-1, hidden=True)
-            total_sum.append(r)
-            rows = ws1[f'A{r}:V{r}']
-            for row in rows:
-                for cell in row:
-                    cell.fill = my_fill
-
-            t_s = '=SUM('
-            for ts in total_sum:
-                t_s = t_s + f'(B{ts})' + ','
-            t_s = t_s + ')'
-            r = r + 1
-            ws1.cell(row=r, column=1).value = 'Итого Всего'
-            ws1.cell(row=r, column=2).value = t_s
-            rows = ws1[f'A{r}:V{r}']
-            for row in rows:
-                for cell in row:
-                    cell.fill = total_fill
-
-            return ws1
-
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         #Проверить, что роль у объекта Врач-Лаборант, или Лаборант, или Врач параклиники, или Лечащий врач
         if us_o:
             for i in us_o:
                 if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
-                    ws = wb.create_sheet(i.get_fio())
                     res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin)
                     res_job = sql_func.indirect_job_sql(i.pk, start_date, end_date)
-                    dict_job = {}
-                    for r_j in res_job:
-                        key_type_job = r_j[1]
-                        key_date = utils.strfdatetime(r_j[0], "%d.%m.%Y")
-                        value_total = r_j[2]
-                        temp_dict = dict_job.get(key_date,{})
-                        temp_dict.update({key_type_job : value_total})
-                        dict_job[key_date] = temp_dict
+                    if res_job:
+                        ws = wb.create_sheet(f'{i.get_fio()}-Косвенные')
+                        ws = structure_sheet.inderect_job_base(ws, i, d1, d2)
+                        dict_job = {}
+                        for r_j in res_job:
+                            key_type_job = r_j[1]
+                            key_date = utils.strfdatetime(r_j[0], "%d.%m.%Y")
+                            value_total = r_j[2]
+                            temp_dict = dict_job.get(key_date,{})
+                            temp_dict.update({key_type_job : value_total})
+                            dict_job[key_date] = temp_dict
+                        structure_sheet.inderect_job_data(dict_job, i, d1, d2)
 
-                    ws = structure(ws, i, res_oq, d1, d2, dict_job)
+                    # ws = structure(ws, i, res_oq, d1, d2, dict_job)
+                    ws = wb.create_sheet(i.get_fio())
+                    ws = structure_sheet.statistics_tickets_base(ws, i, type_fin, d1, d2)
+                    ws = structure_sheet.statistics_tickets_data(ws, res_oq, i)
 
                     if month_obj:
                         date, res, title, title2 = None, None, None, None
@@ -879,7 +649,8 @@ def statistic_xls(request):
         passed_oq = sql_func.passed_research(start_date, end_date)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        ws = wb.create_sheet('Движение за ' + d_s)
+        # ws = wb.create_sheet('Движение за ' + d_s)
+        ws = wb.create_sheet(f'{d_s}-{d_e}')
         ws = structure_sheet.passed_research_base(ws, d_s)
         ws = structure_sheet.passed_research_data(ws, passed_oq)
 

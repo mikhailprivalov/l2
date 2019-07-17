@@ -24,9 +24,12 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
             directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.def_uet,
             directions_issledovaniya.co_executor_id, directions_issledovaniya.co_executor_uet, 
             directions_issledovaniya.co_executor2_id, directions_issledovaniya.co_executor2_uet,
-            directions_issledovaniya.time_confirmation,
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS datetime_confirm,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
+            
             directions_issledovaniya.maybe_onco, statistics_tickets_visitpurpose.title AS purpose,
-            directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title AS result,
+            directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title AS iss_result,
             statistics_tickets_outcomes.title AS outcome
             FROM directions_issledovaniya 
             LEFT JOIN directory_researches
@@ -43,10 +46,11 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
             directions_issledovaniya.co_executor2_id)) 
             AND time_confirmation BETWEEN %(d_start)s AND %(d_end)s
             AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
-            ORDER BY time_confirmation),
+            ORDER BY datetime_confirm),
         t_card AS 
-            (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,clients_individual.name,
-            clients_individual.patronymic,clients_individual.birthday, 
+            (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS card_number, 
+            clients_individual.family AS client_family, clients_individual.name AS client_name,
+            clients_individual.patronymic AS client_patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday, 
             clients_document.number, clients_document.serial, clients_document.who_give 
             FROM clients_individual
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
@@ -54,9 +58,11 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
             WHERE clients_document.document_type_id=(SELECT id AS polis_id FROM clients_documenttype  WHERE title = 'Полис ОМС')
             ORDER BY clients_card.id)
         
-        SELECT * FROM t_iss
+        SELECT title, code, is_first_reception, polis_n, polis_who_give, first_time, napravleniye_id, doc_confirmation_id, 
+        def_uet, co_executor_id, co_executor_uet, co_executor2_id, co_executor2_uet, datetime_confirm, date_confirm, time_confirm,
+        maybe_onco, purpose, diagnos, iss_result, outcome, card_number, client_family, client_name, client_patronymic, birthday FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
-        ORDER BY time_confirmation""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin})
+        ORDER BY datetime_confirm""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -78,16 +84,16 @@ def indirect_job_sql(d_conf, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute("""WITH 
         t_j AS 
-            (SELECT ej.type_job_id, ej.count, ej.date_job, tj.value, tj.title, 
+            (SELECT ej.type_job_id, ej.count, ej.date_job AT TIME ZONE %(tz)s as date_job , tj.value, tj.title as title, 
             (ej.count*tj.value) as total
             FROM public.directions_employeejob ej
             LEFT JOIN public.directions_typejob tj ON ej.type_job_id=tj.id
             WHERE ej.doc_execute_id=%(d_confirms)s AND ej.date_job BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY ej.date_job, ej.type_job_id)
 
-        SELECT t_j.date_job, t_j.title, SUM(t_j.total) FROM t_j
-        GROUP BY t_j.title, t_j.date_job
-        ORDER BY date_job """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e})
+        SELECT date_job, title, SUM(total) FROM t_j
+        GROUP BY title, date_job
+        ORDER BY date_job """, params={'d_confirms': d_conf, 'd_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
 
         row = cursor.fetchall()
     return row
@@ -133,10 +139,12 @@ def passed_research(d_s, d_e):
         t_iss AS
             (SELECT directions_napravleniya.client_id, directory_researches.title,
             directions_napravleniya.polis_n, directions_napravleniya.polis_who_give,
-            directions_issledovaniya.napravleniye_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s AS t_confirm,
-            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_confirm,
+            directions_issledovaniya.napravleniye_id, 
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS t_confirm,
+            to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY-HH24:MI:SS') AS create_napr,
+            to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_napr,
             directions_issledovaniya.diagnos, statistics_tickets_resultoftreatment.title as result, 
-            directions_issledovaniya.id AS iss_id
+            directions_issledovaniya.id AS iss_id, directions_napravleniya.data_sozdaniya
             FROM directions_issledovaniya
             LEFT JOIN directory_researches 
                 ON directions_issledovaniya.research_id = directory_researches.Id
@@ -144,15 +152,16 @@ def passed_research(d_s, d_e):
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
             LEFT JOIN statistics_tickets_resultoftreatment 
                 ON directions_issledovaniya.result_reception_id=statistics_tickets_resultoftreatment.id
-            WHERE directions_issledovaniya.time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+            WHERE directions_napravleniya.data_sozdaniya BETWEEN %(d_start)s AND %(d_end)s 
+            AND directions_issledovaniya.time_confirmation IS NOT NULL
             AND TRUE IN (directory_researches.is_paraclinic, directory_researches.is_doc_refferal, 
             directory_researches.is_stom, directory_researches.is_hospital)
             ),
         t_card AS
-            (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number, clients_individual.family,
-            clients_individual.name, clients_individual.patronymic, clients_individual.birthday,
+            (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number as num_card, clients_individual.family,
+            clients_individual.name AS ind_name, clients_individual.patronymic, to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
             clients_document.number, clients_document.serial, clients_document.who_give, clients_card.main_address,
-            clients_card.fact_address
+            clients_card.fact_address, clients_card.work_place
             FROM clients_individual
             LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id
             LEFT JOIN clients_document ON clients_card.individual_id = clients_document.individual_id
@@ -162,11 +171,13 @@ def passed_research(d_s, d_e):
             (SELECT id AS f_is FROM directory_paraclinicinputfield
             WHERE directory_paraclinicinputfield.title='Кем направлен')
 
-        SELECT * FROM t_iss
+        SELECT client_id, title, polis_n, polis_who_give, napravleniye_id, t_confirm, create_napr, diagnos, result, 
+        data_sozdaniya, num_card, family, ind_name, patronymic, birthday, main_address, fact_address, work_place, 
+        directions_paraclinicresult.value, time_napr FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN directions_paraclinicresult ON t_iss.iss_id = directions_paraclinicresult.issledovaniye_id
         AND (directions_paraclinicresult.field_id IN (SELECT * FROM t_field))
-        ORDER BY client_id, t_confirm""", params={'d_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
+        ORDER BY client_id, data_sozdaniya""", params={'d_start': d_s, 'd_end': d_e, 'tz':TIME_ZONE})
 
         row = cursor.fetchall()
     return row
