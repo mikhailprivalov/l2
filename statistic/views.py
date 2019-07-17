@@ -679,20 +679,20 @@ def statistic_xls(request):
         ws.cell(row=1, column=1).value = 'Дата рождения'
         ws.cell(row=1, column=1).style = style_o
         ws.column_dimensions[get_column_letter(2)].width = 8
-        ws.cell(row=1, column=(2)).value = 'Возраст'
-        ws.cell(row=1, column=(2)).style = style_o
+        ws.cell(row=1, column=2).value = 'Возраст'
+        ws.cell(row=1, column=2).style = style_o
         ws.column_dimensions[get_column_letter(3)].width = 35
-        ws.cell(row=1, column=(3)).value = 'Физлицо'
-        ws.cell(row=1, column=(3)).style = style_o
+        ws.cell(row=1, column=3).value = 'Физлицо'
+        ws.cell(row=1, column=3).style = style_o
         ws.column_dimensions[get_column_letter(4)].width = 35
-        ws.cell(row=1, column=(4)).value = 'Исследование'
-        ws.cell(row=1, column=(4)).style = style_o
+        ws.cell(row=1, column=4).value = 'Исследование'
+        ws.cell(row=1, column=4).style = style_o
         ws.column_dimensions[get_column_letter(5)].width = 35
-        ws.cell(row=1, column=(5)).value = 'Дата подтверждения'
-        ws.cell(row=1, column=(5)).style = style_o
+        ws.cell(row=1, column=5).value = 'Дата подтверждения'
+        ws.cell(row=1, column=5).style = style_o
         ws.column_dimensions[get_column_letter(6)].width = 20
-        ws.cell(row=1, column=(6)).value = 'Карта'
-        ws.cell(row=1, column=(6)).style = style_o
+        ws.cell(row=1, column=6).value = 'Карта'
+        ws.cell(row=1, column=6).style = style_o
 
         res_o = Researches.objects.get(pk=pk)
         d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')

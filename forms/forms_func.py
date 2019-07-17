@@ -4,12 +4,8 @@ from directory.models import Researches
 from copy import deepcopy
 from collections import OrderedDict
 from django.db.models import Q
-import datetime
 from laboratory import utils
 from decimal import Decimal
-from appconf.manager import SettingManager
-from reportlab.lib.colors import HexColor
-from reportlab.lib.units import mm
 
 
 def get_all_doc(docs: [Document]):
