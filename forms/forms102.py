@@ -88,7 +88,6 @@ def form_01(request_data):
     exec_person = request_data['user'].doctorprofile.fio
 
     patient_data = ind_card.get_data_individual()
-
     agent_status = None
     p_agent = None
     if ind_card.who_is_agent:
@@ -322,7 +321,7 @@ def form_01(request_data):
 
     if p_agent:
         client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
-        objs.append( Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
+        objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '

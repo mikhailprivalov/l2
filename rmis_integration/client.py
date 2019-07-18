@@ -382,6 +382,9 @@ class Patients(BaseRequester):
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
                     r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
+                elif t.title == "Иностранный паспорт":
+                    r["local_types"][t.pk] = Settings.get("foreign_passport_id", default="18")
+                    r["reverse_types"][Settings.get("foreign_passport_id", default="18")] = t.pk
                 if t.rmis_type != r["local_types"][t.pk]:
                     t.rmis_type = r["local_types"][t.pk]
                     t.save()
