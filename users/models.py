@@ -120,8 +120,7 @@ class AssignmentTemplates(models.Model):
 
     def __str__(self):
         return (self.title + " | Шаблон для ") + (
-            ("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(
-                self.doc))
+            str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
 
     class Meta:
         verbose_name = 'Шаблон назначений'
