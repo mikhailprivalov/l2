@@ -31,18 +31,27 @@ class DoctorProfile(models.Model):
         (1, "Врач"),
         (2, "Лаборант"),
     )
-    user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
-    specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя',on_delete=models.CASCADE)
+    user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт',
+                                on_delete=models.CASCADE)
+    specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True,
+                                     help_text='Специальности пользователя', on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
-    isLDAP_user = models.BooleanField(default=False, blank=True, help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
-    labtype = models.IntegerField(choices=labtypes, default=0, blank=True, help_text='Категория профиля для лаборатории')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True,
+                                       on_delete=models.CASCADE)
+    isLDAP_user = models.BooleanField(default=False, blank=True,
+                                      help_text='Флаг, показывающий, что это импортированый из LDAP пользователь')
+    labtype = models.IntegerField(choices=labtypes, default=0, blank=True,
+                                  help_text='Категория профиля для лаборатории')
     login_id = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Код авторизации')
 
-    restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True, help_text='Запрет на выдачу направлений с исследованиями')
-    users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True, help_text='Услуги, оказываемые пользователем')
+    restricted_to_direct = models.ManyToManyField('directory.Researches', blank=True,
+                                                  help_text='Запрет на выдачу направлений с исследованиями')
+    users_services = models.ManyToManyField('directory.Researches', related_name='users_services', blank=True,
+                                            help_text='Услуги, оказываемые пользователем')
     personal_code = models.IntegerField(default=0, blank=True, help_text='Код врача')
     rmis_location = models.IntegerField(default=None, blank=True, null=True)
+    local_location = models.CharField(default='', blank=True, null=True, max_length=20,
+                                      help_text='Номера очередей (pk) через запятую', db_index=True)
 
     def get_login_id(self):
         if not self.login_id:
@@ -57,11 +66,13 @@ class DoctorProfile(models.Model):
         :param dots:
         :return:
         """
+
         def gfl(w: str, dots):
             w = w.strip()
             if not w.isdigit() and len(w) > 0:
                 w = w[0] + ("." if dots else "")
             return w
+
         fio = self.fio.strip().replace("  ", " ").strip()
         fio_split = fio.split(" ")
 
@@ -86,6 +97,9 @@ class DoctorProfile(models.Model):
     def has_group(self, group) -> bool:
         return self.is_member([group])
 
+    def get_data(self):
+        return {"pk": self.pk, "fio": self.get_fio(), "username": self.user.username}
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.fio + ', ' + self.podrazdeleniye.title
@@ -100,11 +114,13 @@ class DoctorProfile(models.Model):
 class AssignmentTemplates(models.Model):
     title = models.CharField(max_length=40)
     doc = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
-    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr', on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, related_name='podr',
+                                       on_delete=models.CASCADE)
     global_template = models.BooleanField(default=True, blank=True)
 
     def __str__(self):
-        return (self.title + " | Шаблон для ") + (("всех" if self.podrazdeleniye is None else str(self.podrazdeleniye)) if self.doc is None else str(self.doc))
+        return (self.title + " | Шаблон для ") + (
+            str(self.doc) if self.doc else str(self.podrazdeleniye) if self.podrazdeleniye else "всех")
 
     class Meta:
         verbose_name = 'Шаблон назначений'

@@ -948,3 +948,67 @@ def user_fill_slot(request):
                                                                            rmis_slot=slot["id"])
         direction = result["list_id"][0]
     return JsonResponse({"direction": direction})
+
+
+@login_required
+def job_types(request):
+    types = [{"pk": x.pk, "title": x.title} for x in directions.TypeJob.objects.filter(hide=False)]
+    g = Group.objects.filter(name="Зав. лабораторией").first()
+    is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
+    users_list = [request.user.doctorprofile.get_data()]
+    if is_zav_lab:
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
+                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+            users_list.append(user.get_data())
+    return JsonResponse({"types": types, "is_zav_lab": is_zav_lab, "users": users_list})
+
+
+@login_required
+def job_save(request):
+    data = json.loads(request.body)
+    g = Group.objects.filter(name="Зав. лабораторией").first()
+    ej = directions.EmployeeJob(type_job_id=data["type"], count=data["count"],
+                                doc_execute_id=data["executor"], date_job=try_strptime(data["date"]).date())
+    ej.save()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def job_list(request):
+    data = json.loads(request.body)
+    date = try_strptime(data["date"]).date()
+    g = Group.objects.filter(name="Зав. лабораторией").first()
+    is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
+    users_list = [request.user.doctorprofile]
+    if is_zav_lab:
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
+                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+            users_list.append(user)
+    l = []
+    for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute",
+                                                                                                       "-time_save"):
+        l.append({
+            "pk": j.pk,
+            "executor": j.doc_execute.get_fio(),
+            "type": j.type_job.title,
+            "count": j.count,
+            "saved": strdatetime(j.time_save),
+            "canceled": bool(j.who_do_cancel),
+        })
+    return JsonResponse({"list": l})
+
+
+@login_required
+def job_cancel(request):
+    data = json.loads(request.body)
+    j = directions.EmployeeJob.objects.get(pk=data["pk"])
+    g = Group.objects.filter(name="Зав. лабораторией").first()
+    is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
+    if is_zav_lab or j.doc_execute == request.user.doctorprofile:
+        if data["cancel"]:
+            j.canceled_at = timezone.now()
+            j.who_do_cancel = request.user.doctorprofile
+        else:
+            j.canceled_at = j.who_do_cancel = None
+        j.save()
+    return JsonResponse({"ok": True})

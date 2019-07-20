@@ -185,7 +185,7 @@
                         @clickout="hide_results">
                 <a style="font-weight: normal"
                    href="#" @click.prevent="open_results(row.pk)">
-                  (другие результаты пациента)
+                  (другие результаты)
                 </a>
                 <div class="results-history" slot="dropdown">
                   <ul>

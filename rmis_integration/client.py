@@ -382,6 +382,9 @@ class Patients(BaseRequester):
                 elif t.title == "СНИЛС":
                     r["local_types"][t.pk] = Settings.get("snils_id", default="19")
                     r["reverse_types"][Settings.get("snils_id", default="19")] = t.pk
+                elif t.title == "Иностранный паспорт":
+                    r["local_types"][t.pk] = Settings.get("foreign_passport_id", default="18")
+                    r["reverse_types"][Settings.get("foreign_passport_id", default="18")] = t.pk
                 if t.rmis_type != r["local_types"][t.pk]:
                     t.rmis_type = r["local_types"][t.pk]
                     t.save()
@@ -832,7 +835,7 @@ class Directions(BaseRequester):
                                 typeId=self.main_client.get_directory(
                                     "md_referral_type").get_first("ID",
                                                                   search_data=direction.rmis_direction_type()),
-                                referralDate=ndate(direction.data_sozdaniya),
+                                referralDate=ndate(direction.data_sozdaniya_local),
                                 referralOrganizationId=self.main_client.search_organization_id(),
                                 referringDepartmentId=self.main_client.search_dep_id(q=direction.rmis_referral_title(),
                                                                                      org_id=self.main_client.search_organization_id()),

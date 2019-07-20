@@ -1,0 +1,32 @@
+{% extends "dbase.html" %}
+{% block title %}Учёт косвенных услуг по лаборатории{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <employee-jobs/>
+{% endblock %}
+
+{% block head_cn %}
+    <script src="{% static 'js/split.js' %}"></script>
+    <style>
+        body, html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            padding-bottom: 0;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        .navbar {
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}

@@ -49,6 +49,7 @@ new Vue({
     'DirectionSteps': () => import('./DirectionSteps'),
     'RmisConfirm': () => import('./RmisConfirm'),
     'Profiles': () => import('./Profiles'),
+    'EmployeeJobs': () => import('./EmployeeJobs'),
     RmisLocation,
     // loading,
   },

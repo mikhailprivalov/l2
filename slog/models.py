@@ -1,5 +1,7 @@
 import simplejson
 from django.db import models
+
+from laboratory.utils import localtime
 from users.models import DoctorProfile
 
 
@@ -91,6 +93,10 @@ class Log(models.Model):
     body = models.TextField()
     user = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, blank=True, null=True)
     time = models.DateTimeField(auto_now=True)
+
+    @property
+    def time_local(self):
+        return localtime(self.time)
 
     @staticmethod
     def log(key, type, user=None, body=None):

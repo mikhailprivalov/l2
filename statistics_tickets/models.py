@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from appconf.manager import SettingManager
 from clients.models import Card
+from laboratory.utils import localtime
 from users.models import DoctorProfile
 
 
@@ -91,6 +92,9 @@ class StatisticsTicket(models.Model):
     date_ticket = models.CharField(max_length=10, null=True, blank=True, default=None, help_text='Дата талона')
     invalid_ticket = models.BooleanField(default=False, blank=True, help_text='Статталон недействителен')
 
+    @property
+    def date_local(self):
+        return localtime(self.date)
 
     def can_invalidate(self):
         rt = SettingManager.get("ticket_invalidate_time_min", default='1440.0', default_type='f') * 60

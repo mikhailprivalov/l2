@@ -9,13 +9,16 @@
         <div style="height: 100%;width: 100%;display: flex;flex-direction: row; justify-content: space-between;align-items:center">
             <div class="logo">L<sup>2</sup></div>
             <div style="text-align: center;flex-basis: 25%">
-                <label><input id="split" type="checkbox"> Результаты на отдельных страницах</label>
+                <label><input id="split" type="checkbox"> На отдельных страницах</label>
             </div>
             <div style="text-align: center;flex-basis: 20%">
                 <label><input id="margin" type="checkbox"> Большой отступ слева</label>
             </div>
             <div style="text-align: center;flex-basis: 20%">
-                <label><input id="protocol_plain_text" type="checkbox"> Описание сплошным текстом</label>
+                <label><input id="protocol_plain_text" type="checkbox"> Сплошным текстом</label>
+            </div>
+            <div style="text-align: center;flex-basis: 20%">
+                <label><input id="sick_list" type="checkbox"> ЛН</label>
             </div>
             <div style="text-align: right;flex-basis: 20%">
                 <button type="button" class="btn btn-blue-nb" onclick="updatePreview();">Обновить</button>
@@ -61,6 +64,14 @@
             } else {
                 $("#protocol_plain_text").prop("checked", JSON.parse(localStorage.getItem("print_results_protocol_plain_text")));
             }
+
+            if(!localStorage.getItem("print_results_sick_list")){
+                $("#sick_list").prop("checked", false);
+                localStorage.setItem("print_results_sick_list", "false");
+            } else {
+                $("#sick_list").prop("checked", JSON.parse(localStorage.getItem("print_results_sick_list")));
+            }
+
             updatePreview();
         });
         function get_url(inline){
@@ -70,7 +81,10 @@
             localStorage.setItem("print_results_margin", margin + "");
             let protocol_plain_text = $("#protocol_plain_text").is(":checked");
             localStorage.setItem("print_results_protocol_plain_text", protocol_plain_text + "");
-            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}`;
+            let sick_list = $("#sick_list").is(":checked");
+            localStorage.setItem("print_results_sick_list", sick_list + "");
+
+            return `/results/pdf?pk=${JSON.stringify(pks)}&split=${split? 1 : 0}&leftnone=${margin? 0 : 1}&inline=${inline? 1: 0}&protocol_plain_text=${protocol_plain_text? 1: 0}&sick_list=${sick_list? 1: 0}`;
         }
         function updatePreview(){
             PDFObject.embed(get_url(true), '#previewContainer')
