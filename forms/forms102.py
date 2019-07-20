@@ -88,7 +88,6 @@ def form_01(request_data):
     exec_person = request_data['user'].doctorprofile.fio
 
     patient_data = ind_card.get_data_individual()
-
     agent_status = None
     p_agent = None
     if ind_card.who_is_agent:
@@ -322,7 +321,7 @@ def form_01(request_data):
 
     if p_agent:
         client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
-        objs.append( Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
+        objs.append(Paragraph('<font fontname ="PTAstraSerifBold"> {}: </font> {} ({} {}), дата рождения {} г., '
           'паспорт: {}-{} '
           'выдан {} г. '
           'кем: {} '
@@ -760,7 +759,6 @@ def form_01(request_data):
     if npf != p_npf:
         qr_value = protect_code + ',' + npf + '-' +p_npf + '(' + qr_napr + ')' + protect_val
 
-
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont("PTAstraSerifReg", 9)
@@ -802,6 +800,7 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg',5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
 
+
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -828,11 +827,13 @@ def form_01(request_data):
         canvas.setFont('PTAstraSerifReg', 8)
         canvas.drawString(50 * mm, 7 * mm, '(подпись сотрудника)')
         canvas.drawString(160 * mm, 7 * mm, '(подпись плательщика)')
-
         canvas.rotate(90)
         canvas.setFillColor(HexColor(0x4f4b4b))
         canvas.setFont('PTAstraSerifReg',5.2)
         canvas.drawString(10 * mm, -12 * mm, '{}'.format(6 * left_size_str))
+
+
+
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)

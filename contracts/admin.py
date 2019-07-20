@@ -8,6 +8,7 @@ class ResPriceCoast(admin.ModelAdmin):
     list_display = ('price_name','research', 'internal_code', 'coast','status',)
     list_display_links = ('price_name','research', 'internal_code', 'coast',)
     search_fields = ('research__internal_code', 'research__title')
+    ordering = ('research__internal_code',)
 
     def status(self, obj):
         return obj.price_name.status()
@@ -16,6 +17,7 @@ class ResPriceCoast(admin.ModelAdmin):
 
     def internal_code(self, obj):
         return obj.research.internal_code
+
 
 class ResCompany(admin.ModelAdmin):
     list_filter = ('active_status','contract__price',)

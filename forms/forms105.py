@@ -183,7 +183,6 @@ def form_01(request_data):
         ]))
         tbl.wrapOn(canvas, width, height)
         tbl.drawOn(canvas, 30, 530)
-
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=later_pages, onLaterPages=later_pages, )

@@ -4,7 +4,6 @@ from directory.models import Researches
 from copy import deepcopy
 from collections import OrderedDict
 from django.db.models import Q
-import datetime
 from laboratory import utils
 from decimal import Decimal
 
