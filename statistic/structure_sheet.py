@@ -441,3 +441,41 @@ def inderect_job_data(ws1, indirect_job, i_obj, d1, d2):
             ws1.cell(row=r, column=2).value = k_job
             ws1.cell(row=r, column=3).value = v_job
 
+
+def statistic_research_structure(ws1):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.column_dimensions[get_column_letter(1)].width = 30
+    ws1.cell(row=1, column=1).value = 'Физлицо'
+    ws1.column_dimensions[get_column_letter(2)].width = 15
+    ws1.cell(row=1, column=2).value = 'Дата рождения'
+    ws1.column_dimensions[get_column_letter(3)].width = 8
+    ws1.cell(row=1, column=3).value = 'Возраст'
+    ws1.column_dimensions[get_column_letter(4)].width = 20
+    ws1.cell(row=1, column=4).value = 'Карта'
+    ws1.column_dimensions[get_column_letter(5)].width = 30
+    ws1.cell(row=1, column=5).value = 'Исследование'
+    ws1.column_dimensions[get_column_letter(6)].width = 11
+    ws1.cell(row=1, column=6).value = 'Источник'
+    ws1.column_dimensions[get_column_letter(7)].width = 20
+    ws1.cell(row=1, column=7).value = 'Стоимость'
+
+    ws1.column_dimensions[get_column_letter(8)].width = 20
+    ws1.cell(row=1, column=8).value = 'Исполнитель'
+    ws1.column_dimensions[get_column_letter(9)].width = 16
+    ws1.cell(row=1, column=9).value = 'Направление, создано(дата)'
+    ws1.column_dimensions[get_column_letter(10)].width = 16
+    ws1.cell(row=1, column=10).value = 'Дата подтверждения'
+    ws1.column_dimensions[get_column_letter(11)].width = 16
+    ws1.cell(row=1, column=11).value = 'Время подтверждения'
+
+    rows = ws1[f'A{1}:K{1}']
+    for row in rows:
+        for cell in row:
+            cell.style = style_border
+
+    return ws1
