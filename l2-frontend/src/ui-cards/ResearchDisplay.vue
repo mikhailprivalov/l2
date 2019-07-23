@@ -1,8 +1,12 @@
 <template>
   <div class="root-c" @click.left="remove"
-       :title="title" v-tippy="{ placement : 'bottom', arrow: true }"
+       :title="`${title}, ${count} шт.`" v-tippy="{ placement : 'bottom', arrow: true }"
        @click.right.prevent="update_comment">
-    <div class="root-in">{{title}}<span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span></div>
+    <div class="root-in">
+      {{title}}
+      <span class="count" v-if="count > 1">(x{{count}})</span>
+      <span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span>
+    </div>
     <div v-if="n + 1 < nof" class="root-div"></div>
   </div>
 </template>
@@ -34,6 +38,10 @@
       simple: {
         type: Boolean,
         default: false,
+      },
+      count: {
+        type: Number,
+        default: 1,
       }
     },
     methods: {
@@ -86,6 +94,12 @@
   .comment {
     margin-left: 3px;
     color: #049372;
+    font-weight: 600;
+  }
+
+  .count {
+    margin-left: 3px;
+    color: #932a04;
     font-weight: 600;
   }
 </style>

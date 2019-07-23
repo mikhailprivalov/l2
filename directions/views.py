@@ -461,6 +461,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
 
     for v in issledovaniya:
         values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
+                       "count": v.how_many,
                        "comment": v.comment,
                        "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                        "info": v.research.paraclinic_info})
@@ -507,7 +508,13 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             pg = p.page(pg_num)
             tmp = []
             for obj in pg.object_list:
-                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '">' + obj["title"] + ("" if not obj["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(obj["comment"])) + "</font>",
+                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '">' + obj["title"]
+                                     + ("" if not obj["count"] or obj["count"] == 1
+                                        else" ({}шт.)".format(str(obj["count"]))) +
+                                     ("" if not obj["comment"]
+                                      else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) +
+                                           "\">[{}]</font>".format(obj["comment"]))
+                                     + "</font>",
                                      styleSheet["BodyText"]))
             if len(pg.object_list) < 2:
                 tmp.append(

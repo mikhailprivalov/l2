@@ -435,10 +435,11 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
-                                          count=1, discount=0, parent_iss=None, rmis_slot=None):
+                                          count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None):
 
         #импорт для получения прайса и цены по услугам
-        from forms import forms_func
+        if counts is None:
+            counts = {}
 
         if rmis_data is None:
             rmis_data = {}
@@ -536,13 +537,15 @@ class Napravleniya(models.Model):
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
 
-
                     discount_end = discount
                     if research.prior_discount:
                         discount_end = research.def_discount
 
                     research_discount = discount_end * -1
-                    research_howmany = count
+                    research_howmany = int(counts.get(str(research.pk), 1))
+
+                    if research_howmany == 1:
+                        research_howmany = count
 
                     issledovaniye = Issledovaniya(napravleniye=directions_for_researches[dir_group],
                                                   research=research, coast=research_coast, discount=research_discount,

@@ -10,7 +10,7 @@
             <button type="button" class="close" v-show="!noClose" @click="$emit('close')">&times;</button>
           </h3>
         </div>
-        <div class="panel-body" :class="{white_bg: whiteBg === 'true'}">
+        <div class="panel-body" :class="{white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true'}">
           <slot name="body">
             default body
           </slot>
@@ -34,6 +34,10 @@
         default: 'false',
       },
       'white-bg': {
+        required: false,
+        default: 'false',
+      },
+      'overflow-unset': {
         required: false,
         default: 'false',
       },
@@ -103,5 +107,9 @@
   .panel-body {
     overflow-y: auto;
     overflow-x: hidden;
+  }
+
+  .panel-body.overflowUnset {
+    overflow: unset;
   }
 </style>
