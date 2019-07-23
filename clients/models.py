@@ -7,6 +7,7 @@ from django.core.management.base import OutputWrapper
 from django.db import models
 
 import slog.models as slog
+from appconf.manager import SettingManager
 from laboratory.utils import localtime
 from users.models import Speciality, DoctorProfile
 
@@ -43,6 +44,8 @@ class Individual(models.Model):
         b.delete()
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
+        if not SettingManager.get("rmis_enabled", default='false', default_type='b'):
+            return
         if self.primary_for_rmis:
             self.reverse_sync()
             return
@@ -684,6 +687,7 @@ class Card(models.Model):
     def add_phone(self, t: str):
         if not t:
             return
+        t = t[:20]
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
 
