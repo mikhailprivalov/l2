@@ -684,6 +684,7 @@ class Card(models.Model):
     def add_phone(self, t: str):
         if not t:
             return
+        t = t[:20]
         p, created = Phones.objects.get_or_create(card=self, number=t)
         p.normalize_number()
 
