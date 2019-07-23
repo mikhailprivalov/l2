@@ -37,7 +37,7 @@
               <research-display v-for="(res, idx) in row.researches" :simple="simple"
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :kk="kk"
-                                :nof="row.researches.length" :comment="comments[res.pk]"/>
+                                :nof="row.researches.length" :comment="comments[res.pk]" :count="counts[res.pk]"/>
           </td>
           <td v-if="!readonly" class="cl-td">
             <button class="btn last btn-blue-nb nbr" type="button"
@@ -82,22 +82,36 @@
     </div>
 
     <modal ref="modal" @close="cancel_update" show-footer="true"
+           overflow-unset="true"
            v-show="need_update_comment.length > 0 && !hide_window_update && !simple">
-      <span slot="header">Настройка коментариев для биоматериала</span>
-      <div slot="body">
+      <span slot="header">Настройка назначений</span>
+      <div slot="body" class="overflow-unset">
         <table class="table table-bordered table-responsive"
                style="margin-bottom: 0;width:auto;table-layout: fixed;background-color: #fff">
           <colgroup>
             <col width="300">
             <col width="300">
+            <col width="60">
           </colgroup>
+          <thead>
+            <tr>
+              <th>Назначение</th>
+              <th>Комментарий</th>
+              <th>Количество</th>
+            </tr>
+          </thead>
           <tbody>
           <tr v-for="row in need_update_object">
             <td>
               <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}}</div>
             </td>
             <td>
-              <v-select :options="row.options" taggable v-model="comments[row.pk]"/>
+              <v-select :options="row.options" taggable v-model="comments[row.pk]">
+                <div slot="no-options">Нет вариантов по умолчанию</div>
+              </v-select>
+            </td>
+            <td>
+              <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]" />
             </td>
           </tr>
           </tbody>
@@ -185,6 +199,7 @@
         diagnos: '',
         fin: -1,
         comments: {},
+        counts: {},
         need_update_comment: [],
         hide_window_update: false,
         delayTime: 300,
@@ -210,25 +225,29 @@
         this.fin = -1
       },
       researches() {
-        let c = {}
+        let comments = {}
+        let counts = {}
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         for (let pk of this.researches) {
           if (Object.keys(this.comments).indexOf(pk.toString()) === -1) {
-            c[pk] = ''
+            comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
               if (res.comment_variants.length > 0) {
-                c[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
+                comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
               }
               if (res.comment_variants.length > 1) {
                 this.need_update_comment.push(pk)
               }
             }
+            counts[pk] = 1
           } else {
-            c[pk] = this.comments[pk]
+            comments[pk] = this.comments[pk]
+            counts[pk] = this.counts[pk]
           }
         }
-        this.comments = c
+        this.comments = comments
+        this.counts = counts
       },
       need_update_comment() {
         if (this.need_update_comment.length > 0 && this.hide_window_update) {
@@ -375,6 +394,7 @@
           ofname: this.ofname,
           history_num: this.history_num,
           comments: this.comments,
+          counts: this.counts,
           vich_code: this.need_vich_code ? this.vich_code : '',
           count: this.count,
           discount: this.discount,

@@ -28,6 +28,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
+from collections import OrderedDict
 
 
 @login_required
@@ -450,6 +451,7 @@ def result_print(request):
 
     split = request.GET.get("split", "1") == "1"
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
+    sick_document = request.GET.get("sick_list", "0") == "1"
 
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
     from reportlab.platypus.flowables import HRFlowable
@@ -598,6 +600,7 @@ def result_print(request):
                 date_t = strdate(iss.tubes.first().time_get)
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
+                not_lab = True
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
@@ -1145,8 +1148,12 @@ def result_print(request):
                 else:
                     fwb.append(Paragraph("Услуга: " + iss.research.title, styleBold))
                 if not protocol_plain_text:
+                    sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
                             "order"):
+                        sick_title = True if group.title == "Сведения ЛН" else False
+                        if sick_title:
+                            sick_result = collections.OrderedDict()
                         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
                             value="").order_by("field__order")
                         group_title = False
@@ -1168,10 +1175,17 @@ def result_print(request):
                                         style_ml if group_title else style))
                                 else:
                                     fwb.append(Paragraph(v, style))
+                                #чтобы вывести в будущем дополнительно сведения о листке нетрудоспособности (квиток, талон, корешок)
+                                if sick_title:
+                                    sick_result[r.field.title] = v
                 else:
                     txt = ""
+                    sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
                             "order"):
+                        sick_title = True if group.title == "Сведения ЛН" else False
+                        if sick_title:
+                            sick_result = collections.OrderedDict()
                         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
                             value="").order_by("field__order")
                         if results.exists():
@@ -1188,12 +1202,16 @@ def result_print(request):
                                     vals.append("{}:&nbsp;{}".format(r.field.title, v))
                                 else:
                                     vals.append(v)
+                                if sick_title:
+                                    sick_result[r.field.title] = v
+
                             txt += "; ".join(vals)
                             txt = txt.strip()
                             if len(txt) > 0 and txt.strip()[-1] != ".":
                                 txt += ". "
                             elif len(txt) > 0:
                                 txt += " "
+
 
                     fwb.append(Paragraph(txt, style))
                 fwb.append(Spacer(1, 2.5 * mm))
@@ -1242,7 +1260,19 @@ def result_print(request):
                         fwb.append(Spacer(1, 3.5 * mm))
                         fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
 
-                fwb.append(Spacer(1, 2.5 * mm))
+                    fwb.append(Spacer(1, 2.5 * mm))
+                if sick_document and sick_result:
+                    fwb.append(
+                        HRFlowable(width=pw, thickness=0.3, spaceAfter=3 * mm, spaceBefore=9 * mm, color=colors.black,
+                                   dash=[4, 4]))
+                    fwb.append(Spacer(1, 3 * mm))
+                    fwb.append(Paragraph('<u>Талон для получения "Листа нетрудоспособности"</u>', style))
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph('ФИО: {}'.format(direction.client.individual.fio()), style))
+                    fwb.append(Paragraph('Дата рождения: {}'.format(direction.client.individual.birthday), style))
+                    fwb.append(Paragraph('Диагноз: {}'.format(iss.diagnos), style))
+                    for sick_key, sick_val in sick_result.items():
+                        fwb.append(Paragraph('{}: {}'.format(sick_key, sick_val), style))
 
         if client_prev == direction.client.individual_id and not split:
             naprs.append(HRFlowable(width=pw, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.lightgrey))
@@ -1267,11 +1297,11 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
+
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-
         canvas.restoreState()
 
     def later_pages(canvas, document):
@@ -1283,7 +1313,6 @@ def result_print(request):
         canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
-        canvas.restoreState()
 
     if len(pk) == 1:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)

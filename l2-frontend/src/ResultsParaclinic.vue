@@ -180,7 +180,7 @@
                         @clickout="hide_results">
                 <a style="font-weight: normal"
                    href="#" @click.prevent="open_results(row.pk)">
-                  (другие результаты пациента)
+                  (другие результаты)
                 </a>
                 <div class="results-history" slot="dropdown">
                   <ul>
@@ -217,10 +217,12 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field"
+                <longpress v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10"
+                           class="btn btn-default btn-field"
                            :on-confirm="clear_val" :confirm-time="0"
                            :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
-                <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
+                <div v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10"
+                     class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
                       <div class="inner-wrap">
@@ -248,6 +250,16 @@
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
                   <input v-model="field.value" class="form-control" :readonly="true" />
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 10">
+                  <select v-model="field.value" class="form-control fw" :disabled="row.confirmed">
+                    <option :value="''">
+                      Не выбрано
+                    </option>
+                    <option :value="val" v-for="val in field.values_to_input">
+                      {{val}}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1377,7 +1389,9 @@
     }
     select {
       width: 100%;
-      max-width: 370px;
+      &:not(.fw) {
+        max-width: 370px;
+      }
     }
     input[type="checkbox"] {
       margin-top: 8px;
