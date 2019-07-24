@@ -172,6 +172,18 @@
       }
     },
     created() {
+      this.$store.watch(state => state.templates, (oldValue, newValue) => {
+        this.check_template()
+      })
+
+      this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
+        this.checkType()
+      })
+
+      this.$store.watch(state => state.templates, (oldValue, newValue) => {
+        this.check_template()
+      })
+
       if (!this.$store.getters.okDep || Object.keys(this.$store.getters.researches).length === 0) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
@@ -184,18 +196,6 @@
         this.$store.dispatch(action_types.GET_RESEARCHES).then().finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()
         })
-
-        if (this.types.length === 0) {
-          this.$store.watch(state => state.allTypes, (oldValue, newValue) => {
-            this.checkType()
-          })
-        }
-
-        if (this.templates.length === 0) {
-          this.$store.watch(state => state.templates, (oldValue, newValue) => {
-            this.check_template()
-          })
-        }
       }
 
       this.checkType()
@@ -205,11 +205,17 @@
         this.checked_researches = this.value
       }
     },
-    mounted() {
+    async mounted() {
       this.$root.$on('researches-picker:deselect' + this.kk, this.deselect_research_ignore)
       this.$root.$on('researches-picker:deselect_department' + this.kk, this.deselect_department)
       this.$root.$on('researches-picker:deselect_all' + this.kk, this.clear)
       this.$root.$on('researches-picker:add_research' + this.kk, this.select_research_ignore)
+
+      if (this.templates.length === 0) {
+        await this.$store.dispatch(action_types.INC_LOADING)
+        await this.$store.dispatch(action_types.GET_TEMPLATES)
+        await this.$store.dispatch(action_types.DEC_LOADING)
+      }
     },
     watch: {
       value(v) {
@@ -315,6 +321,9 @@
       },
     },
     methods: {
+      load_templates() {
+
+      },
       researches_dep_display(dep=this.dep) {
         let r = [];
         if(this.rev_t === -2) {
