@@ -195,7 +195,13 @@
               </dropdown>
             </div>
             <div class="research-right" v-if="!row.confirmed">
-              <button class="btn btn-blue-nb" @click="clear_vals(row)">Очистить</button>
+              <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
+                      title="Сохранить без подтверждения" v-tippy>
+                &nbsp;<i class="fa fa-save"></i>&nbsp;
+              </button>
+              <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                &nbsp;<i class="fa fa-times"></i>&nbsp;
+              </button>
               <div class="right-f" v-if="fte">
                 <select-picker-m v-model="templates[row.pk]"
                                  :search="true"
