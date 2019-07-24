@@ -45,7 +45,7 @@ class Individual(models.Model):
 
     def sync_with_rmis(self, out: OutputWrapper = None, c=None):
         if not SettingManager.get("rmis_enabled", default='false', default_type='b') or \
-                not CardBase.objects.filter(is_rmis=True, hide=False).exists():
+                not CardBase.objects.filter(is_rmis=True).exists():
             return
         if self.primary_for_rmis:
             self.reverse_sync()

@@ -603,7 +603,7 @@ class Patients(BaseRequester):
 
     @staticmethod
     def create_rmis_card(individual: clients_models.Individual, get_id: str):
-        base = clients_models.CardBase.objects.filter(is_rmis=True, hide=False).first()
+        base = clients_models.CardBase.objects.filter(is_rmis=True).first()
         if not clients_models.Card.objects.filter(base=base, number=get_id, is_archive=False).exists():
             for cm in clients_models.Card.objects.filter(base=base, individual=individual):
                 cm.is_archive = True
