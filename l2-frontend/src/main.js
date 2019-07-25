@@ -131,8 +131,9 @@ new Vue({
 
     this.$root.$on('generate-directions', ({
                                              type, card_pk, fin_source_pk, diagnos, base,
-                                             researches, operator, ofname, history_num, comments, for_rmis,
-                                             rmis_data, callback, vich_code, count, discount, need_contract,
+                                             researches, operator, ofname, history_num, comments,
+                                             counts, for_rmis, rmis_data, callback, vich_code, count,
+                                             discount, need_contract,
                                              parent_iss=null, kk='',
                                            }) => {
       if (card_pk === -1) {
@@ -155,7 +156,7 @@ new Vue({
         history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
       directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches,
-        comments, for_rmis, rmis_data, vich_code, count, discount, parent_iss).then(data => {
+        comments, for_rmis, rmis_data, vich_code, count, discount, parent_iss, counts).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 
         if (data.ok) {

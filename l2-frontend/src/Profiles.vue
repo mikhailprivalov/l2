@@ -63,6 +63,17 @@
                     <i class="fa fa-dot-circle-o"></i>
                   </button>
                 </div>
+                <div class="input-group-btn" v-if="user.doc_pk > -1">
+                  <a :href="`/barcodes/login?pk=${user.doc_pk}`"
+                     target="_blank"
+                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
+                     title="Штрих-код для входа"
+                     type="button"
+                     style="border-radius: 0"
+                     v-tippy="{ placement : 'bottom', arrow: true }">
+                    <i class="fa fa-barcode"></i>
+                  </a>
+                </div>
               </div>
             </div>
             <div class="col-xs-6" style="padding-left: 0">
@@ -167,6 +178,7 @@
         user: {
           username: '',
           rmis_location: '',
+          doc_pk: -1,
         },
         open_pk: -2,
       }

@@ -37,7 +37,8 @@ def statistic_page(request):
     podrs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT)  # Подлазделения
     getters_material = DoctorProfile.objects.filter(user__groups__name='Заборщик биоматериала').distinct()
     statistics_tickets_users = DoctorProfile.objects.filter(user__groups__name__in=['Оформление статталонов',
-                                                                                    'Лечащий врач']).distinct()
+                                                                                    'Лечащий врач', 'Лаборант',
+                                                                                    'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
     statistics_researches_res = Researches.objects.all().filter(hide=False).order_by('title')
 

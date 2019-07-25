@@ -195,7 +195,13 @@
               </dropdown>
             </div>
             <div class="research-right" v-if="!row.confirmed">
-              <button class="btn btn-blue-nb" @click="clear_vals(row)">Очистить</button>
+              <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
+                      title="Сохранить без подтверждения" v-tippy>
+                &nbsp;<i class="fa fa-save"></i>&nbsp;
+              </button>
+              <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                &nbsp;<i class="fa fa-times"></i>&nbsp;
+              </button>
               <div class="right-f" v-if="fte">
                 <select-picker-m v-model="templates[row.pk]"
                                  :search="true"
@@ -217,10 +223,12 @@
                 <div v-if="field.title !== ''" class="field-title">
                   {{field.title}}
                 </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3" class="btn btn-default btn-field"
+                <longpress v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10"
+                           class="btn btn-default btn-field"
                            :on-confirm="clear_val" :confirm-time="0"
                            :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
-                <div v-if="field.values_to_input.length > 0 && !row.confirmed" class="field-inputs">
+                <div v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10"
+                     class="field-inputs">
                   <div class="input-values-wrap">
                     <div class="input-values">
                       <div class="inner-wrap">
@@ -248,6 +256,16 @@
                 </div>
                 <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
                   <input v-model="field.value" class="form-control" :readonly="true" />
+                </div>
+                <div class="field-value" v-else-if="field.field_type === 10">
+                  <select v-model="field.value" class="form-control fw" :disabled="row.confirmed">
+                    <option :value="''">
+                      Не выбрано
+                    </option>
+                    <option :value="val" v-for="val in field.values_to_input">
+                      {{val}}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1377,7 +1395,9 @@
     }
     select {
       width: 100%;
-      max-width: 370px;
+      &:not(.fw) {
+        max-width: 370px;
+      }
     }
     input[type="checkbox"] {
       margin-top: 8px;
