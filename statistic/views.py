@@ -564,6 +564,11 @@ def statistic_xls(request):
             d2 = datetime.date(int(data_date['year']),month_obj, num_days)
 
         type_fin = request_data.get("fin")
+        title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
+        if title_fin.title == 'ОМС' and title_fin.base.title == 'L2':
+            can_null = 1
+        else:
+            can_null = 0
         users_o = json.loads(user_o)
         us_o = None
         if users_o != -1:
@@ -582,7 +587,7 @@ def statistic_xls(request):
         if us_o:
             for i in us_o:
                 if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
-                    res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin)
+                    res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin, can_null)
                     res_job = sql_func.indirect_job_sql(i.pk, start_date, end_date)
                     if res_job:
                         ws = wb.create_sheet(f'{i.get_fio()}-Косвенные')
@@ -668,7 +673,7 @@ def statistic_xls(request):
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         # pk = request_data.get("pk", "")
-        pk = request_data.get("department")
+        pk = request_data.get("research")
         pk = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)

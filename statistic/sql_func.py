@@ -2,7 +2,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE
 
 
-def direct_job_sql(d_conf, d_s, d_e, fin):
+def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
     """
     парам: d_conf - doctor_confirm, d_s - date-start,  d_e - date-end,  fin - источник финансирвоания
 
@@ -45,7 +45,13 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
             AND time_confirmation BETWEEN %(d_start)s AND %(d_end)s
-            AND directions_napravleniya.istochnik_f_id=%(ist_fin)s
+            AND 
+            CASE when %(can_null)s = 1 THEN 
+            directions_napravleniya.istochnik_f_id = %(ist_fin)s or directions_napravleniya.istochnik_f_id is NULL
+            when %(can_null)s = 0 THEN
+            directions_napravleniya.istochnik_f_id = %(ist_fin)s
+            END 
+            
             ORDER BY datetime_confirm),
         t_card AS 
             (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS card_number, 
@@ -62,7 +68,7 @@ def direct_job_sql(d_conf, d_s, d_e, fin):
         def_uet, co_executor_id, co_executor_uet, co_executor2_id, co_executor2_uet, datetime_confirm, date_confirm, time_confirm,
         maybe_onco, purpose, diagnos, iss_result, outcome, card_number, client_family, client_name, client_patronymic, birthday FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
-        ORDER BY datetime_confirm""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin, 'tz': TIME_ZONE})
+        ORDER BY datetime_confirm""",params={'d_confirms':d_conf, 'd_start':d_s, 'd_end':d_e, 'ist_fin':fin, 'can_null':can_null, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row

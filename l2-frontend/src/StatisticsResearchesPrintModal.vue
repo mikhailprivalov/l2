@@ -12,8 +12,8 @@
               <date-selector :date_type.sync="date_type" :values.sync="values"/>
             </div>
             <div class="col-xs-7">
-              <div v-if="deps_list.length > 0">
-                <select-picker :val="dep" :options="deps_list" :func="change_dep"/>
+              <div v-if="researches_list.length > 0">
+                <select-picker :val="research" :options="researches_list" :func="change_research"/>
               </div>
             </div>
           </div>
@@ -23,7 +23,7 @@
             <div class="col-xs-3"></div>
             <div class="col-xs-6">
               <button type="button" @click="make_report"
-                      :disabled="(user === '-1' || user === '') && dep === '-1'"
+                      :disabled="(user === '-1' || user === '') && research === '-1'"
                       class="btn btn-primary-nb btn-blue-nb2">
                 Печать
               </button>
@@ -49,7 +49,7 @@
       SelectPicker
     },
     props: {
-      deps: {
+      researches: {
         type: Array,
         required: false,
         default() {
@@ -65,31 +65,30 @@
           month: '',
           year: ''
         },
-        dep: '-1',
+        research: '-1',
       }
     },
     computed: {
-      deps_list() {
+      researches_list() {
         let u = []
-        for (let u_row of this.deps) {
+        for (let u_row of this.researches) {
           u.push({value: u_row.pk, label: u_row.title})
         }
         return u
       },
     },
     methods: {
-      change_dep(v) {
+      change_research(v) {
         if (!v) {
           v = ''
         }
         if (Array.isArray(v)) {
           v = v.join(',')
         }
-        this.dep = v
+        this.research = v
       },
       make_report() {
-        // window.open(`/statistic/xls?type=statistics-tickets-print&user=${this.selected_users}&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
-        window.open(`/statistic/xls?type=statistics-research&department=${this.dep}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
+        window.open(`/statistic/xls?type=statistics-research&research=${this.research}&date_type=${this.date_type}&date_values=${encodeURIComponent(JSON.stringify(this.values))}&fin=${this.fin}`, '_blank')
       }
     },
   }
