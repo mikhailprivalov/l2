@@ -442,40 +442,102 @@ def inderect_job_data(ws1, indirect_job, i_obj, d1, d2):
             ws1.cell(row=r, column=3).value = v_job
 
 
-def statistic_research_structure(ws1):
+def statistic_research_base(ws1, d1, d2, research_titile):
     style_border = NamedStyle(name="style_border")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    ws1.column_dimensions[get_column_letter(1)].width = 30
-    ws1.cell(row=1, column=1).value = 'Физлицо'
+    ws1.cell(row=1, column=1).value = 'Услуга:'
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    ws1.column_dimensions[get_column_letter(1)].width = 26
+    ws1.cell(row=4, column=1).value = 'Исполнитель'
     ws1.column_dimensions[get_column_letter(2)].width = 15
-    ws1.cell(row=1, column=2).value = 'Дата рождения'
-    ws1.column_dimensions[get_column_letter(3)].width = 8
-    ws1.cell(row=1, column=3).value = 'Возраст'
-    ws1.column_dimensions[get_column_letter(4)].width = 20
-    ws1.cell(row=1, column=4).value = 'Карта'
-    ws1.column_dimensions[get_column_letter(5)].width = 30
-    ws1.cell(row=1, column=5).value = 'Исследование'
-    ws1.column_dimensions[get_column_letter(6)].width = 11
-    ws1.cell(row=1, column=6).value = 'Источник'
-    ws1.column_dimensions[get_column_letter(7)].width = 20
-    ws1.cell(row=1, column=7).value = 'Стоимость'
+    ws1.cell(row=4, column=2).value = 'Направление, за дату'
+    ws1.column_dimensions[get_column_letter(3)].width = 16.5
+    ws1.cell(row=4, column=3).value = 'Дата подтверждения'
+    ws1.column_dimensions[get_column_letter(4)].width = 16.5
+    ws1.cell(row=4, column=4).value = 'Время подтверждения'
+    ws1.column_dimensions[get_column_letter(5)].width = 10
+    ws1.cell(row=4, column=5).value = 'Источник'
+    ws1.column_dimensions[get_column_letter(6)].width = 10
+    ws1.cell(row=4, column=6).value = 'Цена'
+    ws1.column_dimensions[get_column_letter(7)].width = 7
+    ws1.cell(row=4, column=7).value = 'Кол-во'
+    ws1.column_dimensions[get_column_letter(8)].width = 7.5
+    ws1.cell(row=4, column=8).value = 'Скидка'
+    ws1.column_dimensions[get_column_letter(9)].width = 14
+    ws1.cell(row=4, column=9).value = 'Сумма'
+    ws1.column_dimensions[get_column_letter(10)].width = 26
+    ws1.cell(row=4, column=10).value = 'Физ.лицо'
+    ws1.column_dimensions[get_column_letter(11)].width = 12
+    ws1.cell(row=4, column=11).value = 'Дата рождения'
+    ws1.column_dimensions[get_column_letter(12)].width = 8
+    ws1.cell(row=4, column=12).value = 'Возраст'
+    ws1.column_dimensions[get_column_letter(13)].width = 15
+    ws1.cell(row=4, column=13).value = 'Карта'
 
-    ws1.column_dimensions[get_column_letter(8)].width = 20
-    ws1.cell(row=1, column=8).value = 'Исполнитель'
-    ws1.column_dimensions[get_column_letter(9)].width = 16
-    ws1.cell(row=1, column=9).value = 'Направление, создано(дата)'
-    ws1.column_dimensions[get_column_letter(10)].width = 16
-    ws1.cell(row=1, column=10).value = 'Дата подтверждения'
-    ws1.column_dimensions[get_column_letter(11)].width = 16
-    ws1.cell(row=1, column=11).value = 'Время подтверждения'
-
-    rows = ws1[f'A{1}:K{1}']
+    rows = ws1[f'A{4}:M{4}']
     for row in rows:
         for cell in row:
             cell.style = style_border
+
+    return ws1
+
+
+def statistic_research_data(ws1, researches):
+    """
+    res - результат выборки SQL
+    порядок возврата:
+    napr, date_confirm, time_confirm, create_date_napr, create_time_napr,
+    doc_fio, coast, discount, how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money,
+    ist_f, time_confirmation, num_card, ind_family, ind_name,
+    patronymic, birthday, date_born, to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+    for res in researches:
+        r += 1
+        current_doc = res[5]
+        current_napr = res[0]
+        current_napr_atcreate = res[3]
+        current_date_confirm = res[1]
+        current_time_confirm = res[2]
+        current_ist_f = res[10]
+        current_coast = res[6]
+        current_how_many = res[8]
+        current_discount = res[7]
+        current_price_total = res[9]
+        current_ind_fio = f'{res[13]} {res[14]} {res[15]}'
+        current_born = res[16]
+        current_age = res[18]
+        current_num_card = res[12]
+
+        ws1.cell(row=r, column=1).value = current_doc
+        ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
+        ws1.cell(row=r, column=3).value = current_date_confirm
+        ws1.cell(row=r, column=4).value = current_time_confirm
+        ws1.cell(row=r, column=5).value = current_ist_f
+        ws1.cell(row=r, column=6).value = current_coast
+        ws1.cell(row=r, column=7).value = current_how_many
+        ws1.cell(row=r, column=8).value = current_discount
+        ws1.cell(row=r, column=9).value = current_price_total
+        ws1.cell(row=r, column=10).value = current_ind_fio
+        ws1.cell(row=r, column=11).value = current_born
+        ws1.cell(row=r, column=12).value = current_age
+        ws1.cell(row=r, column=13).value = current_num_card
+
+        rows = ws1[f'A{r}:M{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
 
     return ws1

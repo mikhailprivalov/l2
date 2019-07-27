@@ -674,7 +674,7 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         # pk = request_data.get("pk", "")
         pk = request_data.get("research")
-        pk = int(pk)
+        research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
 
@@ -692,26 +692,13 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
-        ws = structure_sheet.statistic_research_structure(ws)
-
-        res_o = Researches.objects.get(pk=pk)
+        research_title = Researches.objects.values_list('title').get(pk=research_id)
+        ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        list_o = Issledovaniya.objects.select_related('napravleniye__client').filter(
-            time_confirmation__date__range=(start_date, end_date), research=res_o,
-                napravleniye__isnull=False).order_by('time_confirmation')
+        researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+        ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
-        r = 1
-        for i in list_o:
-            r = r + 1
-            patient_data = i.napravleniye.client.get_data_individual()
-            date_o = utils.strfdatetime(i.time_confirmation, "%d.%m.%Y")
-            ws.cell(row=r, column=1).value = patient_data['born']
-            ws.cell(row=r, column=2).value = patient_data['age']
-            ws.cell(row=r, column=3).value = patient_data['fio']
-            ws.cell(row=r, column=4).value = res_o.title
-            ws.cell(row=r, column=5).value = date_o
-            ws.cell(row=r, column=6).value = patient_data['card_num']
 
     elif tp == "journal-get-material":
         import datetime
