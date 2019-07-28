@@ -42,7 +42,8 @@ def directions_generate(request):
                                                             vich_code=p.get("vich_code", ""),
                                                             count=p.get("count", 1),
                                                             discount=p.get("discount", 0),
-                                                            parent_iss=p.get("parent_iss", None))
+                                                            parent_iss=p.get("parent_iss", None),
+                                                            counts=p.get("counts", {}))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:

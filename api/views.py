@@ -796,6 +796,7 @@ def user_view(request):
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
             "rmis_location": '',
+            "doc_pk": -1,
         }
     else:
         doc = users.DoctorProfile.objects.get(pk=pk)
@@ -810,6 +811,7 @@ def user_view(request):
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
             "rmis_location": doc.rmis_location or '',
+            "doc_pk": doc.user.pk,
         }
 
     return JsonResponse({"user": data})

@@ -40,6 +40,8 @@ def statistic_page(request):
                                                                                     'Лечащий врач', 'Лаборант',
                                                                                     'Врач-лаборант']).distinct()
     statistics_tickets_deps = Podrazdeleniya.objects.all().order_by('title')
+    statistics_researches_res = Researches.objects.all().filter(hide=False).order_by('title')
+
     return render(request, 'statistic.html', {"labs": labs, "tubes": tubes, "podrs": podrs,
                                               "getters_material": json.dumps(
                                                   [{"pk": str(x.pk), "fio": str(x)} for x in getters_material]),
@@ -50,7 +52,11 @@ def statistic_page(request):
                                               "statistics_tickets_deps": json.dumps(
                                                   [{"pk": -1, "title": 'Подразделение не выбрано'},
                                                    *[{"pk": str(x.pk), "title": x.title} for x in
-                                                    statistics_tickets_deps]])
+                                                    statistics_tickets_deps]]),
+                                              "statistics_researches_res": json.dumps(
+                                                  [{"pk": -1, "title": 'Услуга не выбрана'},
+                                                   *[{"pk": str(x.pk), "title": x.title} for x in
+                                                     statistics_researches_res]])
                                               })
 
 
@@ -558,6 +564,11 @@ def statistic_xls(request):
             d2 = datetime.date(int(data_date['year']),month_obj, num_days)
 
         type_fin = request_data.get("fin")
+        title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
+        if title_fin.title == 'ОМС' and title_fin.base.title == 'L2':
+            can_null = 1
+        else:
+            can_null = 0
         users_o = json.loads(user_o)
         us_o = None
         if users_o != -1:
@@ -576,7 +587,7 @@ def statistic_xls(request):
         if us_o:
             for i in us_o:
                 if i.is_member(["Лечащий врач", "Врач-лаборант", "Врач параклиники", "Лаборант", "Врач консультаций"]):
-                    res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin)
+                    res_oq = sql_func.direct_job_sql(i.pk, start_date, end_date, type_fin, can_null)
                     res_job = sql_func.indirect_job_sql(i.pk, start_date, end_date)
                     if res_job:
                         ws = wb.create_sheet(f'{i.get_fio()}-Косвенные')
@@ -589,7 +600,7 @@ def statistic_xls(request):
                             temp_dict = dict_job.get(key_date,{})
                             temp_dict.update({key_type_job : value_total})
                             dict_job[key_date] = temp_dict
-                        structure_sheet.inderect_job_data(ws, dict_job, i, d1, d2)
+                        structure_sheet.inderect_job_data(ws, dict_job)
 
                     # ws = structure(ws, i, res_oq, d1, d2, dict_job)
                     ws = wb.create_sheet(i.get_fio())
@@ -650,7 +661,6 @@ def statistic_xls(request):
         passed_oq = sql_func.passed_research(start_date, end_date)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        # ws = wb.create_sheet('Движение за ' + d_s)
         ws = wb.create_sheet(f'{d_s}-{d_e}')
         ws = structure_sheet.passed_research_base(ws, d_s)
         ws = structure_sheet.passed_research_data(ws, passed_oq)
@@ -660,58 +670,33 @@ def statistic_xls(request):
         return response
 
     elif tp == "statistics-research":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Статталоны.xlsx\"", tr)
-        pk = request_data.get("pk", "")
-        pk = int(pk)
-        date_start_o = request_data.get("date-start")
-        date_start_o = json.loads(date_start_o)
-        date_end_o = request_data.get("date-end")
-        date_end_o = json.loads(date_end_o)
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
+        pk = request_data.get("research")
+        research_id = int(pk)
+        data_date = request_data.get("date_values")
+        data_date = json.loads(data_date)
 
-        from openpyxl.styles import Font, NamedStyle
-        style_o = NamedStyle(name="style_o")
-        style_o.font = Font(bold=True, size=11)
+        import calendar
+        if request_data.get("date_type") == 'd':
+            d1 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+            d2 = datetime.datetime.strptime(data_date['date'], '%d.%m.%Y')
+            month_obj = ''
+        else:
+            month_obj = int(data_date['month']) + 1
+            _, num_days = calendar.monthrange(int(data_date['year']), month_obj)
+            d1 = datetime.date(int(data_date['year']), month_obj, 1)
+            d2 = datetime.date(int(data_date['year']),month_obj, num_days)
+
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        wb.add_named_style(style_o)
         ws = wb.create_sheet("Отчет")
-        from openpyxl.utils.cell import get_column_letter
-        ws.column_dimensions[get_column_letter(1)].width = 15
-        ws.cell(row=1, column=1).value = 'Дата рождения'
-        ws.cell(row=1, column=1).style = style_o
-        ws.column_dimensions[get_column_letter(2)].width = 8
-        ws.cell(row=1, column=2).value = 'Возраст'
-        ws.cell(row=1, column=2).style = style_o
-        ws.column_dimensions[get_column_letter(3)].width = 35
-        ws.cell(row=1, column=3).value = 'Физлицо'
-        ws.cell(row=1, column=3).style = style_o
-        ws.column_dimensions[get_column_letter(4)].width = 35
-        ws.cell(row=1, column=4).value = 'Исследование'
-        ws.cell(row=1, column=4).style = style_o
-        ws.column_dimensions[get_column_letter(5)].width = 35
-        ws.cell(row=1, column=5).value = 'Дата подтверждения'
-        ws.cell(row=1, column=5).style = style_o
-        ws.column_dimensions[get_column_letter(6)].width = 20
-        ws.cell(row=1, column=6).value = 'Карта'
-        ws.cell(row=1, column=6).style = style_o
+        research_title = Researches.objects.values_list('title').get(pk=research_id)
+        ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
+        ws = structure_sheet.statistic_research_data(ws, researches_sql)
 
-        res_o = Researches.objects.get(pk=pk)
-        d_s = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
-        d_e = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
-        list_o = Issledovaniya.objects.select_related('napravleniye__client').filter(time_confirmation__date__range=(d_s, d_e), research=res_o,
-                napravleniye__isnull=False).order_by('time_confirmation')
-
-        r = 1
-        for i in list_o:
-            r = r + 1
-            patient_data = i.napravleniye.client.get_data_individual()
-            date_o = utils.strfdatetime(i.time_confirmation, "%d.%m.%Y")
-            ws.cell(row=r, column=1).value = patient_data['born']
-            ws.cell(row=r, column=2).value = patient_data['age']
-            ws.cell(row=r, column=3).value = patient_data['fio']
-            ws.cell(row=r, column=4).value = res_o.title
-            ws.cell(row=r, column=5).value = date_o
-            ws.cell(row=r, column=6).value = patient_data['card_num']
 
     elif tp == "journal-get-material":
         import datetime

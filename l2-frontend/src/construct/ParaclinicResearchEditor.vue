@@ -103,10 +103,13 @@
                 <strong>Формула:</strong>
                 <input v-model="row.default" class="form-control"/>
               </div>
-              <v-collapse-wrapper v-show="row.field_type === 0">
+              <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10">
                 <div class="header" v-collapse-toggle>
-                  <a href="#" @click.prevent>
+                  <a href="#" @click.prevent v-if="row.field_type === 0">
                     Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
+                  </a>
+                  <a href="#" @click.prevent v-else>
+                    Варианты (кол-во: {{ row.values_to_input.length }})
                   </a>
                 </div>
                 <div class="my-content" v-collapse-content>
@@ -158,12 +161,12 @@
               </label>
               <label>
                 Тип поля:<br/>
-                <select v-model="row.field_type" class="form-control">
+                <select v-model.number="row.field_type" class="form-control">
                   <option value="0">Строка</option>
                   <option value="1">Дата</option>
                   <option value="2">Диагноз по МКБ</option>
                   <option value="3">Расчётное</option>
-                  <option value="9">Список значений</option>
+                  <option value="10">Справочник</option>
                 </select>
               </label>
             </div>
