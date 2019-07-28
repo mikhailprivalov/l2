@@ -36,6 +36,7 @@ new Vue({
   components: {
     'JournalGetMaterialModal': () => import('./JournalGetMaterialModal'),
     'StatisticsTicketsPrintModal': () => import('./StatisticsTicketsPrintModal'),
+    'StatisticsResearchesPrintModal': () => import('./StatisticsResearchesPrintModal'),
     'DepartmentsForm': () => import('./DepartmentsForm'),
     'Directions': () => import('./Directions'),
     'Cases': () => import('./pages/Cases'),

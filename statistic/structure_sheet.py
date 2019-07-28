@@ -70,51 +70,25 @@ def passed_research_base(ws1, data_date):
                                       'г.(мед.документация Ф№001/У утв. МИНЗДРАВОМ СССР 04.10.1980г. №1030)'
     ws1.cell(row=1, column=1).style = style_border
 
-    ws1.cell(row=2, column=1).value = '№ п/п'
-    #Время поступления - время создания направления
-    ws1.cell(row=2, column=2).value = 'Время поступления'
-    ws1.cell(row=2, column=3).value = 'Услуга (дата-время подтверждения)'
-    ws1.cell(row=2, column=4).value = 'Направление'
-    ws1.cell(row=2, column=5).value = 'Фамилия, имя, отчество больного'
-    ws1.cell(row=2, column=6).value = 'Дата рождения'
-    ws1.cell(row=2, column=7).value = 'Постоянное место жительства или адрес родственников, близких и N телефона'
-    ws1.cell(row=2, column=8).value = 'Каким учреждением был направлен или доставлен'
-    ws1.cell(row=2, column=9).value = 'Отделение, в которое помещен больной'
-    ws1.cell(row=2, column=10).value = 'N карты (стационарного) больного'
-    ws1.cell(row=2, column=11).value = 'Диагноз направившего учреждения'
-    ws1.cell(row=2, column=12).value = 'Диагноз при поступлении'
-    ws1.cell(row=2, column=13).value = '№ ДДУ'
-    ws1.cell(row=2, column=14).value = 'Полис'
-    ws1.cell(row=2, column=15).value = 'Примечания'
-    ws1.cell(row=2,
-             column=16).value = 'Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен'
-    ws1.cell(row=2, column=17).value = 'Отметка о сообщении родственникам или учреждению'
-    ws1.cell(row=2, column=18).value = 'Если не был госпитализирован указать причину и принятые меры '
-    ws1.cell(row=2, column=19).value = 'отказ в приеме первичный, повторный (вписать)'
-    for i in range(20):
-        ws1.cell(row=2, column=i + 1).style = style_border
-
     # габариты ячеек
     ws1.row_dimensions[2].height = 115
-    ws1.column_dimensions[get_column_letter(1)].width = 5
-    ws1.column_dimensions[get_column_letter(2)].width = 8
-    ws1.column_dimensions[get_column_letter(3)].width = 14
-    ws1.column_dimensions[get_column_letter(4)].width = 11
-    ws1.column_dimensions[get_column_letter(5)].width = 20
-    ws1.column_dimensions[get_column_letter(6)].width = 10
-    ws1.column_dimensions[get_column_letter(7)].width = 23
-    ws1.column_dimensions[get_column_letter(8)].width = 15
-    ws1.column_dimensions[get_column_letter(9)].width = 12
-    ws1.column_dimensions[get_column_letter(10)].width = 10
-    ws1.column_dimensions[get_column_letter(11)].width = 7
-    ws1.column_dimensions[get_column_letter(12)].width = 7
-    ws1.column_dimensions[get_column_letter(13)].width = 16
-    ws1.column_dimensions[get_column_letter(14)].width = 21
-    ws1.column_dimensions[get_column_letter(15)].width = 10
-    ws1.column_dimensions[get_column_letter(16)].width = 20
-    ws1.column_dimensions[get_column_letter(17)].width = 11
-    ws1.column_dimensions[get_column_letter(18)].width = 11
-    ws1.column_dimensions[get_column_letter(19)].width = 11
+    columns = [
+    ('№ п/п', 5), ('Время поступления', 8),
+    ('Услуга (дата-время подтверждения)', 14), ('Направление', 11),
+    ('Фамилия, имя, отчество больного', 20), ('Дата рождения', 10),
+    ('Постоянное место жительства или адрес родственников, близких и N телефона', 23),('Каким учреждением был направлен или доставлен', 15),
+    ('Отделение, в которое помещен больной', 12),('N карты (стационарного) больного', 10),
+    ('Диагноз направившего учреждения', 7),('Диагноз при поступлении', 7),
+    ('№ ДДУ', 16),('Полис', 21),
+    ('Примечания', 10),('Выписан, переведен в другой стационар, умер (вписать и указать дату и название стационара, куда переведен', 20),
+    ('Отметка о сообщении родственникам или учреждению', 11),('Если не был госпитализирован указать причину и принятые меры', 11),
+    ('отказ в приеме первичный, повторный (вписать)', 11)
+    ]
+
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=2, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=2, column=idx).style = style_border
 
     return ws1
 
@@ -171,7 +145,7 @@ def passed_research_data(ws1, data):
         ws1.cell(row=r, column=17).value = ' '
         ws1.cell(row=r, column=18).value = ' '
         ws1.cell(row=r, column=19).value = ' '
-        for j in range(1, 21):
+        for j in range(1, 20):
             ws1.cell(row=r, column=j).style = style_border1
 
     return ws1
@@ -180,29 +154,29 @@ def passed_research_data(ws1, data):
 def statistics_tickets_base(ws1, i_obj, type_fin, d1,d2):
     """
     Назначить ширину колонок. Вход worksheet выход worksheen с размерами
+    Заголовки данных
     """
-    ws1.column_dimensions[get_column_letter(1)].width = 13
-    ws1.column_dimensions[get_column_letter(2)].width = 7
-    ws1.column_dimensions[get_column_letter(3)].width = 15
-    ws1.column_dimensions[get_column_letter(4)].width = 9
-    ws1.column_dimensions[get_column_letter(5)].width = 31
-    ws1.column_dimensions[get_column_letter(6)].width = 13
-    ws1.column_dimensions[get_column_letter(7)].width = 12
-    ws1.column_dimensions[get_column_letter(8)].width = 27
-    ws1.column_dimensions[get_column_letter(9)].width = 16
-    ws1.column_dimensions[get_column_letter(10)].width = 12
-    ws1.column_dimensions[get_column_letter(11)].width = 18
-    ws1.column_dimensions[get_column_letter(12)].width = 13
-    ws1.column_dimensions[get_column_letter(13)].width = 12
-    ws1.column_dimensions[get_column_letter(14)].width = 13
-    ws1.column_dimensions[get_column_letter(15)].width = 13
-    ws1.column_dimensions[get_column_letter(16)].width = 13
-    ws1.column_dimensions[get_column_letter(17)].width = 13
-    ws1.column_dimensions[get_column_letter(18)].width = 13
-    ws1.column_dimensions[get_column_letter(19)].width = 13
-    ws1.column_dimensions[get_column_letter(20)].width = 13
-    ws1.column_dimensions[get_column_letter(21)].width = 13
-    ws1.column_dimensions[get_column_letter(22)].width = 13
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True)
+
+    columns = [
+        ('Дата',13), ('Кол-во', 7),
+        ('Услуга',15), ('Соисполнитель', 9),
+        ('ФИО пациента,\n№ направления',31), ('Дата рождения', 13),
+        ('№ карты',12), ('Данные полиса', 27),
+        ('Код услуги',16), ('Услуга \n (ует/мин)', 12),
+        ('Время \n подтверждения',18), ('Онкоподозрение', 13),
+        ('Первичный прием',12), ('Цель \n посещения\n(код)е', 13),
+        ('Диагноз \n МКБ',13), ('Впервые', 13),
+        ('Результат \n обращения \n(код)',13), ('Исход(код)', 13)
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=7, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=7, column=idx).style = style_border
 
     style_o = NamedStyle(name="style_o")
     style_o.font = Font(bold=True, size=11)
@@ -225,37 +199,6 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1,d2):
     ws1.cell(row=3, column=5).style = style_o
     fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
     ws1.cell(row=3, column=6).value = fin_obj[0]
-
-    # Заголовки данных
-    ws1.cell(row=7, column=1).value = 'Дата'
-    ws1.cell(row=7, column=2).value = 'Кол-во'
-    ws1.cell(row=7, column=3).value = 'Услуга'
-    ws1.cell(row=7, column=4).value = 'Соисполнитель'
-    ws1.cell(row=7, column=5).value = 'ФИО пациента,\n№ направления'
-    ws1.cell(row=7, column=6).value = 'Дата рождения'
-    ws1.cell(row=7, column=7).value = '№ карты'
-    ws1.cell(row=7, column=8).value = 'Данные полиса'
-    ws1.cell(row=7, column=9).value = 'Код услуги'
-    ws1.cell(row=7, column=10).value = 'Услуга \n (ует/мин)'
-    ws1.cell(row=7, column=11).value = 'Время \n подтверждения'
-    ws1.cell(row=7, column=12).value = 'Онкоподозрение'
-    ws1.cell(row=7, column=13).value = 'Первичный прием'
-    ws1.cell(row=7, column=14).value = 'Цель \n посещения\n(код)'
-    ws1.cell(row=7, column=15).value = 'Диагноз \n МКБ'
-    ws1.cell(row=7, column=16).value = 'Впервые'
-    ws1.cell(row=7, column=17).value = 'Результат \n обращения \n(код)'
-    ws1.cell(row=7, column=18).value = 'Исход(код)'
-    ws1.cell(row=7, column=19).value = 'Стоимость'
-
-    style_border = NamedStyle(name="style_border")
-    bd = Side(style='thin', color="000000")
-    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border.font = Font(bold=True, size=11)
-    style_border.alignment = Alignment(wrap_text=True)
-    rows = ws1[f'A{7}:V{7}']
-    for row in rows:
-        for cell in row:
-            cell.style = style_border
 
     return ws1
 
@@ -431,8 +374,7 @@ def inderect_job_base(ws1, doc_obj, d1, d2):
     return ws1
 
 
-def inderect_job_data(ws1, indirect_job, i_obj, d1, d2):
-
+def inderect_job_data(ws1, indirect_job):
     r = 4
     for k,v in indirect_job.items():
         for k_job, v_job in v.items():
@@ -441,3 +383,88 @@ def inderect_job_data(ws1, indirect_job, i_obj, d1, d2):
             ws1.cell(row=r, column=2).value = k_job
             ws1.cell(row=r, column=3).value = v_job
 
+    return ws1
+
+
+def statistic_research_base(ws1, d1, d2, research_titile):
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+
+    ws1.cell(row=1, column=1).value = 'Услуга:'
+    ws1.cell(row=1, column=2).value = research_titile
+    ws1.cell(row=2, column=1).value = 'Период:'
+    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+
+    columns = [
+        ('Исполнитель',26),('Направление, за дату',15),
+        ('Дата подтверждения',16.5),('Время подтверждения',16.5),
+        ('Источник',10),('Цена',10),
+        ('Кол-во',7),('Скидка',7.5),
+        ('Сумма',14),('Физлицо',26),
+        ('Дата рождения',12),('Возраст',8),
+        ('Карта',15)
+    ]
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=4, column=idx).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx)].width = column[1]
+        ws1.cell(row=4, column=idx).style = style_border
+
+    return ws1
+
+
+def statistic_research_data(ws1, researches):
+    """
+    res - результат выборки SQL
+    порядок возврата:
+    napr, date_confirm, time_confirm, create_date_napr, create_time_napr,
+    doc_fio, coast, discount, how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money,
+    ist_f, time_confirmation, num_card, ind_family, ind_name,
+    patronymic, birthday, date_born, to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age
+    :return:
+    """
+    style_border_res = NamedStyle(name="style_border_res")
+    bd = Side(style='thin', color="000000")
+    style_border_res.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border_res.font = Font(bold=False, size=11)
+    style_border_res.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    r = 4
+    for res in researches:
+        r += 1
+        current_doc = res[5]
+        current_napr = res[0]
+        current_napr_atcreate = res[3]
+        current_date_confirm = res[1]
+        current_time_confirm = res[2]
+        current_ist_f = res[10]
+        current_coast = res[6]
+        current_how_many = res[8]
+        current_discount = res[7]
+        current_price_total = res[9]
+        current_ind_fio = f'{res[13]} {res[14]} {res[15]}'
+        current_born = res[16]
+        current_age = res[18]
+        current_num_card = res[12]
+
+        ws1.cell(row=r, column=1).value = current_doc
+        ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
+        ws1.cell(row=r, column=3).value = current_date_confirm
+        ws1.cell(row=r, column=4).value = current_time_confirm
+        ws1.cell(row=r, column=5).value = current_ist_f
+        ws1.cell(row=r, column=6).value = current_coast
+        ws1.cell(row=r, column=7).value = current_how_many
+        ws1.cell(row=r, column=8).value = current_discount
+        ws1.cell(row=r, column=9).value = current_price_total
+        ws1.cell(row=r, column=10).value = current_ind_fio
+        ws1.cell(row=r, column=11).value = current_born
+        ws1.cell(row=r, column=12).value = current_age
+        ws1.cell(row=r, column=13).value = current_num_card
+
+        rows = ws1[f'A{r}:M{r}']
+        for row in rows:
+            for cell in row:
+                cell.style = style_border_res
+
+    return ws1
