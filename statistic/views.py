@@ -600,7 +600,7 @@ def statistic_xls(request):
                             temp_dict = dict_job.get(key_date,{})
                             temp_dict.update({key_type_job : value_total})
                             dict_job[key_date] = temp_dict
-                        structure_sheet.inderect_job_data(ws, dict_job, i, d1, d2)
+                        structure_sheet.inderect_job_data(ws, dict_job)
 
                     # ws = structure(ws, i, res_oq, d1, d2, dict_job)
                     ws = wb.create_sheet(i.get_fio())
@@ -661,7 +661,6 @@ def statistic_xls(request):
         passed_oq = sql_func.passed_research(start_date, end_date)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
-        # ws = wb.create_sheet('Движение за ' + d_s)
         ws = wb.create_sheet(f'{d_s}-{d_e}')
         ws = structure_sheet.passed_research_base(ws, d_s)
         ws = structure_sheet.passed_research_data(ws, passed_oq)
@@ -672,7 +671,6 @@ def statistic_xls(request):
 
     elif tp == "statistics-research":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
-        # pk = request_data.get("pk", "")
         pk = request_data.get("research")
         research_id = int(pk)
         data_date = request_data.get("date_values")
