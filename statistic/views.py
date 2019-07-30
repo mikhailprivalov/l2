@@ -580,6 +580,8 @@ def statistic_xls(request):
 
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
+        styles_obj = structure_sheet.style_sheet()
+        wb.add_named_style(styles_obj[0])
 
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
@@ -602,10 +604,9 @@ def statistic_xls(request):
                             dict_job[key_date] = temp_dict
                         structure_sheet.inderect_job_data(ws, dict_job)
 
-                    # ws = structure(ws, i, res_oq, d1, d2, dict_job)
                     ws = wb.create_sheet(i.get_fio())
-                    ws = structure_sheet.statistics_tickets_base(ws, i, type_fin, d1, d2)
-                    ws = structure_sheet.statistics_tickets_data(ws, res_oq, i)
+                    ws = structure_sheet.statistics_tickets_base(ws, i, type_fin, d1, d2, styles_obj[0], styles_obj[1])
+                    ws = structure_sheet.statistics_tickets_data(ws, res_oq, i, styles_obj[2])
 
                     if month_obj:
                         date, res, title, title2 = None, None, None, None
@@ -696,7 +697,6 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         researches_sql = sql_func.statistics_research(research_id, start_date, end_date)
         ws = structure_sheet.statistic_research_data(ws, researches_sql)
-
 
     elif tp == "journal-get-material":
         import datetime
