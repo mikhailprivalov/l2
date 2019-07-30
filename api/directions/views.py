@@ -722,7 +722,7 @@ def directions_paraclinic_form(request):
 
                 rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
 
-                for rt in rts.order_by('pk'):
+                for rt in rts.order_by('title'):
                     iss["templates"].append({
                         "pk": rt.pk,
                         "title": rt.title,
