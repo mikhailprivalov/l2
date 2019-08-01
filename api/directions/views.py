@@ -29,6 +29,9 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
+        type_card = Card.objects.get(pk = p.get("card_pk"))
+        if SettingManager.get("l2_cards_module", default='false', default_type='b') and type_card.base.title in ('Поликлиника', 'РМИС'):
+            return
         rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
                                                             p.get("diagnos"),
                                                             p.get("fin_source"),

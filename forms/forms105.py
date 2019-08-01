@@ -327,7 +327,12 @@ def form_02(request_data):
             'field__group__order', 'field__order')
 
         for f in field_iss:
-            list_f =[[Paragraph(f.field.title, styleT), Paragraph(f.value, styleT)]]
+            v = f.value.replace("\n", "<br/>")
+            if f.field.field_type == 1:
+                vv = v.split('-')
+                if len(vv) == 3:
+                    v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+            list_f =[[Paragraph(f.field.title, styleT), Paragraph(v, styleT)]]
             opinion.extend(list_f)
 
         tbl = Table(opinion, colWidths=(60 * mm, 123* mm))
