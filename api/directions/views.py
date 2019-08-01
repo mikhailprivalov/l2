@@ -30,8 +30,9 @@ def directions_generate(request):
     if request.method == "POST":
         p = json.loads(request.body)
         type_card = Card.objects.get(pk = p.get("card_pk"))
-        if SettingManager.get("l2_cards_module", default='false', default_type='b') and type_card.base.title in ('Поликлиника', 'РМИС'):
-            return
+        if type_card.base.forbidden_create_napr:
+            result["message"] = "Для данного типа карт нельзя создать направления и услуги"
+            return JsonResponse(result)
         rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
                                                             p.get("diagnos"),
                                                             p.get("fin_source"),
