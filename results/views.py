@@ -1220,7 +1220,7 @@ def result_print(request):
                 #Добавить выписанные направления врачом
                 if iss.research.is_doc_refferal:
                     # Найти все направления где данное исследование родитель
-                    napr_child = Napravleniya.objects.filter(parent=iss)
+                    napr_child = Napravleniya.objects.filter(parent=iss, cancel=False)
                     br = ""
                     if not protocol_plain_text:
                         br = '<br/>'
