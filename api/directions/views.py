@@ -59,6 +59,8 @@ def directions_history(request):
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
+    services = request_data.get("services", [])
+    services = list(map(int, services or []))
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     try:
@@ -75,6 +77,9 @@ def directions_history(request):
                                                    | Q(data_sozdaniya__range=(date_start, date_end),
                                                        doc=request.user.doctorprofile)).order_by(
                     "-data_sozdaniya")
+
+            if services:
+                rows = rows.filter(issledovaniya__research__pk__in=services)
 
             for napr in rows.values("pk", "data_sozdaniya", "cancel"):
                 iss_list = Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related(
@@ -120,6 +125,7 @@ def directions_history(request):
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
+        print(e)
     return JsonResponse(res)
 
 

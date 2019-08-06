@@ -1,24 +1,28 @@
 <template>
   <div style="height: 100%;width: 100%;position: relative" :class="[!!iss_pk && 'no_abs']">
     <div class="top-picker" v-if="!iss_pk">
-      <div style="align-self: stretch;display: inline-flex;align-items: center;padding: 1px 0 1px 5px;
-      flex: 1;margin: 0;font-size: 12px;width: 87px;color:#fff">
-        <span
-          style="display: block;max-height: 2.2em;line-height: 1.1em;vertical-align: top">Дата<br/>направления:</span>
-      </div>
-      <div style="width: 186px;display: inline-block;vertical-align: top">
-        <date-range v-model="date_range"/>
+      <div style="width: 126px;display: inline-block;vertical-align: top" title="Дата направления"
+           v-tippy="{ placement : 'right', arrow: true }">
+        <date-range small v-model="date_range"/>
       </div>
       <div class="top-inner">
-        <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                style="text-align: left!important;border-radius: 0;width: 100%">
-          <span class="caret"></span> {{active_type_obj.title}}
-        </button>
-        <ul class="dropdown-menu">
-          <li><a v-if="row.pk !== active_type" href="#" @click.prevent="select_type(row.pk)" v-for="row in types"
-                 :title="row.title">{{ row.title }}</a></li>
-        </ul>
-        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;" title="Обновить"
+        <div style="width: 180px">
+          <select-picker-m :options="services_options" actions_box multiple
+                           noneText="Все услуги" search
+                           uid="services_options" v-model="services"/>
+        </div>
+        <div style="flex: 0 calc(100% - 230px);position: relative;">
+          <button class="btn btn-blue-nb btn-ell dropdown-toggle" data-toggle="dropdown"
+                  style="text-align: left!important;border-radius: 0;width: 100%;"
+                  type="button">
+            <span class="caret"></span> {{active_type_obj.title}}
+          </button>
+          <ul class="dropdown-menu">
+            <li><a :title="row.title" @click.prevent="select_type(row.pk)" href="#" v-for="row in types"
+                   v-if="row.pk !== active_type">{{ row.title }}</a></li>
+          </ul>
+        </div>
+        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;flex: 1 50px;" title="Обновить"
                 @click="load_history">
           <i class="glyphicon glyphicon-refresh"></i>
         </button>
@@ -111,14 +115,16 @@
 </template>
 
 <script>
+  import SelectPickerM from './SelectPickerM'
   import DateRange from './ui-cards/DateRange'
   import directions_point from './api/directions-point'
   import * as action_types from './store/action-types'
   import moment from 'moment'
   import {forDirs} from './forms';
+  import {mapGetters} from 'vuex'
 
   export default {
-    components: {DateRange},
+    components: {SelectPickerM, DateRange},
     name: 'directions-history',
     props: {
       patient_pk: {
@@ -138,7 +144,7 @@
     },
     data() {
       return {
-        date_range: [moment().subtract(3, 'month').format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+        date_range: [moment().subtract(3, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
         types: [
           {pk: 3, title: 'Направления пациента'},
           {pk: 0, title: 'Только выписанные'},
@@ -151,6 +157,8 @@
         is_created: false,
         directions: [],
         checked: [],
+        services: [],
+        services_options: [],
         all_checked: false,
         statuses: {
           '-2': 'Посещение зарегистрировано',
@@ -178,6 +186,9 @@
         }
         return {}
       },
+      ...mapGetters({
+        researches: 'researches',
+      }),
     },
     mounted() {
       this.is_created = true
@@ -185,6 +196,20 @@
       this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
     },
     methods: {
+      update_so(researches) {
+        const s = [].concat.apply([], Object.values(researches)).map(r => ({
+          value: String(r.pk),
+          label: r.full_title,
+        }))
+        if (s.length === 0) {
+          return
+        }
+        s.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1)
+        this.services_options = s
+        setTimeout(() => {
+          this.$root.$emit(`update-sp-m-services_options`)
+        }, 0)
+      },
       show_results(row) {
         if (row.has_descriptive) {
           this.$root.$emit('print:results', [row.pk])
@@ -258,7 +283,8 @@
         vm.directions = []
         vm.all_checked = false
         directions_point.getHistory(this.active_type, this.patient_pk,
-          this.date_range[0], this.date_range[1], this.iss_pk).then((data) => {
+          moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
+          moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'), this.iss_pk, this.services).then((data) => {
           vm.directions = data.directions
         }).finally(() => {
           vm.is_created = true
@@ -288,6 +314,9 @@
       date_range() {
         this.load_history()
       },
+      services() {
+        this.load_history()
+      },
       all_checked() {
         for (let row of this.directions) {
           row.checked = this.all_checked
@@ -303,7 +332,13 @@
           }
         },
         deep: true
-      }
+      },
+      researches: {
+        handler() {
+          this.update_so(this.researches)
+        },
+        immediate: true,
+      },
     }
   }
 </script>
@@ -358,7 +393,7 @@
 
   .top-inner {
     position: absolute;
-    left: 278px;
+    left: 126px;
     top: 0;
     right: 0;
     height: 34px;

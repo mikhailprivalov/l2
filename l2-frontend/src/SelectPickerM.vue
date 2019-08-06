@@ -1,10 +1,11 @@
 <template>
-  <select v-selectpicker ref="self" class="selectpicker" data-width="100%" data-none-selected-text="Ничего не выбрано"
+  <select v-selectpicker ref="self" class="selectpicker" data-width="100%" :data-none-selected-text="noneText"
           data-select-all-text="Выбрать всё" data-deselect-all-text="Отменить весь выбор"
           :data-live-search="search"
-          :disabled="disabled"
+          :disabled="disabled"  :multiple="multiple" :data-actions-box="actions_box"
           data-container="body">
-    <option :value="option.value" v-for="option in options" :selected="option.value === value">{{ option.label }}
+    <option :value="option.value" v-for="option in options" :selected="option.value === value">
+      {{ option.label }}
     </option>
   </select>
 </template>
@@ -28,10 +29,35 @@
         type: Boolean,
         default: false,
       },
+      noneText: {
+        type: String,
+        default: 'Ничего не выбрано',
+      },
+      uid: {
+        type: String,
+        default: 'default',
+      },
+      multiple: {
+        type: Boolean,
+        default: false
+      },
+      actions_box: {
+        type: Boolean,
+        default: false
+      },
+    },
+    mounted() {
+      this.$root.$on(`update-sp-m-${this.uid}`, () => {
+        this.refresh()
+      })
     },
     methods: {
       update_val(v) {
         this.$emit('input', v)
+      },
+      refresh() {
+          this.elc && this.elc.selectpicker('render')
+          this.elc && this.elc.selectpicker('refresh')
       },
     },
     data() {
@@ -51,7 +77,7 @@
       disabled: {
         handler(v) {
           this.elc && this.elc.prop('disabled', v);
-          this.elc && this.elc.selectpicker('refresh')
+          this.refresh();
         },
         deep: true,
         immediate: true,

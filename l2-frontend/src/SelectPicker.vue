@@ -1,8 +1,10 @@
 <template>
   <select v-selectpicker class="selectpicker" data-width="100%" :multiple="multiple"
-          :data-actions-box="actions_box" data-none-selected-text="Ничего не выбрано" data-select-all-text="Выбрать всё"
-          data-deselect-all-text="Отменить весь выбор" data-live-search="true">
-    <option v-bind:value="option.value" v-for="option in options" :selected="option.value === val">{{ option.label }}</option>
+          :data-actions-box="actions_box" :data-none-selected-text="noneText" data-select-all-text="Выбрать всё"
+          :data-deselect-all-text="deselectText" data-live-search="true" :data-container="dataContainer">
+    <option v-bind:value="option.value" v-for="option in options" :selected="option.value === val">
+      {{ option.label }}
+    </option>
   </select>
 </template>
 
@@ -30,6 +32,17 @@
       disabled: {
         type: Boolean,
         default: false
+      },
+      noneText: {
+        type: String,
+        default: 'Ничего не выбрано',
+      },
+      deselectText: {
+        type: String,
+        default: 'Отменить весь выбор',
+      },
+      dataContainer: {
+        default: null,
       },
     },
     methods: {
