@@ -29,6 +29,10 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
+        type_card = Card.objects.get(pk = p.get("card_pk"))
+        if type_card.base.forbidden_create_napr:
+            result["message"] = "Для данного типа карт нельзя создать направления"
+            return JsonResponse(result)
         rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
                                                             p.get("diagnos"),
                                                             p.get("fin_source"),
@@ -728,7 +732,7 @@ def directions_paraclinic_form(request):
 
                 rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
 
-                for rt in rts.order_by('pk'):
+                for rt in rts.order_by('title'):
                     iss["templates"].append({
                         "pk": rt.pk,
                         "title": rt.title,

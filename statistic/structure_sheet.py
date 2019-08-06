@@ -6,6 +6,7 @@ import openpyxl
 from directions.models import IstochnikiFinansirovaniya
 from datetime import  timedelta
 from laboratory import utils
+from copy import deepcopy, copy
 
 month_dict = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
               9: 'Сентябрь',
@@ -151,16 +152,31 @@ def passed_research_data(ws1, data):
     return ws1
 
 
-def statistics_tickets_base(ws1, i_obj, type_fin, d1,d2):
+def style_sheet():
+    style_border = NamedStyle(name="style_border")
+    bd = Side(style='thin', color="000000")
+    border = Border(left=bd, top=bd, right=bd, bottom=bd)
+
+    style_border.border = border
+    style_border.font = Font(bold=True, size=11)
+    style_border.alignment = Alignment(wrap_text=True)
+
+    style_border1 = NamedStyle(name="style_border1")
+    style_border1.border = border
+    style_border1.font = Font(bold=False, size=11)
+    style_border1.alignment = Alignment(wrap_text=True)
+
+    style_o = NamedStyle(name="style_o")
+    style_o.font = Font(bold=True, size=11)
+
+    return (style_border, style_o, style_border1)
+
+
+def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o):
     """
     Назначить ширину колонок. Вход worksheet выход worksheen с размерами
     Заголовки данных
     """
-    style_border = NamedStyle(name="style_border")
-    bd = Side(style='thin', color="000000")
-    style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border.font = Font(bold=True, size=11)
-    style_border.alignment = Alignment(wrap_text=True)
 
     columns = [
         ('Дата',13), ('Кол-во', 7),
@@ -178,8 +194,6 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1,d2):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=7, column=idx).style = style_border
 
-    style_o = NamedStyle(name="style_o")
-    style_o.font = Font(bold=True, size=11)
     # Закголовки столбцов
     ws1.cell(row=1, column=1).value = 'Сотрудник'
     ws1.cell(row=1, column=1).style = style_o
@@ -203,14 +217,8 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1,d2):
     return ws1
 
 
-def statistics_tickets_data(ws1, issl_obj, i_obj):
+def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
     #i_obj - обеъект доктор
-
-    style_border1 = NamedStyle(name="style_border1")
-    bd = Side(style='thin', color="000000")
-    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border1.font = Font(bold=False, size=11)
-    style_border1.alignment = Alignment(wrap_text=True)
 
     my_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='a9d094',
                                                 end_color='a9d094')

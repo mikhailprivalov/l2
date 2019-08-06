@@ -583,6 +583,7 @@ class CardBase(models.Model):
                                          blank=True, default=None,
                                          on_delete=models.SET_NULL)
     order_weight = models.SmallIntegerField(default=0)
+    forbidden_create_napr = models.BooleanField(help_text="Запрет создания направлений", default=False)
 
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
