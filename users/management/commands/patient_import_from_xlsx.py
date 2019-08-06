@@ -115,19 +115,22 @@ class Command(BaseCommand):
                             birthday=datetime.datetime.strptime(cells[born_date], "%Y-%m-%d %H:%M:%S").date(), sex=cells[sex])
 
                     if cells[snils]:
-                        clients.Document.objects.create(document_type__title__iexact="СНИЛС", number=cells[snils], individual=ind)
+                        snils_object = clients.DocumentType.objects.get(title__iexact='СНИЛС')
+                        clients.Document.objects.create(document_type=snils_object, number=cells[snils], individual=ind)
 
                     if cells[pasport_serial] and cells[pasport_num]:
-                        clients.Document.objects.create(document_type__title__iexact="Паспорт гражданина РФ",
+                        passport_object = clients.DocumentType.objects.get(title__iexact = 'Паспорт гражданина РФ')
+                        clients.Document.objects.create(document_type=passport_object,
                                 number=cells[pasport_num], serial=cells[pasport_serial], individual=ind)
 
-                    document_polis = clients.Document.objects.create(document_type__title__iexact="Полис ОМС", number=cells[polis],
+                    polis_object = clients.DocumentType.objects.get(title__iexact='Полис ОМС')
+                    document_polis = clients.Document.objects.create(document_type=polis_object, number=cells[polis],
                             individual=ind) if cells[polis] else None
 
                     add_dist = get_district(cells[distict_num], cells[district_gin])
                     m_address = str(cells[city]).strip() + ', ' + str(cells[street]).strip() + ', д.' + str(cells[house]).strip() + \
                             ', кв.' + str(cells[room]).strip()
-                    c = clients.Card.objects.create(individual=i, number=clients.Card.next_l2_n(), base=base_l2, number_poliklinika=cells[num_card],
+                    c = clients.Card.objects.create(individual=ind, number=clients.Card.next_l2_n(), base=base_l2, number_poliklinika=cells[num_card],
                             polis=document_polis, district=add_dist[0], ginekolog_district = add_dist[1], main_address=m_address,
                             fact_address=m_address)
                     print('Добавлена карта: \n', c)

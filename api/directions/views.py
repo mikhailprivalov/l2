@@ -29,6 +29,10 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
+        type_card = Card.objects.get(pk = p.get("card_pk"))
+        if type_card.base.forbidden_create_napr:
+            result["message"] = "Для данного типа карт нельзя создать направления"
+            return JsonResponse(result)
         rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
                                                             p.get("diagnos"),
                                                             p.get("fin_source"),
