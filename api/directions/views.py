@@ -129,7 +129,6 @@ def directions_history(request):
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
-        print(e)
     return JsonResponse(res)
 
 
