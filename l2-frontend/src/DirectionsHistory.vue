@@ -6,7 +6,7 @@
         <date-range small v-model="date_range"/>
       </div>
       <div class="top-inner">
-        <div style="width: 180px">
+        <div class="top-select" style="width: 180px">
           <select-picker-m :options="services_options" actions_box multiple
                            noneText="Все услуги" search
                            uid="services_options" v-model="services"/>
@@ -123,6 +123,16 @@
   import {forDirs} from './forms';
   import {mapGetters} from 'vuex'
 
+  function truncate(s, n, useWordBoundary) {
+    if (s.length <= n) {
+      return s
+    }
+    const subString = s.substr(0, n - 1)
+    return (useWordBoundary
+      ? subString.substr(0, subString.lastIndexOf(' '))
+      : subString) + '...'
+  }
+
   export default {
     components: {SelectPickerM, DateRange},
     name: 'directions-history',
@@ -199,7 +209,7 @@
       update_so(researches) {
         const s = [].concat.apply([], Object.values(researches)).map(r => ({
           value: String(r.pk),
-          label: r.full_title,
+          label: truncate(r.full_title, 60, true),
         }))
         if (s.length === 0) {
           return
@@ -522,6 +532,14 @@
       padding: 2px;
       border: none !important;
       flex: 0 0 50%;
+    }
+  }
+
+  .top-select /deep/ {
+    .btn {
+      border-radius: 0;
+      border-top: 0;
+      height: 34px;
     }
   }
 </style>
