@@ -1164,7 +1164,7 @@ def result_print(request):
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
-                                v = r.value.replace("\n", "<br/>").replace('<', '&lt;').replace('>', '&gt;')
+                                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
@@ -1195,7 +1195,7 @@ def result_print(request):
                                     group.title.replace('<', '&lt;').replace('>', '&gt;'))
                             vals = []
                             for r in results:
-                                v = r.value.replace("\n", "<br/>").replace('<', '&lt;').replace('>', '&gt;')
+                                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
