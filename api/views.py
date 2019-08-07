@@ -371,7 +371,7 @@ def bases(request):
 def current_user_info(request):
     ret = {"auth": request.user.is_authenticated, "doc_pk": -1, "username": "", "fio": "",
            "department": {"pk": -1, "title": ""}, "groups": [], "modules": SettingManager.l2_modules(),
-           "user_services": []}
+           "user_services": [], "rmis_enabled": SettingManager.get("rmis_enabled", default='false', default_type='b')}
     if ret["auth"]:
         ret["username"] = request.user.username
         ret["fio"] = request.user.doctorprofile.fio
@@ -385,6 +385,7 @@ def current_user_info(request):
         ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
         ret["user_services"] = [x.pk for x in
                                 request.user.doctorprofile.users_services.all() if x not in ret["restricted"]]
+        ret["su"] = request.user.is_superuser
 
         en = SettingManager.en()
         ret["extended_departments"] = {}

@@ -28,7 +28,7 @@ async function sendDirections(card_pk, diagnos, fin_source, history_num,
   return {ok: false, directions: [], message: ''}
 }
 
-async function getHistory(type, patient, date_from, date_to, iss_pk) {
+async function getHistory(type, patient, date_from, date_to, iss_pk, services) {
   try {
     const response = await HTTP.post('directions/history', {
       type,
@@ -36,6 +36,7 @@ async function getHistory(type, patient, date_from, date_to, iss_pk) {
       date_from,
       date_to,
       iss_pk,
+      services,
     })
     if (response.statusText === 'OK') {
       return response.data

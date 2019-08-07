@@ -29,6 +29,10 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
+        type_card = Card.objects.get(pk = p.get("card_pk"))
+        if type_card.base.forbidden_create_napr:
+            result["message"] = "Для данного типа карт нельзя создать направления"
+            return JsonResponse(result)
         rc = Napravleniya.gen_napravleniya_by_issledovaniya(p.get("card_pk"),
                                                             p.get("diagnos"),
                                                             p.get("fin_source"),
@@ -59,6 +63,8 @@ def directions_history(request):
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
+    services = request_data.get("services", [])
+    services = list(map(int, services or []))
 
     date_start, date_end = try_parse_range(request_data["date_from"], request_data["date_to"])
     try:
@@ -75,6 +81,9 @@ def directions_history(request):
                                                    | Q(data_sozdaniya__range=(date_start, date_end),
                                                        doc=request.user.doctorprofile)).order_by(
                     "-data_sozdaniya")
+
+            if services:
+                rows = rows.filter(issledovaniya__research__pk__in=services)
 
             for napr in rows.values("pk", "data_sozdaniya", "cancel"):
                 iss_list = Issledovaniya.objects.filter(napravleniye__pk=napr["pk"]).prefetch_related(

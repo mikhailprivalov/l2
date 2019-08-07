@@ -20,7 +20,7 @@
         </div>
         <input type="text" class="form-control bob" v-model="query" placeholder="Введите запрос" ref="q"
                maxlength="255" @keyup.enter="search">
-        <span v-if="selected_base.internal_type" class="rmis-search input-group-btn">
+        <span class="rmis-search input-group-btn" v-if="selected_base.internal_type && user_data.rmis_enabled">
           <label class="btn btn-blue-nb nbr" style="padding: 5px 12px;">
             <input type="checkbox" v-model="inc_rmis" /> Вкл. РМИС
           </label>
@@ -87,13 +87,13 @@
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Новая L2 карта" @click="open_editor(true)"
-                        v-if="is_l2_cards"><i class="fa fa-plus"></i></button>
+                        v-if="is_l2_cards && allow_l2_card_edit"><i class="fa fa-plus"></i></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk" @click="open_editor()"
-                        v-if="is_l2_cards"><i class="glyphicon glyphicon-pencil"></i></button>
+                        v-if="is_l2_cards && allow_l2_card_edit"><i class="glyphicon glyphicon-pencil"></i></button>
               </div>
-              <div class="internal_type" v-else-if="l2_cards">
+              <div class="internal_type" v-else-if="l2_cards && allow_l2_card_edit">
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Открыть пациента в базе L2" style="margin-left: -1px"
@@ -188,6 +188,7 @@
   import Modal from './ui-cards/Modal'
   import * as action_types from './store/action-types'
   import patients_point from './api/patients-point'
+  import {mapGetters} from 'vuex'
 
   export default {
     name: 'patient-picker',
@@ -399,7 +400,11 @@
           return this.selected_card.phones
         }
         return []
-      }
+      },
+      ...mapGetters(['user_data']),
+      allow_l2_card_edit() {
+        return this.user_data.su || this.user_data.groups.includes('Картотека L2')
+      },
     },
     methods: {
       open_anamnesis() {

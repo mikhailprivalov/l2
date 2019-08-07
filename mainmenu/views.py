@@ -34,7 +34,9 @@ def dashboard(request):
         return render(request, 'dashboard.html',
                       {"rmis": SettingManager.get("rmis_enabled", default='false', default_type='b'),
                        "mis_module": SettingManager.get("mis_module", default='false', default_type='b'),
-                       "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b')})
+                       "paraclinic": SettingManager.get("paraclinic_module", default='false', default_type='b'),
+                       "region": SettingManager.get("region", default='38', default_type='s'),
+                       })
     return HttpResponse("OK")
 
 

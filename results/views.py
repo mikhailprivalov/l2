@@ -1160,18 +1160,19 @@ def result_print(request):
                         if results.exists():
                             fwb.append(Spacer(1, 1 * mm))
                             if group.show_title and group.show_title != "":
-                                fwb.append(Paragraph(group.title, styleBold))
+                                fwb.append(Paragraph(group.title.replace('<', '&lt;').replace('>', '&gt;'), styleBold))
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
-                                v = r.value.replace("\n", "<br/>")
+                                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
                                     fwb.append(Paragraph(
-                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(r.field.title, v),
+                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(
+                                            r.field.title.replace('<', '&lt;').replace('>', '&gt;'), v),
                                         style_ml if group_title else style))
                                 else:
                                     fwb.append(Paragraph(v, style))
@@ -1183,23 +1184,26 @@ def result_print(request):
                     sick_result = None
                     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by(
                             "order"):
-                        sick_title = True if group.title == "Сведения ЛН" else False
+                        sick_title = group.title == "Сведения ЛН"
                         if sick_title:
                             sick_result = collections.OrderedDict()
                         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(
                             value="").order_by("field__order")
                         if results.exists():
                             if group.show_title and group.title != "":
-                                txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(group.title)
+                                txt += "<font face=\"OpenSansBold\">{}:</font>&nbsp;".format(
+                                    group.title.replace('<', '&lt;').replace('>', '&gt;'))
                             vals = []
                             for r in results:
-                                v = r.value.replace("\n", "<br/>")
+                                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
                                 if r.field.title != "":
-                                    vals.append("{}:&nbsp;{}".format(r.field.title, v))
+                                    vals.append(
+                                        "{}:&nbsp;{}".format(r.field.title.replace('<', '&lt;').replace('>', '&gt;'),
+                                                             v))
                                 else:
                                     vals.append(v)
                                 if sick_title:
@@ -1212,7 +1216,6 @@ def result_print(request):
                             elif len(txt) > 0:
                                 txt += " "
 
-
                     fwb.append(Paragraph(txt, style))
                 fwb.append(Spacer(1, 2.5 * mm))
                 t1 = iss.get_visit_date()
@@ -1220,7 +1223,7 @@ def result_print(request):
                 #Добавить выписанные направления врачом
                 if iss.research.is_doc_refferal:
                     # Найти все направления где данное исследование родитель
-                    napr_child = Napravleniya.objects.filter(parent=iss)
+                    napr_child = Napravleniya.objects.filter(parent=iss, cancel=False)
                     br = ""
                     if not protocol_plain_text:
                         br = '<br/>'
