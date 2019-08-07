@@ -512,8 +512,10 @@ def result_print(request):
     nw = 158
     i.drawHeight = i.drawHeight * (nw / i.drawWidth)
     i.drawWidth = nw
+    region = SettingManager.get("region", default='38', default_type='s')
     logo_col = [i, '', '', '', '', Paragraph(
-        'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font face="OpenSansLight">(L2-irk.ru)</font><br/><br/>%s<br/>%s<br/>%s' % (
+        'Результат из <font face="OpenSansBoldItalic">L²</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s' % (
+            '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
             SettingManager.get("org_title"), SettingManager.get("org_www"), SettingManager.get("org_phones")),
         styleAb), '', '', '']
     pw = doc.width
