@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'forms',
     'contracts',
     'lq',
+    'treatment',
 )
 
 MIDDLEWARE = [
