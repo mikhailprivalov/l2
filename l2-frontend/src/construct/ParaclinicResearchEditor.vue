@@ -196,11 +196,6 @@
   import construct_point from '../api/construct-point'
   import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
-  import VueCollapse from 'vue2-collapse'
-
-  import Vue from 'vue'
-
-  Vue.use(VueCollapse)
 
   export default {
     name: 'paraclinic-research-editor',
@@ -660,5 +655,12 @@
 
   /deep/ .v-collapse-content-end {
     max-height: 10000px !important;
+  }
+
+  .vc-collapse /deep/ .v-collapse-content {
+    display: none;
+    &.v-collapse-content-end {
+    display: block;
+    }
   }
 </style>

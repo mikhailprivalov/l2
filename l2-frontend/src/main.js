@@ -9,11 +9,12 @@ import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
 import VueAutosize from 'vue-autosize';
-const VueInputMask = require('vue-inputmask').default;
 import VuejsDialog from 'vuejs-dialog';
+import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ReplaceAppendModal';
 import RmisLocation from './RmisLocation'
+const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VuejsDialog, {
     okText: 'Подтвердить',
@@ -25,6 +26,7 @@ Vue.use(VueTippy)
 Vue.use(Steps)
 Vue.use(Step)
 Vue.use(VueInputMask)
+Vue.use(VueCollapse)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
