@@ -1,146 +1,45 @@
-import {HTTP} from '../http-common'
+import {generator} from './http-common'
 
-async function getCurrentUserInfo() {
-  try {
-    const response = await HTTP.get('current-user-info')
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}, extended_departments: {}}
-}
 
-async function getDirectiveFrom() {
-  try {
-    const response = await HTTP.get('directive-from')
-    if (response.statusText === 'OK') {
-      return response.data.data
-    }
-  } catch (e) {
-  }
-  return []
-}
-
-async function loadUsers() {
-  try {
-    const response = await HTTP.post('users')
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function loadUser(pk) {
-  try {
-    const response = await HTTP.post('user', {
-      pk,
-    })
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function saveUser(pk, user_data) {
-  try {
-    const response = await HTTP.post('user-save', {
-      pk, user_data,
-    })
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function loadLocation(date) {
-  try {
-    const response = await HTTP.post('user-location', {
-      date,
-    })
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function getReserve(pk, patient) {
-  try {
-    const response = await HTTP.post('user-get-reserve', {
-      pk, patient,
-    })
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function fillSlot(slot) {
-  try {
-    const response = await HTTP.post('user-fill-slot', {
-      slot,
-    })
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function loadJobTypes() {
-  try {
-    const response = await HTTP.post('job-types')
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function saveJob(data) {
-  try {
-    const response = await HTTP.post('job-save', data)
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function loadJobs(data) {
-  try {
-    const response = await HTTP.post('job-list', data)
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-async function jobCancel(data) {
-  try {
-    const response = await HTTP.post('job-cancel', data)
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {}
-}
-
-export default {getCurrentUserInfo, getDirectiveFrom, loadUsers,
-  loadUser, saveUser, loadLocation, getReserve, fillSlot, loadJobTypes, saveJob, loadJobs, jobCancel}
+export default generator({
+  getCurrentUserInfo: {
+    method: 'get',
+    url: 'current-user-info',
+    onReject: {"auth": false, username: "", fio: "", groups: [], doc_pk: -1, department: {pk: -1, title: ""}, extended_departments: {}}
+  },
+  getDirectiveFrom: {
+    method: 'get',
+    url: 'directive-from',
+    onReject: {data: []}
+  },
+  loadUsers: {
+    url: 'users',
+  },
+  loadUser: {
+    url: 'user',
+  },
+  saveUser: {
+    url: 'user-save',
+  },
+  loadLocation: {
+    url: 'user-location',
+  },
+  getReserve: {
+    url: 'user-get-reserve',
+  },
+  fillSlot: {
+    url: 'user-fill-slot',
+  },
+  loadJobTypes: {
+    url: 'job-types',
+  },
+  saveJob: {
+    url: 'job-save',
+  },
+  loadJobs: {
+    url: 'job-list',
+  },
+  jobCancel: {
+    url: 'job-cancel',
+  },
+});

@@ -303,14 +303,13 @@
         this.$root.$emit('research-editor:cancel')
       },
       save() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateTemplate(vm.pk, vm.title, vm.researches, vm.global_template).then(() => {
-          vm.has_unsaved = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
+          this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       }
     }

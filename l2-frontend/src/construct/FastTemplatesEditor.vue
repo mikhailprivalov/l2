@@ -146,53 +146,53 @@
         this.selected_template = -1;
       },
       load_data(select_after) {
-        let vm = this
-        vm.loaded = false
+        this.loaded = false
         this.clear();
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getFastTemplates(vm.research_pk, true).then(({data}) => {
-          vm.rows = data
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getFastTemplates({pk: research_pk, all: true}).then(({data}) => {
+          this.rows = data
           if (select_after) {
             this.select_template(select_after);
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.loaded = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.loaded = true
         })
       },
       select_template(pk) {
         if (pk === this.selected_template)
           return
         this.clear();
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getTemplateData(pk).then(({data}) => {
-          vm.template_data = data
-          vm.selected_template = pk
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData({pk}).then(({data}) => {
+          this.template_data = data
+          this.selected_template = pk
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       copy_template(pk) {
         this.clear();
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getTemplateData(pk).then(({data}) => {
-          vm.template_data = {...data, title: '', hide: false, readonly: false}
-          vm.selected_template = -1
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData({pk}).then(({data}) => {
+          this.template_data = {...data, title: '', hide: false, readonly: false}
+          this.selected_template = -1
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       save() {
-        let vm = this
-        vm.loaded = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.saveFastTemplate(vm.selected_template, vm.template_data, vm.research_pk).then(({pk}) => {
-          vm.load_data(pk)
+        this.loaded = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.saveFastTemplate({
+          pk: this.selected_template,
+          data: this.template_data,
+          research_pk: this.research_pk
+        }).then(({pk}) => {
+          this.load_data(pk)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.loaded = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.loaded = true
         })
       }
     }

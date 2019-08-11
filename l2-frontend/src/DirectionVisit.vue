@@ -235,12 +235,11 @@
         this.$root.$emit('print:directions', [this.loaded_pk])
       },
       load_journal() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directionsPoint.visitJournal(this.journal_date).then(data => {
-          vm.journal_data = data.data
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directionsPoint.visitJournal({date: this.journal_date}).then(data => {
+          this.journal_data = data.data
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       load() {
@@ -249,26 +248,25 @@
         }
         if (this.in_load)
           return
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.in_load = true
-        vm.cancel()
-        directionsPoint.getDirectionsServices(this.query_int).then(data => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.in_load = true
+        this.cancel()
+        directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
           if (data.ok) {
-            vm.loaded_pk = data.loaded_pk
-            vm.researches = data.researches
-            vm.direction_data = data.direction_data
-            vm.visit_status = data.visit_status
-            vm.visit_date = data.visit_date
-            vm.allow_reset_confirm = data.allow_reset_confirm
-            vm.blur()
+            this.loaded_pk = data.loaded_pk
+            this.researches = data.researches
+            this.direction_data = data.direction_data
+            this.visit_status = data.visit_status
+            this.visit_date = data.visit_date
+            this.allow_reset_confirm = data.allow_reset_confirm
+            this.blur()
           } else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.in_load = false
-          vm.direction = ''
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.in_load = false
+          this.direction = ''
         })
       },
       focus() {
@@ -285,22 +283,21 @@
         if (this.loaded_pk === -1 || this.in_load)
           return
         cancel = cancel || false
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.in_load = true
-        directionsPoint.getMarkDirectionVisit(this.loaded_pk, cancel).then(data => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.in_load = true
+        directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
           if (data.ok) {
-            vm.visit_status = data.visit_status
-            vm.visit_date = data.visit_date
-            vm.allow_reset_confirm = data.allow_reset_confirm
-            vm.focus()
+            this.visit_status = data.visit_status
+            this.visit_date = data.visit_date
+            this.allow_reset_confirm = data.allow_reset_confirm
+            this.focus()
           } else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.in_load = false
-          vm.load_journal()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.in_load = false
+          this.load_journal()
         })
       }
     }

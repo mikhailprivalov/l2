@@ -260,9 +260,8 @@
       }
     },
     mounted() {
-      let vm = this
-      $(window).on('beforeunload', function () {
-        if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
+      $(window).on('beforeunload', () => {
+        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
       this.$root.$on('hide_fte', () => this.f_templates_hide())
@@ -464,23 +463,22 @@
         this.site_type = null
         this.groups = []
         if (this.pk >= 0) {
-          let vm = this
-          vm.$store.dispatch(action_types.INC_LOADING).then()
-          construct_point.researchDetails(vm.pk).then(data => {
-            vm.title = data.title
-            vm.short_title = data.short_title
-            vm.code = data.code
-            vm.internal_code = data.internal_code
-            vm.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
-            vm.hide = data.hide
-            vm.site_type = data.site_type
-            vm.loaded_pk = vm.pk
-            vm.groups = data.groups
-            if (vm.groups.length === 0) {
-              vm.add_group()
+          this.$store.dispatch(action_types.INC_LOADING).then()
+          construct_point.researchDetails(this, 'pk').then(data => {
+            this.title = data.title
+            this.short_title = data.short_title
+            this.code = data.code
+            this.internal_code = data.internal_code
+            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
+            this.hide = data.hide
+            this.site_type = data.site_type
+            this.loaded_pk = this.pk
+            this.groups = data.groups
+            if (this.groups.length === 0) {
+              this.add_group()
             }
           }).finally(() => {
-            vm.$store.dispatch(action_types.DEC_LOADING).then()
+            this.$store.dispatch(action_types.DEC_LOADING).then()
           })
         } else {
           this.add_group()
@@ -494,16 +492,16 @@
         this.$root.$emit('research-editor:cancel')
       },
       save() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code,
-          vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups, vm.site_type,
-          vm.internal_code).then(() => {
-          vm.has_unsaved = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        construct_point.updateResearch(
+          this, ['pk', 'department', 'title', 'short_title', 'code', 'info'],
+          {info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')}
+        ).then(() => {
+          this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       }
     }
