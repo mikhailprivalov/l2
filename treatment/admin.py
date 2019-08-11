@@ -8,4 +8,5 @@ class ResMedicament(admin.ModelAdmin):
     list_filter = ('pharm_group',)
     search_fields = ('trade_name','international_name','pharm_group',)
 
+
 admin.site.register(Medicament, ResMedicament)
