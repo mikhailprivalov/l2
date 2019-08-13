@@ -9,10 +9,10 @@
 
   export default {
     name: 'VisibilityGroupWrapper',
-    props: ['group', 'groups', 'formula'],
+    props: ['group', 'groups'],
     computed: {
       visible() {
-        return vGroup(this.group, this.groups, this.formula);
+        return vGroup(this.group, this.groups);
       },
     },
   }

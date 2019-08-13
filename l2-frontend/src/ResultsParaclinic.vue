@@ -217,7 +217,7 @@
               </button>
             </div>
           </div>
-          <visibility-group-wrapper :formula="group.visibility" :group="group"
+          <visibility-group-wrapper :group="group"
                                     :groups="row.research.groups"
                                     v-for="group in row.research.groups">
             <div class="group">
@@ -667,7 +667,7 @@
           this.loc_timer = setInterval(() => this.load_location(), 120000);
         }
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation({data: this.td})).data
+        this.location.data = (await users_point.loadLocation({date: this.td})).data
         this.location.loading = false
       },
       load_dreg_rows() {
@@ -853,11 +853,35 @@
         this.create_directions_diagnosis = iss.diagnos
         this.create_directions_for = iss.pk
       },
+      visibility_state(iss) {
+        const groups = {}
+        const fields = {}
+        const {groups: igroups} = iss.research
+        for (const group of iss.research.groups) {
+          if (!vGroup(group, igroups)) {
+            groups[group.pk] = false
+          } else {
+            groups[group.pk] = true
+            for (const field of group.fields) {
+              fields[field.pk] = vField(igroups, field.visibility)
+            }
+          }
+        }
+
+        return {
+          groups,
+          fields,
+        }
+      },
       save(iss) {
         this.hide_results();
         this.inserted = false
         this.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave({data: iss, with_confirm: false}).then(data => {
+        directions_point.paraclinicResultSave({
+          data: iss,
+          with_confirm: false,
+          visibility_state: this.visibility_state(iss)
+        }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             iss.saved = true
@@ -877,7 +901,11 @@
         this.hide_results();
         this.inserted = false
         this.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave({data: iss, with_confirm: true}).then(data => {
+        directions_point.paraclinicResultSave({
+          data: iss,
+          with_confirm: true,
+          visibility_state: this.visibility_state(iss)
+        }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             okmessage('Подтверждено')

@@ -770,16 +770,26 @@ def directions_paraclinic_form(request):
 @group_required("Врач параклиники", "Врач консультаций")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
-    request_data = json.loads(request.body).get("data", {})
+    rb = json.loads(request.body)
+    request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
-    with_confirm = json.loads(request.body).get("with_confirm", False)
+    with_confirm = rb.get("with_confirm", False)
+    visibility_state = rb.get("visibility_state", {})
+    v_g = visibility_state.get("groups", {})
+    v_f = visibility_state.get("fields", {})
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                    | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
         for group in request_data["research"]["groups"]:
+            if not v_g.get(str(group["pk"]), True):
+                ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
+                continue
             for field in group["fields"]:
+                if not v_f.get(str(field["pk"]), True):
+                    ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
+                    continue
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
                     continue
                 f = ParaclinicInputField.objects.get(pk=field["pk"])

@@ -3,8 +3,9 @@ import {flatten} from 'lodash/array'
 
 export const vField = (groups, formula) => formula === '' || CalculateVisibility(objFields(groups), formula)
 
-export const vGroup = (group, groups, formula) => {
+export const vGroup = (group, groups) => {
   const fields = objFields(groups);
+  const {visibility: formula} = group
   if(formula !== '' && !CalculateVisibility(fields, formula)) {
     return false;
   }
@@ -16,7 +17,4 @@ export const vGroup = (group, groups, formula) => {
   return group.fields.length === 0;
 }
 
-export const objFields = (groups) => flatten(groups.map(({fields}) => fields)).reduce((a, b) => ({
-  ...a,
-  [b.pk]: b
-}), {})
+export const objFields = (groups) => flatten(groups.map(({fields}) => fields)).reduce((a, b) => Object.assign(a, {[b.pk]: b}), {})
