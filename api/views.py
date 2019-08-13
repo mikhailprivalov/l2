@@ -682,7 +682,7 @@ def update_template(request):
     if pk > -2:
         title = request_data.get("title").strip()
         researches = request_data["researches"]
-        global_template = request_data["global"]
+        global_template = request_data["global_template"]
         if len(title) > 0 and len(researches) > 0:
             t = None
             if pk == -1:

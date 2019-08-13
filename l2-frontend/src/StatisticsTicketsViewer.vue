@@ -114,11 +114,10 @@
       }
     },
     created() {
-      let vm = this
       this.load()
       this.$root.$on('create-ticket', () => {
-        if (vm.date === moment().format('DD.MM.YYYY')) {
-          vm.load()
+        if (this.date === moment().format('DD.MM.YYYY')) {
+          this.load()
         }
       })
     },
@@ -132,24 +131,22 @@
         window.open(`/statistic/xls?type=statistics-tickets-print&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date}&date-end=${this.date}`, '_blank')
       },
       load() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        statistics_tickets_point.loadTickets(this.date).then(data => {
-          vm.data = data.data
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        statistics_tickets_point.loadTickets(this, 'date').then(data => {
+          this.data = data.data
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       invalidate(pk, invalid) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        statistics_tickets_point.invalidateTicket(pk, invalid).then(data => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        statistics_tickets_point.invalidateTicket({pk, invalid}).then(data => {
           if (!data.ok) {
             errmessage(data.message)
           }
-          vm.load()
+          this.load()
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       }
     }

@@ -1,14 +1,9 @@
-import {HTTP} from '../http-common'
+import {generator} from './http-common'
 
-async function getBases() {
-  try {
-    const response = await HTTP.get('bases')
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
+export default generator({
+  getBases: {
+    method: 'get',
+    url: 'bases',
+    onReject: {bases: []}
   }
-  return {bases: []}
-}
-
-export default {getBases}
+})

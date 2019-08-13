@@ -157,8 +157,11 @@ new Vue({
       if (!operator && history_num !== '')
         history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches,
-        comments, for_rmis, rmis_data, vich_code, count, discount, parent_iss, counts).then(data => {
+      directions_point.sendDirections({
+        card_pk, diagnos, fin_source: fin_source_pk, history_num,
+        ofname_pk: ofname, researches, comments, for_rmis,
+        rmis_data, vich_code, count, discount, parent_iss, counts
+      }).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 
         if (data.ok) {

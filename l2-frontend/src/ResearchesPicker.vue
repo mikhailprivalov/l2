@@ -113,7 +113,7 @@
 <script>
   import * as action_types from './store/action-types'
   import ResearchPick from './ResearchPick'
-  import _ from 'lodash'
+  import {debounce} from 'lodash/function'
 
   export default {
     name: 'researches-picker',
@@ -239,7 +239,7 @@
       search() {
         this.check_found_tip()
       },
-      search_template: _.debounce(function(nv) { this.do_search_template(nv) }, 80)
+      search_template: debounce(function(nv) { this.do_search_template(nv) }, 80)
     },
     computed: {
       types() {

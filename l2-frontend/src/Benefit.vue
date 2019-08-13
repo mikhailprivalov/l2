@@ -154,7 +154,7 @@
     },
     methods: {
       async edit(pk) {
-        const d = await patients_point.loadBenefitDetail(pk)
+        const d = await patients_point.loadBenefitDetail({pk})
         this.edit_data = {
           ...this.edit_data,
           ...d,
@@ -173,19 +173,18 @@
       },
       async save() {
         await this.$store.dispatch(action_types.INC_LOADING)
-        const data = await patients_point.saveBenefit(this.card_pk, this.edit_pk, this.edit_data)
+        const data = await patients_point.saveBenefit({card_pk: this.card_pk, pk: this.edit_pk, data: this.edit_data})
         this.$store.dispatch(action_types.DEC_LOADING).then()
         okmessage('Сохранено')
         this.hide_edit()
         this.load_data()
       },
       load_data() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.loadBenefit(vm.card_pk).then(({rows}) => {
-          vm.rows = rows
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadBenefit(this, 'card_pk').then(({rows}) => {
+          this.rows = rows
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
     }

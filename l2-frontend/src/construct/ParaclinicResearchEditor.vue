@@ -148,10 +148,6 @@
               </v-collapse-wrapper>
             </div>
             <div>
-              <strong>Условие видимости:</strong>
-              <textarea v-model="row.visibility" class="form-control"></textarea>
-            </div>
-            <div>
               <label>
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
@@ -161,9 +157,6 @@
                <label>
                 <input type="checkbox" v-model="row.for_talon" /> в талон
               </label>
-<!--              <a href="#" @click.prevent="requirements(row.pk)" v-if="row.pk !== -1"><i class="fa fa-cog"></i> зависимость</a>-->
-            </div>
-            <div>
               <label style="line-height: 1" v-show="row.field_type === 0">
                 Число строк:<br/>
                 <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
@@ -205,6 +198,11 @@
   import construct_point from '../api/construct-point'
   import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
+  import VueCollapse from 'vue2-collapse'
+
+  import Vue from 'vue'
+
+  Vue.use(VueCollapse)
 
   export default {
     name: 'paraclinic-research-editor',
@@ -634,7 +632,7 @@
     &:nth-child(2) {
       width: 100%;
     }
-    &:nth-child(3), &:nth-child(4), &:nth-child(5) {
+    &:nth-child(3) {
       width: 140px;
       padding-left: 5px;
       padding-right: 5px;
@@ -647,9 +645,6 @@
           width: 100%;
         }
       }
-    }
-    &:nth-child(3) {
-      width: 180px;
     }
   }
 
@@ -664,12 +659,5 @@
 
   /deep/ .v-collapse-content-end {
     max-height: 10000px !important;
-  }
-
-  .vc-collapse /deep/ .v-collapse-content {
-    display: none;
-    &.v-collapse-content-end {
-    display: block;
-    }
   }
 </style>

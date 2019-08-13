@@ -27,7 +27,7 @@
           this.init = true;
           this.loading = true;
           console.log('rmis_location', rmis_location);
-          this.data = await users_point.loadLocation();
+          this.data = await users_point.loadLocation({});
           this.loading = false;
         }
       },

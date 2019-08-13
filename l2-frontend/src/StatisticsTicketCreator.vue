@@ -211,27 +211,30 @@
     },
     methods: {
       create() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        statistics_tickets_point.sendTicket(vm.card_pk,
-          vm.visit,
-          vm.info,
-          vm.first_time,
-          vm.primary_visit,
-          vm.disp,
-          vm.result,
-          vm.outcome,
-          vm.disp_diagnos_val,
-          vm.exclude_val,
-          vm.ofname,
-          vm.date_ticket,
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        statistics_tickets_point.sendTicket(this, [
+            'card_pk',
+            'visit',
+            'info',
+            'first_time',
+            'primary_visit',
+            'disp',
+            'result',
+            'outcome',
+            'ofname',
+            'date_ticket'
+          ],
+          {
+            exclude: this.exclude_val,
+            disp_diagnos: this.disp_diagnos_val,
+          },
         )
           .then(() => {
-            vm.clear()
+            this.clear()
             okmessage('Статталон добавлен')
             this.$root.$emit('create-ticket')
           }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       clear() {

@@ -126,7 +126,7 @@
     created() {
       let vm = this
       vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.getResults(this.pk).then(data => {
+      directions_point.getResults(this, ['pk']).then(data => {
         if (!data.full) {
           alert('Результаты подтверждены не полностью. Данные могут быть изменены')
         }

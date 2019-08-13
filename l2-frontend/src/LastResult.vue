@@ -115,7 +115,7 @@
       load() {
         !this.noScroll && $('.scrolldown').scrollDown()
         let vm = this
-        directions_point.lastResult(this.individual, this.research).then(data => {
+        directions_point.lastResult(this, ['individual', 'research']).then(data => {
           vm.in_load = false
           vm.ok = data.ok
           if (data.ok) {

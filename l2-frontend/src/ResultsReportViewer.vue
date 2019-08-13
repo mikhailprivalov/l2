@@ -145,13 +145,17 @@
           return
         this.$root.$emit('validate-datepickers')
         this.is_created = false
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.getResultsReport(this.individual_pk, this.params, this.date_range[0], this.date_range[1]).then(data => {
-          vm.rows = data.data
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.getResultsReport({
+          individual: this.individual_pk,
+          params: this.params,
+          date_start: this.date_range[0],
+          date_end: this.date_range[1]
+        }).then(data => {
+          this.rows = data.data
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.is_created = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.is_created = true
         })
       },
       clear() {

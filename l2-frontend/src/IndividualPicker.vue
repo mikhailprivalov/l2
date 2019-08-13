@@ -194,7 +194,7 @@
           this.return_base = this.return_card = null
         }
         vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск пациента...'}).then()
-        patients_point.searchIndividual(this.query).then((result) => {
+        patients_point.searchIndividual(this, 'query').then((result) => {
           vm.clear()
           if (result.results) {
             vm.founded_individuals = result.results
