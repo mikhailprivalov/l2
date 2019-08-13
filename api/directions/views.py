@@ -739,7 +739,7 @@ def directions_paraclinic_form(request):
 
                 for group in ParaclinicInputGroups.objects.filter(research=i.research, hide=False).order_by("order"):
                     g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
-                         "hide": group.hide, "fields": []}
+                         "hide": group.hide, "fields": [], "visibility": group.visibility}
                     for field in ParaclinicInputField.objects.filter(group=group, hide=False).order_by("order"):
                         g["fields"].append({
                             "pk": field.pk,
@@ -754,6 +754,7 @@ def directions_paraclinic_form(request):
                             ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
                             "field_type": field.field_type,
                             "default_value": field.default_value,
+                            "visibility": field.visibility,
                             "required": field.required,
                         })
                     iss["research"]["groups"].append(g)

@@ -217,64 +217,76 @@
               </button>
             </div>
           </div>
-          <div class="group" v-for="group in row.research.groups">
-            <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
-            <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed,
-                empty: r_list_pk(row).includes(field.pk),
-                required: field.required}"
-                   :title="field.required && 'обязательно для заполнения'"
-                   @mouseenter="enter_field" @mouseleave="leave_field">
-                <div v-if="field.title !== ''" class="field-title">
-                  {{field.title}}
-                </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10"
-                           class="btn btn-default btn-field"
-                           :on-confirm="clear_val" :confirm-time="0"
-                           :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
-                <div v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10"
-                     class="field-inputs">
-                  <div class="input-values-wrap">
-                    <div class="input-values">
-                      <div class="inner-wrap">
-                        <div class="input-value" v-for="val in field.values_to_input" @click="append_value(field, val)">
-                          {{val}}
+          <visibility-group-wrapper :formula="group.visibility" :group="group"
+                                    :groups="row.research.groups"
+                                    v-for="group in row.research.groups">
+            <div class="group">
+              <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
+              <div class="fields">
+                <visibility-field-wrapper :formula="field.visibility" :groups="row.research.groups"
+                                          v-for="field in group.fields">
+                  <div :class="{disabled: row.confirmed,
+                  empty: r_list_pk(row).includes(field.pk),
+                  required: field.required}" :title="field.required && 'обязательно для заполнения'"
+                       @mouseenter="enter_field"
+                       @mouseleave="leave_field" class="field">
+                    <div class="field-title" v-if="field.title !== ''">
+                      {{field.title}}
+                    </div>
+                    <longpress :confirm-time="0"
+                               :duration="400"
+                               :on-confirm="clear_val" :value="field"
+                               action-text="×" class="btn btn-default btn-field" pressing-text="×"
+                               v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10">×
+                    </longpress>
+                    <div class="field-inputs"
+                         v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10">
+                      <div class="input-values-wrap">
+                        <div class="input-values">
+                          <div class="inner-wrap">
+                            <div @click="append_value(field, val)" class="input-value"
+                                 v-for="val in field.values_to_input">
+                              {{val}}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div class="field-value" v-if="field.field_type === 0">
+                    <textarea :readonly="row.confirmed" :rows="field.lines" class="form-control"
+                              v-if="field.lines > 1" v-model="field.value"></textarea>
+                      <input :readonly="row.confirmed" class="form-control" v-else v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 1">
+                      <input :readonly="row.confirmed" class="form-control" style="width: 160px" type="date"
+                             v-model="field.value"/>
+                    </div>
+                    <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
+                      <m-k-b-field :short="false" @input="change_mkb(row, field)" v-model="field.value"/>
+                    </div>
+                    <div class="field-value mkb10" v-else-if="field.field_type === 3">
+                      <formula-field :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])"
+                                     :formula="field.default_value"
+                                     v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
+                      <input :readonly="true" class="form-control" v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 10">
+                      <select :disabled="row.confirmed" class="form-control fw" v-model="field.value">
+                        <option :value="''">
+                          Не выбрано
+                        </option>
+                        <option :value="val" v-for="val in field.values_to_input">
+                          {{val}}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <div class="field-value" v-if="field.field_type === 0">
-                  <textarea v-model="field.value" :rows="field.lines" class="form-control"
-                            v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
-                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" v-else/>
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 1">
-                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
-                </div>
-                <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
-                </div>
-                <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                  <formula-field v-model="field.value" :formula="field.default_value"
-                                 :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])" />
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                  <input v-model="field.value" class="form-control" :readonly="true" />
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 10">
-                  <select v-model="field.value" class="form-control fw" :disabled="row.confirmed">
-                    <option :value="''">
-                      Не выбрано
-                    </option>
-                    <option :value="val" v-for="val in field.values_to_input">
-                      {{val}}
-                    </option>
-                  </select>
-                </div>
+                </visibility-field-wrapper>
               </div>
-            </div>
           </div>
+          </visibility-group-wrapper>
           <div class="group">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
@@ -543,12 +555,15 @@
   import DirectionsHistory from './DirectionsHistory'
   import ResultsViewer from './ResultsViewer'
   import LastResult from './LastResult'
+  import VisibilityFieldWrapper from './components/VisibilityFieldWrapper'
+  import VisibilityGroupWrapper from './components/VisibilityGroupWrapper'
+  import {vField, vGroup} from './components/visibility-triggers'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult,
+      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper,
     },
     data() {
       return {

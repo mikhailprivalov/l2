@@ -175,6 +175,7 @@ class ParaclinicInputGroups(models.Model):
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
     order = models.IntegerField()
     hide = models.BooleanField()
+    visibility = models.TextField(default='', blank=True)
 
 
 class ParaclinicInputField(models.Model):
@@ -202,6 +203,7 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
+    visibility = models.TextField(default='', blank=True)
 
 
 class ParaclinicTemplateName(models.Model):
