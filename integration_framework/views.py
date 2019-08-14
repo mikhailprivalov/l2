@@ -25,3 +25,33 @@ def next_result_direction(request):
         x.append(xx.pk)
 
     return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
+
+
+@api_view()
+def direction_data(request):
+    pk = request.GET.get("pk")
+    direction = directions.Napravleniya.objects.get(pk=pk)
+    card = direction.client
+    individual = card.individual
+
+    return Response({
+        "pk": pk,
+        "createdAt": direction.data_sozdaniya,
+        "patient": {
+            **card.get_data_individual(full_empty=True),
+            "family": individual.family,
+            "name": individual.name,
+            "patronymic": individual.patronymic,
+            "birthday": individual.birthday,
+            "sex": individual.sex,
+            "card": {
+                "base": {
+                    "pk": card.base_id,
+                    "title": card.base.title,
+                    "short_title": card.base.short_title,
+                },
+                "pk": card.pk,
+                "number": card.number,
+            },
+        }
+    })

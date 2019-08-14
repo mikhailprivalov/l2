@@ -710,48 +710,52 @@ class Card(models.Model):
                 docs[t] = None
         return docs
 
-    def get_data_individual(self, empty=False):
+    def get_data_individual(self, empty=False, full_empty=False):
+        if not empty and full_empty:
+            empty = full_empty
         """
         Получает на входе объект Карта
         возвращает словарь атрибутов по карте и Физ.лицу(Индивидуалу)
         :param card_object:
         :return:
         """
-        ind_data = {'ind': self.individual}
-        ind_data['age'] = ind_data['ind'].age()
+        ind_data = {'ind': self.individual} if not full_empty else {}
+        ind_data['age'] = self.individual.age()
         docs = []
         cd = self.get_card_documents()
         for d in cd:
             if d and Document.objects.filter(pk=cd[d]).exists():
                 docs.append(Document.objects.filter(pk=cd[d])[0])
-        ind_data['doc'] = docs
-        ind_data['fio'] = ind_data['ind'].fio()
-        ind_data['born'] = ind_data['ind'].bd()
-        ind_data['main_address'] = "____________________________________________________" if not self.main_address \
+        ind_data['doc'] = docs if not full_empty else []
+        ind_data['fio'] = self.individual.fio()
+        ind_data['born'] = self.individual.bd()
+        ind_data[
+            'main_address'] = "____________________________________________________" if not self.main_address and not full_empty \
             else self.main_address
-        ind_data['fact_address'] = "____________________________________________________" if not self.fact_address \
+        ind_data[
+            'fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty \
             else self.fact_address
         ind_data['card_num'] = self.number_with_type()
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
         ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
-        ind_data['sex'] = ind_data['ind'].sex
+        ind_data['sex'] = self.individual.sex
 
         # document "Паспорт РФ"
-        ind_documents = Document.get_all_doc(ind_data['doc'])
+        ind_documents = Document.get_all_doc(docs)
         ind_data['passport_num'] = ind_documents['passport']['num']
         ind_data['passport_serial'] = ind_documents['passport']['serial']
         ind_data['passport_date_start'] = ind_documents['passport']['date_start']
         ind_data['passport_issued'] = "______________________________________________________________" \
-            if not ind_documents['passport']['issued'] else ind_documents['passport']['issued']
+            if not ind_documents['passport']['issued'] and not full_empty else ind_documents['passport']['issued']
 
         # document "св-во о рождении"
         ind_data['bc_num'] = ind_documents['bc']['num']
         ind_data['bc_serial'] = ind_documents['bc']['serial']
         ind_data['bc_date_start'] = ind_documents['bc']['date_start']
         ind_data['bc_issued'] = "______________________________________________________________" \
-            if not ind_documents['bc']['issued'] else ind_documents['bc']['issued']
+            if not ind_documents['bc']['issued'] and not full_empty else ind_documents['bc']['issued']
         if ind_data['passport_num']:
             ind_data['type_doc'] = 'паспорт'
         elif ind_data['bc_num']:
@@ -771,7 +775,7 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else \
-        ind_documents["polis"]["issued"]
+            ind_documents["polis"]["issued"]
 
         return ind_data
 
