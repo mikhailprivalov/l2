@@ -51,6 +51,7 @@ urlpatterns = [
                   path('reports/', include('reports.urls')),
                   path('mq/', include('mq.urls')),
                   path('logout/', LogoutView.as_view(), {'next_page': '/'}),
+                  path('if/', include('integration_framework.urls')),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if 'silk' in settings.INSTALLED_APPS:
