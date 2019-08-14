@@ -913,12 +913,7 @@ class BenefitReg(models.Model):
     registration_basis = models.TextField(default="", blank=True)
 
 
-class Reception(models.Model):
-    """
-    Учет выписанных рецептов фактически. Когда кем кому, дозировка, по мнн и т.д.
-    с последующм формированием печатных форм. ии Выгрузка ОАЗИС.
-    """
-    pass
+
 
 
 

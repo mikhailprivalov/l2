@@ -26,13 +26,17 @@ class ResEmployeeJob(admin.ModelAdmin):
     list_display_links = ('doc_execute',)
     search_fields = ('doc_execute__fio',)
 
+
+class ResDiagnoses(admin.ModelAdmin):
+    search_fields = ('code',)
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)
 admin.site.register(RMISOrgs)
 admin.site.register(RMISServiceInactive)
-admin.site.register(Diagnoses)
+admin.site.register(Diagnoses, ResDiagnoses)
 admin.site.register(TypeJob, ResTypeJob)
 admin.site.register(EmployeeJob, ResEmployeeJob)
 
