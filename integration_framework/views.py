@@ -8,6 +8,7 @@ import directions.models as directions
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
     after_date = request.GET.get("afterDate")
+    next_n = int(request.GET.get("nextN", 10))
     dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
         issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk').distinct()
     if from_pk:
@@ -20,7 +21,7 @@ def next_result_direction(request):
         next_pk = dirs[0].pk
 
     x = []
-    for xx in dirs[:10]:
+    for xx in dirs[:next_n]:
         x.append(xx.pk)
 
-    return Response({"next": next_pk, "next10": x, "fromPk": from_pk, "afterDate": after_date})
+    return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})

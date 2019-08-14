@@ -14,6 +14,14 @@ class Application(models.Model):
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
 
+    @property
+    def is_authenticated(self):
+        return self.active
+
+    @property
+    def username(self):
+        return self.name
+
     def __str__(self):
         return self.name
 
