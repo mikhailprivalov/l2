@@ -466,7 +466,7 @@
         this.groups = []
         if (this.pk >= 0) {
           this.$store.dispatch(action_types.INC_LOADING).then()
-          construct_point.researchDetails(this.pk).then(data => {
+          construct_point.researchDetails(this, 'pk').then(data => {
             this.title = data.title
             this.short_title = data.short_title
             this.code = data.code
@@ -495,9 +495,9 @@
       },
       save() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(this.pk, this.department, this.title, this.short_title, this.code,
-          this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), this.hide, this.groups, this.site_type,
-          this.internal_code).then(() => {
+        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'groups', 'site_type', 'internal_code'], {
+          info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
+        }).then(() => {
           this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
