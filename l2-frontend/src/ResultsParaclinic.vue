@@ -371,7 +371,7 @@
               </div>
             </div>
           </div>
-          <div v-if="row.research.is_doc_refferal && row.recipe" class="group">
+          <!--<div v-if="row.research.is_doc_refferal && row.recipe" class="group">
             <div class="group-title">Рецепты</div><div class="row">
               <div class="col-xs-12">
                 <div class="sd">
@@ -379,7 +379,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div>-->
           <div class="group" v-if="row.research.is_doc_refferal">
             <div class="group-title">Направления в рамках приёма</div>
             <div class="row">

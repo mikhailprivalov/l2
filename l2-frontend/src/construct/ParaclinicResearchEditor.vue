@@ -74,8 +74,14 @@
           <span class="input-group-addon">Условие видимости</span>
           <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
         </div>
-        <label>Отображать название <input v-model="group.show_title" type="checkbox"/></label><br/>
-        <label>Скрыть группу <input v-model="group.hide" type="checkbox"/></label>
+        <div class="row">
+          <div class="col-xs-6">
+            <label>Отображать название <input type="checkbox" v-model="group.show_title"/></label>
+          </div>
+          <div class="col-xs-6 text-right">
+            <label>Скрыть группу <input type="checkbox" v-model="group.hide"/></label>
+          </div>
+        </div>
         <div>
           <strong>Поля ввода</strong>
         </div>
@@ -148,6 +154,10 @@
               </v-collapse-wrapper>
             </div>
             <div>
+              <strong>Условие видимости:</strong>
+              <textarea class="form-control" v-model="row.visibility"></textarea>
+            </div>
+            <div>
               <label>
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
@@ -198,11 +208,6 @@
   import construct_point from '../api/construct-point'
   import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
-  import VueCollapse from 'vue2-collapse'
-
-  import Vue from 'vue'
-
-  Vue.use(VueCollapse)
 
   export default {
     name: 'paraclinic-research-editor',
@@ -632,7 +637,8 @@
     &:nth-child(2) {
       width: 100%;
     }
-    &:nth-child(3) {
+
+    &:nth-child(3), &:nth-child(4), &:nth-child(5) {
       width: 140px;
       padding-left: 5px;
       padding-right: 5px;
@@ -645,6 +651,10 @@
           width: 100%;
         }
       }
+    }
+
+    &:nth-child(3) {
+      width: 180px;
     }
   }
 
@@ -659,5 +669,13 @@
 
   /deep/ .v-collapse-content-end {
     max-height: 10000px !important;
+  }
+
+  .vc-collapse /deep/ .v-collapse-content {
+    display: none;
+
+    &.v-collapse-content-end {
+      display: block;
+    }
   }
 </style>
