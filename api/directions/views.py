@@ -766,6 +766,7 @@ def directions_paraclinic_form(request):
                             "default_value": field.default_value,
                             "visibility": field.visibility,
                             "required": field.required,
+                            "helper": field.helper,
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)

@@ -375,7 +375,7 @@
             <div class="group-title">Рецепты</div><div class="row">
               <div class="col-xs-12">
                 <div class="sd">
-                  <recipe-input v-model="row" />
+                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
                 </div>
               </div>
             </div>
