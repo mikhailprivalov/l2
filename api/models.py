@@ -20,7 +20,7 @@ class Application(models.Model):
 
     @property
     def username(self):
-        return self.name
+        return 'API: ' + self.name
 
     def __str__(self):
         return self.name

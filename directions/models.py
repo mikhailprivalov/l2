@@ -770,6 +770,43 @@ class Issledovaniya(models.Model):
         verbose_name_plural = 'Назначения на исследования'
 
 
+class MethodsOfTaking(models.Model):
+    drug_prescription = models.CharField(max_length=128, db_index=True)
+    method_of_taking = models.CharField(max_length=128, db_index=True)
+    count = models.IntegerField()
+
+    @staticmethod
+    def inc(dp, method):
+        objs = MethodsOfTaking.objects.filter(drug_prescription=dp, method_of_taking=method)
+        if not objs.exists():
+            MethodsOfTaking(drug_prescription=dp, method_of_taking=method, count=1).save()
+        else:
+            obj = objs[0]
+            obj.count += 1
+            obj.save()
+
+    @staticmethod
+    def dec(dp, method):
+        objs = MethodsOfTaking.objects.filter(drug_prescription=dp, method_of_taking=method)
+        if objs.exists():
+            obj = objs[0]
+            obj.count -= 1
+            obj.save()
+
+
+class Recipe(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
+                                      help_text='Направление на исследование, для которого сохранен рецепт',
+                                      on_delete=models.CASCADE)
+    drug_prescription = models.CharField(max_length=128, db_index=True)
+    method_of_taking = models.CharField(max_length=128)
+    comment = models.CharField(max_length=128)
+
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+
+
 class TypeJob(models.Model):
     title = models.CharField(max_length=255, db_index=True)
     hide = models.BooleanField(help_text="Скрыть тип", default=False)
