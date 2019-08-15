@@ -252,7 +252,7 @@ class Diagnoses(models.Model):
     )
     code = models.CharField(max_length=255, db_index=True)
     title = models.TextField(db_index=True)
-    parent = models.CharField(max_length=255, null=True, db_index=True)
+    parent = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     d_type = models.CharField(max_length=255, db_index=True)
     m_type = models.IntegerField(choices=M, db_index=True)
 
