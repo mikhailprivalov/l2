@@ -260,6 +260,14 @@ class Diagnoses(models.Model):
         return "{} {}".format(self.code, self.title)
 
 
+class KeyValue(models.Model):
+    key = models.CharField(max_length=255, db_index=True)
+    value = models.TextField(db_index=True)
+
+    def __str__(self):
+        return "{} {}".format(self.key, self.value)
+
+
 class RMISServiceInactive(models.Model):
     rmis_id = models.CharField(max_length=30, primary_key=True)
     enabled = models.BooleanField(default=True, blank=True)

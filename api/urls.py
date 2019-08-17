@@ -21,6 +21,8 @@ urlpatterns = [
     path('statistics-tickets/get', views.statistics_tickets_get),
     path('statistics-tickets/invalidate', views.statistics_tickets_invalidate),
     path('mkb10', views.mkb10),
+    path('methods-of-taking', views.methods_of_taking),
+    path('key-value', views.key_value),
     path('vich_code', views.vich_code),
     path('flg', views.flg),
     path('search-template', views.search_template),

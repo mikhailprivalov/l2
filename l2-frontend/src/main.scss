@@ -1304,3 +1304,18 @@ body > .container-fluid {
 .tippy-tooltip {
   font-size: 14px!important;
 }
+
+
+.cl-td {
+  padding: 0!important;
+
+  button {
+    border-radius: 0;
+  }
+
+  input, textarea {
+    border-radius: 0;
+    width: 100%;
+    min-height: 100%;
+  }
+}

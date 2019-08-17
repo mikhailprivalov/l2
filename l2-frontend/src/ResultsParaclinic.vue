@@ -282,6 +282,10 @@
                         </option>
                       </select>
                     </div>
+                    <div :title="field.helper" class="field-helper" v-if="field.helper"
+                         v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
+                      <i class="fa fa-question"></i>
+                    </div>
                   </div>
                 </visibility-field-wrapper>
               </div>
@@ -371,7 +375,7 @@
               </div>
             </div>
           </div>
-          <!--<div v-if="row.research.is_doc_refferal && row.recipe" class="group">
+          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
             <div class="group-title">Рецепты</div><div class="row">
               <div class="col-xs-12">
                 <div class="sd">
@@ -379,7 +383,7 @@
                 </div>
               </div>
             </div>
-          </div>-->
+          </div>
           <div class="group" v-if="row.research.is_doc_refferal">
             <div class="group-title">Направления в рамках приёма</div>
             <div class="row">
@@ -677,7 +681,11 @@
           this.loc_timer = setInterval(() => this.load_location(), 120000);
         }
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation({date: this.td})).data
+        try {
+          this.location.data = (await users_point.loadLocation({date: this.td})).data
+        } catch (_) {
+
+        }
         this.location.loading = false
       },
       load_dreg_rows() {
@@ -1393,6 +1401,7 @@
     margin-top: 5px;
     margin-bottom: 5px;
     background-color: #fafafa;
+    position: relative;
 
     overflow: visible;
 
@@ -1428,6 +1437,20 @@
     }
   }
 
+  .field-helper {
+    position: absolute;
+    top: 1px;
+    right: 6px;
+    bottom: 0;
+    font-size: 18px;
+    padding: 3px;
+    display: inline-block;
+    cursor: pointer;
+    font-weight: bold;
+    color: #049372;
+    text-shadow: 0 0 4px rgba(#049372, .5);
+  }
+
   .field-title {
     flex: 1 0 150px;
     padding-left: 5px;
@@ -1442,6 +1465,7 @@
     .form-control {
       width: 100%;
       border-radius: 0;
+      padding-right: 15px;
     }
     select {
       width: 100%;
