@@ -196,6 +196,7 @@ def researches_update(request):
                                                          visibility=field.get("visibility", ""),
                                                          input_templates=json.dumps(field["values_to_input"]),
                                                          field_type=field.get("field_type", 0),
+                                                         helper=field.get("helper", ''),
                                                          required=field.get("required", False))
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -210,6 +211,7 @@ def researches_update(request):
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
                                 f.for_talon = field.get("for_talon", False)
+                                f.helper = field.get("helper", '')
                             if f:
                                 f.save()
 
@@ -257,6 +259,7 @@ def researches_details(request):
                     "field_type": field.field_type,
                     "required": field.required,
                     "for_talon": field.for_talon,
+                    "helper": field.helper,
                     "new_value": ""
                 })
             response["groups"].append(g)

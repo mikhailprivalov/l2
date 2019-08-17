@@ -371,6 +371,15 @@
               </div>
             </div>
           </div>
+          <!--<div v-if="row.research.is_doc_refferal && row.recipe" class="group">
+            <div class="group-title">Рецепты</div><div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+                </div>
+              </div>
+            </div>
+          </div>-->
           <div class="group" v-if="row.research.is_doc_refferal">
             <div class="group-title">Направления в рамках приёма</div>
             <div class="row">
@@ -553,6 +562,7 @@
   import ResearchPick from './ResearchPick'
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
+  import RecipeInput from './RecipeInput'
   import ResultsViewer from './ResultsViewer'
   import LastResult from './LastResult'
   import VisibilityFieldWrapper from './components/VisibilityFieldWrapper'
@@ -563,7 +573,7 @@
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper,
+      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput,
     },
     data() {
       return {

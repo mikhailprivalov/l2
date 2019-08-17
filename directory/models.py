@@ -204,6 +204,7 @@ class ParaclinicInputField(models.Model):
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
     visibility = models.TextField(default='', blank=True)
+    helper = models.CharField(max_length=255, blank=True, default='')
 
 
 class ParaclinicTemplateName(models.Model):

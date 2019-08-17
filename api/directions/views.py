@@ -11,7 +11,7 @@ from django.utils import dateformat, timezone
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
-from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult
+from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -698,7 +698,17 @@ def directions_paraclinic_form(request):
                                              request.user.groups.all()]) and i.time_confirmation is not None,
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
+                    "recipe": [],
                 }
+
+                if iss["research"]["is_doc_refferal"]:
+                    for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
+                        iss["recipe"].append({
+                            "pk": rp.pk,
+                            "drug_prescription": rp.drug_prescription,
+                            "method_of_taking": rp.method_of_taking,
+                            "comment": rp.comment,
+                        })
 
                 for sd in Napravleniya.objects.filter(parent=i):
                     iss["sub_directions"].append({
@@ -756,6 +766,7 @@ def directions_paraclinic_form(request):
                             "default_value": field.default_value,
                             "visibility": field.visibility,
                             "required": field.required,
+                            "helper": field.helper,
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
