@@ -689,6 +689,7 @@ def directions_paraclinic_form(request):
                         "is_stom": i.research.is_stom,
                         "groups": []
                     },
+                    "examination_date": i.get_medical_examination(),
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
@@ -835,6 +836,8 @@ def directions_paraclinic_result(request):
                 f_result.save()
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
+        if iss.research.is_doc_refferal:
+            iss.medical_examination = request_data.get("examination_date", timezone.now().date())
         if with_confirm:
             iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()

@@ -373,6 +373,15 @@
                   <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
                 </label>
               </div>
+              <div class="field">
+                <div class="field-title">
+                  Дата осмотра
+                </div>
+                <label class="field-value">
+                  <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
+                         required style="width: 160px" type="date" v-model="row.examination_date"/>
+                </label>
+              </div>
             </div>
           </div>
           <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
@@ -585,6 +594,8 @@
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
         td: moment().format('YYYY-MM-DD'),
+        tnd: moment().add(1, 'day').format('YYYY-MM-DD'),
+        td_m_year: moment().subtract(1, 'year').format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -687,6 +698,9 @@
 
         }
         this.location.loading = false
+      },
+      tdm() {
+        return moment().add(1, 'day').format('YYYY-MM-DD')
       },
       load_dreg_rows() {
         (async() => {
@@ -846,6 +860,8 @@
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
           if (data.ok) {
+            this.tnd = moment().add(1, 'day').format('YYYY-MM-DD')
+            this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD')
             this.dreg_rows_loading = false;
             this.benefit_rows_loading = false;
             this.dreg_rows = [];
