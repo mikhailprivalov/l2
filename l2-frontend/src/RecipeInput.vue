@@ -19,9 +19,8 @@
         <tbody>
         <tr v-for="v in fv">
           <td>{{v.prescription}}</td>
-          <!--          <td class="cl-td"><input :readonly="confirmed" class="form-control" maxlength="128" v-model="v.taking"></td>-->
           <td class="cl-td prec">
-            <TypeAhead :delayTime="300"
+            <TypeAhead :delayTime="300" v-if="!confirmed"
                        :getResponse="resp => [...resp.data.data]"
                        :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
                        :limit="10" :minChars="1" :render="items => items.map(i => `${i.method_of_taking}`)"
@@ -30,6 +29,7 @@
                        maxlength="128"
                        v-model="v.taking"
             />
+            <input class="form-control" readonly v-else v-model="v.prescription">
           </td>
           <td class="cl-td"><input :readonly="confirmed" class="form-control" maxlength="128" v-model="v.comment"></td>
           <td class="cl-td" v-if="!confirmed">
