@@ -1250,7 +1250,10 @@ def result_print(request):
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title),style))
 
                 fwb.append(Spacer(1, 3 * mm))
-                fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
+                if iss.research.is_doc_refferal:
+                    fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
+                else:
+                    fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio,

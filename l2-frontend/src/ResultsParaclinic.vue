@@ -373,7 +373,7 @@
                   <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
                 </label>
               </div>
-              <div class="field">
+              <div class="field" v-if="row.research.is_doc_refferal">
                 <div class="field-title">
                   Дата осмотра
                 </div>

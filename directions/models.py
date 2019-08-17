@@ -765,8 +765,8 @@ class Issledovaniya(models.Model):
         return strdate(self.napravleniye.visit_date)
 
     def get_medical_examination(self):
-        if not self.medical_examination and self.time_confirmation:
-            self.medical_examination = self.time_confirmation_local.date()
+        if not self.medical_examination and (self.napravleniye.visit_date or self.time_confirmation):
+            self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
             self.save()
         return self.medical_examination
 
