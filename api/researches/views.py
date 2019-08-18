@@ -120,8 +120,6 @@ def researches_params(request):
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
 def researches_update(request):
     response = {"ok": False}
-    a = int(request.body.decode("utf-8"))
-    print(a, type(a))
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -2)
     if pk > -2:
