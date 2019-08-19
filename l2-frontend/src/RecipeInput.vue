@@ -18,7 +18,7 @@
         </thead>
         <tbody>
         <tr v-for="v in fv">
-          <td>{{v.taking}}</td>
+          <td>{{v.prescription}}</td>
           <td class="cl-td prec">
             <TypeAhead :delayTime="300" v-if="!confirmed"
                        :getResponse="resp => [...resp.data.data]"
@@ -29,7 +29,7 @@
                        maxlength="128"
                        v-model="v.taking"
             />
-            <input class="form-control" readonly v-else v-model="v.prescription">
+            <input class="form-control" readonly v-else v-model="v.taking">
           </td>
           <td class="cl-td"><input :readonly="confirmed" class="form-control" maxlength="128" v-model="v.comment"></td>
           <td class="cl-td" v-if="!confirmed">
