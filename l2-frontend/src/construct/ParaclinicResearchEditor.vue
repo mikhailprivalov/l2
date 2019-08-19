@@ -154,6 +154,10 @@
               </v-collapse-wrapper>
             </div>
             <div>
+              <strong>Подсказка:</strong>
+              <textarea class="form-control" v-model="row.helper"></textarea>
+            </div>
+            <div>
               <strong>Условие видимости:</strong>
               <textarea class="form-control" v-model="row.visibility"></textarea>
             </div>
@@ -164,7 +168,7 @@
               <label>
                 <input type="checkbox" v-model="row.required"/> запрет пустого
               </label>
-               <label>
+              <label>
                 <input type="checkbox" v-model="row.for_talon" /> в талон
               </label>
               <label style="line-height: 1" v-show="row.field_type === 0">
@@ -635,10 +639,10 @@
       padding-right: 5px;
     }
     &:nth-child(2) {
-      width: 100%;
+      width: calc(100% - 530px);
     }
 
-    &:nth-child(3), &:nth-child(4), &:nth-child(5) {
+    &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6) {
       width: 140px;
       padding-left: 5px;
       padding-right: 5px;
@@ -653,7 +657,7 @@
       }
     }
 
-    &:nth-child(3) {
+    &:nth-child(3), &:nth-child(4) {
       width: 180px;
     }
   }

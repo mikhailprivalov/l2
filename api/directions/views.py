@@ -11,7 +11,7 @@ from django.utils import dateformat, timezone
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
-from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe
+from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicResult, Recipe, MethodsOfTaking
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
@@ -689,6 +689,7 @@ def directions_paraclinic_form(request):
                         "is_stom": i.research.is_stom,
                         "groups": []
                     },
+                    "examination_date": i.get_medical_examination(),
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
@@ -700,15 +701,6 @@ def directions_paraclinic_form(request):
                     "sub_directions": [],
                     "recipe": [],
                 }
-
-                if iss["research"]["is_doc_refferal"]:
-                    for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
-                        iss["recipe"].append({
-                            "pk": rp.pk,
-                            "drug_prescription": rp.drug_prescription,
-                            "method_of_taking": rp.method_of_taking,
-                            "comment": rp.comment,
-                        })
 
                 for sd in Napravleniya.objects.filter(parent=i):
                     iss["sub_directions"].append({
@@ -736,6 +728,14 @@ def directions_paraclinic_form(request):
                         "outcome_list": [{"pk": x.pk, "title": x.title} for x in
                                          Outcomes.objects.filter(hide=False).order_by("pk")]
                     }
+
+                    for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
+                        iss["recipe"].append({
+                            "pk": rp.pk,
+                            "prescription": rp.drug_prescription,
+                            "taking": rp.method_of_taking,
+                            "comment": rp.comment,
+                        })
 
                 ParaclinicTemplateName.make_default(i.research)
 
@@ -788,11 +788,35 @@ def directions_paraclinic_result(request):
     visibility_state = rb.get("visibility_state", {})
     v_g = visibility_state.get("groups", {})
     v_f = visibility_state.get("fields", {})
+    recipe = request_data.get("recipe", [])
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                    | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
+
+        recipe_no_remove = []
+
+        for r in recipe:
+            if r.get("remove", False):
+                continue
+            if r.get("isNew", False):
+                rn = Recipe(issledovaniye=iss, drug_prescription=r["prescription"], method_of_taking=r["taking"],
+                            comment=r["comment"])
+                rn.save()
+            else:
+                rn = Recipe.objects.get(pk=r["pk"])
+                MethodsOfTaking.dec(rn.drug_prescription, rn.method_of_taking)
+                rn.drug_prescription = r["prescription"]
+                rn.method_of_taking = r["taking"]
+                rn.comment = r["comment"]
+                rn.save()
+            if rn.method_of_taking:
+                MethodsOfTaking.inc(rn.drug_prescription, rn.method_of_taking)
+            recipe_no_remove.append(rn.pk)
+
+        Recipe.objects.filter(issledovaniye=iss).exclude(pk__in=recipe_no_remove).delete()
+
         for group in request_data["research"]["groups"]:
             if not v_g.get(str(group["pk"]), True):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
@@ -812,6 +836,8 @@ def directions_paraclinic_result(request):
                 f_result.save()
         iss.doc_save = request.user.doctorprofile
         iss.time_save = timezone.now()
+        if iss.research.is_doc_refferal:
+            iss.medical_examination = request_data.get("examination_date", timezone.now().date())
         if with_confirm:
             iss.doc_confirmation = request.user.doctorprofile
             iss.time_confirmation = timezone.now()

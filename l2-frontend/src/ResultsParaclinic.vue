@@ -282,6 +282,10 @@
                         </option>
                       </select>
                     </div>
+                    <div :title="field.helper" class="field-helper" v-if="field.helper"
+                         v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
+                      <i class="fa fa-question"></i>
+                    </div>
                   </div>
                 </visibility-field-wrapper>
               </div>
@@ -291,15 +295,42 @@
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
+                   v-if="!row.confirmed"
                    style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
                 <researches-picker v-model="row.more" :hidetemplates="true"
                                    :readonly="row.confirmed"
                                    :just_search="true"
                                    :filter_types="[2]"/>
               </div>
-              <div class="col-xs-6" style="height: 200px;padding-left: 0;">
+              <div :class="row.confirmed ? 'col-xs-12' : 'col-xs-6'"
+                   :style="'height: 200px;' + (row.confirmed ? '' : 'padding-left: 0')">
                 <selected-researches :researches="row.more"
                                      :readonly="row.confirmed" :simple="true"/>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
+            <div class="group-title">Рецепты</div><div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -369,30 +400,14 @@
                   <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
                 </label>
               </div>
-            </div>
-          </div>
-          <!--<div v-if="row.research.is_doc_refferal && row.recipe" class="group">
-            <div class="group-title">Рецепты</div><div class="row">
-              <div class="col-xs-12">
-                <div class="sd">
-                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+              <div class="field" v-if="row.research.is_doc_refferal">
+                <div class="field-title">
+                  Дата осмотра
                 </div>
-              </div>
-            </div>
-          </div>-->
-          <div class="group" v-if="row.research.is_doc_refferal">
-            <div class="group-title">Направления в рамках приёма</div>
-            <div class="row">
-              <div class="col-xs-12">
-                <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="cd" />
-                </div>
-                <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)"
-                          class="btn btn-primary-nb btn-blue-nb" type="button">
-                    <i class="fa fa-plus"></i> создать направления
-                  </button>
-                </div>
+                <label class="field-value">
+                  <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
+                         required style="width: 160px" type="date" v-model="row.examination_date"/>
+                </label>
               </div>
             </div>
           </div>
@@ -581,6 +596,8 @@
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
         td: moment().format('YYYY-MM-DD'),
+        tnd: moment().add(1, 'day').format('YYYY-MM-DD'),
+        td_m_year: moment().subtract(1, 'year').format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -677,8 +694,15 @@
           this.loc_timer = setInterval(() => this.load_location(), 120000);
         }
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation({date: this.td})).data
+        try {
+          this.location.data = (await users_point.loadLocation({date: this.td})).data
+        } catch (_) {
+
+        }
         this.location.loading = false
+      },
+      tdm() {
+        return moment().add(1, 'day').format('YYYY-MM-DD')
       },
       load_dreg_rows() {
         (async() => {
@@ -838,6 +862,8 @@
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
           if (data.ok) {
+            this.tnd = moment().add(1, 'day').format('YYYY-MM-DD')
+            this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD')
             this.dreg_rows_loading = false;
             this.benefit_rows_loading = false;
             this.dreg_rows = [];
@@ -1393,6 +1419,7 @@
     margin-top: 5px;
     margin-bottom: 5px;
     background-color: #fafafa;
+    position: relative;
 
     overflow: visible;
 
@@ -1428,6 +1455,20 @@
     }
   }
 
+  .field-helper {
+    position: absolute;
+    top: 1px;
+    right: 6px;
+    bottom: 0;
+    font-size: 18px;
+    padding: 3px;
+    display: inline-block;
+    cursor: pointer;
+    font-weight: bold;
+    color: #049372;
+    text-shadow: 0 0 4px rgba(#049372, .5);
+  }
+
   .field-title {
     flex: 1 0 150px;
     padding-left: 5px;
@@ -1442,6 +1483,7 @@
     .form-control {
       width: 100%;
       border-radius: 0;
+      padding-right: 15px;
     }
     select {
       width: 100%;

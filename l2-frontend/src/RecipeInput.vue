@@ -1,549 +1,211 @@
 <template>
-  <div style="height: 100%;width: 100%;position: relative" :class="[!!iss_pk && 'no_abs']">
-    <div class="top-picker" v-if="!iss_pk">
-      <div style="width: 126px;display: inline-block;vertical-align: top" title="Дата направления"
-           v-tippy="{ placement : 'right', arrow: true }">
-        <date-range small v-model="date_range"/>
-      </div>
-      <div class="top-inner">
-        <div class="top-select" style="width: 180px">
-          <select-picker-m :options="services_options" actions_box multiple
-                           noneText="Все услуги" search
-                           uid="services_options" v-model="services"/>
-        </div>
-        <div style="flex: 0 calc(100% - 230px);position: relative;">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" data-toggle="dropdown"
-                  style="text-align: left!important;border-radius: 0;width: 100%;"
-                  type="button">
-            <span class="caret"></span> {{active_type_obj.title}}
-          </button>
-          <ul class="dropdown-menu">
-            <li><a :title="row.title" @click.prevent="select_type(row.pk)" href="#" v-for="row in types"
-                   v-if="row.pk !== active_type">{{ row.title }}</a></li>
-          </ul>
-        </div>
-        <button class="btn btn-blue-nb btn-ell" style="border-radius: 0;width: 50px;flex: 1 50px;" title="Обновить"
-                @click="load_history">
-          <i class="glyphicon glyphicon-refresh"></i>
-        </button>
-      </div>
-    </div>
-    <div class="content-picker">
-      <table class="table table-responsive table-bordered"
-             style="table-layout: fixed;margin-bottom: 0;position:sticky;top:0;background-color: #fff">
+  <div style="height: 100%;width: 100%;position: relative;min-height: 100px;">
+    <table class="table table-responsive table-bordered table-condensed"
+           style="table-layout: fixed;margin-bottom: 0;background-color: #fff">
         <colgroup>
-          <col width="66">
-          <col width="70">
+          <col width="280">
           <col>
-          <col width="65">
-          <col :width="!!iss_pk ? 200 : 150">
-          <col width="28">
+          <col width="240">
+          <col v-if="!confirmed" width="38">
         </colgroup>
         <thead>
         <tr>
-          <th class="text-center">Дата</th>
-          <th>№ напр.</th>
-          <th>Назначения</th>
-          <th class="text-center">Статус</th>
-          <th></th>
-          <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
+          <th>Назначение</th>
+          <th>Способ применения</th>
+          <th>Комментарий</th>
+          <th v-if="!confirmed"></th>
         </tr>
         </thead>
-      </table>
-      <table class="table table-responsive table-bordered no-first-border-top table-hover"
-             style="table-layout: fixed;margin-bottom: 0">
-        <colgroup>
-          <col width="66">
-          <col width="70">
-          <col>
-          <col width="65">
-          <col :width="!!iss_pk ? 200 : 150">
-          <col width="28">
-        </colgroup>
         <tbody>
-        <tr v-if="directions.length === 0 && is_created">
-          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Не найдено</td>
-        </tr>
-        <tr v-if="directions.length === 0 && !is_created">
-          <td class="text-center" :colspan="!iss_pk ? 6 : 5">Загрузка...</td>
-        </tr>
-        <tr v-for="row in directions">
-          <td class="text-center">{{row.date}}</td>
-          <td>{{row.pk}}</td>
-          <td class="researches" :title="row.researches">{{row.researches}}</td>
-          <td class="text-center" :title="statuses[row.status === 1 && row.has_descriptive ? -2 : row.status]"
-              v-tippy="{ placement : 'bottom', arrow: true }"
-              :class="['status-' + row.status]">
-            <strong>{{row.status}}</strong></td>
-          <td class="button-td">
-            <div class="button-td-inner">
-              <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
-              <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
-              <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
-            </div>
+        <tr v-for="v in fv">
+          <td>{{v.prescription}}</td>
+          <td class="cl-td prec">
+            <TypeAhead :delayTime="300" v-if="!confirmed"
+                       :getResponse="resp => [...resp.data.data]"
+                       :highlighting="(item, vue) => item.toString().replace(vue.query, `<b>${vue.query}</b>`)"
+                       :limit="10" :minChars="1" :render="items => items.map(i => `${i.method_of_taking}`)"
+                       :selectFirst="true"
+                       :src="`/api/methods-of-taking?keyword=:keyword&prescription=${v.prescription}`"
+                       maxlength="128"
+                       v-model="v.taking"
+            />
+            <input class="form-control" readonly v-else v-model="v.taking">
           </td>
-          <td class="nopd"><input v-model="row.checked" type="checkbox"/></td>
+          <td class="cl-td"><input :readonly="confirmed" class="form-control" maxlength="128" v-model="v.comment"></td>
+          <td class="cl-td" v-if="!confirmed">
+            <button :title="`Убрать назначение`" @click.prevent="remove(v.pk)"
+                    class="btn last btn-blue-nb nbr"
+                    type="button" v-tippy="{ placement : 'bottom', arrow: true }">
+              <i class="fa fa-times-circle"></i>
+            </button>
+          </td>
+        </tr>
+        <tr v-if="fv.length === 0">
+          <td class="text-center" colspan="4">нет назначений</td>
         </tr>
         </tbody>
       </table>
-    </div>
-    <div class="bottom-picker" v-if="checked.length > 0 || !iss_pk">
-      <div style="padding-left: 5px;color: #fff"><span v-if="checked.length > 0">Отмечено: {{checked.length}}</span>
-      </div>
-      <div class="bottom-inner">
-        <div class="dropup" style="display: inline-block;max-width: 350px;width: 100%">
-          <button class="btn btn-blue-nb btn-ell dropdown-toggle" type="button" data-toggle="dropdown"
-                  style="text-align: right!important;border-radius: 0;width: 100%">
-            Действие с отмеченными <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
-                <a :href="f.url" target="_blank">{{f.title}}</a>
-            </li>
-            <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
-            <li v-if="!iss_pk">
-              <a href="#" @click.prevent="selected_do('copy_researches')">Скопировать исследования для назначения</a>
-            </li>
-            <li><a href="#" @click.prevent="selected_do('print_results')">Печать результатов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_barcodes')">Печать штрих-кодов</a></li>
-            <li><a href="#" @click.prevent="selected_do('print_directions')">Печать направлений</a></li>
-          </ul>
+    <hr v-if="!confirmed"/>
+    <div class="row" v-if="!confirmed">
+      <div class="col-xs-3">
+        <div class="input-group" style="z-index: 0">
+          <input class="form-control" placeholder="Поиск назначения" v-model="search">
+          <span class="input-group-btn">
+            <button @click="search = ''" class="btn btn-blue-nb" type="button"><i class="fa fa-times"></i></button>
+          </span>
         </div>
+        <div v-if="variants.length > 0">
+          <small>выберите назначение из списка справа</small>
+        </div>
+      </div>
+      <div class="col-xs-9" style="padding-left: 0">
+        <div @click="add(v.value)" class="variant" v-for="v in variants">
+          <strong>{{v.highlighted}}</strong>{{v.noHighlighted}}
+        </div>
+        <div class="variant-msg" v-if="search === ''">выполните поиск для добавления назначений</div>
+        <div class="variant-msg" v-else-if="variants.length === 0">не найдено</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import SelectPickerM from './SelectPickerM'
-  import DateRange from './ui-cards/DateRange'
-  import directions_point from './api/directions-point'
+  import TypeAhead from 'vue2-typeahead'
   import * as action_types from './store/action-types'
-  import moment from 'moment'
-  import {forDirs} from './forms';
-  import {mapGetters} from 'vuex'
-
-  function truncate(s, n, useWordBoundary) {
-    if (s.length <= n) {
-      return s
-    }
-    const subString = s.substr(0, n - 1)
-    return (useWordBoundary
-      ? subString.substr(0, subString.lastIndexOf(' '))
-      : subString) + '...'
-  }
 
   export default {
-    components: {SelectPickerM, DateRange},
-    name: 'directions-history',
+    name: 'recipe-input',
+    components: {TypeAhead},
     props: {
-      patient_pk: {
-        type: Number,
-        default: -1,
-        required: false,
+      value: {
+        type: Array,
       },
-      iss_pk: {
-        type: Number,
-        default: null,
-        required: false,
-      },
-      kk: {
-        type: String,
-        default: '',
-      },
+      confirmed: {
+        type: Boolean,
+        default: false,
+      }
     },
     data() {
       return {
-        date_range: [moment().subtract(3, 'month').format('DD.MM.YY'), moment().format('DD.MM.YY')],
-        types: [
-          {pk: 3, title: 'Направления пациента'},
-          {pk: 0, title: 'Только выписанные'},
-          {pk: 1, title: 'Материал в лаборатории'},
-          {pk: 2, title: 'Результаты подтверждены'},
-          {pk: 4, title: 'Созданы пользователем'}
-        ],
-        active_type: 3,
-        checked_obj: {},
-        is_created: false,
-        directions: [],
-        checked: [],
-        services: [],
-        services_options: [],
-        all_checked: false,
-        statuses: {
-          '-2': 'Посещение зарегистрировано',
-          '-1': 'Направление отменено',
-          '0': 'Направление только выписано',
-          '1': 'Материал в лаборатории',
-          '2': 'Результаты подтверждены',
-        }
-      }
+        search: '',
+        variants: [],
+        toRemove: [],
+      };
     },
     computed: {
-      forms() {
-        return forDirs.map(f => {
-          return {...f, url: f.url.kwf({
-              card: this.patient_pk,
-              dir: JSON.stringify(this.checked),
-            })}
-        });
-      },
-      active_type_obj() {
-        for (let row of this.types) {
-          if (row.pk === this.active_type) {
-            return row
-          }
-        }
-        return {}
-      },
-      ...mapGetters({
-        researches: 'researches',
-      }),
-    },
-    mounted() {
-      this.is_created = true
-      this.load_history()
-      this.$root.$on('researches-picker:directions_created' + this.kk, this.load_history)
-    },
-    methods: {
-      update_so(researches) {
-        const s = [].concat.apply([], Object.values(researches)).map(r => ({
-          value: String(r.pk),
-          label: truncate(r.full_title, 60, true),
-        }))
-        if (s.length === 0) {
-          return
-        }
-        s.sort((a, b) => (a.label.toUpperCase() > b.label.toUpperCase()) ? 1 : -1)
-        this.services_options = s
-        setTimeout(() => {
-          this.$root.$emit(`update-sp-m-services_options`)
-        }, 0)
-      },
-      show_results(row) {
-        if (row.has_descriptive) {
-          this.$root.$emit('print:results', [row.pk])
-        }
-        else {
-          this.$root.$emit('show_results', row.pk)
-        }
-      },
-      print_direction(pk) {
-        this.$root.$emit('print:directions', [pk])
-      },
-      cancel_direction(pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.cancelDirection({pk}).then((data) => {
-          for (let dir of vm.directions) {
-            if (dir.pk === pk) {
-              dir.cancel = data.cancel
-              if (dir.status === -1 && !dir.cancel) {
-                dir.status = 0
-              } else if (dir.status === 0 && dir.cancel) {
-                dir.status = -1
-              }
-              break
-            }
-          }
-        }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-        })
-
-      },
-      selected_do(type) {
-        switch (type) {
-          case 'resend_results_rmis':
-            break
-          case 'resend_directions_rmis':
-            break
-          case 'copy_researches':
-            for (let dir of this.directions) {
-              if (this.in_checked(dir.pk)) {
-                for (let pk of dir.researches_pks) {
-                  this.$root.$emit('researches-picker:add_research', pk)
-                }
-              }
-            }
-            break
-          case 'print_results':
-            this.$root.$emit('print:results', this.checked)
-            break
-          case 'print_barcodes':
-            this.$root.$emit('print:barcodes', this.checked)
-            break
-          case 'directions_list':
-            this.$root.$emit('print:directions_list', this.checked)
-            break
-          default:
-            this.$root.$emit('print:directions', this.checked)
-            break
-        }
-      },
-      select_type(pk) {
-        this.active_type = pk
-      },
-      load_history() {
-        if (!this.is_created)
-          return
-        this.$root.$emit('validate-datepickers')
-        this.is_created = false
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.directions = []
-        vm.all_checked = false
-
-        directions_point.getHistory(this, ['iss_pk', 'services'], {
-          type: this.active_type,
-          patient: this.patient_pk,
-          date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
-          date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
-        }).then((data) => {
-          vm.directions = data.directions
-        }).finally(() => {
-          vm.is_created = true
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-        })
-      },
-      in_checked(pk) {
-        return this.checked.indexOf(pk) !== -1
-      },
-      sync_check(pk, e) {
-        let v = e.target.checked
-        if (!v) {
-          this.checked = this.checked.filter(e => e !== pk)
-        }
-        else if (!this.in_checked(pk)) {
-          this.checked.push(pk)
-        }
+      fv() {
+        return this.value.filter(v => !this.toRemove.includes(v.pk) && !v.remove)
       }
     },
-    watch: {
-      active_type() {
-        this.load_history()
+    methods: {
+      add(value) {
+        this.value.push({
+          pk: Math.random() + Math.random(),
+          prescription: value,
+          taking: '',
+          comment: '',
+          isNew: true,
+        })
       },
-      patient_pk() {
-        this.load_history()
-      },
-      date_range() {
-        this.load_history()
-      },
-      services() {
-        this.load_history()
-      },
-      all_checked() {
-        for (let row of this.directions) {
-          row.checked = this.all_checked
+      async remove(pk) {
+        for (let i = 0; i < this.value.length; i++) {
+          if (this.value[i].pk === pk) {
+            try {
+              await this.$dialog.confirm(`Подтвердите удаление назначения «${this.value[i].prescription}»`)
+            } catch (_) {
+              return
+            }
+            this.value[i].remove = true
+            this.toRemove.push(pk)
+            break
+          }
         }
       },
-      directions: {
-        handler() {
-          this.checked = []
-          for (let row of this.directions) {
-            if (row.checked) {
-              this.checked.push(row.pk)
-            }
-          }
-        },
-        deep: true
+    },
+    watch: {
+      async search() {
+        if (this.search.trim() === '') {
+          this.variants = []
+          return
+        }
+        await this.$store.dispatch(action_types.INC_LOADING)
+        const {data} = await fetch(`/api/key-value?key=mnn&value=${this.search}`).then(r => r.json())
+        this.variants = []
+        const lowerSearch = this.search.trim().toLowerCase()
+        const l = lowerSearch.length
+        for (const v of data) {
+          const i = v.value.toLowerCase().indexOf(lowerSearch)
+          const to = i + l
+
+          const highlighted = v.value.substring(i, to)
+          const noHighlighted = v.value.substring(to)
+          this.variants.push({
+            value: v.value,
+            highlighted,
+            noHighlighted,
+          })
+        }
+        await this.$store.dispatch(action_types.DEC_LOADING)
       },
-      researches: {
-        handler() {
-          this.update_so(this.researches)
-        },
-        immediate: true,
-      },
-    }
+    },
   }
 </script>
 
 <style scoped lang="scss">
+  .variant {
+    cursor: pointer;
+    transition: all .2s cubic-bezier(.25, .8, .25, 1);
 
-  .top-picker, .bottom-picker {
-    height: 34px;
-    background-color: #AAB2BD;
-    position: absolute;
-    left: 0;
-    right: 0;
-  }
-
-  .top-picker {
-    top: 0;
-    white-space: nowrap;
-
-    /deep/ {
-      input {
-        border-radius: 0;
-        border: none;
-        border-bottom: 1px solid #AAB2BD;
-        background: #fff;
-      }
-
-      .input-group-addon {
-        border: 1px solid #AAB2BD;
-        border-top: none;
-      }
-    }
-  }
-
-  .content-picker, .content-none, .bottom-inner {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: stretch;
-    align-content: center;
-    align-items: stretch;
-    overflow-y: auto;
-  }
-
-  .content-picker {
-    align-content: flex-start;
-  }
-
-  .content-none {
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-  }
-
-  .top-inner {
-    position: absolute;
-    left: 126px;
-    top: 0;
-    right: 0;
-    height: 34px;
-    overflow: visible;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    justify-content: space-between;
-  }
-
-  .content-picker, .content-none {
-    position: absolute;
-    top: 34px;
-    bottom: 34px;
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-    .no_abs & {
-      position: static;
-    }
-  }
-
-  .bottom-picker {
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    .no_abs & {
+    &:hover {
+      color: #fff;
+      background-color: #049372;
+      box-shadow: 0 14px 28px rgba(#049372, 0.35), 0 10px 10px rgba(#049372, 0.32);
       position: relative;
+      z-index: 1;
+      transform: scale(1.008) translateX(-2px);
     }
   }
 
-  .bottom-inner {
-    position: absolute;
-    color: #fff;
-    height: 34px;
-    right: 0;
-    left: 155px;
-    top: 0;
-    justify-content: flex-end;
-    align-content: center;
-    align-items: center;
-    overflow: visible;
-  }
+  .variant, .variant-msg {
+    color: #000;
+    background: rgba(0, 0, 0, .05);
+    padding: 7px 5px;
+    margin: 4px 0 2px 4px;
+    border-radius: 5px;
 
-  th {
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-
-  td:not(.nopd):not(.button-td), th:not(.nopd):not(.button-td) {
-    padding: 2px !important;
-  }
-
-  .nopd {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-
-  .no-first-border-top {
-    border-top: none;
-    border-bottom: none;
-
-    tr {
-      &:first-child {
-        border-top: none;
-
-        td {
-          border-top: none;
-        }
-      }
-
-      td:first-child {
-        border-left: none;
-      }
-
-      td:last-child {
-        border-right: none;
-      }
+    &:first-child {
+      margin-top: 0;
     }
   }
 
-  .status--1 {
-    color: #F4D03F
+  .prec {
+    margin-right: -1px;
+    z-index: 0;
   }
 
-  .status-0 {
-    color: #CF3A24
+  .prec /deep/ .input-group {
+    border-radius: 0;
+    width: 100%;
+    z-index: 0;
   }
 
-  .status-1 {
-    color: #4B77BE
+  .prec /deep/ input {
+    border-radius: 0!important;
   }
 
-  .status-2 {
-    color: #049372
+  .prec /deep/ ul {
+    position: relative;
+    font-size: 13px;
+    z-index: 1000;
   }
 
-  .researches {
-    white-space: nowrap;
+  .prec /deep/ ul li {
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 12px;
-  }
-
-  .button-td {
-    padding: 0 !important;
-    text-align: right;
-    height: 1px;
-
-    .button-td-inner {
-      display: flex;
-      height: 100%;
-      min-height: 24px;
-      width: 100%;
-      justify-content: flex-end;
-      align-items: stretch;
-    }
-
-    .btn {
-      margin: 0;
-      border-radius: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      padding: 2px;
-      border: none !important;
-      flex: 0 0 50%;
-    }
-  }
-
-  .top-select /deep/ {
-    .btn {
-      border-radius: 0;
-      border-top: 0;
-      height: 34px;
+    padding: 2px .25rem;
+    margin: 0 .2rem;
+    a {
+      padding: 2px 10px;
     }
   }
 </style>

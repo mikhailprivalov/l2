@@ -260,6 +260,14 @@ class Diagnoses(models.Model):
         return "{} {}".format(self.code, self.title)
 
 
+class KeyValue(models.Model):
+    key = models.CharField(max_length=255, db_index=True)
+    value = models.TextField(db_index=True)
+
+    def __str__(self):
+        return "{} {}".format(self.key, self.value)
+
+
 class RMISServiceInactive(models.Model):
     rmis_id = models.CharField(max_length=30, primary_key=True)
     enabled = models.BooleanField(default=True, blank=True)
@@ -724,6 +732,7 @@ class Issledovaniya(models.Model):
                                 on_delete=models.SET_NULL)
     parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание",
                                blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    medical_examination = models.DateField(blank=True, null=True, default=None, help_text="Дата осмотра")
 
     @property
     def time_save_local(self):
@@ -754,6 +763,12 @@ class Issledovaniya(models.Model):
             self.napravleniye.visit_who_mark = self.doc_confirmation
             self.napravleniye.save()
         return strdate(self.napravleniye.visit_date)
+
+    def get_medical_examination(self):
+        if not self.medical_examination and (self.napravleniye.visit_date or self.time_confirmation):
+            self.medical_examination = (self.napravleniye.visit_date or self.time_confirmation).date()
+            self.save()
+        return self.medical_examination
 
     def is_receive_material(self):
         """

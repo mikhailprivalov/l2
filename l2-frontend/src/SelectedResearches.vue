@@ -689,12 +689,6 @@
     align-items: stretch;
     overflow-y: auto;
   }
-  .cl-td {
-    padding: 0;
-    button {
-      border-radius: 0;
-    }
-  }
   .pb0 {
     padding-bottom: 0;
     padding-top: 4px;

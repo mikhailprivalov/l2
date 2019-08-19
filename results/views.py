@@ -21,7 +21,7 @@ import users.models as users
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
-    ParaclinicResult
+    ParaclinicResult, Recipe
 from laboratory.decorators import group_required, logged_in_or_token
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
@@ -1217,8 +1217,22 @@ def result_print(request):
                                 txt += ". "
                             elif len(txt) > 0:
                                 txt += " "
-
                     fwb.append(Paragraph(txt, style))
+
+                recipies = Recipe.objects.filter(issledovaniye=iss).order_by('pk')
+                if recipies.exists():
+                    fwb.append(Spacer(1, 1 * mm))
+                    fwb.append(Paragraph('Рецепты', styleBold))
+                    fwb.append(Spacer(1, 0.25 * mm))
+                    for r in recipies:
+                        fwb.append(Paragraph(
+                            "<font face=\"OpenSansBold\">{}:</font> {}{}".format(
+                                r.drug_prescription,
+                                r.method_of_taking,
+                                '' if not r.comment else f' ({r.comment})'
+                            ),
+                            style_ml))
+
                 fwb.append(Spacer(1, 2.5 * mm))
                 t1 = iss.get_visit_date()
                 t2 = strdate(iss.time_confirmation)
@@ -1250,7 +1264,10 @@ def result_print(request):
                                 fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title),style))
 
                 fwb.append(Spacer(1, 3 * mm))
-                fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
+                if iss.research.is_doc_refferal:
+                    fwb.append(Paragraph("Дата осмотра: {}".format(strdate(iss.get_medical_examination())), styleBold))
+                else:
+                    fwb.append(Paragraph("Дата оказания услуги: {}".format(t1), styleBold))
                 fwb.append(Paragraph("Дата формирования протокола: {}".format(t2), styleBold))
                 if iss.doc_confirmation.podrazdeleniye.vaccine:
                     fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.fio,
