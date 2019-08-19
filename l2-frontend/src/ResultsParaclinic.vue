@@ -307,6 +307,31 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
+            <div class="group-title">Рецепты</div><div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="group" v-if="row.research.is_doc_refferal && stat_btn">
             <div class="group-title">Данные статталона</div>
             <div class="fields">
@@ -381,31 +406,6 @@
                   <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
                          required style="width: 160px" type="date" v-model="row.examination_date"/>
                 </label>
-              </div>
-            </div>
-          </div>
-          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
-            <div class="group-title">Рецепты</div><div class="row">
-              <div class="col-xs-12">
-                <div class="sd">
-                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="group" v-if="row.research.is_doc_refferal">
-            <div class="group-title">Направления в рамках приёма</div>
-            <div class="row">
-              <div class="col-xs-12">
-                <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="cd" />
-                </div>
-                <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)"
-                          class="btn btn-primary-nb btn-blue-nb" type="button">
-                    <i class="fa fa-plus"></i> создать направления
-                  </button>
-                </div>
               </div>
             </div>
           </div>

@@ -18,7 +18,7 @@
         </thead>
         <tbody>
         <tr v-for="v in fv">
-          <td>{{v.prescription}}</td>
+          <td>{{v.taking}}</td>
           <td class="cl-td prec">
             <TypeAhead :delayTime="300" v-if="!confirmed"
                        :getResponse="resp => [...resp.data.data]"
