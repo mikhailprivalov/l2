@@ -198,7 +198,6 @@
         }
 
         this.post = true
-        const vm = this
         const pk = this.selected_direction
         this.$root.$emit('generate-directions', {
           type: 'direction',
@@ -214,7 +213,7 @@
           for_rmis: true,
           rmis_data: {rmis_number: this.selected_direction, imported_org: this.direction_data.referralOrganizationPk},
           callback: () => {
-            vm.load_data()
+            this.load_data()
           }
         })
       },
@@ -234,27 +233,25 @@
         this.$refs.modal.$el.style.display = 'none'
       },
       load_data() {
-        let vm = this
-        vm.loaded = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        vm.cancel()
-        directions_point.getRmisDirections(vm.card.pk).then(data => {
-          vm.rows = data.rows
+        this.loaded = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.cancel()
+        directions_point.getRmisDirections(this.card, ['pk']).then(data => {
+          this.rows = data.rows
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.loaded = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.loaded = true
         })
       },
       select_direction(pk) {
         if (pk === this.selected_direction)
           return
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.getRmisDirection(pk).then(data => {
-          vm.direction_data = data
-          vm.selected_direction = pk
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.getRmisDirection({pk}).then(data => {
+          this.direction_data = data
+          this.selected_direction = pk
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       }
     }

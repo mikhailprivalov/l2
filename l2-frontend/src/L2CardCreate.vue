@@ -715,15 +715,14 @@
         if (!this.valid) {
           return
         }
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          const data = await patients_point.sendCard(this.card_pk, this.card.family, this.card.name,
-            this.card.patronymic, this.card.birthday, this.card.sex,
-            this.card.individual, this.card.new_individual, this.base_pk,
-            this.card.fact_address, this.card.main_address, this.card.work_place, this.card.main_diagnosis,
-            this.card.work_position, this.card.work_place_db, this.card.custom_workplace,
-            this.card.district, this.card.ginekolog_district, this.card.phone)
+          await this.$store.dispatch(action_types.INC_LOADING)
+          const data = await patients_point.sendCard(this.card,
+            ['card_pk', 'family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
+              'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
+              'custom_workplace', 'district', 'phone'], {
+              individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
+            })
           if (data.result !== 'ok') {
             return
           }
@@ -736,29 +735,27 @@
             hide: hide_after,
           })
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       update_cdu(doc) {
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.updateCdu(this.card_pk, doc)
+          await this.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.updateCdu({card_pk: this.card_pk, doc})
           this.load_data();
           okmessage('Изменения сохранены');
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       update_wia(key) {
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.updateWIA(this.card_pk, key)
+          await this.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.updateWIA({card_pk: this.card_pk, key})
           this.load_data();
           okmessage('Изменения сохранены');
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       edit_agent(key) {
@@ -768,13 +765,12 @@
         this.agent_to_edit = key;
       },
       sync_rmis() {
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          await patients_point.syncRmis(this.card_pk)
+          await this.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.syncRmis(this, 'card_pk')
           this.load_data();
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       getResponse(resp) {
@@ -807,22 +803,21 @@
         if (this.card_pk === -1) {
           return;
         }
-        let vm = this
-        vm.loaded = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.getCard(vm.card_pk).then(data => {
-          vm.card = data
+        this.loaded = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.getCard(this, 'card_pk').then(data => {
+          this.card = data
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.loaded = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.loaded = true
         })
       },
       individuals_search() {
         if (!this.valid) {
           return
         }
-        patients_point.individualsSearch(this.card.family, this.card.name,
-          this.card.patronymic, this.card.birthday, this.card.sex).then(({result}) => {
+        patients_point.individualsSearch(this.card, ['family', 'name', 'patronymic', 'birthday', 'sex'])
+          .then(({result}) => {
           this.individuals = result
           this.card.individual = result.length === 0 ? -1 : result[0].pk
           this.card.new_individual = result.length === 0
@@ -832,7 +827,7 @@
         if (this.card_pk >= 0) {
           return
         }
-        patients_point.individualSex(t, v).then(({sex}) => {
+        patients_point.individualSex({t, v}).then(({sex}) => {
           this.card.sex = sex
         })
       },
@@ -862,41 +857,40 @@
         if (!this.valid_doc) {
           return
         }
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          const data = await patients_point.editDoc(this.document_to_edit,
-            this.document.document_type, this.document.serial,
-            this.document.number, this.document.is_active, this.card.individual,
-            this.document.date_start, this.document.date_end, this.document.who_give, this.card_pk,
-          )
+          await this.$store.dispatch(action_types.INC_LOADING)
+          const data = await patients_point.editDoc(this.document,
+            ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give', 'card_pk'],
+            {
+              pk: this.document_to_edit,
+              type: this.document.document_type,
+            })
           this.load_data();
           this.document = {
             number: ''
           };
           this.hide_modal_doc_edit();
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       save_agent() {
         if (!this.valid_agent) {
           return
         }
-        let vm = this;
         (async () => {
-          await vm.$store.dispatch(action_types.INC_LOADING)
-          const data = await patients_point.editAgent(
-            this.agent_to_edit,
-            this.card_pk,
-            this.agent_card_selected,
-            this.agent_doc,
-            this.agent_clear,
-          )
+          await this.$store.dispatch(action_types.INC_LOADING)
+          await patients_point.editAgent({
+            key: this.agent_to_edit,
+            parent_card_pk: this.card_pk,
+            card_pk: this.agent_card_selected,
+            doc: this.agent_doc,
+            clear: this.agent_clear,
+          })
           this.load_data();
           this.hide_modal_agent_edit();
         })().then().finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       }
     }

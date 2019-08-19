@@ -1,48 +1,16 @@
-import {HTTP} from '../http-common'
+import {generator} from './http-common'
 
-async function updateResearch(pk, department, title, short_title, code, info, hide, groups, site_type, internal_code) {
-  try {
-    const response = await HTTP.post('researches/update', {pk, department, title, short_title,
-      code, info, hide, groups, site_type, internal_code})
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
+export default generator({
+  updateResearch: {
+    url: 'researches/update',
+    onReject: {ok: false},
+  },
+  researchDetails: {
+    url: 'researches/details',
+    onReject: {pk: -1, department: -1, title: '', short_title: '', code: ''},
+  },
+  updateTemplate: {
+    url: 'researches/paraclinic_details',
+    onReject: {groups: []},
   }
-  return {ok: false}
-}
-
-async function updateTemplate(pk, title, researches, global) {
-  try {
-    const response = await HTTP.post('templates/update', {pk, title, researches, global})
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {ok: false}
-}
-
-async function researchDetails(pk) {
-  try {
-    const response = await HTTP.post('researches/details', {pk})
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {pk: -1, department: -1, title: '', short_title: '', code: ''}
-}
-
-async function researchParaclinicDetails(pk) {
-  try {
-    const response = await HTTP.post('researches/paraclinic_details', {pk})
-    if (response.statusText === 'OK') {
-      return response.data
-    }
-  } catch (e) {
-  }
-  return {groups: []}
-}
-
-export default {updateResearch, researchDetails, updateTemplate}
+})

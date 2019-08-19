@@ -240,51 +240,49 @@
       }
     },
     created() {
-      let vm = this
-
-      vm.$store.dispatch(action_types.INC_LOADING).then()
+      this.$store.dispatch(action_types.INC_LOADING).then()
       this.$store.dispatch(action_types.GET_DIRECTIVE_FROM).then(() => {
-        vm.local_directive_departments = vm.$store.getters.directive_from
-        vm.directive_departments_select = []
-        for (let dep of vm.local_directive_departments) {
-          vm.directive_departments_select.push({label: dep.title, value: dep.pk})
+        this.local_directive_departments = this.$store.getters.directive_from
+        this.directive_departments_select = []
+        for (let dep of this.local_directive_departments) {
+          this.directive_departments_select.push({label: dep.title, value: dep.pk})
         }
 
-        if (vm.local_directive_departments.length > 0 && vm.ofname_to_set === '-1') {
-          for (let dep of vm.local_directive_departments) {
-            if (dep.pk === vm.$store.getters.user_data.department.pk) {
-              vm.directive_department = dep.pk + ''
-              vm.check_base()
+        if (this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
+          for (let dep of this.local_directive_departments) {
+            if (dep.pk === this.$store.getters.user_data.department.pk) {
+              this.directive_department = dep.pk + ''
+              this.check_base()
               return
             }
           }
-          vm.directive_department = vm.local_directive_departments[0].pk.toString()
+          this.directive_department = this.local_directive_departments[0].pk.toString()
         }
 
-        vm.check_base()
+        this.check_base()
       }).finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.DEC_LOADING).then()
       })
 
       this.$store.watch(state => state.bases, (oldValue, newValue) => {
         this.check_base()
       })
       this.$root.$on('search', () => {
-        vm.search()
+        this.search()
       })
       this.$root.$on('select_card', data => {
-        vm.base = data.base_pk;
-        vm.query = `card_pk:${data.card_pk}`
-        vm.search_after_loading = true
-        $(vm.$refs.q).focus()
-        vm.emit_input()
+        this.base = data.base_pk
+        this.query = `card_pk:${data.card_pk}`
+        this.search_after_loading = true
+        $(this.$refs.q).focus()
+        this.emit_input()
         if (!data.hide) {
-          vm.editor_pk = data.card_pk
+          this.editor_pk = data.card_pk
         } else {
-          vm.editor_pk = -2;
+          this.editor_pk = -2
         }
         setTimeout(() => {
-          vm.search()
+          this.search()
           if (!data.hide) {
             setTimeout(() => {
               this.$root.$emit('reload_editor');
@@ -293,7 +291,7 @@
         }, 5);
       })
       this.$root.$on('hide_l2_card_create', () => {
-        vm.editor_pk = -2;
+        this.editor_pk = -2
       })
       this.$root.$on('hide_dreg', () => {
         this.dreg = false;
@@ -408,11 +406,10 @@
     },
     methods: {
       open_anamnesis() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.loadAnamnesis(this.selected_card.pk).then(data => {
-          vm.an_tab('text');
-          vm.anamnesis_data = data;
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadAnamnesis({card_pk: this.selected_card.pk}).then(data => {
+          this.an_tab('text')
+          this.anamnesis_data = data
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then();
           this.anamnesis = true;
@@ -618,16 +615,15 @@
         this.emit_input()
       },
       open_as_l2_card() {
-        let vm = this
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
-        patients_point.searchL2Card(this.selected_card.pk).then((result) => {
-          vm.clear()
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
+        patients_point.searchL2Card({card_pk: this.selected_card.pk}).then((result) => {
+          this.clear()
           if (result.results) {
-            vm.founded_cards = result.results
-            if (vm.founded_cards.length > 1) {
-              vm.showModal = true
-            } else if (vm.founded_cards.length === 1) {
-              vm.select_card(0)
+            this.founded_cards = result.results
+            if (this.founded_cards.length > 1) {
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
             }
           } else {
             errmessage('Ошибка на сервере')
@@ -635,7 +631,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING).then()
         })
       },
       search() {
@@ -646,16 +642,20 @@
         $('input').each(function () {
           $(this).trigger('blur')
         })
-        let vm = this
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, q, false, this.inc_rmis || this.search_after_loading).then((result) => {
-          vm.clear()
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
+        patients_point.searchCard({
+          type: this.base,
+          query: q,
+          list_all_cards: false,
+          inc_rmis: this.inc_rmis || this.search_after_loading
+        }).then((result) => {
+          this.clear()
           if (result.results) {
-            vm.founded_cards = result.results
-            if (vm.founded_cards.length > 1) {
-              vm.showModal = true
-            } else if (vm.founded_cards.length === 1) {
-              vm.select_card(0)
+            this.founded_cards = result.results
+            if (this.founded_cards.length > 1) {
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
             } else {
               errmessage('Не найдено', 'Карт по такому запросу не найдено')
             }
@@ -669,7 +669,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING).then()
         })
       }
     }

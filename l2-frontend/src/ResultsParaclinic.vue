@@ -217,77 +217,120 @@
               </button>
             </div>
           </div>
-          <div class="group" v-for="group in row.research.groups">
-            <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
-            <div class="fields">
-              <div class="field" v-for="field in group.fields" :class="{disabled: row.confirmed,
-                empty: r_list_pk(row).includes(field.pk),
-                required: field.required}"
-                   :title="field.required && 'обязательно для заполнения'"
-                   @mouseenter="enter_field" @mouseleave="leave_field">
-                <div v-if="field.title !== ''" class="field-title">
-                  {{field.title}}
-                </div>
-                <longpress v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10"
-                           class="btn btn-default btn-field"
-                           :on-confirm="clear_val" :confirm-time="0"
-                           :duration="400" :value="field" pressing-text="×" action-text="×">×</longpress>
-                <div v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10"
-                     class="field-inputs">
-                  <div class="input-values-wrap">
-                    <div class="input-values">
-                      <div class="inner-wrap">
-                        <div class="input-value" v-for="val in field.values_to_input" @click="append_value(field, val)">
-                          {{val}}
+          <visibility-group-wrapper :group="group"
+                                    :groups="row.research.groups"
+                                    v-for="group in row.research.groups">
+            <div class="group">
+              <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
+              <div class="fields">
+                <visibility-field-wrapper :formula="field.visibility" :groups="row.research.groups"
+                                          v-for="field in group.fields">
+                  <div :class="{disabled: row.confirmed,
+                  empty: r_list_pk(row).includes(field.pk),
+                  required: field.required}" :title="field.required && 'обязательно для заполнения'"
+                       @mouseenter="enter_field"
+                       @mouseleave="leave_field" class="field">
+                    <div class="field-title" v-if="field.title !== ''">
+                      {{field.title}}
+                    </div>
+                    <longpress :confirm-time="0"
+                               :duration="400"
+                               :on-confirm="clear_val" :value="field"
+                               action-text="×" class="btn btn-default btn-field" pressing-text="×"
+                               v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10">×
+                    </longpress>
+                    <div class="field-inputs"
+                         v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10">
+                      <div class="input-values-wrap">
+                        <div class="input-values">
+                          <div class="inner-wrap">
+                            <div @click="append_value(field, val)" class="input-value"
+                                 v-for="val in field.values_to_input">
+                              {{val}}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div class="field-value" v-if="field.field_type === 0">
+                    <textarea :readonly="row.confirmed" :rows="field.lines" class="form-control"
+                              v-if="field.lines > 1" v-model="field.value"></textarea>
+                      <input :readonly="row.confirmed" class="form-control" v-else v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 1">
+                      <input :readonly="row.confirmed" class="form-control" style="width: 160px" type="date"
+                             v-model="field.value"/>
+                    </div>
+                    <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
+                      <m-k-b-field :short="false" @input="change_mkb(row, field)" v-model="field.value"/>
+                    </div>
+                    <div class="field-value mkb10" v-else-if="field.field_type === 3">
+                      <formula-field :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])"
+                                     :formula="field.default_value"
+                                     v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
+                      <input :readonly="true" class="form-control" v-model="field.value"/>
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 10">
+                      <select :disabled="row.confirmed" class="form-control fw" v-model="field.value">
+                        <option :value="''">
+                          Не выбрано
+                        </option>
+                        <option :value="val" v-for="val in field.values_to_input">
+                          {{val}}
+                        </option>
+                      </select>
+                    </div>
+                    <div :title="field.helper" class="field-helper" v-if="field.helper"
+                         v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
+                      <i class="fa fa-question"></i>
+                    </div>
                   </div>
-                </div>
-                <div class="field-value" v-if="field.field_type === 0">
-                  <textarea v-model="field.value" :rows="field.lines" class="form-control"
-                            v-if="field.lines > 1" :readonly="row.confirmed"></textarea>
-                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" v-else/>
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 1">
-                  <input v-model="field.value" class="form-control" :readonly="row.confirmed" type="date" style="width: 160px"/>
-                </div>
-                <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                  <m-k-b-field v-model="field.value" :short="false" @input="change_mkb(row, field)" />
-                </div>
-                <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                  <formula-field v-model="field.value" :formula="field.default_value"
-                                 :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])" />
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                  <input v-model="field.value" class="form-control" :readonly="true" />
-                </div>
-                <div class="field-value" v-else-if="field.field_type === 10">
-                  <select v-model="field.value" class="form-control fw" :disabled="row.confirmed">
-                    <option :value="''">
-                      Не выбрано
-                    </option>
-                    <option :value="val" v-for="val in field.values_to_input">
-                      {{val}}
-                    </option>
-                  </select>
-                </div>
+                </visibility-field-wrapper>
               </div>
-            </div>
           </div>
+          </visibility-group-wrapper>
           <div class="group">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
+                   v-if="!row.confirmed"
                    style="height: 200px;border-right: 1px solid #eaeaea;padding-right: 0;">
                 <researches-picker v-model="row.more" :hidetemplates="true"
                                    :readonly="row.confirmed"
                                    :just_search="true"
                                    :filter_types="[2]"/>
               </div>
-              <div class="col-xs-6" style="height: 200px;padding-left: 0;">
+              <div :class="row.confirmed ? 'col-xs-12' : 'col-xs-6'"
+                   :style="'height: 200px;' + (row.confirmed ? '' : 'padding-left: 0')">
                 <selected-researches :researches="row.more"
                                      :readonly="row.confirmed" :simple="true"/>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
+            <div class="group-title">Рецепты</div><div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="row.research.is_doc_refferal">
+            <div class="group-title">Направления в рамках приёма</div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="sd">
+                  <directions-history :iss_pk="row.pk" kk="cd" />
+                </div>
+                <div class="sd empty" v-if="!row.confirmed">
+                  <button @click="create_directions(row)"
+                          class="btn btn-primary-nb btn-blue-nb" type="button">
+                    <i class="fa fa-plus"></i> создать направления
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -357,21 +400,14 @@
                   <input type="checkbox" v-model="row.maybe_onco" :disabled="row.confirmed" />
                 </label>
               </div>
-            </div>
-          </div>
-          <div class="group" v-if="row.research.is_doc_refferal">
-            <div class="group-title">Направления в рамках приёма</div>
-            <div class="row">
-              <div class="col-xs-12">
-                <div class="sd">
-                  <directions-history :iss_pk="row.pk" kk="cd" />
+              <div class="field" v-if="row.research.is_doc_refferal">
+                <div class="field-title">
+                  Дата осмотра
                 </div>
-                <div class="sd empty" v-if="!row.confirmed">
-                  <button @click="create_directions(row)"
-                          class="btn btn-primary-nb btn-blue-nb" type="button">
-                    <i class="fa fa-plus"></i> создать направления
-                  </button>
-                </div>
+                <label class="field-value">
+                  <input :max="tdm()" :min="td_m_year" :readonly="row.confirmed" class="form-control"
+                         required style="width: 160px" type="date" v-model="row.examination_date"/>
+                </label>
               </div>
             </div>
           </div>
@@ -541,14 +577,18 @@
   import ResearchPick from './ResearchPick'
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
+  import RecipeInput from './RecipeInput'
   import ResultsViewer from './ResultsViewer'
   import LastResult from './LastResult'
+  import VisibilityFieldWrapper from './components/VisibilityFieldWrapper'
+  import VisibilityGroupWrapper from './components/VisibilityGroupWrapper'
+  import {vField, vGroup} from './components/visibility-triggers'
 
   export default {
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult,
+      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput,
     },
     data() {
       return {
@@ -556,6 +596,8 @@
         data: {ok: false},
         date: moment().format('DD.MM.YYYY'),
         td: moment().format('YYYY-MM-DD'),
+        tnd: moment().add(1, 'day').format('YYYY-MM-DD'),
+        td_m_year: moment().subtract(1, 'year').format('YYYY-MM-DD'),
         directions_history: [],
         prev_scroll: 0,
         changed: false,
@@ -621,12 +663,11 @@
       },
     },
     mounted() {
-      let vm = this
-      $(window).on('beforeunload', function () {
-        if (vm.has_changed)
+      $(window).on('beforeunload', () => {
+        if (this.has_changed)
           return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
       })
-      vm.load_history()
+      this.load_history()
       this.$root.$on('hide_dreg', () => {
         this.load_dreg_rows();
         this.dreg = false;
@@ -653,13 +694,20 @@
           this.loc_timer = setInterval(() => this.load_location(), 120000);
         }
         this.location.loading = true
-        this.location.data = (await users_point.loadLocation(this.td)).data
+        try {
+          this.location.data = (await users_point.loadLocation({date: this.td})).data
+        } catch (_) {
+
+        }
         this.location.loading = false
+      },
+      tdm() {
+        return moment().add(1, 'day').format('YYYY-MM-DD')
       },
       load_dreg_rows() {
         (async() => {
           this.dreg_rows_loading = true;
-          this.dreg_rows = (await patients_point.loadDreg(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
           this.data.patient.has_dreg = this.dreg_rows.length > 0
           this.dreg_rows_loading = false;
         })().then();
@@ -667,7 +715,7 @@
       load_benefit_rows() {
         (async() => {
           this.benefit_rows_loading = true;
-          this.benefit_rows = (await patients_point.loadBenefit(this.data.patient.card_pk)).rows.filter(r => !r.date_end);
+          this.benefit_rows = (await patients_point.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
           this.data.patient.has_benefit = this.benefit_rows.length > 0
           this.benefit_rows_loading = false;
         })().then();
@@ -675,7 +723,7 @@
       load_anamnesis() {
         (async() => {
           this.anamnesis_loading = true
-          this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient.card_pk)
+          this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk')
           this.anamnesis_loading = false
         })().then();
       },
@@ -694,13 +742,12 @@
           this.hide_results()
           return;
         }
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then()
         this.research_history = [];
-        directions_point.paraclinicResultPatientHistory(pk).then(({data}) => {
-          vm.research_history = data
+        directions_point.paraclinicResultPatientHistory({pk}).then(({data}) => {
+          this.research_history = data
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
           this.research_open_history = pk;
         })
       },
@@ -761,19 +808,17 @@
         this.anamnesis_edit = false;
       },
       save_anamnesis() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.saveAnamnesis(vm.data.patient.card_pk, this.anamnesis_data.text).then().finally(() => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.saveAnamnesis(this.data.patient, ['card_pk', 'text']).then().finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then()
           this.new_anamnesis = this.anamnesis_data.text;
           this.hide_modal_anamnesis_edit();
         })
       },
       edit_anamnesis() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.loadAnamnesis(vm.data.patient.card_pk).then(data => {
-          vm.anamnesis_data = data
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        patients_point.loadAnamnesis(this.data.patient, 'card_pk').then(data => {
+          this.anamnesis_data = data
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then()
           this.anamnesis_edit = true;
@@ -785,21 +830,19 @@
         $elem.addClass('open-field')
       },
       leave_field($e) {
-        let oh = $('.results-editor > div')[0].offsetHeight
-        let sh = $('.results-editor > div')[0].scrollHeight
+        let {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0]
         if (sh > oh)
           $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
         let $elem = $($e.target)
         $elem.removeClass('open-field')
       },
       load_history() {
-        let vm = this
-        vm.directions_history = []
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultUserHistory(vm.date).then(data => {
-          vm.directions_history = data.directions
+        this.directions_history = []
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicResultUserHistory(this, 'date').then(data => {
+          this.directions_history = data.directions
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       reload_if_need() {
@@ -815,24 +858,25 @@
         if (this.has_changed && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')) {
           return
         }
-        let vm = this
-        vm.clear(true)
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.getParaclinicForm(vm.pk_c).then(data => {
+        this.clear(true)
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
           if (data.ok) {
+            this.tnd = moment().add(1, 'day').format('YYYY-MM-DD')
+            this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD')
             this.dreg_rows_loading = false;
             this.benefit_rows_loading = false;
             this.dreg_rows = [];
             this.benefit_rows = [];
-            vm.pk = ''
-            vm.data = data
-            vm.changed = false
+            this.pk = ''
+            this.data = data
+            this.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       hide_modal_create_directions() {
@@ -845,96 +889,120 @@
         this.create_directions_diagnosis = iss.diagnos
         this.create_directions_for = iss.pk
       },
+      visibility_state(iss) {
+        const groups = {}
+        const fields = {}
+        const {groups: igroups} = iss.research
+        for (const group of iss.research.groups) {
+          if (!vGroup(group, igroups)) {
+            groups[group.pk] = false
+          } else {
+            groups[group.pk] = true
+            for (const field of group.fields) {
+              fields[field.pk] = vField(igroups, field.visibility)
+            }
+          }
+        }
+
+        return {
+          groups,
+          fields,
+        }
+      },
       save(iss) {
         this.hide_results();
-        let vm = this
-        vm.inserted = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave(iss, false).then(data => {
+        this.inserted = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicResultSave({
+          data: iss,
+          with_confirm: false,
+          visibility_state: this.visibility_state(iss)
+        }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             iss.saved = true
-            vm.reload_if_need()
-            vm.changed = false
+            this.reload_if_need()
+            this.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.inserted = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.inserted = true
           this.load_location();
         })
       },
       save_and_confirm(iss) {
         this.hide_results();
-        let vm = this
-        vm.inserted = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultSave(iss, true).then(data => {
+        this.inserted = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicResultSave({
+          data: iss,
+          with_confirm: true,
+          visibility_state: this.visibility_state(iss)
+        }).then(data => {
           if (data.ok) {
             okmessage('Сохранено')
             okmessage('Подтверждено')
             iss.saved = true
             iss.allow_reset_confirm = true
             iss.confirmed = true
-            vm.reload_if_need()
-            vm.changed = false
+            this.reload_if_need()
+            this.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.inserted = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.inserted = true
           this.load_location();
         })
       },
       confirm(iss) {
         this.hide_results();
-        let vm = this
-        vm.inserted = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultConfirm(iss.pk).then(data => {
+        this.inserted = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicResultConfirm({iss_pk: iss.pk}).then(data => {
           if (data.ok) {
             okmessage('Подтверждено')
             iss.confirmed = true
             iss.allow_reset_confirm = true
-            vm.reload_if_need()
-            vm.changed = false
+            this.reload_if_need()
+            this.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.inserted = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.inserted = true
           this.load_location();
         })
       },
       reset_confirm(iss) {
         this.hide_results();
-        let vm = this
         let msg = `Сбросить подтверждение исследования ${iss.research.title}?`
         let doreset = confirm(msg)
         if (doreset === false || doreset === null) {
           return
         }
-        vm.inserted = false
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicResultConfirmReset(iss.pk).then(data => {
+        this.inserted = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
           if (data.ok) {
             okmessage('Подтверждение сброшено')
             iss.confirmed = false
-            vm.reload_if_need()
-            vm.changed = false
+            this.reload_if_need()
+            this.changed = false
           }
           else {
             errmessage(data.message)
           }
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
-          vm.inserted = true
+          this.$store.dispatch(action_types.DEC_LOADING).then()
+          this.inserted = true
           this.load_location();
         })
       },
@@ -962,28 +1030,26 @@
         this.$root.$emit('print:results', [pk])
       },
       copy_results(row, pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.paraclinicDataByFields(pk).then(({data}) => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        directions_point.paraclinicDataByFields({pk}).then(({data}) => {
           this.hide_results();
           this.replace_fields_values(row, data);
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       load_template(row, pk) {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getTemplateData(parseInt(pk)).then(({data: {fields: data, title}}) => {
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
           this.template_fields_values(row, data, title);
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
       async open_slot(row) {
         await this.$store.dispatch(action_types.INC_LOADING)
         this.slot.id = row.slot;
-        this.slot.data = await users_point.getReserve(row.slot, row.uid);
+        this.slot.data = await users_point.getReserve({pk: row.slot, patient: row.uid});
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async close_slot() {
@@ -1005,9 +1071,14 @@
         try {
           await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`);
           await this.$store.dispatch(action_types.INC_LOADING)
-          const cards = await patients_point.searchCard(this.internal_base, this.slot.data.patient_uid, false, true);
+          const cards = await patients_point.searchCard({
+            type: this.internal_base,
+            query: this.slot.data.patient_uid,
+            list_all_cards: false,
+            inc_rmis: true
+          })
           let card_pk = cards.results[0].pk
-          const {direction} = await users_point.fillSlot({...this.slot, card_pk});
+          const {direction} = await users_point.fillSlot({slot: {...this.slot, card_pk}});
           await this.$store.dispatch(action_types.DEC_LOADING);
           this.load_location();
           this.open_fill_slot(direction);
@@ -1348,6 +1419,7 @@
     margin-top: 5px;
     margin-bottom: 5px;
     background-color: #fafafa;
+    position: relative;
 
     overflow: visible;
 
@@ -1383,6 +1455,20 @@
     }
   }
 
+  .field-helper {
+    position: absolute;
+    top: 1px;
+    right: 6px;
+    bottom: 0;
+    font-size: 18px;
+    padding: 3px;
+    display: inline-block;
+    cursor: pointer;
+    font-weight: bold;
+    color: #049372;
+    text-shadow: 0 0 4px rgba(#049372, .5);
+  }
+
   .field-title {
     flex: 1 0 150px;
     padding-left: 5px;
@@ -1397,6 +1483,7 @@
     .form-control {
       width: 100%;
       border-radius: 0;
+      padding-right: 15px;
     }
     select {
       width: 100%;

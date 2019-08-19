@@ -234,7 +234,7 @@
       cancel_direction(pk) {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        directions_point.cancelDirection(pk).then((data) => {
+        directions_point.cancelDirection({pk}).then((data) => {
           for (let dir of vm.directions) {
             if (dir.pk === pk) {
               dir.cancel = data.cancel
@@ -292,9 +292,13 @@
         vm.$store.dispatch(action_types.INC_LOADING).then()
         vm.directions = []
         vm.all_checked = false
-        directions_point.getHistory(this.active_type, this.patient_pk,
-          moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
-          moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'), this.iss_pk, this.services).then((data) => {
+
+        directions_point.getHistory(this, ['iss_pk', 'services'], {
+          type: this.active_type,
+          patient: this.patient_pk,
+          date_from: moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY'),
+          date_to: moment(this.date_range[1], 'DD.MM.YY').format('DD.MM.YYYY'),
+        }).then((data) => {
           vm.directions = data.directions
         }).finally(() => {
           vm.is_created = true

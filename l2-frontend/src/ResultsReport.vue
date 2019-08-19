@@ -99,7 +99,7 @@
         this.inLoad = true
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getResearchesParams(pks).then(data => {
+        researches_point.getResearchesParams({pks}).then(data => {
           for(let r of data.researches) {
             vm.params_directory[r.pk] = r
           }

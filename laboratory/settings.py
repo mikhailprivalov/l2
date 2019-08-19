@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'discharge',
     'rmis_integration',
     'rest_framework',
+    'integration_framework',
     'django_logtail',
     'corsheaders',
     'statistics_tickets',
@@ -53,6 +54,7 @@ INSTALLED_APPS = (
     'forms',
     'contracts',
     'lq',
+    'treatment',
 )
 
 MIDDLEWARE = [
@@ -73,6 +75,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'django.contrib.auth.backends.RemoteUserBackend',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'integration_framework.authentication.TokenAuthentication',
+    ]
+}
 
 ROOT_URLCONF = 'laboratory.urls'
 TEMPLATES = [

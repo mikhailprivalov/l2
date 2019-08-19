@@ -20,7 +20,7 @@ const actions = {
     commit(mutation_types.SET_USER_DATA, {data})
   },
   async [action_types.GET_DIRECTIVE_FROM]({commit}) {
-    const directive_from = await user_point.getDirectiveFrom()
+    const {data: directive_from} = await user_point.getDirectiveFrom()
     commit(mutation_types.SET_DIRECTIVE_FROM, {directive_from})
   },
 }

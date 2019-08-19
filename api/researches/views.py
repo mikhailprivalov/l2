@@ -169,7 +169,8 @@ def researches_update(request):
                                                   show_title=group["show_title"],
                                                   research=res,
                                                   order=group["order"],
-                                                  hide=group["hide"])
+                                                  hide=group["hide"],
+                                                  visibility=group.get("visibility", ""))
                     elif ParaclinicInputGroups.objects.filter(pk=pk).exists():
                         g = ParaclinicInputGroups.objects.get(pk=pk)
                         g.title = group["title"]
@@ -177,6 +178,7 @@ def researches_update(request):
                         g.research = res
                         g.order = group["order"]
                         g.hide = group["hide"]
+                        g.visibility = group.get("visibility", "")
                     if g:
                         g.save()
                         for field in group["fields"]:
@@ -189,8 +191,10 @@ def researches_update(request):
                                                          lines=field["lines"],
                                                          hide=field["hide"],
                                                          default_value=field["default"],
+                                                         visibility=field.get("visibility", ""),
                                                          input_templates=json.dumps(field["values_to_input"]),
                                                          field_type=field.get("field_type", 0),
+                                                         helper=field.get("helper", ''),
                                                          required=field.get("required", False))
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
@@ -200,10 +204,12 @@ def researches_update(request):
                                 f.lines = field["lines"]
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
+                                f.visibility = field.get("visibility", "")
                                 f.input_templates = json.dumps(field["values_to_input"])
                                 f.field_type = field.get("field_type", 0)
                                 f.required = field.get("required", False)
                                 f.for_talon = field.get("for_talon", False)
+                                f.helper = field.get("helper", '')
                             if f:
                                 f.save()
 
@@ -237,7 +243,7 @@ def researches_details(request):
         response["internal_code"] = res.internal_code
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {"pk": group.pk, "order": group.order, "title": group.title, "show_title": group.show_title,
-                 "hide": group.hide, "fields": []}
+                 "hide": group.hide, "fields": [], "visibility": group.visibility}
             for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
                 g["fields"].append({
                     "pk": field.pk,
@@ -245,11 +251,13 @@ def researches_details(request):
                     "lines": field.lines,
                     "title": field.title,
                     "default": field.default_value,
+                    "visibility": field.visibility,
                     "hide": field.hide,
                     "values_to_input": json.loads(field.input_templates),
                     "field_type": field.field_type,
                     "required": field.required,
                     "for_talon": field.for_talon,
+                    "helper": field.helper,
                     "new_value": ""
                 })
             response["groups"].append(g)

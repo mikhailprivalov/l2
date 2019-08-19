@@ -5,6 +5,8 @@
 </template>
 
 <script>
+  import {CalculateFormula} from './utils'
+
   export default {
     name: 'formula-field',
     props: ['value', 'fields', 'formula'],
@@ -26,31 +28,7 @@
     },
     computed: {
       func_formula() {
-        let s = this.formula;
-        let necessary = s.match(/{(\d+)}/g);
-
-        if (necessary) {
-          for (const n of necessary) {
-            let v = null;
-            let vOrig = ((this.f_obj[n.replace(/[{}]/g, "")] || {}).value || '').trim();
-            if ((/^\d+([,.]\d+)?$/).test(vOrig)) {
-              if (this.f_obj[n.replace(/[{}]/g, "")]) {
-                v = parseFloat(vOrig.trim().replace(",", "."));
-              }
-              v = v || 0;
-              v = isFinite(v) ? v : 0;
-            } else {
-              v = vOrig;
-            }
-            s = s.replace(new RegExp(n.replace(/{/g, '\\{').replace(/}/g, '\\}'), 'g'), v || '');
-          }
-        }
-        s = `return (${s});`
-        try {
-          return (new Function(s)()) || 0;
-        } catch (e) {
-          return '';
-        }
+        return CalculateFormula(this.f_obj, this.formula)
 
       },
       f_obj() {

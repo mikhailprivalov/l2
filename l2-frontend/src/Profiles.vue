@@ -137,7 +137,7 @@
   import * as action_types from './store/action-types'
   import ResearchesPicker from './ResearchesPicker'
   import SelectedResearches from './SelectedResearches'
-  import l from 'lodash'
+  import {debounce} from 'lodash-es'
 
   let toTranslit = function (text) {
     return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
@@ -197,7 +197,7 @@
       },
     },
     methods: {
-      deb_gu: l.debounce(function (e) {
+      deb_gu: debounce(function (e) {
         this.gen_username()
       }, 500),
       gen_username() {
@@ -232,7 +232,7 @@
         }
         this.close()
         this.$store.dispatch(action_types.INC_LOADING).then()
-        const {user} = await users_point.loadUser(pk)
+        const {user} = await users_point.loadUser({pk})
         this.user = user
         if (pk === -1) {
           this.user.department = dep
@@ -243,7 +243,7 @@
       },
       async save() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        const {ok, npk, message} = await users_point.saveUser(this.open_pk, this.user)
+        const {ok, npk, message} = await users_point.saveUser({pk: this.open_pk, user_data: this.user})
         if (ok) {
           okmessage('Пользователь сохранён', `${this.user.fio} – ${this.user.username}`)
           this.open_pk = npk

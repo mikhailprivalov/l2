@@ -70,10 +70,18 @@
             </button>
           </span>
           <span class="input-group-addon">Название группы</span>
-          <input type="text" class="form-control" v-model="group.title">
+          <input type="text" class="form-control" placeholder="Название" v-model="group.title">
+          <span class="input-group-addon">Условие видимости</span>
+          <input type="text" class="form-control" placeholder="Условие" v-model="group.visibility">
         </div>
-        <label>Отображать название <input v-model="group.show_title" type="checkbox"/></label><br/>
-        <label>Скрыть группу <input v-model="group.hide" type="checkbox"/></label>
+        <div class="row">
+          <div class="col-xs-6">
+            <label>Отображать название <input type="checkbox" v-model="group.show_title"/></label>
+          </div>
+          <div class="col-xs-6 text-right">
+            <label>Скрыть группу <input type="checkbox" v-model="group.hide"/></label>
+          </div>
+        </div>
         <div>
           <strong>Поля ввода</strong>
         </div>
@@ -146,13 +154,21 @@
               </v-collapse-wrapper>
             </div>
             <div>
+              <strong>Подсказка:</strong>
+              <textarea class="form-control" v-model="row.helper"></textarea>
+            </div>
+            <div>
+              <strong>Условие видимости:</strong>
+              <textarea class="form-control" v-model="row.visibility"></textarea>
+            </div>
+            <div>
               <label>
                 <input type="checkbox" v-model="row.hide"/> скрыть поле
               </label>
               <label>
                 <input type="checkbox" v-model="row.required"/> запрет пустого
               </label>
-               <label>
+              <label>
                 <input type="checkbox" v-model="row.for_talon" /> в талон
               </label>
               <label style="line-height: 1" v-show="row.field_type === 0">
@@ -196,11 +212,6 @@
   import construct_point from '../api/construct-point'
   import FastTemplatesEditor from './FastTemplatesEditor';
   import * as action_types from '../store/action-types'
-  import VueCollapse from 'vue2-collapse'
-
-  import Vue from 'vue'
-
-  Vue.use(VueCollapse)
 
   export default {
     name: 'paraclinic-research-editor',
@@ -260,9 +271,8 @@
       }
     },
     mounted() {
-      let vm = this
-      $(window).on('beforeunload', function () {
-        if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
+      $(window).on('beforeunload', () => {
+        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
       this.$root.$on('hide_fte', () => this.f_templates_hide())
@@ -464,23 +474,22 @@
         this.site_type = null
         this.groups = []
         if (this.pk >= 0) {
-          let vm = this
-          vm.$store.dispatch(action_types.INC_LOADING).then()
-          construct_point.researchDetails(vm.pk).then(data => {
-            vm.title = data.title
-            vm.short_title = data.short_title
-            vm.code = data.code
-            vm.internal_code = data.internal_code
-            vm.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
-            vm.hide = data.hide
-            vm.site_type = data.site_type
-            vm.loaded_pk = vm.pk
-            vm.groups = data.groups
-            if (vm.groups.length === 0) {
-              vm.add_group()
+          this.$store.dispatch(action_types.INC_LOADING).then()
+          construct_point.researchDetails(this, 'pk').then(data => {
+            this.title = data.title
+            this.short_title = data.short_title
+            this.code = data.code
+            this.internal_code = data.internal_code
+            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
+            this.hide = data.hide
+            this.site_type = data.site_type
+            this.loaded_pk = this.pk
+            this.groups = data.groups
+            if (this.groups.length === 0) {
+              this.add_group()
             }
           }).finally(() => {
-            vm.$store.dispatch(action_types.DEC_LOADING).then()
+            this.$store.dispatch(action_types.DEC_LOADING).then()
           })
         } else {
           this.add_group()
@@ -494,18 +503,17 @@
         this.$root.$emit('research-editor:cancel')
       },
       save() {
-        let vm = this
-        vm.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(vm.pk, vm.department, vm.title, vm.short_title, vm.code,
-          vm.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'), vm.hide, vm.groups, vm.site_type,
-          vm.internal_code).then(() => {
-          vm.has_unsaved = false
+        this.$store.dispatch(action_types.INC_LOADING).then()
+        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'groups', 'site_type', 'internal_code'], {
+          info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
+        }).then(() => {
+          this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
-          vm.$store.dispatch(action_types.DEC_LOADING).then()
+          this.$store.dispatch(action_types.DEC_LOADING).then()
         })
-      }
+      },
     }
   }
 </script>
@@ -631,9 +639,10 @@
       padding-right: 5px;
     }
     &:nth-child(2) {
-      width: 100%;
+      width: calc(100% - 530px);
     }
-    &:nth-child(3) {
+
+    &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6) {
       width: 140px;
       padding-left: 5px;
       padding-right: 5px;
@@ -646,6 +655,10 @@
           width: 100%;
         }
       }
+    }
+
+    &:nth-child(3), &:nth-child(4) {
+      width: 180px;
     }
   }
 
@@ -660,5 +673,13 @@
 
   /deep/ .v-collapse-content-end {
     max-height: 10000px !important;
+  }
+
+  .vc-collapse /deep/ .v-collapse-content {
+    display: none;
+
+    &.v-collapse-content-end {
+      display: block;
+    }
   }
 </style>

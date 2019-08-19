@@ -51,7 +51,7 @@
       load_researches() {
         let vm = this
         vm.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getResearchesByDepartment(this.department).then(data => {
+        researches_point.getResearchesByDepartment(this, 'department').then(data => {
           vm.researches_list = data.researches
         }).finally(() => {
           vm.$store.dispatch(action_types.DEC_LOADING).then()

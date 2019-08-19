@@ -4,16 +4,17 @@ import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
-import { Steps, Step } from 'element-ui'
+// import { Steps, Step } from 'element-ui'
 import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
 import VueAutosize from 'vue-autosize';
-const VueInputMask = require('vue-inputmask').default;
 import VuejsDialog from 'vuejs-dialog';
+import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
 import ReplaceAppendModal from './ReplaceAppendModal';
 import RmisLocation from './RmisLocation'
+const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VuejsDialog, {
     okText: 'Подтвердить',
@@ -22,9 +23,10 @@ Vue.use(VuejsDialog, {
 });
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
-Vue.use(Steps)
-Vue.use(Step)
+// Vue.use(Steps)
+// Vue.use(Step)
 Vue.use(VueInputMask)
+Vue.use(VueCollapse)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
@@ -155,8 +157,11 @@ new Vue({
       if (!operator && history_num !== '')
         history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.sendDirections(card_pk, diagnos, fin_source_pk, history_num, ofname, researches,
-        comments, for_rmis, rmis_data, vich_code, count, discount, parent_iss, counts).then(data => {
+      directions_point.sendDirections({
+        card_pk, diagnos, fin_source: fin_source_pk, history_num,
+        ofname_pk: ofname, researches, comments, for_rmis,
+        rmis_data, vich_code, count, discount, parent_iss, counts
+      }).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 
         if (data.ok) {

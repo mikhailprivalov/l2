@@ -296,15 +296,17 @@
         if (!this.query_valid || this.inLoading)
           return
         this.check_base()
-        let vm = this
-        vm.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-        patients_point.searchCard(this.base, this.query, false, this.inc_rmis).then((result) => {
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
+        patients_point.searchCard(this, ['query', 'inc_rmis'], {
+          type: this.base,
+          list_all_cards: false,
+        }).then((result) => {
           if (result.results) {
-            vm.founded_cards = result.results
-            if (vm.founded_cards.length > 1) {
-              vm.showModal = true
-            } else if (vm.founded_cards.length === 1) {
-              vm.select_card(0)
+            this.founded_cards = result.results
+            if (this.founded_cards.length > 1) {
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
             } else {
               errmessage('Не найдено', 'Карт по такому запросу не найдено')
             }
@@ -314,7 +316,7 @@
         }).catch((error) => {
           errmessage('Ошибка на сервере', error.message)
         }).finally(() => {
-          vm.$store.dispatch(action_types.DISABLE_LOADING).then()
+          this.$store.dispatch(action_types.DISABLE_LOADING).then()
         })
       }
     }

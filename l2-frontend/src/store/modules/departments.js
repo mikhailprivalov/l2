@@ -43,24 +43,30 @@ const actions = {
   },
 
   async [action_types.UPDATE_DEPARTMENTS]({commit, getters}, {type_update, to_update}) {
-    to_update = to_update || getters.diff_departments
-    type_update = type_update || 'update'
-    if (type_update === 'update') {
-      if (to_update.length === 0)
+    const data = to_update || getters.diff_departments
+    const type = type_update || 'update'
+    if (type === 'update') {
+      if (data.length === 0)
         return []
       try {
-        const answer = await departments_directory.sendDepartments(type_update, to_update)
+        const answer = await departments_directory.sendDepartments(null, null, {
+          type,
+          data,
+        })
         commit(mutation_types.UPDATE_OLD_DEPARTMENTS, {departments: getters.allDepartments})
         if (answer.ok) {
-          return to_update
+          return data
         }
       } catch (e) {
         // console.log(e)
       }
       return []
-    } else if (type_update === 'insert') {
+    } else if (type === 'insert') {
       try {
-        const answer = await departments_directory.sendDepartments(type_update, to_update)
+        const answer = await departments_directory.sendDepartments(null, null, {
+          type,
+          data,
+        })
         return answer.ok
       } catch (e) {
         // console.log(e)
