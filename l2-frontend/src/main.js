@@ -4,7 +4,7 @@ import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
-import { Steps, Step } from 'element-ui'
+// import { Steps, Step } from 'element-ui'
 import 'element-ui/lib/theme-chalk/steps.css'
 import 'element-ui/lib/theme-chalk/step.css'
 import 'element-ui/lib/theme-chalk/icon.css'
@@ -23,8 +23,8 @@ Vue.use(VuejsDialog, {
 });
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
-Vue.use(Steps)
-Vue.use(Step)
+// Vue.use(Steps)
+// Vue.use(Step)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
 

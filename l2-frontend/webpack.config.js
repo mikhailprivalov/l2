@@ -3,6 +3,7 @@ const webpack = require('webpack')
 const BundleTracker = require('webpack-bundle-tracker')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = {
   entry: {
@@ -78,6 +79,10 @@ if (process.env.NODE_ENV === 'production') {
       'process.env': {
         NODE_ENV: '"production"'
       }
-    })
+    }),
   ])
 }
+
+module.exports.plugins = (module.exports.plugins || []).concat([
+  new BundleAnalyzerPlugin(),
+])
