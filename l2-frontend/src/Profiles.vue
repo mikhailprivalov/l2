@@ -137,7 +137,7 @@
   import * as action_types from './store/action-types'
   import ResearchesPicker from './ResearchesPicker'
   import SelectedResearches from './SelectedResearches'
-  import l from 'lodash'
+  import {debounce} from 'lodash-es'
 
   let toTranslit = function (text) {
     return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
@@ -197,7 +197,7 @@
       },
     },
     methods: {
-      deb_gu: l.debounce(function (e) {
+      deb_gu: debounce(function (e) {
         this.gen_username()
       }, 500),
       gen_username() {

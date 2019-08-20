@@ -1,5 +1,5 @@
 import {CalculateVisibility} from '../utils'
-import {flatten} from 'lodash/array'
+import {flatten} from 'lodash-es/array'
 
 export const vField = (groups, formula) => formula === '' || CalculateVisibility(objFields(groups), formula)
 

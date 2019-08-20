@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import IstochnikiFinansirovaniya, Napravleniya, TubesRegistration, Issledovaniya, Result, \
-    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses, TypeJob, EmployeeJob
+    FrequencyOfUseResearches, CustomResearchOrdering, RMISOrgs, RMISServiceInactive, Diagnoses, TypeJob, EmployeeJob, \
+    KeyValue
 
 admin.site.register(IstochnikiFinansirovaniya)
 
@@ -16,19 +17,26 @@ class IssAdmin(admin.ModelAdmin):
 
 
 class ResTypeJob(admin.ModelAdmin):
-    list_display = ('title','value','hide',)
+    list_display = ('title', 'value', 'hide',)
     list_display_links = ('title',)
     search_fields = ('title',)
 
 
 class ResEmployeeJob(admin.ModelAdmin):
-    list_display = ('type_job','doc_execute','count','date_job', 'time_save',)
+    list_display = ('type_job', 'doc_execute', 'count', 'date_job', 'time_save',)
     list_display_links = ('doc_execute',)
     search_fields = ('doc_execute__fio',)
 
 
+class ResKeyValue(admin.ModelAdmin):
+    list_display = ('key', 'value',)
+    list_display_links = ('value',)
+    search_fields = ('value',)
+
+
 class ResDiagnoses(admin.ModelAdmin):
     search_fields = ('code',)
+
 
 admin.site.register(TubesRegistration)
 admin.site.register(Result)
@@ -39,4 +47,4 @@ admin.site.register(RMISServiceInactive)
 admin.site.register(Diagnoses, ResDiagnoses)
 admin.site.register(TypeJob, ResTypeJob)
 admin.site.register(EmployeeJob, ResEmployeeJob)
-
+admin.site.register(KeyValue, ResKeyValue)

@@ -113,7 +113,7 @@
 <script>
   import * as action_types from './store/action-types'
   import ResearchPick from './ResearchPick'
-  import {debounce} from 'lodash/function'
+  import {debounce} from 'lodash-es/function'
 
   export default {
     name: 'researches-picker',

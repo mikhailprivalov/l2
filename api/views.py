@@ -563,6 +563,27 @@ def mkb10(request):
     return JsonResponse({"data": data})
 
 
+def methods_of_taking(request):
+    prescription = request.GET.get("prescription", "")
+    kw = request.GET.get("keyword", "")
+    data = []
+    m = directions.MethodsOfTaking.objects.filter(drug_prescription=prescription,
+                                                  method_of_taking__istartswith=kw).order_by("-count").distinct()[:10]
+    for d in m:
+        data.append({"pk": d.pk, "method_of_taking": d.method_of_taking})
+    return JsonResponse({"data": data})
+
+
+def key_value(request):
+    key = request.GET.get("key", "")
+    value = request.GET.get("value", "").strip()
+    limit = int(request.GET.get("limit", "10"))
+    data = []
+    for v in directions.KeyValue.objects.filter(key=key, value__istartswith=value).order_by("value").distinct()[:limit]:
+        data.append({"pk": v.pk, "key": v.key, "value": v.value})
+    return JsonResponse({"data": data})
+
+
 def vich_code(request):
     kw = request.GET.get("keyword", "")
     data = []
