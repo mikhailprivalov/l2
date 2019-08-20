@@ -22,6 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from laboratory.settings import MAX_RMIS_THREADS
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from mq.views import dt
 from podrazdeleniya.models import Podrazdeleniya
@@ -1150,7 +1151,7 @@ class Directions(BaseRequester):
                 self.fill_send_old_data(send_data, service_old_data)
         return send_data, ssd
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=10):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS):
         def check_lock():
             return cache.get('upload_lock') is not None
 
