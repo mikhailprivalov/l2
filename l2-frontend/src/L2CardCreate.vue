@@ -722,6 +722,7 @@
               'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
               'custom_workplace', 'district', 'phone'], {
               card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
+              base_pk: this.base_pk,
             })
           if (data.result !== 'ok') {
             return
