@@ -112,30 +112,24 @@
       async save() {
         this.$store.dispatch(action_types.INC_LOADING).then()
         await users_point.saveJob({
-          data: {
             date: this.date,
             type: this.type,
             executor: this.executor,
             count: this.count,
-          }
         })
         await this.loadRows()
         this.$store.dispatch(action_types.DEC_LOADING).then()
       },
       async loadRows() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        const {list} = await users_point.loadJobs({
-          data: {
-            date: this.date,
-          }
-        })
+        const {list} = await users_point.loadJobs(this, "date")
         this.rows = list;
         this.$store.dispatch(action_types.DEC_LOADING).then()
       },
       async cancel(pk, cancel) {
         this.$store.dispatch(action_types.INC_LOADING).then()
         await users_point.jobCancel({
-          data: {pk, cancel},
+          pk, cancel,
         })
         await this.loadRows()
         this.$store.dispatch(action_types.DEC_LOADING).then()
