@@ -395,6 +395,7 @@ class Patients(BaseRequester):
         self.polis_types_id_list = r["polis_types_id_list"]
         self.local_types = r["local_types"]
         self.local_reverse_types = r["reverse_types"]
+        self.patient_client = self.main_client.get_client("path_patient_patients", "patients-ws/patient?wsdl").service
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
         self.appointment_client = self.main_client.get_client("path_appointment", "appointment-ws/appointment?wsdl").service
 
@@ -448,9 +449,11 @@ class Patients(BaseRequester):
         }
         iuid = self.client.createIndividual(**data)
 
+        self.patient_client.createPatient(patientId=iuid, patientData={})
+
         ruid = self.smart_client.sendPatient(patientCard={
             'patient': iuid,
-            'identifiers':{
+            'identifiers': {
                 'code': iuid,
                 'codeType': '7',
                 'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),
