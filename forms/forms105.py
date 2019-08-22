@@ -205,7 +205,7 @@ def form_02(request_data):
     #получить направления
     ind_dir = json.loads(request_data["napr_id"])
 
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
