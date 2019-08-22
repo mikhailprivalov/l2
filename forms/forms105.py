@@ -107,7 +107,7 @@ def form_01(request_data):
     else:
         title = 'Ведомость статистических талонов по посещениям пациентов'
         opinion = [
-            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
+            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, дата рождения ', styleT), Paragraph('Дата осмотра, &nbsp № направления', styleT),
              Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
              Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
              Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),

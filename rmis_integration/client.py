@@ -452,7 +452,7 @@ class Patients(BaseRequester):
         self.patient_client.createPatient(patientId=iuid, patientData={})
 
         ruid = self.smart_client.sendPatient(patientCard={
-            'patient': iuid,
+            'patient': {'uid':iuid},
             'identifiers': {
                 'code': iuid,
                 'codeType': '7',
@@ -461,6 +461,7 @@ class Patients(BaseRequester):
         })
 
         return iuid, ruid["patientUid"]
+
 
     def edit_patient(self, individual):
         data = {
