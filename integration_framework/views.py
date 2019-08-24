@@ -2,7 +2,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
-
+from results.views import result_print
+import simplejson as json
 
 @api_view()
 def next_result_direction(request):
@@ -55,3 +56,11 @@ def direction_data(request):
             },
         }
     })
+
+
+@api_view()
+def document_result(request):
+    pk = json.loads(request.GET["pk"])
+    a = result_print(request)
+    print(a)
+    return Response(pk, a)

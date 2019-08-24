@@ -2,10 +2,17 @@ import clients.models as models
 from django.contrib import admin
 
 
-@admin.register(models.Individual)
-class IndividualAdmin(admin.ModelAdmin):
-    pass
 
+# @admin.register(models.Individual)
+# class IndividualAdmin(admin.ModelAdmin):
+#     pass
+
+class ResIndividual(admin.ModelAdmin):
+    search_fields = ('family', )
+    ordering = ('family',)
+
+
+admin.site.register(models.Individual, ResIndividual)
 
 @admin.register(models.DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):

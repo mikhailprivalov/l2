@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-from directions.models import Diagnoses
+from directions.models import KeyValue
 
 
 class Command(BaseCommand):
@@ -20,11 +20,10 @@ class Command(BaseCommand):
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
-                if "код" in cells and "расшифровка" in cells:
+                if "мнн" in cells:
                     starts = True
-                    code = cells.index("код")
-                    title = cells.index("расшифровка")
-                    Diagnoses.objects.filter(d_type='mkb10.4').delete()
+                    mnn = cells.index("мнн")
+                    KeyValue.objects.filter(key='mnn').delete()
             else:
-                Diagnoses.objects.create(d_type='mkb10.4', m_type=2, code=cells[code], title=cells[title])
-                print(f'добавлен MKB:{cells[code]}:{cells[title]}')
+                KeyValue.objects.create(key='mnn', code=cells[mnn])
+                print(f'добавлен МНН:{cells[mnn]}')
