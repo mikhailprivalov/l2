@@ -25,5 +25,5 @@ class Command(BaseCommand):
                     mnn = cells.index("мнн")
                     KeyValue.objects.filter(key='mnn').delete()
             else:
-                KeyValue.objects.create(key='mnn', code=cells[mnn])
+                KeyValue.objects.create(key='mnn', value=cells[mnn].strip())
                 print(f'добавлен МНН:{cells[mnn]}')
