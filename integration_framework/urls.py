@@ -6,5 +6,4 @@ from . import views
 urlpatterns = [
     path('result/next', views.next_result_direction),
     path('direction/data', views.direction_data),
-    path('result/pdf', views.document_result),
 ]

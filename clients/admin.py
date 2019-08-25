@@ -2,11 +2,6 @@ import clients.models as models
 from django.contrib import admin
 
 
-
-# @admin.register(models.Individual)
-# class IndividualAdmin(admin.ModelAdmin):
-#     pass
-
 class ResIndividual(admin.ModelAdmin):
     search_fields = ('family', )
     ordering = ('family',)
@@ -62,4 +57,3 @@ class DispensaryRegAdmin(admin.ModelAdmin):
 @admin.register(models.BenefitReg)
 class DispensaryRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
-
