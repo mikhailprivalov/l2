@@ -56,11 +56,3 @@ def direction_data(request):
             },
         }
     })
-
-
-@api_view()
-def document_result(request):
-    pk = json.loads(request.GET["pk"])
-    a = result_print(request)
-    print(a)
-    return Response(pk, a)
