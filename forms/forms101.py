@@ -212,7 +212,7 @@ def form_02(request_data):
         Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 2 * mm))
 
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
 
     if agent_status:
@@ -377,7 +377,7 @@ def form_03(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
 
     buffer = BytesIO()
@@ -459,7 +459,7 @@ def form_03(request_data):
         Paragraph('Выдан: {} {}'.format(person_data['passport_date_start'], person_data['passport_issued']), styleSign))
     objs.append(Spacer(1, 3 * mm))
 
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
 
     opinion = []
     if agent_status:
