@@ -98,8 +98,8 @@ def form_01(request_data):
     if param:
         title = 'Ведомость статистических талонов по услугам пациентов'
         opinion = [
-            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT),
-             Paragraph('Дата рождения', styleT),
+            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, дата рождени', styleT),
+             Paragraph('Дата осмотра, &nbsp №', styleT),
              Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT),
              Paragraph('Код услуги', styleT),
              Paragraph('Наименование услуги', styleT), ]
@@ -107,7 +107,7 @@ def form_01(request_data):
     else:
         title = 'Ведомость статистических талонов по посещениям пациентов'
         opinion = [
-            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, &nbsp № направления', styleT), Paragraph('Дата рождения', styleT),
+            [Paragraph('№ п.п.', styleT), Paragraph('ФИО пациента, дата рождения ', styleT), Paragraph('Дата осмотра, &nbsp №', styleT),
              Paragraph('№ карты', styleT), Paragraph('Данные полиса', styleT), Paragraph('Цель посещения (код)', styleT),
              Paragraph('Первичный прием', styleT), Paragraph('Диагноз МКБ', styleT), Paragraph('Впервые', styleT),
              Paragraph('Результат обращения (код)', styleT), Paragraph('Исход (код)', styleT),
@@ -205,7 +205,7 @@ def form_02(request_data):
     #получить направления
     ind_dir = json.loads(request_data["napr_id"])
 
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:

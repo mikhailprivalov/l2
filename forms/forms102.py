@@ -272,7 +272,7 @@ def form_01(request_data):
 
 
     objs.append(Spacer(1, 4.5 * mm))
-    hospital_name = SettingManager.get("rmis_orgname")
+    hospital_name = SettingManager.get("org_title")
     hospital_short_name = SettingManager.get("org_title")
     hospital_address = SettingManager.get("org_address")
 
