@@ -1,3 +1,4 @@
+from django.db.models import Min
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -13,7 +14,8 @@ def next_result_direction(request):
     dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
         issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk')
     if from_pk:
-        dirs = dirs.filter(pk__gt=from_pk)
+        d = directions.Issledovaniya.objects.filter(napravleniye__pk=from_pk).aggregate(Min('time_confirmation'))
+        dirs = dirs.filter(issledovaniya__time_confirmation__gt=d["time_confirmation__min"])
     if after_date:
         dirs = dirs.filter(data_sozdaniya__date__gte=after_date)
     if research_pks != '*':
@@ -65,6 +67,7 @@ def direction_data(request):
         "issledovaniya": [x.pk for x in iss]
     })
 
+
 @api_view()
 def issledovaniye_data(request):
     pk = request.GET.get("pk")
@@ -78,11 +81,23 @@ def issledovaniye_data(request):
             "ok": False,
         })
 
+    results_data = []
+
+    for r in results:
+        results_data.append({
+            "pk": r.pk,
+            "fsli": r.fraction.fsli,
+            "value": r.value,
+            "units": r.get_units(),
+            "ref": r.calc_normal(only_ref=True).get("r", r.value).split("-")
+        })
+
     return Response({
         "ok": True,
         "pk": pk,
         "sample": {
             "date": sample.time_get.date()
-        }
+        },
+        "results": results_data,
     })
 
