@@ -11,7 +11,7 @@ def next_result_direction(request):
     next_n = int(request.GET.get("nextN", 10))
     research_pks = request.GET.get("research", '*')
     dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
-        issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk').distinct()
+        issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk')
     if from_pk:
         dirs = dirs.filter(pk__gt=from_pk)
     if after_date:
@@ -24,7 +24,7 @@ def next_result_direction(request):
         next_pk = dirs[0].pk
 
     x = []
-    for xx in dirs[:next_n]:
+    for xx in dirs.distinct()[:next_n]:
         x.append(xx.pk)
 
     return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
