@@ -9,12 +9,15 @@ def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
     after_date = request.GET.get("afterDate")
     next_n = int(request.GET.get("nextN", 10))
+    research_pks = request.GET.get("research", '*')
     dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
         issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk')
     if from_pk:
         dirs = dirs.filter(pk__gt=from_pk)
     if after_date:
         dirs = dirs.filter(data_sozdaniya__date__gte=after_date)
+    if research_pks != '*':
+        dirs = dirs.filter(issledovaniya__research__pk__in=research_pks.split(','))
 
     next_pk = None
     if dirs.exists():
@@ -30,9 +33,14 @@ def next_result_direction(request):
 @api_view()
 def direction_data(request):
     pk = request.GET.get("pk")
+    research_pks = request.GET.get("research", '*')
     direction = directions.Napravleniya.objects.get(pk=pk)
     card = direction.client
     individual = card.individual
+
+    iss = directions.Issledovaniya.objects.filter(napravleniye=direction, time_confirmation__isnull=False)
+    if research_pks != '*':
+        iss = iss.filter(research__pk__in=research_pks.split(','))
 
     return Response({
         "pk": pk,
@@ -53,5 +61,28 @@ def direction_data(request):
                 "pk": card.pk,
                 "number": card.number,
             },
+        },
+        "issledovaniya": [x.pk for x in iss]
+    })
+
+@api_view()
+def issledovaniye_data(request):
+    pk = request.GET.get("pk")
+    i = directions.Issledovaniya.objects.get(pk=pk)
+
+    sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    results = directions.Result.objects.filter(issledovaniye=i, fraction__fsli__isnull=False)
+
+    if not sample or not results.exists():
+        return Response({
+            "ok": False,
+        })
+
+    return Response({
+        "ok": True,
+        "pk": pk,
+        "sample": {
+            "date": sample.time_get.date()
         }
     })
+
