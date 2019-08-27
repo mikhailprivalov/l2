@@ -87,9 +87,12 @@ def issledovaniye_data(request):
         results_data.append({
             "pk": r.pk,
             "fsli": r.fraction.fsli,
-            "value": r.value,
+            "value": r.value.replace(',', '.'),
             "units": r.get_units(),
-            "ref": r.calc_normal(only_ref=True).get("r", r.value).split("-")
+            "ref": list(map(lambda rf: rf if '.' in rf else rf + '.0', map(lambda f: f.replace(',', '.'),
+                                                                           r.calc_normal(only_ref=True).get("r",
+                                                                                                            r.value).split(
+                                                                               "-"))))
         })
 
     return Response({
@@ -98,6 +101,8 @@ def issledovaniye_data(request):
         "sample": {
             "date": sample.time_get.date()
         },
+        "date": i.time_confirmation.date(),
         "results": results_data,
+        "code": i.research.code,
     })
 
