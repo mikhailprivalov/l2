@@ -225,7 +225,11 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
 
+MAX_RMIS_THREADS = 10
+
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
+
+RMIS_PROXY = None
 
 
 class DisableMigrations(object):

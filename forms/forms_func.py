@@ -6,6 +6,7 @@ from collections import OrderedDict
 from django.db.models import Q
 from laboratory import utils
 from decimal import Decimal
+from laboratory.utils import strdate
 
 
 def get_all_doc(docs: [Document]):
@@ -317,8 +318,9 @@ def get_finaldata_talon(doc_result_obj):
             continue
         polis_who_giv = empty if not napr_attr['polis_who_give'] else napr_attr['polis_who_give']
         polis_num = empty if not napr_attr['polis_n'] else napr_attr['polis_n']
-        temp_dict['client_fio'] = napr_attr['client_fio'] + ', ' + str(i.napravleniye_id)
-        temp_dict['client_bd'] = napr_attr['client_bd']
+
+        temp_dict['client_fio'] = napr_attr['client_fio'] + ', ' + napr_attr['client_bd']
+        temp_dict['med_exam'] = strdate(i.medical_examination) + ', ' + str(i.napravleniye_id)
         temp_dict['card_num'] = napr_attr['card_num']
         temp_dict['polis_data'] = '<u>' + polis_num + '</u>' + '<br/>' + polis_who_giv
 

@@ -80,7 +80,7 @@
                   загрузка...
                 </td>
               </tr>
-              <td colspan="3" style="text-align: center" v-else-if="location.data.length === 0">
+              <td colspan="3" style="text-align: center" v-else-if="(location.data || []).length === 0">
                 нет данных на дату
               </td>
               </tbody>
@@ -695,9 +695,13 @@
         }
         this.location.loading = true
         try {
-          this.location.data = (await users_point.loadLocation({date: this.td})).data
-        } catch (_) {
-
+          this.location.data = (await users_point.loadLocation({date: this.td}).catch((e) => {
+            console.error(e);
+            return {data: []};
+          })).data;
+        } catch (e) {
+          console.error(e);
+          this.location.data = [];
         }
         this.location.loading = false
       },

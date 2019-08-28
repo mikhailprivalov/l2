@@ -245,12 +245,12 @@ class Individual(models.Model):
                 out.write("Физ.лицо не найдено в РМИС")
         return ok
 
-    def reverse_sync(self):
+    def reverse_sync(self, force_new=False):
         from rmis_integration.client import Client
         c = Client(modules=['patients', 'individuals'])
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
         n = False
-        if not cards.exists() or not self.rmis_uid:
+        if not cards.exists() or not self.rmis_uid or force_new:
             # ind_uid = c.individuals.createIndividual(self)
             ind_uid, rmis_uid = c.patients.send_new_patient(self)
             self.rmis_uid = ind_uid
@@ -261,7 +261,10 @@ class Individual(models.Model):
             n = True
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
-        if not n:
+        if "patient" not in pat_data:
+            if not force_new:
+                self.reverse_sync(force_new=True)
+        elif not n:
             p = pat_data["patient"]
             g = {"ж": "2"}.get(self.sex.lower(), "1")
             if self.family != p["lastName"] or \

@@ -22,6 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from mq.views import dt
 from podrazdeleniya.models import Podrazdeleniya
@@ -134,6 +135,8 @@ class Client(object):
         self.base_address = Settings.get("address")
         self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
+        if RMIS_PROXY:
+            self.session.proxies = RMIS_PROXY
         self.clients = {}
         self.directories = {}
         if "patients" in modules:
@@ -394,6 +397,7 @@ class Patients(BaseRequester):
         self.polis_types_id_list = r["polis_types_id_list"]
         self.local_types = r["local_types"]
         self.local_reverse_types = r["reverse_types"]
+        self.patient_client = self.main_client.get_client("path_patient_patients", "patients-ws/patient?wsdl").service
         self.smart_client = self.main_client.get_client("path_smart_patients", "patients-smart-ws/patient?wsdl").service
         self.appointment_client = self.main_client.get_client("path_appointment", "appointment-ws/appointment?wsdl").service
 
@@ -447,9 +451,11 @@ class Patients(BaseRequester):
         }
         iuid = self.client.createIndividual(**data)
 
+        self.patient_client.createPatient(patientId=iuid, patientData={})
+
         ruid = self.smart_client.sendPatient(patientCard={
-            'patient': iuid,
-            'identifiers':{
+            'patient': {'uid':iuid},
+            'identifiers': {
                 'code': iuid,
                 'codeType': '7',
                 'issueDate': strfdatetime(timezone.now(), "%Y-%m-%d"),
@@ -457,6 +463,7 @@ class Patients(BaseRequester):
         })
 
         return iuid, ruid["patientUid"]
+
 
     def edit_patient(self, individual):
         data = {
@@ -1150,7 +1157,7 @@ class Directions(BaseRequester):
                 self.fill_send_old_data(send_data, service_old_data)
         return send_data, ssd
 
-    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=10):
+    def check_and_send_all(self, stdout: OutputWrapper = None, without_results=False, maxthreads=MAX_RMIS_THREADS):
         def check_lock():
             return cache.get('upload_lock') is not None
 
