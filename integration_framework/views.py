@@ -24,11 +24,12 @@ def next_result_direction(request):
         dirs = dirs.filter(issledovaniya__research__pk__in=research_pks.split(','))
 
     next_pk = None
+    dirs = dirs[:next_n]
     if dirs.exists():
         next_pk = dirs[0].pk
 
     x = []
-    for xx in dirs.distinct()[:next_n]:
+    for xx in dirs:
         x.append(xx.pk)
 
     return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
