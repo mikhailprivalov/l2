@@ -133,7 +133,7 @@ class Client(object):
                        "department",
                        "tc"]
         self.base_address = Settings.get("address")
-        self.session = Session()
+        self.session = Session.proxies = {'http': '192.168.0.7:3128','https': '192.168.0.7:3128'}
         self.session.auth = HTTPBasicAuth(login, password)
         self.clients = {}
         self.directories = {}
