@@ -13,9 +13,11 @@ def next_result_direction(request):
     research_pks = request.GET.get("research", '*')
     dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
         issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk')
-    if from_pk:
-        d = directions.Issledovaniya.objects.filter(napravleniye__pk=from_pk).aggregate(Min('time_confirmation'))
-        dirs = dirs.filter(issledovaniya__time_confirmation__gt=d["time_confirmation__min"])
+    if from_pk and dirs.exists():
+        d = directions.Issledovaniya.objects.filter(napravleniye__pk=from_pk,
+                                                    time_confirmation__isnull=False).aggregate(Min('time_confirmation'))
+        if d["time_confirmation__min"]:
+            dirs = dirs.filter(issledovaniya__time_confirmation__gt=d["time_confirmation__min"])
     if after_date:
         dirs = dirs.filter(data_sozdaniya__date__gte=after_date)
     if research_pks != '*':

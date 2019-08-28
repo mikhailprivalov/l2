@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, \
     RMISServiceInactive
 from directory.models import Fractions, ParaclinicInputGroups, Researches
-from laboratory.settings import MAX_RMIS_THREADS
+from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
 from laboratory.utils import strdate, strtime, localtime, strfdatetime
 from mq.views import dt
 from podrazdeleniya.models import Podrazdeleniya
@@ -135,6 +135,8 @@ class Client(object):
         self.base_address = Settings.get("address")
         self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
+        if RMIS_PROXY:
+            self.session.proxies = RMIS_PROXY
         self.clients = {}
         self.directories = {}
         if "patients" in modules:
