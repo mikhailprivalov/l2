@@ -229,6 +229,8 @@ MAX_RMIS_THREADS = 10
 
 RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
+RMIS_PROXY = None
+
 
 class DisableMigrations(object):
     def __contains__(self, item):

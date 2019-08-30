@@ -338,6 +338,7 @@ class Fractions(models.Model):
     print_title = models.BooleanField(default=False, blank=True, help_text='Печатать название(Группировка)', db_index=True)
     readonly_title = models.BooleanField(default=False, blank=True,
                                          help_text='Только для чтения-суррогатная группа для фракций', db_index=True)
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
 
     def __str__(self):
         return self.research.title + " | " + self.title
