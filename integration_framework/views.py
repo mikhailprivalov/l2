@@ -1,35 +1,38 @@
 from django.db.models import Min
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+import datetime
+
+from laboratory.utils import strdatetime
 
 import directions.models as directions
+from . import sql_if
 
 
 @api_view()
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
-    after_date = request.GET.get("afterDate")
-    next_n = int(request.GET.get("nextN", 10))
-    research_pks = request.GET.get("research", '*')
-    dirs = directions.Napravleniya.objects.filter(issledovaniya__time_confirmation__isnull=False).exclude(
-        issledovaniya__time_confirmation__isnull=True).order_by('issledovaniya__time_confirmation', 'pk')
-    if from_pk and dirs.exists():
-        d = directions.Issledovaniya.objects.filter(napravleniye__pk=from_pk,
-                                                    time_confirmation__isnull=False).aggregate(Min('time_confirmation'))
-        if d["time_confirmation__min"]:
-            dirs = dirs.filter(issledovaniya__time_confirmation__gt=d["time_confirmation__min"])
-    if after_date:
-        dirs = dirs.filter(data_sozdaniya__date__gte=after_date)
-    if research_pks != '*':
-        dirs = dirs.filter(issledovaniya__research__pk__in=research_pks.split(','))
+    after_date = request.GET.get("afterDate", datetime.datetime.today())
+    next_n = int(request.GET.get("nextN", 2))
+    type_researches = request.GET.get("research", '*')
+    type_researches = 'mbu'
+    after_date = '2019-01-01 10:48:07.558120'
+    d_start = f'{after_date}+08'
+    after_date = datetime.datetime.strptime('01.01.2019', '%d.%m.%Y')
+    dirs = None
+    dirs = sql_if.direction_collect(d_start, type_researches, next_n)
+    print(dirs)
 
     next_pk = None
-    if dirs.exists():
-        next_pk = dirs[0].pk
+    next_time = None
+    napr = []
+    if dirs:
+        for i in dirs:
+            napr.append(i[0])
+            next_time = i[3]
 
-    x = []
-    for xx in dirs.distinct()[:next_n]:
-        x.append(xx.pk)
+    print(napr)
+    print(next_time)
 
     return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
