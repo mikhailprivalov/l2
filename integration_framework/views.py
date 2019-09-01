@@ -1,40 +1,32 @@
 from django.db.models import Min
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import datetime
-
-from laboratory.utils import strdatetime
 
 import directions.models as directions
 from . import sql_if
+from laboratory.local_settings import AFTER_DATE
 
 
 @api_view()
 def next_result_direction(request):
     from_pk = request.GET.get("fromPk")
-    after_date = request.GET.get("afterDate", datetime.datetime.today())
-    next_n = int(request.GET.get("nextN", 2))
+    after_date = request.GET.get("afterDate")
+    if after_date == '0':
+        after_date = AFTER_DATE
+    next_n = int(request.GET.get("nextN", 10))
     type_researches = request.GET.get("research", '*')
-    type_researches = 'mbu'
-    after_date = '2019-01-01 10:48:07.558120'
     d_start = f'{after_date}+08'
-    after_date = datetime.datetime.strptime('01.01.2019', '%d.%m.%Y')
     dirs = None
     dirs = sql_if.direction_collect(d_start, type_researches, next_n)
-    print(dirs)
 
-    next_pk = None
     next_time = None
-    napr = []
+    naprs = []
     if dirs:
         for i in dirs:
-            napr.append(i[0])
+            naprs.append(i[0])
             next_time = i[3]
 
-    print(napr)
-    print(next_time)
-
-    return Response({"next": next_pk, "next_n": x, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
+    return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
 
 @api_view()

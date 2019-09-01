@@ -13,16 +13,22 @@ def direction_collect(d_s, type_integration, limit):
     t_iss - это временная таблица запроса для направлений в к-рых есть подтвержденные исследований (Направления уникальны)
     t_iss_null - это временная таблица запроса направлений, у к-рых есть неподтвержденные исследования
     t_all - это готовая выборка направлений, где подтверждены ВСЕ исследования в определенном направлении
+    SELECT research_id FROM integration_framework_integrationresearches WHERE
     """
 
     with connection.cursor() as cursor:
         cursor.execute("""WITH
-        t_field AS (SELECT research_id FROM integration_framework_integrationresearches where type_integration=%(type_integration)s),
+        t_field AS ( SELECT research_id FROM integration_framework_integrationresearches WHERE 
+            CASE 
+            WHEN %(type_integration)s = '*' THEN 
+                type_integration IS NOT NULL
+            ELSE type_integration=%(type_integration)s
+            END),
         t_iss AS 
             (SELECT distinct on (napravleniye_id) napravleniye_id, research_id, time_confirmation AT TIME ZONE %(tz)s AS time_confirmation,
              to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI:SS.US') AS t_confirm
              FROM public.directions_issledovaniya
-                   WHERE time_confirmation >= %(d_start)s AND (research_id IN (SELECT * FROM t_field))
+                   WHERE time_confirmation > %(d_start)s AND (research_id IN (SELECT * FROM t_field))
             order by napravleniye_id),
         t_iss_null AS
             (SELECT distinct on (napravleniye_id) napravleniye_id as napr_null FROM public.directions_issledovaniya
