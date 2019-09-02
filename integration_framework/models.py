@@ -1,5 +1,5 @@
 from django.db import models
-
+from directory.models import Researches
 
 class IntegrationNamespace(models.Model):
     key = models.CharField(max_length=128, primary_key=True)
@@ -19,3 +19,13 @@ class IntegrationJournal(models.Model):
     namespace = models.ForeignKey(IntegrationNamespace, db_index=True, on_delete=models.CASCADE)
     type = models.SmallIntegerField(choices=TYPES, db_index=True)
     key = models.IntegerField(db_index=True)
+
+
+class IntegrationResearches(models.Model):
+    TYPES =  (
+        ('mbu', 'MBU'),
+        ('amd', 'AMD'),
+    )
+
+    type_integration = models.CharField(max_length=3, choices=TYPES, db_index=True)
+    research = models.ForeignKey(Researches, on_delete=models.CASCADE)
