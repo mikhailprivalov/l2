@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 import directions.models as directions
 from . import sql_if
-from laboratory.local_settings import AFTER_DATE
+from laboratory.settings import AFTER_DATE
 
 
 @api_view()
