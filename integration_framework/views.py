@@ -5,6 +5,7 @@ from rest_framework.response import Response
 import directions.models as directions
 from . import sql_if
 from laboratory.settings import AFTER_DATE
+from laboratory import utils
 
 
 @api_view()
@@ -13,7 +14,7 @@ def next_result_direction(request):
     after_date = request.GET.get("afterDate")
     if after_date == '0':
         after_date = AFTER_DATE
-    next_n = int(request.GET.get("nextN", 10))
+    next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
     dirs = sql_if.direction_collect(d_start, type_researches, next_n)
@@ -60,7 +61,8 @@ def direction_data(request):
                 "number": card.number,
             },
         },
-        "issledovaniya": [x.pk for x in iss]
+        "issledovaniya": [x.pk for x in iss],
+        "issConfirm": iss[0].time_confirmation
     })
 
 

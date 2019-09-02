@@ -133,6 +133,7 @@ class Client(object):
                        "department",
                        "tc"]
         self.base_address = Settings.get("address")
+        self.session = Session()
         self.session.auth = HTTPBasicAuth(login, password)
         if RMIS_PROXY:
             self.session.proxies = RMIS_PROXY
