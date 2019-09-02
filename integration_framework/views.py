@@ -15,8 +15,7 @@ def next_result_direction(request):
         after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 10))
     type_researches = request.GET.get("research", '*')
-    d_start = f'{after_date}+08'
-    dirs = None
+    d_start = f'{after_date}'
     dirs = sql_if.direction_collect(d_start, type_researches, next_n)
 
     next_time = None

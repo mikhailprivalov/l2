@@ -28,7 +28,7 @@ def direction_collect(d_s, type_integration, limit):
             (SELECT distinct on (napravleniye_id) napravleniye_id, research_id, time_confirmation AT TIME ZONE %(tz)s AS time_confirmation,
              to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'YYYY-MM-DD HH24:MI:SS.US') AS t_confirm
              FROM public.directions_issledovaniya
-                   WHERE time_confirmation > %(d_start)s AND (research_id IN (SELECT * FROM t_field))
+                   WHERE time_confirmation > %(d_start)s AT TIME ZONE %(tz)s AND (research_id IN (SELECT * FROM t_field))
             order by napravleniye_id),
         t_iss_null AS
             (SELECT distinct on (napravleniye_id) napravleniye_id as napr_null FROM public.directions_issledovaniya
