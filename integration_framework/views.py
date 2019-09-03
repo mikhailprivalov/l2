@@ -63,8 +63,8 @@ def direction_data(request):
         },
         "issledovaniya": [x.pk for x in iss],
         "issConfirm": iss[0].time_confirmation,
-        "issDocConfirm": "klueva",
-        "docPass":"Lera93"
+        "issDocConfirm": "",
+        "docPass":""
     })
 
 
