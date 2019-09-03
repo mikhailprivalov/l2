@@ -321,7 +321,8 @@ def get_finaldata_talon(doc_result_obj):
 
         temp_dict['client_fio'] = napr_attr['client_fio'] + ', ' + napr_attr['client_bd']
         temp_dict['med_exam'] = strdate(i.medical_examination) + ', ' + str(i.napravleniye_id)
-        temp_dict['card_num'] = napr_attr['card_num']
+        num_poliklinika = ' ('+napr_attr['number_poliklinika']+')' if napr_attr['number_poliklinika'] else ''
+        temp_dict['card_num'] = napr_attr['card_num'] + num_poliklinika
         temp_dict['polis_data'] = '<u>' + polis_num + '</u>' + '<br/>' + polis_who_giv
 
         temp_dict_iss = temp_dict.copy()
