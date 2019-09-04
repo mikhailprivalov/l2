@@ -76,8 +76,18 @@ def tubes(request, direction_implict_id=None):
         fresearches = set()
         fuppers = set()
         flowers = set()
+        has_microbiology = False
+        tubet = {}
 
         for iss in Issledovaniya.objects.filter(napravleniye=tmp2):
+            if iss.research.is_microbiology:
+                has_microbiology = True
+                tpk = int(d) * 10 + 4600000000000
+                tubes_id.add(tpk)
+                tubet = {"pk": tpk, "researches": {iss.research.title},
+                         "title": iss.research.microbiology_tube.title,
+                         "microbiology": True,
+                         "short_title": iss.research.microbiology_tube.get_short_title()}
             for fr in iss.research.fractions_set.all():
                 absor = directory.Absorption.objects.filter(fupper=fr)
                 if absor.exists():
@@ -87,33 +97,36 @@ def tubes(request, direction_implict_id=None):
                         flowers.add(absor_obj.flower_id)
                         fresearches.add(absor_obj.flower.research_id)
 
-        for v in tmp:
-            for val in directory.Fractions.objects.filter(research=v.research):
-                vrpk = val.relation_id
-                rel = val.relation
-                if val.research_id in fresearches and val.pk in flowers:
-                    absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
-                    if absor.fupper_id in fuppers:
-                        vrpk = absor.fupper.relation_id
-                        rel = absor.fupper.relation
+        if not has_microbiology:
+            for v in tmp:
+                for val in directory.Fractions.objects.filter(research=v.research):
+                    vrpk = val.relation_id
+                    rel = val.relation
+                    if val.research_id in fresearches and val.pk in flowers:
+                        absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
+                        if absor.fupper_id in fuppers:
+                            vrpk = absor.fupper.relation_id
+                            rel = absor.fupper.relation
 
-                if vrpk not in tubes_buffer.keys():
-                    if not v.tubes.filter(type=rel).exists():
-                        ntube = TubesRegistration(type=rel)
-                        ntube.save()
-                        v.tubes.add(ntube)
+                    if vrpk not in tubes_buffer.keys():
+                        if not v.tubes.filter(type=rel).exists():
+                            ntube = TubesRegistration(type=rel)
+                            ntube.save()
+                            v.tubes.add(ntube)
+                        else:
+                            ntube = v.tubes.filter(type=rel).first()
+                        tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(),
+                                              "title": ntube.type.tube.title,
+                                              "short_title": ntube.type.tube.get_short_title()}
+                        if not istubes:
+                            tubes_id.add(ntube.pk)
                     else:
-                        ntube = v.tubes.filter(type=rel).first()
-                    tubes_buffer[vrpk] = {"pk": ntube.pk, "researches": set(),
-                                          "title": ntube.type.tube.title,
-                                          "short_title": ntube.type.tube.get_short_title()}
-                    if not istubes:
-                        tubes_id.add(ntube.pk)
-                else:
-                    ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
-                    v.tubes.add(ntube)
+                        ntube = TubesRegistration.objects.get(pk=tubes_buffer[vrpk]["pk"])
+                        v.tubes.add(ntube)
 
-                tubes_buffer[vrpk]["researches"].add(v.research.title)
+                    tubes_buffer[vrpk]["researches"].add(v.research.title)
+        else:
+            tubes_buffer[tubet["pk"]] = tubet
         for tube_k in sorted(tubes_buffer.keys(), key=lambda k: tubes_buffer[k]["pk"]):
             tube = tubes_buffer[tube_k]["pk"]
             if tube not in tubes_id:
@@ -132,11 +145,18 @@ def tubes(request, direction_implict_id=None):
             else:
                 st = "вн.орг"
 
-            st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
+            if has_microbiology:
+                st = st + "=>м.био"
+            else:
+                st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
 
             fam = tmp2.client.individual.fio(short=True, dots=False)
-            pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
-                tubes__pk=tube).first().comment[:9]
+
+            if has_microbiology:
+                pr = tubes_buffer[tube_k]["short_title"]
+            else:
+                pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
+                    tubes__pk=tube).first().comment[:9]
 
             nm = "№" + str(d) + "," + tmp2.client.base.short_title
 
@@ -161,6 +181,8 @@ def tubes(request, direction_implict_id=None):
                 m = 0.0212
             if tube >= 1000000:
                 m = 0.016
+            if has_microbiology:
+                m = 0.012
             barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
             barcode.drawOn(c, -3 * mm, 4 * mm)
 

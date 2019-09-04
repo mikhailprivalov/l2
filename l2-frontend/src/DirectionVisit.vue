@@ -66,6 +66,18 @@
                 <ol>
                   <li v-for="r in researches">{{r.title}}</li>
                 </ol>
+                <div style="margin-top: 5px" v-if="direction_data.tubes && direction_data.tubes.length > 0">
+                  <h5>Ёмкости:</h5>
+                  <div v-for="r in direction_data.tubes">
+                    <span
+                      :style="`background-color: ${r.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;margin-left: 25px;`"></span>
+                    {{r.title}}
+                  </div>
+
+                    <button @click="print_tube()" class="btn btn-blue-nb" style="margin-top: 10px">
+                      Печать штрих-кода
+                    </button>
+                </div>
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <div class="row">
@@ -73,14 +85,21 @@
                     <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
                   </div>
                   <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
-                    <button class="btn btn-blue-nb" @click="make_visit()" v-if="!visit_status">
-                      Зарегистрировать посещение
-                    </button>
+                    <div v-if="!visit_status">
+                      <button @click="make_visit()" class="btn btn-blue-nb" v-if="!direction_data.has_microbiology">
+                        Зарегистрировать посещение
+                      </button>
+                      <button @click="make_visit()" class="btn btn-blue-nb" v-else>
+                        Регистрация забора биоматерала
+                      </button>
+                    </div>
                     <div class="float-right" v-else>
                       Посещение {{visit_date}}<br/>
                       {{direction_data.visit_who_mark}}
                       <div v-if="allow_reset_confirm">
-                        <a href="#" @click.prevent="cancel_visit">отменить посещение</a>
+                        <a @click.prevent="cancel_visit" href="#" v-if="direction_data.has_microbiology">отменить забор
+                          материала</a>
+                        <a @click.prevent="cancel_visit" href="#" v-else>отменить посещение</a>
                       </div>
                     </div>
                   </div>
@@ -137,11 +156,6 @@
       </div>
       <div slot="footer" class="text-center">
         <div class="row">
-          <!--<div class="col-xs-6">
-            <button type="button" @click="report('humans')" class="btn btn-primary-nb btn-blue-nb btn-ell">
-              Отчёт по людям
-            </button>
-          </div>-->
           <div class="col-xs-6">
             <button type="button" @click="report('sum')" class="btn btn-primary-nb btn-blue-nb btn-ell">
               Суммарный отчёт
@@ -299,6 +313,9 @@
           this.in_load = false
           this.load_journal()
         })
+      },
+      print_tube() {
+        this.$root.$emit('print:barcodes', [this.loaded_pk])
       }
     }
   }

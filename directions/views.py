@@ -421,6 +421,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     vid = []
     has_descriptive = False
     has_doc_refferal = False
+    has_micro = False
     for i in issledovaniya:
         rtp = i.research.reversed_type
         if rtp < -1:
@@ -429,7 +430,10 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                 -2: 'Консультации',
                 -3: 'Лечение',
                 -4: 'Стоматология',
+                -6: 'Микробиология',
             }[rtp]
+            if rtp == -6:
+                has_micro = True
         else:
             rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
@@ -471,7 +475,8 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         tmp = [Paragraph(
             '<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"),
             styleSheet["BodyText"]),
-               Paragraph('<font face="OpenSansBold" size="8">Подготовка, кабинет</font>', styleSheet["BodyText"])]
+            Paragraph('<font face="OpenSansBold" size="8">Подготовка{}</font>'.format('' if has_micro else ', кабинет'),
+                      styleSheet["BodyText"])]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
         values.sort(key=lambda l: l["full_title"])
