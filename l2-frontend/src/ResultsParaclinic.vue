@@ -861,7 +861,7 @@
       },
       save_anamnesis() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        patients_point.saveAnamnesis(this.data.patient, ['card_pk', 'text']).then().finally(() => {
+        patients_point.saveAnamnesis(this.data.patient, "card_pk", {text: this.anamnesis_data.text}).then().finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then()
           this.new_anamnesis = this.anamnesis_data.text;
           this.hide_modal_anamnesis_edit();
