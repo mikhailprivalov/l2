@@ -27,6 +27,7 @@ class SettingManager:
             "hosp",
             "rmis_queue",
             "benefit",
+            "microbiology",
         ]}
 
     @staticmethod
@@ -37,4 +38,5 @@ class SettingManager:
             5: SettingManager.l2('treatment'),
             6: SettingManager.l2('stom'),
             7: SettingManager.l2('hosp'),
+            8: SettingManager.l2('microbiology'),
         }

@@ -380,6 +380,8 @@ def current_user_info(request):
             ret["groups"].append("Admin")
         ret["doc_pk"] = request.user.doctorprofile.pk
         ret["rmis_location"] = request.user.doctorprofile.rmis_location
+        ret["rmis_login"] = request.user.doctorprofile.rmis_login
+        ret["rmis_password"] = request.user.doctorprofile.rmis_password
         ret["department"] = {"pk": request.user.doctorprofile.podrazdeleniye_id,
                              "title": request.user.doctorprofile.podrazdeleniye.title}
         ret["restricted"] = [x.pk for x in request.user.doctorprofile.restricted_to_direct.all()]
@@ -818,6 +820,8 @@ def user_view(request):
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
             "rmis_location": '',
+            "rmis_login": '',
+            "rmis_password": '',
             "doc_pk": -1,
         }
     else:
@@ -833,6 +837,8 @@ def user_view(request):
             "groups_list": [{"pk": x.pk, "title": x.name} for x in Group.objects.all()],
             "password": '',
             "rmis_location": doc.rmis_location or '',
+            "rmis_login": doc.rmis_login or '',
+            "rmis_password": '',
             "doc_pk": doc.user.pk,
         }
 
@@ -849,6 +855,8 @@ def user_save_view(request):
     ud = request_data["user_data"]
     username = ud["username"]
     rmis_location = ud["rmis_location"].strip() or None
+    rmis_login = ud["rmis_login"].strip() or None
+    rmis_password = ud["rmis_password"].strip() or None
     npk = pk
     if pk == -1:
         if not User.objects.filter(username=username).exists():
@@ -894,6 +902,13 @@ def user_save_view(request):
             doc.podrazdeleniye_id = ud['department']
             doc.fio = ud["fio"]
             doc.rmis_location = rmis_location
+            if rmis_login:
+                doc.rmis_login = rmis_login
+                if rmis_password:
+                    doc.rmis_password = rmis_password
+            else:
+                doc.rmis_login = None
+                doc.rmis_password = None
             doc.save()
     return JsonResponse({"ok": ok, "npk": npk, "message": message})
 

@@ -67,6 +67,12 @@ class RefSiteType(admin.ModelAdmin):
     list_filter = ('site_type',)
 
 
+class TitleHide(admin.ModelAdmin):
+    list_display = ('title', 'hide',)
+    list_display_links = ('title',)
+    list_filter = ('hide',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -84,3 +90,6 @@ admin.site.register(models.ParaclinicTemplateField)
 
 admin.site.register(models.RouteSheet, ResRouteSheet)
 admin.site.register(models.NameRouteSheet, ResNameRouteSheet)
+
+admin.site.register(models.Culture, TitleHide)
+admin.site.register(models.Antibiotic, TitleHide)

@@ -420,7 +420,12 @@
       },
       researches_departments() {
         let r = {}
-        let deps = {"-2": {title: "Консультации"}, "-3": {title: "Лечение"}, "-4": {title: "Стоматология"}}
+        let deps = {
+          '-2': {title: 'Консультации'},
+          '-3': {title: 'Лечение'},
+          '-4': {title: 'Стоматология'},
+          '-6': {title: 'Микробиология'}
+        }
         for (let dep of this.$store.getters.allDepartments) {
           deps[dep.pk] = dep
         }

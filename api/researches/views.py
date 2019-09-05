@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 import simplejson as json
 
+from researches.models import Tubes
 from slog.models import Log
 import users.models as users
 from directory.models import Researches as DResearches, AutoAdd, ParaclinicInputGroups, Fractions, \
@@ -37,6 +38,7 @@ class ResearchesTemplates(View):
 
 class Researches(View):
     def get(self, request):
+        tubes = []
         deps = defaultdict(list)
 
         for r in DResearches.objects.filter(hide=False).order_by("title")\
@@ -61,7 +63,15 @@ class Researches(View):
                  "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
                  "site_type": r.site_type_id
                  })
-        return JsonResponse({"researches": deps})
+
+        for t in Tubes.objects.all():
+            tubes.append({
+                "pk": t.pk,
+                "title": t.title,
+                "color": t.color
+            })
+
+        return JsonResponse({"researches": deps, "tubes": tubes})
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -81,6 +91,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_treatment=True).order_by("title")
         elif department_pk == -4:
             q = DResearches.objects.filter(is_stom=True).order_by("title")
+        elif department_pk == -6:
+            q = DResearches.objects.filter(is_microbiology=True).order_by("title")
         else:
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
@@ -131,8 +143,11 @@ def researches_update(request):
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         site_type = request_data.get("site_type", None)
-        groups = request_data.get("groups")
-        desc = department_pk in [-2, -3, -4]
+        groups = request_data.get("groups", [])
+        tube = request_data.get("tube", -1)
+        if tube == -1:
+            tube = None
+        desc = department_pk in [-2, -3, -4, -6]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -143,6 +158,8 @@ def researches_update(request):
                                   is_doc_refferal=department_pk == -2,
                                   is_treatment=department_pk == -3,
                                   is_stom=department_pk == -4,
+                                  is_microbiology=department_pk == -6,
+                                  microbiology_tube_id=tube if department_pk == -6 else None,
                                   site_type_id=site_type, internal_code=internal_code)
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
@@ -154,6 +171,8 @@ def researches_update(request):
                 res.is_doc_refferal = department_pk == -2
                 res.is_treatment = department_pk == -3
                 res.is_stom = department_pk == -4
+                res.is_microbiology = department_pk == -6
+                res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
                 res.site_type_id = site_type
@@ -239,6 +258,7 @@ def researches_details(request):
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide
+        response["tube"] = res.microbiology_tube_id or -1
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):

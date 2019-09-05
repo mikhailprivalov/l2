@@ -354,20 +354,33 @@ def directions_services(request):
     if dn.exists():
         n = dn[0]
         if Issledovaniya.objects.filter(
-                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
+                Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
+                    research__is_microbiology=True)).exists():
             cdid, ctime, ctp, rt = get_reset_time_vars(n)
 
             response["ok"] = True
             researches = []
+            tubes = []
+            has_microbiology = False
             for i in Issledovaniya.objects.filter(napravleniye=n).filter(
-                    Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).distinct():
+                    Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
+                        research__is_microbiology=True)).distinct():
                 researches.append({"title": i.research.title,
-                                   "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title()})
+                                   "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title(),
+                                   "is_microbiology": i.research.is_microbiology})
+                if i.research.is_microbiology:
+                    has_microbiology = True
+                    tubes.append({
+                        "title": i.research.microbiology_tube.title,
+                        "color": i.research.microbiology_tube.color,
+                    })
             response["direction_data"] = {
                 "date": strdate(n.data_sozdaniya),
                 "client": n.client.individual.fio(full=True),
                 "card": n.client.number_with_type(),
                 "diagnos": n.diagnos,
+                "tubes": tubes,
+                "has_microbiology": has_microbiology,
                 "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
                 "imported_from_rmis": n.imported_from_rmis,
                 "imported_org": "" if not n.imported_org else n.imported_org.title,
@@ -643,12 +656,13 @@ def directions_paraclinic_form(request):
         d = dn[0]
         df = Issledovaniya.objects.filter(napravleniye=d)
         df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
-                       | Q(research__is_treatment=True) | Q(research__is_stom=True))
+                       | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(research__is_microbiology=True))
         df = df.distinct()
 
         if df.exists():
             response["ok"] = True
             response["has_doc_referral"] = False
+            response["has_microbiology"] = False
             response["card_internal"] = d.client.base.internal_type
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
@@ -668,12 +682,22 @@ def directions_paraclinic_form(request):
                 "diagnos": d.diagnos,
                 "fin_source": "" if not d.istochnik_f else d.istochnik_f.title,
                 "fin_source_id": d.istochnik_f_id,
+                "tube": None,
             }
 
             response["researches"] = []
             for i in df:
                 if i.research.is_doc_refferal:
                     response["has_doc_referral"] = True
+                if i.research.is_microbiology and not response["has_microbiology"]:
+                    response["has_microbiology"] = True
+                    if i.research.microbiology_tube:
+                        response["direction"]["tube"] = {
+                            "type": i.research.microbiology_tube.title,
+                            "color": i.research.microbiology_tube.color,
+                            "get": i.get_visit_date(force=True),
+                            "n": d.microbiology_n,
+                        }
                 ctp = int(0 if not i.time_confirmation else int(
                     time.mktime(timezone.localtime(i.time_confirmation).timetuple())))
                 ctime = int(time.time())
@@ -700,7 +724,12 @@ def directions_paraclinic_form(request):
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
+                    "microbiology": [],
+                    "lab_comment": i.lab_comment,
                 }
+
+                if i.research.is_microbiology:
+                    pass  # TODO: Fill microbiology results
 
                 for sd in Napravleniya.objects.filter(parent=i):
                     iss["sub_directions"].append({
@@ -789,11 +818,15 @@ def directions_paraclinic_result(request):
     v_g = visibility_state.get("groups", {})
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
+    tube = request_data.get("direction", {}).get("tube", {})
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
                    | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
+
+        iss.napravleniye.microbiology_n = tube.get("n", "")
+        iss.napravleniye.save()
 
         recipe_no_remove = []
 
@@ -853,6 +886,7 @@ def directions_paraclinic_result(request):
         iss.outcome_illness_id = request_data.get("outcome")
         iss.maybe_onco = request_data.get("maybe_onco", False)
         iss.diagnos = request_data.get("diagnos", "")
+        iss.lab_comment = request_data.get("lab_comment", "")
 
         iss.save()
 

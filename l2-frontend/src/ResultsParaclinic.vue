@@ -7,7 +7,7 @@
         <button class="btn btn-blue-nb" @click="load">Загрузить</button>
       </div>
       <div class="sidebar-bottom-top"><span>Результаты за</span>
-        <date-field-nav :brn="false" :val.sync="date" :def="date"/>
+        <date-field-nav :brn="false" :def="date" :val.sync="date" w="100px"/>
       </div>
       <div class="directions" :class="{noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d}">
         <div class="inner">
@@ -182,6 +182,7 @@
               {{row.research.title}}
               <dropdown :visible="research_open_history === row.pk"
                         :position='["left", "bottom", "left", "top"]'
+                        v-if="!data.has_microbiology"
                         @clickout="hide_results">
                 <a style="font-weight: normal"
                    href="#" @click.prevent="open_results(row.pk)">
@@ -199,7 +200,7 @@
                 </div>
               </dropdown>
             </div>
-            <div class="research-right" v-if="!row.confirmed">
+            <div class="research-right" v-if="!row.confirmed && !data.has_microbiology">
               <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
                       title="Сохранить без подтверждения" v-tippy>
                 &nbsp;<i class="fa fa-save"></i>&nbsp;
@@ -291,7 +292,7 @@
               </div>
           </div>
           </visibility-group-wrapper>
-          <div class="group">
+          <div class="group" v-if="!data.has_microbiology">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
@@ -309,8 +310,54 @@
               </div>
             </div>
           </div>
+          <div class="group" v-if="data.has_microbiology && data.direction.tube">
+            <div class="group-title">Материал</div>
+            <div class="fields">
+              <div class="field">
+                <div class="field-title" style="flex: 1 0 240px">
+                  Ёмкость
+                </div>
+                <div class="field-value" style="padding: 3px">
+                  <span
+                    :style="{
+                    width: '10px',
+                    height: '10px',
+                    background: data.direction.tube.color,
+                    border: '1px solid #aaa',
+                    display: 'inline-block' }"></span>
+                  {{data.direction.tube.type}}, дата забора {{data.direction.tube.get}}
+                </div>
+              </div>
+              <div class="field">
+                <div class="field-title" style="flex: 1 0 240px">
+                  Номер материала в лаборатории
+                </div>
+                <div class="field-value">
+                  <input :readonly="row.confirmed" class="form-control" v-model="data.direction.tube.n"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="group" v-if="data.has_microbiology">
+            <div class="group-title">Культуры</div>
+            <div class="fields">
+              <culture-input :confirmed="row.confirmed" :pk="row.pk" v-model="row.microbiology"/>
+            </div>
+          </div>
+          <div class="group" v-if="data.has_microbiology">
+            <div class="group-title">Заключение</div>
+            <div class="fields">
+              <div class="field">
+                <div class="field-value">
+                  <textarea :readonly="row.confirmed" class="form-control" rows="4"
+                            v-model="row.lab_comment"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="group" v-if="row.research.is_doc_refferal && row.recipe">
-            <div class="group-title">Рецепты</div><div class="row">
+            <div class="group-title">Рецепты</div>
+            <div class="row">
               <div class="col-xs-12">
                 <div class="sd">
                   <recipe-input v-model="row.recipe" :pk="row.pk" :confirmed="row.confirmed" />
@@ -578,6 +625,7 @@
   import Benefit from './Benefit'
   import DirectionsHistory from './DirectionsHistory'
   import RecipeInput from './RecipeInput'
+  import CultureInput from './CultureInput'
   import ResultsViewer from './ResultsViewer'
   import LastResult from './LastResult'
   import VisibilityFieldWrapper from './components/VisibilityFieldWrapper'
@@ -588,7 +636,7 @@
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput,
+      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput,
     },
     data() {
       return {
@@ -918,7 +966,10 @@
         this.inserted = false
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
-          data: iss,
+          data: {
+            ...iss,
+            direction: this.data.direction,
+          },
           with_confirm: false,
           visibility_state: this.visibility_state(iss)
         }).then(data => {
@@ -942,7 +993,10 @@
         this.inserted = false
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
-          data: iss,
+          data: {
+            ...iss,
+            direction: this.data.direction,
+          },
           with_confirm: true,
           visibility_state: this.visibility_state(iss)
         }).then(data => {
