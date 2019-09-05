@@ -825,8 +825,9 @@ def directions_paraclinic_result(request):
                    | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
 
-        iss.napravleniye.microbiology_n = tube.get("n", "")
-        iss.napravleniye.save()
+        if tube:
+            iss.napravleniye.microbiology_n = tube.get("n", "")
+            iss.napravleniye.save()
 
         recipe_no_remove = []
 
