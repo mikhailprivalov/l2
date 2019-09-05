@@ -58,6 +58,7 @@ class ResearchSite(models.Model):
         (0, 'Консультация врача'),
         (1, 'Лечение'),
         (2, 'Стоматалогия'),
+        (3, 'Микробиология'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -112,6 +113,7 @@ class Researches(models.Model):
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение")
     is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
+    is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
@@ -125,6 +127,9 @@ class Researches(models.Model):
     internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
+    microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True,
+                                          help_text="Пробирка для микробиологического исследования",
+                                          on_delete=models.SET_NULL)
 
     @staticmethod
     def filter_type(t):
@@ -133,6 +138,7 @@ class Researches(models.Model):
             5: dict(is_doc_refferal=True),
             6: dict(is_treatment=True),
             7: dict(is_stom=True),
+            8: dict(is_microbiology=True),
         }
         return ts.get(t, {})
 
@@ -146,11 +152,13 @@ class Researches(models.Model):
             return -3
         if self.is_stom:
             return -4
+        if self.is_microbiology:
+            return -6
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
@@ -396,3 +404,29 @@ class RouteSheet(models.Model):
     class Meta:
         verbose_name = 'Списоки маршрутов - Услуги'
         verbose_name_plural = 'Списки маршрутов - Услуги'
+
+
+class Culture(models.Model):
+    title = models.CharField(max_length=255, help_text="Название культуры")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Культура'
+        verbose_name_plural = 'Культуры'
+
+
+class Antibiotic(models.Model):
+    title = models.CharField(max_length=255, help_text="Название антибиотика")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    hide = models.BooleanField()
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Антибиотик'
+        verbose_name_plural = 'Антибиотики'

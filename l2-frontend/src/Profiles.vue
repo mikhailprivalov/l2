@@ -89,9 +89,13 @@
           </div>
         </div>
         <div class="more-data">
-          <div class="input-group" style="width: 100%" v-if="rmis_queue">
-            <span class="input-group-addon">РМИС location</span>
-            <input class="form-control" v-model="user.rmis_location" />
+          <div class="input-group" style="width: 100%" v-if="l2_user_data.rmis_enabled">
+            <span class="input-group-addon" v-if="modules.l2_rmis_queue">РМИС location</span>
+            <input class="form-control" v-if="modules.l2_rmis_queue" v-model="user.rmis_location"/>
+            <span class="input-group-addon">РМИС логин</span>
+            <input class="form-control" v-model="user.rmis_login"/>
+            <span class="input-group-addon">РМИС пароль</span>
+            <input class="form-control" placeholder="Для замены введите значение" v-model="user.rmis_password"/>
           </div>
           <div class="input-group" style="width: 100%">
             <span class="input-group-addon">Группы</span>
@@ -110,8 +114,10 @@
               <selected-researches :researches="user.restricted_to_direct" :simple="true"/>
             </div>
           </div>
-          <div class="more-title" v-if="rmis_queue">Услуги, оказываемые пользователем:</div>
-          <div class="row" style="margin-right: 0" v-if="rmis_queue">
+          <div class="more-title" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">Услуги, оказываемые
+            пользователем:
+          </div>
+          <div class="row" style="margin-right: 0" v-if="modules.l2_rmis_queue && user.rmis_location !== ''">
             <div class="col-xs-6"
                  style="height: 300px;border-right: 1px solid #eaeaea;padding-right: 0;">
               <researches-picker :hidetemplates="true"
@@ -138,6 +144,7 @@
   import ResearchesPicker from './ResearchesPicker'
   import SelectedResearches from './SelectedResearches'
   import {debounce} from 'lodash-es'
+  import {mapGetters} from 'vuex'
 
   let toTranslit = function (text) {
     return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi,
@@ -178,6 +185,8 @@
         user: {
           username: '',
           rmis_location: '',
+          rmis_login: '',
+          rmis_password: '',
           doc_pk: -1,
         },
         open_pk: -2,
@@ -268,9 +277,6 @@
       },
     },
     computed: {
-      rmis_queue() {
-        return this.$store.getters.modules.l2_rmis_queue;
-      },
       department_filter() {
         const r = []
         for (let x of this.departments) {
@@ -286,6 +292,10 @@
           || (this.open_pk === -1 && this.user.password.length >= 3))
         return p && this.user.username !== '' && this.user.fio !== ''
       },
+      ...mapGetters({
+        modules: 'modules',
+        l2_user_data: 'user_data',
+      }),
     },
   }
 </script>

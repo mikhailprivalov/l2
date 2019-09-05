@@ -861,8 +861,9 @@
         (async () => {
           await this.$store.dispatch(action_types.INC_LOADING)
           const data = await patients_point.editDoc(this.document,
-            ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give', 'card_pk'],
+            ['serial', 'number', 'is_active', 'date_start', 'date_end', 'who_give'],
             {
+              card_pk: this.card_pk,
               pk: this.document_to_edit,
               type: this.document.document_type,
             })

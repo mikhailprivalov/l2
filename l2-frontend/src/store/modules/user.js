@@ -3,7 +3,9 @@ import * as mutation_types from '../mutation-types'
 import * as action_types from '../action-types'
 
 const state = {
-  data: {},
+  data: {
+    modules: {},
+  },
   directive_from: []
 }
 

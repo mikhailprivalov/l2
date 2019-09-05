@@ -10,6 +10,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     TREATMENT = 5
     STOM = 6
     HOSP = 7
+    MICROBIOLOGY = 8
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -20,6 +21,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (TREATMENT, "Лечение"),
         (STOM, "Стоматология"),
         (HOSP, "Стационар"),
+        (MICROBIOLOGY, "Микробиология"),
     )
 
     title = models.CharField(max_length=255)  # Название подразделения
