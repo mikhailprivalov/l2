@@ -12,8 +12,8 @@ import VueAutosize from 'vue-autosize';
 import VuejsDialog from 'vuejs-dialog';
 import VueCollapse from 'vue2-collapse'
 import 'vuejs-dialog/dist/vuejs-dialog.min.css';
-import ReplaceAppendModal from './ReplaceAppendModal';
-import RmisLocation from './RmisLocation'
+import ReplaceAppendModal from './ui-cards/ReplaceAppendModal';
+import RmisLocation from './ui-cards/RmisLocation'
 const VueInputMask = require('vue-inputmask').default;
 
 Vue.use(VuejsDialog, {
@@ -36,23 +36,23 @@ new Vue({
   el: '#app',
   store,
   components: {
-    'JournalGetMaterialModal': () => import('./JournalGetMaterialModal'),
-    'StatisticsTicketsPrintModal': () => import('./StatisticsTicketsPrintModal'),
-    'StatisticsResearchesPrintModal': () => import('./StatisticsResearchesPrintModal'),
-    'DepartmentsForm': () => import('./DepartmentsForm'),
-    'Directions': () => import('./Directions'),
+    'JournalGetMaterialModal': () => import('./modals/JournalGetMaterialModal'),
+    'StatisticsTicketsPrintModal': () => import('./modals/StatisticsTicketsPrintModal'),
+    'StatisticsResearchesPrintModal': () => import('./modals/StatisticsResearchesPrintModal'),
+    'DepartmentsForm': () => import('./forms/DepartmentsForm'),
+    'Directions': () => import('./pages/Directions'),
     'Cases': () => import('./pages/Cases'),
     'ConstructParaclinic': () => import('./construct/ConstructParaclinic'),
     'ConstructTemplates': () => import('./construct/ConstructTemplates'),
-    'ResultsParaclinic': () => import('./ResultsParaclinic'),
-    'StatisticsTickets': () => import('./StatisticsTickets'),
-    'DirectionVisit': () => import('./DirectionVisit'),
-    'ResultsReport': () => import('./ResultsReport'),
-    'RmqManagement': () => import('./RmqManagement'),
-    'DirectionSteps': () => import('./DirectionSteps'),
-    'RmisConfirm': () => import('./RmisConfirm'),
-    'Profiles': () => import('./Profiles'),
-    'EmployeeJobs': () => import('./EmployeeJobs'),
+    'ResultsParaclinic': () => import('./pages/ResultsParaclinic'),
+    'StatisticsTickets': () => import('./pages/StatisticsTickets'),
+    'DirectionVisit': () => import('./pages/DirectionVisit'),
+    'ResultsReport': () => import('./pages/ResultsReport'),
+    'RmqManagement': () => import('./ui-cards/RmqManagement'),
+    'DirectionSteps': () => import('./ui-cards/DirectionSteps'),
+    'RmisConfirm': () => import('./pages/RmisConfirm'),
+    'Profiles': () => import('./pages/Profiles'),
+    'EmployeeJobs': () => import('./pages/EmployeeJobs'),
     RmisLocation,
     // loading,
   },

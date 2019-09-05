@@ -31,7 +31,7 @@
 </template>
 
 <script>
-  import SelectPickerM from '../SelectPickerM'
+  import SelectPickerM from '../fields/SelectPickerM'
   import ParaclinicResearchEditor from './ParaclinicResearchEditor'
   import MicrobiologyResearchEditor from './MicrobiologyResearchEditor'
   import researches_point from '../api/researches-point'
