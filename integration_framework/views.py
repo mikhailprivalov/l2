@@ -14,7 +14,7 @@ def next_result_direction(request):
     after_date = request.GET.get("afterDate")
     if after_date == '0':
         after_date = AFTER_DATE
-    next_n = int(request.GET.get("nextN", 2))
+    next_n = int(request.GET.get("nextN", 1))
     type_researches = request.GET.get("research", '*')
     d_start = f'{after_date}'
     dirs = sql_if.direction_collect(d_start, type_researches, next_n)
@@ -62,9 +62,9 @@ def direction_data(request):
             },
         },
         "issledovaniya": [x.pk for x in iss],
-        "issConfirm": iss[0].time_confirmation,
-        "issDocConfirm": "",
-        "docPass":""
+        "timeConfirmation": iss[0].time_confirmation,
+        "docLogin": iss[0].doc_confirmation.rmis_login,
+        "docPassword": iss[0].doc_confirmation.rmis_password
     })
 
 
