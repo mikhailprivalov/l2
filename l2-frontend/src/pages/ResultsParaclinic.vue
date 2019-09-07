@@ -6,7 +6,8 @@
                placeholder="Номер направления"/>
         <button class="btn btn-blue-nb" @click="load">Загрузить</button>
       </div>
-      <div class="sidebar-bottom-top"><span>Результаты за</span>
+      <div class="sidebar-bottom-top">
+        <span>Результаты за</span>
         <date-field-nav :brn="false" :def="date" :val.sync="date" w="100px"/>
       </div>
       <div class="directions" :class="{noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d}">
@@ -21,9 +22,7 @@
                   {{i.title}}
                 </div>
                 <div class="col-xs-4 text-right">
-                  <span class="status status-none" v-if="!i.confirmed && !i.saved">не сохр.</span>
-                  <span class="status status-saved" v-if="!i.confirmed && i.saved">сохр.</span>
-                  <span class="status status-confirmed" v-if="i.confirmed && i.saved">подтв.</span>
+                  <iss-status :i="i" short />
                 </div>
               </div>
             </div>
@@ -460,9 +459,7 @@
           </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
-            <div class="status status-none" v-if="!row.confirmed && !row.saved">Не сохранено</div>
-            <div class="status status-saved" v-if="!row.confirmed && row.saved">Сохранено</div>
-            <div class="status status-confirmed" v-if="row.confirmed && row.saved">Подтверждено</div>
+            <iss-status :i="row" />
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
             <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">Сохранить и
               подтвердить
@@ -628,6 +625,7 @@
   import CultureInput from '../forms/CultureInput'
   import ResultsViewer from '../modals/ResultsViewer'
   import LastResult from '../ui-cards/LastResult'
+  import IssStatus from '../ui-cards/IssStatus'
   import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
   import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
   import {vField, vGroup} from '../components/visibility-triggers'
@@ -636,7 +634,7 @@
     name: 'results-paraclinic',
     components: {DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
       dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput,
+      LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
     },
     data() {
       return {
@@ -1621,26 +1619,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .status {
-    padding: 5px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .status-none {
-    color: #CF3A24
-  }
-
-  .status-saved {
-    color: #F4D03F
-  }
-
-  .status-confirmed {
-    color: #049372
   }
 
   .direction, .sd {
