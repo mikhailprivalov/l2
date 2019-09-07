@@ -298,6 +298,14 @@
             </div>
           </div>
         </div>
+        <div class="row" style="margin-bottom: 10px">
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+                <div class="row-t">Номер карты ТФОМС</div>
+                <input class="form-control" v-model="card.number_poli" maxlength="20">
+            </div>
+          </div>
+        </div>
       </div>
       <modal v-if="document_to_edit > -2" ref="modalDocEdit" @close="hide_modal_doc_edit" show-footer="true" white-bg="true" max-width="710px" width="100%" marginLeftRight="auto" margin-top>
         <span slot="header">Редактор документов (карта {{card.number}} пациента {{card.family}} {{card.name}} {{card.patronymic}})</span>
@@ -525,6 +533,7 @@
       return {
         card: {
           number: '',
+          number_poli: '',
           main_address: "",
           fact_address: "",
           work_place: "",
@@ -720,7 +729,7 @@
           const data = await patients_point.sendCard(this.card,
             ['family', 'name', 'patronymic', 'birthday', 'sex', 'new_individual', 'base_pk',
               'fact_address', 'main_address', 'work_place', 'main_diagnosis', 'work_position', 'work_place_db',
-              'custom_workplace', 'district', 'phone'], {
+              'custom_workplace', 'district', 'phone', 'number_poli'], {
               card_pk: this.card_pk, individual_pk: this.card.individual, gin_district: this.card.ginekolog_district,
               base_pk: this.base_pk,
             })
