@@ -29,8 +29,8 @@
 </template>
 
 <script>
-  import ResearchesPicker from '../ResearchesPicker'
-  import SelectedResearches from '../SelectedResearches'
+  import ResearchesPicker from '../ui-cards/ResearchesPicker'
+  import SelectedResearches from '../ui-cards/SelectedResearches'
   import construct_point from '../api/construct-point'
   import * as action_types from '../store/action-types'
 
