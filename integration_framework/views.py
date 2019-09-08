@@ -6,6 +6,7 @@ import directions.models as directions
 from . import sql_if
 from laboratory.settings import AFTER_DATE
 from laboratory import utils
+import random
 
 
 @api_view()
@@ -41,6 +42,8 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
+    iss_index = random.randrange(len(iss))
+
     return Response({
         "pk": pk,
         "createdAt": direction.data_sozdaniya,
@@ -62,9 +65,9 @@ def direction_data(request):
             },
         },
         "issledovaniya": [x.pk for x in iss],
-        "timeConfirmation": iss[0].time_confirmation,
-        "docLogin": iss[0].doc_confirmation.rmis_login,
-        "docPassword": iss[0].doc_confirmation.rmis_password
+        "timeConfirmation": iss[iss_index].time_confirmation,
+        "docLogin": iss[iss_index].doc_confirmation.rmis_login,
+        "docPassword": iss[iss_index].doc_confirmation.rmis_password
     })
 
 
