@@ -33,6 +33,3 @@ class Command(BaseCommand):
                             defaults={'date_start':day_start})
                     print('добавлен/обновлен Д-учет: \n')
                     print(card, 'Диагноз:дата постановки: ',cells[diag], day_start)
-
-
-

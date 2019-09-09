@@ -136,7 +136,7 @@ def form_01(request_data):
         for u, s in v.items():
             list_t = [Paragraph(str(u), styleT)]
             for t, q in s.items():
-                list_t.append(Paragraph(str(q), styleT))
+                list_t.append(Paragraph(str(q).replace("\n", "<br/>"), styleT))
             list_g.append(list_t)
         t_opinion.extend(list_g)
 
