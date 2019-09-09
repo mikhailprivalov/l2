@@ -77,10 +77,10 @@
 
 <script>
   import Modal from '../ui-cards/Modal'
-  import MKBField from '../MKBField'
+  import MKBField from '../fields/MKBField'
   import researches_point from '../api/researches-point'
   import * as action_types from '../store/action-types'
-  import ResearchesPicker from '../ResearchesPicker'
+  import ResearchesPicker from '../ui-cards/ResearchesPicker'
 
   export default {
     name: 'fast-templates-editor',

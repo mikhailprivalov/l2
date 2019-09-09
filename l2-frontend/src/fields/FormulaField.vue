@@ -1,0 +1,39 @@
+<template>
+  <div class="input-group">
+      <input class="form-control" :value="content" readonly placeholder="Расчётное поле" />
+  </div>
+</template>
+
+<script>
+  import {CalculateFormula} from '../utils'
+
+  export default {
+    name: 'formula-field',
+    props: ['value', 'fields', 'formula'],
+    data() {
+      return {
+        content: this.value
+      }
+    },
+    watch: {
+      value() {
+        this.content = this.value
+      },
+      content() {
+        this.$emit('input', this.content);
+      },
+      func_formula() {
+        this.content = this.func_formula.toString();
+      },
+    },
+    computed: {
+      func_formula() {
+        return CalculateFormula(this.f_obj, this.formula)
+
+      },
+      f_obj() {
+        return this.fields.reduce((a, b) => ({...a, [b.pk]: b}), {})
+      },
+    },
+  }
+</script>

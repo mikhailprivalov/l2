@@ -248,36 +248,40 @@ def patients_get_card_data(request, card_id):
                                                                                   "serial").order_by('pk')]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     d = District.objects.all().order_by('-sort_weight', '-id')
-    return JsonResponse({**i, **c,
-                         "docs": docs,
-                         "main_docs": card.get_card_documents(),
-                         "has_rmis_card": rc.exists(),
-                         "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""},
-                                          *[model_to_dict(x) for x in
-                                            Company.objects.filter(active_status=True).order_by('title')]],
-                         "custom_workplace": card.work_place != "",
-                         "work_place_db": card.work_place_db_id or -1,
-                         "district": card.district_id or -1,
-                         "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                                       *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
-                         "ginekolog_district": card.ginekolog_district_id or -1,
-                         "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
-                                           *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
-                         "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
-                         "excluded_types": Card.AGENT_CANT_SELECT,
-                         "agent_need_doc": Card.AGENT_NEED_DOC,
-                         "mother": None if not card.mother else card.mother.get_fio_w_card(),
-                         "mother_pk": card.mother_id,
-                         "father": None if not card.father else card.father.get_fio_w_card(),
-                         "father_pk": card.father_id,
-                         "curator": None if not card.curator else card.curator.get_fio_w_card(),
-                         "curator_pk": card.curator_id,
-                         "agent": None if not card.agent else card.agent.get_fio_w_card(),
-                         "agent_pk": card.agent_id,
-                         "payer": None if not card.payer else card.payer.get_fio_w_card(),
-                         "payer_pk": card.payer_id,
-                         "rmis_uid": rc[0].number if rc.exists() else None,
-                         "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]})
+    return JsonResponse({
+        **i,
+        **c,
+        "docs": docs,
+        "main_docs": card.get_card_documents(),
+        "has_rmis_card": rc.exists(),
+        "av_companies": [{"id": -1, "title": "НЕ ВЫБРАНО", "short_title": ""},
+                         *[model_to_dict(x) for x in
+                           Company.objects.filter(active_status=True).order_by('title')]],
+        "custom_workplace": card.work_place != "",
+        "work_place_db": card.work_place_db_id or -1,
+        "district": card.district_id or -1,
+        "districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
+                      *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
+        "ginekolog_district": card.ginekolog_district_id or -1,
+        "gin_districts": [{"id": -1, "title": "НЕ ВЫБРАН"},
+                          *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=True)]],
+        "agent_types": [{"key": x[0], "title": x[1]} for x in Card.AGENT_CHOICES if x[0]],
+        "excluded_types": Card.AGENT_CANT_SELECT,
+        "agent_need_doc": Card.AGENT_NEED_DOC,
+        "mother": None if not card.mother else card.mother.get_fio_w_card(),
+        "mother_pk": card.mother_id,
+        "father": None if not card.father else card.father.get_fio_w_card(),
+        "father_pk": card.father_id,
+        "curator": None if not card.curator else card.curator.get_fio_w_card(),
+        "curator_pk": card.curator_id,
+        "agent": None if not card.agent else card.agent.get_fio_w_card(),
+        "agent_pk": card.agent_id,
+        "payer": None if not card.payer else card.payer.get_fio_w_card(),
+        "payer_pk": card.payer_id,
+        "rmis_uid": rc[0].number if rc.exists() else None,
+        "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
+        "number_poli": card.number_poliklinika,
+    })
 
 
 def patients_card_save(request):
@@ -342,6 +346,7 @@ def patients_card_save(request):
     c.main_diagnosis = request_data["main_diagnosis"]
     c.main_address = request_data["main_address"]
     c.fact_address = request_data["fact_address"]
+    c.number_poliklinika = request_data.get("number_poli", "")
     if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data["work_place_db"]).exists():
         c.work_place_db = None
         c.work_place = request_data["work_place"]

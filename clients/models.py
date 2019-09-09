@@ -739,6 +739,7 @@ class Card(models.Model):
             'fact_address'] = "____________________________________________________" if not self.fact_address and not full_empty \
             else self.fact_address
         ind_data['card_num'] = self.number_with_type()
+        ind_data['number_poliklinika'] = self.number_poliklinika
         ind_data['phone'] = self.get_phones()
         ind_data['work_place'] = self.work_place
         ind_data['work_place_db'] = self.work_place_db

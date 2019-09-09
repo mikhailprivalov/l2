@@ -18,16 +18,22 @@
         Добавить
       </button>
     </div>
-    <div class="construct-content">
+    <div class="construct-content" v-if="department !== '-6'">
       <paraclinic-research-editor style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;" v-if="opened_id > -2"
                                   :pk="opened_id" :department="department_int"/>
+    </div>
+    <div class="construct-content" v-else>
+      <microbiology-research-editor :department="department_int" :pk="opened_id"
+                                    style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
+                                    v-if="opened_id > -2"/>
     </div>
   </div>
 </template>
 
 <script>
-  import SelectPickerM from '../SelectPickerM'
+  import SelectPickerM from '../fields/SelectPickerM'
   import ParaclinicResearchEditor from './ParaclinicResearchEditor'
+  import MicrobiologyResearchEditor from './MicrobiologyResearchEditor'
   import researches_point from '../api/researches-point'
   import { mapGetters } from 'vuex'
   import * as action_types from '../store/action-types'
@@ -36,6 +42,7 @@
     components: {
       SelectPickerM,
       ParaclinicResearchEditor,
+      MicrobiologyResearchEditor,
     },
     name: 'construct-paraclinic',
     data() {
@@ -43,6 +50,7 @@
         department: '-1',
         // departments: [],
         researches_list: [],
+        departments_of_type: [],
         opened_id: -2,
         title_filter: ''
       }
@@ -63,28 +71,63 @@
       cancel_edit() {
         this.opened_id = -2
         this.load_researches()
+      },
+      update_deps() {
+        let d = []
+        if (Object.keys(this.modules).length > 0) {
+          for (let row of this.departments) {
+            if (row.type === '3') {
+              d.push({label: row.title, value: row.pk})
+              if (row.pk.toString() === this.$store.getters.user_data.department.pk.toString() && this.department === '-1') {
+                this.department = row.pk.toString()
+              }
+            }
+          }
+
+          if (this.modules.consults_module) {
+            d.push({value: -2, label: 'Консультации'})
+          }
+
+          if (this.modules.l2_treatment) {
+            d.push({value: -3, label: 'Лечение'})
+          }
+
+          if (this.modules.l2_stom) {
+            d.push({value: -4, label: 'Стоматология'})
+          }
+
+          if (this.modules.l2_microbiology) {
+            d.push({value: -6, label: 'Микробиология'})
+          }
+        }
+
+        this.departments_of_type = d
+
+        this.set_dep()
+      },
+      set_dep(deps) {
+        if (this.department !== '-1' || !deps || deps.length === 0
+          || !this.$store.getters.user_data.department)
+          return
+        for (let row of deps) {
+          if (row.value === this.$store.getters.user_data.department.pk) {
+            this.department = row.value.toString()
+            return
+          }
+        }
+        this.department = deps[0].value.toString()
       }
     },
     created() {
       this.$parent.$on('research-editor:cancel', this.cancel_edit)
     },
+    mounted() {
+      this.$store.watch(state => state.user.data, (oldValue, newValue) => {
+        this.update_deps()
+      })
+      this.update_deps()
+    },
     watch: {
-      departments_of_type: {
-        handler(){
-          if (this.department !== '-1' || !this.departments_of_type || this.departments_of_type.length === 0
-            || !this.$store.getters.user_data.department)
-            return
-          for(let row of this.departments_of_type) {
-            if(row.value === this.$store.getters.user_data.department.pk) {
-              this.department = row.value.toString()
-              return
-            }
-          }
-          this.department = this.departments_of_type[0].value.toString()
-        },
-        deep: true,
-        immediate: true,
-      },
       department: {
         handler() {
           if (this.department === '-1')
@@ -92,21 +135,23 @@
           this.load_researches()
         },
         immediate: true,
-      }
+      },
+      modules: {
+        handler() {
+          this.update_deps()
+        },
+        deep: true,
+        immediate: true,
+      },
+      departments: {
+        handler() {
+          this.update_deps()
+        },
+        deep: true,
+        immediate: true,
+      },
     },
     computed: {
-      departments_of_type() {
-        let d = []
-        for (let row of this.departments) {
-          if (row.type === '3') {
-            d.push({label: row.title, value: row.pk})
-          }
-        }
-        if (d.length === 0)
-          return [];
-        return [...d, {value: -2, label: 'Консультации'},
-          {value: -3, label: 'Лечение'}, {value: -4, label: 'Стоматология'}];
-      },
       department_int() {
         return parseInt(this.department)
       },
@@ -115,6 +160,7 @@
       },
       ...mapGetters({
         departments: 'allDepartments',
+        modules: 'modules',
       }),
     }
   }

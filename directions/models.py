@@ -252,7 +252,7 @@ class Diagnoses(models.Model):
     )
     code = models.CharField(max_length=255, db_index=True)
     title = models.TextField(db_index=True)
-    parent = models.CharField(max_length=255, null=True, db_index=True)
+    parent = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     d_type = models.CharField(max_length=255, db_index=True)
     m_type = models.IntegerField(choices=M, db_index=True)
 
@@ -333,6 +333,7 @@ class Napravleniya(models.Model):
     parent = models.ForeignKey('Issledovaniya', related_name='parent_iss', help_text="Протокол-основание", blank=True,
                                null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
+    microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
 
     @property
     def data_sozdaniya_local(self):
@@ -638,6 +639,7 @@ class Napravleniya(models.Model):
         napr_data['client_fio'] = ind_data['fio']
         napr_data['client_bd'] = ind_data['born']
         napr_data['card_num'] = ind_data['card_num']
+        napr_data['number_poliklinika'] = ind_data['number_poliklinika']
         napr_data['polis_n'] = self.polis_n if self.polis_n else ''
         napr_data['polis_who_give'] = self.polis_who_give if self.polis_who_give else ''
         napr_data['istochnik_f'] = self.istochnik_f.title.lower() if self.istochnik_f else ''
@@ -755,8 +757,8 @@ class Issledovaniya(models.Model):
         """
         return self.tubes.filter().exists() and all([x.doc_get is not None for x in self.tubes.filter()])
 
-    def get_visit_date(self):
-        if not self.time_confirmation:
+    def get_visit_date(self, force=False):
+        if not self.time_confirmation and not force:
             return ""
         if not self.napravleniye.visit_date or not self.napravleniye.visit_who_mark:
             self.napravleniye.visit_date = timezone.now()
@@ -865,6 +867,21 @@ class ParaclinicResult(models.Model):
                               help_text='Поле результата',
                               on_delete=models.CASCADE)
     value = models.TextField()
+
+
+class MicrobiologyResult(models.Model):
+    SENSITIVITIES = (
+        (0, 'S'),
+        (1, 'R'),
+        (2, 'I'),
+    )
+
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
+                                      help_text='Направление на исследование, для которого сохранен результат',
+                                      on_delete=models.CASCADE)
+    culture = models.ForeignKey(directory.Culture, help_text="Культура", on_delete=models.PROTECT)
+    antibiotic = models.ForeignKey(directory.Antibiotic, help_text="Антибиотик", on_delete=models.PROTECT)
+    sensitivity = models.SmallIntegerField(choices=SENSITIVITIES, help_text="Чувствительность")
 
 
 class RmisServices(models.Model):

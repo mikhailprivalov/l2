@@ -1,51 +1,81 @@
 <template>
   <div class="root">
     <div class="top-editor">
-      <div class="input-group" style="width: 100%;">
-        <span class="input-group-addon">Название</span>
-        <input type="text" class="form-control" v-model="title">
+      <div class="left">
+        <div class="input-group">
+          <span class="input-group-addon">Полное наименование</span>
+          <input class="form-control" type="text" v-model="title">
+        </div>
+        <div class="input-group">
+          <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
+          <input class="form-control" type="text" v-model="short_title">
+        </div>
       </div>
-      <div class="input-group">
-        <label class="input-group-addon" style="height: 34px;text-align: left;">
-          <input type="checkbox" v-model="global_template"/> {{global_template ? "Global" : "Searchable"}}
-        </label>
+      <div class="right">
+        <div class="row" style="margin-right: 0;" v-if="department < -1">
+          <div class="col-xs-6" style="padding-right: 0">
+            <div class="input-group" style="margin-right: -1px">
+              <span class="input-group-addon">Код (ОМС)</span>
+              <input class="form-control f-code" type="text" v-model="code">
+              <span class="input-group-addon">Код (внутр)</span>
+              <input class="form-control f-code" type="text" v-model="internal_code">
+            </div>
+          </div>
+          <div class="col-xs-6" style="padding-left: 0;padding-right: 0;margin-right: 0;">
+            <div class="input-group">
+              <span class="input-group-addon">Подраздел</span>
+              <select class="form-control" v-model="site_type">
+                <option :value="r.pk" v-for="r in ex_deps">{{r.title}}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="input-group" v-else>
+          <span class="input-group-addon">Код (ОМС)</span>
+          <input class="form-control f-code" type="text" v-model="code">
+          <span class="input-group-addon">Код (внутр)</span>
+          <input class="form-control f-code" type="text" v-model="internal_code">
+        </div>
+        <div class="input-group">
+          <label class="input-group-addon" style="height: 34px;text-align: left;">
+            <input type="checkbox" v-model="hide"/> Скрытие исследования
+          </label>
+        </div>
       </div>
     </div>
     <div class="content-editor">
-      <div class="row" style="height: 100%">
-        <div class="col-xs-6" style="height: 100%">
-          <researches-picker v-model="researches" autoselect="none" :hidetemplates="true" v-if="researches !== null" />
-        </div>
-        <div class="col-xs-6" style="height: 100%">
-          <selected-researches :researches="researches || []" :simple="true" />
-        </div>
+      <div class="input-group" style="margin-bottom: 5px">
+        <span class="input-group-addon">Подготовка</span>
+        <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon">Ёмкость для биоматериала</span>
+        <select class="form-control" v-model="tube">
+          <option :value="-1">Не выбрано</option>
+          <option :value="t.pk" v-for="t in tubes">{{t.title}}</option>
+        </select>
       </div>
     </div>
     <div class="footer-editor">
-      <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
-      <button class="btn btn-blue-nb" :disabled="!valid" @click="save">Сохранить</button>
+      <button @click="cancel" class="btn btn-blue-nb">Отмена</button>
+      <button :disabled="!valid" @click="save" class="btn btn-blue-nb">Сохранить</button>
     </div>
   </div>
 </template>
 
 <script>
-  import ResearchesPicker from '../ui-cards/ResearchesPicker'
-  import SelectedResearches from '../ui-cards/SelectedResearches'
   import construct_point from '../api/construct-point'
   import * as action_types from '../store/action-types'
+  import {mapGetters} from 'vuex'
 
   export default {
-    name: 'template-editor',
-    components: {
-      ResearchesPicker,
-      SelectedResearches,
-    },
+    name: 'microbiology-research-editor',
     props: {
       pk: {
         type: Number,
         required: true
       },
-      global_template_p: {
+      department: {
         type: Number,
         required: true
       },
@@ -56,11 +86,27 @@
     data() {
       return {
         title: '',
+        short_title: '',
+        code: '',
+        internal_code: '',
+        info: '',
+        hide: false,
         cancel_do: false,
         loaded_pk: -2,
-        researches: null,
+        site_type: null,
+        groups: [],
+        template_add_types: [
+          {sep: ' ', title: 'Пробел'},
+          {sep: ', ', title: 'Запятая и пробел'},
+          {sep: '; ', title: 'Точка с запятой (;) и пробел'},
+          {sep: '. ', title: 'Точка и пробел'},
+          {sep: '\n', title: 'Перенос строки'},
+        ],
         has_unsaved: false,
-        global_template: false,
+        f_templates_open: false,
+        templates: [],
+        opened_template_data: {},
+        tube: -1,
       }
     },
     watch: {
@@ -80,38 +126,19 @@
       }
     },
     mounted() {
-      let vm = this
-      $(window).on('beforeunload', function () {
-        if (vm.has_unsaved && vm.loaded_pk > -2 && !vm.cancel_do)
+      $(window).on('beforeunload', () => {
+        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
           return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
       })
+      this.$root.$on('hide_fte', () => this.f_templates_hide())
+      this.$store.dispatch(action_types.GET_RESEARCHES).then()
     },
     computed: {
-      researches_departments() {
-        let r = {}
-        let deps = {"-2": {title: "Консультации"}}
-        for (let dep of this.$store.getters.allDepartments) {
-          deps[dep.pk] = dep
-        }
-
-        for (let pk of this.researches) {
-          if (pk in this.$store.getters.researches_obj) {
-            let res = this.$store.getters.researches_obj[pk]
-            let d = res.department_pk && !res.doc_refferal ? res.department_pk: -2;
-            if (!(d in r)) {
-              r[d] = {
-                pk: d,
-                title: deps[d].title,
-                researches: []
-              }
-            }
-            r[d].researches.push({pk: pk, title: res.title})
-          }
-        }
-        return r
+      fte() {
+        return this.$store.getters.modules.l2_fast_templates
       },
       valid() {
-        return this.norm_title.length > 0 && this.researches && this.researches.length > 0
+        return this.tube !== -1 && this.norm_title.length > 0 && !this.cancel_do
       },
       norm_title() {
         return this.title.trim()
@@ -134,8 +161,26 @@
         }
         return {min, max}
       },
+      ex_dep() {
+        return {
+          '-2': 4,
+          '-3': 5,
+          '-4': 6,
+          '-5': 7,
+        }[this.department] || this.department
+      },
+      ex_deps() {
+        return this.$store.getters.ex_dep[this.ex_dep] || []
+      },
+      ...mapGetters(['tubes']),
     },
     methods: {
+      f_templates() {
+        this.f_templates_open = true
+      },
+      f_templates_hide() {
+        this.f_templates_open = false
+      },
       is_first_in_template(i) {
         return i === 0
       },
@@ -265,7 +310,8 @@
           values_to_input: [],
           new_value: '',
           hide: false,
-          lines: 3
+          lines: 3,
+          field_type: 0,
         })
       },
       add_group() {
@@ -279,20 +325,29 @@
       },
       load() {
         this.title = ''
-        this.researches = null
-        this.global_template = this.global_template_p === 1
+        this.short_title = ''
+        this.code = ''
+        this.info = ''
+        this.hide = false
+        this.site_type = null
+        this.tube = -1
         if (this.pk >= 0) {
-          let vm = this
-          vm.$store.dispatch(action_types.INC_LOADING).then()
-          fetch('/api/get-template?pk=' + this.pk).then(r => r.json()).then(data => {
-            vm.title = data.title
-            vm.researches = data.researches
-            vm.global_template = data.global_template
+          this.$store.dispatch(action_types.INC_LOADING).then()
+          construct_point.researchDetails(this, 'pk').then(data => {
+            this.title = data.title
+            this.short_title = data.short_title
+            this.code = data.code
+            this.internal_code = data.internal_code
+            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
+            this.hide = data.hide
+            this.site_type = data.site_type
+            this.loaded_pk = this.pk
+            this.tube = data.tube
           }).finally(() => {
-            vm.$store.dispatch(action_types.DEC_LOADING).then()
+            this.$store.dispatch(action_types.DEC_LOADING).then()
           })
         } else {
-          this.researches = []
+          this.add_group()
         }
       },
       cancel() {
@@ -304,31 +359,51 @@
       },
       save() {
         this.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateTemplate(this, ['pk', 'title', 'researches', 'global_template']).then(() => {
+        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'site_type', 'internal_code', 'tube'], {
+          info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
+        }).then(() => {
           this.has_unsaved = false
           okmessage('Сохранено')
           this.cancel()
         }).finally(() => {
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
-      }
+      },
     }
   }
 </script>
 
-<style>
-  body {
-    overflow-x: hidden;
+<style lang="scss" scoped>
+  .modal-mask {
+    align-items: stretch !important;
+    justify-content: stretch !important;
   }
-</style>
 
-<style scoped lang="scss">
+  /deep/ .panel-flt {
+    margin: 41px;
+    align-self: stretch !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /deep/ .panel-body {
+    flex: 1;
+    padding: 0;
+    height: calc(100% - 91px);
+    min-height: 200px;
+  }
+
   .top-editor {
     display: flex;
-    flex: 0 0 43px;
+    flex: 0 0 68px;
 
-    .left, .right {
-      flex: 0 0 50%
+    .left {
+      flex: 0 0 45%
+    }
+
+    .right {
+      flex: 0 0 55%
     }
 
     .left {
@@ -338,6 +413,7 @@
     .input-group-addon {
       border-top: none;
       border-left: none;
+      border-right: none;
       border-radius: 0;
     }
 
@@ -349,6 +425,10 @@
     .input-group > .form-control:last-child {
       border-right: none;
     }
+
+    .f-code {
+      padding: 6px;
+    }
   }
 
   .content-editor {
@@ -356,11 +436,7 @@
   }
 
   .footer-editor {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 34px;
+    flex: 0 0 34px;
     display: flex;
     justify-content: flex-end;
     background-color: #f4f4f4;
@@ -370,7 +446,7 @@
     }
   }
 
-  .top-editor, .content-editor {
+  .top-editor, .content-editor, .footer-editor {
     align-self: stretch;
   }
 
@@ -379,6 +455,11 @@
     flex-direction: column;
     align-items: stretch;
     align-content: stretch;
+  }
+
+  .content-editor {
+    padding: 5px;
+    overflow-y: auto;
   }
 
   .group {
@@ -404,6 +485,7 @@
 
   .field-inner > div {
     align-self: stretch;
+
     textarea {
       resize: none;
     }
@@ -412,22 +494,30 @@
       flex: 0 0 35px;
       padding-right: 5px;
     }
+
     &:nth-child(2) {
-      width: 100%;
+      width: calc(100% - 530px);
     }
-    &:nth-child(3) {
+
+    &:nth-child(3), &:nth-child(4), &:nth-child(5), &:nth-child(6) {
       width: 140px;
       padding-left: 5px;
       padding-right: 5px;
       white-space: nowrap;
+
       label {
         display: block;
         margin-bottom: 2px;
         width: 100%;
+
         input[type="number"] {
           width: 100%;
         }
       }
+    }
+
+    &:nth-child(3), &:nth-child(4) {
+      width: 180px;
     }
   }
 
@@ -442,5 +532,13 @@
 
   /deep/ .v-collapse-content-end {
     max-height: 10000px !important;
+  }
+
+  .vc-collapse /deep/ .v-collapse-content {
+    display: none;
+
+    &.v-collapse-content-end {
+      display: block;
+    }
   }
 </style>

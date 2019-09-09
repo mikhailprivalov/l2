@@ -27,7 +27,7 @@
 </template>
 
 <script>
-  import SelectPickerM from '../SelectPickerM'
+  import SelectPickerM from '../fields/SelectPickerM'
   import TemplateEditor from './TemplateEditor'
   import * as action_types from '../store/action-types'
 
