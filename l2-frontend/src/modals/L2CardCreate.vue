@@ -875,6 +875,7 @@
               card_pk: this.card_pk,
               pk: this.document_to_edit,
               type: this.document.document_type,
+              individual_pk: this.card.individual,
             })
           this.load_data();
           this.document = {
