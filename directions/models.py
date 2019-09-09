@@ -639,6 +639,7 @@ class Napravleniya(models.Model):
         napr_data['client_fio'] = ind_data['fio']
         napr_data['client_bd'] = ind_data['born']
         napr_data['card_num'] = ind_data['card_num']
+        napr_data['number_poliklinika'] = ind_data['number_poliklinika']
         napr_data['polis_n'] = self.polis_n if self.polis_n else ''
         napr_data['polis_who_give'] = self.polis_who_give if self.polis_who_give else ''
         napr_data['istochnik_f'] = self.istochnik_f.title.lower() if self.istochnik_f else ''
