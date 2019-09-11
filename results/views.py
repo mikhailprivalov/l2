@@ -611,16 +611,18 @@ def result_print(request):
             date_t = maxdate
 
         fwb = []
+        number_poliklinika = f'({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
+        individual_birthday = f'({strdate(direction.client.individual.birthday)})'
         data = [
             ["Номер:", str(dpk)],
             ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
             ["Пол:", direction.client.individual.sex],
-            ["Возраст:", direction.client.individual.age_s(direction=direction)],
+            ["Возраст:", direction.client.individual.age_s(direction=direction) + individual_birthday],
         ]
         data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
         data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                  ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
-                  direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "")]]
+                  direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika]]
         if not direction.imported_from_rmis:
             data.append(
                 ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
@@ -1319,9 +1321,9 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), pk[0],
+                                                                               number_poliklinika))
+        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
         canvas.restoreState()
@@ -1332,7 +1334,7 @@ def result_print(request):
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
         canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(),pk[0]))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {}'.format(direction.client.individual.fio()))
+        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
