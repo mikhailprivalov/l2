@@ -18,7 +18,7 @@ class SettingManager:
 
     @staticmethod
     def l2_modules():
-        return {'l2_{}'.format(x): SettingManager.l2(x) for x in [
+        return {**{'l2_{}'.format(x): SettingManager.l2(x) for x in [
             "cards_module",
             "fast_templates",
             "stat_btn",
@@ -28,7 +28,7 @@ class SettingManager:
             "rmis_queue",
             "benefit",
             "microbiology",
-        ]}
+        ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod
     def en():
