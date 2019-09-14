@@ -1223,15 +1223,18 @@ def result_print(request):
 
                 recipies = Recipe.objects.filter(issledovaniye=iss).order_by('pk')
                 if recipies.exists():
+                    style_recipe = deepcopy(style)
+                    style_recipe.leftIndent = 14
                     fwb.append(Spacer(1, 1 * mm))
                     fwb.append(Paragraph('Рецепты', styleBold))
+                    fwb.append(Paragraph('<u>Наименование ЛП: форма выпуска, дозировка, количество; (способ применения)</u>', style_recipe))
                     fwb.append(Spacer(1, 0.25 * mm))
                     for r in recipies:
                         fwb.append(Paragraph(
                             "<font face=\"OpenSansBold\">{}:</font> {}{}".format(
                                 r.drug_prescription,
                                 r.method_of_taking,
-                                '' if not r.comment else f' ({r.comment})'
+                                '' if not r.comment else f'; ({r.comment})'
                             ),
                             style_ml))
 
