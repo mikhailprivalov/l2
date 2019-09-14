@@ -5,14 +5,14 @@
         <colgroup>
           <col width="280">
           <col>
-          <col width="240">
+          <col width="290">
           <col v-if="!confirmed" width="38">
         </colgroup>
         <thead>
         <tr>
-          <th>Назначение</th>
+          <th>Наименование ЛП</th>
+          <th>Форма выпуска, дозировка, количество</th>
           <th>Способ применения</th>
-          <th>Комментарий</th>
           <th v-if="!confirmed"></th>
         </tr>
         </thead>
