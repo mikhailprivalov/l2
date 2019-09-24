@@ -1,0 +1,142 @@
+div.col-md-4
+div.col-md-2
+    button(onclick="save();")#save-btn.btn.btn-primary-nb Сохранить
+div.col-md-2
+    .row
+        button(onclick="save(true,confirm_result);")#confirm-btn.btn.btn-primary-nb Подтвердить
+div.col-md-4
+    button(onclick="save(true,confirm_result);")#confirm-andsave-btn.btn.btn-primary-nb Сохранить и подтвердить
+h4(style="margin-top: 0") #{title}
+form(onsubmit="return false;")
+    input(type="hidden", value=res_id)#issledovaniye_id
+    input(type="hidden", value=research_pk)#research_pk
+    #result-jade-form
+        table.table.table-bordered.table-sm-pd
+            thead
+                th(style="width: 29%") Фракция
+                th Значение
+                th(style="width: 23%") Нормы М
+                th(style="width: 23%") Нормы Ж
+            each fraction in fractions
+                if !fraction.hide
+                    tr.fraction-row(data-research-pk=research_pk, data-fraction-pk=fraction.pk, data-ref="")
+                        td
+                            label= fraction.title
+                        td
+                            .input-group
+                                input(type="text", data-pk=fraction.pk, style="border-top-right-radius: 0;border-bottom-right-radius: 0;").form-control.result-enter
+                                span.input-group-btn
+                                    a(title="Генерация результата", href="#", onclick="genresult(this);return false;", pk=fraction.pk, ftitle=fraction.title, dir=fraction.dir).btn.btn-default.btn-primary-nb
+                                        i.fa.fa-circle
+                        td.ref.ref_m
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.m
+                                    tr
+                                        td= index
+                                        td.col-md-5
+                                            !{norm}
+                        td.ref.ref_f
+                            table.table.table-bordered.table-responsive
+                                each norm, index in fraction.references.f
+                                    tr
+                                        td= index
+                                        td.col-md-5
+                                            !{norm}
+            if laborants.length > 0 && co_executor_mode > 0
+                tr
+                    td(colspan="4")
+                        hr
+                tr
+                    td
+                        label(for="laborant").labtitle Лаборант
+                    td(colspan="3")
+                        select(data-live-search="true", data-width="100%", data-container="body").select-b#laborant
+                            each l in laborants
+                                option(value=l.pk)= l.fio
+                if co_executor_mode > 1
+                    tr
+                        td
+                            label(for="coexecutor").labtitle= co_executor_title
+                        td(colspan="3")
+                            select(data-live-search="true", data-width="100%", data-container="body").select-b#coexecutor
+                                each l in laborants
+                                    option(value=l.pk)= l.fio
+
+script.
+    var k = -1;
+    var group = -1;
+    var groups = {0: "Oαβ (I)", 1: "A₁ (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB (IV)", 5: "A₂B₀ (IV)"};
+    function genresult(th) {
+        let pk = $(th).attr("pk");
+        $("#res-modal h4").text($(th).attr("ftitle"));
+        $("#res-modal #res-modal-dir").text($("#dir_num a").text());
+        $("#hiddenresmodal-1, #hiddenresmodal-2").hide();
+        $("#hiddenresmodal").hide();
+        $("[name='groupb']:checked").prop("checked", false);
+        $("[name='subgroup1']:checked").prop("checked", false);
+        $("[name='subgroup2']:checked").prop("checked", false);
+        $("#res-modal").modal();
+    }
+
+    function updateresmodal(th) {
+        let val = $(th).val();
+        if ($(th).attr("name") == "groupb") {
+            $("#hiddenresmodal-1, #hiddenresmodal-2").hide();
+            $("[name='subgroup1']:checked").prop("checked", false);
+            $("[name='subgroup2']:checked").prop("checked", false);
+            if (val == "-2") {
+                $("#hiddenresmodal-1").show();
+            } else if (val == "-3") {
+                $("#hiddenresmodal-2").show();
+            }
+        }
+        group = parseInt(val);
+    }
+
+    function saveresmodal() {
+        if (group >= 0) {
+            $("[data-pk=" + k + "]").val(groups[group]);
+        }
+    }
+
+.modal.fade#res-modal
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button(type="button", data-dismiss="modal", aria-label="Close").close
+                    span(aria-hidden="true") &times;
+                h4.modal-title
+                .modal-body
+                    span Направление:
+                        span#res-modal-dir
+                    hr
+                    div(style="text-align: center")
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="0")
+                            | O<sub>&alpha;&beta;</sub> (I)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-2")
+                            | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="3")
+                            | B<sub>&alpha;</sub> (III)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-3")
+                            | AB<sub>0</sub> (IV)
+                        #hiddenresmodal-1
+                            label
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="1")
+                                | A<sub>1</sub>&nbsp;&nbsp;&nbsp;&nbsp;
+                            label
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="2")
+                                | A<sub>2&beta;</sub>
+                        #hiddenresmodal-2
+                            label
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="4")
+                                | AB&nbsp;&nbsp;&nbsp;&nbsp;
+                            label
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="5")
+                                | A<sub>2</sub>B<sub>0</sub>
+                .modal-footer
+                    button(type="button", data-dismiss="modal").btn.btn-default Отмена
+                    button(type="button", onclick="saveresmodal();", data-dismiss="modal").btn.btn-default Сохранить

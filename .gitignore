@@ -224,5 +224,6 @@ assets/webpack_bundles/*
 assets/static/img/logo*
 .idea
 static/*
+!/static/templates
 !/static/.gitkeep
 .DS_Store
