@@ -242,9 +242,12 @@ class Client(object):
         multipart_data = MultipartEncoder(
             fields={'file': (filename, content, filetype)},
         )
+
         resip = requests.request(method, path,
                                  data=multipart_data,
-                                 headers={'Content-Type': "multipart/form-data"}, auth=self.session.auth)
+                                 headers={'Content-Type': "multipart/form-data"},
+                                 auth=self.session.auth,
+                                 proxies = RMIS_PROXY)
         if stdout:
             stdout.write("put_content ANSWER: [{}] {}".format(resip.status_code, resip.text))
         return str(resip.status_code) == "200"
