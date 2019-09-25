@@ -87,6 +87,7 @@ admin.site.register(models.ReleationsFT)
 admin.site.register(models.AutoAdd)
 admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
+admin.site.register(models.DirectionsGroup)
 
 admin.site.register(models.RouteSheet, ResRouteSheet)
 admin.site.register(models.NameRouteSheet, ResNameRouteSheet)
