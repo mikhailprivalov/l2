@@ -68,7 +68,8 @@ form(onsubmit="return false;")
 script.
     var k = -1;
     var dgroup = -1;
-    var dgroups = {0: "Oαβ (I)", 1: "A<sub>β</sub> (II)", 2: "A₂β (II)", 3: " Bα (III)", 4: "AB₀ (IV)", 5: "A₂B₀ (IV)"};
+    var dgroups = {0: "O<sub>αβ</sub> (I)", 1: "A<sub>β</sub> (II)", 2: "A₂β (II) (подгруппа)", 3: " Bα (III)",
+    4: "AB₀ (IV)", 5: "A₂B₀ (IV) (подгруппа)", 6: "A (II)",7: "AB (IV)", 8: "O (I)", 9: "B (III)"};
     function genresult(th) {
         k = $(th).attr("pk");
         let pk = k;
@@ -118,33 +119,68 @@ script.
                     span Направление:
                         span#res-modal-dir
                     hr
-                    div(style="text-align: center")
+                    div(style="text-align: left")
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="8")
+                            | O(I)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         label
                             input(type="radio", name="groupb", onclick="updateresmodal(this);", value="0")
-                            | O<sub>&alpha;&beta;</sub> (I)&nbsp;&nbsp;&nbsp;&nbsp;
+                            | O<sub>&alpha;</sub><sub>&beta;</sub> (I)&nbsp;&nbsp;&nbsp;&nbsp;
+                        br
                         label
-                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-2")
-                            | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="6")
+                            | A(II) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="1", checked)
+                            | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="2")
+                            | A<sub>2&beta;</sub> (II) (подгруппа) &nbsp;&nbsp;&nbsp;&nbsp;
+
+                        br
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="9")
+                            | B (III)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         label
                             input(type="radio", name="groupb", onclick="updateresmodal(this);", value="3")
                             | B<sub>&alpha;</sub> (III)&nbsp;&nbsp;&nbsp;&nbsp;
+                        br
+
                         label
-                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-3")
-                            | AB<sub>0</sub> (IV)
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="7")
+                            | AB (IV)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="4", checked)
+                            | AB<sub>0</sub> (IV)&nbsp;&nbsp;&nbsp;&nbsp;
+                        label
+                            input(type="radio", name="groupb", onclick="updateresmodal(this);", value="5")
+                            | A<sub>2</sub>B<sub>0</sub> (IV) (подгруппа) &nbsp;&nbsp;&nbsp;&nbsp;
+
                         #hiddenresmodal-1
                             label
                                 input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="1", checked)
                                 | A<sub>&beta;</sub> (II)&nbsp;&nbsp;&nbsp;&nbsp;
                             label
                                 input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="2")
-                                | A<sub>2&beta;</sub> (II)
+                                | A<sub>2&beta;</sub> (II) &nbsp;&nbsp;&nbsp;&nbsp;
+                             label
+                                input(type="radio", name="subgroup1", onclick="updateresmodal(this);", value="6")
+                                | A(II)
                         #hiddenresmodal-2
                             label
                                 input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="4", checked)
                                 | AB<sub>0</sub> (IV)&nbsp;&nbsp;&nbsp;&nbsp;
                             label
                                 input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="5")
-                                | A<sub>2</sub>B<sub>0</sub> (IV)
+                                | A<sub>2</sub>B<sub>0</sub> (IV) &nbsp;&nbsp;&nbsp;&nbsp;
+                            label
+                                input(type="radio", name="subgroup2", onclick="updateresmodal(this);", value="7")
+                                | AB (IV)
                 .modal-footer
                     button(type="button", data-dismiss="modal").btn.btn-default Отмена
                     button(type="button", onclick="saveresmodal();", data-dismiss="modal").btn.btn-default Сохранить
+
+
+//label
+//input(type="radio", name="groupb", onclick="updateresmodal(this);", value="-3")
+//| AB<sub>0</sub> (IV)
