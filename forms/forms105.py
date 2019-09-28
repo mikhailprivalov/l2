@@ -397,10 +397,10 @@ def form_02(request_data):
             objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
             for i in tree_dir:
                 s = i[-1] * 5
-                diagnos = '-' + i[-2] if i[-2] else ""
+                diagnos = '  --' + i[-2] + '--' if i[-2] else ""
                 if dir == i[0]:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.format(s * space_symbol, i[0], i[9], i[1],
-                        i[2], diagnos), styleBold))
+                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}{}<font face="Symbola" size=10>\u2713</font>'.format(s * space_symbol, i[0], i[9], i[1],
+                        i[2], diagnos, 3 * space_symbol), styleBold))
                 else:
                     objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.format(s * space_symbol, i[0], i[9], i[1],
                                                                                   i[2], diagnos), styleT))
