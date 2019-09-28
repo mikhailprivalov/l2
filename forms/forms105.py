@@ -23,6 +23,7 @@ import simplejson as json
 from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
 from laboratory import utils
+from utils import tree_directions
 
 
 def form_01(request_data):
@@ -385,10 +386,38 @@ def form_02(request_data):
         personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
         objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
              42 * space_symbol, personal_code),style))
+
+        objs.append(Spacer(1, 5 * mm))
+
+        #Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
+        root_dir = tree_directions.root_direction(dir)
+        num_iss = (root_dir[-1][-2])
+        tree_dir = tree_directions.tree_direction(num_iss)
+        if len(tree_dir) > 1:
+            objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
+            for i in tree_dir:
+                s = i[-1] * 5
+                if len(i[9]) > 47:
+                    research = i[9][:47] + '...'
+                else:
+                    research = i[9]
+                diagnos = '  --' + i[-2] + '--' if i[-2] else ""
+                if dir == i[0]:
+                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}{}<font face="Symbola" size=10>\u2713</font>'.
+                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos, 3 * space_symbol),
+                                          styleBold))
+                else:
+                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.
+                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos), styleT))
+
+
         objs.append(PageBreak())
 
 
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
+
+
+
     return pdf
