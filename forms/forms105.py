@@ -390,18 +390,20 @@ def form_02(request_data):
         objs.append(Spacer(1, 5 * mm))
 
         #Получить структуру Направлений если, направление в Дереве не важно в корне в середине или в начале
-        root_dir = tree_directions.root_direction(374923)
+        root_dir = tree_directions.root_direction(dir)
         num_iss = (root_dir[-1][-2])
         tree_dir = tree_directions.tree_direction(num_iss)
         if len(tree_dir) > 1:
             objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
             for i in tree_dir:
                 s = i[-1] * 5
+                diagnos = '-' + i[-2] if i[-2] else ""
                 if dir == i[0]:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({})'.format(s * space_symbol, i[0], i[9], i[1], i[2]),
-                                          styleBold))
+                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.format(s * space_symbol, i[0], i[9], i[1],
+                        i[2], diagnos), styleBold))
                 else:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({})'.format(s * space_symbol, i[0], i[9], i[1], i[2]), styleT))
+                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.format(s * space_symbol, i[0], i[9], i[1],
+                                                                                  i[2], diagnos), styleT))
 
 
         objs.append(PageBreak())
