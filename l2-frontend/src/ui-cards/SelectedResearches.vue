@@ -28,16 +28,15 @@
           <col width="38" v-if="!readonly">
         </colgroup>
         <tbody>
-        <tr v-if="researches.length === 0">
-          <td colspan="3" class="text-center">Ничего не выбрано</td>
-        </tr>
-        <tr v-else v-for="(row, key) in researches_departments">
+        <tr v-for="(row, key) in researches_departments">
           <td>{{row.title}}</td>
           <td class="pb0">
               <research-display v-for="(res, idx) in row.researches" :simple="simple"
                                 :title="res.title" :pk="res.pk" :n="idx"
                                 :kk="kk"
-                                :nof="row.researches.length" :comment="comments[res.pk]" :count="counts[res.pk]"/>
+                                :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
+                                :count="counts[res.pk]"
+                                :nof="row.researches.length"/>
           </td>
           <td v-if="!readonly" class="cl-td">
             <button class="btn last btn-blue-nb nbr" type="button"
@@ -106,7 +105,10 @@
               <div style="width:100%; overflow: hidden;text-overflow: ellipsis;" :title="row.title">{{row.title}}</div>
             </td>
             <td>
-              <v-select :options="row.options" taggable v-model="comments[row.pk]">
+              <v-select :clearable="false" :options="row.localizations"
+                        :searchable="false" v-if="row.localizations && row.localizations.length > 0"
+                        v-model="localizations[row.pk]"/>
+              <v-select :options="row.options" taggable v-else v-model="comments[row.pk]">
                 <div slot="no-options">Нет вариантов по умолчанию</div>
               </v-select>
             </td>
@@ -118,7 +120,7 @@
         </table>
       </div>
       <div slot="footer" class="text-center">
-        <button class="btn btn-blue-nb" @click="cancel_update">Закрыть</button>
+        <button @click="cancel_update" class="btn btn-blue-nb">Сохранить</button>
       </div>
     </modal>
   </div>
@@ -199,8 +201,10 @@
         diagnos: '',
         fin: -1,
         comments: {},
+        localizations: {},
         counts: {},
         need_update_comment: [],
+        need_update_localization: [],
         hide_window_update: false,
         delayTime: 300,
         minChars: 1,
@@ -228,16 +232,26 @@
         let comments = {}
         let counts = {}
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
+        this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
         for (let pk of this.researches) {
-          if (Object.keys(this.comments).indexOf(pk.toString()) === -1) {
+          if (!this.comments[pk]) {
             comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
               if (res.comment_variants.length > 0) {
                 comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
+
+                if (res.comment_variants.length > 1) {
+                  this.need_update_comment.push(pk)
+                }
               }
-              if (res.comment_variants.length > 1) {
-                this.need_update_comment.push(pk)
+
+              if (res.localizations && res.localizations.length > 0) {
+                this.localizations[pk] = res.localizations[0]
+
+                if (res.localizations.length > 1) {
+                  this.need_update_comment.push(pk)
+                }
               }
             }
             counts[pk] = 1
@@ -250,7 +264,7 @@
         this.counts = counts
       },
       need_update_comment() {
-        if (this.need_update_comment.length > 0 && this.hide_window_update) {
+        if (this.need_update_comment.length + this.need_update_localization.length > 0 && this.hide_window_update) {
           this.show_window()
         }
       },
@@ -462,7 +476,12 @@
         for (let pk of this.need_update_comment) {
           if (pk in this.$store.getters.researches_obj) {
             let res = this.$store.getters.researches_obj[pk]
-            r.push({pk: pk, title: res.title, options: res.comment_variants})
+            r.push({
+              pk: pk,
+              title: res.title,
+              options: res.comment_variants,
+              localizations: res.localizations
+            })
           }
         }
         return r

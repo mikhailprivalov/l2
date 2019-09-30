@@ -73,6 +73,18 @@ class ResearchSite(models.Model):
         verbose_name_plural = 'Подразделы'
 
 
+class Localization(models.Model):
+    title = models.CharField(max_length=64, help_text="Название места локализации")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Локализация'
+        verbose_name_plural = 'Локализации'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -130,6 +142,7 @@ class Researches(models.Model):
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True,
                                           help_text="Пробирка для микробиологического исследования",
                                           on_delete=models.SET_NULL)
+    localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
 
     @staticmethod
     def filter_type(t):

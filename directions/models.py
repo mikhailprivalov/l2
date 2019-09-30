@@ -735,6 +735,8 @@ class Issledovaniya(models.Model):
     parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание",
                                blank=True, null=True, default=None, on_delete=models.SET_NULL)
     medical_examination = models.DateField(blank=True, null=True, default=None, help_text="Дата осмотра")
+    localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None,
+                                     help_text="Локализация", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
