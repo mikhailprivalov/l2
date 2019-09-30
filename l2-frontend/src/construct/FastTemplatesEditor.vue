@@ -149,7 +149,7 @@
         this.loaded = false
         this.clear();
         this.$store.dispatch(action_types.INC_LOADING).then()
-        researches_point.getFastTemplates({pk: research_pk, all: true}).then(({data}) => {
+        researches_point.getFastTemplates({pk: this.research_pk, all: true}).then(({data}) => {
           this.rows = data
           if (select_after) {
             this.select_template(select_after);
