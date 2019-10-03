@@ -409,6 +409,7 @@
           history_num: this.history_num,
           comments: this.comments,
           counts: this.counts,
+          localizations: this.localizations,
           vich_code: this.need_vich_code ? this.vich_code : '',
           count: this.count,
           discount: this.discount,

@@ -76,6 +76,7 @@ class ResearchSite(models.Model):
 class Localization(models.Model):
     title = models.CharField(max_length=64, help_text="Название места локализации")
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    barcode = models.CharField(max_length=10, default="", blank=True)
 
     def __str__(self):
         return "%s" % self.title

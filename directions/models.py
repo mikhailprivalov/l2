@@ -444,11 +444,13 @@ class Napravleniya(models.Model):
     @staticmethod
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
-                                          count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None):
-
-        #импорт для получения прайса и цены по услугам
+                                          count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
+                                          localizations=None):
         if counts is None:
             counts = {}
+
+        if localizations is None:
+            localizations = {}
 
         if rmis_data is None:
             rmis_data = {}
@@ -560,7 +562,12 @@ class Napravleniya(models.Model):
                                                   research=research, coast=research_coast, discount=research_discount,
                                                   how_many=research_howmany,
                                                   deferred=False)
-                    issledovaniye.comment = (comments.get(str(research.pk), "") or "")[:10]
+                    loc = ""
+                    if str(research.pk) in localizations:
+                        l = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
+                        issledovaniye.localization = l
+                        loc = l.barcode
+                    issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
                 for k, v in directions_for_researches.items():
