@@ -10,7 +10,7 @@ export default generator({
     onReject: {pk: -1, department: -1, title: '', short_title: '', code: ''},
   },
   updateTemplate: {
-    url: 'researches/paraclinic_details',
+    url: 'templates/update',
     onReject: {groups: []},
   }
 })
