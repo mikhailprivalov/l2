@@ -36,6 +36,7 @@
                                 :kk="kk"
                                 :comment="(localizations[res.pk] || {}).label || comments[res.pk]"
                                 :count="counts[res.pk]"
+                                :service_location="(service_locations[res.pk] || {}).label"
                                 :nof="row.researches.length"/>
           </td>
           <td v-if="!readonly" class="cl-td">
@@ -86,16 +87,18 @@
       <span slot="header">Настройка назначений</span>
       <div slot="body" class="overflow-unset">
         <table class="table table-bordered table-responsive"
-               style="margin-bottom: 0;width:auto;table-layout: fixed;background-color: #fff">
+               style="table-layout: fixed;background-color: #fff;margin: 0 auto;">
           <colgroup>
+            <col width="260">
             <col width="300">
             <col width="300">
-            <col width="60">
+            <col width="80">
           </colgroup>
           <thead>
             <tr>
               <th>Назначение</th>
               <th>Комментарий</th>
+              <th>Место оказания</th>
               <th>Количество</th>
             </tr>
           </thead>
@@ -111,6 +114,14 @@
               <v-select :options="row.options" taggable v-else v-model="comments[row.pk]">
                 <div slot="no-options">Нет вариантов по умолчанию</div>
               </v-select>
+            </td>
+            <td>
+              <v-select :clearable="false" :options="row.service_locations"
+                        :searchable="false" v-if="row.service_locations && row.service_locations.length > 0"
+                        v-model="service_locations[row.pk]"/>
+              <div style="text-align: center;padding: 3px;color: lightslategray;font-size: 90%" v-else>
+                нет доступных вариантов
+              </div>
             </td>
             <td>
               <input class="form-control" type="number" min="1" max="1000" v-model="counts[row.pk]" />
@@ -203,8 +214,10 @@
         comments: {},
         localizations: {},
         counts: {},
+        service_locations: {},
         need_update_comment: [],
         need_update_localization: [],
+        need_update_service_location: [],
         hide_window_update: false,
         delayTime: 300,
         minChars: 1,
@@ -230,42 +243,60 @@
       },
       researches() {
         let comments = {}
+        let service_locations = {}
+        let localizations = {}
         let counts = {}
         this.need_update_comment = this.need_update_comment.filter(e => this.researches.indexOf(e) !== -1)
         this.need_update_localization = this.need_update_localization.filter(e => this.researches.indexOf(e) !== -1)
+        this.need_update_service_location = this.need_update_service_location.filter(e => this.researches.indexOf(e) !== -1)
+        let needShowWindow = false;
         for (let pk of this.researches) {
-          if (!this.comments[pk]) {
+          if (!this.comments[pk] && !this.localizations[pk] && !this.service_locations[pk]) {
             comments[pk] = ''
             if (pk in this.$store.getters.researches_obj) {
               let res = this.$store.getters.researches_obj[pk]
               if (res.comment_variants.length > 0) {
                 comments[pk] = JSON.parse(JSON.stringify(res.comment_variants[0]))
 
-                if (res.comment_variants.length > 1) {
+                if (res.comment_variants.length > 1 && !this.need_update_comment.includes(pk)) {
                   this.need_update_comment.push(pk)
+                  needShowWindow = true;
                 }
               }
 
               if (res.localizations && res.localizations.length > 0) {
-                this.localizations[pk] = res.localizations[0]
+                localizations[pk] = res.localizations[0]
 
-                if (res.localizations.length > 1) {
-                  this.need_update_comment.push(pk)
+                if (res.localizations.length > 1 && !this.need_update_localization.includes(pk)) {
+                  this.need_update_localization.push(pk)
+                  needShowWindow = true;
+                }
+              }
+
+              if (res.service_locations && res.service_locations.length > 0) {
+                service_locations[pk] = res.service_locations[0]
+
+                if (res.service_locations.length > 1 && !this.need_update_service_location.includes(pk)) {
+                  this.need_update_service_location.push(pk)
+                  needShowWindow = true;
                 }
               }
             }
             counts[pk] = 1
           } else {
             comments[pk] = this.comments[pk]
+            localizations[pk] = this.localizations[pk]
+            service_locations[pk] = this.service_locations[pk]
             counts[pk] = this.counts[pk]
           }
         }
         this.comments = comments
+        this.localizations = localizations
+        this.service_locations = service_locations
         this.counts = counts
-      },
-      need_update_comment() {
-        if (this.need_update_comment.length + this.need_update_localization.length > 0 && this.hide_window_update) {
+        if (needShowWindow) {
           this.show_window()
+          this.$forceUpdate();
         }
       },
       comments: {
@@ -319,6 +350,8 @@
       },
       cancel_update() {
         this.need_update_comment = []
+        this.need_update_localization = []
+        this.need_update_service_location = []
         this.hide_window()
       },
       onHit(item) {
@@ -410,6 +443,7 @@
           comments: this.comments,
           counts: this.counts,
           localizations: this.localizations,
+          service_locations: this.service_locations,
           vich_code: this.need_vich_code ? this.vich_code : '',
           count: this.count,
           discount: this.discount,
@@ -474,14 +508,21 @@
       },
       need_update_object() {
         let r = []
-        for (let pk of this.need_update_comment) {
+        const toUpd = [...this.need_update_comment];
+        for (const pk of [...this.need_update_localization, ...this.need_update_service_location]) {
+          if (!toUpd.includes(pk)) {
+            toUpd.push(pk);
+          }
+        }
+        for (let pk of toUpd) {
           if (pk in this.$store.getters.researches_obj) {
             let res = this.$store.getters.researches_obj[pk]
             r.push({
               pk: pk,
               title: res.title,
               options: res.comment_variants,
-              localizations: res.localizations
+              localizations: res.localizations,
+              service_locations: res.service_locations,
             })
           }
         }

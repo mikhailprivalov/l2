@@ -6,6 +6,7 @@
       {{title}}
       <span class="count" v-if="count > 1">(x{{count}})</span>
       <span class="comment" v-if="comment !== '' && !simple">[{{comment}}]</span>
+      <span class="service_location" v-if="service_location !== '' && !simple">[{{service_location}}]</span>
     </div>
     <div v-if="n + 1 < nof" class="root-div"></div>
   </div>
@@ -32,6 +33,10 @@
         default: ''
       },
       kk: {
+        type: String,
+        default: ''
+      },
+      service_location: {
         type: String,
         default: ''
       },
@@ -100,6 +105,12 @@
   .count {
     margin-left: 3px;
     color: #932a04;
+    font-weight: 600;
+  }
+
+  .service_location {
+    margin-left: 3px;
+    color: #93046d;
     font-weight: 600;
   }
 </style>

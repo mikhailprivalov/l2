@@ -76,7 +76,7 @@ class ResearchSite(models.Model):
 class Localization(models.Model):
     title = models.CharField(max_length=64, help_text="Название места локализации")
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    barcode = models.CharField(max_length=10, default="", blank=True)
+    barcode = models.CharField(max_length=15, default="", blank=True)
 
     def __str__(self):
         return "%s" % self.title
@@ -84,6 +84,18 @@ class Localization(models.Model):
     class Meta:
         verbose_name = 'Локализация'
         verbose_name_plural = 'Локализации'
+
+
+class ServiceLocation(models.Model):
+    title = models.CharField(max_length=64, help_text="Название места оказания услуги")
+    hide = models.BooleanField(help_text="Скрытие")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Место оказания услуги'
+        verbose_name_plural = 'Места оказания услуг'
 
 
 class Researches(models.Model):
@@ -144,6 +156,7 @@ class Researches(models.Model):
                                           help_text="Пробирка для микробиологического исследования",
                                           on_delete=models.SET_NULL)
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
+    service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
 
     @staticmethod
     def filter_type(t):

@@ -445,12 +445,15 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
-                                          localizations=None):
+                                          localizations=None, service_locations=None):
         if counts is None:
             counts = {}
 
         if localizations is None:
             localizations = {}
+
+        if service_locations is None:
+            service_locations = {}
 
         if rmis_data is None:
             rmis_data = {}
@@ -567,6 +570,9 @@ class Napravleniya(models.Model):
                         l = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
                         issledovaniye.localization = l
                         loc = l.barcode
+                    if str(research.pk) in service_locations:
+                        s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
+                        issledovaniye.service_location = s
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:10]
                     issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
@@ -744,6 +750,8 @@ class Issledovaniya(models.Model):
     medical_examination = models.DateField(blank=True, null=True, default=None, help_text="Дата осмотра")
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None,
                                      help_text="Локализация", on_delete=models.SET_NULL)
+    service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None,
+                                     help_text="Место оказания услуги", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):

@@ -151,12 +151,13 @@ def tubes(request, direction_implict_id=None):
                 st = (st + "=>" + ",".join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__pk=tube)]))).lower()
 
             fam = tmp2.client.individual.fio(short=True, dots=False)
-
+            f = {}
             if has_microbiology:
-                pr = tubes_buffer[tube_k]["short_title"]
+                f["napravleniye"] = d
             else:
-                pr = tubes_buffer[tube_k]["short_title"] + " " + Issledovaniya.objects.filter(
-                    tubes__pk=tube).first().comment[:9]
+                f["tubes__pk"] = tube
+            iss = Issledovaniya.objects.filter(**f)[0]
+            pr = tubes_buffer[tube_k]["short_title"] + " " + (iss.comment[:9] if not iss.localization else iss.localization.barcode)
 
             nm = "№" + str(d) + "," + tmp2.client.base.short_title
 
@@ -169,7 +170,8 @@ def tubes(request, direction_implict_id=None):
             c.drawRightString(pw * mm - 2 * mm, ph * mm - 7 * mm, fam)
             c.setFont('clacon', 12)
             c.drawString(2 * mm, mm, pr)
-            c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
+            if not has_microbiology:
+                c.drawRightString(pw * mm - 2 * mm, mm, str(tube))
             m = 0.03
             if tube >= 100:
                 m = 0.0212
