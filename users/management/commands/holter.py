@@ -40,14 +40,30 @@ import  pathlib, sys, time
 import pathlib, re
 from datetime import datetime
 from dateutil.relativedelta import *
+from directions.models import Issledovaniya, Napravleniya
+from appconf.manager import SettingManager
+from users.models import DoctorProfile
 
 class Command(BaseCommand):
     help = "Обработка холтера"
 
     def handle(self, *args, **options):
+        base_dir = SettingManager.get("folder_file")
+        today_dir = datetime.now().strftime('%Y/%m/%d')
         d_start = datetime.now().date() - relativedelta(days=+10)
         pattern = re.compile('(Направление: <b>\d+</b>;)|(Адрес: <b>\d+</b>;)')
+        pattern_doc = re.compile('Врач')
         p = pathlib.Path('d:/holter/')
+        podrazdeleniye_user = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=85)
+        doctors = {}
+        for i in podrazdeleniye_user:
+            k = i[1].split()
+            temp_dict = {k[0] : i[0]}
+            doctors.update(temp_dict)
+        print(doctors)
+        print(doctors.keys())
+
+        # p = pathlib.Path('c:\\my\\node_project\\holter\\')
         for f in p.iterdir():
             stat_info = f.stat()
             if datetime.fromtimestamp(stat_info.st_ctime) > datetime.combine(d_start, datetime.min.time()):
@@ -61,12 +77,49 @@ class Command(BaseCommand):
                                 if result:
                                     obj_num_dir = re.search(r'\d+', result.group(0))
                                     num_dir = obj_num_dir.group(0)
-                                    print(num_dir)
-                                    find = True
-                                    break
+                                    obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=298).first()
+                                    if obj_iss:
+                                        patient = Napravleniya.objects.filter(pk=num_dir).first()
+                                        fio = patient.client.get_fio_w_card()
+                                        if not os.path.exists(base_dir + today_dir):
+                                            x = base_dir + today_dir
+                                            os.makedirs(x)
+                                        find = True
+                                        break
                         if find:
                             with open(h, 'r') as f:
                                 old_data = f.read()
-                            new_data = old_data.replace('Адрес:', 'Направление:')
+                            new_data2 = old_data.replace('Адрес:', 'Направление:')
+                            new_data = new_data2.replace('офд<o:p></o:p>', 'офд<o:p> ' + fio + '</o:p>')
                             with open(h, 'w') as f:
                                 f.write(new_data)
+
+                            with open(h, 'r') as f:
+                                find_doc = False
+                                exit = False
+                                pk_doc = None
+                                for line in f:
+                                    result = pattern_doc.search(line)
+                                    if result:
+                                        find_doc = True
+                                    if find_doc:
+                                        for doc in doctors.keys():
+                                            doc_fio_find = re.search(doc, line)
+                                            if doc_fio_find:
+                                                pk_doc = doctors.get(doc_fio_find.group(0))
+                                                exit = True
+                                                break
+                                        if exit:
+                                            break
+
+                            list_fio = fio.split()
+                            link = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
+                            pdfkit.from_file(h.as_posix(), base_dir + link)
+                            if pk_doc:
+                                doc_profile = DoctorProfile.objects.filter(pk=pk_doc).first()
+                            else:
+                                doc_profile = DoctorProfile.objects.filter(pk=1108).first()
+
+                            obj_iss.doc_confirmation = doc_profile
+                            obj_iss.link_file = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
+                            obj_iss.save(update_fields=['doc_confirmation','link_file'])

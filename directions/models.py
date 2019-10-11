@@ -4,6 +4,8 @@ from datetime import date
 
 import simplejson as json
 from django.db import models
+from django.core.files.storage import FileSystemStorage
+
 from django.utils import timezone
 from jsonfield import JSONField
 
@@ -735,6 +737,8 @@ class Issledovaniya(models.Model):
     parent = models.ForeignKey('self', related_name='parent_issledovaniye', help_text="Исследование основание",
                                blank=True, null=True, default=None, on_delete=models.SET_NULL)
     medical_examination = models.DateField(blank=True, null=True, default=None, help_text="Дата осмотра")
+    link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
+
 
     @property
     def time_save_local(self):
