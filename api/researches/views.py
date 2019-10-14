@@ -61,7 +61,9 @@ class Researches(View):
                  "addto": addto,
                  "code": r.code,
                  "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
-                 "site_type": r.site_type_id
+                 "site_type": r.site_type_id,
+                 "localizations": [{"code": x.pk, "label": x.title} for x in r.localization.all()],
+                 "service_locations": [{"code": x.pk, "label": x.title} for x in r.service_location.all()],
                  })
 
         for t in Tubes.objects.all():

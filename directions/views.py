@@ -463,26 +463,47 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
 
     values = []
 
+    service_locations = {}
+
+    n = 0
     for v in issledovaniya:
+        n += 1
+        service_location_title = "" if not v.service_location else v.service_location.title
+        if service_location_title:
+            if service_location_title not in service_locations:
+                service_locations[service_location_title] = []
+            service_locations[service_location_title].append(n)
         values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
                        "count": v.how_many,
                        "comment": v.comment,
+                       "n": n,
                        "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                        "info": v.research.paraclinic_info})
+
+    one_sl = len(service_locations) <= 1
+
     tw = w / 2 - paddingx * 2
     m = 0
+    ns = {}
     if has_descriptive or has_doc_refferal:
         tmp = [Paragraph(
             '<font face="OpenSansBold" size="8">%s</font>' % ("Исследование" if not has_doc_refferal else "Назначение"),
             styleSheet["BodyText"]),
-            Paragraph('<font face="OpenSansBold" size="8">Подготовка{}</font>'.format('' if has_micro else ', кабинет'),
+            Paragraph('<font face="OpenSansBold" size="8">Информация</font>',
                       styleSheet["BodyText"])]
         data.append(tmp)
         colWidths = [int(tw * 0.5), int(tw * 0.5)]
         values.sort(key=lambda l: l["full_title"])
 
         for v in values:
-            tmp = [Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["full_title"]) + ("" if not v["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(v["comment"])) + "</font>",
+            ns[v["n"]] = v["n"]
+            tmp = [Paragraph('<font face="OpenSans" size="8">'
+                             + ("" if one_sl else "№{}: ".format(v["n"])) +
+                             xh.fix(v["full_title"]) +
+                             ("" if not v["comment"] else
+                              " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) +
+                              "\">[{}]</font>".format(v["comment"]))
+                             + "</font>",
                              styleSheet["BodyText"]),
                    Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", styleSheet["BodyText"])]
             data.append(tmp)
@@ -508,12 +529,15 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                 c_cnt += 1
 
         p = Paginator(normvars, 2)
-
+        n = 1
         for pg_num in p.page_range:
             pg = p.page(pg_num)
             tmp = []
             for obj in pg.object_list:
-                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '">' + obj["title"]
+                ns[obj["n"]] = n
+                tmp.append(Paragraph('<font face="OpenSans" size="' + str(font_size) + '">'
+                                     + ("" if one_sl else "№{}: ".format(n)) +
+                                     obj["title"]
                                      + ("" if not obj["count"] or obj["count"] == 1
                                         else" ({}шт.)".format(str(obj["count"]))) +
                                      ("" if not obj["comment"]
@@ -521,6 +545,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                                            "\">[{}]</font>".format(obj["comment"]))
                                      + "</font>",
                                      styleSheet["BodyText"]))
+                n += 1
             if len(pg.object_list) < 2:
                 tmp.append(
                     Paragraph('<font face="OpenSans" size="' + str(font_size) + '"></font>', styleSheet["BodyText"]))
@@ -542,9 +567,23 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     t.drawOn(c, paddingx + (w / 2 * xn), ((h / 2 - height - 138 + m) + (h / 2) * yn - ht))
 
     c.setFont('OpenSans', 8)
-    if not has_descriptive:
+    if not has_descriptive and not has_doc_refferal:
         c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 10,
                      "Всего назначено: " + str(len(issledovaniya)))
+
+    if service_locations:
+        n = 0 if has_descriptive or has_doc_refferal else 1
+        if one_sl:
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                         "Место оказания: " + list(service_locations)[0])
+        else:
+            c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                         "Места оказания услуг:")
+            for title in service_locations:
+                n += 1
+                c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 138 + m) + (h / 2) * yn - ht - 14 - n * 10,
+                             title +
+                             " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])))
 
     nn = 0
     if not dir.imported_from_rmis:

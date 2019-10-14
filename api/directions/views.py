@@ -47,7 +47,9 @@ def directions_generate(request):
                                                             count=p.get("count", 1),
                                                             discount=p.get("discount", 0),
                                                             parent_iss=p.get("parent_iss", None),
-                                                            counts=p.get("counts", {}))
+                                                            counts=p.get("counts", {}),
+                                                            localizations=p.get("localizations", {}),
+                                                            service_locations=p.get("service_locations", {}))
         result["ok"] = rc["r"]
         result["directions"] = rc["list_id"]
         if "message" in rc:
