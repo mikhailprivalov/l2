@@ -44,35 +44,61 @@ from directions.models import Issledovaniya, Napravleniya
 from appconf.manager import SettingManager
 from users.models import DoctorProfile
 from shutil import copytree, rmtree
+from integration_framework.models import TempData
+from laboratory.settings import TIME_ZONE
+from django.utils.timezone import now, pytz
 
 class Command(BaseCommand):
     help = "Обработка холтера"
 
     def handle(self, *args, **options):
-        base_dir = SettingManager.get("folder_file")
+        dst_dir = SettingManager.get("root_dir")
+        src_dir = SettingManager.get("src_holter")
+        p = pathlib.Path(src_dir)
+        temp_dir = SettingManager.get("temp_dir")
+
+        #в каих каталогах искать "-" дней
+        day_count = 10
         today_dir = datetime.now().strftime('%Y/%m/%d')
-        d_start = datetime.now().date() - relativedelta(days=20)
+        d_start = datetime.now().date() - relativedelta(days=day_count)
+        #Ищем последовательность
         pattern = re.compile('(Направление: <b>\d+</b>;)|(Адрес: <b>\d+</b>;)')
         pattern_doc = re.compile('Врач')
-        p = pathlib.Path('d:/holter/')
-        temp_dir = 'd:/tmp/holter_temp/1/'
-        podrazdeleniye_user = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=85)
+
+        #услуга относящаяся к подразделению
+        podrazdeleniye_pk = 85
+        podrazdeleniye_users = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=podrazdeleniye_pk)
+        podrazdeleniye_manager_pk=1108
+
+        date_time = '2019-09-01 10:48:07.558120'
+        holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": date_time})
+        user_timezone = pytz.timezone(TIME_ZONE)
+
+        if created:
+            date_proto = TempData.objects.values_list('holter_protocol_date').get(key='holter')
+        else:
+            date_proto = holter_obj.holter_protocol_date
+        print('##', date_proto.astimezone(user_timezone))
+
         doctors = {}
-        for i in podrazdeleniye_user:
+        for i in podrazdeleniye_users:
             k = i[1].split()
             temp_dict = {k[0] : i[0]}
             doctors.update(temp_dict)
 
-        # p = pathlib.Path('c:\\my\\node_project\\holter\\')
+
         for f in p.iterdir():
             stat_info = f.stat()
             if datetime.fromtimestamp(stat_info.st_ctime) > datetime.combine(d_start, datetime.min.time()):
                 for h in f.glob('*.html'):
                     find = False
+
                     stat_info = h.stat()
+                    file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(user_timezone)
                     holter_path_result = h.as_posix()
                     file_name = holter_path_result.split('/')[-1]
-                    if stat_info.st_size > 30000:
+
+                    if stat_info.st_size > 30000 and file_modify >= date_proto:
                         with open(holter_path_result) as file:
                             for line in file:
                                 result = pattern.match(line)
@@ -84,11 +110,14 @@ class Command(BaseCommand):
                                     if obj_iss:
                                         patient = Napravleniya.objects.filter(pk=num_dir).first()
                                         fio = patient.client.get_fio_w_card()
-                                        if not os.path.exists(base_dir + today_dir):
-                                            x = base_dir + today_dir
+                                        if not os.path.exists(dst_dir + today_dir):
+                                            x = dst_dir + today_dir
                                             os.makedirs(x)
                                         find = True
                                         current_dir = os.path.dirname(holter_path_result)
+                                        file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(user_timezone)
+                                        TempData.objects.filter(key='holter').update(holter_protocol_date=file_modify)
+
                                         if os.path.exists(temp_dir):
                                             rmtree(temp_dir)
                                         copytree(current_dir, temp_dir)
@@ -120,11 +149,12 @@ class Command(BaseCommand):
 
                             list_fio = fio.split()
                             link = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
-                            pdfkit.from_file(temp_dir + file_name, base_dir + link)
+                            pdfkit.from_file(temp_dir + file_name, dst_dir + link)
                             if pk_doc:
                                 doc_profile = DoctorProfile.objects.filter(pk=pk_doc).first()
                             else:
-                                doc_profile = DoctorProfile.objects.filter(pk=1108).first()
+                                doc_profile = DoctorProfile.objects.filter(pk=podrazdeleniye_manager_pk).first()
+
 
                             obj_iss.doc_confirmation = doc_profile
                             obj_iss.link_file = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
