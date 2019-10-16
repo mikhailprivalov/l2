@@ -1,25 +1,17 @@
 from django.core.management import BaseCommand
-
-
-
 import pdfkit
 import os, datetime
-# pdfkit.from_file('c:\\my\\node_project\\holter\\ME1747190927113306.001\\ME1747190927113306.html', 'c:/tmp/holter24.pdf')
-# path = 'c:\\my\\node_project\\holter\\ME1747190927113306.001\\ME1747190927113306.html'
-# a = os.path.getmtime(path)
-#2019-09-30 22:11:51.790084
-# print(datetime.datetime.fromtimestamp(a))
-
-import  pathlib, sys, time
-# p = pathlib.Path('c:\\my\\node_project\\holter\\ME1747190927113306.001\\ME1747190927113306.html')
-# p = pathlib.Path('c:\\my\\node_project\\holter\\ME1747190927113306.001\\')
-# stat_info = p.stat()
-# print(f'{p}')
-# print(f"Size: {stat_info.st_size}")
-# print(f"created: {time.ctime(stat_info.st_ctime)}")
-# print(f"modify: {time.ctime(stat_info.st_mtime)}")
-# print(f"acces: {time.ctime(stat_info.st_atime)}")
-# print(f"acces: {time.ctime(stat_info.st_atime)}")
+import pathlib, re
+from datetime import datetime
+from dateutil.relativedelta import *
+from directions.models import Issledovaniya, Napravleniya
+from appconf.manager import SettingManager
+from users.models import DoctorProfile
+from shutil import copytree, rmtree
+from integration_framework.models import TempData
+from laboratory.settings import TIME_ZONE
+from django.utils.timezone import pytz
+from django.utils import timezone
 
 ##################################################
 # в каталогах созданных -20 дней назад
@@ -37,16 +29,7 @@ import  pathlib, sys, time
           #если найдена последовательность Врач: Фамилия
               #подтвердить результат от имени врача
           #Если нет, то от имени зав.отд.
-import pathlib, re
-from datetime import datetime
-from dateutil.relativedelta import *
-from directions.models import Issledovaniya, Napravleniya
-from appconf.manager import SettingManager
-from users.models import DoctorProfile
-from shutil import copytree, rmtree
-from integration_framework.models import TempData
-from laboratory.settings import TIME_ZONE
-from django.utils.timezone import now, pytz
+
 
 class Command(BaseCommand):
     help = "Обработка холтера"
@@ -58,9 +41,9 @@ class Command(BaseCommand):
         temp_dir = SettingManager.get("temp_dir")
 
         #в каих каталогах искать "-" дней
-        day_count = 10
+        back_days = 10
+        d_start = datetime.now().date() - relativedelta(days=back_days)
         today_dir = datetime.now().strftime('%Y/%m/%d')
-        d_start = datetime.now().date() - relativedelta(days=day_count)
         #Ищем последовательность
         pattern = re.compile('(Направление: <b>\d+</b>;)|(Адрес: <b>\d+</b>;)')
         pattern_doc = re.compile('Врач')
@@ -78,14 +61,12 @@ class Command(BaseCommand):
             date_proto = TempData.objects.values_list('holter_protocol_date').get(key='holter')
         else:
             date_proto = holter_obj.holter_protocol_date
-        print('##', date_proto.astimezone(user_timezone))
 
         doctors = {}
         for i in podrazdeleniye_users:
             k = i[1].split()
             temp_dict = {k[0] : i[0]}
             doctors.update(temp_dict)
-
 
         for f in p.iterdir():
             stat_info = f.stat()
@@ -98,21 +79,20 @@ class Command(BaseCommand):
                     holter_path_result = h.as_posix()
                     file_name = holter_path_result.split('/')[-1]
 
-                    if stat_info.st_size > 30000 and file_modify >= date_proto:
+                    if stat_info.st_size > 30000 and file_modify > date_proto:
                         with open(holter_path_result) as file:
                             for line in file:
                                 result = pattern.match(line)
                                 if result:
                                     obj_num_dir = re.search(r'\d+', result.group(0))
                                     num_dir = obj_num_dir.group(0)
-                                    print(num_dir)
                                     obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=298).first()
                                     if obj_iss:
                                         patient = Napravleniya.objects.filter(pk=num_dir).first()
                                         fio = patient.client.get_fio_w_card()
                                         if not os.path.exists(dst_dir + today_dir):
-                                            x = dst_dir + today_dir
-                                            os.makedirs(x)
+                                            new_dir = dst_dir + today_dir
+                                            os.makedirs(new_dir)
                                         find = True
                                         current_dir = os.path.dirname(holter_path_result)
                                         file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(user_timezone)
@@ -121,11 +101,13 @@ class Command(BaseCommand):
                                         if os.path.exists(temp_dir):
                                             rmtree(temp_dir)
                                         copytree(current_dir, temp_dir)
+
                         if find:
                             with open(temp_dir + file_name, 'r') as f:
                                 old_data = f.read()
                             new_data2 = old_data.replace('Адрес:', 'Направление:')
                             new_data = new_data2.replace('офд<o:p></o:p>', 'офд<o:p> ' + fio + '</o:p>')
+
                             with open(temp_dir + file_name, 'w') as f:
                                 f.write(new_data)
 
@@ -155,8 +137,9 @@ class Command(BaseCommand):
                             else:
                                 doc_profile = DoctorProfile.objects.filter(pk=podrazdeleniye_manager_pk).first()
 
-
+                            t = timezone.now()
                             obj_iss.doc_confirmation = doc_profile
                             obj_iss.link_file = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
-                            obj_iss.save(update_fields=['doc_confirmation','link_file'])
+                            obj_iss.time_confirmation = t
+                            obj_iss.save(update_fields=['doc_confirmation','time_confirmation','link_file'])
                             rmtree(temp_dir)
