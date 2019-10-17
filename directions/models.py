@@ -715,7 +715,7 @@ class Issledovaniya(models.Model):
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
                                              help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
-    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
+    comment = models.CharField(max_length=20, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None,
                                 help_text='Приложение API, через которое результаты были сохранены',
