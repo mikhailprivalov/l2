@@ -69,10 +69,13 @@ class TubesRegistration(models.Model):
     id = models.AutoField(primary_key=True, db_index=True)
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
-    doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
+    doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget',
+                                help_text='Кто взял материал', on_delete=models.SET_NULL)
     time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
-    doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive', help_text='Кто получил материал', on_delete=models.SET_NULL)
-    barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
+    doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive',
+                                   help_text='Кто получил материал', on_delete=models.SET_NULL)
+    barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости',
+                               db_index=True)
 
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
 
@@ -130,7 +133,8 @@ class TubesRegistration(models.Model):
         Получение статуса взятия
         :return:
         """
-        return (self.time_get_local is not None and self.doc_get is not None) or (self.type.receive_in_lab and one_by_one)
+        return (self.time_get_local is not None and self.doc_get is not None) or (
+                self.type.receive_in_lab and one_by_one)
 
     def set_r(self, doc_r):
         """
@@ -203,18 +207,19 @@ class IstochnikiFinansirovaniya(models.Model):
     """
     title = models.CharField(max_length=511, help_text='Название')
     active_status = models.BooleanField(default=True, help_text='Статус активности')
-    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования', db_index=True, on_delete=models.CASCADE)
+    base = models.ForeignKey(Clients.CardBase, help_text='База пациентов, к которой относится источник финансирования',
+                             db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие")
     rmis_auto_send = models.BooleanField(default=True, blank=True, help_text="Автоматическая отправка в РМИС")
     default_diagnos = models.CharField(max_length=36, help_text="Диагноз по умолчанию", default="", blank=True)
-    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True,default='', on_delete=models.CASCADE)
+    contracts = models.ForeignKey(contracts.Contract, null=True, blank=True, default='', on_delete=models.CASCADE)
     order_weight = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return "{} {} (скрыт: {})".format(self.base, self.title, self.hide)
 
     @staticmethod
-    def get_price_modifier(finsource, work_place_link = None):
+    def get_price_modifier(finsource, work_place_link=None):
         """
         На основании источника финансирования возвращает прайс(объект)+модификатор(множитель цены)
         Если источник финансирования ДМС поиск осуществляется по цепочке company-contract. Company(Страховая организация)
@@ -228,7 +233,7 @@ class IstochnikiFinansirovaniya(models.Model):
         price_company = set(SettingManager.get("price_company").split(','))
         if finsource:
             if finsource.title.upper() in price_contract:
-                contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id')\
+                contract_l = IstochnikiFinansirovaniya.objects.values_list('contracts_id') \
                     .filter(pk=finsource.pk).first()
                 if contract_l[0]:
                     price_modifier = contracts.Contract.objects.values_list('price', 'modifier').get(id=contract_l[0])
@@ -303,37 +308,60 @@ class Napravleniya(models.Model):
     Таблица направлений
     """
     data_sozdaniya = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
-    visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None, blank=True, null=True)
-    visit_who_mark = models.ForeignKey(DoctorProfile, related_name="visit_who_mark", default=None, blank=True, null=True, help_text='Профиль, который отметил посещение', on_delete=models.SET_NULL)
+    visit_date = models.DateTimeField(help_text='Дата посещения по направлению', db_index=True, default=None,
+                                      blank=True, null=True)
+    visit_who_mark = models.ForeignKey(DoctorProfile, related_name="visit_who_mark", default=None, blank=True,
+                                       null=True, help_text='Профиль, который отметил посещение',
+                                       on_delete=models.SET_NULL)
     diagnos = models.CharField(max_length=511, help_text='Диагноз', default='', blank=True)
     vich_code = models.CharField(max_length=12, help_text='Код для направления на СПИД', default='', blank=True)
     client = models.ForeignKey(Clients.Card, db_index=True, help_text='Пациент', on_delete=models.CASCADE)
     doc = models.ForeignKey(DoctorProfile, db_index=True, null=True, help_text='Лечащий врач', on_delete=models.CASCADE)
-    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True, help_text='Источник финансирования', on_delete=models.CASCADE)
+    istochnik_f = models.ForeignKey(IstochnikiFinansirovaniya, blank=True, null=True,
+                                    help_text='Источник финансирования', on_delete=models.CASCADE)
     history_num = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Номер истории')
     rmis_case_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: Номер случая')
     rmis_hosp_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='РМИС: ЗОГ')
-    rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?', db_index=True)
-    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
+    rmis_resend_services = models.BooleanField(default=False, blank=True, help_text='Переотправить услуги?',
+                                               db_index=True)
+    doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
+                                       related_name="doc_who_create", help_text='Создатель направления',
+                                       on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
-    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    rmis_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True,
+                                   help_text='ID направления в РМИС')
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?')
-    imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
+    imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True,
+                                             help_text='Направление создано на основе направления из РМИС?')
     imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
-    imported_directions_rmis_send = models.BooleanField(default=False, blank=True, help_text='Для направления из РМИС отправлен бланк')
+    imported_directions_rmis_send = models.BooleanField(default=False, blank=True,
+                                                        help_text='Для направления из РМИС отправлен бланк')
     force_rmis_send = models.BooleanField(default=False, blank=True, help_text='Подтверждение ручной отправки в РМИС')
-    forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_forcer_rmis_send", help_text='Исполнитель подтверждения отправки в РМИС', on_delete=models.SET_NULL)
+    forcer_rmis_send = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
+                                         related_name="doc_forcer_rmis_send",
+                                         help_text='Исполнитель подтверждения отправки в РМИС',
+                                         on_delete=models.SET_NULL)
 
-    case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания', on_delete=models.SET_NULL)
-    num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
-    protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text="Контрольная сумма контракта")
+    case = models.ForeignKey(cases.Case, default=None, blank=True, null=True, help_text='Случай обслуживания',
+                             on_delete=models.SET_NULL)
+    num_contract = models.CharField(max_length=25, default=None, blank=True, null=True, db_index=True,
+                                    help_text='ID направления в РМИС')
+    protect_code = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True,
+                                    help_text="Контрольная сумма контракта")
 
     polis_who_give = models.TextField(blank=True, null=True, default=None, help_text="Страховая компания")
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
     parent = models.ForeignKey('Issledovaniya', related_name='parent_iss', help_text="Протокол-основание", blank=True,
                                null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
-    microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
+    microbiology_n = models.CharField(max_length=10, blank=True, default='',
+                                      help_text="Номер в микробиологической лаборатории")
+    time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True,
+                                                     help_text='Дата/время приёма материала микробиологии')
+    doc_microbiology_receive = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True,
+                                                 related_name="doc_microbiology_receive",
+                                                 help_text='Кто принял материал микробиологии',
+                                                 on_delete=models.SET_NULL)
 
     @property
     def data_sozdaniya_local(self):
@@ -345,7 +373,8 @@ class Napravleniya(models.Model):
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
-            self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create, self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
+            self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create,
+            self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
 
     def get_instructions(self):
         r = []
@@ -507,7 +536,7 @@ class Napravleniya(models.Model):
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
 
-                    #пользователю добавлять данные услуги в направления(не будут добавлены)
+                    # пользователю добавлять данные услуги в направления(не будут добавлены)
                     if research in doc_current.restricted_to_direct.all():
                         continue
 
@@ -546,7 +575,6 @@ class Napravleniya(models.Model):
                                                                                              rmis_slot=rmis_slot)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
-
 
                     # получить по прайсу и услуге: текущую цену
                     research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
@@ -674,12 +702,12 @@ class PersonContract(models.Model):
     sum_contract = models.CharField(max_length=255, null=False, db_index=True, help_text="Итоговая сумма контракта")
     patient_data = models.CharField(max_length=255, null=False, db_index=True,
                                     help_text="Фамилия инициалы Заказчика-Пациента")
-    patient_card = models.ForeignKey(Clients.Card,related_name='patient_card', null= True, help_text='Карта пациента',
+    patient_card = models.ForeignKey(Clients.Card, related_name='patient_card', null=True, help_text='Карта пациента',
                                      db_index=True, on_delete=models.SET_NULL)
     payer_card = models.ForeignKey(Clients.Card, related_name='payer_card', null=True, help_text='Карта плательщика',
                                    db_index=False, on_delete=models.SET_NULL)
     agent_card = models.ForeignKey(Clients.Card, related_name='agent_card', null=True, help_text='Карта Представителя',
-                                   db_index=False,on_delete=models.SET_NULL)
+                                   db_index=False, on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = ("num_contract", "protect_code")
@@ -687,13 +715,13 @@ class PersonContract(models.Model):
         verbose_name_plural = 'Договоры физ.лиц'
 
     @staticmethod
-    def person_contract_save(n_contract, p_code, d_list,s_contract, p_data, p_card, p_payer=None, p_agent=None):
+    def person_contract_save(n_contract, p_code, d_list, s_contract, p_data, p_card, p_payer=None, p_agent=None):
         """
         Запись в базу сведений о контракте
         """
-        pers_contract = PersonContract(num_contract =n_contract, protect_code=p_code, dir_list=d_list,
+        pers_contract = PersonContract(num_contract=n_contract, protect_code=p_code, dir_list=d_list,
                                        sum_contract=s_contract, patient_data=p_data,
-                                       patient_card = p_card, payer_card=p_payer, agent_card=p_agent)
+                                       patient_card=p_card, payer_card=p_payer, agent_card=p_agent)
         pers_contract.save()
 
 
@@ -720,18 +748,18 @@ class Issledovaniya(models.Model):
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None,
                                 help_text='Приложение API, через которое результаты были сохранены',
                                 on_delete=models.SET_NULL)
-    coast = models.DecimalField(max_digits=10,null=True, blank=True, default=None, decimal_places=2)
+    coast = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     discount = models.SmallIntegerField(default=0, help_text='Скидка назначена оператором')
-    how_many = models.PositiveSmallIntegerField(default=1,help_text='Кол-во услуг назначено оператором')
+    how_many = models.PositiveSmallIntegerField(default=1, help_text='Кол-во услуг назначено оператором')
     def_uet = models.DecimalField(max_digits=6, null=True,
                                   help_text="Нагрузка врача(лаборанта) подтвердившего результат", blank=True,
                                   default=None, decimal_places=3)
     co_executor = models.ForeignKey(DoctorProfile, related_name="co_executor", help_text="Со-исполнитель", default=None,
                                     null=True, blank=True, on_delete=models.SET_NULL)
-    co_executor_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
+    co_executor_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
     co_executor2 = models.ForeignKey(DoctorProfile, related_name="co_executor2", help_text="Со-исполнитель2",
                                      default=None, null=True, blank=True, on_delete=models.SET_NULL)
-    co_executor2_uet = models.DecimalField(max_digits=6,null=True, blank=True, default=None, decimal_places=3)
+    co_executor2_uet = models.DecimalField(max_digits=6, null=True, blank=True, default=None, decimal_places=3)
     purpose = models.ForeignKey(VisitPurpose, default=None, blank=True, null=True, on_delete=models.SET_NULL,
                                 help_text="Цель посещения")
     first_time = models.BooleanField(default=False, help_text="Впервые")
@@ -751,7 +779,7 @@ class Issledovaniya(models.Model):
     localization = models.ForeignKey(directory.Localization, blank=True, null=True, default=None,
                                      help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None,
-                                     help_text="Место оказания услуги", on_delete=models.SET_NULL)
+                                         help_text="Место оказания услуги", on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
@@ -918,8 +946,11 @@ class Result(models.Model):
     """
     Результат исследований
     """
-    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
-    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True, on_delete=models.CASCADE)
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True,
+                                      help_text='Направление на исследование, для которого сохранен результат',
+                                      on_delete=models.CASCADE)
+    fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True,
+                                 on_delete=models.CASCADE)
     value = models.TextField(null=True, blank=True, help_text='Значение')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
@@ -994,7 +1025,8 @@ class Result(models.Model):
         signs = {">": [">", "&gt;", "более", "старше"], "<": ["<", "&lt;", "до", "младше", "менее"]}
 
         value = self.value
-        days, monthes, years = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye, days_monthes_years=True)
+        days, monthes, years = self.issledovaniye.napravleniye.client.individual.age(iss=self.issledovaniye,
+                                                                                     days_monthes_years=True)
 
         ref = self.get_ref(fromsave=fromsave)
 
@@ -1173,7 +1205,8 @@ class Result(models.Model):
                     elif rigth[0] <= age <= rigth[1]:
                         if not only_ref:
                             rigth_v = rigths_v(r[k].strip().lower())
-                            pattern = re.compile(r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
+                            pattern = re.compile(
+                                r"^([a-zA-Zа-яА-Я]|\s|:|,|\^|@|\\|\||/|\+|-|\(|\)|\[|\]|{|}|#|№|!|~|\.)+$")
                             if pattern.match(r[k]):
                                 if self.compare(r[k], val):
                                     tmp_result = "normal"

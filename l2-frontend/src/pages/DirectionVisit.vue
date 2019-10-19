@@ -64,7 +64,10 @@
               <li class="list-group-item" v-if="loaded_pk > 0">
                 <h5>Услуги направления:</h5>
                 <ol>
-                  <li v-for="r in researches">{{r.title}}</li>
+                  <li v-for="r in researches">
+                    {{r.title}}
+                    <span class="comment" v-if="r.comment && r.comment !== ''"> [{{r.comment}}]</span>
+                  </li>
                 </ol>
                 <div style="margin-top: 5px" v-if="direction_data.tubes && direction_data.tubes.length > 0">
                   <h5>Ёмкости:</h5>
@@ -85,21 +88,37 @@
                     <button class="btn btn-blue-nb" @click="cancel">Отмена</button>
                   </div>
                   <div class="col-xs-7 col-sm-7 col-md-7 col-lg-6 text-right">
-                    <div v-if="!visit_status">
-                      <button @click="make_visit()" class="btn btn-blue-nb" v-if="!direction_data.has_microbiology">
+                    <div>
+                      <template v-if="direction_data.has_microbiology">
+                        <button @click="make_visit()" class="btn btn-blue-nb" v-if="!visit_status && can_get">
+                          Регистрация забора биоматерала
+                        </button>
+                      </template>
+                      <button @click="make_visit()" class="btn btn-blue-nb" v-else-if="!visit_status && can_visit">
                         Зарегистрировать посещение
                       </button>
-                      <button @click="make_visit()" class="btn btn-blue-nb" v-else>
-                        Регистрация забора биоматерала
-                      </button>
                     </div>
-                    <div class="float-right" v-else>
+                    <div class="float-right" v-if="visit_status">
                       Посещение {{visit_date}}<br/>
                       {{direction_data.visit_who_mark}}
                       <div v-if="allow_reset_confirm">
-                        <a @click.prevent="cancel_visit" href="#" v-if="direction_data.has_microbiology">отменить забор
+                        <a @click.prevent="cancel_visit" href="#" v-if="direction_data.has_microbiology && can_get">отменить
+                          забор
                           материала</a>
-                        <a @click.prevent="cancel_visit" href="#" v-else>отменить посещение</a>
+                        <a @click.prevent="cancel_visit" href="#"
+                           v-else-if="!direction_data.has_microbiology && can_visit">отменить посещение</a>
+                      </div>
+                    </div>
+                    <div class="float-right" style="margin-top: 10px"
+                         v-if="direction_data.has_microbiology && can_receive">
+                      <div v-if="receive_status">
+                        Материал принят<br/>{{receive_datetime}}<br/>
+                        <a @click.prevent="cancel_receive" href="#">отменить приём материала</a>
+                      </div>
+                      <div v-else>
+                        <button @click="make_receive()" class="btn btn-blue-nb">
+                          Принять материал
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -113,7 +132,7 @@
         </div>
       </div>
       <div class="col-xs-12 col-sm-12 col-md-6">
-        <div class="panel panel-flt">
+        <div class="panel panel-flt" v-if="can_visit || can_get">
           <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px">
             <date-field-nav class="btr" :brn="false" w="190px" style="float: right"
                             :val.sync="journal_date" :def="journal_date"/>
@@ -139,6 +158,44 @@
                 <td>{{r.pk}}</td>
                 <td>{{r.datetime}}</td>
                 <td>{{r.client}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel panel-flt" v-if="can_receive">
+          <div class="panel-heading" style="padding-top: 0;padding-bottom: 0;padding-right: 0;height: 34px">
+            <date-field-nav :brn="false" :def="journal_recv_date" :val.sync="journal_recv_date" class="btr"
+                            style="float: right" w="190px"/>
+            <span style="margin-top: 7px;display: inline-block;">Журнал приёма материала</span></div>
+          <div class="panel-body" style="padding-top: 5px">
+            <div class="text-center" v-if="journal_recv_data.length === 0">
+              <br/>
+              нет данных
+            </div>
+            <table class="table table-bordered table-condensed dirtb visits"
+                   style="margin-bottom: 0;background-color: #fff"
+                   v-else>
+              <thead>
+              <tr>
+                <th>Направление</th>
+                <th>Дата и время</th>
+                <th>Пациент</th>
+                <th>Ёмкость</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="r in journal_recv_data">
+                <td>{{r.pk}}</td>
+                <td>{{r.datetime}}</td>
+                <td>{{r.client}}</td>
+                <td>
+                  <div v-for="t in r.tubes">
+                    <span
+                      :style="`background-color: ${t.color};display: inline-block;width: 10px;height: 10px;border: 1px solid #aab2bd;`"></span>
+                    {{t.title}}
+                  </div>
+                </td>
               </tr>
               </tbody>
             </table>
@@ -175,16 +232,19 @@
   import Modal from '../ui-cards/Modal'
   import moment from 'moment'
 
+  /**
+   * @return {number}
+   */
   function TryParseInt(str, defaultValue) {
-    let retValue = defaultValue
-    if (str !== null) {
-      if (str.length > 0) {
-        if (!isNaN(str)) {
-          retValue = parseInt(str)
-        }
+      let retValue = defaultValue
+      if (str !== null) {
+          if (str.length > 0) {
+              if (!isNaN(str)) {
+                  retValue = parseInt(str)
+              }
+          }
       }
-    }
-    return retValue
+      return retValue
   }
 
   export default {
@@ -196,32 +256,70 @@
     },
     data() {
       return {
-        loaded_pk: -1,
-        direction: '',
-        in_load: false,
-        showModal: false,
-        researches: [],
-        visit_status: false,
-        allow_reset_confirm: false,
-        visit_date: '',
-        direction_data: {},
-        journal_date: moment().format('DD.MM.YYYY'),
-        journal_data: [],
-        date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+          loaded_pk: -1,
+          direction: '',
+          in_load: false,
+          showModal: false,
+          researches: [],
+          visit_status: false,
+          receive_status: false,
+          receive_datetime: null,
+          allow_reset_confirm: false,
+          visit_date: '',
+          direction_data: {},
+          journal_date: moment().format('DD.MM.YYYY'),
+          journal_data: [],
+          journal_recv_date: moment().format('DD.MM.YYYY'),
+          journal_recv_data: [],
+          date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       }
     },
     computed: {
       query_int() {
         return TryParseInt(this.direction, -1)
-      }
+      },
+        can_get() {
+            if ('groups' in this.$store.getters.user_data) {
+                for (let g of this.$store.getters.user_data.groups) {
+                    if (g === 'Заборщик биоматериала микробиологии') {
+                        return true
+                    }
+                }
+            }
+            return false
+        },
+        can_receive() {
+            if ('groups' in this.$store.getters.user_data) {
+                for (let g of this.$store.getters.user_data.groups) {
+                    if (g === 'Получатель биоматериала микробиологии') {
+                        return true
+                    }
+                }
+            }
+            return false
+        },
+        can_visit() {
+            if ('groups' in this.$store.getters.user_data) {
+                for (let g of this.$store.getters.user_data.groups) {
+                    if (g === 'Посещения по направлениям' || g === 'Врач параклиники' || g === 'Врач консультаций') {
+                        return true
+                    }
+                }
+            }
+            return false
+        },
     },
     watch: {
       journal_date() {
         this.load_journal()
-      }
+      },
+        journal_recv_date() {
+            this.load_recv_journal()
+        },
     },
     mounted() {
       this.load_journal()
+      this.load_recv_journal()
     },
     methods: {
       report(t) {
@@ -256,6 +354,14 @@
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      load_recv_journal() {
+          this.$store.dispatch(action_types.INC_LOADING).then()
+          directionsPoint.recvJournal({date: this.journal_date}).then(data => {
+              this.journal_recv_data = data.data
+          }).finally(() => {
+              this.$store.dispatch(action_types.DEC_LOADING).then()
+          })
+      },
       load() {
         if (this.query_int === -1) {
           return
@@ -267,13 +373,15 @@
         this.cancel()
         directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
           if (data.ok) {
-            this.loaded_pk = data.loaded_pk
-            this.researches = data.researches
-            this.direction_data = data.direction_data
-            this.visit_status = data.visit_status
-            this.visit_date = data.visit_date
-            this.allow_reset_confirm = data.allow_reset_confirm
-            this.blur()
+              this.loaded_pk = data.loaded_pk
+              this.researches = data.researches
+              this.direction_data = data.direction_data
+              this.visit_status = data.visit_status
+              this.visit_date = data.visit_date
+              this.receive_status = !!data.direction_data.receive_datetime
+              this.receive_datetime = data.direction_data.receive_datetime
+              this.allow_reset_confirm = data.allow_reset_confirm
+              this.blur()
           } else {
             errmessage(data.message)
           }
@@ -293,10 +401,9 @@
         if (confirm('Вы уверены, что хотите отменить посещение?'))
           this.make_visit(true)
       },
-      make_visit(cancel) {
+        make_visit(cancel = false) {
         if (this.loaded_pk === -1 || this.in_load)
           return
-        cancel = cancel || false
         this.$store.dispatch(action_types.INC_LOADING).then()
         this.in_load = true
         directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
@@ -316,7 +423,30 @@
       },
       print_tube() {
         this.$root.$emit('print:barcodes', [this.loaded_pk])
-      }
+      },
+        cancel_receive() {
+            if (confirm('Вы уверены, что хотите отменить приём биоматериала?'))
+                this.make_receive(true)
+        },
+        make_receive(cancel = false) {
+            if (this.loaded_pk === -1 || this.in_load)
+                return
+            this.$store.dispatch(action_types.INC_LOADING).then()
+            this.in_load = true
+            directionsPoint.drectionReceiveMaterial({pk: this.loaded_pk, cancel}).then(data => {
+                if (data.ok) {
+                    this.receive_status = !!data.receive_datetime
+                    this.receive_datetime = data.receive_datetime
+                    this.focus()
+                } else {
+                    errmessage(data.message)
+                }
+            }).finally(() => {
+                this.$store.dispatch(action_types.DEC_LOADING).then()
+                this.in_load = false
+                this.load_recv_journal()
+            })
+        },
     }
   }
 </script>
@@ -352,5 +482,11 @@
 
   .btr /deep/ input {
     border-radius: 0 4px 0 0;
+  }
+
+  .comment {
+    margin-left: 3px;
+    color: #049372;
+    font-weight: 600;
   }
 </style>
