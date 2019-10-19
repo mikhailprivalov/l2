@@ -41,7 +41,7 @@ class Command(BaseCommand):
         temp_dir = SettingManager.get("temp_dir")
 
         #в каих каталогах искать "-" дней
-        back_days = 10
+        back_days = 5
         d_start = datetime.now().date() - relativedelta(days=back_days)
         today_dir = datetime.now().strftime('%Y/%m/%d')
         #Ищем последовательность
@@ -86,6 +86,9 @@ class Command(BaseCommand):
                                 if result:
                                     obj_num_dir = re.search(r'\d+', result.group(0))
                                     num_dir = obj_num_dir.group(0)
+                                    if num_dir >= 4600000000000:
+                                        num_dir -= 4600000000000
+                                        num_dir //= 10
                                     obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=298).first()
                                     if obj_iss:
                                         patient = Napravleniya.objects.filter(pk=num_dir).first()
@@ -105,8 +108,7 @@ class Command(BaseCommand):
                         if find:
                             with open(temp_dir + file_name, 'r') as f:
                                 old_data = f.read()
-                            new_data2 = old_data.replace('Адрес:', 'Направление:')
-                            new_data = new_data2.replace('офд<o:p></o:p>', 'офд<o:p> ' + fio + '</o:p>')
+                            new_data = old_data.replace('Адрес:', fio + '<br><u>Направление:</u>')
 
                             with open(temp_dir + file_name, 'w') as f:
                                 f.write(new_data)
@@ -141,5 +143,6 @@ class Command(BaseCommand):
                             obj_iss.doc_confirmation = doc_profile
                             obj_iss.link_file = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
                             obj_iss.time_confirmation = t
-                            obj_iss.save(update_fields=['doc_confirmation','time_confirmation','link_file'])
+                            obj_iss.time_save = t
+                            obj_iss.save(update_fields=['doc_confirmation','time_save','time_confirmation','link_file'])
                             rmtree(temp_dir)

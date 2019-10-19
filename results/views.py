@@ -29,6 +29,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from collections import OrderedDict
+import os
 
 
 @login_required
@@ -399,6 +400,11 @@ def result_normal(s):
     return s
 
 
+def save(form, filename: str):
+    with open(filename, 'wb') as f:
+        f.write(form.read())
+
+
 @logged_in_or_token
 def result_print(request):
     """ Печать результатов """
@@ -581,6 +587,7 @@ def result_print(request):
 
     client_prev = -1
     # cl = Client()
+    link_result = []
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
@@ -592,6 +599,7 @@ def result_print(request):
         dates = {}
         date_t = ""
         has_paraclinic = False
+        link_files = False
         for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -603,6 +611,14 @@ def result_print(request):
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
                 not_lab = True
+            link_files = False
+            if iss.link_file:
+                link_result.append(iss.link_file)
+                link_files = True
+
+        if link_files:
+            continue
+
         maxdate = ""
         if dates != {}:
             maxdate = max(dates.items(), key=operator.itemgetter(1))[0]
@@ -613,6 +629,7 @@ def result_print(request):
         fwb = []
         number_poliklinika = f'({direction.client.number_poliklinika})' if direction.client.number_poliklinika else ''
         individual_birthday = f'({strdate(direction.client.individual.birthday)})'
+
         data = [
             ["Номер:", str(dpk)],
             ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
@@ -1341,11 +1358,41 @@ def result_print(request):
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
-    if len(pk) == 1:
+    if len(pk) == 1 and len(link_result)==0:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
         doc.build(naprs)
 
+    ################################################
+    from pdfrw import PdfReader, PdfWriter
+
+    if len(link_result) > 0:
+        from pdfrw import PdfReader, PdfWriter
+        import random
+        date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S%f")[:-3]
+        date_now_str = str(random.random())+ str(date_now1)
+        dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+        file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
+        buffer.seek(0)
+        save(buffer, filename=file_dir_l2)
+        dst_dir = SettingManager.get("root_dir")
+        pdf_all = BytesIO()
+        file_dir = [os.path.join(dst_dir, link_f) for link_f in link_result]
+        file_dir.append(file_dir_l2)
+        writer = PdfWriter()
+        pdf_all = BytesIO()
+        for inpfn in file_dir:
+            writer.addpages(PdfReader(inpfn).pages)
+        writer.write(pdf_all)
+        pdf_out = pdf_all.getvalue()
+        pdf_all.close()
+        response.write(pdf_out)
+        buffer.close()
+        os.remove(file_dir_l2)
+        return response
+
+
+    ################################################
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
