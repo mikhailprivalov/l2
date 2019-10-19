@@ -778,6 +778,7 @@ def directions_paraclinic_form(request):
                         "is_doc_refferal": i.research.is_doc_refferal,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
+                        "wide_headers": i.research.wide_headers,
                         "groups": []
                     },
                     "examination_date": i.get_medical_examination(),
