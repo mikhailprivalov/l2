@@ -69,7 +69,7 @@ def menu(request):
             {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
             # {"url": "/reports", "title": "Отчёты", "nt": False, "access": []},
             {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
-            {"url": "/mainmenu/direction_visit", "title": "Посещения по направлениям", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"], "module": "paraclinic_module"},
+            {"url": "/mainmenu/direction_visit", "title": "Регистрация направлений", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"], "module": "paraclinic_module"},
             {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Врач консультаций"], "module": "paraclinic_module"},
             {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
             {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
