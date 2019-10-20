@@ -40,7 +40,7 @@ lxml==4.3.4
 Markdown==3.1.1
 MarkupSafe==1.1.0
 numpy==1.16.4
-openpyxl==2.6.0
+openpyxl==3.0.0
 pdfrw==0.4
 pika==1.0.1
 Pillow==6.0.0
