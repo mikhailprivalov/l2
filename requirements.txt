@@ -34,7 +34,7 @@ isodate==0.6.0
 jdcal==1.4.1
 Jinja2==2.10.1
 jsonfield==2.0.2
-jsonpickle==1.1
+jsonpickle==1.2
 ldap3==2.6
 lxml==4.3.4
 Markdown==3.1.1
