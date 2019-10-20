@@ -287,7 +287,6 @@ def form_01(request_data):
     them_contract = 'настоящий договор о нижеследующем:'
     client_who = 'Заказчик'
     is_payer = False
-
     #Добавдяем представителя (мать, отец, опекун или др. не дееспособный)
     is_pagent = False
     #представитель==Заказчик ()
@@ -567,16 +566,16 @@ def form_01(request_data):
     #Данные плательщика в Договоре
     fio_list = payer_fio.split(' ')
     f = fio_list[0]
-    n = fio_list[1][0:1]
-    p = fio_list[2][0:1]
-    npf = n + '.' + ' ' + p + '.' + ' ' + f
+    n = fio_list[1][0:1] + '.'
+    p = fio_list[2][0:1] + '.' if len(fio_list) > 2 else ''
+    npf = n  + ' ' + p  + ' ' + f
 
     # Данные пациента в Договоре
     patient_list = patient_data['fio'].split(' ')
     pf = patient_list[0]
-    pn = patient_list[1][0:1]
-    pp = patient_list[2][0:1]
-    p_npf = pn + '.' + ' ' + pp + '.' + ' ' + pf
+    pn = patient_list[1][0:1] + '.'
+    pp = patient_list[2][0:1] + '.' if len(patient_list) > 2 else ''
+    p_npf = pn  + ' ' + pp  + ' ' + pf
 
     rowHeights = None
 
@@ -609,8 +608,8 @@ def form_01(request_data):
         if p_agent:
             agent_list = person_data['fio'].split(' ')
             af = agent_list[0]
-            an = agent_list[1][0:1]
-            ap = agent_list[2][0:1]
+            an = agent_list[1]
+            ap = agent_list[2][0:1] if len(agent_list) > 2 else ''
             a_npf = an + '.' + ' ' + ap + '.' + ' ' + af
 
             opinion_agent = [

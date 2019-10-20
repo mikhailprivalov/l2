@@ -198,7 +198,7 @@
     </li>
     <li class="divider context-st"></li>
     <li class="context-st">
-        <div class="input-group" style="max-width: 450px">
+        <div class="input-group" style="max-width: 650px">
             <span class="input-group-addon noclick">п</span>
             <input type="text" class="noclick form-control" id="leicP" maxlength="3" placeholder="п">
             <span class="input-group-addon noclick">c</span>
@@ -209,6 +209,12 @@
             <input type="text" class="noclick form-control" id="leicM" maxlength="3" placeholder="м">
             <span class="input-group-addon noclick">л</span>
             <input type="text" class="noclick form-control" id="leicL" maxlength="3" placeholder="л">
+            <span class="input-group-addon noclick">ю</span>
+            <input type="text" class="noclick form-control" id="leicY" maxlength="3" placeholder="л">
+            <span class="input-group-addon noclick">б</span>
+            <input type="text" class="noclick form-control" id="leicB" maxlength="3" placeholder="л">
+            <span class="input-group-addon noclick">п.кл</span>
+            <input type="text" class="noclick form-control" id="leicPK" maxlength="3" placeholder="л">
             <span class="input-group-btn">
                 <a action="addleic" class="btn btn-primary-nb">Ок</a>
             </span>
@@ -545,10 +551,10 @@
                         $recalcValue.val('')
                         break
                     case 'addleic':
-                        val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}`
+                        val = `${invokedOn.val()}п${$('#leicP').val()}\\с${$('#leicS').val()}\\э${$('#leicE').val()}\\м${$('#leicM').val()}\\л${$('#leicL').val()}\\ю${$('#leicY').val()}\\б${$('#leicB').val()}\\п.кл${$('#leicPK').val()}`
                         $(invokedOn).val(val)
                         $(invokedOn).typeahead('val', val)
-                        $('#leicP,#leicE,#leicL,#leicM,#leicS').val('')
+                        $('#leicP,#leicE,#leicL,#leicM,#leicS,#leicY,#leicB,#leicPK').val('')
                         break
                 }
                 invokedOn.focus()

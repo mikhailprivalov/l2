@@ -13,6 +13,8 @@ class Application(models.Model):
     active = models.BooleanField(default=True, help_text="Флаг активности")
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
+    is_superuser = False
+
 
     @property
     def is_authenticated(self):

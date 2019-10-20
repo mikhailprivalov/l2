@@ -394,7 +394,7 @@ script.
     function ready_formula(formula) {
         v = new Function("return " + formula.tmp + ";")();
         if (is_float(v)) {
-            v = Math.round(parseFloat(v) * 10000) / 10000;
+            v = Math.round(parseFloat(v) * 1000) / 1000;
         }
         if (!isNaN(v) && isFinite(v)) {
             $(`input[data-pk=${formula.fraction}]`).val(v);

@@ -229,7 +229,7 @@ class ParaclinicInputField(models.Model):
         (10, 'Dict'),
     )
 
-    title = models.CharField(max_length=255, help_text='Название поля ввода')
+    title = models.CharField(max_length=400, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
     default_value = models.TextField(blank=True, default='')

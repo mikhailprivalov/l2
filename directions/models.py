@@ -743,7 +743,7 @@ class Issledovaniya(models.Model):
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
                                              help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
-    comment = models.CharField(max_length=10, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
+    comment = models.CharField(max_length=15, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None,
                                 help_text='Приложение API, через которое результаты были сохранены',
@@ -780,6 +780,7 @@ class Issledovaniya(models.Model):
                                      help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None,
                                          help_text="Место оказания услуги", on_delete=models.SET_NULL)
+    link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
 
     @property
     def time_save_local(self):
