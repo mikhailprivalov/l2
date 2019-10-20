@@ -73,6 +73,11 @@ class TitleHide(admin.ModelAdmin):
     list_filter = ('hide',)
 
 
+class TitleFsli(admin.ModelAdmin):
+    list_display = ('title', 'fsli',)
+    list_display_links = ('title',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -94,3 +99,6 @@ admin.site.register(models.NameRouteSheet, ResNameRouteSheet)
 
 admin.site.register(models.Culture, TitleHide)
 admin.site.register(models.Antibiotic, TitleHide)
+
+admin.site.register(models.Localization, TitleFsli)
+admin.site.register(models.ServiceLocation, TitleHide)

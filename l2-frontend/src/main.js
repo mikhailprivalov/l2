@@ -136,7 +136,7 @@ new Vue({
                                              researches, operator, ofname, history_num, comments,
                                              counts, for_rmis, rmis_data, callback, vich_code, count,
                                              discount, need_contract,
-                                             parent_iss=null, kk='',
+                                             parent_iss=null, kk='', localizations={}, service_locations={}
                                            }) => {
       if (card_pk === -1) {
         errmessage('Не выбрана карта')
@@ -160,7 +160,7 @@ new Vue({
       directions_point.sendDirections({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,
         ofname_pk: ofname, researches, comments, for_rmis,
-        rmis_data, vich_code, count, discount, parent_iss, counts
+        rmis_data, vich_code, count, discount, parent_iss, counts, localizations, service_locations,
       }).then(data => {
         vm.$store.dispatch(action_types.DEC_LOADING).then()
 

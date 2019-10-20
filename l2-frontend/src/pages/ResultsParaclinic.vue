@@ -225,12 +225,16 @@
               <div class="fields">
                 <visibility-field-wrapper :formula="field.visibility" :groups="row.research.groups"
                                           v-for="field in group.fields">
+
+                  <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
+                    {{field.title}}:
+                  </div>
                   <div :class="{disabled: row.confirmed,
                   empty: r_list_pk(row).includes(field.pk),
                   required: field.required}" :title="field.required && 'обязательно для заполнения'"
                        @mouseenter="enter_field"
                        @mouseleave="leave_field" class="field">
-                    <div class="field-title" v-if="field.title !== ''">
+                    <div class="field-title" v-if="field.title !== '' && !row.research.wide_headers">
                       {{field.title}}
                     </div>
                     <longpress :confirm-time="0"
@@ -1462,6 +1466,14 @@
 
   .fields {
     padding: 5px 5px 5px 10px;
+  }
+
+  .wide-field-title {
+    margin-top: 10px;
+    margin-bottom: -5px;
+    background-color: #fafafa;
+    font-weight: bold;
+    padding-left: 5px;
   }
 
   .field {

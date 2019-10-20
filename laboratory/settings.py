@@ -231,6 +231,8 @@ RATELIMIT_VIEW = 'mainmenu.views.ratelimited'
 
 RMIS_PROXY = None
 AFTER_DATE = None
+AFTER_DATE_HOLTER = None
+
 
 class DisableMigrations(object):
     def __contains__(self, item):

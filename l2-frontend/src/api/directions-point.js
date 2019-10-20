@@ -45,8 +45,16 @@ export default generator({
     url: 'directions/mark-visit',
     onReject: {ok: false, message: 'Ошибка запроса'}
   },
+  drectionReceiveMaterial: {
+    url: 'directions/receive-material',
+    onReject: {ok: false, message: 'Ошибка запроса'}
+  },
   visitJournal: {
     url: 'directions/visit-journal',
+    onReject: {data: []}
+  },
+  recvJournal: {
+    url: 'directions/recv-journal',
     onReject: {data: []}
   },
   lastResult: {

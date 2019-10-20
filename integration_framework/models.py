@@ -29,3 +29,8 @@ class IntegrationResearches(models.Model):
 
     type_integration = models.CharField(max_length=3, choices=TYPES, db_index=True)
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
+
+
+class TempData(models.Model):
+    key = models.CharField(max_length=50, default="", blank=True, help_text='Приложение/объект', db_index=True)
+    holter_protocol_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Последний обработанный протокол')

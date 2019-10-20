@@ -73,6 +73,31 @@ class ResearchSite(models.Model):
         verbose_name_plural = 'Подразделы'
 
 
+class Localization(models.Model):
+    title = models.CharField(max_length=64, help_text="Название места локализации")
+    fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
+    barcode = models.CharField(max_length=15, default="", blank=True)
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Локализация'
+        verbose_name_plural = 'Локализации'
+
+
+class ServiceLocation(models.Model):
+    title = models.CharField(max_length=64, help_text="Название места оказания услуги")
+    hide = models.BooleanField(help_text="Скрытие")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Место оказания услуги'
+        verbose_name_plural = 'Места оказания услуг'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -130,6 +155,9 @@ class Researches(models.Model):
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True,
                                           help_text="Пробирка для микробиологического исследования",
                                           on_delete=models.SET_NULL)
+    localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
+    service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
+    wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
 
     @staticmethod
     def filter_type(t):
@@ -201,7 +229,7 @@ class ParaclinicInputField(models.Model):
         (10, 'Dict'),
     )
 
-    title = models.CharField(max_length=255, help_text='Название поля ввода')
+    title = models.CharField(max_length=400, help_text='Название поля ввода')
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     order = models.IntegerField()
     default_value = models.TextField(blank=True, default='')
