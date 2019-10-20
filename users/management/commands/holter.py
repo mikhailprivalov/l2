@@ -52,6 +52,7 @@ class Command(BaseCommand):
         podrazdeleniye_pk = SettingManager.get("ofd")
         podrazdeleniye_users = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=podrazdeleniye_pk)
         podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
+        pk_research = SettingManager.get("holter_pk_research")
 
         date_time = '2019-09-01 10:48:07.558120'
         holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": date_time})
@@ -85,12 +86,19 @@ class Command(BaseCommand):
                                 result = pattern.match(line)
                                 if result:
                                     obj_num_dir = re.search(r'\d+', result.group(0))
-                                    num_dir = obj_num_dir.group(0)
+                                    num_dir = int(obj_num_dir.group(0))
                                     if num_dir >= 4600000000000:
                                         num_dir -= 4600000000000
                                         num_dir //= 10
-                                    obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=298).first()
+                                    obj_iss = Issledovaniya.objects.filter(napravleniye=num_dir, research=pk_research).first()
                                     if obj_iss:
+                                        time_confirm = obj_iss.time_confirmation
+                                        file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(
+                                            user_timezone)
+                                        if obj_iss.time_confirmation:
+                                            delta_confirm = file_modify - time_confirm
+                                            if delta_confirm.seconds // 60 > SettingManager.get("holter_reset_confirm"):
+                                                break
                                         patient = Napravleniya.objects.filter(pk=num_dir).first()
                                         fio = patient.client.get_fio_w_card()
                                         if not os.path.exists(dst_dir + today_dir):
@@ -98,7 +106,7 @@ class Command(BaseCommand):
                                             os.makedirs(new_dir)
                                         find = True
                                         current_dir = os.path.dirname(holter_path_result)
-                                        file_modify = datetime.fromtimestamp(stat_info.st_mtime).astimezone(user_timezone)
+
                                         TempData.objects.filter(key='holter').update(holter_protocol_date=file_modify)
 
                                         if os.path.exists(temp_dir):
@@ -115,7 +123,7 @@ class Command(BaseCommand):
 
                             with open(temp_dir + file_name, 'r') as f:
                                 find_doc = False
-                                exit = False
+                                break_line = False
                                 pk_doc = None
                                 for line in f:
                                     result = pattern_doc.search(line)
@@ -132,7 +140,7 @@ class Command(BaseCommand):
                                             break
 
                             list_fio = fio.split()
-                            link = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
+                            link = today_dir + f'/{str(num_dir) + "_" + list_fio[2]}.pdf'
                             pdfkit.from_file(temp_dir + file_name, dst_dir + link)
                             if pk_doc:
                                 doc_profile = DoctorProfile.objects.filter(pk=pk_doc).first()

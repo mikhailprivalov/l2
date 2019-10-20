@@ -588,6 +588,7 @@ def result_print(request):
         return j
 
     client_prev = -1
+    # cl = Client()
     link_result = []
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
@@ -600,6 +601,7 @@ def result_print(request):
         dates = {}
         date_t = ""
         has_paraclinic = False
+        link_files = False
         for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -611,7 +613,6 @@ def result_print(request):
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
                 not_lab = True
-            link_files = False
             if iss.link_file:
                 link_result.append(iss.link_file)
                 link_files = True
@@ -1365,7 +1366,7 @@ def result_print(request):
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
-        date_now_str = str(random.random()) + str(date_now1)
+        date_now_str = str(random.random())+ str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
         buffer.seek(0)
@@ -1385,6 +1386,8 @@ def result_print(request):
         os.remove(file_dir_l2)
         return response
 
+
+    ################################################
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
