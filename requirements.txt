@@ -11,7 +11,6 @@ DAWG-Python==0.7.2
 defusedxml==0.6.0
 Django==2.2.6
 django-ajax-selects==1.7.1
-django-cachalot==2.1.0
 django-cors-middleware==1.4.0
 django-debug-panel==0.8.3
 django-debug-toolbar==2.0
@@ -44,7 +43,7 @@ openpyxl==3.0.0
 pdfrw==0.4
 pika==1.0.1
 Pillow==6.2.0
-psycopg2==2.8.3
+psycopg2==2.8.2
 pyaml==19.4.1
 pyasn1==0.4.5
 pycodestyle==2.5.0

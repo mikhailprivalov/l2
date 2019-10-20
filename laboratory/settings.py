@@ -208,7 +208,6 @@ DEBUG_TOOLBAR_PANELS = (
     'debug_toolbar.panels.cache.CachePanel',
     'debug_toolbar.panels.signals.SignalsPanel',
     'debug_toolbar.panels.logging.LoggingPanel',
-    'cachalot.panels.CachalotPanel',
 )
 LDAP = {
     "enable": False,
@@ -252,7 +251,6 @@ if 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]:
     TEMPLATE_DEBUG = False
     TESTS_IN_PROGRESS = True
     MIGRATION_MODULES = DisableMigrations()
-CACHALOT_ENABLED = True
 
 import warnings
 
@@ -276,6 +274,8 @@ WS_ENABLED = False
 
 SILKY_INTERCEPT_FUNC = lambda request: request.path not in ['/mainmenu/']
 
+AFTER_DATE_HOLTER = None
+
 try:
     from laboratory.local_settings import *
 except ImportError:
@@ -288,7 +288,7 @@ if PROFILING:
 MIDDLEWARE += MIDDLEWARE_ADD
 MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
-INSTALLED_APPS = list(OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS))
+INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
 
 WS_URL = "ws://{}:{}/".format(WS_BASE, WS_PORT)
 

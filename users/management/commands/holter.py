@@ -9,10 +9,9 @@ from appconf.manager import SettingManager
 from users.models import DoctorProfile
 from shutil import copytree, rmtree
 from integration_framework.models import TempData
-from laboratory.settings import TIME_ZONE
+from laboratory.settings import TIME_ZONE, AFTER_DATE_HOLTER
 from django.utils.timezone import pytz
 from django.utils import timezone
-from laboratory.local_settings import AFTER_DATE_HOLTER
 
 ##################################################
 # в каталогах созданных -20 дней назад

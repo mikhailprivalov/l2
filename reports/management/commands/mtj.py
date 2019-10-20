@@ -1,17 +1,13 @@
 import sys
-from pprint import pprint
 
 import jsonpickle
-import simplejson
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import DEFAULT_DB_ALIAS, connections, router
 from django.db.migrations.loader import MigrationLoader
 from django.db.migrations.migration import Migration
-from django.db.migrations.questioner import (
-    NonInteractiveMigrationQuestioner,
-)
+from django.db.migrations.questioner import NonInteractiveMigrationQuestioner
 from django.db.migrations.state import ProjectState
 
 from reports.management.mad import MigrationAutodetector
