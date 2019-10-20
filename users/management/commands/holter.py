@@ -12,6 +12,7 @@ from integration_framework.models import TempData
 from laboratory.settings import TIME_ZONE
 from django.utils.timezone import pytz
 from django.utils import timezone
+from laboratory.local_settings import AFTER_DATE_HOLTER
 
 ##################################################
 # в каталогах созданных -20 дней назад
@@ -54,7 +55,7 @@ class Command(BaseCommand):
         podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
         pk_research = SettingManager.get("holter_pk_research")
 
-        date_time = '2019-09-01 10:48:07.558120'
+        date_time = AFTER_DATE_HOLTER
         holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": date_time})
         user_timezone = pytz.timezone(TIME_ZONE)
 
