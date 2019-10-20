@@ -157,6 +157,7 @@ class Researches(models.Model):
                                           on_delete=models.SET_NULL)
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
+    wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
 
     @staticmethod
     def filter_type(t):

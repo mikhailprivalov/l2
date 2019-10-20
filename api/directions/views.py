@@ -29,7 +29,7 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
-        type_card = Card.objects.get(pk = p.get("card_pk"))
+        type_card = Card.objects.get(pk=p.get("card_pk"))
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
             return JsonResponse(result)
@@ -123,7 +123,8 @@ def directions_history(request):
                         {"pk": napr["pk"], "status": -1 if status == 0 and napr["cancel"] else status,
                          "researches": ' | '.join(researches_list),
                          "researches_pks": researches_pks,
-                         "date": str(dateformat.format(localtime(napr["data_sozdaniya"]).date(), settings.DATE_FORMAT_SHORT)),
+                         "date": str(
+                             dateformat.format(localtime(napr["data_sozdaniya"]).date(), settings.DATE_FORMAT_SHORT)),
                          "lab": "Консультации" if not iss_list[0].research.get_podrazdeleniye() or iss_list[
                              0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
@@ -364,18 +365,26 @@ def directions_services(request):
             researches = []
             tubes = []
             has_microbiology = False
+            receive_datetime = None
             for i in Issledovaniya.objects.filter(napravleniye=n).filter(
                     Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(
                         research__is_microbiology=True)).distinct():
                 researches.append({"title": i.research.title,
-                                   "department": "" if not i.research.podrazdeleniye else i.research.podrazdeleniye.get_title(),
-                                   "is_microbiology": i.research.is_microbiology})
+                                   "department": ""
+                                   if not i.research.podrazdeleniye
+                                   else i.research.podrazdeleniye.get_title(),
+                                   "is_microbiology": i.research.is_microbiology,
+                                   "comment": i.localization.title if i.localization else i.comment})
                 if i.research.is_microbiology:
                     has_microbiology = True
                     tubes.append({
                         "title": i.research.microbiology_tube.title,
                         "color": i.research.microbiology_tube.color,
                     })
+
+            if has_microbiology:
+                receive_datetime = None if not n.time_microbiology_receive else strdatetime(n.time_microbiology_receive)
+
             response["direction_data"] = {
                 "date": strdate(n.data_sozdaniya),
                 "client": n.client.individual.fio(full=True),
@@ -383,6 +392,7 @@ def directions_services(request):
                 "diagnos": n.diagnos,
                 "tubes": tubes,
                 "has_microbiology": has_microbiology,
+                "receive_datetime": receive_datetime,
                 "doc": "" if not n.doc else "{}, {}".format(n.doc.get_fio(), n.doc.podrazdeleniye.title),
                 "imported_from_rmis": n.imported_from_rmis,
                 "imported_org": "" if not n.imported_org else n.imported_org.title,
@@ -396,9 +406,9 @@ def directions_services(request):
             response["visit_status"] = n.visit_date is not None
             response["visit_date"] = "" if not n.visit_date else strdatetime(n.visit_date)
             response["allow_reset_confirm"] = bool(((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                                                     or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                     str(x) for x in
-                                                     request.user.groups.all()]) and n.visit_date)
+                                                    or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                        str(x) for x in
+                                                        request.user.groups.all()]) and n.visit_date)
             f = True
     if not f:
         response["message"] = "Направление не найдено"
@@ -460,6 +470,37 @@ def directions_mark_visit(request):
     return JsonResponse(response)
 
 
+@group_required("Получатель биоматериала микробиологии")
+def directions_receive_material(request):
+    response = {"ok": False, "message": ""}
+    request_data = json.loads(request.body)
+    pk = request_data.get("pk", -1)
+    cancel = request_data.get("cancel", False)
+    dn = Napravleniya.objects.filter(pk=pk)
+    f = False
+    if dn.exists():
+        n = dn[0]
+        if not cancel:
+            if not n.time_microbiology_receive:
+                n.time_microbiology_receive = timezone.now()
+                n.doc_microbiology_receive = request.user.doctorprofile
+                n.save()
+                response["ok"] = True
+                response["receive_datetime"] = strdatetime(n.time_microbiology_receive)
+            else:
+                response["message"] = "Материал уже принят"
+        else:
+            n.time_microbiology_receive = None
+            n.doc_microbiology_receive = None
+            n.save()
+            response["ok"] = True
+            response["receive_datetime"] = None
+        f = True
+    if not f:
+        response["message"] = "Направление не найдено"
+    return JsonResponse(response)
+
+
 @group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
 def directions_visit_journal(request):
     response = {"data": []}
@@ -472,6 +513,30 @@ def directions_visit_journal(request):
             "client": v.client.individual.fio(full=True),
             "card": v.client.number_with_type(),
             "datetime": strdatetime(v.visit_date)
+        })
+    return JsonResponse(response)
+
+
+@group_required("Врач параклиники", "Посещения по направлениям", "Врач консультаций")
+def directions_recv_journal(request):
+    response = {"data": []}
+    request_data = json.loads(request.body)
+    date_start, date_end = try_parse_range(request_data["date"])
+    for v in Napravleniya.objects.filter(time_microbiology_receive__range=(date_start, date_end,),
+                                         doc_microbiology_receive=request.user.doctorprofile).order_by(
+        "-time_microbiology_receive"):
+        tubes = []
+        for i in Issledovaniya.objects.filter(napravleniye=v, research__microbiology_tube__isnull=False):
+            tube = i.research.microbiology_tube
+            tubes.append({
+                "color": tube.color,
+                "title": tube.title,
+            })
+        response["data"].append({
+            "pk": v.pk,
+            "client": v.client.individual.fio(full=True),
+            "datetime": strdatetime(v.time_microbiology_receive),
+            "tubes": tubes,
         })
     return JsonResponse(response)
 
@@ -519,12 +584,12 @@ def directions_last_result(request):
             if v and v.napravleniye.visit_date > u.napravleniye.data_sozdaniya:
                 response["type"] = "visit"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(v.napravleniye.visit_date),
-                                   "is_desc": i.research.desc,
+                                    "is_desc": i.research.desc,
                                     "ts": tsdatetime(v.napravleniye.visit_date)}
             else:
                 response["type"] = "direction"
                 response["data"] = {"direction": u.napravleniye_id, "datetime": strdate(u.napravleniye.data_sozdaniya),
-                                   "is_desc": i.research.desc,
+                                    "is_desc": i.research.desc,
                                     "ts": tsdatetime(u.napravleniye.data_sozdaniya)}
             response["has_last_result"] = True
             response["last_result"] = {"direction": i.napravleniye_id, "datetime": strdate(i.time_confirmation),
@@ -713,6 +778,7 @@ def directions_paraclinic_form(request):
                         "is_doc_refferal": i.research.is_doc_refferal,
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
+                        "wide_headers": i.research.wide_headers,
                         "groups": []
                     },
                     "examination_date": i.get_medical_examination(),
@@ -720,9 +786,9 @@ def directions_paraclinic_form(request):
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
                     "allow_reset_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                                             or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                             str(x) for x in
-                                             request.user.groups.all()]) and i.time_confirmation is not None,
+                                            or request.user.is_superuser or "Сброс подтверждений результатов" in [
+                                                str(x) for x in
+                                                request.user.groups.all()]) and i.time_confirmation is not None,
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
