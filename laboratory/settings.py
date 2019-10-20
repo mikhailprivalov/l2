@@ -8,8 +8,8 @@ PROFILING = False
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'sbib5ss_=z^qngyjqw1om5)4w5l@_ba@pin(7ee^k=#6q=0b)!'
 DEBUG = "DLIS" in os.environ
-INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128','192.168.10.155']
-ALLOWED_HOSTS = ['lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost', 'testserver', '192.168.0.130','192.168.10.155']
+INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
+ALLOWED_HOSTS = ['lis.fc-ismu.local', 'lis', '127.0.0.1', 'localhost', 'testserver']
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1

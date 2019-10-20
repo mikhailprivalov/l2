@@ -41,7 +41,7 @@ class Command(BaseCommand):
         temp_dir = SettingManager.get("temp_dir")
 
         #в каих каталогах искать "-" дней
-        back_days = 5
+        back_days = SettingManager.get("holter_back_days")
         d_start = datetime.now().date() - relativedelta(days=back_days)
         today_dir = datetime.now().strftime('%Y/%m/%d')
         #Ищем последовательность
@@ -49,9 +49,9 @@ class Command(BaseCommand):
         pattern_doc = re.compile('Врач')
 
         #услуга относящаяся к подразделению
-        podrazdeleniye_pk = 85
+        podrazdeleniye_pk = SettingManager.get("ofd")
         podrazdeleniye_users = DoctorProfile.objects.values_list('pk', 'fio').filter(podrazdeleniye=podrazdeleniye_pk)
-        podrazdeleniye_manager_pk=1108
+        podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
 
         date_time = '2019-09-01 10:48:07.558120'
         holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": date_time})
@@ -65,7 +65,7 @@ class Command(BaseCommand):
         doctors = {}
         for i in podrazdeleniye_users:
             k = i[1].split()
-            temp_dict = {k[0] : i[0]}
+            temp_dict = {k[0]:i[0]}
             doctors.update(temp_dict)
 
         for f in p.iterdir():
@@ -126,9 +126,9 @@ class Command(BaseCommand):
                                             doc_fio_find = re.search(doc, line)
                                             if doc_fio_find:
                                                 pk_doc = doctors.get(doc_fio_find.group(0))
-                                                exit = True
+                                                break_line = True
                                                 break
-                                        if exit:
+                                        if break_line:
                                             break
 
                             list_fio = fio.split()
@@ -141,7 +141,7 @@ class Command(BaseCommand):
 
                             t = timezone.now()
                             obj_iss.doc_confirmation = doc_profile
-                            obj_iss.link_file = today_dir + f'/{num_dir + "_" + list_fio[2]}.pdf'
+                            obj_iss.link_file = f'{today_dir}/{num_dir}_{list_fio[2]}.pdf'
                             obj_iss.time_confirmation = t
                             obj_iss.time_save = t
                             obj_iss.save(update_fields=['doc_confirmation','time_save','time_confirmation','link_file'])

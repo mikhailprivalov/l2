@@ -32,8 +32,5 @@ class IntegrationResearches(models.Model):
 
 
 class TempData(models.Model):
-    """
-    Направления на исследования
-    """
-    key = models.CharField(max_length=255, default="", blank=True, help_text='Приложение/объект', db_index=True)
+    key = models.CharField(max_length=50, default="", blank=True, help_text='Приложение/объект', db_index=True)
     holter_protocol_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Последний обработанный протокол')

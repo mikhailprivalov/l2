@@ -780,6 +780,7 @@ class Issledovaniya(models.Model):
                                      help_text="Локализация", on_delete=models.SET_NULL)
     service_location = models.ForeignKey(directory.ServiceLocation, blank=True, null=True, default=None,
                                          help_text="Место оказания услуги", on_delete=models.SET_NULL)
+    link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
 
     @property
     def time_save_local(self):

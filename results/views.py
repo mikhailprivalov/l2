@@ -30,6 +30,8 @@ from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
 from collections import OrderedDict
 import os
+from pdfrw import PdfReader, PdfWriter
+import random
 
 
 @login_required
@@ -586,7 +588,6 @@ def result_print(request):
         return j
 
     client_prev = -1
-    # cl = Client()
     link_result = []
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
@@ -599,7 +600,6 @@ def result_print(request):
         dates = {}
         date_t = ""
         has_paraclinic = False
-        link_files = False
         for iss in Issledovaniya.objects.filter(napravleniye=direction, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -1358,25 +1358,19 @@ def result_print(request):
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
-    if len(pk) == 1 and len(link_result)==0:
+    if len(pk) == 1 and not link_result:
         doc.build(fwb, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvas)
     else:
         doc.build(naprs)
 
-    ################################################
-    from pdfrw import PdfReader, PdfWriter
-
     if len(link_result) > 0:
-        from pdfrw import PdfReader, PdfWriter
-        import random
-        date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S%f")[:-3]
-        date_now_str = str(random.random())+ str(date_now1)
+        date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+        date_now_str = str(random.random()) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
         buffer.seek(0)
         save(buffer, filename=file_dir_l2)
         dst_dir = SettingManager.get("root_dir")
-        pdf_all = BytesIO()
         file_dir = [os.path.join(dst_dir, link_f) for link_f in link_result]
         file_dir.append(file_dir_l2)
         writer = PdfWriter()
@@ -1391,8 +1385,6 @@ def result_print(request):
         os.remove(file_dir_l2)
         return response
 
-
-    ################################################
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
