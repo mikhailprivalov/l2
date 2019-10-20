@@ -356,7 +356,7 @@
       },
       load_recv_journal() {
           this.$store.dispatch(action_types.INC_LOADING).then()
-          directionsPoint.recvJournal({date: this.journal_date}).then(data => {
+          directionsPoint.recvJournal({date: this.journal_recv_date}).then(data => {
               this.journal_recv_data = data.data
           }).finally(() => {
               this.$store.dispatch(action_types.DEC_LOADING).then()
