@@ -55,8 +55,7 @@ class Command(BaseCommand):
         podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
         pk_research = SettingManager.get("holter_pk_research")
 
-        date_time = AFTER_DATE_HOLTER
-        holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": date_time})
+        holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": AFTER_DATE_HOLTER})
         user_timezone = pytz.timezone(TIME_ZONE)
 
         if created:
