@@ -3,31 +3,11 @@ import directory.models as models
 from django.forms import TextInput, Textarea
 from django.db import models as dbmodels
 
-
-class RouteSheetInline(admin.TabularInline):
-    model = models.RouteSheet
-    extra = 0
-    formfield_overrides = {
-        dbmodels.CharField: {'widget': TextInput(attrs={'size': '10'})},
-        dbmodels.TextField: {'widget': Textarea(attrs={'rows': 2, 'cols': 55})},
-    }
-
-class ResRouteSheet(admin.ModelAdmin):
-    list_filter = ('name_route_sheet',)
-    list_display = ('name_route_sheet', 'research', 'work_time', 'cabinet', 'comment',)
-    fields = ['name_route_sheet', 'research', ('work_time', 'cabinet', 'comment')]
-    list_display_links = ('name_route_sheet',)
-
-    formfield_overrides = {
-        dbmodels.CharField: {'widget': TextInput(attrs={'size': '25'})},
-        dbmodels.TextField: {'widget': Textarea(attrs={'rows': 2, 'cols': 55})},
-    }
-
-
-class ResNameRouteSheet(admin.ModelAdmin):
-    list_display = ('title', 'static_text',)
-    list_display_links = ('title',)
-    inlines = [RouteSheetInline]
+class ResDispensaryRouteSheet(admin.ModelAdmin):
+    list_filter = ('age_client', 'sex_client',)
+    list_display = ('age_client', 'sex_client', 'research',)
+    list_display_links = ('age_client', 'sex_client', 'research',)
+    search_fields = ('age_client', 'sex_client',)
 
 
 class ResAdmin(admin.ModelAdmin):
@@ -94,8 +74,7 @@ admin.site.register(models.ParaclinicTemplateName)
 admin.site.register(models.ParaclinicTemplateField)
 admin.site.register(models.DirectionsGroup)
 
-admin.site.register(models.RouteSheet, ResRouteSheet)
-admin.site.register(models.NameRouteSheet, ResNameRouteSheet)
+admin.site.register(models.DispensaryRouteSheet, ResDispensaryRouteSheet)
 
 admin.site.register(models.Culture, TitleHide)
 admin.site.register(models.Antibiotic, TitleHide)

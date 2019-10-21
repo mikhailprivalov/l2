@@ -417,21 +417,24 @@ class NameRouteSheet(models.Model):
         verbose_name_plural = 'Списки маршрутов'
 
 
-class RouteSheet(models.Model):
-    name_route_sheet = models.ForeignKey(NameRouteSheet, db_index=True, help_text='Наименование перечня',on_delete=models.CASCADE)
+class DispensaryRouteSheet(models.Model):
+    SEX = (
+        ('м', 'м'),
+        ('ж', 'ж'),
+    )
+
+    age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
+    sex_client = models.CharField(max_length=1, choices=SEX,  help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
                                  on_delete=models.CASCADE)
-    work_time = models.CharField(max_length=55, help_text='Время работы', blank=True, default='')
-    cabinet = models.CharField(max_length=25, help_text='кабинет', blank=True, default='')
-    comment = models.TextField(max_length=255, help_text='Комментарий', blank=True, default='')
 
     def __str__(self):
-        return "{} , - исследование {}".format(self.name_route_sheet, self.research)
-
+        return "{} , - возраст, {} - пол, {}".format(self.age_client, self.sex_client, self.research)
 
     class Meta:
-        verbose_name = 'Списоки маршрутов - Услуги'
-        verbose_name_plural = 'Списки маршрутов - Услуги'
+        unique_together = ("age_client", "sex_client", "research")
+        verbose_name = 'Диспансеризация Шаблон'
+        verbose_name_plural = 'Диспансеризация-Шаблоны'
 
 
 class Culture(models.Model):
