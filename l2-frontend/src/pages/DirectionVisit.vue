@@ -77,9 +77,9 @@
                     {{r.title}}
                   </div>
 
-                    <button @click="print_tube()" class="btn btn-blue-nb" style="margin-top: 10px">
-                      Печать штрих-кода
-                    </button>
+                  <button @click="print_tube()" class="btn btn-blue-nb" style="margin-top: 10px">
+                    Печать штрих-кода
+                  </button>
                 </div>
               </li>
               <li class="list-group-item" v-if="loaded_pk > 0">
@@ -225,230 +225,230 @@
 </template>
 
 <script>
-  import DateFieldNav from '../fields/DateFieldNav'
-  import DateRange from '../ui-cards/DateRange'
-  import directionsPoint from '../api/directions-point'
-  import * as action_types from '../store/action-types'
-  import Modal from '../ui-cards/Modal'
-  import moment from 'moment'
+    import DateFieldNav from '../fields/DateFieldNav'
+    import DateRange from '../ui-cards/DateRange'
+    import directionsPoint from '../api/directions-point'
+    import * as action_types from '../store/action-types'
+    import Modal from '../ui-cards/Modal'
+    import moment from 'moment'
 
-  /**
-   * @return {number}
-   */
-  function TryParseInt(str, defaultValue) {
-      let retValue = defaultValue
-      if (str !== null) {
-          if (str.length > 0) {
-              if (!isNaN(str)) {
-                  retValue = parseInt(str)
-              }
-          }
-      }
-      return retValue
-  }
+    /**
+     * @return {number}
+     */
+    function TryParseInt(str, defaultValue) {
+        let retValue = defaultValue
+        if (str !== null) {
+            if (str.length > 0) {
+                if (!isNaN(str)) {
+                    retValue = parseInt(str)
+                }
+            }
+        }
+        return retValue
+    }
 
-  export default {
-    name: 'direction-visit',
-    components: {
-      DateFieldNav,
-      Modal,
-      DateRange
-    },
-    data() {
-      return {
-          loaded_pk: -1,
-          direction: '',
-          in_load: false,
-          showModal: false,
-          researches: [],
-          visit_status: false,
-          receive_status: false,
-          receive_datetime: null,
-          allow_reset_confirm: false,
-          visit_date: '',
-          direction_data: {},
-          journal_date: moment().format('DD.MM.YYYY'),
-          journal_data: [],
-          journal_recv_date: moment().format('DD.MM.YYYY'),
-          journal_recv_data: [],
-          date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
-      }
-    },
-    computed: {
-      query_int() {
-        return TryParseInt(this.direction, -1)
-      },
-        can_get() {
-            if ('groups' in this.$store.getters.user_data) {
-                for (let g of this.$store.getters.user_data.groups) {
-                    if (g === 'Заборщик биоматериала микробиологии') {
-                        return true
+    export default {
+        name: 'direction-visit',
+        components: {
+            DateFieldNav,
+            Modal,
+            DateRange
+        },
+        data() {
+            return {
+                loaded_pk: -1,
+                direction: '',
+                in_load: false,
+                showModal: false,
+                researches: [],
+                visit_status: false,
+                receive_status: false,
+                receive_datetime: null,
+                allow_reset_confirm: false,
+                visit_date: '',
+                direction_data: {},
+                journal_date: moment().format('DD.MM.YYYY'),
+                journal_data: [],
+                journal_recv_date: moment().format('DD.MM.YYYY'),
+                journal_recv_data: [],
+                date_range: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
+            }
+        },
+        computed: {
+            query_int() {
+                return TryParseInt(this.direction, -1)
+            },
+            can_get() {
+                if ('groups' in this.$store.getters.user_data) {
+                    for (let g of this.$store.getters.user_data.groups) {
+                        if (g === 'Заборщик биоматериала микробиологии') {
+                            return true
+                        }
                     }
                 }
-            }
-            return false
-        },
-        can_receive() {
-            if ('groups' in this.$store.getters.user_data) {
-                for (let g of this.$store.getters.user_data.groups) {
-                    if (g === 'Получатель биоматериала микробиологии') {
-                        return true
+                return false
+            },
+            can_receive() {
+                if ('groups' in this.$store.getters.user_data) {
+                    for (let g of this.$store.getters.user_data.groups) {
+                        if (g === 'Получатель биоматериала микробиологии') {
+                            return true
+                        }
                     }
                 }
-            }
-            return false
-        },
-        can_visit() {
-            if ('groups' in this.$store.getters.user_data) {
-                for (let g of this.$store.getters.user_data.groups) {
-                    if (g === 'Посещения по направлениям' || g === 'Врач параклиники' || g === 'Врач консультаций') {
-                        return true
+                return false
+            },
+            can_visit() {
+                if ('groups' in this.$store.getters.user_data) {
+                    for (let g of this.$store.getters.user_data.groups) {
+                        if (g === 'Посещения по направлениям' || g === 'Врач параклиники' || g === 'Врач консультаций') {
+                            return true
+                        }
                     }
                 }
-            }
-            return false
+                return false
+            },
         },
-    },
-    watch: {
-      journal_date() {
-        this.load_journal()
-      },
-        journal_recv_date() {
+        watch: {
+            journal_date() {
+                this.load_journal()
+            },
+            journal_recv_date() {
+                this.load_recv_journal()
+            },
+        },
+        mounted() {
+            this.load_journal()
             this.load_recv_journal()
         },
-    },
-    mounted() {
-      this.load_journal()
-      this.load_recv_journal()
-    },
-    methods: {
-      report(t) {
-        window.open(`/statistic/xls?type=statistics-visits&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}&t=${t}`, '_blank')
-      },
-      hide_modal() {
-        this.showModal = false
-        this.$refs.modal.$el.style.display = 'none'
-      },
-      show_modal() {
-        this.$refs.modal.$el.style.display = 'flex'
-        this.showModal = true
-      },
-      cancel() {
-        this.loaded_pk = -1
-        this.researches = []
-        this.visit_status = false
-        this.allow_reset_confirm = false
-        this.visit_date = ''
-        this.direction_data = {}
-      },
-      print_direction() {
-        if (this.loaded_pk === -1)
-          return
-        this.$root.$emit('print:directions', [this.loaded_pk])
-      },
-      load_journal() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        directionsPoint.visitJournal({date: this.journal_date}).then(data => {
-          this.journal_data = data.data
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
-      },
-      load_recv_journal() {
-          this.$store.dispatch(action_types.INC_LOADING).then()
-          directionsPoint.recvJournal({date: this.journal_recv_date}).then(data => {
-              this.journal_recv_data = data.data
-          }).finally(() => {
-              this.$store.dispatch(action_types.DEC_LOADING).then()
-          })
-      },
-      load() {
-        if (this.query_int === -1) {
-          return
-        }
-        if (this.in_load)
-          return
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        this.in_load = true
-        this.cancel()
-        directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
-          if (data.ok) {
-              this.loaded_pk = data.loaded_pk
-              this.researches = data.researches
-              this.direction_data = data.direction_data
-              this.visit_status = data.visit_status
-              this.visit_date = data.visit_date
-              this.receive_status = !!data.direction_data.receive_datetime
-              this.receive_datetime = data.direction_data.receive_datetime
-              this.allow_reset_confirm = data.allow_reset_confirm
-              this.blur()
-          } else {
-            errmessage(data.message)
-          }
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-          this.in_load = false
-          this.direction = ''
-        })
-      },
-      focus() {
-        $(this.$refs.field).focus()
-      },
-      blur() {
-        $(this.$refs.field).blur()
-      },
-      cancel_visit() {
-        if (confirm('Вы уверены, что хотите отменить посещение?'))
-          this.make_visit(true)
-      },
-        make_visit(cancel = false) {
-        if (this.loaded_pk === -1 || this.in_load)
-          return
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        this.in_load = true
-        directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
-          if (data.ok) {
-            this.visit_status = data.visit_status
-            this.visit_date = data.visit_date
-            this.allow_reset_confirm = data.allow_reset_confirm
-            this.focus()
-          } else {
-            errmessage(data.message)
-          }
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-          this.in_load = false
-          this.load_journal()
-        })
-      },
-      print_tube() {
-        this.$root.$emit('print:barcodes', [this.loaded_pk])
-      },
-        cancel_receive() {
-            if (confirm('Вы уверены, что хотите отменить приём биоматериала?'))
-                this.make_receive(true)
-        },
-        make_receive(cancel = false) {
-            if (this.loaded_pk === -1 || this.in_load)
-                return
-            this.$store.dispatch(action_types.INC_LOADING).then()
-            this.in_load = true
-            directionsPoint.drectionReceiveMaterial({pk: this.loaded_pk, cancel}).then(data => {
-                if (data.ok) {
-                    this.receive_status = !!data.receive_datetime
-                    this.receive_datetime = data.receive_datetime
-                    this.focus()
-                } else {
-                    errmessage(data.message)
+        methods: {
+            report(t) {
+                window.open(`/statistic/xls?type=statistics-visits&users=${encodeURIComponent(JSON.stringify([this.$store.getters.user_data.doc_pk]))}&date-start=${this.date_range[0]}&date-end=${this.date_range[1]}&t=${t}`, '_blank')
+            },
+            hide_modal() {
+                this.showModal = false
+                this.$refs.modal.$el.style.display = 'none'
+            },
+            show_modal() {
+                this.$refs.modal.$el.style.display = 'flex'
+                this.showModal = true
+            },
+            cancel() {
+                this.loaded_pk = -1
+                this.researches = []
+                this.visit_status = false
+                this.allow_reset_confirm = false
+                this.visit_date = ''
+                this.direction_data = {}
+            },
+            print_direction() {
+                if (this.loaded_pk === -1)
+                    return
+                this.$root.$emit('print:directions', [this.loaded_pk])
+            },
+            load_journal() {
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                directionsPoint.visitJournal({date: this.journal_date}).then(data => {
+                    this.journal_data = data.data
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                })
+            },
+            load_recv_journal() {
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                directionsPoint.recvJournal({date: this.journal_recv_date}).then(data => {
+                    this.journal_recv_data = data.data
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                })
+            },
+            load() {
+                if (this.query_int === -1) {
+                    return
                 }
-            }).finally(() => {
-                this.$store.dispatch(action_types.DEC_LOADING).then()
-                this.in_load = false
-                this.load_recv_journal()
-            })
-        },
+                if (this.in_load)
+                    return
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.in_load = true
+                this.cancel()
+                directionsPoint.getDirectionsServices({pk: this.query_int}).then(data => {
+                    if (data.ok) {
+                        this.loaded_pk = data.loaded_pk
+                        this.researches = data.researches
+                        this.direction_data = data.direction_data
+                        this.visit_status = data.visit_status
+                        this.visit_date = data.visit_date
+                        this.receive_status = !!data.direction_data.receive_datetime
+                        this.receive_datetime = data.direction_data.receive_datetime
+                        this.allow_reset_confirm = data.allow_reset_confirm
+                        this.blur()
+                    } else {
+                        errmessage(data.message)
+                    }
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.in_load = false
+                    this.direction = ''
+                })
+            },
+            focus() {
+                $(this.$refs.field).focus()
+            },
+            blur() {
+                $(this.$refs.field).blur()
+            },
+            cancel_visit() {
+                if (confirm('Вы уверены, что хотите отменить посещение?'))
+                    this.make_visit(true)
+            },
+            make_visit(cancel = false) {
+                if (this.loaded_pk === -1 || this.in_load)
+                    return
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.in_load = true
+                directionsPoint.getMarkDirectionVisit({pk: this.loaded_pk, cancel}).then(data => {
+                    if (data.ok) {
+                        this.visit_status = data.visit_status
+                        this.visit_date = data.visit_date
+                        this.allow_reset_confirm = data.allow_reset_confirm
+                        this.focus()
+                    } else {
+                        errmessage(data.message)
+                    }
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.in_load = false
+                    this.load_journal()
+                })
+            },
+            print_tube() {
+                this.$root.$emit('print:barcodes', [this.loaded_pk])
+            },
+            cancel_receive() {
+                if (confirm('Вы уверены, что хотите отменить приём биоматериала?'))
+                    this.make_receive(true)
+            },
+            make_receive(cancel = false) {
+                if (this.loaded_pk === -1 || this.in_load)
+                    return
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.in_load = true
+                directionsPoint.drectionReceiveMaterial({pk: this.loaded_pk, cancel}).then(data => {
+                    if (data.ok) {
+                        this.receive_status = !!data.receive_datetime
+                        this.receive_datetime = data.receive_datetime
+                        this.focus()
+                    } else {
+                        errmessage(data.message)
+                    }
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.in_load = false
+                    this.load_recv_journal()
+                })
+            },
+        }
     }
-  }
 </script>
 
 <style scoped lang="scss">
