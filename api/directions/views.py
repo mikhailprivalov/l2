@@ -779,6 +779,7 @@ def directions_paraclinic_form(request):
                         "is_treatment": i.research.is_treatment,
                         "is_stom": i.research.is_stom,
                         "wide_headers": i.research.wide_headers,
+                        "comment": i.localization.title if i.localization else i.comment,
                         "groups": []
                     },
                     "examination_date": i.get_medical_examination(),
