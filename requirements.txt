@@ -35,7 +35,7 @@ Jinja2==2.10.1
 jsonfield==2.0.2
 jsonpickle==1.2
 ldap3==2.6
-lxml==4.3.4
+lxml==4.4.1
 Markdown==3.1.1
 MarkupSafe==1.1.0
 numpy==1.17.3
