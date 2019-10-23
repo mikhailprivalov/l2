@@ -56,7 +56,7 @@ PyPDF2==1.26.0
 python-dateutil==2.8.0
 python3-memcached==1.51
 pytils==0.3
-pytz==2019.1
+pytz==2019.3
 PyYAML==5.1.2
 redis==3.3.11
 relatorio==0.9.0
