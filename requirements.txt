@@ -41,7 +41,7 @@ MarkupSafe==1.1.0
 numpy==1.17.3
 openpyxl==3.0.0
 pdfrw==0.4
-pika==1.0.1
+pika==1.1.0
 Pillow==6.2.1
 psycopg2==2.8.2
 pyaml==19.4.1
