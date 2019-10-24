@@ -59,6 +59,7 @@ class ResearchSite(models.Model):
         (1, 'Лечение'),
         (2, 'Стоматалогия'),
         (3, 'Микробиология'),
+        (4, 'Стационар'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -100,6 +101,7 @@ class ServiceLocation(models.Model):
 
 class Researches(models.Model):
     """
+    Вид исследования
     Вид исследования
     """
     DIRECTION_FORMS = (
@@ -424,12 +426,13 @@ class DispensaryRouteSheet(models.Model):
     )
 
     age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
-    sex_client = models.CharField(max_length=1, choices=SEX,  help_text="Пол", db_index=True)
+    sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
                                  on_delete=models.CASCADE)
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
 
     def __str__(self):
-        return "{} , - возраст, {} - пол, {}".format(self.age_client, self.sex_client, self.research)
+        return "{} , - возраст, {} - пол, {}, {}-sort".format(self.age_client, self.sex_client, self.research, self.sort_weight)
 
     class Meta:
         unique_together = ("age_client", "sex_client", "research")
