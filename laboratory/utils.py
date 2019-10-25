@@ -52,16 +52,15 @@ def current_time(only_date=False):
 
     return datetime_object
 
+def current_year():
+    return strdate(current_time(only_date=True))[-4:]
 
-def calculate_age(born, year_patient):
-    return year_patient.year - born.year - ((year_patient.month, year_patient.day) < (born.month, born.day))
-
-
-def start_end_year(current_year):
+def start_end_year():
     # возвращает даты-время(начало конец в году): 01.01.ГОД 00:00:00 00:00:01 И 31.12.ГОД 23:59:59 59:59:59
     user_timezone = pytz.timezone(TIME_ZONE)
-    d1 = datetime.strptime(f'01.01.{current_year}', '%d.%m.%Y')
-    d2 = datetime.strptime(f'31.12.{current_year}', '%d.%m.%Y')
+    year_today = current_year()
+    d1 = datetime.strptime(f'01.01.{year_today}', '%d.%m.%Y')
+    d2 = datetime.strptime(f'31.12.{year_today}', '%d.%m.%Y')
     start_date = datetime.combine(d1, time.min).astimezone(user_timezone)
     end_date = datetime.combine(d2, time.max).astimezone(user_timezone)
 

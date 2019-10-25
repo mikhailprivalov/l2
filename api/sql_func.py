@@ -35,7 +35,7 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
 		client_id, napr, data_sozdaniya, t_iss.research_id, time_confirmation FROM t_field
 		LEFT JOIN t_iss ON t_field.research_id = t_iss.research_id)
 	
-	SELECT res_id, sort, client_id, napr, data_sozdaniya, time_confirmation, title, short_title 
+	SELECT res_id, sort, napr, data_sozdaniya, time_confirmation, title, short_title 
 	FROM t_disp
     LEFT JOIN t_research ON t_disp.res_id = t_research.id
 	ORDER by sort
