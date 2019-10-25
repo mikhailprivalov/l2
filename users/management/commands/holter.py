@@ -62,8 +62,10 @@ class Command(BaseCommand):
 
         if created:
             date_proto = TempData.objects.values_list('holter_protocol_date').get(key='holter')
+            date_proto = date_proto[0].astimezone(user_timezone)
         else:
             date_proto = holter_obj.holter_protocol_date
+            date_proto = date_proto.astimezone(user_timezone)
 
         doctors = {}
         for i in podrazdeleniye_users:

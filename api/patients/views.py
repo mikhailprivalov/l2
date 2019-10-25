@@ -157,6 +157,7 @@ def patients_search_card(request):
                      "phones": row.get_phones(),
                      "main_diagnosis": row.main_diagnosis,
                      "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs]})
+    print(row.individual.bd(), type(row.individual.bd()))
     return JsonResponse({"results": data})
 
 
