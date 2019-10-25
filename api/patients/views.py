@@ -154,7 +154,6 @@ def patients_search_card(request):
         born_date = row.individual.birthday
         age_current_year = utils.calculate_age(born_date, last_date)
         disp_data = sql_func.dispensarization_research(row.individual.sex, age_current_year, row.pk, d1, d2)
-        print(disp_data)
 
         data.append({"type_title": card_type.title,
                      "num": row.number,
