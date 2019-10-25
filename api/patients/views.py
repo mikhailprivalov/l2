@@ -18,6 +18,8 @@ from laboratory import settings
 from laboratory.utils import strdate, strdateiso
 from rmis_integration.client import Client
 from slog.models import Log
+from datetime import date, datetime
+from laboratory import utils
 
 
 def full_patient_search_data(p, query):
@@ -158,6 +160,12 @@ def patients_search_card(request):
                      "main_diagnosis": row.main_diagnosis,
                      "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs]})
     print(row.individual.bd(), type(row.individual.bd()))
+    current_year = strdate(utils.current_time(only_date=True))[-4:]
+    last_date = datetime.strptime(f'31.12.{current_year}', '%d.%m.%Y').date()
+    born_date = datetime.strptime(row.individual.bd(), '%d.%m.%Y').date()
+    age_year = utils.calculate_age(born_date, last_date)
+
+    print(last_date, born_date, age_year)
     return JsonResponse({"results": data})
 
 
