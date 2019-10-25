@@ -26,8 +26,7 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
 		   ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id 
 	    WHERE directions_napravleniya.client_id = %(client_p)s
 		 and directions_issledovaniya.research_id in (SELECT research_id FROM t_field) 
-		 and directions_issledovaniya.time_confirmation BETWEEN '2019-01-01 00:00:00 +08' 
-		 AND '2019-12-31 23:59:59 +08'
+		 and directions_issledovaniya.time_confirmation BETWEEN  %(start_p)s AND %(end_p)s
 		 ORDER BY directions_issledovaniya.time_confirmation DESC),
 	 t_research AS (SELECT directory_researches.id, directory_researches.title, 
 					directory_researches.short_title FROM directory_researches),

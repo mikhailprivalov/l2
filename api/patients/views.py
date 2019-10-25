@@ -20,6 +20,7 @@ from rmis_integration.client import Client
 from slog.models import Log
 from datetime import date, datetime
 from laboratory import utils
+from api import sql_func
 
 
 def full_patient_search_data(p, query):
@@ -140,10 +141,21 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
+    current_year = strdate(utils.current_time(only_date=True))[-4:]
+    last_date = datetime.strptime(f'31.12.{current_year}', '%d.%m.%Y').date()
+    date_start_end = utils.start_end_year(current_year)
+    d1 = date_start_end[0]
+    d2 = date_start_end[1]
+
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
         docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
                                        document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
             .distinct("pk", "number", "document_type", "serial").order_by('pk')
+        born_date = row.individual.birthday
+        age_current_year = utils.calculate_age(born_date, last_date)
+        disp_data = sql_func.dispensarization_research(row.individual.sex, age_current_year, row.pk, d1, d2)
+        print(disp_data)
+
         data.append({"type_title": card_type.title,
                      "num": row.number,
                      "is_rmis": row.base.is_rmis,
@@ -159,13 +171,7 @@ def patients_search_card(request):
                      "phones": row.get_phones(),
                      "main_diagnosis": row.main_diagnosis,
                      "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs]})
-    print(row.individual.bd(), type(row.individual.bd()))
-    current_year = strdate(utils.current_time(only_date=True))[-4:]
-    last_date = datetime.strptime(f'31.12.{current_year}', '%d.%m.%Y').date()
-    born_date = datetime.strptime(row.individual.bd(), '%d.%m.%Y').date()
-    age_year = utils.calculate_age(born_date, last_date)
 
-    print(last_date, born_date, age_year)
     return JsonResponse({"results": data})
 
 
