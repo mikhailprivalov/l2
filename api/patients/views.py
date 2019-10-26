@@ -15,11 +15,9 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, strdateiso
+from laboratory.utils import strdate, strdateiso, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
-from datetime import date, datetime
-from laboratory import utils
 from api import sql_func
 
 
@@ -141,9 +139,7 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
-    date_start_end = utils.start_end_year()
-    d1 = date_start_end[0]
-    d2 = date_start_end[1]
+    d1, d2 = start_end_year()
 
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
         docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,

@@ -102,7 +102,6 @@ class ServiceLocation(models.Model):
 class Researches(models.Model):
     """
     Вид исследования
-    Вид исследования
     """
     DIRECTION_FORMS = (
         (0, 'По умолчанию'),

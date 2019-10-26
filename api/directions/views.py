@@ -15,13 +15,12 @@ from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicRes
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime, strdate, tsdatetime, localtime
+from laboratory.utils import strdatetime, strdate, tsdatetime, localtime, start_end_year
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
-from laboratory import utils
 from api import sql_func
 
 
@@ -872,12 +871,10 @@ def directions_paraclinic_form(request):
                 response["researches"].append(iss)
             if response["has_doc_referral"]:
                 response["anamnesis"] = d.client.anamnesis_of_life
-                date_start_end = utils.start_end_year()
-                d1 = date_start_end[0]
-                d2 = date_start_end[1]
+
+                d1, d2 = start_end_year()
                 disp_data = sql_func.dispensarization_research(d.client.individual.sex, d.client.individual.age_for_year(),
                                                                d.client_id, d1, d2)
-
                 status_disp = 'finished'
                 if not disp_data:
                     status_disp = 'notneed'
