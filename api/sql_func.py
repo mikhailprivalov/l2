@@ -20,7 +20,8 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
 	t_iss AS
 	    (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr,  
 	    directions_napravleniya.data_sozdaniya, 
-	    directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation
+	    directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
+	    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
 	    FROM directions_issledovaniya
 	    LEFT JOIN directions_napravleniya 
 		   ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id 
@@ -32,14 +33,14 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
 					directory_researches.short_title FROM directory_researches),
      t_disp AS 
         (SELECT DISTINCT ON (t_field.research_id) t_field.research_id as res_id, t_field.sort_weight as sort,
-		client_id, napr, data_sozdaniya, t_iss.research_id, time_confirmation FROM t_field
+		client_id, napr, data_sozdaniya, t_iss.research_id, time_confirmation, date_confirm FROM t_field
 		LEFT JOIN t_iss ON t_field.research_id = t_iss.research_id)
 	
-	SELECT res_id, sort, napr, data_sozdaniya, time_confirmation, title, short_title 
+	SELECT res_id, sort, napr, time_confirmation, date_confirm, title, short_title 
 	FROM t_disp
     LEFT JOIN t_research ON t_disp.res_id = t_research.id
 	ORDER by sort
-        """, params={'sex_p': sex, 'age_p': age, 'client_p': client_id, 'start_p': d_start, 'end_p': d_end})
+        """, params={'sex_p': sex, 'age_p': age, 'client_p': client_id, 'start_p': d_start, 'end_p': d_end, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
