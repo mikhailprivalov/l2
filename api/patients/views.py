@@ -15,9 +15,10 @@ from clients.models import CardBase, Individual, Card, Document, DocumentType, D
     DispensaryReg, CardDocUsage, BenefitReg, BenefitType
 from contracts.models import Company
 from laboratory import settings
-from laboratory.utils import strdate, strdateiso
+from laboratory.utils import strdate, strdateiso, start_end_year
 from rmis_integration.client import Client
 from slog.models import Log
+from api import sql_func
 
 
 def full_patient_search_data(p, query):
@@ -138,10 +139,23 @@ def patients_search_card(request):
         if re.match(p3, query):
             cards = cards.filter(number=query)
 
+    d1, d2 = start_end_year()
+
     for row in cards.filter(is_archive=False).prefetch_related("individual").distinct():
         docs = Document.objects.filter(individual__pk=row.individual_id, is_active=True,
                                        document_type__title__in=['СНИЛС', 'Паспорт гражданина РФ', 'Полис ОМС']) \
             .distinct("pk", "number", "document_type", "serial").order_by('pk')
+        disp_data = sql_func.dispensarization_research(row.individual.sex, row.individual.age_for_year(), row.pk, d1, d2)
+
+        status_disp = 'finished'
+        if not disp_data:
+            status_disp = 'notneed'
+        else:
+            for i in disp_data:
+                if not i[4]:
+                    status_disp = 'need'
+                    break
+
         data.append({"type_title": card_type.title,
                      "num": row.number,
                      "is_rmis": row.base.is_rmis,
@@ -156,7 +170,10 @@ def patients_search_card(request):
                      "pk": row.pk,
                      "phones": row.get_phones(),
                      "main_diagnosis": row.main_diagnosis,
-                     "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs]})
+                     "docs": [{**model_to_dict(x), "type_title": x.document_type.title} for x in docs],
+                     "status_disp": status_disp,
+                     "disp_data": disp_data})
+
     return JsonResponse({"results": data})
 
 

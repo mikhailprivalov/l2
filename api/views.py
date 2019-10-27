@@ -919,7 +919,7 @@ def user_location(request):
     date = request_data["date"]
     d = {}
     rl = request.user.doctorprofile.rmis_location
-    if rl:
+    if rl and SettingManager.get("l2_rmis_queue", default='false', default_type='b'):
         from rmis_integration.client import Client
         c = Client(modules=['patients'])
         d = c.patients.get_reserves(date, rl)

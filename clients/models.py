@@ -1,5 +1,5 @@
 import sys
-from datetime import date
+from datetime import date, datetime
 
 import simplejson
 from dateutil.relativedelta import relativedelta
@@ -8,7 +8,7 @@ from django.db import models
 
 import slog.models as slog
 from appconf.manager import SettingManager
-from laboratory.utils import localtime
+from laboratory.utils import localtime, current_year
 from users.models import Speciality, DoctorProfile
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
@@ -276,6 +276,14 @@ class Individual(models.Model):
 
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
+
+
+    def age_for_year(self):
+    #подсчет возраста в рамках года
+        year_today = current_year()
+        last_date = datetime.strptime(f'31.12.{year_today}', '%d.%m.%Y').date()
+        born_date = self.birthday
+        return last_date.year - born_date.year - ((last_date.month, last_date.day) < (born_date.month, born_date.day))
 
     def age(self, iss=None, days_monthes_years=False):
         """

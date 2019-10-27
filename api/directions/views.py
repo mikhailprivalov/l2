@@ -15,12 +15,13 @@ from directions.models import Napravleniya, Issledovaniya, Result, ParaclinicRes
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField
 from laboratory import settings
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime, strdate, tsdatetime, localtime
+from laboratory.utils import strdatetime, strdate, tsdatetime, localtime, start_end_year
 from results.views import result_normal
 from rmis_integration.client import Client, get_direction_full_data_cache
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes
 from utils.dates import try_parse_range
+from api import sql_func
 
 
 @login_required
@@ -870,6 +871,21 @@ def directions_paraclinic_form(request):
                 response["researches"].append(iss)
             if response["has_doc_referral"]:
                 response["anamnesis"] = d.client.anamnesis_of_life
+
+                d1, d2 = start_end_year()
+                disp_data = sql_func.dispensarization_research(d.client.individual.sex, d.client.individual.age_for_year(),
+                                                               d.client_id, d1, d2)
+                status_disp = 'finished'
+                if not disp_data:
+                    status_disp = 'notneed'
+                else:
+                    for i in disp_data:
+                        if not i[4]:
+                            status_disp = 'need'
+                            break
+                response["status_disp"] = status_disp
+                response["disp_data"] = disp_data
+
             f = True
     if not f:
         response["message"] = "Направление не найдено"
