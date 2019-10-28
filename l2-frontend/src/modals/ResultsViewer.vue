@@ -105,59 +105,66 @@
 </template>
 
 <script>
-  import Modal from '../ui-cards/Modal'
-  import directions_point from '../api/directions-point'
-  import * as action_types from '../store/action-types'
+    import Modal from '../ui-cards/Modal'
+    import directions_point from '../api/directions-point'
+    import * as action_types from '../store/action-types'
 
-  export default {
-    name: 'results-viewer',
-    components: {Modal},
-    props: {
-      pk: {
-        type: Number,
-        required: true
-      },
-    },
-    data() {
-      return {
-        data: {}
-      }
-    },
-    created() {
-      let vm = this
-      vm.$store.dispatch(action_types.INC_LOADING).then()
-      directions_point.getResults(this, ['pk']).then(data => {
-        if (!data.full) {
-          alert('Результаты подтверждены не полностью. Данные могут быть изменены')
+    export default {
+        name: 'results-viewer',
+        components: {Modal},
+        props: {
+            pk: {
+                type: Number,
+                required: true
+            },
+        },
+        data() {
+            return {
+                data: {}
+            }
+        },
+        created() {
+            let vm = this
+            vm.$store.dispatch(action_types.INC_LOADING).then()
+            directions_point.getResults(this, ['pk']).then(data => {
+                if (data.desc) {
+                    this.printResults()
+                    this.hide_modal()
+                    return
+                }
+                if (!data.full) {
+                    alert('Результаты подтверждены не полностью. Данные могут быть изменены')
+                }
+                this.data = data
+            }).finally(() => {
+                vm.$store.dispatch(action_types.DEC_LOADING).then()
+            })
+        },
+        methods: {
+            hide_modal() {
+                this.$root.$emit('hide_results')
+                if (this.$refs.modal) {
+                    this.$refs.modal.$el.style.display = 'none'
+                }
+            },
+            selectResults() {
+                selectTextEl(this.$refs.rc)
+            },
+            printResults() {
+                this.$root.$emit('print:results', [this.pk])
+            },
+            copyResults() {
+                selectTextEl(this.$refs.rc)
+                document.execCommand('copy')
+                clearselection()
+                okblink(this.$refs.rc)
+                okmessage('Результаты скопированы', 'Ок')
+            },
+            need_units_and_refs(fraction) {
+                return fraction.units !== '' || JSON.stringify(fraction.ref_m) !== JSON.stringify({}) && JSON.stringify(fraction.ref_m) !== JSON.stringify({'Все': ''}) || JSON.stringify(fraction.ref_f) !== JSON.stringify({}) && JSON.stringify(fraction.ref_f) !== JSON.stringify({'Все': ''})
+            }
         }
-        this.data = data
-      }).finally(() => {
-        vm.$store.dispatch(action_types.DEC_LOADING).then()
-      })
-    },
-    methods: {
-      hide_modal() {
-        this.$root.$emit('hide_results')
-        this.$refs.modal.$el.style.display = 'none'
-      },
-      selectResults() {
-        selectTextEl(this.$refs.rc)
-      },
-      printResults() {
-        this.$root.$emit('print:results', [this.pk])
-      },
-      copyResults() {
-        selectTextEl(this.$refs.rc)
-        document.execCommand('copy')
-        clearselection()
-        okblink(this.$refs.rc)
-        okmessage('Результаты скопированы', 'Ок')
-      },
-      need_units_and_refs(fraction) {
-        return fraction.units !== '' || JSON.stringify(fraction.ref_m) !== JSON.stringify({}) && JSON.stringify(fraction.ref_m) !== JSON.stringify({'Все': ''}) || JSON.stringify(fraction.ref_f) !== JSON.stringify({}) && JSON.stringify(fraction.ref_f) !== JSON.stringify({'Все': ''})
-      }
     }
-  }
 </script>
 
 <style scoped lang="scss">

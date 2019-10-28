@@ -854,7 +854,7 @@ def user_save_view(request):
     message = ""
     ud = request_data["user_data"]
     username = ud["username"]
-    rmis_location = ud["rmis_location"].strip() or None
+    rmis_location = str(ud["rmis_location"]).strip() or None
     rmis_login = ud["rmis_login"].strip() or None
     rmis_password = ud["rmis_password"].strip() or None
     npk = pk

@@ -179,6 +179,7 @@ def directions_cancel(request):
 @login_required
 def directions_results(request):
     result = {"ok": False,
+              "desc": False,
               "direction": {"pk": -1, "doc": "", "date": ""},
               "client": {},
               "full": False}
@@ -187,6 +188,10 @@ def directions_results(request):
     if Napravleniya.objects.filter(pk=pk).exists():
         napr = Napravleniya.objects.get(pk=pk)
         dates = {}
+        for iss in Issledovaniya.objects.filter(napravleniye=napr):
+            if iss.research.desc:
+                result["desc"] = True
+                return JsonResponse(result)
         for iss in Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))

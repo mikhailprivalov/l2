@@ -150,7 +150,7 @@ new Vue({
         errmessage('Не выбраны исследования')
         return
       }
-      if (operator && ofname === -1) {
+      if (operator && ofname < 0) {
         errmessage('Не выбрано, от чьего имени выписываются направления')
         return
       }
