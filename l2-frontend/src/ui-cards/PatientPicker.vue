@@ -76,43 +76,14 @@
                 <button class="btn last btn-blue-nb nbr" :class="{[`disp_${selected_card.status_disp}`]: true}"
                         ref="disp"
                         type="button" v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
-                                                animateFill: false, theme : 'light bordered',
-                                                flipBehavior: ['bottom'],
+                                                theme : 'light bordered',
+                                                duration : 0,
                                                 sticky: true,
                                                 trigger: 'click',
                                                 interactive : true, html: '#template-disp' }"
                         v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
                   Д
                 </button>
-                <div id="template-disp"
-                     class="disp"
-                     v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
-                  <strong>Диспансеризация</strong><br/>
-                  <ul style="padding-left: 25px;text-align: left">
-                    <li v-for="d in selected_card.disp_data">
-                      <a href="#" @click.prevent="add_researches([d[0]])">
-                        {{d[5]}}
-                      </a>
-                      –
-                      <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
-                        [{{!!d[2] ? 'пройдено' : 'требуется' }}]
-                      </span>
-                      <span v-if="!!d[2]">
-                        –
-                        <a href="#" @click.prevent="show_results(d[2])">
-                          результат
-                        </a>
-                      </span>
-                    </li>
-                  </ul>
-                  <div>
-                    <a href="#"
-                       v-if="selected_card.status_disp === 'need'"
-                       @click.prevent="add_researches(selected_card.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
-                      Выбрать требуемые
-                    </a>
-                  </div>
-                </div>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Льготы пациента" @click="open_benefit()"
@@ -222,6 +193,39 @@
         </div>
       </div>
     </modal>
+    <div id="template-disp"
+         class="disp"
+         v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
+      <strong>Диспансеризация</strong><br/>
+      <ul style="padding-left: 25px;text-align: left">
+        <li v-for="d in selected_card.disp_data">
+          <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
+            <span v-if="!d[2]">требуется</span>
+            <a v-else href="#" @click.prevent="show_results([d[2]])">
+              пройдено
+            </a>
+          </span>
+
+          <a href="#" @click.prevent="add_researches([d[0]])">
+            {{d[5]}}
+          </a>
+        </li>
+      </ul>
+      <div>
+        <a href="#"
+           class="btn btn-blue-nb"
+           v-if="selected_card.status_disp === 'need'"
+           @click.prevent="add_researches(selected_card.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
+          Выбрать требуемые
+        </a>
+        <a href="#"
+           class="btn btn-blue-nb"
+           v-else
+           @click.prevent="show_results(selected_card.disp_data.map(d => d[0]))">
+          Печать всех результатов
+        </a>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -453,7 +457,7 @@
                     }
                 }
                 if (!this.is_doc && o.length > 0) {
-                    o = [{label: 'Выберите врача', value: -2}, ...o];
+                    o = [{label: 'Выберите врача', value: -2}, ...o]
                 }
                 return o
             },
@@ -743,7 +747,7 @@
                     this.$store.dispatch(action_types.DISABLE_LOADING).then()
                 })
             },
-            add_researches(pks, full=false) {
+            add_researches(pks, full = false) {
                 for (const pk of pks) {
                     this.$root.$emit('researches-picker:add_research', pk)
                 }
@@ -755,7 +759,7 @@
                 }
             },
             show_results(pk) {
-                this.$root.$emit('show_results', pk)
+                this.$root.$emit('print:results', pk)
             }
         }
     }
@@ -1064,7 +1068,7 @@
   }
 
   .disp {
-    a {
+    a:not(.btn):not(.disp_row) {
       color: #0d0d0d !important;
       text-decoration: dotted underline;
 
@@ -1073,17 +1077,24 @@
       }
     }
 
-    &_need, &_need:focus, &_need:active, &_need:hover  {
+    &_need, &_need:focus, &_need:active, &_need:hover {
       background: #F4D03F !important;
     }
 
     &_finished, &_finished:focus, &_finished:active, &_finished:hover {
       background: #049372 !important;
     }
+
+    .btn {
+      width: 100%;
+      padding: 4px;
+    }
   }
 
   .disp_row {
     font-weight: bold;
+    display: inline-block;
+    width: 76px;
 
     &_need {
       color: #da3b6c !important;
