@@ -47,14 +47,13 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
     return row
 
 
-def get_fraction_result(client_id, fraction_id):
+def get_fraction_result(client_id, fraction_id, count=1):
     """
     на входе: id-фракции, id-карты,
     выход: последний результат исследования"
     :return:
     """
 
-    get_count_results = SettingManager.get("count_fractions", default='1', default_type='i')
     with connection.cursor() as cursor:
         cursor.execute("""
         SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
@@ -70,7 +69,7 @@ def get_fraction_result(client_id, fraction_id):
 		 and directions_result.fraction_id = %(fraction_p)s
 		 and directions_issledovaniya.time_confirmation is not NULL
 		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s 
-        """, params={'client_p': client_id, 'fraction_p': fraction_id, 'count_p': get_count_results, 'tz': TIME_ZONE})
+        """, params={'client_p': client_id, 'fraction_p': fraction_id, 'count_p': count, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
