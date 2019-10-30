@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from appconf.manager import SettingManager
 
 
 def dispensarization_research(sex, age, client_id, d_start, d_end):
@@ -52,9 +53,11 @@ def get_fraction_result(client_id, fraction_id):
     выход: последний результат исследования"
     :return:
     """
+
+    get_count_results = SettingManager.get("count_fractions", default='1', default_type='i')
     with connection.cursor() as cursor:
         cursor.execute("""
-        SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr,   
+        SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
 	    directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
 	    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
 		directions_result.value, directions_result.fraction_id
@@ -66,8 +69,8 @@ def get_fraction_result(client_id, fraction_id):
 	    WHERE directions_napravleniya.client_id = %(client_p)s
 		 and directions_result.fraction_id = %(fraction_p)s
 		 and directions_issledovaniya.time_confirmation is not NULL
-		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT 3 
-        """, params={'client_p': client_id, 'fraction_p': fraction_id, 'tz': TIME_ZONE})
+		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s 
+        """, params={'client_p': client_id, 'fraction_p': fraction_id, 'count_p': get_count_results, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
