@@ -66,7 +66,7 @@ def get_fraction_result(client_id, fraction_id):
 	    WHERE directions_napravleniya.client_id = %(client_p)s
 		 and directions_result.fraction_id = %(fraction_p)s
 		 and directions_issledovaniya.time_confirmation is not NULL
-		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT 1 
+		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT 3 
         """, params={'client_p': client_id, 'fraction_p': fraction_id, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
