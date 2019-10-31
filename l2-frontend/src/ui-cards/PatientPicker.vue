@@ -137,6 +137,39 @@
         <slot name="for_card" v-if="loaded" style="margin-top: 5px"/>
         <slot name="for_all" style="margin-top: 5px"/>
       </div>
+      <div id="template-disp"
+           class="disp"
+           v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
+        <strong>Диспансеризация</strong><br/>
+        <ul style="padding-left: 25px;text-align: left">
+          <li v-for="d in selected_card.disp_data">
+          <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
+            <span v-if="!d[2]">требуется</span>
+            <a v-else href="#" @click.prevent="show_results([d[2]])">
+              пройдено
+            </a>
+          </span>
+
+            <a href="#" @click.prevent="add_researches([d[0]])">
+              {{d[5]}}
+            </a>
+          </li>
+        </ul>
+        <div>
+          <a href="#"
+             class="btn btn-blue-nb"
+             v-if="selected_card.status_disp === 'need'"
+             @click.prevent="add_researches(selected_card.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
+            Выбрать требуемые
+          </a>
+          <a href="#"
+             class="btn btn-blue-nb"
+             v-else
+             @click.prevent="show_results(selected_card.disp_data.map(d => d[2]))">
+            Печать всех результатов
+          </a>
+        </div>
+      </div>
     </div>
     <div class="bottom-picker" v-if="bottom_picker === 'true'">
       <slot name="for_card_bottom"/>
@@ -193,39 +226,6 @@
         </div>
       </div>
     </modal>
-    <div id="template-disp"
-         class="disp"
-         v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
-      <strong>Диспансеризация</strong><br/>
-      <ul style="padding-left: 25px;text-align: left">
-        <li v-for="d in selected_card.disp_data">
-          <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
-            <span v-if="!d[2]">требуется</span>
-            <a v-else href="#" @click.prevent="show_results([d[2]])">
-              пройдено
-            </a>
-          </span>
-
-          <a href="#" @click.prevent="add_researches([d[0]])">
-            {{d[5]}}
-          </a>
-        </li>
-      </ul>
-      <div>
-        <a href="#"
-           class="btn btn-blue-nb"
-           v-if="selected_card.status_disp === 'need'"
-           @click.prevent="add_researches(selected_card.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
-          Выбрать требуемые
-        </a>
-        <a href="#"
-           class="btn btn-blue-nb"
-           v-else
-           @click.prevent="show_results(selected_card.disp_data.map(d => d[0]))">
-          Печать всех результатов
-        </a>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -1096,11 +1096,11 @@
     display: inline-block;
     width: 76px;
 
-    &_need {
+    &_need, &_need a {
       color: #da3b6c !important;
     }
 
-    &_finished {
+    &_finished, &_finished a {
       color: #049372 !important;
     }
   }
