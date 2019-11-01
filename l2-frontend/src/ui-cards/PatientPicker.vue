@@ -1116,6 +1116,7 @@
 </style>
 
 <style>
+  /* TODO: при добавлении новых тултипов проверить */
   #tippy-46 {
     transform: translate3d(253px, 166px, 0) !important;
   }
