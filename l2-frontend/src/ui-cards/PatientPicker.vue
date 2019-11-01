@@ -75,9 +75,10 @@
               <div v-if="selected_base.internal_type && l2_cards" class="internal_type">
                 <button class="btn last btn-blue-nb nbr" :class="{[`disp_${selected_card.status_disp}`]: true}"
                         ref="disp"
-                        type="button" v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                        type="button" v-tippy="{ placement : 'bottom', arrow: false, reactive : true,
                                                 theme : 'light bordered',
                                                 duration : 0,
+                                                distance: 4,
                                                 sticky: true,
                                                 trigger: 'click',
                                                 interactive : true, html: '#template-disp' }"
@@ -145,7 +146,7 @@
           <li v-for="d in selected_card.disp_data">
           <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
             <span v-if="!d[2]">требуется</span>
-            <a v-else href="#" @click.prevent="show_results([d[2]])">
+            <a v-else href="#" @click.prevent="show_results([d[2]])" class="not-black">
               пройдено
             </a>
           </span>
@@ -1068,7 +1069,7 @@
   }
 
   .disp {
-    a:not(.btn):not(.disp_row) {
+    a:not(.btn):not(.not-black) {
       color: #0d0d0d !important;
       text-decoration: dotted underline;
 
@@ -1097,11 +1098,25 @@
     width: 76px;
 
     &_need, &_need a {
-      color: #da3b6c !important;
+      color: #ff0000 !important;
     }
 
     &_finished, &_finished a {
       color: #049372 !important;
     }
+
+    a {
+      text-decoration: dotted underline;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+</style>
+
+<style>
+  #tippy-46 {
+    transform: translate3d(253px, 166px, 0) !important;
   }
 </style>
