@@ -24,6 +24,7 @@ from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
 from laboratory import utils
 from utils import tree_directions
+from anytree import Node, RenderTree
 
 
 def form_01(request_data):
@@ -393,22 +394,56 @@ def form_02(request_data):
         root_dir = tree_directions.root_direction(dir)
         num_iss = (root_dir[-1][-2])
         tree_dir = tree_directions.tree_direction(num_iss)
+        final_tree = {}
+        #
+        #
+        # print(tree_dir)
         if len(tree_dir) > 1:
-            objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
-            for i in tree_dir:
-                s = i[-1] * 5
-                if len(i[9]) > 47:
-                    research = i[9][:47] + '...'
+            # objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
+
+            for j in tree_dir:
+                if len(j[9]) > 47:
+                    research = j[9][:47] + '...'
                 else:
-                    research = i[9]
-                diagnos = '  --' + i[-2] + '--' if i[-2] else ""
-                if dir == i[0]:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}{}<font face="Symbola" size=10>\u2713</font>'.
-                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos, 3 * space_symbol),
-                                          styleBold))
+                    research = j[9]
+                diagnos = '  --' + j[-2] + '--' if j[-2] else ""
+                temp_s = f"{j[0]} - {research}. Создано {j[1]}({j[2]}){diagnos}"
+                if j[3] == None:
+                    node_dir = Node("Структура направлений")
+                    final_tree[j[5]] = Node(temp_s, parent=node_dir)
                 else:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.
-                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos), styleT))
+                    final_tree[j[5]] = Node(temp_s, parent=final_tree.get(j[3]))
+        x = 0
+        for row in RenderTree(node_dir):
+            x += 1
+            if x >= 3:
+                objs.append(Paragraph('{}{}{}'.format(space_symbol*5, row.pre, row.node.name), styleT))
+            else:
+                objs.append(Paragraph('{}{}'.format(row.pre, row.node.name), styleT))
+
+
+        # for pre, fill, node in RenderTree(node_dir):
+        #     print("%s%s" % (pre, node.name))
+        #     objs.append(Paragraph('{}{}'.
+        #                           format(pre, node.name), styleT))
+
+        #
+        # if len(tree_dir) > 1:
+        #     objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
+        #     for i in tree_dir:
+        #         s = i[-1] * 5
+        #         if len(i[9]) > 47:
+        #             research = i[9][:47] + '...'
+        #         else:
+        #             research = i[9]
+        #         diagnos = '  --' + i[-2] + '--' if i[-2] else ""
+        #         if dir == i[0]:
+        #             objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}{}<font face="Symbola" size=10>\u2713</font>'.
+        #                                   format(s * space_symbol, i[0], research, i[1], i[2], diagnos, 3 * space_symbol),
+        #                                   styleBold))
+        #         else:
+        #             objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.
+        #                                   format(s * space_symbol, i[0], research, i[1], i[2], diagnos), styleT))
 
 
         objs.append(PageBreak())
