@@ -53,7 +53,7 @@ pymorphy2==0.8
 pymorphy2-dicts==2.4.393442.3710985
 pymorphy2-dicts-ru==2.4.404381.4453942
 PyPDF2==1.26.0
-python-dateutil==2.8.0
+python-dateutil==2.8.1
 python3-memcached==1.51
 pytils==0.3
 pytz==2019.3
