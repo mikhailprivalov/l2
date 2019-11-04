@@ -78,8 +78,18 @@
                         type="button" v-tippy="{ placement : 'bottom', arrow: false, reactive : true,
                                                 theme : 'light bordered',
                                                 duration : 0,
-                                                distance: 4,
+                                                arrow: true,
                                                 sticky: true,
+                                                popperOptions: {
+                                                  modifiers: {
+                                                    preventOverflow: {
+                                                      enabled: false
+                                                    },
+                                                    hide: {
+                                                      enabled: false
+                                                    }
+                                                  }
+                                                },
                                                 trigger: 'click',
                                                 interactive : true, html: '#template-disp' }"
                         v-if="selected_card.pk && selected_card.status_disp && selected_card.status_disp !== 'notneed'">
@@ -1112,12 +1122,5 @@
         text-decoration: none;
       }
     }
-  }
-</style>
-
-<style>
-  /* TODO: при добавлении новых тултипов проверить */
-  #tippy-46 {
-    transform: translate3d(253px, 166px, 0) !important;
   }
 </style>

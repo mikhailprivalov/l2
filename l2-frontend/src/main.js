@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import VueTippy from 'vue-tippy'
+import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
@@ -21,6 +21,7 @@ Vue.use(VueAutosize)
 Vue.use(VueTippy)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
+Vue.use(Tippy)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
