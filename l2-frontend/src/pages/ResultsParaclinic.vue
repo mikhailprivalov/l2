@@ -161,6 +161,39 @@
                   <li v-if="benefit_rows.length === 0">нет активных записей</li>
                 </ul>
               </div>
+              <a style="margin-left: 3px"
+                 href="#"
+                 :class="{[`disp_${data.status_disp}`]: true}"
+                 v-if="data.card_internal && data.has_doc_referral"
+                 v-tippy="{ placement : 'bottom', arrow: true, reactive : true,
+                    theme : 'light bordered',
+                    html: '#template-disp',
+                    interactive : true }">Д</a>
+              <div id="template-disp"
+                   class="disp"
+                   v-if="data.card_internal && data.status_disp !== 'notneed'">
+                <strong>Диспансеризация</strong><br/>
+                <ul style="padding-left: 25px;text-align: left">
+                  <li v-for="d in data.disp_data">
+                      <span :class="{disp_row: true, [!!d[2] ? 'disp_row_finished' : 'disp_row_need']: true}">
+                        <span v-if="!d[2]">требуется</span>
+                        <a v-else href="#" @click.prevent="show_results([d[2]])" class="not-black">
+                          пройдено
+                        </a>
+                      </span>
+
+                    {{d[5]}}
+                  </li>
+                </ul>
+                <div>
+                  <a href="#"
+                     class="btn btn-blue-nb"
+                     v-if="data.status_disp === 'finished'"
+                     @click.prevent="show_results(data.disp_data.map(d => d[2]))">
+                    Печать всех результатов
+                  </a>
+                </div>
+              </div>
             </div>
             <div class="text-ell" :title="data.patient.doc" v-if="!data.patient.imported_from_rmis">Лечащий врач:
               {{data.patient.doc}}
@@ -1214,6 +1247,20 @@
                 }
                 this.slot.data.direction_service = pk
             },
+            add_researches(pks, full = false) {
+                // for (const pk of pks) {
+                //     this.$root.$emit('researches-picker:add_research', pk)
+                // }
+                // if (full) {
+                //     if (this.$refs.disp) {
+                //         $(this.$refs.disp).click()
+                //         $(this.$refs.disp).blur()
+                //     }
+                // }
+            },
+            show_results(pk) {
+                this.$root.$emit('print:results', pk)
+            }
         },
         computed: {
             date_to_form() {
@@ -1932,5 +1979,53 @@
     margin-left: 3px;
     color: #049372;
     font-weight: 600;
+  }
+
+  .disp {
+    a:not(.btn):not(.not-black) {
+      color: #0d0d0d !important;
+      text-decoration: dotted underline;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+
+    &_need, &_need:focus, &_need:active, &_need:hover {
+      color: #F4D03F !important;
+      text-shadow: 0 0 4px rgba(#F4D03F, .6);
+    }
+
+    &_finished, &_finished:focus, &_finished:active, &_finished:hover {
+      color: #049372 !important;
+      text-shadow: 0 0 4px rgba(#049372, .6);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 4px;
+    }
+  }
+
+  .disp_row {
+    font-weight: bold;
+    display: inline-block;
+    width: 76px;
+
+    &_need, &_need a {
+      color: #ff0000 !important;
+    }
+
+    &_finished, &_finished a {
+      color: #049372 !important;
+    }
+
+    a {
+      text-decoration: dotted underline;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
   }
 </style>
