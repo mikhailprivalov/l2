@@ -63,12 +63,12 @@ def tree_direction(iss):
         cursor.execute("""WITH RECURSIVE r AS (
             SELECT nn.id, 
             to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
-            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_create,
+            to_char(nn.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
             nn.parent_id, 
             ii.napravleniye_id,
             ii.id as iss, 
             to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
-            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm, 
+            to_char(ii.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm, 
             ii.research_id, ddrr.title,
             ii.diagnos, 1 AS level
             FROM directions_issledovaniya ii 
@@ -83,12 +83,12 @@ def tree_direction(iss):
             
             SELECT n.id, 
                   to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
-                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_create,
+                  to_char(n.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') as time_create,
                   n.parent_id,
                   i.napravleniye_id,
                   i.id, 
                   to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm, 
-                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') as time_confirm,
+                  to_char(i.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm,
                   i.research_id, dr.title,
                   i.diagnos, 
                   r.level + 1 AS level

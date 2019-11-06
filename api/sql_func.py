@@ -1,5 +1,6 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
+from appconf.manager import SettingManager
 
 
 def dispensarization_research(sex, age, client_id, d_start, d_end):
@@ -41,6 +42,34 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
     LEFT JOIN t_research ON t_disp.res_id = t_research.id
 	ORDER by sort
         """, params={'sex_p': sex, 'age_p': age, 'client_p': client_id, 'start_p': d_start, 'end_p': d_end, 'tz': TIME_ZONE})
+
+        row = cursor.fetchall()
+    return row
+
+
+def get_fraction_result(client_id, fraction_id, count=1):
+    """
+    на входе: id-фракции, id-карты,
+    выход: последний результат исследования"
+    :return:
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
+	    directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
+	    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+		directions_result.value, directions_result.fraction_id
+	    FROM directions_issledovaniya
+	    LEFT JOIN directions_napravleniya 
+		   ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+		LEFT JOIN directions_result
+		   ON directions_issledovaniya.id=directions_result.issledovaniye_id
+	    WHERE directions_napravleniya.client_id = %(client_p)s
+		 and directions_result.fraction_id = %(fraction_p)s
+		 and directions_issledovaniya.time_confirmation is not NULL
+		 ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s 
+        """, params={'client_p': client_id, 'fraction_p': fraction_id, 'count_p': count, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
