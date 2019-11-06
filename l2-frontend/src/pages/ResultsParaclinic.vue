@@ -182,13 +182,21 @@
                         </a>
                       </span>
 
-                    {{d[5]}}
+                    <a href="#" @click.prevent="add_researches(data.researches[0], [d[0]])">
+                      {{d[5]}}
+                    </a>
                   </li>
                 </ul>
                 <div>
                   <a href="#"
                      class="btn btn-blue-nb"
-                     v-if="data.status_disp === 'finished'"
+                     v-if="data.status_disp === 'need'"
+                     @click.prevent="add_researches(data.researches[0], data.disp_data.filter(d => !d[2]).map(d => d[0]), true)">
+                    Выбрать требуемые
+                  </a>
+                  <a href="#"
+                     class="btn btn-blue-nb"
+                     v-else
                      @click.prevent="show_results(data.disp_data.map(d => d[2]))">
                     Печать всех результатов
                   </a>
@@ -1247,16 +1255,13 @@
                 }
                 this.slot.data.direction_service = pk
             },
-            add_researches(pks, full = false) {
-                // for (const pk of pks) {
-                //     this.$root.$emit('researches-picker:add_research', pk)
-                // }
-                // if (full) {
-                //     if (this.$refs.disp) {
-                //         $(this.$refs.disp).click()
-                //         $(this.$refs.disp).blur()
-                //     }
-                // }
+            add_researches(row, pks) {
+                this.create_directions(row);
+                setTimeout(() => {
+                    for (const pk of pks) {
+                        this.$root.$emit('researches-picker:add_researchcd', pk)
+                    }
+                }, 300)
             },
             show_results(pk) {
                 this.$root.$emit('print:results', pk)
