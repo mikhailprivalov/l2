@@ -228,6 +228,7 @@ class ParaclinicInputField(models.Model):
         (8, 'maybe_onco'),
         (9, 'List'),
         (10, 'Dict'),
+        (11, 'Fraction'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -242,6 +243,18 @@ class ParaclinicInputField(models.Model):
     for_talon = models.BooleanField(default=False, blank=True)
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=255, blank=True, default='')
+
+    def get_title(self):
+        titles = []
+        if self.title:
+            titles.append(self.title)
+        if self.field_type == 11 and Fractions.objects.filter(pk=self.default_value).exists():
+            f = Fractions.objects.get(pk=self.default_value)
+            titles.append(f.research.get_title())
+            if f.title not in titles:
+                titles[-1] = titles[-1] + ' – ' + f.title
+        title = ', '.join(titles)
+        return title
 
 
 class ParaclinicTemplateName(models.Model):

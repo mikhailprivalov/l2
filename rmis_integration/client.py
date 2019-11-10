@@ -997,7 +997,7 @@ class Directions(BaseRequester):
                                                 vv = v.split('-')
                                                 if len(vv) == 3:
                                                     v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                            xresult += protocol_row.replace("{{фракция}}", y.field.title).replace(
+                                            xresult += protocol_row.replace("{{фракция}}", y.field.get_title()).replace(
                                                 "{{значение}}", v)
                                     xresult = xresult.replace("{{едизм}}", "").replace("<sub>", "")\
                                         .replace("</sub>", "").replace("<font>", "").replace("</font>", "")

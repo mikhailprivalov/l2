@@ -386,3 +386,9 @@ def fast_template_save(request):
             if i.field_type in [0, 2]:
                 ParaclinicTemplateField(template_name=p, input_field=i, value=data["fields"][pk]).save()
     return JsonResponse({"pk": p.pk})
+
+
+def fraction_title(request):
+    request_data = json.loads(request.body)
+    fraction = Fractions.objects.get(pk=request_data["pk"])
+    return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.units})
