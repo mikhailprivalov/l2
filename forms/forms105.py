@@ -24,6 +24,8 @@ from appconf.manager import SettingManager
 from directions.models import Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, ParaclinicResult
 from laboratory import utils
 from utils import tree_directions
+from anytree import Node, RenderTree
+import re
 
 
 def form_01(request_data):
@@ -201,6 +203,13 @@ def form_02(request_data):
     -------------------------------
     Вход: Направление.
     Выходные: форма
+
+    в файле .....\Lib\site-packages\anytree\render.py
+        class ContStyle(AbstractStyle):
+        необходимое мотод super сделать так:(изменить символы)
+                super(ContStyle, self).__init__(u'\u2063   ',
+                                        u'\u2063   ',
+                                        u'\u2063   ')
     """
 
     #получить направления
@@ -393,31 +402,37 @@ def form_02(request_data):
         root_dir = tree_directions.root_direction(dir)
         num_iss = (root_dir[-1][-2])
         tree_dir = tree_directions.tree_direction(num_iss)
-        if len(tree_dir) > 1:
-            objs.append(Paragraph('<font size=11>Структура направлений:</font>', styleBold))
-            for i in tree_dir:
-                s = i[-1] * 5
-                if len(i[9]) > 47:
-                    research = i[9][:47] + '...'
-                else:
-                    research = i[9]
-                diagnos = '  --' + i[-2] + '--' if i[-2] else ""
-                if dir == i[0]:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}{}<font face="Symbola" size=10>\u2713</font>'.
-                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos, 3 * space_symbol),
-                                          styleBold))
-                else:
-                    objs.append(Paragraph('{} №{} - {}. Создано {} ({}){}'.
-                                          format(s * space_symbol, i[0], research, i[1], i[2], diagnos), styleT))
+        final_tree = {}
+        pattern = re.compile('<font face=\"Symbola\" size=10>\u2713</font>')
 
+        node_dir = Node("Структура направлений")
+        for j in tree_dir:
+            if len(j[9]) > 47:
+                research = j[9][:47] + '...'
+            else:
+                research = j[9]
+            diagnos = '  --' + j[-2] if j[-2] else ""
+            temp_s = f"{j[0]} - {research}. Создано {j[1]} в {j[2]} {diagnos}"
+            if dir == j[0]:
+                temp_s = f"{temp_s} -- <font face=\"Symbola\" size=10>\u2713</font>"
+            if not j[3]:
+                final_tree[j[5]] = Node(temp_s, parent=node_dir)
+            else:
+                final_tree[j[5]] = Node(temp_s, parent=final_tree.get(j[3]))
+
+        counter = 0
+        for row in RenderTree(node_dir):
+            counter += 1
+            result = pattern.search(row.node.name)
+            current_style = styleBold if result else styleT
+            count_space = 7 if counter >= 3 else 0
+            para = Paragraph('{}{}{}'.format(space_symbol * count_space, row.pre, row.node.name), current_style)
+            objs.append(para)
 
         objs.append(PageBreak())
-
 
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
-
-
 
     return pdf

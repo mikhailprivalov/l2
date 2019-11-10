@@ -1,13 +1,9 @@
 import Vue from 'vue'
-import VueTippy from 'vue-tippy'
+import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min'
 import store from './store'
 import * as action_types from './store/action-types'
 import * as mutation_types from './store/mutation-types'
 import directions_point from './api/directions-point'
-// import { Steps, Step } from 'element-ui'
-import 'element-ui/lib/theme-chalk/steps.css'
-import 'element-ui/lib/theme-chalk/step.css'
-import 'element-ui/lib/theme-chalk/icon.css'
 import VueAutosize from 'vue-autosize';
 import VuejsDialog from 'vuejs-dialog';
 import VueCollapse from 'vue2-collapse'
@@ -23,10 +19,9 @@ Vue.use(VuejsDialog, {
 });
 Vue.use(VueAutosize)
 Vue.use(VueTippy)
-// Vue.use(Steps)
-// Vue.use(Step)
 Vue.use(VueInputMask)
 Vue.use(VueCollapse)
+Vue.use(Tippy)
 
 const promiseFinally = require('promise.prototype.finally');
 Vue.dialog.registerComponent('replace-append-modal', ReplaceAppendModal);
@@ -150,7 +145,7 @@ new Vue({
         errmessage('Не выбраны исследования')
         return
       }
-      if (operator && ofname === -1) {
+      if (operator && ofname < 0) {
         errmessage('Не выбрано, от чьего имени выписываются направления')
         return
       }

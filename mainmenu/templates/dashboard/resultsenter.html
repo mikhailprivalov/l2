@@ -8,7 +8,7 @@
             <ul class="dropdown-menu" role="menu" style="z-index: 10000">
                 {% for v in labs %}
                     {% if v.pk != lab.pk %}
-                    <li><a href="/results/enter?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
+                        <li><a href="/results/enter?lab_pk={{ v.pk }}">{{ v.title }}</a></li>
                     {% endif %}
                 {% endfor %}
             </ul>
@@ -18,9 +18,12 @@
 {% block content %}
     <div class="col-md-4 col-lg-3" style="padding-right: 0">
         <div class="fastlinks">
-            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="openexeclist();return false">Лист исполнения</a>&nbsp;&nbsp;
-            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;
-            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="dayprint();return false">Печать результатов за день</a></div>
+            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="openexeclist();return false">Лист
+                исполнения</a>&nbsp;&nbsp;
+            <a href="#" style="word-break: keep-all; white-space: nowrap"
+               onclick="openjournal();return false">Журнал</a>&nbsp;&nbsp;
+            <a href="#" style="word-break: keep-all; white-space: nowrap" onclick="dayprint();return false">Печать
+                результатов за день</a></div>
         <div class="panel panel-flt m5" style="margin-bottom: 10px">
             <div class="panel-body" style="padding:10px;">
                 <form autocomplete="off" onsubmit="return false;">
@@ -148,11 +151,11 @@
                 <td colspan="3"><span class="dir-datafield" id="client_cardnum_nohistory"></span></td>
             </tr>
             <tr title="Лечащий врач" class="show-lv">
-                <th >Леч. врач</th>
+                <th>Леч. врач</th>
                 <td colspan="3"><span class="dir-datafield" id="directioner"></span></td>
             </tr>
             <tr class="show-lv">
-                <th >Отделение</th>
+                <th>Отделение</th>
                 <td colspan="3"><span class="dir-datafield" id="otd"></span></td>
             </tr>
             <tr class="show-rmis">
@@ -413,7 +416,7 @@
                         <div class="col-xs-6">
                             <label style="width: 100%">
                                 Ёмкость:<br/><select class="form-control" style="width: 100%"
-                                                      id="fillform-tubes"></select>
+                                                     id="fillform-tubes"></select>
                             </label>
                         </div>
                         <div class="col-xs-6">
@@ -509,6 +512,9 @@
             font-size: 12px;
             text-align: right;
             padding-bottom: 3px;
+            position: absolute;
+            right: 3px;
+            top: 0;
         }
 
         .active .status {
@@ -735,7 +741,10 @@
         }
 
         #issledovaniya .fastlinks {
-            margin: 9px -2px 0 0;
+            position: absolute;
+            right: 6px;
+            bottom: -1px;
+            margin: 0;
         }
 
         .hiddenlinks {
@@ -1156,8 +1165,8 @@
         }
 
         .no_units_and_ref #save-btn {
-           border-top-left-radius: 3px!important;
-           border-bottom-left-radius: 3px!important;
+            border-top-left-radius: 3px !important;
+            border-bottom-left-radius: 3px !important;
         }
 
         .no_units_and_ref table tr > th:nth-child(3), .no_units_and_ref table tr > th:nth-child(4),
@@ -1181,91 +1190,91 @@
 
         $('#empty-dir-for-lab').hide()
 
-        let firstrun = true;
-        let first_resize = true;
-        let list_reload = false;
-        let su = false;
-        let lockdeff = false;
+        let firstrun = true
+        let first_resize = true
+        let list_reload = false
+        let su = false
+        let lockdeff = false
 
-        let type = 0;
-        let cached_templates = {};
-        let nn = 0;
+        let type = 0
+        let cached_templates = {}
+        let nn = 0
 
-        let loaded_research = -1;
-        let datatype = -1;
-        let loaded_fractions = {};
-        let researches_cache = {};
-        let rendered_form_cache = {};
-        let laborants = [];
-        let isDoc = false;
+        let loaded_research = -1
+        let datatype = -1
+        let loaded_fractions = {}
+        let researches_cache = {}
+        let rendered_form_cache = {}
+        let laborants = []
+        let isDoc = false
 
-        let dir_active = -1;
-        let tubes_active = [];
-        let type_active = -1;
+        let dir_active = -1
+        let tubes_active = []
+        let type_active = -1
 
-        let dir_data = {};
+        let dir_data = {}
 
-        let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td></tr>';
+        let loadingtable = '<tr class="isloading-wrapper %wrapper%"><td>%text%</td></tr>'
         let lab_pk = {{ lab.pk }};
         let user_pk = {{ user.doctorprofile.pk }};
 
         let entityMap = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '/': '&#x2F;',
-          '`': '&#x60;',
-          '=': '&#x3D;'
-        };
-        let mapEntity = Object.keys(entityMap).reduce(function(obj, key){
-           obj[entityMap[key]] = key;
-           return obj;
-        }, {});
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            '\'': '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+        }
+        let mapEntity = Object.keys(entityMap).reduce(function (obj, key) {
+            obj[entityMap[key]] = key
+            return obj
+        }, {})
 
         function escapeHtml(string) {
-          return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-            return entityMap[s];
-          });
+            return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+                return entityMap[s]
+            })
         }
 
-        function deescapeHtml (string) {
-          return String(string).replace(new RegExp(`(${Object.keys(mapEntity).join('|')})`), function (s) {
-            return mapEntity[s];
-          });
+        function deescapeHtml(string) {
+            return String(string).replace(new RegExp(`(${Object.keys(mapEntity).join('|')})`), function (s) {
+                return mapEntity[s]
+            })
         }
 
-        let statuses = {"n": "Не обработан", "s": "Обработан", "c": "Подтверждён", "o": "Отложен"}; //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
+        let statuses = {'n': 'Не обработан', 's': 'Обработан', 'c': 'Подтверждён', 'o': 'Отложен'} //= {"n": "Н", "s": "О", "c": "П", "o": "ОТ"};
         let statuses_titles = {
-            "n": "Не обработан",
-            "s": "Обработан (сохранен, ожидает подтверждения)",
-            "c": "Подтверждён",
-            "o": "Отложен"
-        };
+            'n': 'Не обработан',
+            's': 'Обработан (сохранен, ожидает подтверждения)',
+            'c': 'Подтверждён',
+            'o': 'Отложен'
+        }
 
-        let iss_pks = [];
-        let has_o = false;
-        let iss_isnorm = {"unknown": "", "normal": "Норма", "not_normal": "Не норма", "maybe": "Не удалось обработать"};
+        let iss_pks = []
+        let has_o = false
+        let iss_isnorm = {'unknown': '', 'normal': 'Норма', 'not_normal': 'Не норма', 'maybe': 'Не удалось обработать'}
 
         let substringMatcher = function (strs) {
             return function findMatches(q, cb) {
-                let matches, substrRegex;
-                matches = [];
-                substrRegex = new RegExp(q, 'i');
+                let matches, substrRegex
+                matches = []
+                substrRegex = new RegExp(q, 'i')
                 $.each(strs, function (i, str) {
                     if (substrRegex.test(str)) {
-                        matches.push(str);
+                        matches.push(str)
                     }
-                });
+                })
 
-                cb(matches);
-            };
-        };
+                cb(matches)
+            }
+        }
 
-        let fill_researches = {};
-        let queue_fill = [];
-        let request = "";
+        let fill_researches = {}
+        let queue_fill = []
+        let request = ''
 
         let socket = null
 
@@ -1309,34 +1318,34 @@
                 } catch (e) {
                 }
             }
-            $(".show-rmis").hide()
-            {% if request.user.is_superuser %}su = true;{% endif %}
-            $("#result-print").prop("disabled", true);
-            $("#result-confirm").prop("disabled", true);
+            $('.show-rmis').hide()
+            {% if request.user.is_superuser %}su = true{% endif %}
+            $('#result-print').prop('disabled', true)
+            $('#result-confirm').prop('disabled', true)
             $(window).resize(function () {
-                resize();
-            });
-            decsl();
+                resize()
+            })
+            decsl()
             $.ajax({
-                url: "/api/laborants",
+                url: '/api/laborants',
                 dataType: 'json'
             }).done(function ({data = [], doc}) {
-                laborants = data;
-                isDoc = doc || su;
-            }).always(dechl);
-            nn++;
+                laborants = data
+                isDoc = doc || su
+            }).always(dechl)
+            nn++
             $.ajax({ // AJAX запрос
-                url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
+                url: '/directory/researches/list?lab_id=' + lab_pk,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
-                let vv = [];
+                let vv = []
                 for (let v of data) {
-                    vv.push(v.id);
+                    vv.push(v.id)
                 }
-                nn++;
+                nn++
                 $.ajaxq('precache', {
-                    url: "/researches/get/one",
-                    method: "GET",
+                    url: '/researches/get/one',
+                    method: 'GET',
                     cache: false,
                     data: {
                         id: JSON.stringify(vv),
@@ -1353,229 +1362,231 @@
                             no_units_and_ref: v.no_units_and_ref,
                             co_executor_mode: v.co_executor_mode,
                             co_executor_title: v.co_executor_title,
-                        };
+                        }
                     }
-                }).always(dechl);
+                }).always(dechl)
 
                 for (let i = 0; i < 4; i++) {
                     nn++;
                     (function (i) {
                         $.ajaxq('precache', {
                             url: `{% static 'templates' %}/${i}.jade?1`,
-                            type: "text",
+                            type: 'text',
                             cache: false,
-                            method: "GET"
+                            method: 'GET'
                         }).done(function (data) {
-                            cached_templates[i] = data;
-                        }).always(dechl);
-                    })(i);
+                            cached_templates[i] = data
+                        }).always(dechl)
+                    })(i)
                 }
-            }).always(dechl);
+            }).always(dechl)
 
-            $(document).on("click", ".select-tube", function () {
-                fast_search($(this, ".num").attr("tube"));
-                $("#option1").attr("checked", "checked");
-                $("#option2").removeAttr("checked");
-                $("#option1").parent(".btn").addClass('active');
-                $("#option2").parent(".btn").removeClass('active');
-                type = 0;
-                load_d_fast();
-            });
+            $(document).on('click', '.select-tube', function () {
+                fast_search($(this, '.num').attr('tube'))
+                $('#option1').attr('checked', 'checked')
+                $('#option2').removeAttr('checked')
+                $('#option1').parent('.btn').addClass('active')
+                $('#option2').parent('.btn').removeClass('active')
+                type = 0
+                load_d_fast()
+            })
 
-            $(document).on("click", ".select-dir", function () {
-                fast_search($(this).attr("direction"));
-                $("#option1").removeAttr("checked");
-                $("#option2").attr("checked", "checked");
-                $("#option1").parent(".btn").removeClass('active');
-                $("#option2").parent(".btn").addClass('active');
-                type = 1;
-                load_d_fast();
-            });
+            $(document).on('click', '.select-dir', function () {
+                fast_search($(this).attr('direction'))
+                $('#option1').removeAttr('checked')
+                $('#option2').attr('checked', 'checked')
+                $('#option1').parent('.btn').removeClass('active')
+                $('#option2').parent('.btn').addClass('active')
+                type = 1
+                load_d_fast()
+            })
 
-            $("#search-field").bind('keydown', 'return', function () {
-                load_d_fast();
-            });
-            $("body").on('keyup', ':not(.row-container) .result-enter', function (e) {
+            $('#search-field').bind('keydown', 'return', function () {
+                load_d_fast()
+            })
+            $('body').on('keyup', ':not(.row-container) .result-enter', function (e) {
                 if (e.which === 13) {
-                    let index = $('.result-enter:not(.tt-hint)').index(this) + 1;
+                    let index = $('.result-enter:not(.tt-hint)').index(this) + 1
                     if ($('.result-enter:not(.tt-hint)').eq(index).length)
-                        $('.result-enter:not(.tt-hint)').eq(index).focus();
+                        $('.result-enter:not(.tt-hint)').eq(index).focus()
                     else
-                        save();
+                        save()
                 }
-            });
+            })
 
-            $("[name='date-start'],[name='date-end'],[name='datemain-start'],[name='datemain-end'],[name=date-confirm],[name=dateday-confirm]").val(getFormattedDate(today));
+            $('[name=\'date-start\'],[name=\'date-end\'],[name=\'datemain-start\'],[name=\'datemain-end\'],[name=date-confirm],[name=dateday-confirm]').val(getFormattedDate(today))
             $('#datepicker, #datepickermain,[name=date-confirm],[name=dateday-confirm]').datepicker({
-                format: "dd.mm.yyyy",
-                todayBtn: "linked",
-                language: "ru",
+                format: 'dd.mm.yyyy',
+                todayBtn: 'linked',
+                language: 'ru',
                 autoclose: true,
                 todayHighlight: true
-            });
-            $(".context-st").show();
-            resize();
+            })
+            $('.context-st').show()
+            resize()
 
-            load_tubes_and_dirs();
+            load_tubes_and_dirs()
 
-            $("body").on("change", ".table-researches .btn input", sync_checks);
-            $("#loaded-buttons a").fadeOut(100);
+            $('body').on('change', '.table-researches .btn input', sync_checks)
+            $('#loaded-buttons a').fadeOut(100)
 
-        });
+        })
+
         function sync_checks() {
-            $(".btn").removeClass("active-b");
-            let elements = document.querySelectorAll("input[name='sel']:checked");
+            $('.btn').removeClass('active-b')
+            let elements = document.querySelectorAll('input[name=\'sel\']:checked')
             Array.prototype.forEach.call(elements, function (el) {
-                $(el).parent().addClass("active-b");
-            });
+                $(el).parent().addClass('active-b')
+            })
         }
+
         function tgfreeze(th) {
-            $("[name='datemain-start'],[name='datemain-end']").prop("disabled", $(th).prop("checked"));
+            $('[name=\'datemain-start\'],[name=\'datemain-end\']').prop('disabled', $(th).prop('checked'))
         }
+
         function load_d_fast() {
-            type = $('label.btn.active input').val();
-            load_data($('#search-field').val(), type);
+            type = $('label.btn.active input').val()
+            load_data($('#search-field').val(), type)
         }
 
         function reload_fast(sync_all_scroll) {
-            let s = !!sync_all_scroll;
+            let s = !!sync_all_scroll
 
-            if (loaded_research < 0 && request !== "") return;
+            if (loaded_research < 0 && request !== '') return
 
-            load_data(request, type, false, false, s);
+            load_data(request, type, false, false, s)
 
             //load_form(loaded_research);
         }
+
         function get_age(s_age) {
-            return parseInt(s_age.split(" ")[0]);
+            return parseInt(s_age.split(' ')[0])
         }
 
         function sync_active(resync) {
-            let rs = !!resync;
-            $(".select-dir.active, .select-tube.active").removeClass("active");
+            let rs = !!resync
+            $('.select-dir.active, .select-tube.active').removeClass('active')
             if (dir_active != -1 && $(`[direction='${dir_active}']`).length) {
                 if (type_active == 0 || rs) {
-                    $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active === 0 ? "active" : ""), 0, {offset: -35});
+                    $('#dirs-list').scrollTo($(`.select-dir[direction='${dir_active}']`).addClass(type_active === 0 ? 'active' : ''), 0, {offset: -35})
                 }
                 if (type_active == 1 || rs) {
-                    $(`[direction='${dir_active}']`).addClass(type_active == 1 ? "active" : "");
-                    $('#tubes-list').scrollTo($(`.select-tube[direction='${dir_active}']`), 0, {offset: -35});
+                    $(`[direction='${dir_active}']`).addClass(type_active == 1 ? 'active' : '')
+                    $('#tubes-list').scrollTo($(`.select-tube[direction='${dir_active}']`), 0, {offset: -35})
                 }
             }
             for (let tube of tubes_active) {
-                $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group);
+                $(`.select-tube[tube='${tube.pk}']`).addClass(tube.group)
                 if (type_active == 0) {
-                    $(`.select-tube[tube='${tube.pk}']`).addClass("active");
+                    $(`.select-tube[tube='${tube.pk}']`).addClass('active')
                 }
             }
         }
 
         function load_data(id, type, select_el, noclear, s) {
 
-            tubes_active = [];
-            dir_active = -1;
-            type_active = type;
+            tubes_active = []
+            dir_active = -1
+            type_active = type
 
-            sl();
-            iss_pks = [];
-            $("#search-field").attr("placeholder", "");
+            sl()
+            iss_pks = []
+            $('#search-field').attr('placeholder', '')
 
-            $("#loaded-buttons a").fadeOut(100);
-            $(".dir-datafield").fadeOut(100);
-            $(".show-lv").show();
-            $(".show-rmis").hide();
+            $('#loaded-buttons a').fadeOut(100)
+            $('.dir-datafield').fadeOut(100)
+            $('.show-lv').show()
+            $('.show-rmis').hide()
             $.ajax({
-                url: "/directions/get/issledovaniya",
-                type: "json",
-                method: "GET",
+                url: '/directions/get/issledovaniya',
+                type: 'json',
+                method: 'GET',
                 data: {id: id.trim(), type: type, lab_pk: lab_pk}
             }).done(function (data) {
-                hl();
-                if(data.msg) {
-                    alert(data.msg);
+                hl()
+                if (data.msg) {
+                    alert(data.msg)
                 }
                 if (!data.ok) {
-                    $("#search-field").parent().addClass("has-error");
+                    $('#search-field').parent().addClass('has-error')
                     $('#search-field').tooltipster({
-                        content: "Не найдено",
+                        content: 'Не найдено',
                         //position: "bottom",
-                        theme: "tooltipster-shadow"
-                    });
-                    $('#search-field').tooltipster('show');
+                        theme: 'tooltipster-shadow'
+                    })
+                    $('#search-field').tooltipster('show')
                     if (loaded_research >= 0) {
 
-                        $("#loaded-buttons a").fadeIn(100);
-                        $(".dir-datafield").fadeIn(100);
+                        $('#loaded-buttons a').fadeIn(100)
+                        $('.dir-datafield').fadeIn(100)
                     }
                     //load_tubes_and_dirs();
-                    return;
+                    return
                 }
-                $("#result-print").attr("disabled", 1);
-                $("#result-confirm").attr("disabled", 1);
+                $('#result-print').attr('disabled', 1)
+                $('#result-confirm').attr('disabled', 1)
 
                 if (!noclear) {
-                    $("#search-field").val("");
+                    $('#search-field').val('')
                 }
 
-                $(".has-error").removeClass("has-error");
+                $('.has-error').removeClass('has-error')
                 try {
-                    $('#search-field').tooltipster('destroy');
-                }
-                catch (e) {
+                    $('#search-field').tooltipster('destroy')
+                } catch (e) {
 
                 }
-                request = id;
-                dir_data = data;
-                $("#issledovaniya").isLoading("hide");
-                $(".not-loaded").hide();
+                request = id
+                dir_data = data
+                $('#issledovaniya').isLoading('hide')
+                $('.not-loaded').hide()
                 $('#empty-dir-for-lab').hide()
                 $('#empty-dir-for-lab ul').html('')
-                $("#issledovaniya").show();
-                $("#result-form").empty();
-                $("#issledovaniya").empty();
-                $("#dir_num").html(`<a href='/directions/pdf?napr_id=[${data.napr_pk}]' target='_blank'>${data.napr_pk}</a>`);
-                $("#dir_client_fio").html(data.client_fio);
-                $("#directioner").html(data.directioner);
-                $("#client_vozrast").html(data.client_vozrast);
-                $("#client_sex").html(data.client_sex);
+                $('#issledovaniya').show()
+                $('#result-form').empty()
+                $('#issledovaniya').empty()
+                $('#dir_num').html(`<a href='/directions/pdf?napr_id=[${data.napr_pk}]' target='_blank'>${data.napr_pk}</a>`)
+                $('#dir_client_fio').html(data.client_fio)
+                $('#directioner').html(data.directioner)
+                $('#client_vozrast').html(data.client_vozrast)
+                $('#client_sex').html(data.client_sex)
 
                 if (data.client_hisnum === '' || !data.client_hisnum) {
-                    $(".show-history").hide();
-                    $(".show-nohistory").show();
-                    $("#client_cardnum_nohistory").html(data.client_cardnum);
+                    $('.show-history').hide()
+                    $('.show-nohistory').show()
+                    $('#client_cardnum_nohistory').html(data.client_cardnum)
                 } else {
-                    $(".show-history").show();
-                    $(".show-nohistory").hide();
-                    $("#client_cardnum").html(data.client_cardnum);
-                    $("#client_hisnum").html(data.client_hisnum);
+                    $('.show-history').show()
+                    $('.show-nohistory').hide()
+                    $('#client_cardnum').html(data.client_cardnum)
+                    $('#client_hisnum').html(data.client_hisnum)
                 }
 
-                $("#fin_source").html(data.fin_source);
-                $("#otd").html(data.otd);
-                if(data.imported_from_rmis)
-                {
+                $('#fin_source').html(data.fin_source)
+                $('#otd').html(data.otd)
+                if (data.imported_from_rmis) {
                     $('.show-lv').hide()
                     $('.show-rmis').show()
                 }
-                $("#imported_org").html(data.imported_org);
-                $(".dir-datafield").fadeIn(100);
-                let status = "n", all_saved = false, firstch = true, has_n = false, all_o = true;
-                has_o = false;
-                $(".select-tube").removeClass(function (index, css) {
-                    return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ');
-                });
+                $('#imported_org').html(data.imported_org)
+                $('.dir-datafield').fadeIn(100)
+                let status = 'n', all_saved = false, firstch = true, has_n = false, all_o = true
+                has_o = false
+                $('.select-tube').removeClass(function (index, css) {
+                    return (css.match(/(^|\s)tb-group-\d+/g) || []).join(' ')
+                })
 
-                const tmp_types = {"1": "направление", "0": "ёмкость"};
-                $("#search-field").attr("placeholder", `Загружено: ${tmp_types[type + ""]} ${id}`);
+                const tmp_types = {'1': 'направление', '0': 'ёмкость'}
+                $('#search-field').attr('placeholder', `Загружено: ${tmp_types[type + '']} ${id}`)
 
-                dir_active = data.napr_pk;
-                let pks = [];
+                dir_active = data.napr_pk
+                let pks = []
                 if (data.issledovaniya.length === 0) {
                     $('#empty-dir-for-lab').show()
-                    const q = encodeURIComponent(JSON.stringify(data.q));
+                    const q = encodeURIComponent(JSON.stringify(data.q))
                     if ('labs_objects' in data) {
                         for (const p of data.labs_objects) {
-                            if(p.islab) {
+                            if (p.islab) {
                                 $('#empty-dir-for-lab ul').append(`<li><a href='/results/enter?lab_pk=${p.pk}#q:${q}'>Перейти в ${p.title}</a></li>`)
                             } else {
                                 $('#empty-dir-for-lab ul').append(`<li>${p.title}</li>`)
@@ -1584,1098 +1595,1098 @@
                     }
                 }
                 $.each(data.issledovaniya, function (k, v) {
-                    if (v.saved && !v.confirmed) status = "s";
-                    else if (v.saved && v.confirmed) status = "c";
-                    else if (!v.deff) status = "n";
-                    else status = "o";
+                    if (v.saved && !v.confirmed) status = 's'
+                    else if (v.saved && v.confirmed) status = 'c'
+                    else if (!v.deff) status = 'n'
+                    else status = 'o'
 
 
-                    if (status === "s") {
+                    if (status === 's') {
                         if (firstch && !all_saved && !has_n) {
-                            all_saved = firstch = true;
+                            all_saved = firstch = true
                         }
+                    } else if (status === 'n') {
+                        all_saved = false
+                        has_n = true
                     }
-                    else if (status === "n") {
-                        all_saved = false;
-                        has_n = true;
-                    }
-                    let deffc, sv;
-                    deffc = sv = "";
-                    if (status !== "c") {
+                    let deffc, sv
+                    deffc = sv = ''
+                    if (status !== 'c') {
                         if (v.deff === false) {
-                            iss_pks.push(v.pk);
-                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, ${v.pk});return false;'>отложить</a>`;
-                            all_o = false;
-                        }
-                        else {
-                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, ${v.pk});return false;'>отм. отложить</a>`;
-                            status = "o";
+                            iss_pks.push(v.pk)
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(true, ${v.pk});return false;'>отложить</a>`
+                            all_o = false
+                        } else {
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='deff(false, ${v.pk});return false;'>отм. отложить</a>`
+                            status = 'o'
                         }
                         if (v.current_doc_save === 0) {
-                            sv = `<br/><span class='save-other'>сохранил: ${v.doc_save_fio}</span>`;
-                            if(v.doc_save_fio.indexOf("Анализатор") === -1) {
-                                has_o = true;
+                            sv = `<br/><span class='save-other'>сохранил: ${v.doc_save_fio}</span>`
+                            if (v.doc_save_fio.indexOf('Анализатор') === -1) {
+                                has_o = true
                             }
                         }
-                        if (v.tube.pk === "") {
-                            sv = `<span class='no-tube'>Ёмк. ${v.not_received_tubes} не принята${!!v.not_received_why ? ` (${v.not_received_why})`: ""}</span>`;
+                        if (v.tube.pk === '') {
+                            sv = `<span class='no-tube'>Ёмк. ${v.not_received_tubes} не принята${!!v.not_received_why ? ` (${v.not_received_why})` : ''}</span>`
                         }
-                        deffc = "<br/>" + deffc;
-                    }
-                    else {
-                        all_o = false;
+                    } else {
+                        all_o = false
                         if (v.allow_disable_confirm)
-                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='event.preventDefault();reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`;
+                            deffc = `<div class='fastlinks hiddenlinks'><a href='#' onclick='event.preventDefault();reset_confirm(${v.pk}, "${v.title}", ${v.tube.pk || -1});return false;'>Сброс подтверждения</a>`
                     }
-                    let t = "";
-                    if (v.saved && v.is_norm !== "normal")
-                        t = `title='${iss_isnorm[v.is_norm]}'`;
-                    $("#issledovaniya").append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}${deffc}</div></div>${v.title}<br/>${v.tube.pk !== ""? `<small>Ёмкость: ${v.tube.pk}</small>`: sv}</li>`);
+                    let t = ''
+                    if (v.saved && v.is_norm !== 'normal')
+                        t = `title='${iss_isnorm[v.is_norm]}'`
+                    $('#issledovaniya').append(`<li num='${v.pk}' class='brdr tb-group-${v.group} issledovaniya-isnorm-${v.is_norm}' ${t} onclick='load_form(${v.research_pk}, ${v.pk}, ${v.template})'><div title='${statuses_titles[status]}' class='status status-${status}'>${statuses[status]}</div>${deffc}</div>${v.title}<br/>${v.tube.pk !== '' ? `<small>Ёмкость: ${v.tube.pk}</small>` : sv}</li>`)
 
-                    const tubessplit = v.tube.pk.split(',');
+                    const tubessplit = v.tube.pk.split(',')
                     $.each(tubessplit, function (k, vt) {
                         if (pks.indexOf(vt) !== -1) {
-                            if(tubessplit.length === 1) {
+                            if (tubessplit.length === 1) {
                                 for (let i = 0; i < tubes_active.length; i++) {
                                     if (tubes_active[i].pk === vt) {
-                                        tubes_active[i].group = "tb-group-" + v.group
+                                        tubes_active[i].group = 'tb-group-' + v.group
                                         return
                                     }
                                 }
                             }
-                            return;
+                            return
                         }
-                        pks.push(vt);
-                        tubes_active.push({pk: vt, group: "tb-group-" + v.group});
-                    });
-                });
-                sync_active(!!s);
+                        pks.push(vt)
+                        tubes_active.push({pk: vt, group: 'tb-group-' + v.group})
+                    })
+                })
+                sync_active(!!s)
                 if (!select_el)
-                    $("#issledovaniya li").first().click();
+                    $('#issledovaniya li').first().click()
                 else
-                    $(`#issledovaniya li[num='${select_el}']`).click();
-                $('#issledovaniya-scroll').scrollTop(0);
+                    $(`#issledovaniya li[num='${select_el}']`).click()
+                $('#issledovaniya-scroll').scrollTop(0)
                 if (all_saved) {
-                    $("#result-confirm").removeAttr("disabled");
+                    $('#result-confirm').removeAttr('disabled')
                 }
                 if (data.all_confirmed && !all_o) {
-                    $("#result-print").removeAttr("disabled");
-                    $("#result-confirm").attr("disabled", 1);
+                    $('#result-print').removeAttr('disabled')
+                    $('#result-confirm').attr('disabled', 1)
                 }
 
-                $("#loaded-buttons a").fadeIn(100);
-            });
+                $('#loaded-buttons a').fadeIn(100)
+            })
         }
+
         function fix_signs(input) {
             if (/^([<>])\s*\d+$/g.test(input)) {
-                input = input.replace(/>/g, "&gt;").replace(/</g, "&lt;");
+                input = input.replace(/>/g, '&gt;').replace(/</g, '&lt;')
             }
-            return input;
+            return input
         }
 
         function sort_refs(r) {
-            for (let mf of ["m", "f"]) {
+            for (let mf of ['m', 'f']) {
                 if (r.hasOwnProperty(mf)) {
-                    let keys = [], k, i, len, tmp = r[mf];
+                    let keys = [], k, i, len, tmp = r[mf]
                     for (k in tmp) {
                         if (tmp.hasOwnProperty(k)) {
-                            keys.push(k);
+                            keys.push(k)
                         }
                     }
                     keys.sort(
                         function (x, y) {
-                            let xx = 0;
-                            let yy = 0;
+                            let xx = 0
+                            let yy = 0
                             try {
-                                if (x.toLowerCase().indexOf("все") >= 0) {
-                                    xx = -1;
-                                }
-                                else if (x.indexOf("-") >= 0) {
-                                    xx = x.split("-").last();
-                                }
-                                else {
-                                    xx = x.replace(/[^\d.]/g, '');
+                                if (x.toLowerCase().indexOf('все') >= 0) {
+                                    xx = -1
+                                } else if (x.indexOf('-') >= 0) {
+                                    xx = x.split('-').last()
+                                } else {
+                                    xx = x.replace(/[^\d.]/g, '')
                                 }
 
-                                if (y.toLowerCase().indexOf("все") >= 0) {
-                                    yy = -1;
-                                }
-                                else if (y.indexOf("-") >= 0) {
-                                    yy = y.split("-").last();
-                                }
-                                else {
-                                    yy = y.replace(/[^\d.]/g, '');
+                                if (y.toLowerCase().indexOf('все') >= 0) {
+                                    yy = -1
+                                } else if (y.indexOf('-') >= 0) {
+                                    yy = y.split('-').last()
+                                } else {
+                                    yy = y.replace(/[^\d.]/g, '')
                                 }
 
-                                xx = parseInt(xx);
-                                yy = parseInt(yy);
+                                xx = parseInt(xx)
+                                yy = parseInt(yy)
 
-                                if (x.indexOf("старше") >= 0) {
-                                    xx++;
+                                if (x.indexOf('старше') >= 0) {
+                                    xx++
                                 }
-                                if (y.indexOf("старше") >= 0) {
-                                    yy++;
+                                if (y.indexOf('старше') >= 0) {
+                                    yy++
                                 }
 
                             } catch (err) {
                             }
-                            return xx - yy;
+                            return xx - yy
                         }
-                    );
-                    len = keys.length;
-                    r[mf] = {};
+                    )
+                    len = keys.length
+                    r[mf] = {}
                     for (i = 0; i < len; i++) {
-                        k = keys[i];
-                        r[mf][k] = fix_signs(tmp[k]);
+                        k = keys[i]
+                        r[mf][k] = fix_signs(tmp[k])
                     }
                 }
             }
-            return r;
+            return r
         }
 
         function load_form(research_pk, id, templateid) {
-            if (typeof templateid === "undefined") {
-                templateid = 0;
+            if (typeof templateid === 'undefined') {
+                templateid = 0
             }
-            sl(true);
+            sl(true)
             $('.data-research-changed, .data-research-confirmed, .data-dir-changed').hide()
+
             function callback1(data) {
-                template = data;
+                template = data
                 if (!cached_templates[templateid])
-                    cached_templates[templateid] = data;
+                    cached_templates[templateid] = data
+
                 function callback2(data2) {
-                    $("#form-scroll").isLoading("hide");
-                    $("#issledovaniya .active").removeClass("active");
+                    $('#form-scroll').isLoading('hide')
+                    $('#issledovaniya .active').removeClass('active')
                     if (!data2.cached) {
                         researches_cache[research_pk] = {
-                            "title": data2.title,
-                            "fractions": data2.fractions,
-                            "can_comment": data2.can_comment,
-                            "no_units_and_ref": data2.no_units_and_ref,
-                            "co_executor_mode": data2.co_executor_mode,
+                            'title': data2.title,
+                            'fractions': data2.fractions,
+                            'can_comment': data2.can_comment,
+                            'no_units_and_ref': data2.no_units_and_ref,
+                            'co_executor_mode': data2.co_executor_mode,
                             co_executor_title: data2.co_executor_title,
                         }
                     } else {
-                        data2.title = researches_cache[research_pk].title;
-                        data2.fractions = researches_cache[research_pk].fractions;
-                        data2.can_comment = researches_cache[research_pk].can_comment;
-                        data2.no_units_and_ref = researches_cache[research_pk].no_units_and_ref;
-                        data2.co_executor_mode = researches_cache[research_pk].co_executor_mode;
-                        data2.co_executor_title = researches_cache[research_pk].co_executor_title;
+                        data2.title = researches_cache[research_pk].title
+                        data2.fractions = researches_cache[research_pk].fractions
+                        data2.can_comment = researches_cache[research_pk].can_comment
+                        data2.no_units_and_ref = researches_cache[research_pk].no_units_and_ref
+                        data2.co_executor_mode = researches_cache[research_pk].co_executor_mode
+                        data2.co_executor_title = researches_cache[research_pk].co_executor_title
                     }
-                    data2.sex = dir_data.client_sex;
-                    data2.age = dir_data.client_vozrast;
-                    data2.research_pk = research_pk;
+                    data2.sex = dir_data.client_sex
+                    data2.age = dir_data.client_vozrast
+                    data2.research_pk = research_pk
 
 
-                    loaded_fractions = {};
+                    loaded_fractions = {}
                     $.each(data2.fractions, function (fk, fv) {
-                        loaded_fractions[fv.pk] = fv;
-                        data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9);
-                        data2.fractions[fk].references = sort_refs(data2.fractions[fk].references);
-                    });
+                        loaded_fractions[fv.pk] = fv
+                        data2.fractions[fk].unit_count = Math.min(data2.fractions[fk].unit.length, 9)
+                        data2.fractions[fk].references = sort_refs(data2.fractions[fk].references)
+                    })
 
-                    let rendered = !!rendered_form_cache[research_pk];
+                    let rendered = !!rendered_form_cache[research_pk]
                     if (!rendered) {
-                        const rd = {...data2, laborants, isDoc};
-                        console.log(researches_cache[research_pk]);
-                        console.log(rd);
-                        rendered_form_cache[research_pk] = jade.compile(template)(rd);
+                        const rd = {...data2, laborants, isDoc}
+                        console.log(researches_cache[research_pk])
+                        console.log(rd)
+                        rendered_form_cache[research_pk] = jade.compile(template)(rd)
                     }
 
-                    $("#result-form").html(rendered_form_cache[research_pk]);
-                    $("#result-form").removeClass("no_units_and_ref");
-                    if(data2.no_units_and_ref) {
-                        $("#result-form").addClass("no_units_and_ref");
+                    $('#result-form').html(rendered_form_cache[research_pk])
+                    $('#result-form').removeClass('no_units_and_ref')
+                    if (data2.no_units_and_ref) {
+                        $('#result-form').addClass('no_units_and_ref')
                     }
                     if (rendered)
-                        $("#issledovaniye_id").val(data2.res_id);
-                    $(`#issledovaniya [num='${data2.res_id}']`).addClass("active");
-                    let autoIsF = false;
-                    let num = 0;
+                        $('#issledovaniye_id').val(data2.res_id)
+                    $(`#issledovaniya [num='${data2.res_id}']`).addClass('active')
+                    let autoIsF = false
+                    let num = 0
                     $.each(data2.fractions, function (fk, fv) {
-                        num++;
-                        if (fv.type !== -1 && fv.type.length > 0 && fv.type[0] !== "Без вариантов") {
-                            if (num === 1) autoIsF = true;
+                        num++
+                        if (fv.type !== -1 && fv.type.length > 0 && fv.type[0] !== 'Без вариантов') {
+                            if (num === 1) autoIsF = true
                             let ft = $.map(fv.type, function (item) {
-                                return {value: item};
-                            });
+                                return {value: item}
+                            })
                             let typeVals = new Bloodhound({
                                 datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
                                 queryTokenizer: Bloodhound.tokenizers.whitespace,
                                 identify: function (obj) {
-                                    return obj.value;
+                                    return obj.value
                                 },
                                 local: ft
-                            });
+                            })
 
                             function typeValsDefaults(q, sync) {
-                                sync(typeVals.get(fv.type));
+                                sync(typeVals.get(fv.type))
                             }
 
-                            const $d = $(`[data-pk='${fv.pk}']`);
-                            const $val = $d.val();
+                            const $d = $(`[data-pk='${fv.pk}']`)
+                            const $val = $d.val()
                             $d.typeahead({
                                 minLength: 0,
                                 limit: 40,
                                 highlight: true,
-                                hint: $val === ""
+                                hint: $val === ''
                             }, {
                                 name: 'typeval',
                                 display: 'value',
                                 source: typeValsDefaults,
                                 limit: 40
-                            });
-                            $d.typeahead('val', $val);
-                            $d.val($val);
+                            })
+                            $d.typeahead('val', $val)
+                            $d.val($val)
                         }
-                    });
+                    })
                     //f = $('.result-enter:not(.tt-hint)').eq(0);
 
-                    $.ajax({url: "/results/get", cache: false, data: {iss_id: id}}).done(function (data) {
+                    $.ajax({url: '/results/get', cache: false, data: {iss_id: id}}).done(function (data) {
                         $.each(data.results, function (k, v) {
-                            v = deescapeHtml(v);
-                            if (v !== "")
-                                $(`[data-pk='${k}']`).typeahead('close').typeahead('val', v).blur();
-                            $(`[data-pk='${k}']`).val(v);
-                            $(`[data-div-pk='${k}']`).html(v);
+                            v = deescapeHtml(v)
+                            if (v !== '')
+                                $(`[data-pk='${k}']`).typeahead('close').typeahead('val', v).blur()
+                            $(`[data-pk='${k}']`).val(v)
+                            $(`[data-div-pk='${k}']`).html(v)
                             if (data.norms[k]) {
-                                $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`);
+                                $(`[data-pk=${k}]`).closest('tr').addClass(`isnorm_${data.norms[k]}`)
                             }
-                        });
-                        let resync_refs = false;
+                        })
+                        let resync_refs = false
                         $.each(data.refs, function (k, v) {
                             if ($.isEmptyObject(v))
-                                return;
-                            resync_refs = true;
-                            $(`.fraction-row[data-fraction-pk='${k}']`).attr("data-ref", _.escape(JSON.stringify(v)));
-                        });
+                                return
+                            resync_refs = true
+                            $(`.fraction-row[data-fraction-pk='${k}']`).attr('data-ref', _.escape(JSON.stringify(v)))
+                        })
                         if (resync_refs) {
-                            sync_refs();
+                            sync_refs()
                         }
-                        $(".lab_comment").text(data.comment);
+                        $('.lab_comment').text(data.comment)
                         try {
-                            if (jQuery.type(dready) !== "undefined" && $.isFunction(dready)) {
-                                dready();
+                            if (jQuery.type(dready) !== 'undefined' && $.isFunction(dready)) {
+                                dready()
                             }
                         } catch (e) {
-                            resize();
+                            resize()
                         } finally {
-                            $('.result-enter.tt-input').eq(0).focus().blur();
+                            $('.result-enter.tt-input').eq(0).focus().blur()
                             setTimeout(function () {
                                 if ($('.result-enter:not(.tt-hint):textboxEmpty').length) {
-                                    $('.result-enter:not(.tt-hint):textboxEmpty').eq(0).focus();
+                                    $('.result-enter:not(.tt-hint):textboxEmpty').eq(0).focus()
                                 }
-                                resize();
-                            }, 15);
+                                resize()
+                            }, 15)
                         }
-                    });
+                    })
 
-                    sync_refs();
+                    sync_refs()
 
-                    resize();
-                    loaded_research = id;
-                    datatype = -1;
-                    const $l = $("#laborant");
-                    const $c = $("#coexecutor");
+                    resize()
+                    loaded_research = id
+                    datatype = -1
+                    const $l = $('#laborant')
+                    const $c = $('#coexecutor')
                     if ($l.length) {
-                        $l.val(data2.co_executor);
+                        $l.val(data2.co_executor)
                     }
                     if ($c.length) {
-                        $c.val(data2.co_executor2);
+                        $c.val(data2.co_executor2)
                     }
                     if (data2.confirmed) {
-                        $("#confirm-btn").attr("disabled", 1);
-                        $("#save-btn").attr("disabled", 1);
-                        $("#ref-settings-btn").prop("disabled", true);
-                        $("#confirm-andsave-btn").attr("disabled", 1);
-                        $(".result-enter").prop("readonly", true);
+                        $('#confirm-btn').attr('disabled', 1)
+                        $('#save-btn').attr('disabled', 1)
+                        $('#ref-settings-btn').prop('disabled', true)
+                        $('#confirm-andsave-btn').attr('disabled', 1)
+                        $('.result-enter').prop('readonly', true)
                         if ($l.length) {
-                            $l.prop("disabled", true);
+                            $l.prop('disabled', true)
                         }
                         if ($c.length) {
-                            $c.prop("disabled", true);
+                            $c.prop('disabled', true)
                         }
-                        datatype = 2;
-                    }
-                    else if (data2.saved) {
-                        $("#confirm-btn").removeAttr("disabled");
-                        $("#save-btn").removeAttr("disabled");
-                        $("#ref-settings-btn").prop("disabled", false);
-                        $("#confirm-andsave-btn").removeAttr("disabled");
-                        datatype = 1;
-                    }
-                    else {
-                        $("#confirm-btn").attr("disabled", 1);
-                        $("#save-btn").removeAttr("disabled");
-                        $("#ref-settings-btn").prop("disabled", false);
-                        $("#confirm-andsave-btn").removeAttr("disabled");
+                        datatype = 2
+                    } else if (data2.saved) {
+                        $('#confirm-btn').removeAttr('disabled')
+                        $('#save-btn').removeAttr('disabled')
+                        $('#ref-settings-btn').prop('disabled', false)
+                        $('#confirm-andsave-btn').removeAttr('disabled')
+                        datatype = 1
+                    } else {
+                        $('#confirm-btn').attr('disabled', 1)
+                        $('#save-btn').removeAttr('disabled')
+                        $('#ref-settings-btn').prop('disabled', false)
+                        $('#confirm-andsave-btn').removeAttr('disabled')
                     }
                     if ($l.length) {
-                        $l.selectpicker('refresh');
+                        $l.selectpicker('refresh')
                     }
                     if ($c.length) {
-                        $c.selectpicker('refresh');
+                        $c.selectpicker('refresh')
                     }
-                    hl();
-                    $('#result-jade-form').scrollTop(0);
+                    hl()
+                    $('#result-jade-form').scrollTop(0)
                 }
 
                 $.ajaxq('precache', {
-                    url: "/researches/get/one",
-                    method: "GET",
+                    url: '/researches/get/one',
+                    method: 'GET',
                     cache: false,
                     data: {
                         id: id,
                         cached: research_pk in researches_cache
                     }
-                }).done(callback2);
+                }).done(callback2)
 
             }
 
             if (!cached_templates[templateid]) {
                 $.ajax({
                     url: `{% static 'templates' %}/${templateid}.jade`,
-                    type: "text",
+                    type: 'text',
                     cache: false,
-                    method: "GET"
-                }).done(callback1);
-            }
-            else {
-                callback1(cached_templates[templateid]);
+                    method: 'GET'
+                }).done(callback1)
+            } else {
+                callback1(cached_templates[templateid])
             }
 
         }
+
         function make_refs(r, bordered) {
-            let out = "";
-            bordered = bordered || false;
+            let out = ''
+            bordered = bordered || false
             for (let prop in r) {
-                if (((prop !== "Все" && r[prop] !== "") || (prop === "Все" && r[prop] !== "")) && r.hasOwnProperty(prop)) {
+                if (((prop !== 'Все' && r[prop] !== '') || (prop === 'Все' && r[prop] !== '')) && r.hasOwnProperty(prop)) {
                     out += `<tr>
 <td>${prop}</td>
 <td class="col-md-6">${r[prop]}</td>
-</tr>`;
+</tr>`
                 }
             }
-            return `<table class="${bordered ? "table table-bordered table-condensed" : ""}">` + out + "</table>";
+            return `<table class="${bordered ? 'table table-bordered table-condensed' : ''}">` + out + '</table>'
         }
 
         function sync_refs() {
-            $(".fraction-row").each(function () {
-                let research_pk = parseInt($(this).attr("data-research-pk"));
-                let fraction_pk = parseInt($(this).attr("data-fraction-pk"));
-                let ref = $(this).attr("data-ref");
-                let fraction = false;
-                for(let fk in researches_cache[research_pk].fractions){
-                    let f = researches_cache[research_pk].fractions[fk];
-                    if(f.pk === fraction_pk){
-                        fraction = f;
-                        break;
+            $('.fraction-row').each(function () {
+                let research_pk = parseInt($(this).attr('data-research-pk'))
+                let fraction_pk = parseInt($(this).attr('data-fraction-pk'))
+                let ref = $(this).attr('data-ref')
+                let fraction = false
+                for (let fk in researches_cache[research_pk].fractions) {
+                    let f = researches_cache[research_pk].fractions[fk]
+                    if (f.pk === fraction_pk) {
+                        fraction = f
+                        break
                     }
                 }
-                if(!fraction)
-                    return;
-                if (ref === "") {
+                if (!fraction)
+                    return
+                if (ref === '') {
                     if (fraction.references.default === -1) {
-                        ref = {title: "Default", about: "", m: fraction.references.m, f: fraction.references.f};
+                        ref = {title: 'Default', about: '', m: fraction.references.m, f: fraction.references.f}
                     } else {
-                        ref = fraction.references.available[fraction.references.default];
+                        ref = fraction.references.available[fraction.references.default]
                     }
-                    $(this).attr("data-ref", _.escape(JSON.stringify(ref)));
+                    $(this).attr('data-ref', _.escape(JSON.stringify(ref)))
                 } else {
-                    ref = JSON.parse(_.unescape(ref));
+                    ref = JSON.parse(_.unescape(ref))
                 }
 
-                ref = sort_refs(ref);
+                ref = sort_refs(ref)
 
-                $(".ref_m", this).html(make_refs(ref.m));
-                $(".ref_f", this).html(make_refs(ref.f));
-            });
+                $('.ref_m', this).html(make_refs(ref.m))
+                $('.ref_f', this).html(make_refs(ref.f))
+            })
         }
 
         function refsettings() {
-            let research_pk = parseInt($("#research_pk").val());
-            let fractions = researches_cache[research_pk].fractions;
-            $("#refsettings-modal .modal-body").html("");
+            let research_pk = parseInt($('#research_pk').val())
+            let fractions = researches_cache[research_pk].fractions
+            $('#refsettings-modal .modal-body').html('')
             for (let prop in fractions) {
                 if (fractions.hasOwnProperty(prop) && $(`#result-jade-form`).find(`.fraction-row[data-fraction-pk=${fractions[prop].pk}]:not(.settings)`).length) {
-                    let options = "";
-                    let selected_ref = $(`.fraction-row[data-fraction-pk='${fractions[prop].pk}']`).attr("data-ref");
-                    let n = 0;
-                    let inav_refs = false;
+                    let options = ''
+                    let selected_ref = $(`.fraction-row[data-fraction-pk='${fractions[prop].pk}']`).attr('data-ref')
+                    let n = 0
+                    let inav_refs = false
                     for (let rk in fractions[prop].references.available) {
                         if (!fractions[prop].references.available.hasOwnProperty(rk))
-                            continue;
-                        let r = fractions[prop].references.available[rk];
-                        let jref = JSON.parse(JSON.stringify(r));
-                        let jj = JSON.parse($('<div>').html(selected_ref).text());
-                        jj["title"] = jref["title"];
-                        jj["about"] = jref["about"];
+                            continue
+                        let r = fractions[prop].references.available[rk]
+                        let jref = JSON.parse(JSON.stringify(r))
+                        let jj = JSON.parse($('<div>').html(selected_ref).text())
+                        jj['title'] = jref['title']
+                        jj['about'] = jref['about']
                         if (!Object.compare(jj, jref)) {
-                            options += `<option value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`;
+                            options += `<option value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`
+                        } else {
+                            options += `<option selected value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`
+                            inav_refs = true
                         }
-                        else {
-                            options += `<option selected value='${_.escape(JSON.stringify(jref))}'>${r.title}</option>`;
-                            inav_refs = true;
-                        }
-                        n++;
+                        n++
                     }
                     if (!inav_refs) {
-                        options += `<option selected class='custom' value='${selected_ref !== "" && selected_ref !== "{}" ? selected_ref : `{"":""}`}'>Другое...</option>`;
+                        options += `<option selected class='custom' value='${selected_ref !== '' && selected_ref !== '{}' ? selected_ref : `{"":""}`}'>Другое...</option>`
+                    } else {
+                        options += `<option class='custom' value='${_.escape('{"Все":""}')}'>Другое...</option>`
                     }
-                    else {
-                        options += `<option class='custom' value='${_.escape('{"Все":""}')}'>Другое...</option>`;
-                    }
-                    $("#refsettings-modal .modal-body").append(`<div class="row settings" style="border-bottom: 1px solid lightgray;margin-bottom:5px;padding-bottom:5px" data-fraction-pk="${fractions[prop].pk}">
+                    $('#refsettings-modal .modal-body').append(`<div class="row settings" style="border-bottom: 1px solid lightgray;margin-bottom:5px;padding-bottom:5px" data-fraction-pk="${fractions[prop].pk}">
     <div class="col-xs-2">${fractions[prop].title}</div>
     <div class="col-xs-2"><select data-width="100%" class="select-b" onchange="settings_sync_ref(${fractions[prop].pk});">${options}</select></div>
     <div class="col-xs-8"><div class="row preview"></div></div>
-</div>`);
-                    settings_sync_ref(fractions[prop].pk);
-                    update_select(`.settings[data-fraction-pk='${fractions[prop].pk}']`);
+</div>`)
+                    settings_sync_ref(fractions[prop].pk)
+                    update_select(`.settings[data-fraction-pk='${fractions[prop].pk}']`)
                 }
             }
-            $("#refsettings-modal").modal("show");
-            return false;
+            $('#refsettings-modal').modal('show')
+            return false
         }
 
         function ref_form(refs) {
-            let ht = "";
+            let ht = ''
             for (let prop in refs) {
                 if (!refs.hasOwnProperty(prop))
-                    continue;
+                    continue
                 ht += `<div class='row ref-row'>
 <div class='col-xs-6'><input type='text' class='form-control prop-input' value='${prop}' placeholder='Условие' /></div>
 <div class='col-xs-6'><input type='text' class='form-control ref-input' value='${refs[prop]}' placeholder='Референс' /></div>
-</div>`;
+</div>`
             }
-            return ht;
+            return ht
         }
 
         function settings_sync_ref(pk) {
-            let $row = $(`.settings[data-fraction-pk='${pk}']`);
-            let selectval = _.unescape($("select", $row).val());
+            let $row = $(`.settings[data-fraction-pk='${pk}']`)
+            let selectval = _.unescape($('select', $row).val())
 
-            if(selectval === "" || selectval === undefined || selectval === "undefined"){
-                selectval = '{}';
+            if (selectval === '' || selectval === undefined || selectval === 'undefined') {
+                selectval = '{}'
             }
-            let val = sort_refs(JSON.parse(selectval));
+            let val = sort_refs(JSON.parse(selectval))
             if ($.isEmptyObject(val)) {
-                val = {"": ""};
+                val = {'': ''}
             }
-            if ($(`.settings[data-fraction-pk='${pk}'] option:selected`).is(".custom")) {
+            if ($(`.settings[data-fraction-pk='${pk}'] option:selected`).is('.custom')) {
                 $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${ref_form(val.m)}</div><div class="col-xs-6 table-responsive ref_f">Ж${ref_form(val.f)}</div>
                 <div class="col-xs-12">
                 <div class="row">
                     <div class="col-xs-4"></div>
                     <div class="col-xs-4"><button class="btn btn-default btn-primary-nb btn-sm mt5" onclick="add_subref(${pk})">+</button></div>
                     <div class="col-xs-4"></div>
-                </div></div>`);
+                </div></div>`)
             } else {
-                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${make_refs(val.m, true)}</div><div class="col-xs-6 table-responsive ref_f">Ж${make_refs(val.f, true)}</div>`);
+                $(`.settings[data-fraction-pk='${pk}'] .preview`).html(`<div class="col-xs-6 table-responsive ref_m">М${make_refs(val.m, true)}</div><div class="col-xs-6 table-responsive ref_f">Ж${make_refs(val.f, true)}</div>`)
             }
         }
 
         function add_subref(pk) {
-            backsync(pk);
-            let $row = $(`.settings[data-fraction-pk='${pk}']`);
-            let selectval = _.unescape($("select", $row).val());
-            let val = sort_refs(JSON.parse(selectval));
+            backsync(pk)
+            let $row = $(`.settings[data-fraction-pk='${pk}']`)
+            let selectval = _.unescape($('select', $row).val())
+            let val = sort_refs(JSON.parse(selectval))
 
-            if (!("" in val.m)) {
-                val.m[""] = "";
+            if (!('' in val.m)) {
+                val.m[''] = ''
             }
-            if (!("" in val.f)) {
-                val.f[""] = "";
+            if (!('' in val.f)) {
+                val.f[''] = ''
             }
-            $("select option:selected", $row).attr("value", _.escape(JSON.stringify(val)));
-            settings_sync_ref(pk);
+            $('select option:selected', $row).attr('value', _.escape(JSON.stringify(val)))
+            settings_sync_ref(pk)
         }
 
         function backsync(pk) {
-            let $row = $(`.settings[data-fraction-pk='${pk}']`);
-            let selectval = _.unescape($("select", $row).val());
-            if(selectval === ""){
-                selectval = `{}`;
+            let $row = $(`.settings[data-fraction-pk='${pk}']`)
+            let selectval = _.unescape($('select', $row).val())
+            if (selectval === '') {
+                selectval = `{}`
             }
-            let val = sort_refs(JSON.parse(selectval));
-            if ($("select option:selected", $row).is(".custom")) {
-                val.m = {};
-                $(".ref_m .ref-row", $row).each(function () {
-                    val.m[$(".prop-input", this).val()] = $(".ref-input", this).val()
-                });
-                val.f = {};
-                $(".ref_f .ref-row", $row).each(function () {
-                    val.f[$(".prop-input", this).val()] = $(".ref-input", this).val()
-                });
+            let val = sort_refs(JSON.parse(selectval))
+            if ($('select option:selected', $row).is('.custom')) {
+                val.m = {}
+                $('.ref_m .ref-row', $row).each(function () {
+                    val.m[$('.prop-input', this).val()] = $('.ref-input', this).val()
+                })
+                val.f = {}
+                $('.ref_f .ref-row', $row).each(function () {
+                    val.f[$('.prop-input', this).val()] = $('.ref-input', this).val()
+                })
             }
-            $("select option:selected", $row).attr("value", _.escape(JSON.stringify(sort_refs(val))));
+            $('select option:selected', $row).attr('value', _.escape(JSON.stringify(sort_refs(val))))
         }
 
         function apply_refs() {
             $('.settings').each(function () {
-                backsync($(this).attr("data-fraction-pk"));
-                $(`.fraction-row[data-fraction-pk=${$(this).attr("data-fraction-pk")}]`).attr("data-ref", $("select", this).val());
-            });
+                backsync($(this).attr('data-fraction-pk'))
+                $(`.fraction-row[data-fraction-pk=${$(this).attr('data-fraction-pk')}]`).attr('data-ref', $('select', this).val())
+            })
             sync_refs()
         }
 
         function fast_search(num) {
-            $("#search-field").val(num);
+            $('#search-field').val(num)
         }
 
         function dechl() {
-            nn--;
+            nn--
             if (nn <= 0) {
-                hl();
+                hl()
                 if (firstrun) {
-                    firstrun = false;
-                    $("#search-field").focus();
+                    firstrun = false
+                    $('#search-field').focus()
                 }
             }
         }
+
         function decsl() {
-            nn++;
-            sl();
+            nn++
+            sl()
         }
 
         function load_tubes_and_dirs() {
-            sl();
-            nn++;
-            $("#tubes-list tbody").isLoading({
-                text: "Загрузка",
-                position: "inside",
+            sl()
+            nn++
+            $('#tubes-list tbody').isLoading({
+                text: 'Загрузка',
+                position: 'inside',
                 'tpl': loadingtable,
-            });
-            $("#dirs-list tbody").isLoading({
-                text: "Загрузка",
-                position: "inside",
+            })
+            $('#dirs-list tbody').isLoading({
+                text: 'Загрузка',
+                position: 'inside',
                 'tpl': loadingtable,
-            });
-            document.querySelector("#dirs-list").scrollTop = 0;
-            document.querySelector("#tubes-list").scrollTop = 0;
+            })
+            document.querySelector('#dirs-list').scrollTop = 0
+            document.querySelector('#tubes-list').scrollTop = 0
             $.ajax({
-                url: "/results/loadready",
+                url: '/results/loadready',
                 data: {
-                    datestart: $("[name=datemain-start]").val(),
-                    dateend: $("[name=datemain-end]").val(),
-                    def: $("[name=def]").prop("checked") ? 1 : 0,
+                    datestart: $('[name=datemain-start]').val(),
+                    dateend: $('[name=datemain-end]').val(),
+                    def: $('[name=def]').prop('checked') ? 1 : 0,
                     lab: lab_pk
                 },
-                type: "json",
-                method: "GET"
+                type: 'json',
+                method: 'GET'
             }).done(function (data) {
-                let tubes_list = document.querySelector("#tubes-list tbody");
-                let dirs_list = document.querySelector("#dirs-list tbody");
-                let tubes_html = "";
-                let dirs_html = "";
+                let tubes_list = document.querySelector('#tubes-list tbody')
+                let dirs_list = document.querySelector('#dirs-list tbody')
+                let tubes_html = ''
+                let dirs_html = ''
 
-                $(tubes_list).isLoading("hide");
-                $(dirs_list).isLoading("hide");
+                $(tubes_list).isLoading('hide')
+                $(dirs_list).isLoading('hide')
 
                 if (data.tubes.length === 0) {
-                    tubes_html = "<tr class='pulse'><td>Не найдено</td></tr>";
-                }
-                else {
+                    tubes_html = '<tr class=\'pulse\'><td>Не найдено</td></tr>'
+                } else {
                     for (let v of data.tubes) {
-                        tubes_html += `<tr direction='${v.direction}' tube='${v.id}' class='select-tube' title='${v.tube.title}'><td><span style='float: right'>${v.date}</span><div style='background-color: ${v.tube.color}' class='circle'></div> ${v.id}</td></tr>`;
+                        tubes_html += `<tr direction='${v.direction}' tube='${v.id}' class='select-tube' title='${v.tube.title}'><td><span style='float: right'>${v.date}</span><div style='background-color: ${v.tube.color}' class='circle'></div> ${v.id}</td></tr>`
                     }
                 }
                 if (data.directions.length === 0) {
-                    dirs_html = "<tr class='pulse'><td>Не найдено</td></tr>";
+                    dirs_html = '<tr class=\'pulse\'><td>Не найдено</td></tr>'
                 } else {
                     for (let v of data.directions) {
-                        dirs_html += `<tr direction='${v.id}' class='select-dir'><td class='num'><span style='float: right'>${v.date}</span> ${v.id}</td></tr>`;
+                        dirs_html += `<tr direction='${v.id}' class='select-dir'><td class='num'><span style='float: right'>${v.date}</span> ${v.id}</td></tr>`
                     }
                 }
-                document.querySelector("#tubes-list th small").textContent = data.tubes.length;
-                document.querySelector("#dirs-list th small").textContent = data.directions.length;
+                document.querySelector('#tubes-list th small').textContent = data.tubes.length
+                document.querySelector('#dirs-list th small').textContent = data.directions.length
 
-                tubes_list.innerHTML = tubes_html;
-                dirs_list.innerHTML = dirs_html;
+                tubes_list.innerHTML = tubes_html
+                dirs_list.innerHTML = dirs_html
 
-                sync_active(true);
+                sync_active(true)
 
-                $('#tubes-list').perfectScrollbar('update');
-                $('#dirs-list').perfectScrollbar('update');
-                if(window.location.hash) {
-                    const hh = window.location.hash.split(":");
-                    if(hh.length === 2) {
-                        const h = JSON.parse(decodeURIComponent(hh[1]));
-                        history.replaceState(null, null, ' ');
+                $('#tubes-list').perfectScrollbar('update')
+                $('#dirs-list').perfectScrollbar('update')
+                if (window.location.hash) {
+                    const hh = window.location.hash.split(':')
+                    if (hh.length === 2) {
+                        const h = JSON.parse(decodeURIComponent(hh[1]))
+                        history.replaceState(null, null, ' ')
 
-                        fast_search(h.text);
+                        fast_search(h.text)
 
-                        if(h.type === "0") {
-                            $("#option1").attr("checked", "checked");
-                            $("#option2").removeAttr("checked");
-                            $("#option1").parent(".btn").addClass('active');
-                            $("#option2").parent(".btn").removeClass('active');
-                            type = 0;
+                        if (h.type === '0') {
+                            $('#option1').attr('checked', 'checked')
+                            $('#option2').removeAttr('checked')
+                            $('#option1').parent('.btn').addClass('active')
+                            $('#option2').parent('.btn').removeClass('active')
+                            type = 0
                         } else {
-                            $("#option1").removeAttr("checked");
-                            $("#option2").attr("checked", "checked");
-                            $("#option1").parent(".btn").removeClass('active');
-                            $("#option2").parent(".btn").addClass('active');
-                            type = 1;
+                            $('#option1').removeAttr('checked')
+                            $('#option2').attr('checked', 'checked')
+                            $('#option1').parent('.btn').removeClass('active')
+                            $('#option2').parent('.btn').addClass('active')
+                            type = 1
                         }
 
-                        load_d_fast();
+                        load_d_fast()
                     }
                 }
-            }).always(dechl);
+            }).always(dechl)
         }
 
         function resize() {
-            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 110);
-            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 110);
-            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50);
+            $('#tubes-list').height($(window).height() - $('#tubes-list').position().top - 110)
+            $('#dirs-list').height($(window).height() - $('#dirs-list').position().top - 110)
+            $('#issledovaniya-scroll').height($(window).height() - $('#issledovaniya-scroll').position().top - 50)
             if (first_resize) {
-                $('#tubes-list').perfectScrollbar();
-                $('#dirs-list').perfectScrollbar();
-                $('#issledovaniya-scroll').perfectScrollbar();
-                first_resize = false;
-            }
-            else {
-                $('#tubes-list').perfectScrollbar('update');
-                $('#dirs-list').perfectScrollbar('update');
-                $('#issledovaniya-scroll').perfectScrollbar('update');
+                $('#tubes-list').perfectScrollbar()
+                $('#dirs-list').perfectScrollbar()
+                $('#issledovaniya-scroll').perfectScrollbar()
+                first_resize = false
+            } else {
+                $('#tubes-list').perfectScrollbar('update')
+                $('#dirs-list').perfectScrollbar('update')
+                $('#issledovaniya-scroll').perfectScrollbar('update')
             }
 
-            $(".floatThead").floatThead('reflow');
-            $(".floatThead").floatThead({
+            $('.floatThead').floatThead('reflow')
+            $('.floatThead').floatThead({
                 useAbsolutePositioning: false,
                 scrollContainer: function ($table) {
-                    return $table.closest("div");
+                    return $table.closest('div')
                 }
-            });
+            })
 
-            if (!$('#result-jade-form').length) return;
-            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 50);
-            $('#result-jade-form').perfectScrollbar({suppressScrollX: true});
+            if (!$('#result-jade-form').length) return
+            $('#result-jade-form').height($(window).height() - $('#result-jade-form').position().top - 50)
+            $('#result-jade-form').perfectScrollbar({suppressScrollX: true})
         }
-        let insave = false;
+
+        let insave = false
+
         function save(noreload, fc) {
-            if(insave)
+            if (insave)
                 return
             insave = true
-            $("#confirm-btn").attr("disabled", 1);
-            $("#save-btn").attr("disabled", 1);
-            $("#confirm-andsave-btn").attr("disabled", 1);
-            if (datatype === 2) return;
-            $(this).disabled = true;
-            let result = {issledovaniye: -1, fractions: {}};
-            result.issledovaniye = $("#issledovaniye_id").val();
-            result.fractions_ref = {};
-            $.each($(".result-enter:not(.group-title):not(.subgroup-value)"), function (k, v) {
-                result.fractions[$(v).data("pk")] = $(v).val();
-                result.fractions_ref[$(v).data("pk")] = JSON.parse(_.unescape($(`.fraction-row[data-fraction-pk="${$(v).data("pk")}"]`).attr("data-ref")));
-            });
-            result.comment = $(".lab_comment").val() || "";
-            result.fractions = JSON.stringify(result.fractions);
-            result.fractions_ref = JSON.stringify(result.fractions_ref);
-            result.co_executor = $('#laborant').length ? $('#laborant').val(): '-1';
-            result.co_executor2 = $('#coexecutor').length ? $('#coexecutor').val(): '-1';
-            $(this).disabled = false;
-            $.ajax({url: "/results/save", method: "POST", data: result}).done(function () {
+            $('#confirm-btn').attr('disabled', 1)
+            $('#save-btn').attr('disabled', 1)
+            $('#confirm-andsave-btn').attr('disabled', 1)
+            if (datatype === 2) return
+            $(this).disabled = true
+            let result = {issledovaniye: -1, fractions: {}}
+            result.issledovaniye = $('#issledovaniye_id').val()
+            result.fractions_ref = {}
+            $.each($('.result-enter:not(.group-title):not(.subgroup-value)'), function (k, v) {
+                result.fractions[$(v).data('pk')] = $(v).val()
+                result.fractions_ref[$(v).data('pk')] = JSON.parse(_.unescape($(`.fraction-row[data-fraction-pk="${$(v).data('pk')}"]`).attr('data-ref')))
+            })
+            result.comment = $('.lab_comment').val() || ''
+            result.fractions = JSON.stringify(result.fractions)
+            result.fractions_ref = JSON.stringify(result.fractions_ref)
+            result.co_executor = $('#laborant').length ? $('#laborant').val() : '-1'
+            result.co_executor2 = $('#coexecutor').length ? $('#coexecutor').val() : '-1'
+            $(this).disabled = false
+            $.ajax({url: '/results/save', method: 'POST', data: result}).done(function () {
                 emit_event('results_save', {pk: result.issledovaniye, user: user_pk, dir: dir_active})
                 if (!noreload)
-                    reload_fast();
+                    reload_fast()
                 else {
-                    fc();
+                    fc()
                 }
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
                         title: 'Результат сохранен',
-                        message: "",
+                        message: '',
                         info: '',
                         icon: 'glyphicon glyphicon-ok'
                     },
                     'position': 'bottom right',
                     delay: 6000
-                });
+                })
             }).always(() => {
                 insave = false
-            });
+            })
         }
 
         function confirm_results(ignore) {
 
-            $(this).prop("disabled", true);
+            $(this).prop('disabled', true)
             if (has_o && !ignore) {
-                $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
-                $('#dataConfirmOK').attr('onclick', "confirm_results(true);$('#dataConfirmModal').modal('hide');return false;");
-                $('#dataConfirmModal').modal({show: true});
-                return false;
+                $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'))
+                $('#dataConfirmOK').attr('onclick', 'confirm_results(true);$(\'#dataConfirmModal\').modal(\'hide\');return false;')
+                $('#dataConfirmModal').modal({show: true})
+                return false
             }
 
             $.ajax({
-                "url": "/results/confirm/list",
-                method: "POST",
-                type: "json",
+                'url': '/results/confirm/list',
+                method: 'POST',
+                type: 'json',
                 data: {list: JSON.stringify(iss_pks)}
             }).done(function (data) {
                 for (const pk of iss_pks) {
                     emit_event('result_confirm', {pk: pk, dir: dir_active})
                 }
-                reload_fast();
+                reload_fast()
                 if (data.ok) {
                     $.amaran({
                         'theme': 'awesome ok',
                         'content': {
                             title: 'Исследования подтверждены',
-                            message: "",
+                            message: '',
                             info: '',
                             icon: 'glyphicon glyphicon-ok'
                         },
                         'position': 'bottom right',
                         delay: 6000
-                    });
+                    })
                 }
-                $("#result-confirm").attr("disabled", 1);
-            });
+                $('#result-confirm').attr('disabled', 1)
+            })
         }
 
         function confirm_result() {
-            $("#confirm_result-btn").attr("disabled", 1);
-            $("#save-btn").attr("disabled", 1);
-            $("#confirm_result-andsave-btn").attr("disabled", 1);
-            $("#ref-settings-btn").prop("disabled", true);
+            $('#confirm_result-btn').attr('disabled', 1)
+            $('#save-btn').attr('disabled', 1)
+            $('#confirm_result-andsave-btn').attr('disabled', 1)
+            $('#ref-settings-btn').prop('disabled', true)
             $.ajax({
-                "url": "/results/confirm",
-                method: "POST",
-                data: {pk: $("#issledovaniye_id").val()}
+                'url': '/results/confirm',
+                method: 'POST',
+                data: {pk: $('#issledovaniye_id').val()}
             }).done(function () {
                 emit_event('result_confirm', {pk: loaded_research, dir: dir_active})
-                reload_fast();
+                reload_fast()
                 $.amaran({
                     'theme': 'awesome ok',
                     'content': {
                         title: 'Исследование подтверждено',
-                        message: "",
+                        message: '',
                         info: '',
                         icon: 'glyphicon glyphicon-ok'
                     },
                     'position': 'bottom right',
                     delay: 6000
-                });
-            });
+                })
+            })
         }
 
         function print_results() {
-            printResults(dir_data.napr_pk);
+            printResults(dir_data.napr_pk)
             // list_reload = true;
             //$('[direction="' + dir_data.napr_pk + '"]').remove();
         }
 
         function createjournal() {
-            const date = $("[name=date-confirm]").val();
+            const date = $('[name=date-confirm]').val()
             const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',
                     'content': {
                         title: 'Не выбран источник финансирования',
-                        message: "",
+                        message: '',
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 5000
-                });
-                return;
+                })
+                return
             }
-            const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&lab_pk="+lab_pk, '_blank');
+            const arr = JSON.parse('[' + v + ']')
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + '&group=' + $('#select-journal-group').val() + '&lab_pk=' + lab_pk, '_blank')
         }
+
         function createjournalcodes() {
-            const date = $("[name=date-confirm]").val();
+            const date = $('[name=date-confirm]').val()
             const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',
                     'content': {
                         title: 'Не выбран источник финансирования',
-                        message: "",
+                        message: '',
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 5000
-                });
-                return;
+                })
+                return
             }
-            const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&group=" + $("#select-journal-group").val() + "&codes=1&lab_pk="+lab_pk, '_blank');
+            const arr = JSON.parse('[' + v + ']')
+            window.open('/results/journal?date=' + date + '&ist_f=' + JSON.stringify(arr) + '&group=' + $('#select-journal-group').val() + '&codes=1&lab_pk=' + lab_pk, '_blank')
         }
+
         function createjournaltable() {
-            const date = $("[name=date-confirm]").val();
+            const date = $('[name=date-confirm]').val()
             const v = $('#ist_f').val()
             if (!v) {
                 $.amaran({
                     'theme': 'awesome no',
                     'content': {
                         title: 'Не выбран источник финансирования',
-                        message: "",
+                        message: '',
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 5000
-                });
-                return;
+                })
+                return
             }
-            const arr = JSON.parse('[' + v + ']');
-            window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr) + "&lab_pk="+lab_pk, '_blank');
+            const arr = JSON.parse('[' + v + ']')
+            window.open('/results/journal_table?date=' + date + '&ist_f=' + JSON.stringify(arr) + '&lab_pk=' + lab_pk, '_blank')
         }
+
         function open_fill_form() {
-            sl();
-            let tubes = new Set();
-            fill_researches = {};
+            sl()
+            let tubes = new Set()
+            fill_researches = {}
             for (let iss of dir_data.issledovaniya) {
-                for (let tube of iss.tube.pk.split(",")) {
-                    tubes.add(parseInt(tube));
+                for (let tube of iss.tube.pk.split(',')) {
+                    tubes.add(parseInt(tube))
                     if (fill_researches[tube] === undefined)
-                        fill_researches[tube] = new Set();
-                    fill_researches[tube].add({pk: iss.pk, research_pk: iss.research_pk});
+                        fill_researches[tube] = new Set()
+                    fill_researches[tube].add({pk: iss.pk, research_pk: iss.research_pk})
                 }
             }
-            $("#fillform-tubes").html("");
+            $('#fillform-tubes').html('')
             for (let tube of tubes) {
-                $("#fillform-tubes").append(`<option value='${tube}'>${tube}</option>`);
+                $('#fillform-tubes').append(`<option value='${tube}'>${tube}</option>`)
             }
-            $("#fillform-text").val("");
-            $("[name=fillform-type][value=empty]").prop("checked", true);
-            $("#fillform-modal").modal();
-            hl();
+            $('#fillform-text').val('')
+            $('[name=fillform-type][value=empty]').prop('checked', true)
+            $('#fillform-modal').modal()
+            hl()
         }
 
         function do_fill() {
-            sl();
-            let tube = parseInt($("#fillform-tubes").val());
-            let all = $("[name=fillform-type]:checked").val() === "all";
-            let researches = fill_researches[tube];
-            let text_to_fill = $("#fillform-text").val();
+            sl()
+            let tube = parseInt($('#fillform-tubes').val())
+            let all = $('[name=fillform-type]:checked').val() === 'all'
+            let researches = fill_researches[tube]
+            let text_to_fill = $('#fillform-text').val()
             for (let res of researches) {
                 (function (res_pk) {
-                    queue_fill.push(res_pk);
+                    queue_fill.push(res_pk)
                     $.ajaxq('/researches/get/one', {
-                        url: "/researches/get/one",
-                        method: "GET",
+                        url: '/researches/get/one',
+                        method: 'GET',
                         data: {id: res_pk}
                     }).done(function (data) {
                         $.ajaxq('/results/get', {
-                            url: "/results/get",
-                            type: "text",
-                            method: "GET",
+                            url: '/results/get',
+                            type: 'text',
+                            method: 'GET',
                             data: {iss_id: res_pk}
                         }).done(function (results_data) {
-                            sl();
-                            let fractions_data = data.fractions;
-                            let result = {issledovaniye: res_pk, fractions: {}};
-                            let isnorm = results_data.norms;
-                            results_data = results_data.results;
+                            sl()
+                            let fractions_data = data.fractions
+                            let result = {issledovaniye: res_pk, fractions: {}}
+                            let isnorm = results_data.norms
+                            results_data = results_data.results
                             for (let fk of Object.keys(fractions_data)) {
-                                let fv = fractions_data[fk];
-                                fv.pk += "";
-                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] === "") && fv.render_type === 0) {
-                                    result.fractions[fv.pk] = text_to_fill;
+                                let fv = fractions_data[fk]
+                                fv.pk += ''
+                                if ((all || !(fv.pk in results_data) || results_data[fv.pk] === '') && fv.render_type === 0) {
+                                    result.fractions[fv.pk] = text_to_fill
                                 } else if ((fv.render_type === 1 || !all) && fv.pk in results_data) {
-                                    result.fractions[fv.pk] = results_data[fv.pk];
+                                    result.fractions[fv.pk] = results_data[fv.pk]
                                 }
                             }
                             if (Object.keys(result.fractions).length > 0) {
-                                result.fractions = JSON.stringify(result.fractions);
+                                result.fractions = JSON.stringify(result.fractions)
                                 $.ajax({
-                                    url: "/results/save",
-                                    method: "POST",
+                                    url: '/results/save',
+                                    method: 'POST',
                                     data: result
                                 }).done(function () {
-                                    let index = queue_fill.indexOf(res_pk);
+                                    let index = queue_fill.indexOf(res_pk)
                                     if (index > -1) {
-                                        queue_fill.splice(index, 1);
+                                        queue_fill.splice(index, 1)
                                     }
                                     if (queue_fill.length === 0) {
-                                        hl();
-                                        reload_fast();
+                                        hl()
+                                        reload_fast()
                                     }
                                     emit_event('results_save', {
                                         pk: result.issledovaniye,
                                         user: user_pk,
                                         dir: dir_active
                                     })
-                                });
-                            }
-                            else {
-                                let index = queue_fill.indexOf(res_pk);
+                                })
+                            } else {
+                                let index = queue_fill.indexOf(res_pk)
                                 if (index > -1) {
-                                    queue_fill.splice(index, 1);
+                                    queue_fill.splice(index, 1)
                                 }
                                 if (queue_fill.length === 0) {
-                                    $("#fill-hide").click();
-                                    hl();
-                                    reload_fast();
+                                    $('#fill-hide').click()
+                                    hl()
+                                    reload_fast()
                                 }
                             }
-                        });
-                    });
-                })(res.pk);
+                        })
+                    })
+                })(res.pk)
             }
         }
+
         function openexeclist() {
-            load_researches();
-            $("#list-modal").modal();
+            load_researches()
+            $('#list-modal').modal()
         }
+
         function openjournal() {
-            $("#journal-modal").modal();
+            $('#journal-modal').modal()
         }
+
         function dayprint() {
-            load_researches("#dayprint-table-researches");
-            $("#results-day-modal").modal();
+            load_researches('#dayprint-table-researches')
+            $('#results-day-modal').modal()
         }
+
         function deff(status, pk) {
-            if (lockdeff) return;
-            lockdeff = true;
-            $.ajax({url: "/directions/def", data: {pk: pk, status: status}}).done(function () {
-                lockdeff = false;
-                reload_fast();
-            });
+            if (lockdeff) return
+            lockdeff = true
+            $.ajax({url: '/directions/def', data: {pk: pk, status: status}}).done(function () {
+                lockdeff = false
+                reload_fast()
+            })
         }
+
         function dayprint_do() {
-            if (lockdeff) return;
-            lockdeff = true;
-            let researches = [];
-            $.each($("#dayprint-table-researches .research-sel:checked"), function (k, v) {
-                researches.push(parseInt($(v).val()));
-            });
+            if (lockdeff) return
+            lockdeff = true
+            let researches = []
+            $.each($('#dayprint-table-researches .research-sel:checked'), function (k, v) {
+                researches.push(parseInt($(v).val()))
+            })
             if (researches.length === 0) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
-                        title: "Печать невозможна",
-                        message: "Ничего не выбрано",
+                        title: 'Печать невозможна',
+                        message: 'Ничего не выбрано',
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 6000
-                });
-                lockdeff = false;
-                return;
+                })
+                lockdeff = false
+                return
             }
-            sl();
+            sl()
             $.ajax({
-                url: "/results/day",
+                url: '/results/day',
                 data: {
-                    date: $("[name=dateday-confirm]").val(),
+                    date: $('[name=dateday-confirm]').val(),
                     researches: JSON.stringify(researches),
-                    otd: $("#print-results-otd").val()
+                    otd: $('#print-results-otd').val()
                 }
             }).done(function (data) {
-                lockdeff = false;
+                lockdeff = false
                 if (Object.keys(data.directions).length > 0) {
-                    let strs = [];
+                    let strs = []
                     for (let l = 0; l < Object.keys(data.directions).length; l++) {
-                        strs = _.union(strs, data.directions[Object.keys(data.directions)[l]]);
+                        strs = _.union(strs, data.directions[Object.keys(data.directions)[l]])
                     }
-                    printResults(strs);
-                    $("#results-day-modal").modal('hide');
-                }
-                else {
+                    printResults(strs)
+                    $('#results-day-modal').modal('hide')
+                } else {
                     $.amaran({
                         'theme': 'awesome wrn',
                         'content': {
-                            title: "Печать невозможна",
-                            message: "Ничего не найдено",
+                            title: 'Печать невозможна',
+                            message: 'Ничего не найдено',
                             info: '',
                             icon: 'fa fa-exclamation'
                         },
                         'position': 'bottom right',
                         delay: 6000
-                    });
+                    })
                 }
-                hl();
-            });
+                hl()
+            })
         }
+
         function createlist(type) {
-            let datestart, dateend;
-            datestart = dateend = "";
-            let researches = [];
-            $.each($("#table-researches .research-sel:checked"), function (k, v) {
-                researches.push(parseInt($(v).val()));
-            });
+            let datestart, dateend
+            datestart = dateend = ''
+            let researches = []
+            $.each($('#table-researches .research-sel:checked'), function (k, v) {
+                researches.push(parseInt($(v).val()))
+            })
             if (researches.length === 0) {
                 $.amaran({
                     'theme': 'awesome wrn',
                     'content': {
-                        title: "Создание невозможно",
-                        message: "Ничего не выбрано",
+                        title: 'Создание невозможно',
+                        message: 'Ничего не выбрано',
                         info: '',
                         icon: 'fa fa-exclamation'
                     },
                     'position': 'bottom right',
                     delay: 6000
-                });
-                return;
+                })
+                return
             }
             switch (type) {
                 case 2:
-                    break;
+                    break
                 default:
-                    datestart = $("[name=date-start]").val();
-                    dateend = $("[name=date-end]").val();
-                    break;
+                    datestart = $('[name=date-start]').val()
+                    dateend = $('[name=date-end]').val()
+                    break
             }
             switch (type) {
                 case 3:
-                    window.open(`/mainmenu/receive/execlist?type=nonconfirmed&datestart=${datestart}&dateend=${dateend}&researches=${JSON.stringify(researches)}`, '_blank');
-                    break;
+                    window.open(`/mainmenu/receive/execlist?type=nonconfirmed&datestart=${datestart}&dateend=${dateend}&researches=${JSON.stringify(researches)}`, '_blank')
+                    break
                 default:
-                    window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + "&researches=" + JSON.stringify(researches), '_blank');
-                    break;
+                    window.open('/directions/execlist?type=' + type + '&datestart=' + datestart + '&dateend=' + dateend + '&researches=' + JSON.stringify(researches), '_blank')
+                    break
             }
         }
 
         function load_researches(cont) {
-            let $o = $("#table-researches");
+            let $o = $('#table-researches')
             if (cont !== undefined)
-                $o = $(cont);
-            $o.html("");
-            $o.append(lang.table_researches_header);
+                $o = $(cont)
+            $o.html('')
+            $o.append(lang.table_researches_header)
             $.ajax({ // AJAX запрос
-                url: "/directory/researches/list?lab_id=" + lab_pk,// Установка адреса и параметров запроса
+                url: '/directory/researches/list?lab_id=' + lab_pk,// Установка адреса и параметров запроса
                 dataType: 'json'
             }).done(function (data) {
                 if (data.length === 0) {
-                    $o.append(lang.table_researches_not_found);
-                    return;
+                    $o.append(lang.table_researches_not_found)
+                    return
                 }
-                $o.html("");
-                $o.append(lang.table_researches_header);
+                $o.html('')
+                $o.append(lang.table_researches_header)
                 $.each(data, function (k, v) {
-                    $o.append(`<label title='${v.fields.ref_title}' class="btn btn-default col-xs-3"><input type="checkbox" name="sel" value="${v.pk}" class="research-sel" autocomplete="off"/> ${v.fields.ref_title}</label>`);
-                });
-            });
+                    $o.append(`<label title='${v.fields.ref_title}' class="btn btn-default col-xs-3"><input type="checkbox" name="sel" value="${v.pk}" class="research-sel" autocomplete="off"/> ${v.fields.ref_title}</label>`)
+                })
+            })
         }
+
         function reset_confirm(id, rtitle, tube) {
-            if(dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis) {
-                alert("Результат уже был загружен в РМИС");
+            if (dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis) {
+                alert('Результат уже был загружен в РМИС')
             }
-            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, ёмкость №${tube}?${dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis? ' Результат уже был загружен в РМИС' : ''}`;
-            let doreset = confirm(msg);
+            let msg = `Сбросить подтверждение исследования №${id} - ${rtitle}, ёмкость №${tube}?${dir_data.hasOwnProperty('in_rmis') && dir_data.in_rmis ? ' Результат уже был загружен в РМИС' : ''}`
+            let doreset = confirm(msg)
             if (doreset === false || doreset === null) {
-                return;
+                return
             }
-            sl();
+            sl()
             $.ajax({
-                "url": "/mainmenu/confirm_reset",
-                method: "POST",
+                'url': '/mainmenu/confirm_reset',
+                method: 'POST',
                 data: {pk: id}
             }).done(function (data) {
                 emit_event('result_confirm', {pk: id, dir: dir_active})
                 if (data.ok) {
-                    reload_fast();
+                    reload_fast()
                     $.amaran({
                         'theme': 'awesome ok',
                         'content': {
@@ -2686,7 +2697,7 @@
                         },
                         'position': 'bottom right',
                         delay: 6000
-                    });
+                    })
                 } else {
                     $.amaran({
                         'theme': 'awesome wrn',
@@ -2698,12 +2709,12 @@
                         },
                         'position': 'bottom right',
                         delay: 6000
-                    });
+                    })
 
                 }
             }).always(() => {
-                hl();
-            });
+                hl()
+            })
         }
     </script>
 {% endblock %}

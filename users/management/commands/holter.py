@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 import pdfkit
-import os, datetime
+import os, datetime, sys
 import pathlib, re
 from datetime import datetime
 from dateutil.relativedelta import *
@@ -12,6 +12,7 @@ from integration_framework.models import TempData
 from laboratory.settings import TIME_ZONE, AFTER_DATE_HOLTER
 from django.utils.timezone import pytz
 from django.utils import timezone
+from pyvirtualdisplay import Display
 
 ##################################################
 # в каталогах созданных -20 дней назад
@@ -54,13 +55,17 @@ class Command(BaseCommand):
         podrazdeleniye_manager_pk = SettingManager.get("manager_ofd")
         pk_research = SettingManager.get("holter_pk_research")
 
-        holter_obj, created = TempData.objects.get_or_create(key='holter', defaults={"holter_protocol_date": AFTER_DATE_HOLTER})
         user_timezone = pytz.timezone(TIME_ZONE)
+        datetime_object = datetime.strptime(AFTER_DATE_HOLTER, '%Y-%m-%d %H:%M:%S').astimezone(user_timezone)
+        holter_obj, created = TempData.objects.get_or_create(key='holter',
+                                                             defaults={"holter_protocol_date": datetime_object})
 
         if created:
             date_proto = TempData.objects.values_list('holter_protocol_date').get(key='holter')
+            date_proto = date_proto[0].astimezone(user_timezone)
         else:
             date_proto = holter_obj.holter_protocol_date
+            date_proto = date_proto.astimezone(user_timezone)
 
         doctors = {}
         for i in podrazdeleniye_users:
@@ -80,7 +85,7 @@ class Command(BaseCommand):
                     file_name = holter_path_result.split('/')[-1]
 
                     if stat_info.st_size > 30000 and file_modify > date_proto:
-                        with open(holter_path_result) as file:
+                        with open(holter_path_result, 'r', encoding="cp1251") as file:
                             for line in file:
                                 result = pattern.match(line)
                                 if result:
@@ -113,14 +118,14 @@ class Command(BaseCommand):
                                         copytree(current_dir, temp_dir)
 
                         if find:
-                            with open(temp_dir + file_name, 'r') as f:
+                            with open(temp_dir + file_name, 'r', encoding="cp1251") as f:
                                 old_data = f.read()
                             new_data = old_data.replace('Адрес:', fio + '<br><u>Направление:</u>')
 
-                            with open(temp_dir + file_name, 'w') as f:
+                            with open(temp_dir + file_name, 'w', encoding="cp1251") as f:
                                 f.write(new_data)
 
-                            with open(temp_dir + file_name, 'r') as f:
+                            with open(temp_dir + file_name, 'r', encoding="cp1251") as f:
                                 find_doc = False
                                 break_line = False
                                 pk_doc = None
@@ -140,7 +145,15 @@ class Command(BaseCommand):
 
                             list_fio = fio.split()
                             link = today_dir + f'/{str(num_dir) + "_" + list_fio[2]}.pdf'
-                            pdfkit.from_file(temp_dir + file_name, dst_dir + link)
+                            if sys.platform != 'win32':
+                                try:
+                                    display = Display(visible=0, size=(800, 600))
+                                    display.start()
+                                    pdfkit.from_file(temp_dir + file_name, dst_dir + link)
+                                finally:
+                                    display.stop()
+                            else:
+                                pdfkit.from_file(temp_dir + file_name, dst_dir + link)
                             if pk_doc:
                                 doc_profile = DoctorProfile.objects.filter(pk=pk_doc).first()
                             else:
