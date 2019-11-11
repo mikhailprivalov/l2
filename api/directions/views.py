@@ -862,7 +862,7 @@ def directions_paraclinic_form(request):
                             "lines": field.lines,
                             "title": field.title,
                             "hide": field.hide,
-                            "values_to_input": ([] if not field.required or field.field_type != 10 else
+                            "values_to_input": ([] if not field.required or field.field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
                             "value": (field.default_value if field.field_type not in [3, 11] else '')
                             if not ParaclinicResult.objects.filter(
