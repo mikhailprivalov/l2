@@ -19,8 +19,6 @@
     import researches_point from '../api/researches-point'
     import directions_point from '../api/directions-point'
 
-    const regexDirection = /направление (\d+)\)$/gm
-
     export default {
         name: 'SearchFractionValueField',
         props: {
@@ -44,6 +42,7 @@
                 val: this.value,
                 title: '',
                 units: '',
+                direction: null,
             }
         },
         mounted() {
@@ -51,17 +50,23 @@
                 const titles = new Set([data.research, data.fraction])
                 this.title = [...titles].join(' – ')
                 this.units = data.units
+                this.checkDirection()
             })
         },
         watch: {
             val() {
                 this.changeValue(this.val)
+                this.checkDirection()
             },
         },
         model: {
             event: 'modified'
         },
         methods: {
+            checkDirection() {
+                const res = /направление (\d+)\)$/gm.exec(this.val)
+                this.direction = !res ? null : parseInt(res[1])
+            },
             changeValue(newVal) {
                 this.$emit('modified', newVal)
             },
@@ -78,15 +83,6 @@
             },
             print_results() {
                 this.$root.$emit('print:results', [this.direction])
-            },
-        },
-        computed: {
-            direction() {
-                const res = regexDirection.exec(this.val)
-                if (!res) {
-                    return null
-                }
-                return parseInt(res[1])
             },
         },
     }

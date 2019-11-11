@@ -269,7 +269,7 @@
                                           v-for="field in group.fields">
 
                   <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
-                    {{field.title}}:
+                    {{field.title}}<template v-if="!field.title.endsWith('?')">:</template>
                   </div>
                   <div :class="{disabled: row.confirmed,
                   empty: r_list_pk(row).includes(field.pk),
@@ -283,11 +283,11 @@
                                :duration="400"
                                :on-confirm="clear_val" :value="field"
                                action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                               v-if="!row.confirmed && ![3, 10].includes(field.field_type)">
+                               v-if="!row.confirmed && ![3, 10, 12].includes(field.field_type)">
                       ×
                     </longpress>
                     <div class="field-inputs"
-                         v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10">
+                         v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10 && field.field_type !== 12">
                       <div class="input-values-wrap">
                         <div class="input-values">
                           <div class="inner-wrap">
@@ -331,6 +331,12 @@
                                                    :client-pk="data.patient.card_pk"
                                                    v-model="field.value"/>
                     </div>
+                    <div class="field-value" v-else-if="field.field_type === 12">
+                      <radio-field
+                        :disabled="row.confirmed" :variants="field.values_to_input"
+                        v-model="field.value"
+                      />
+                    </div>
                     <div :title="field.helper" class="field-helper" v-if="field.helper"
                          v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
                       <i class="fa fa-question"></i>
@@ -340,7 +346,7 @@
               </div>
             </div>
           </visibility-group-wrapper>
-          <div class="group" v-if="!data.has_microbiology">
+          <div class="group" v-if="!data.has_microbiology && (!row.confirmed || row.more.length > 0)">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
               <div class="col-xs-6"
@@ -683,6 +689,7 @@
     import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
     import {vField, vGroup} from '../components/visibility-triggers'
     import SelectField from '../fields/SelectField'
+    import RadioField from '../fields/RadioField'
     import SearchFractionValueField from '../fields/SearchFractionValueField'
 
     export default {
@@ -691,7 +698,7 @@
             SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
-            SearchFractionValueField,
+            SearchFractionValueField, RadioField,
         },
         data() {
             return {
@@ -869,7 +876,7 @@
 
                 for (const g of research.research.groups) {
                     for (const f of g.fields) {
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             return false
                         }
                     }
@@ -886,7 +893,7 @@
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
                         }
                     }
@@ -903,7 +910,7 @@
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             l.push(f.pk)
                         }
                     }
@@ -1591,7 +1598,7 @@
       border-right: 3px solid #00a1cb;
 
       &.empty {
-        input, textarea, /deep/ input {
+        input, textarea, /deep/ input, /deep/ select {
           border-color: #f00;
         }
 
@@ -2042,5 +2049,17 @@
         text-decoration: none;
       }
     }
+  }
+
+  .status {
+    padding: 5px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-none {
+    color: #CF3A24
   }
 </style>
