@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import dateformat, timezone
 
+from api.sql_func import get_fraction_result
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -640,7 +641,7 @@ def directions_results_report(request):
                                                                  issledovaniye=i).order_by("field__order"):
                             if r.value == "":
                                 continue
-                            res.append((r.field.title + ": " if r.field.title != "" else "") + r.value)
+                            res.append((r.field.get_title() + ": " if r.field.get_title() != "" else "") + r.value)
 
                         if len(res) == 0:
                             continue
@@ -862,7 +863,7 @@ def directions_paraclinic_form(request):
                             "title": field.title,
                             "hide": field.hide,
                             "values_to_input": json.loads(field.input_templates),
-                            "value": (field.default_value if field.field_type != 3 else '')
+                            "value": (field.default_value if field.field_type not in [3, 11] else '')
                             if not ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
@@ -1139,3 +1140,20 @@ def directions_data_by_fields(request):
             if ParaclinicResult.objects.filter(issledovaniye=i, field=field).exists():
                 data[field.pk] = ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value
     return JsonResponse({"data": data})
+
+
+@login_required
+def last_fraction_result(request):
+    request_data = json.loads(request.body)
+    client_pk = request_data["clientPk"]
+    fraction_pk = int(request_data["fractionPk"])
+    rows = get_fraction_result(client_pk, fraction_pk)
+    result = None
+    if rows:
+        row = rows[0]
+        result = {
+            "direction": row[1],
+            "date": row[4],
+            "value": row[5]
+        }
+    return JsonResponse({"result": result})

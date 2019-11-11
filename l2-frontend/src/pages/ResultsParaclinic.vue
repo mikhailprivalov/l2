@@ -283,7 +283,8 @@
                                :duration="400"
                                :on-confirm="clear_val" :value="field"
                                action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                               v-if="!row.confirmed && field.field_type !== 3 && field.field_type !== 10">×
+                               v-if="!row.confirmed && ![3, 10].includes(field.field_type)">
+                      ×
                     </longpress>
                     <div class="field-inputs"
                          v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10">
@@ -299,8 +300,8 @@
                       </div>
                     </div>
                     <div class="field-value" v-if="field.field_type === 0">
-                    <textarea :readonly="row.confirmed" :rows="field.lines" class="form-control"
-                              v-if="field.lines > 1" v-model="field.value"></textarea>
+                      <textarea :readonly="row.confirmed" :rows="field.lines" class="form-control"
+                                v-if="field.lines > 1" v-model="field.value"></textarea>
                       <input :readonly="row.confirmed" class="form-control" v-else v-model="field.value"/>
                     </div>
                     <div class="field-value" v-else-if="field.field_type === 1">
@@ -323,6 +324,12 @@
                         :disabled="row.confirmed" :variants="field.values_to_input" class="form-control fw"
                         v-model="field.value"
                       />
+                    </div>
+                    <div class="field-value" v-else-if="field.field_type === 11">
+                      <search-fraction-value-field :readonly="row.confirmed"
+                                                   :fraction-pk="field.default_value"
+                                                   :client-pk="data.patient.card_pk"
+                                                   v-model="field.value"/>
                     </div>
                     <div :title="field.helper" class="field-helper" v-if="field.helper"
                          v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
@@ -676,6 +683,7 @@
     import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
     import {vField, vGroup} from '../components/visibility-triggers'
     import SelectField from '../fields/SelectField'
+    import SearchFractionValueField from '../fields/SearchFractionValueField'
 
     export default {
         name: 'results-paraclinic',
@@ -683,6 +691,7 @@
             SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
+            SearchFractionValueField,
         },
         data() {
             return {
@@ -1212,7 +1221,7 @@
             append_fields_values(row, data) {
                 for (const g of row.research.groups) {
                     for (const f of g.fields) {
-                        if (![3, 1].includes(f.field_type) && data[f.pk]) {
+                        if (![3, 1, 11].includes(f.field_type) && data[f.pk]) {
                             this.append_value(f, data[f.pk])
                         }
                     }
@@ -1256,7 +1265,7 @@
                 this.slot.data.direction_service = pk
             },
             add_researches(row, pks) {
-                this.create_directions(row);
+                this.create_directions(row)
                 setTimeout(() => {
                     for (const pk of pks) {
                         this.$root.$emit('researches-picker:add_researchcd', pk)

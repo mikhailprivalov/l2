@@ -22,4 +22,5 @@ urlpatterns = [
     path('paraclinic_result_history', views.directions_paraclinic_history),
     path('patient-history', views.directions_patient_history),
     path('data-by-fields', views.directions_data_by_fields),
+    path('last-fraction-result', views.last_fraction_result),
 ]

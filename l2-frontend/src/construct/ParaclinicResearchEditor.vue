@@ -111,6 +111,10 @@
                 <strong>Формула:</strong>
                 <input v-model="row.default" class="form-control"/>
               </div>
+              <div v-else-if="row.field_type === 11">
+                <strong>ID фракции:</strong>
+                <input v-model="row.default" class="form-control"/>
+              </div>
               <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10">
                 <div class="header" v-collapse-toggle>
                   <a href="#" @click.prevent v-if="row.field_type === 0">
@@ -183,6 +187,7 @@
                   <option value="2">Диагноз по МКБ</option>
                   <option value="3">Расчётное</option>
                   <option value="10">Справочник</option>
+                  <option value="11">Фракция</option>
                 </select>
               </label>
             </div>
