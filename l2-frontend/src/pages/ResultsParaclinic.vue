@@ -869,7 +869,7 @@
 
                 for (const g of research.research.groups) {
                     for (const f of g.fields) {
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             return false
                         }
                     }
@@ -886,7 +886,7 @@
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
                         }
                     }
@@ -903,7 +903,7 @@
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
                             l.push(f.pk)
                         }
                     }
@@ -1591,7 +1591,7 @@
       border-right: 3px solid #00a1cb;
 
       &.empty {
-        input, textarea, /deep/ input {
+        input, textarea, /deep/ input, /deep/ select {
           border-color: #f00;
         }
 
@@ -2041,5 +2041,17 @@
         text-decoration: none;
       }
     }
+  }
+
+  .status {
+    padding: 5px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-none {
+    color: #CF3A24
   }
 </style>
