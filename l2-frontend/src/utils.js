@@ -1,10 +1,10 @@
-export const CalculateVisibility = (fields, rule) => {
-  return Boolean(CalculateFormula(fields, rule, true))
+export const CalculateVisibility = (fields, rule, patient={}) => {
+  return Boolean(CalculateFormula(fields, rule, patient, true))
 }
 
 
-export const CalculateFormula = (fields, formula, strict = false) => {
-  let s = PrepareFormula(fields, formula, strict)
+export const CalculateFormula = (fields, formula, patient={}, strict = false) => {
+  let s = PrepareFormula(fields, formula, patient, strict)
 
   try {
     return (new Function(s)()) || 0
@@ -13,7 +13,9 @@ export const CalculateFormula = (fields, formula, strict = false) => {
   }
 }
 
-export const PrepareFormula = (fields, formula, strict = false) => {
+const patientProps = ['age', 'sex'];
+
+export const PrepareFormula = (fields, formula, patient={}, strict = false) => {
   let s = formula
   let necessary = s.match(/{(\d+)}/g)
 
@@ -38,5 +40,11 @@ export const PrepareFormula = (fields, formula, strict = false) => {
       }
     }
   }
+
+  for (const prop of patientProps) {
+    const r = new RegExp(`\\[_${prop}_\\]`, 'g')
+    s = s.replace(r, patient[prop] || '')
+  }
+
   return `return (${s});`
 }

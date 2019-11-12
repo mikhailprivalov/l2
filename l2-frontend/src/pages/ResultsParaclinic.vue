@@ -261,11 +261,13 @@
           </div>
           <visibility-group-wrapper :group="group"
                                     :groups="row.research.groups"
+                                    :patient="data.patient"
                                     v-for="group in row.research.groups">
             <div class="group">
               <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
               <div class="fields">
                 <visibility-field-wrapper :formula="field.visibility" :groups="row.research.groups"
+                                          :patient="data.patient"
                                           v-for="field in group.fields">
 
                   <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
@@ -314,6 +316,7 @@
                     <div class="field-value mkb10" v-else-if="field.field_type === 3">
                       <formula-field :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])"
                                      :formula="field.default_value"
+                                     :patient="data.patient"
                                      v-model="field.value"/>
                     </div>
                     <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">

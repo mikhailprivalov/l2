@@ -740,6 +740,8 @@ def directions_paraclinic_form(request):
             response["card_internal"] = d.client.base.internal_type
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
+                "age": d.client.individual.age(),
+                "sex": d.client.individual.sex.lower(),
                 "card": d.client.number_with_type(),
                 "card_pk": d.client_id,
                 "individual_pk": d.client.individual_id,

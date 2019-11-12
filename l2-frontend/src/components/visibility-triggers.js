@@ -1,16 +1,16 @@
 import {CalculateVisibility} from '../utils'
 import {flatten} from 'lodash-es/array'
 
-export const vField = (groups, formula) => formula === '' || CalculateVisibility(objFields(groups), formula)
+export const vField = (groups, formula, patient={}) => formula === '' || CalculateVisibility(objFields(groups), formula, patient)
 
-export const vGroup = (group, groups) => {
+export const vGroup = (group, groups, patient={}) => {
   const fields = objFields(groups);
   const {visibility: formula} = group
-  if(formula !== '' && !CalculateVisibility(fields, formula)) {
+  if(formula !== '' && !CalculateVisibility(fields, formula, patient)) {
     return false;
   }
   for (const field of group.fields) {
-    if (field.visibility === '' || CalculateVisibility(fields, field.visibility)) {
+    if (field.visibility === '' || CalculateVisibility(fields, field.visibility, patient)) {
       return true;
     }
   }
