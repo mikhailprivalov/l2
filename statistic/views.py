@@ -537,8 +537,8 @@ def statistic_xls(request):
             ]
             v = {}
             for p in ParaclinicResult.objects.filter(issledovaniye=i):
-                if p.field.title in ts:
-                    v[p.field.title] = p.value
+                if p.field.get_title() in ts:
+                    v[p.field.get_title()] = p.value
             for t in ts:
                 row.append(v.get(t, ""))
             row.append("V")

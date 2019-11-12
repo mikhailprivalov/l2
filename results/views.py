@@ -1191,16 +1191,16 @@ def result_print(request):
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.title != "":
+                                if r.field.get_title() != "":
                                     fwb.append(Paragraph(
                                         "<font face=\"OpenSansBold\">{}:</font> {}".format(
-                                            r.field.title.replace('<', '&lt;').replace('>', '&gt;'), v),
+                                            r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v),
                                         style_ml if group_title else style))
                                 else:
                                     fwb.append(Paragraph(v, style))
                                 #чтобы вывести в будущем дополнительно сведения о листке нетрудоспособности (квиток, талон, корешок)
                                 if sick_title:
-                                    sick_result[r.field.title] = v
+                                    sick_result[r.field.get_title()] = v
                 else:
                     txt = ""
                     sick_result = None
@@ -1222,14 +1222,14 @@ def result_print(request):
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.title != "":
+                                if r.field.get_title() != "":
                                     vals.append(
-                                        "{}:&nbsp;{}".format(r.field.title.replace('<', '&lt;').replace('>', '&gt;'),
+                                        "{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'),
                                                              v))
                                 else:
                                     vals.append(v)
                                 if sick_title:
-                                    sick_result[r.field.title] = v
+                                    sick_result[r.field.get_title()] = v
 
                             txt += "; ".join(vals)
                             txt = txt.strip()

@@ -78,4 +78,7 @@ export default generator({
   paraclinicDataByFields: {
     url: 'directions/data-by-fields',
   },
+  lastFractionResult: {
+    url: 'directions/last-fraction-result',
+  },
 })

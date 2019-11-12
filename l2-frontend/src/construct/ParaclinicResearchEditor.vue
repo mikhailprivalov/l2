@@ -111,7 +111,11 @@
                 <strong>Формула:</strong>
                 <input v-model="row.default" class="form-control"/>
               </div>
-              <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10">
+              <div v-else-if="row.field_type === 11">
+                <strong>ID фракции:</strong>
+                <input v-model="row.default" class="form-control"/>
+              </div>
+              <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10 || row.field_type === 12">
                 <div class="header" v-collapse-toggle>
                   <a href="#" @click.prevent v-if="row.field_type === 0">
                     Шаблоны быстрого ввода (кол-во: {{ row.values_to_input.length }})
@@ -183,6 +187,8 @@
                   <option value="2">Диагноз по МКБ</option>
                   <option value="3">Расчётное</option>
                   <option value="10">Справочник</option>
+                  <option value="11">Фракция</option>
+                  <option value="12">Радио</option>
                 </select>
               </label>
             </div>

@@ -26,5 +26,8 @@ export default generator({
   },
   saveFastTemplate: {
     url: 'researches/fast-template-save'
-  }
+  },
+  fractionTitle: {
+    url: 'researches/fraction-title'
+  },
 })
