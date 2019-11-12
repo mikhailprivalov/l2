@@ -1918,7 +1918,7 @@
     }
 
     &-1 {
-      color: #F4D03F;
+      color: #f7581c;
     }
 
     &-2 {
@@ -2016,8 +2016,9 @@
     }
 
     &_need, &_need:focus, &_need:active, &_need:hover {
-      color: #F4D03F !important;
-      text-shadow: 0 0 4px rgba(#F4D03F, .6);
+      color: #f7581c !important;
+      text-shadow: 0 0 4px rgba(#f7581c, .6);
+      font-weight: bold;
     }
 
     &_finished, &_finished:focus, &_finished:active, &_finished:hover {
