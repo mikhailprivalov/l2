@@ -1187,6 +1187,8 @@ def result_print(request):
                                 group_title = True
                             for r in results:
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                                v = v.replace('&lt;sub&gt;', '<sub>')
+                                v = v.replace('&lt;/sub&gt;', '</sub>')
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
@@ -1218,6 +1220,10 @@ def result_print(request):
                             vals = []
                             for r in results:
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                                v = v.replace('&lt;sub&gt;', '<sub>')
+                                v = v.replace('&lt;/sub&gt;', '</sub>')
+                                v = v.replace('&lt;sup&gt;', '<sup>')
+                                v = v.replace('&lt;/sup&gt;', '</sup>')
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
