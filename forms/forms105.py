@@ -421,12 +421,13 @@ def form_02(request_data):
                 final_tree[j[5]] = Node(temp_s, parent=final_tree.get(j[3]))
 
         counter = 0
+        s = u'\u2063'
         for row in RenderTree(node_dir):
             counter += 1
             result = pattern.search(row.node.name)
             current_style = styleBold if result else styleT
-            count_space = 7 if counter >= 3 else 0
-            para = Paragraph('{}{}{}'.format(space_symbol * count_space, row.pre, row.node.name), current_style)
+            count_space = len(row.pre) // 2
+            para = Paragraph('{}{}'.format(s * count_space , row.node.name), current_style)
             objs.append(para)
 
         objs.append(PageBreak())
