@@ -51,6 +51,12 @@
                 this.title = [...titles].join(' – ')
                 this.units = data.units
                 this.checkDirection()
+
+                setTimeout(() => {
+                  if (!this.val || this.val === '') {
+                      this.loadLast()
+                  }
+                }, 200)
             })
         },
         watch: {
@@ -78,7 +84,7 @@
                 if (result) {
                     this.val = `${result.value}${this.units === '' ? '' : ' ' + this.units} (${result.date}, направление ${result.direction})`
                 } else {
-                    errmessage('Результат не найден!')
+                    errmessage(`Результат не найден (${this.title})!`)
                 }
             },
             print_results() {
