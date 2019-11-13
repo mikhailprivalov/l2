@@ -1222,8 +1222,8 @@ def result_print(request):
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 v = v.replace('&lt;sub&gt;', '<sub>')
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
-                                v = v.replace('&lt;sup&gt;', '<sub>')
-                                v = v.replace('&lt;/sup&gt;', '</sub>')
+                                v = v.replace('&lt;sup&gt;', '<sup>')
+                                v = v.replace('&lt;/sup&gt;', '</sup>')
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
