@@ -271,7 +271,8 @@
                                           v-for="field in group.fields">
 
                   <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
-                    {{field.title}}<template v-if="!field.title.endsWith('?')">:</template>
+                    {{field.title}}
+                    <template v-if="!field.title.endsWith('?')">:</template>
                   </div>
                   <div :class="{disabled: row.confirmed,
                   empty: r_list_pk(row).includes(field.pk),
@@ -520,10 +521,12 @@
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
             <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed" :disabled="!r(row)">
+            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed && can_confirm"
+                    :disabled="!r(row)">
               Сохранить и подтвердить
             </button>
-            <button class="btn btn-blue-nb" @click="reset_confirm(row)" v-if="row.confirmed && row.allow_reset_confirm">
+            <button class="btn btn-blue-nb" @click="reset_confirm(row)"
+                    v-if="row.confirmed && row.allow_reset_confirm && can_confirm">
               Сброс подтверждения
             </button>
             <div class="status-list" v-if="!r(row)">
@@ -1359,6 +1362,14 @@
                     }
                 }
                 return r
+            },
+            can_confirm() {
+                for (let g of (this.$store.getters.user_data.groups || [])) {
+                    if (g === 'Без подтверждений') {
+                        return false
+                    }
+                }
+                return true
             },
         }
     }
