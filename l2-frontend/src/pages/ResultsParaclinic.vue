@@ -271,8 +271,8 @@
                                           v-for="field in group.fields">
 
                   <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
-                    {{field.title}}
-                    <template v-if="!field.title.endsWith('?')">:</template>
+                    <template v-if="field.title.endsWith('?')">{{field.title}}</template>
+                    <template v-else>{{field.title}}:</template>
                   </div>
                   <div :class="{disabled: row.confirmed,
                   empty: r_list_pk(row).includes(field.pk),
