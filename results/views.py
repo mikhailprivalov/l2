@@ -81,7 +81,8 @@ def enter(request):
     """ Представление для страницы ввода результатов """
     from podrazdeleniya.models import Podrazdeleniya
     lab = Podrazdeleniya.objects.get(pk=request.GET.get("lab_pk", request.user.doctorprofile.podrazdeleniye_id))
-    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(title="Внешние организации").order_by("title")
+    labs = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).exclude(
+        title="Внешние организации").order_by("title")
     if lab.p_type != Podrazdeleniya.LABORATORY:
         lab = labs[0]
     podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.DEPARTMENT).order_by("title")
@@ -243,7 +244,8 @@ def results_save(request):
 
             issledovaniye.time_save = timezone.now()  # Время сохранения
             issledovaniye.lab_comment = request.POST.get("comment", "")
-            issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(request.POST["co_executor"])
+            issledovaniye.co_executor_id = None if request.POST.get("co_executor", '-1') == '-1' else int(
+                request.POST["co_executor"])
             issledovaniye.def_uet = 0
             issledovaniye.co_executor_uet = 0
 
@@ -257,7 +259,8 @@ def results_save(request):
                     for r in Result.objects.filter(issledovaniye=issledovaniye):
                         issledovaniye.co_executor_uet += r.fraction.uet_co_executor_1
 
-            issledovaniye.co_executor2_id = None if request.POST.get("co_executor2", '-1') == '-1' else int(request.POST["co_executor2"])
+            issledovaniye.co_executor2_id = None if request.POST.get("co_executor2", '-1') == '-1' else int(
+                request.POST["co_executor2"])
             issledovaniye.co_executor2_uet = 0
             if issledovaniye.co_executor2_id:
                 for r in Result.objects.filter(issledovaniye=issledovaniye):
@@ -640,7 +643,8 @@ def result_print(request):
         data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
         data += [[Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
                  ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:",
-                  direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika]]
+                  direction.client.number_with_type() + (
+                      " - архив" if direction.client.is_archive else "") + number_poliklinika]]
         if not direction.imported_from_rmis:
             data.append(
                 ["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.doc.podrazdeleniye.title)])
@@ -906,7 +910,8 @@ def result_print(request):
 
                                 norm = "none"
                                 # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and f.print_title==False:
+                                if Result.objects.filter(issledovaniye=iss,
+                                                         fraction=f).exists() and f.print_title == False:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
@@ -915,8 +920,8 @@ def result_print(request):
                                     f_units = r.get_units()
                                 # начало Касьяненко С.Н. Вывести жирным только название фракции. Если свойство print_title true
                                 elif f.print_title:
-                                    tmp[0]=(Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
-                                                         styleSheet["BodyText"]))
+                                    tmp[0] = (Paragraph('<font face="CalibriBold" size="10">{}</font>'.format(f.title),
+                                                        styleSheet["BodyText"]))
                                     data.append(tmp)
                                     continue
                                 # начало Касьяненко С.Н.
@@ -1189,10 +1194,14 @@ def result_print(request):
                                 v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                                 v = v.replace('&lt;sub&gt;', '<sub>')
                                 v = v.replace('&lt;/sub&gt;', '</sub>')
+                                v = v.replace('&lt;sup&gt;', '<sup>')
+                                v = v.replace('&lt;/sup&gt;', '</sup>')
                                 if r.field.field_type == 1:
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                                if r.field.field_type == 11:
+                                    v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                 if r.field.get_title() != "":
                                     fwb.append(Paragraph(
                                         "<font face=\"OpenSansBold\">{}:</font> {}".format(
@@ -1200,7 +1209,7 @@ def result_print(request):
                                         style_ml if group_title else style))
                                 else:
                                     fwb.append(Paragraph(v, style))
-                                #чтобы вывести в будущем дополнительно сведения о листке нетрудоспособности (квиток, талон, корешок)
+                                # чтобы вывести в будущем дополнительно сведения о листке нетрудоспособности (квиток, талон, корешок)
                                 if sick_title:
                                     sick_result[r.field.get_title()] = v
                 else:
@@ -1228,10 +1237,11 @@ def result_print(request):
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                                if r.field.field_type == 11:
+                                    v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                 if r.field.get_title() != "":
-                                    vals.append(
-                                        "{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'),
-                                                             v))
+                                    vals.append("{}:&nbsp;{}".format(
+                                            r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                                 else:
                                     vals.append(v)
                                 if sick_title:
@@ -1251,7 +1261,9 @@ def result_print(request):
                     style_recipe.leftIndent = 14
                     fwb.append(Spacer(1, 1 * mm))
                     fwb.append(Paragraph('Рецепты', styleBold))
-                    fwb.append(Paragraph('<u>Наименование ЛП: форма выпуска, дозировка, количество; (способ применения)</u>', style_recipe))
+                    fwb.append(
+                        Paragraph('<u>Наименование ЛП: форма выпуска, дозировка, количество; (способ применения)</u>',
+                                  style_recipe))
                     fwb.append(Spacer(1, 0.25 * mm))
                     for r in recipies:
                         fwb.append(Paragraph(
@@ -1265,7 +1277,7 @@ def result_print(request):
                 fwb.append(Spacer(1, 2.5 * mm))
                 t1 = iss.get_visit_date()
                 t2 = strdate(iss.time_confirmation)
-                #Добавить выписанные направления врачом
+                # Добавить выписанные направления врачом
                 if iss.research.is_doc_refferal:
                     # Найти все направления где данное исследование родитель
                     napr_child = Napravleniya.objects.filter(parent=iss, cancel=False)
@@ -1276,7 +1288,8 @@ def result_print(request):
                         fwb.append(Paragraph("Направления:".format(t1), styleBold))
                         s_napr = ""
                         for n_child in napr_child:
-                            iss_research = [s.research.title for s in Issledovaniya.objects.filter(napravleniye=n_child)]
+                            iss_research = [s.research.title for s in
+                                            Issledovaniya.objects.filter(napravleniye=n_child)]
                             iss_research_str = ', '.join(iss_research)
                             n = "<font face=\"OpenSansBold\">№{}:&nbsp;</font>".format(n_child.pk)
                             n += "{}; {} ".format(iss_research_str, br)
@@ -1290,7 +1303,7 @@ def result_print(request):
                             fwb.append(Spacer(1, 3 * mm))
                             fwb.append(Paragraph('Дополнительные услуги:', styleBold))
                             for i in add_research:
-                                fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title),style))
+                                fwb.append(Paragraph('{}-{}'.format(i.research.code, i.research.title), style))
 
                 fwb.append(Spacer(1, 3 * mm))
                 if iss.research.is_doc_refferal:
@@ -1304,12 +1317,15 @@ def result_print(request):
                                          styleBold))
                 else:
                     fwb.append(Paragraph("Исполнитель: врач {}, {}".format(iss.doc_confirmation.fio,
-                                                                       iss.doc_confirmation.podrazdeleniye.title),
+                                                                           iss.doc_confirmation.podrazdeleniye.title),
                                          styleBold))
 
-                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True', default_type='b'):
+                    if iss.research.is_doc_refferal and SettingManager.get("agree_diagnos", default='True',
+                                                                           default_type='b'):
                         fwb.append(Spacer(1, 3.5 * mm))
-                        fwb.append(Paragraph("С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",style))
+                        fwb.append(Paragraph(
+                            "С диагнозом, планом обследования и лечения ознакомлен и согласен _________________________",
+                            style))
 
                     fwb.append(Spacer(1, 2.5 * mm))
                 if sick_document and sick_result:
@@ -1348,20 +1364,23 @@ def result_print(request):
                        width=470, height=18, textColor=black, forceBorder=False)
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), pk[0],
-                                                                               number_poliklinika))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas.drawString(55 * mm, 9 * mm,
+                          '№ карты : {}; Номер: {} {}'.format(direction.client.number_with_type(), pk[0],
+                                                              number_poliklinika))
+        canvas.drawString(55 * mm, 6 * mm,
+                          'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
         canvas.restoreState()
 
     def later_pages(canvas, document):
         canvas.saveState()
-        #вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
+        # вывести атрибуты пациента: № карты, № направления, ФИО. И Организацию
         canvas.setFont('PTAstraSerifBold', 8)
         canvas.drawString(55 * mm, 12 * mm, '{}'.format(SettingManager.get("org_title")))
-        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(),pk[0]))
-        canvas.drawString(55 * mm, 6 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+        canvas.drawString(55 * mm, 9 * mm, '№ карты : {}; Номер: {}'.format(direction.client.number_with_type(), pk[0]))
+        canvas.drawString(55 * mm, 6 * mm,
+                          'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
         canvas.rect(180 * mm, 6 * mm, 23 * mm, 5.5 * mm)
         canvas.line(55 * mm, 11.5 * mm, 181 * mm, 11.5 * mm)
 
@@ -1372,7 +1391,7 @@ def result_print(request):
 
     if len(link_result) > 0:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
-        date_now_str = str(random.random())+ str(date_now1)
+        date_now_str = str(random.random()) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
         buffer.seek(0)
@@ -1391,7 +1410,6 @@ def result_print(request):
         buffer.close()
         os.remove(file_dir_l2)
         return response
-
 
     ################################################
     pdf = buffer.getvalue()
@@ -2397,7 +2415,8 @@ def results_search_directions(request):
         l = direction.issledovaniya_set.first().research.get_podrazdeleniye()
         tmp_dir = {"pk": direction.pk,
                    "laboratory": "Консультации" if not l else l.title,
-                   "otd": ("" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.doc.podrazdeleniye.title,
+                   "otd": (
+                       "" if not direction.imported_org else direction.imported_org.title) if direction.imported_from_rmis else direction.doc.podrazdeleniye.title,
                    "doc": "" if direction.imported_from_rmis else direction.doc.get_fio(),
                    "researches": researches, "is_normal": row_normal}
 
