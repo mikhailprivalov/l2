@@ -1,7 +1,6 @@
 from orthanc_rest_client import Orthanc
-from requests.auth import HTTPBasicAuth
 from directions.models import Issledovaniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_AUTH
+from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER
 from checkdigit import isbn
 
 
@@ -21,8 +20,7 @@ def search_dicom_study(direction=None):
             orthanc = Orthanc(DICOM_SERVER)
             for tag in DICOM_SEARCH_TAGS:
                 for dir in [ean13_dir, str_dir]:
-                    query = {"Level": "Study",
-                        "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}
+                    query = {"Level": "Study", "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}
                     dicom_study = orthanc.find(query)
                     if len(dicom_study) > 0:
                         Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study[0])
