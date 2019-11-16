@@ -9,7 +9,7 @@ def search_dicom_study(direction=None):
     if direction:
         dicom_study = None
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
-        if dicom_study and dicom_study['study_instance_uid'] != None:
+        if dicom_study and dicom_study['study_instance_uid']:
             return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study["study_instance_uid"]}'
         else:
             num_dir = str(direction + 460000000000)
