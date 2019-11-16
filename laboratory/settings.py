@@ -276,6 +276,9 @@ SILKY_INTERCEPT_FUNC = lambda request: request.path not in ['/mainmenu/']
 
 AFTER_DATE_HOLTER = None
 
+DICOM_SEARCH_TAGS = []
+DICOM_SERVER = ""
+
 try:
     from laboratory.local_settings import *
 except ImportError:
