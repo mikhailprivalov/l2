@@ -737,6 +737,11 @@ def direction_info(request):
                      ["Регистратор", dir.visit_who_mark.fio + ", " + dir.visit_who_mark.podrazdeleniye.title], ]
                 ]}
                 data.append(d)
+            for l in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
+                data[0]["events"].append([
+                    ["title", l.get_type_display()],
+                    ["Отмена", "{}, {}".format(l.body, get_userdata(l.user))]
+                ])
             for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=dir).distinct():
                 d = {"type": "Ёмкость №%s" % tube.pk, "events": []}
                 if tube.time_get is not None:
