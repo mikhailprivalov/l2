@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import dateformat, timezone
 
+from api.dicom import search_dicom_study
 from api.sql_func import get_fraction_result
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
@@ -131,6 +132,9 @@ def directions_history(request):
                              0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
                          "checked": False,
+                         "pacs": None if not iss_list[0].research.podrazdeleniye or
+                                         not iss_list[0].research.podrazdeleniye.can_has_pacs else
+                         search_dicom_study(int(napr["pk"])),
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
@@ -789,8 +793,10 @@ def directions_paraclinic_form(request):
                         "is_stom": i.research.is_stom,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
-                        "groups": []
+                        "groups": [],
                     },
+                    "pacs": None if not i.research.podrazdeleniye
+                                    or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
                     "templates": [],
                     "saved": i.time_save is not None,
@@ -882,7 +888,8 @@ def directions_paraclinic_form(request):
                 response["anamnesis"] = d.client.anamnesis_of_life
 
                 d1, d2 = start_end_year()
-                disp_data = sql_func.dispensarization_research(d.client.individual.sex, d.client.individual.age_for_year(),
+                disp_data = sql_func.dispensarization_research(d.client.individual.sex,
+                                                               d.client.individual.age_for_year(),
                                                                d.client_id, d1, d2)
                 status_disp = 'finished'
                 if not disp_data:

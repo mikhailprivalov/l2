@@ -46,7 +46,7 @@
           <th>Назначения</th>
           <th class="text-center">Статус</th>
           <th></th>
-          <th class="nopd"><input type="checkbox" v-model="all_checked"/></th>
+          <th class="nopd noel"><input type="checkbox" v-model="all_checked"/></th>
         </tr>
         </thead>
       </table>
@@ -76,7 +76,8 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
-            <div class="button-td-inner">
+            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
+              <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"><i class="fa fa-camera"></i></a>
               <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
               <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
@@ -525,17 +526,31 @@
       width: 100%;
       justify-content: flex-end;
       align-items: stretch;
-    }
 
-    .btn {
-      margin: 0;
-      border-radius: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 12px;
-      padding: 2px;
-      border: none !important;
-      flex: 0 0 50%;
+      .btn {
+        margin: 0;
+        border-radius: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        padding: 2px;
+        border: none !important;
+      }
+
+      &:not(.has_pacs) {
+        .btn {
+          flex: 0 0 50%;
+        }
+      }
+
+      &.has_pacs {
+        .btn {
+          flex: 0 0 40%;
+        }
+        .btn:first-child {
+          flex: 0 0 20%;
+        }
+      }
     }
   }
 
@@ -545,5 +560,9 @@
       border-top: 0;
       height: 34px;
     }
+  }
+
+  .noel {
+    text-overflow: clip;
   }
 </style>
