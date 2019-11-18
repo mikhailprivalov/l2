@@ -178,6 +178,7 @@ def directions_cancel(request):
         direction.cancel = not direction.cancel
         direction.save()
         response["cancel"] = direction.cancel
+        Log(key=pk, type=5002, body="да" if direction.cancel else "нет", user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
@@ -1019,6 +1020,8 @@ def directions_paraclinic_result(request):
 
         response["ok"] = True
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
+        if with_confirm:
+            Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 
