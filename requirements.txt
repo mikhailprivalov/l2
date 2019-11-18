@@ -78,4 +78,4 @@ pdfkit==0.6.1
 PyVirtualDisplay==0.2.4
 anytree==2.7.2
 orthanc-rest-client==0.5.7
-checkdigit=0.0.6
+checkdigit==0.0.6

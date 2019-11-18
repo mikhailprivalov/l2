@@ -241,22 +241,28 @@
                 </div>
               </dropdown>
             </div>
-            <div class="research-right" v-if="!row.confirmed && !data.has_microbiology">
-              <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
-                      title="Сохранить без подтверждения" v-tippy>
-                &nbsp;<i class="fa fa-save"></i>&nbsp;
-              </button>
-              <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
-                &nbsp;<i class="fa fa-times"></i>&nbsp;
-              </button>
-              <div class="right-f" v-if="fte">
-                <select-picker-m v-model="templates[row.pk]"
-                                 :search="true"
-                                 :options="row.templates.map(x => ({label: x.title, value: x.pk}))"/>
-              </div>
-              <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
-                Загрузить шаблон
-              </button>
+            <div class="research-right" v-if="!data.has_microbiology">
+              <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"
+                      title="Снимок" v-tippy>
+                &nbsp;<i class="fa fa-camera"></i>&nbsp;
+              </a>
+              <template v-if="!row.confirmed">
+                <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
+                        title="Сохранить без подтверждения" v-tippy>
+                  &nbsp;<i class="fa fa-save"></i>&nbsp;
+                </button>
+                <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                  &nbsp;<i class="fa fa-times"></i>&nbsp;
+                </button>
+                <div class="right-f" v-if="fte">
+                  <select-picker-m v-model="templates[row.pk]"
+                                   :search="true"
+                                   :options="row.templates.map(x => ({label: x.title, value: x.pk}))"/>
+                </div>
+                <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                  Загрузить шаблон
+                </button>
+              </template>
             </div>
           </div>
           <visibility-group-wrapper :group="group"
