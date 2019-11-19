@@ -171,7 +171,7 @@
                     interactive : true }">Д</a>
               <div id="template-disp"
                    class="disp"
-                   v-if="data.card_internal && data.status_disp !== 'notneed'">
+                   v-if="data.card_internal && data.status_disp !== 'notneed' && data.card_internal && data.has_doc_referral">
                 <strong>Диспансеризация</strong><br/>
                 <ul style="padding-left: 25px;text-align: left">
                   <li v-for="d in data.disp_data">
@@ -243,7 +243,8 @@
             </div>
             <div class="research-right" v-if="!data.has_microbiology">
               <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"
-                      title="Снимок" v-tippy>
+                 target="_blank"
+                 title="Снимок" v-tippy>
                 &nbsp;<i class="fa fa-camera"></i>&nbsp;
               </a>
               <template v-if="!row.confirmed">
@@ -1457,17 +1458,18 @@
   .research-left {
     position: relative;
     text-align: left;
-    width: calc(100% - 380px);
+    width: calc(100% - 390px);
   }
 
   .research-right {
     text-align: right;
-    width: 380px;
+    width: 390px;
     margin-top: -5px;
     margin-right: -5px;
     margin-bottom: -5px;
+    white-space: nowrap;
 
-    button {
+    .btn {
       border-radius: 0;
       padding: 5px 4px;
     }
