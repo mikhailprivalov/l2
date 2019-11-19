@@ -48,7 +48,6 @@ def search_dicom_study(direction=None):
                 for dir in [ean13_dir, str_dir]:
                     query = {"Level": "Study", "Query": {"Modality": "*", "StudyDate": "*", tag: dir}}
                     dicom_study = orthanc.find(query)
-                    print(dicom_study)
                     if len(dicom_study) > 0:
                         Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study[0])
                         return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study[0]}'
