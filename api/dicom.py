@@ -34,4 +34,4 @@ def search_dicom_study(direction=None):
                         Issledovaniya.objects.filter(napravleniye=direction).update(study_instance_uid=dicom_study[0])
                         return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study[0]}'
 
-    return None
+    return ''
