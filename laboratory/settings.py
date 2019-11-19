@@ -277,6 +277,8 @@ SILKY_INTERCEPT_FUNC = lambda request: request.path not in ['/mainmenu/']
 AFTER_DATE_HOLTER = None
 
 DICOM_SEARCH_TAGS = []
+DICOM_ADDRESS = ''
+DICOM_PORT = None
 DICOM_SERVER = ""
 
 try:
