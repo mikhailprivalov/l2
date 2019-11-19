@@ -8,10 +8,12 @@ import socket
 def sum(x, y):
     return int(x) + int(y)
 
+
 def check_sum_ean13(num):
     evensum = reduce(sum, num[-2::-2])
     oddsum = reduce(sum, num[-1::-2])
     return (10 - ((evensum + oddsum * 3) % 10)) % 10
+
 
 def check_server_port(address, port):
     TCP_IP = address
