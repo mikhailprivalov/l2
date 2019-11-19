@@ -77,7 +77,9 @@
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
             <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
-              <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"><i class="fa fa-camera"></i></a>
+              <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
+                <i class="fa fa-camera"></i>
+              </a>
               <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
               <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
