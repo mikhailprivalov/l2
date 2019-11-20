@@ -64,7 +64,7 @@ reportlab==3.5.32
 requests==2.22.0
 requests-toolbelt==0.9.1
 selenium==3.141.0
-simplejson==3.16.0
+simplejson==3.17.0
 six==1.13.0
 socketIO-client-nexus==0.7.6
 sqlparse==0.3.0
