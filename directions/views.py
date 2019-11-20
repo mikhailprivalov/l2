@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode import eanbc
+from reportlab.graphics.barcode import eanbc, qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -38,6 +38,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 import numpy as np
+from transliterate import translit
 
 
 @login_required
@@ -422,6 +423,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
     has_descriptive = False
     has_doc_refferal = False
     has_micro = False
+    need_qr_code = False
     for i in issledovaniya:
         rtp = i.research.reversed_type
         if rtp < -1:
@@ -440,6 +442,8 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             vid.append(rt)
             if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                 has_descriptive = True
+                if i.research.podrazdeleniye.can_has_pacs:
+                    need_qr_code = True
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 120) + (h / 2) * yn, "Вид: " + ", ".join(vid))
 
@@ -586,6 +590,20 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                              " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])))
 
     nn = 0
+
+    if need_qr_code:
+        qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
+        qr_code = qr.QrCodeWidget(qr_value)
+        qr_code.barWidth = 70
+        qr_code.barHeight = 70
+        qr_code.qrVersion = 1
+        bounds = qr_code.getBounds()
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+        d = Drawing()
+        d.add(qr_code)
+        renderPDF.draw(d, c, paddingx + (w / 2 * xn) + 200, 5 + (h / 2) * yn)
+
     if not dir.imported_from_rmis:
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
