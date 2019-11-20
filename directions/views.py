@@ -589,8 +589,6 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                              title +
                              " – услуги " + ', '.join(map(lambda x: "№{}".format(ns[x]), service_locations[title])))
 
-    nn = 0
-
     if need_qr_code:
         qr_value = translit(dir.client.individual.fio(), 'ru', reversed=True)
         qr_code = qr.QrCodeWidget(qr_value)
@@ -604,6 +602,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         d.add(qr_code)
         renderPDF.draw(d, c, paddingx + (w / 2 * xn) + 200, 5 + (h / 2) * yn)
 
+    nn = 0
     if not dir.imported_from_rmis:
         if dir.doc_who_create and dir.doc_who_create != dir.doc:
             nn = 9
