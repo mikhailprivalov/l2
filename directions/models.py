@@ -523,6 +523,9 @@ class Napravleniya(models.Model):
                     # {5:[0,2,5,7],6:[8]}
 
             if not no_attach:
+                for r in res:
+                    research = directory.Researches.objects.get(pk=r)
+                    res.extend([x.pk for x in research.auto_add_hidden.all()])
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
 

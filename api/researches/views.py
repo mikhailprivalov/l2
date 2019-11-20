@@ -54,6 +54,7 @@ class Researches(View):
                  "full_title": r.title,
                  "doc_refferal": r.is_doc_refferal,
                  "treatment": r.is_treatment,
+                 "is_hospital": r.is_hospital,
                  "stom": r.is_stom,
                  "need_vich_code": r.need_vich_code,
                  "comment_variants": [] if not r.comment_variants else r.comment_variants.get_variants(),
@@ -93,6 +94,8 @@ def researches_by_department(request):
             q = DResearches.objects.filter(is_treatment=True).order_by("title")
         elif department_pk == -4:
             q = DResearches.objects.filter(is_stom=True).order_by("title")
+        elif department_pk == -5:
+            q = DResearches.objects.filter(is_hospital=True).order_by("title")
         elif department_pk == -6:
             q = DResearches.objects.filter(is_microbiology=True).order_by("title")
         else:
@@ -149,7 +152,7 @@ def researches_update(request):
         tube = request_data.get("tube", -1)
         if tube == -1:
             tube = None
-        desc = department_pk in [-2, -3, -4, -6]
+        desc = department_pk in [-2, -3, -4, -5, -6]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -160,6 +163,7 @@ def researches_update(request):
                                   is_doc_refferal=department_pk == -2,
                                   is_treatment=department_pk == -3,
                                   is_stom=department_pk == -4,
+                                  is_hospital=department_pk == -5,
                                   is_microbiology=department_pk == -6,
                                   microbiology_tube_id=tube if department_pk == -6 else None,
                                   site_type_id=site_type, internal_code=internal_code)
@@ -173,6 +177,7 @@ def researches_update(request):
                 res.is_doc_refferal = department_pk == -2
                 res.is_treatment = department_pk == -3
                 res.is_stom = department_pk == -4
+                res.is_hospital = department_pk == -5
                 res.is_microbiology = department_pk == -6
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info

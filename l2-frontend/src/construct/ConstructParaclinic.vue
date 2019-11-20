@@ -13,8 +13,8 @@
              @click="open_editor(row.pk)">{{row.title}}
         </div>
       </div>
-      <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)"><i
-        class="glyphicon glyphicon-plus"></i>
+      <button class="btn btn-blue-nb sidebar-footer" @click="open_editor(-1)">
+        <i class="glyphicon glyphicon-plus"></i>
         Добавить
       </button>
     </div>
@@ -94,6 +94,10 @@
 
           if (this.modules.l2_stom) {
             d.push({value: -4, label: 'Стоматология'})
+          }
+
+          if (this.modules.l2_hosp) {
+            d.push({value: -5, label: 'Стационар'})
           }
 
           if (this.modules.l2_microbiology) {

@@ -159,6 +159,7 @@ class Researches(models.Model):
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
+    auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
 
     @staticmethod
     def filter_type(t):
@@ -181,13 +182,16 @@ class Researches(models.Model):
             return -3
         if self.is_stom:
             return -4
+        if self.is_hospital:
+            return -5
         if self.is_microbiology:
             return -6
         return self.podrazdeleniye_id or -2
 
     @property
     def desc(self):
-        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology
+        return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology \
+            or self.is_hospital
 
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)

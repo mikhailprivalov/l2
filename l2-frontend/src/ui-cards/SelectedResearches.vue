@@ -474,6 +474,7 @@
                     '-2': {title: 'Консультации'},
                     '-3': {title: 'Лечение'},
                     '-4': {title: 'Стоматология'},
+                    '-5': {title: 'Стационар'},
                     '-6': {title: 'Микробиология'}
                 }
                 for (let dep of this.$store.getters.allDepartments) {

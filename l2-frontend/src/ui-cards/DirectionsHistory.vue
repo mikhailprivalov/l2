@@ -76,10 +76,14 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
+            <div class="button-td-inner" :class="{has_pacs: !!row.pacs || row.has_hosp}">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
                 <i class="fa fa-camera"></i>
               </a>
+              <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
+                      @click="print_hosp(row.pk)" v-if="row.has_hosp">
+                <i class="fa fa-barcode"></i>
+              </button>
               <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
               <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
@@ -233,6 +237,9 @@
       },
       print_direction(pk) {
         this.$root.$emit('print:directions', [pk])
+      },
+      print_hosp(pk) {
+        this.$root.$emit('print:hosp', [pk])
       },
       cancel_direction(pk) {
         let vm = this

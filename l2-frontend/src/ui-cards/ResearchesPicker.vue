@@ -336,7 +336,7 @@
           }
         } else if(this.rev_t < -2) {
           for(const row of (this.$store.getters.researches[this.rev_t] || [])) {
-            if(row.site_type === dep) {
+            if(row.site_type === dep || (dep === -1 && !row.site_type)) {
               r.push(row);
             }
           }
@@ -550,7 +550,8 @@
             (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
             (pk === "4" && res.doc_refferal) ||
             (pk === "5" && res.treatment) ||
-            (pk === "6" && res.stom)
+            (pk === "6" && res.stom) ||
+            (pk === "7" && res.is_hospital)
           ) {
             l++;
           }
@@ -565,7 +566,8 @@
             (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
             (pk === "4" && res.doc_refferal) ||
             (pk === "5" && res.treatment) ||
-            (pk === "6" && res.stom)
+            (pk === "6" && res.stom) ||
+            (pk === "7" && res.is_hospital)
           ) {
             l.push(res);
           }
