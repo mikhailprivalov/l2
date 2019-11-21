@@ -118,6 +118,7 @@ new Vue({
     }
 
     this.$root.$on('print:directions', (pks) => printForm('/directions/pdf?napr_id={pks}', pks))
+    this.$root.$on('print:hosp', (pks) => printForm('/barcodes/hosp?napr_id={pks}', pks))
     this.$root.$on('print:directions:contract', (pks) => printForm('/directions/pdf?napr_id={pks}&contract=1', pks))
 
     this.$root.$on('print:barcodes', (pks) => printForm('/barcodes/tubes?napr_id={pks}', pks))

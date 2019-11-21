@@ -10,7 +10,7 @@
     "build_prod": "cross-env NODE_ENV=production webpack --progress --optimize-max-chunks 10"
   },
   "dependencies": {
-    "@babel/core": "^7.6.4",
+    "@babel/core": "^7.7.2",
     "@babel/plugin-transform-runtime": "^7.6.2",
     "axios": "^0.19.0",
     "element-ui": "^2.12.0",
@@ -34,7 +34,7 @@
     "vue2-collapse": "^1.0.11",
     "vue2-typeahead": "^1.0.30",
     "vuejs-dialog": "^1.4.1",
-    "vuex": "^3.0.1",
+    "vuex": "^3.1.2",
     "webpack-bundle-tracker": "^0.4.3"
   },
   "browserslist": [
@@ -43,13 +43,13 @@
     "not ie <= 8"
   ],
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/plugin-proposal-class-properties": "^7.0.0",
-    "@babel/plugin-proposal-decorators": "^7.6.0",
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/plugin-proposal-decorators": "^7.7.0",
     "@babel/plugin-proposal-do-expressions": "^7.6.0",
     "@babel/plugin-proposal-export-default-from": "^7.0.0",
     "@babel/plugin-proposal-export-namespace-from": "^7.0.0",
-    "@babel/plugin-proposal-function-sent": "^7.0.0",
+    "@babel/plugin-proposal-function-sent": "^7.7.0",
     "@babel/plugin-proposal-json-strings": "^7.0.0",
     "@babel/plugin-proposal-logical-assignment-operators": "^7.0.0",
     "@babel/plugin-proposal-nullish-coalescing-operator": "^7.0.0",
@@ -60,7 +60,7 @@
     "@babel/plugin-proposal-throw-expressions": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.0.0",
     "@babel/plugin-syntax-import-meta": "^7.0.0",
-    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-env": "^7.7.1",
     "@babel/preset-stage-1": "^7.0.0",
     "babel-loader": "^8.0.0",
     "babel-plugin-component": "^1.1.1",
@@ -69,7 +69,7 @@
     "css-loader": "^0.28.11",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.11",
-    "glob": "^7.1.5",
+    "glob": "^7.1.6",
     "lodash-webpack-plugin": "^0.11.5",
     "node-sass": "^4.13.0",
     "sass-loader": "^7.3.1",

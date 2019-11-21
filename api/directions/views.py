@@ -100,9 +100,12 @@ def directions_history(request):
                 researches_list = []
                 researches_pks = []
                 has_descriptive = False
+                has_hosp = False
                 for v in iss_list:
                     if not has_descriptive and v.research.desc:
                         has_descriptive = True
+                    if not has_hosp and v.research.is_hospital:
+                        has_hosp = True
                     researches_list.append(v.research.title)
                     researches_pks.append(v.research_id)
                     iss_status = 1
@@ -135,6 +138,7 @@ def directions_history(request):
                          "pacs": None if not iss_list[0].research.podrazdeleniye or
                                          not iss_list[0].research.podrazdeleniye.can_has_pacs else
                          search_dicom_study(int(napr["pk"])),
+                         "has_hosp": has_hosp,
                          "has_descriptive": has_descriptive})
     except (ValueError, IndexError) as e:
         res["message"] = str(e)
@@ -796,8 +800,8 @@ def directions_paraclinic_form(request):
                         "comment": i.localization.title if i.localization else i.comment,
                         "groups": [],
                     },
-                    "pacs": None if not i.research.podrazdeleniye
-                                    or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
+                    "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else
+                    search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
                     "templates": [],
                     "saved": i.time_save is not None,
