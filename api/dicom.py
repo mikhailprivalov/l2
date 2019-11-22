@@ -19,7 +19,7 @@ def check_server_port(address, port):
     TCP_IP = address
     TCP_PORT = port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(0.1)
+    s.settimeout(0.2)
     try:
         s.connect((TCP_IP, TCP_PORT))
     except socket.error:
