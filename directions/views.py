@@ -19,6 +19,9 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfdoc
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import os.path
 
 import directory.models as directory
 import slog.models as slog
@@ -1371,3 +1374,71 @@ def form38001(c: Canvas, d: Napravleniya):
     c.line(px(0), h / 2, pxr(0), h / 2)
 
     printForm(h / 2 / mm)
+
+
+def form38002(c: Canvas, dir: Napravleniya):
+    def printForm(offset):
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+        c.setStrokeColorRGB(0, 0, 0)
+        c.setLineWidth(0.2 * mm)
+        c.setFont('PTAstraSerifReg', 12)
+
+        # c.drawString(10 * mm, 280 * mm, SettingManager.get("rmis_orgname"))
+        c.drawCentredString(105 * mm, 280 * mm, 'ОГАУЗ г.ИРКУТСКА Городская Ивано-Матренинская детская клиническая больница')
+        c.drawCentredString(105 * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
+
+        depart = Issledovaniya.objects.values_list('research__podrazdeleniye__title').filter(napravleniye=dir.pk)
+        dp_title = ''
+        for i in depart:
+            dp_title = i[0]
+
+        c.setFont('PTAstraSerifReg', 14)
+        c.drawCentredString(105 * mm, 265 * mm, 'Направление на ' + dp_title)
+
+        barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
+        bounds = barcode.getBounds()
+        dir_code = Drawing()
+        dir_code.add(barcode)
+        renderPDF.draw(dir_code, c, 150 * mm, 250 * mm)
+
+        c.setFont('PTAstraSerifReg', 20)
+
+        x_coord, y_coord = 20, 235
+        c.drawString(x_coord * mm, 250 * mm , "№ " + str(dir.pk))  # Номер направления
+
+
+        c.setFont('PTAstraSerifReg', 12)
+        c.drawString(x_coord * mm, y_coord * mm, "Дата: " + strdate(dir.data_sozdaniya))
+        if dir.history_num and len(dir.history_num) > 0:
+            c.drawString(x_coord * mm, (y_coord-5) * mm, "№ истории: " + dir.history_num)
+        c.drawString(x_coord * mm, (y_coord - 10) * mm, "ФИО: " + dir.client.individual.fio())
+        c.drawString(x_coord * mm, (y_coord - 15) * mm, "Пол: " + dir.client.individual.sex)
+        c.drawString(x_coord * mm, (y_coord - 20) * mm,
+                     "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
+        c.drawString(x_coord * mm, (y_coord - 25) * mm,
+                     "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
+        diagnosis = dir.diagnos.strip()
+        if not dir.imported_from_rmis:
+            if diagnosis != "":
+                c.drawString(x_coord * mm, (y_coord - 30) * mm,
+                             ("" if dir.vich_code == "" else (
+                                         "Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + (
+                                 "не указан" if diagnosis == "-" else diagnosis))
+            if dir.istochnik_f:
+                c.drawString(x_coord * mm, (y_coord - 35) * mm,
+                             "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
+            else:
+                c.drawString(x_coord * mm, (y_coord - 35) * mm, "Источник финансирования: ")
+
+
+        issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
+
+
+    printForm(0)
+
+    # c.setStrokeColorRGB(*([0.8] * 3))
+    # c.line(px(0), h / 2, pxr(0), h / 2)
+    #
+    # printForm(h / 2 / mm)
+
