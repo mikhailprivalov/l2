@@ -88,6 +88,9 @@ class Log(models.Model):
 
         (50000, 'Льготы: создание записи'),
         (50001, 'Льготы: редактирование записи'),
+
+        (60000, 'Выгрузка в АМД: успешно'),
+        (60001, 'Выгрузка в АМД: не успешно'),
     )
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
