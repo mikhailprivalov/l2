@@ -171,7 +171,7 @@
                     interactive : true }">Д</a>
               <div id="template-disp"
                    class="disp"
-                   v-if="data.card_internal && data.status_disp !== 'notneed' && data.card_internal && data.has_doc_referral">
+                   v-if="data.card_internal && data.status_disp !== 'notneed' && data.has_doc_referral">
                 <strong>Диспансеризация</strong><br/>
                 <ul style="padding-left: 25px;text-align: left">
                   <li v-for="d in data.disp_data">
@@ -997,6 +997,9 @@
                         this.benefit_rows = []
                         this.pk = ''
                         this.data = data
+                        if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
+                            errmessage('Диспансеризация не пройдена')
+                        }
                         this.changed = false
                     } else {
                         errmessage(data.message)
