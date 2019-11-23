@@ -600,9 +600,6 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
         qr_code.barWidth = 70
         qr_code.barHeight = 70
         qr_code.qrVersion = 1
-        bounds = qr_code.getBounds()
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
         d = Drawing()
         d.add(qr_code)
         renderPDF.draw(d, c, paddingx + (w / 2 * xn) + 200, 5 + (h / 2) * yn)
@@ -1511,9 +1508,6 @@ def form38002(c: Canvas, dir: Napravleniya):
         qr_code.barWidth = 80
         qr_code.barHeight = 80
         qr_code.qrVersion = 1
-        bounds = qr_code.getBounds()
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
         d = Drawing()
         d.add(qr_code)
         renderPDF.draw(d, c, 170 * mm, 10 * mm)
