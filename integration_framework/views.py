@@ -113,7 +113,7 @@ def issledovaniye_data(request):
 
 @api_view()
 def make_log(request):
-    key = request.GET.get("direction")
+    key = request.GET.get("key")
     t = int(request.GET.get("type"))
     if t in (60000, 60001):
         Log.log(key=key, type=t)
