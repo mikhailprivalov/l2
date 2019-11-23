@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 import directions.models as directions
+from slog.models import Log
 from . import sql_if
 from laboratory.settings import AFTER_DATE
 from laboratory import utils
@@ -107,4 +108,15 @@ def issledovaniye_data(request):
         "date": i.time_confirmation.date(),
         "results": results_data,
         "code": i.research.code,
+    })
+
+
+@api_view()
+def make_log(request):
+    key = request.GET.get("direction")
+    t = int(request.GET.get("type"))
+    if t in (60000, 60001):
+        Log.log(key=key, type=t)
+    return Response({
+        "ok": True,
     })
