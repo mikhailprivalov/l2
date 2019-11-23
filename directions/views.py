@@ -1471,7 +1471,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.drawString(x_coord * mm, y_dir_form[1] * mm,  "Онкологические заболевания в анамнезе: " + "отрицает /")
         c.line((x_coord + 95) * mm, y_dir_form[1] * mm, 200 * mm, y_dir_form[1] * mm)
 
-        c.drawString(x_coord * mm, y_dir_form[2] * mm,  "Операции по поводу онкологических заболеваний: " + "Нет / ДА")
+        c.drawString(x_coord * mm, y_dir_form[2] * mm,  "Операции по поводу онкологических заболеваний: " + "Нет / Да")
         c.line((x_coord + 110) * mm, y_dir_form[2] * mm, 200 * mm, y_dir_form[2] * mm)
 
         c.drawString(x_coord * mm, y_dir_form[3] * mm,  "Данные инструментальных методов исследования в зоне  исследования МСКТ:")
