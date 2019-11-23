@@ -1382,8 +1382,6 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.setLineWidth(0.2 * mm)
         c.setFont('PTAstraSerifReg', 12)
 
-        # Точки отсчета
-        x_coord, y_coord = 30, 235
         c.drawCentredString((210 / 2) * mm, 280 * mm, SettingManager.get("org_title"))
         c.drawCentredString((210 / 2) * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
 
@@ -1404,14 +1402,17 @@ def form38002(c: Canvas, dir: Napravleniya):
             localization = "" if not issledovaniye.localization else issledovaniye.localization.title
 
         c.setFont('PTAstraSerifReg', 14)
-        c.drawCentredString(105 * mm, 265 * mm, 'Направление на ' + dp_title)
+        c.drawCentredString((210 / 2) * mm, 265 * mm, 'Направление на ' + dp_title)
 
+        # Точки отсчета
+        x_coord, y_coord = 30, 235
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, 150 * mm, 250 * mm)
+        renderPDF.draw(dir_code, c, (x_coord + 120) * mm, 250 * mm)
 
         c.setFont('PTAstraSerifReg', 20)
+
         # Данные пациента
         y_patient = []
         y = 0
@@ -1423,7 +1424,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.setFont('PTAstraSerifReg', 12)
         c.drawString(x_coord * mm, y_patient[0] * mm, "Дата: " + strdate(dir.data_sozdaniya))
         if dir.history_num and len(dir.history_num) > 0:
-            c.drawString(x_coord * mm, (y_coord-5) * mm, "№ истории: " + dir.history_num)
+            c.drawString((x_coord + 125) * mm, y_patient[0] * mm, "№ истории: " + dir.history_num)
         c.drawString(x_coord * mm, y_patient[1] * mm, "ФИО: " + dir.client.individual.fio())
         c.drawString(x_coord * mm, y_patient[2] * mm, "Пол: " + dir.client.individual.sex)
         c.drawString(x_coord * mm, y_patient[3] * mm,
