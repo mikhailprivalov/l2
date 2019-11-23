@@ -505,7 +505,8 @@ def statistic_xls(request):
             "Доза",
             "Серия",
             "Срок годности",
-            "Способ введения"
+            "Способ введения",
+            "Дата постановки вакцины"
         ]
 
         ws = wb.add_sheet("Вакцинация")
@@ -515,7 +516,7 @@ def statistic_xls(request):
             ("Подтверждено", 5000),
             ("RMIS UID", 5000),
             ("Вакцина", 5000),
-            ("Код", 4000),
+            ("Код", 4000)
         ]
 
         for t in ts:
@@ -528,17 +529,24 @@ def statistic_xls(request):
         row_num += 1
 
         for i in Issledovaniya.objects.filter(research__podrazdeleniye__vaccine=True, time_confirmation__range=(date_start, date_end,)).order_by("time_confirmation"):
-            row = [
-                i.doc_confirmation.get_fio(),
-                i.time_confirmation.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
-                i.napravleniye.client.individual.get_rmis_uid_fast(),
-                i.research.title,
-                i.research.code,
-            ]
+            if i.napravleniye:
+                row = [
+                    i.doc_confirmation.get_fio(),
+                    i.time_confirmation.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %X"),
+                    i.napravleniye.client.individual.get_rmis_uid_fast(),
+                    i.research.title,
+                    i.research.code
+                ]
+            else:
+                continue
             v = {}
             for p in ParaclinicResult.objects.filter(issledovaniye=i):
                 if p.field.get_title() in ts:
-                    v[p.field.get_title()] = p.value
+                    if p.field.field_type == 1:
+                        v_date = p.value.replace("-", ".")
+                        v[p.field.get_title()] = v_date
+                    else:
+                        v[p.field.get_title()] = p.value
             for t in ts:
                 row.append(v.get(t, ""))
             row.append("V")
