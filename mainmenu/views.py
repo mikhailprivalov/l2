@@ -739,7 +739,7 @@ def direction_info(request):
                 data.append(d)
             for l in slog.Log.objects.filter(key=str(pk), type__in=(5002,)):
                 data[0]["events"].append([
-                    ["title", l.get_type_display()],
+                    ["title", "{}, {}".format(strdatetime(l.time), l.get_type_display())],
                     ["Отмена", "{}, {}".format(l.body, get_userdata(l.user))]
                 ])
             for l in slog.Log.objects.filter(key=str(pk), type__in=(60000, 60001)):
