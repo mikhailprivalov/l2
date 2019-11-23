@@ -304,8 +304,8 @@
                 deep: true,
                 handler() {
                     for (let k of Object.keys(this.comments)) {
-                        if (this.comments[k] && this.comments[k].length > 21) {
-                            this.comments[k] = this.comments[k].substr(0, 21)
+                        if (this.comments[k] && this.comments[k].length > 40) {
+                            this.comments[k] = this.comments[k].substr(0, 40)
                         }
                     }
                 }

@@ -604,7 +604,7 @@ class Napravleniya(models.Model):
                     if str(research.pk) in service_locations:
                         s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
                         issledovaniye.service_location = s
-                    issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:21]
+                    issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
                     issledovaniye.save()
                     FrequencyOfUseResearches.inc(research, doc_current)
                 for k, v in directions_for_researches.items():
