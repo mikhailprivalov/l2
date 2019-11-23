@@ -42,6 +42,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 import numpy as np
 from transliterate import translit
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required
@@ -1388,57 +1389,105 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.drawCentredString(105 * mm, 280 * mm, 'ОГАУЗ г.ИРКУТСКА Городская Ивано-Матренинская детская клиническая больница')
         c.drawCentredString(105 * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
 
-        depart = Issledovaniya.objects.values_list('research__podrazdeleniye__title').filter(napravleniye=dir.pk)
-        dp_title = ''
-        for i in depart:
-            dp_title = i[0]
+        # depart = Issledovaniya.objects.values_list('research__podrazdeleniye__title').filter(napravleniye=dir.pk)
+        try:
+            issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
+        except ObjectDoesNotExist:
+            issledovaniye = None
+
+        title, full_title, comment, info = "", "", "", ""
+        if issledovaniye:
+            dp_title = issledovaniye.research.podrazdeleniye.title
+            service_location_title = "" if not issledovaniye.service_location else issledovaniye.service_location.title
+            full_title = issledovaniye.research.title
+            comment = issledovaniye.comment
+            info = issledovaniye.research.paraclinic_info
+            localization = "" if not issledovaniye.localization else issledovaniye.localization.title
 
         c.setFont('PTAstraSerifReg', 14)
         c.drawCentredString(105 * mm, 265 * mm, 'Направление на ' + dp_title)
 
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
-        bounds = barcode.getBounds()
         dir_code = Drawing()
         dir_code.add(barcode)
         renderPDF.draw(dir_code, c, 150 * mm, 250 * mm)
 
         c.setFont('PTAstraSerifReg', 20)
 
-        x_coord, y_coord = 20, 235
+        # Точки отсчета
+        x_coord, y_coord = 30, 235
+
+        # Данные пациента
+        y_patient = []
+        y = 0
+        for i in range(0,7):
+            y_patient.append(y_coord - y)
+            y += 5
         c.drawString(x_coord * mm, 250 * mm , "№ " + str(dir.pk))  # Номер направления
 
-
         c.setFont('PTAstraSerifReg', 12)
-        c.drawString(x_coord * mm, y_coord * mm, "Дата: " + strdate(dir.data_sozdaniya))
+        c.drawString(x_coord * mm, y_patient[0] * mm, "Дата: " + strdate(dir.data_sozdaniya))
         if dir.history_num and len(dir.history_num) > 0:
             c.drawString(x_coord * mm, (y_coord-5) * mm, "№ истории: " + dir.history_num)
-        c.drawString(x_coord * mm, (y_coord - 10) * mm, "ФИО: " + dir.client.individual.fio())
-        c.drawString(x_coord * mm, (y_coord - 15) * mm, "Пол: " + dir.client.individual.sex)
-        c.drawString(x_coord * mm, (y_coord - 20) * mm,
+        c.drawString(x_coord * mm, y_patient[1] * mm, "ФИО: " + dir.client.individual.fio())
+        c.drawString(x_coord * mm, y_patient[2] * mm, "Пол: " + dir.client.individual.sex)
+        c.drawString(x_coord * mm, y_patient[3] * mm,
                      "Д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
-        c.drawString(x_coord * mm, (y_coord - 25) * mm,
+        c.drawString(x_coord * mm, y_patient[4] * mm,
                      "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
         diagnosis = dir.diagnos.strip()
         if not dir.imported_from_rmis:
             if diagnosis != "":
-                c.drawString(x_coord * mm, (y_coord - 30) * mm,
+                c.drawString(x_coord * mm, y_patient[5] * mm,
                              ("" if dir.vich_code == "" else (
                                          "Код: " + dir.vich_code + "  ")) + "Диагноз (МКБ 10): " + (
                                  "не указан" if diagnosis == "-" else diagnosis))
             if dir.istochnik_f:
-                c.drawString(x_coord * mm, (y_coord - 35) * mm,
+                c.drawString(x_coord * mm, y_patient[6] * mm,
                              "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
             else:
-                c.drawString(x_coord * mm, (y_coord - 35) * mm, "Источник финансирования: ")
+                c.drawString(x_coord * mm, y_patient[6] * mm, "Источник финансирования: ")
 
+        #Данные направления
+        y_dir_data = []
+        y = 45
+        for i in range(0, 5):
+            y_dir_data.append(y_coord - y)
+            y += 5
 
-        issledovaniya = Issledovaniya.objects.filter(napravleniye=dir)
+        c.drawString(x_coord * mm, y_dir_data[0] * mm, "Назначение: " + full_title)
+        c.drawString(x_coord * mm, y_dir_data[1] * mm, "Область исследвоания: " + localization)
+        c.drawString(x_coord * mm, y_dir_data[2] * mm, "Комментарий: " + comment)
+        c.drawString(x_coord * mm, y_dir_data[3] * mm, "Информация " + info)
+        c.drawString(x_coord * mm, y_dir_data[4] * mm, "Место оказания " + service_location_title)
+
+        #Специфицные данные формы
+        y_dir_form = []
+        y = 75
+        for i in range(0, 15):
+            y_dir_form.append(y_coord - y)
+            y += 5
+        c.setLineWidth(.2)
+        c.drawString(x_coord * mm, y_dir_form[0] * mm,  "Цель исследования:_____________________________________________________________________")
+        c.drawString(x_coord * mm, y_dir_form[1] * mm,  "Онкологические заболевания в анамнезе: " + "/отрицает/_________________________________")
+        c.drawString(x_coord * mm, y_dir_form[2] * mm,  "Операции по поводу онкологических заболеваний: " + "Нет / ДА __________________________")
+        c.drawString(x_coord * mm, y_dir_form[3] * mm,  "Данные инструментальных методов исследования в зоне  исследования МСКТ:")
+        c.drawString(x_coord * mm, y_dir_form[4] * mm,  "УЗС:")
+        c.line((x_coord + 10) * mm, y_dir_form[4] * mm, 200 * mm, y_dir_form[4] * mm)
+        c.line(x_coord * mm, y_dir_form[5] * mm, 200 * mm, y_dir_form[5] * mm)
+        c.line(x_coord * mm, y_dir_form[6] * mm, 200 * mm, y_dir_form[6] * mm)
+        c.drawString(x_coord * mm, y_dir_form[7] * mm,  "ФБС, ФГС, колоноскопия, R – графия, МРТ:")
+        c.drawString(x_coord * mm, y_dir_form[8] * mm,  "Аллергия на контрастные вещества: Нет / Да")
+        c.line((x_coord + 83) * mm, y_dir_form[8] * mm, 200 * mm, y_dir_form[8] * mm)
+        c.drawString(x_coord * mm, y_dir_form[9] * mm,  "При планировании МСКТ ангиографии необходимо указать анализы:")
+        c.line(x_coord * mm, y_dir_form[10] * mm, 200 * mm, y_dir_form[10] * mm)
+        c.drawString(x_coord * mm, y_dir_form[11] * mm, "При ЭКГ – синхронизированных исследованиях сердца указать ЧСС")
+        c.line((x_coord + 125) * mm, y_dir_form[11] * mm, 200 * mm, y_dir_form[11] * mm)
+        c.drawString(x_coord * mm, y_dir_form[12] * mm, "При   исследовании   живота   уточнить   проводилось ли в ближайшую неделю исследование")
+        c.drawString(x_coord * mm, y_dir_form[13] * mm, "с барием: Нет/ Да")
+        c.drawString(x_coord * mm, y_dir_form[14] * mm, "Обязательно предоставлять данные предыдущих КТ и МРТ исследований (!!!)")
+
+        #Служебные данные дата, врач, отделение
 
 
     printForm(0)
-
-    # c.setStrokeColorRGB(*([0.8] * 3))
-    # c.line(px(0), h / 2, pxr(0), h / 2)
-    #
-    # printForm(h / 2 / mm)
-
