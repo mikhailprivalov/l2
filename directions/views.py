@@ -1459,7 +1459,7 @@ def form38002(c: Canvas, dir: Napravleniya):
 
         #Специфицные данные формы
         y_dir_form = []
-        y = 75
+        y = 70
         for i in range(0, 19):
             y_dir_form.append(y_coord - y)
             y += 6
