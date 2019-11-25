@@ -1385,7 +1385,6 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 280 * mm, SettingManager.get("org_title"))
         c.drawCentredString((210 / 2) * mm, 275 * mm, SettingManager.get("org_address") + ' ' + SettingManager.get("org_phones"))
 
-        # depart = Issledovaniya.objects.values_list('research__podrazdeleniye__title').filter(napravleniye=dir.pk)
         try:
             issledovaniye = Issledovaniya.objects.get(napravleniye=dir.pk)
         except ObjectDoesNotExist:
