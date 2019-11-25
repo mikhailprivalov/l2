@@ -12,23 +12,14 @@ import random
 
 @api_view()
 def next_result_direction(request):
-    from_pk = request.GET.get("fromPk")
-    after_date = request.GET.get("afterDate")
-    if after_date == '0':
-        after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 1))
-    type_researches = request.GET.get("research", '*')
-    d_start = f'{after_date}'
-    dirs = sql_if.direction_collect(d_start, type_researches, next_n)
-
-    next_time = None
+    dirs = sql_if.direction_resend_amd(next_n)
     naprs = []
     if dirs:
         for i in dirs:
             naprs.append(i[0])
-            next_time = i[3]
 
-    return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
+    return Response({"next": naprs})
 
 
 @api_view()
@@ -43,9 +34,15 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
+    if not iss:
+        return Response({
+        "ok": False,
+    })
+
     iss_index = random.randrange(len(iss))
 
     return Response({
+        "ok": True,
         "pk": pk,
         "createdAt": direction.data_sozdaniya,
         "patient": {
