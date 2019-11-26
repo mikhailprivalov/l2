@@ -27,7 +27,7 @@ docutils==0.15.2
 et-xmlfile==1.0.1
 Genshi==0.7.3
 gprof2dot==2017.9.19
-gunicorn==20.0.0
+gunicorn==20.0.3
 idna==2.8
 isodate==0.6.0
 jdcal==1.4.1
