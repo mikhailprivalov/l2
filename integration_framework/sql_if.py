@@ -60,7 +60,7 @@ def direction_resend_amd(limit):
     with connection.cursor() as cursor:
         cursor.execute("""
         SELECT id FROM public.directions_napravleniya
-            where need_resend_amd = False
+            WHERE need_resend_amd = True
             ORDER BY id DESC LIMIT %(limit)s """,
         params={'limit': limit})
 

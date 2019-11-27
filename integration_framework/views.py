@@ -8,6 +8,7 @@ from . import sql_if
 from laboratory.settings import AFTER_DATE
 from laboratory import utils
 import random
+import simplejson as json
 
 
 @api_view()
@@ -33,12 +34,27 @@ def next_result_direction(request):
 
 @api_view()
 def get_dir_amd(request):
-    next_n = int(request.GET.get("nextN", 1))
+    next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_amd(next_n)
+    naprs = []
+    result = {"ok": False, "next": naprs}
     if dirs:
-        naprs = [ i[0] for i in dirs]
+        naprs = [ i[0] for i in dirs ]
+        result = {"ok": True,"next": naprs}
 
-    return Response({"next": naprs})
+    return Response(result)
+
+
+@api_view()
+def result_amd_send(request):
+    result = json.loads(request.GET.get("result"))
+    if result['error']:
+        for i in result['error']:
+            print(i.split(':')[0])
+    if result['send']:
+        print(result['send'])
+
+    return Response(result)
 
 
 @api_view()
