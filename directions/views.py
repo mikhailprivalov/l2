@@ -1404,7 +1404,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         c.drawCentredString((210 / 2) * mm, 265 * mm, 'Направление на ' + dp_title)
 
         # Точки отсчета
-        x_coord, y_coord = 30, 235
+        x_coord, y_coord = 20, 235
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
@@ -1415,7 +1415,7 @@ def form38002(c: Canvas, dir: Napravleniya):
         # Данные пациента
         y_patient = []
         y = 0
-        for i in range(0,7):
+        for i in range(0,9):
             y_patient.append(y_coord - y)
             y += 5
         c.drawString(x_coord * mm, 250 * mm , "№ " + str(dir.pk))  # Номер направления
@@ -1442,10 +1442,15 @@ def form38002(c: Canvas, dir: Napravleniya):
                              "Источник финансирования: " + dir.client.base.title + " - " + dir.istochnik_f.title)
             else:
                 c.drawString(x_coord * mm, y_patient[6] * mm, "Источник финансирования: ")
+        ind_data = dir.client.get_data_individual()
+        if ind_data['oms']['polis_issued'] and ind_data['oms']['polis_num']:
+            c.drawString((x_coord) * mm, y_patient[7] * mm, "С/к: " + ind_data['oms']['polis_issued'])
+            c.drawString((x_coord) * mm, y_patient[8] * mm, "Полис №: " + ind_data['oms']['polis_num'])
+
 
         #Данные направления
         y_dir_data = []
-        y = 40
+        y = 50
         for i in range(0, 4):
             y_dir_data.append(y_coord - y)
             y += 6
@@ -1459,7 +1464,7 @@ def form38002(c: Canvas, dir: Napravleniya):
 
         #Специфицные данные формы
         y_dir_form = []
-        y = 70
+        y = 75
         for i in range(0, 19):
             y_dir_form.append(y_coord - y)
             y += 6

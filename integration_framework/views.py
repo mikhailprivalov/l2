@@ -12,12 +12,31 @@ import random
 
 @api_view()
 def next_result_direction(request):
+    from_pk = request.GET.get("fromPk")
+    after_date = request.GET.get("afterDate")
+    if after_date == '0':
+        after_date = AFTER_DATE
     next_n = int(request.GET.get("nextN", 1))
-    dirs = sql_if.direction_resend_amd(next_n)
+    type_researches = request.GET.get("research", '*')
+    d_start = f'{after_date}'
+    dirs = sql_if.direction_collect(d_start, type_researches, next_n)
+
+    next_time = None
     naprs = []
     if dirs:
         for i in dirs:
             naprs.append(i[0])
+            next_time = i[3]
+
+    return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
+
+
+@api_view()
+def get_dir_amd(request):
+    next_n = int(request.GET.get("nextN", 1))
+    dirs = sql_if.direction_resend_amd(next_n)
+    if dirs:
+        naprs = [ i[0] for i in dirs]
 
     return Response({"next": naprs})
 
