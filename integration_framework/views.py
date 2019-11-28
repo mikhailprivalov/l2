@@ -50,11 +50,16 @@ def result_amd_send(request):
     result = json.loads(request.GET.get("result"))
     if result['error']:
         for i in result['error']:
-            print(i.split(':')[0])
+            dir_pk = int(i.split(':')[0])
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, error_amd=True)
     if result['send']:
-        print(result['send'])
+        for i in result['send']:
+            data_amd = i.split(':')
+            dir_pk = int(data_amd[0])
+            amd_num = data_amd[1]
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
 
-    return Response(result)
+    return Response({"ok": True})
 
 
 @api_view()
