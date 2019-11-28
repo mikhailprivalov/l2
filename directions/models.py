@@ -362,6 +362,10 @@ class Napravleniya(models.Model):
                                                  related_name="doc_microbiology_receive",
                                                  help_text='Кто принял материал микробиологии',
                                                  on_delete=models.SET_NULL)
+    need_resend_amd = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в АМД?')
+    amd_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True,
+                                   help_text='Номер документа в  АМД')
+    error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
 
     @property
     def data_sozdaniya_local(self):
