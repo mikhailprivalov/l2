@@ -86,9 +86,19 @@
             </table>
           </div>
         </div>
-        <a v-if="directions_history.length > 0 && stat_btn"
-           class="btn btn-blue-nb stat"
-           :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
+        <div v-if="directions_history.length > 0 && (stat_btn || amd)"
+             class="side-bottom"
+             :class="{
+                'side-bottom_all': stat_btn && amd,
+                'side-bottom_stat': stat_btn && !amd,
+                'side-bottom_amd': !stat_btn && amd
+             }"
+        >
+          <a v-if="stat_btn" class="btn btn-blue-nb"
+             :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
+          <a v-if="amd" class="btn btn-blue-nb"
+             :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">отправить в амд</a>
+        </div>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
@@ -1321,6 +1331,9 @@
             rmis_queue() {
                 return this.$store.getters.modules.l2_rmis_queue
             },
+            amd() {
+                return this.$store.getters.modules.l2_amd
+            },
             pk_c() {
                 let lpk = this.pk.trim()
                 if (lpk === '')
@@ -1916,12 +1929,34 @@
       }
     }
 
-    .stat {
+    .side-bottom {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       border-radius: 0;
+      display: flex;
+      flex-direction: row;
+
+      .btn {
+        height: 34px;
+        border-radius: 0;
+      }
+
+      &_all {
+        .btn:first-child {
+          width: 163px;
+        }
+        .btn:last-child {
+          width: 140px;
+        }
+      }
+
+      &_amd, &_stat {
+        .btn {
+          width: 100%;
+        }
+      }
     }
   }
 

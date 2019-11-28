@@ -28,6 +28,7 @@ class SettingManager:
             "rmis_queue",
             "benefit",
             "microbiology",
+            "amd",
         ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod

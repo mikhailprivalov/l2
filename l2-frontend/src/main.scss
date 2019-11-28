@@ -8,7 +8,8 @@
 }
 
 .dash-btn {
-  overflow: hidden;
+  overflow: visible;
+  margin-bottom: 4px!important
 }
 
 .dash-btn .panel-body {
@@ -378,7 +379,7 @@ span.isloading-wrapper {
   border: 1px solid #656D78;
   color: #F5F7FA;
   border-radius: 3px;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 5px 0 rgba(0, 0, 0, 0.04), 0 3px 1px -2px rgba(0, 0, 0, 0.05);
   z-index: 99;
   position: relative;
   transition: .1s linear;
@@ -405,6 +406,7 @@ span.isloading-wrapper {
   width: 100%;
   vertical-align: middle;
   margin-bottom: 4px;
+  font-weight: lighter;
 }
 
 .bw100 {
@@ -413,11 +415,13 @@ span.isloading-wrapper {
 }
 
 .dash-buttons :not(.dash-info) .panel-body:hover {
+  text-shadow: 0 0 5px rgba(#fff, .2);
+  transform: scale(1.008);
   background-color: #049372;
   border: 1px solid #049372;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  box-shadow: 0 0 15px rgba(#049372, 0.3), 0 0 6px rgba(#049372, 0.5);
   z-index: 100;
 }
 
@@ -520,7 +524,7 @@ span.isloading-wrapper {
 }
 
 .panel-flt .panel-body, .panel-flt .list-group-item {
-  background-color: #ECF0F1;
+  background-color: #edeeef;
 }
 
 .panel-flt hr {
@@ -1109,6 +1113,11 @@ body.showloader #page-preloader {
   float: left;
 }
 
+.row.dash-buttons {
+  margin-right: 0;
+  margin-left: -5px;
+}
+
 .dash-buttons .panel-body {
   height: 100px;
   position: relative;
@@ -1318,4 +1327,10 @@ body > .container-fluid {
     width: 100%;
     min-height: 100%;
   }
+}
+
+@media (max-width: 991px) {
+    .text-left-xs {
+      text-align: left;
+    }
 }

@@ -3,14 +3,18 @@
 
 {% block content %}{% load has_group %}
     <div class="panel panel-default panel-flt">
-        <div class="panel-heading">
-            <h3 class="panel-title">Профиль</h3>
-        </div>
         <ul class="list-group">
-            <li class="list-group-item">Логин: {{ request.user }}
-                <small><a href="/logout">Выход</a></small>
+            <li class="list-group-item">
+                <div class="row">
+                    <div class="col-xs-12 col-md-3 col-lg-3">Вход выполнен как: {{ request.user }}</div>
+                    <div class="col-xs-12 col-md-6 col-lg-6 text-center text-left-xs">
+                        {{ request.user.doctorprofile }}
+                    </div>
+                    <div class="col-xs-12 col-md-3 col-lg-3 text-right text-left-xs">
+                        <a href="/logout" class="btn btn-blue-nb">Выход</a>
+                    </div>
+                </div>
             </li>
-            <li class="list-group-item">ФИО: {{ request.user.doctorprofile }}</li>
             <li class="list-group-item">Группы:
                 <div class="row dash-buttons" style="padding: 0;margin-right: 0;margin-left: 0">
                     {% for v in request.user.groups.all %}
@@ -29,7 +33,6 @@
             {% endif %}
         </ul>
     </div>
-    <h4 class='f-h' style="text-align: center;">Меню</h4>
     <div class="row dash-buttons text-center">
         {% for item in mainmenu %}
             {% if not item.not_show_home and not item.hr %}
