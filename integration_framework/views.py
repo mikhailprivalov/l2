@@ -8,6 +8,7 @@ from . import sql_if
 from laboratory.settings import AFTER_DATE
 from laboratory import utils
 import random
+import simplejson as json
 
 
 @api_view()
@@ -32,6 +33,39 @@ def next_result_direction(request):
 
 
 @api_view()
+def get_dir_amd(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_amd(next_n)
+    naprs = []
+    result = {"ok": False, "next": naprs}
+    if dirs:
+        naprs = [ i[0] for i in dirs ]
+        result = {"ok": True,"next": naprs}
+
+    return Response(result)
+
+
+@api_view()
+def result_amd_send(request):
+    result = json.loads(request.GET.get("result"))
+    resp = {"ok": False}
+    if result['error']:
+        for i in result['error']:
+            dir_pk = int(i.split(':')[0])
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, error_amd=True)
+        resp = {"ok": True}
+    if result['send']:
+        for i in result['send']:
+            data_amd = i.split(':')
+            dir_pk = int(data_amd[0])
+            amd_num = data_amd[1]
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
+        resp = {"ok": True}
+
+    return Response(resp)
+
+
+@api_view()
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", '*')
@@ -43,9 +77,15 @@ def direction_data(request):
     if research_pks != '*':
         iss = iss.filter(research__pk__in=research_pks.split(','))
 
+    if not iss:
+        return Response({
+        "ok": False,
+    })
+
     iss_index = random.randrange(len(iss))
 
     return Response({
+        "ok": True,
         "pk": pk,
         "createdAt": direction.data_sozdaniya,
         "patient": {
