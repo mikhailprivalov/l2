@@ -24,14 +24,4 @@ class Command(BaseCommand):
                     starts = True
                     code = cells.index("код")
             else:
-                age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False,
-                                                              blank=False)
-                sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
-                research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список',
-                                             on_delete=models.CASCADE)
-                doctor = DoctorProfile.objects.filter(pk=cells[code]).first()
-                if doctor:
-                    doctor.rmis_login = cells[rmis_login]
-                    doctor.rmis_password = cells[rmis_password]
-                    doctor.save(update_fields=['rmis_login','rmis_password'])
-                    print("Обновлен", doctor)
+               pass
