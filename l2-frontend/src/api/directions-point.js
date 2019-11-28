@@ -84,4 +84,7 @@ export default generator({
   sendAMD: {
     url: 'directions/send-amd',
   },
+  resetAMD: {
+    url: 'directions/reset-amd',
+  },
 })

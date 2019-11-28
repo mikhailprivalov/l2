@@ -32,7 +32,6 @@
               <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено</div>
               <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
               <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
-              <div v-else-if="direction.amd === 'excluded'" class="amd amd-excluded">АМД: отправка не требуется</div>
               <hr/>
             </template>
             <div class="row">
@@ -554,7 +553,21 @@
                     v-if="row.confirmed && row.allow_reset_confirm && can_confirm">
               Сброс подтверждения
             </button>
-            <div class="status-list" v-if="!r(row)">
+            <template v-if="amd">
+              <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
+              <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
+              <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
+              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено</div>
+              <button class="btn btn-blue-nb" @click="reset_amd([data.direction.pk])"
+                      v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'">
+                Сброс статуса АМД
+              </button>
+              <button class="btn btn-blue-nb" @click="send_to_amd([data.direction.pk])"
+                      v-if="data.direction.amd === 'need' || data.direction.amd === 'error'">
+                Отправить в АМД
+              </button>
+            </template>
+            <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не заполнено:</div>
               <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
             </div>
@@ -1073,6 +1086,7 @@
                     if (data.ok) {
                         okmessage('Сохранено')
                         iss.saved = true
+                        this.data.direction.amd = data.amd
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1102,6 +1116,7 @@
                         iss.saved = true
                         iss.allow_reset_confirm = true
                         iss.confirmed = true
+                        this.data.direction.amd = data.amd
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1122,6 +1137,7 @@
                         okmessage('Подтверждено')
                         iss.confirmed = true
                         iss.allow_reset_confirm = true
+                        this.data.direction.amd = data.amd
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1146,6 +1162,7 @@
                     if (data.ok) {
                         okmessage('Подтверждение сброшено')
                         iss.confirmed = false
+                        this.data.direction.amd = 'not_need'
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1320,7 +1337,7 @@
             },
             async send_amd() {
                 await this.$store.dispatch(action_types.INC_LOADING)
-                const toSend = this.directions_history.filter(d => ['error', 'need'.includes(d.amd)]).map(d => d.pk)
+                const toSend = this.directions_history.filter(d => ['error', 'need'].includes(d.amd)).map(d => d.pk)
                 if (toSend.length > 0) {
                     await directions_point.sendAMD({pks: toSend})
                     okmessage('Отправка запланирована')
@@ -1328,6 +1345,24 @@
                 } else {
                     errmessage('Не найдены подходящие направления')
                 }
+                await this.$store.dispatch(action_types.DEC_LOADING)
+            },
+            async reset_amd(pks) {
+                try {
+                  await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`)
+                  await this.$store.dispatch(action_types.INC_LOADING)
+                  await directions_point.resetAMD({pks})
+                  this.load_pk(this.data.direction.pk)
+                  this.reload_if_need()
+                  await this.$store.dispatch(action_types.DEC_LOADING)
+                } catch (e) {}
+            },
+            async send_to_amd(pks) {
+                await this.$store.dispatch(action_types.INC_LOADING)
+                await directions_point.sendAMD({pks})
+                this.load_pk(this.data.direction.pk)
+                this.reload_if_need()
+                okmessage('Отправка запланирована')
                 await this.$store.dispatch(action_types.DEC_LOADING)
             },
         },
@@ -1415,6 +1450,14 @@
                     }
                 }
                 return true
+            },
+            can_reset_amd() {
+                for (let g of (this.$store.getters.user_data.groups || [])) {
+                    if (g === 'Управление отправкой в АМД') {
+                        return true
+                    }
+                }
+                return false
             },
         }
     }
@@ -2134,8 +2177,11 @@
     }
   }
 
-  .status {
+  .status, .control-row .amd {
     padding: 5px;
+  }
+
+  .status {
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;

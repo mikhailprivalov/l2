@@ -1024,6 +1024,7 @@ def directions_paraclinic_result(request):
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
 
         response["ok"] = True
+        response["amd"] = iss.napravleniye.amd_status
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
@@ -1053,6 +1054,7 @@ def directions_paraclinic_confirm(request):
             i.time_confirmation = t
             i.save()
         response["ok"] = True
+        response["amd"] = iss.napravleniye.amd_status
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
@@ -1090,6 +1092,7 @@ def directions_paraclinic_confirm_reset(request):
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
                 str(SettingManager.get("lab_reset_confirm_time_min")))
+        response["amd"] = iss.napravleniye.amd_status
     return JsonResponse(response)
 
 
@@ -1188,4 +1191,15 @@ def send_amd(request):
             direction.amd_number = None
             direction.error_amd = False
             direction.save()
+    return JsonResponse({"ok": True})
+
+
+@group_required("Управление отправкой в АМД")
+def reset_amd(request):
+    request_data = json.loads(request.body)
+    for direction in Napravleniya.objects.filter(pk__in=request_data["pks"]):
+        direction.need_resend_amd = False
+        direction.amd_number = None
+        direction.error_amd = False
+        direction.save()
     return JsonResponse({"ok": True})
