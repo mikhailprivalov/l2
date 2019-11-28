@@ -48,18 +48,21 @@ def get_dir_amd(request):
 @api_view()
 def result_amd_send(request):
     result = json.loads(request.GET.get("result"))
+    result = {"ok": False}
     if result['error']:
         for i in result['error']:
             dir_pk = int(i.split(':')[0])
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, error_amd=True)
+        result = {"ok": True}
     if result['send']:
         for i in result['send']:
             data_amd = i.split(':')
             dir_pk = int(data_amd[0])
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
+        result = {"ok": True}
 
-    return Response({"ok": True})
+    return Response(result)
 
 
 @api_view()
