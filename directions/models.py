@@ -366,6 +366,7 @@ class Napravleniya(models.Model):
     amd_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True,
                                    help_text='Номер документа в  АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
+    amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
 
     @property
     def data_sozdaniya_local(self):
@@ -693,6 +694,24 @@ class Napravleniya(models.Model):
         napr_data['istochnik_f'] = self.istochnik_f.title.lower() if self.istochnik_f else ''
 
         return napr_data
+
+    @property
+    def amd_status(self):
+        if self.is_all_confirm():
+            has_amd = SettingManager.l2_modules().get("l2_amd", False)
+
+            if has_amd:
+                if self.need_resend_amd:
+                    return "planned"
+                elif self.amd_excluded:
+                    return "excluded"
+                if self.error_amd:
+                    return "error"
+                elif self.amd_number:
+                    return "ok"
+                else:
+                    return "need"
+        return "not_need"
 
     class Meta:
         verbose_name = 'Направление'

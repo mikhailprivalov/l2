@@ -27,6 +27,14 @@
               </div>
             </div>
             <hr/>
+            <template v-if="direction.amd !== 'not_need'">
+              <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
+              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено</div>
+              <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
+              <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
+              <div v-else-if="direction.amd === 'excluded'" class="amd amd-excluded">АМД: отправка не требуется</div>
+              <hr/>
+            </template>
             <div class="row">
               <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
               <div class="col-xs-4 text-center">
@@ -97,7 +105,7 @@
           <a v-if="stat_btn" class="btn btn-blue-nb"
              :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
           <a v-if="amd" class="btn btn-blue-nb"
-             :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">отправить в амд</a>
+             href="#" @click.prevent="send_amd" target="_blank">отправить в амд</a>
         </div>
       </div>
     </div>
@@ -714,10 +722,12 @@
     import SelectField from '../fields/SelectField'
     import RadioField from '../fields/RadioField'
     import SearchFractionValueField from '../fields/SearchFractionValueField'
+    import TemplateEditor from '../construct/TemplateEditor'
 
     export default {
         name: 'results-paraclinic',
         components: {
+            TemplateEditor,
             SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
@@ -1307,7 +1317,19 @@
             },
             show_results(pk) {
                 this.$root.$emit('print:results', pk)
-            }
+            },
+            async send_amd() {
+                await this.$store.dispatch(action_types.INC_LOADING)
+                const toSend = this.directions_history.filter(d => ['error', 'need'.includes(d.amd)]).map(d => d.pk)
+                if (toSend.length > 0) {
+                    await directions_point.sendAMD({pks: toSend})
+                    okmessage('Отправка запланирована')
+                    this.reload_if_need()
+                } else {
+                    errmessage('Не найдены подходящие направления')
+                }
+                await this.$store.dispatch(action_types.DEC_LOADING)
+            },
         },
         computed: {
             date_to_form() {
@@ -1947,6 +1969,7 @@
         .btn:first-child {
           width: 163px;
         }
+
         .btn:last-child {
           width: 140px;
         }
@@ -2121,5 +2144,21 @@
 
   .status-none {
     color: #CF3A24
+  }
+
+  .amd {
+    font-weight: bold;
+
+    &-need, &-error {
+      color: #CF3A24
+    }
+
+    &-planned {
+      color: #d9be00
+    }
+
+    &-ok {
+      color: #049372
+    }
   }
 </style>
