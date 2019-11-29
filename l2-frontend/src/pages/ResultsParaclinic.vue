@@ -29,7 +29,7 @@
             <hr/>
             <template v-if="direction.amd !== 'not_need'">
               <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
-              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено</div>
+              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено ({{data.direction.amd_number}})</div>
               <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
               <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
               <hr/>
@@ -557,7 +557,7 @@
               <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
               <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
               <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
-              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено</div>
+              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{data.direction.amd_number}})</div>
               <button class="btn btn-blue-nb" @click="reset_amd([data.direction.pk])"
                       v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'">
                 Сброс статуса АМД
@@ -1087,6 +1087,7 @@
                         okmessage('Сохранено')
                         iss.saved = true
                         this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1117,6 +1118,7 @@
                         iss.allow_reset_confirm = true
                         iss.confirmed = true
                         this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1138,6 +1140,7 @@
                         iss.confirmed = true
                         iss.allow_reset_confirm = true
                         this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {

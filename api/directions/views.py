@@ -769,6 +769,7 @@ def directions_paraclinic_form(request):
                 "fin_source_id": d.istochnik_f_id,
                 "tube": None,
                 "amd": d.amd_status,
+                "amd_number": d.amd_number,
             }
 
             response["researches"] = []
@@ -1025,6 +1026,7 @@ def directions_paraclinic_result(request):
 
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
@@ -1055,6 +1057,7 @@ def directions_paraclinic_confirm(request):
             i.save()
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
@@ -1093,6 +1096,7 @@ def directions_paraclinic_confirm_reset(request):
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
                 str(SettingManager.get("lab_reset_confirm_time_min")))
         response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
     return JsonResponse(response)
 
 
@@ -1120,6 +1124,7 @@ def directions_paraclinic_history(request):
             "all_confirmed": True,
             "all_saved": True,
             "amd": direction.amd_status,
+            "amd_number": direction.amd_number,
         }
         for i in Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
             iss = {"title": i.research.get_title(),
