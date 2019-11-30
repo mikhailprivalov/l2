@@ -50,7 +50,7 @@ def dispensarization_research(sex, age, client_id, d_start, d_end):
 def get_fraction_result(client_id, fraction_id, count=1):
     """
     на входе: id-фракции, id-карты,
-    выход: последний результат исследования"
+    выход: последний результат исследования
     :return:
     """
 
@@ -73,3 +73,13 @@ def get_fraction_result(client_id, fraction_id, count=1):
 
         row = cursor.fetchall()
     return row
+
+
+def get_field_result(client_id, field_id, count=1):
+    """
+    на входе: id-поля, id-карты,
+    выход: последний результат поля
+    :return:
+    """
+
+    return [[0, 10005, 0, 132456572342, '01.01.1999', 'TODO', 20]]

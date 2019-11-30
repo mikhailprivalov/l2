@@ -235,6 +235,7 @@ class ParaclinicInputField(models.Model):
         (10, 'Dict'),
         (11, 'Fraction'),
         (12, 'Radio'),
+        (13, 'Protocol field'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
@@ -250,7 +251,7 @@ class ParaclinicInputField(models.Model):
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
 
-    def get_title(self):
+    def get_title(self, recursive=False):
         titles = []
         if self.title:
             titles.append(self.title)
@@ -259,7 +260,14 @@ class ParaclinicInputField(models.Model):
             titles.append(f.research.get_title())
             if f.title not in titles:
                 titles[-1] = titles[-1] + ' – ' + f.title
-        title = ', '.join(titles)
+        if self.field_type == 13 and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
+            f = ParaclinicInputField.objects.get(pk=self.default_value)
+            titles.append(f.group.research.get_title())
+            if f.group.title not in titles:
+                titles[-1] = titles[-1] + ' – ' + f.group.title
+            if f.get_title() not in titles and not recursive:
+                titles[-1] = titles[-1] + ' – ' + f.get_title(recursive=True)
+        title = ', '.join([t for t in titles if t])
         return title
 
 

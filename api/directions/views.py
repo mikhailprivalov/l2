@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.utils import dateformat, timezone
 
 from api.dicom import search_dicom_study
-from api.sql_func import get_fraction_result
+from api.sql_func import get_fraction_result, get_field_result
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -879,7 +879,7 @@ def directions_paraclinic_form(request):
                             "hide": field.hide,
                             "values_to_input": ([] if not field.required or field.field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": (field.default_value if field.field_type not in [3, 11] else '')
+                            "value": (field.default_value if field.field_type not in [3, 11, 13] else '')
                             if not ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
@@ -1176,6 +1176,23 @@ def last_fraction_result(request):
     client_pk = request_data["clientPk"]
     fraction_pk = int(request_data["fractionPk"])
     rows = get_fraction_result(client_pk, fraction_pk)
+    result = None
+    if rows:
+        row = rows[0]
+        result = {
+            "direction": row[1],
+            "date": row[4],
+            "value": row[5]
+        }
+    return JsonResponse({"result": result})
+
+
+@login_required
+def last_field_result(request):
+    request_data = json.loads(request.body)
+    client_pk = request_data["clientPk"]
+    field_pk = int(request_data["fieldPk"])
+    rows = get_field_result(client_pk, field_pk)
     result = None
     if rows:
         row = rows[0]

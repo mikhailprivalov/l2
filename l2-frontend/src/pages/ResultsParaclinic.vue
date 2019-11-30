@@ -365,6 +365,13 @@
                         v-model="field.value"
                       />
                     </div>
+                    <div class="field-value" v-else-if="field.field_type === 13">
+                      <search-field-value-field :readonly="row.confirmed"
+                                                :field-pk="field.default_value"
+                                                :client-pk="data.patient.card_pk"
+                                                :lines="field.lines"
+                                                v-model="field.value"/>
+                    </div>
                     <div :title="field.helper" class="field-helper" v-if="field.helper"
                          v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
                       <i class="fa fa-question"></i>
@@ -735,6 +742,7 @@
     import SelectField from '../fields/SelectField'
     import RadioField from '../fields/RadioField'
     import SearchFractionValueField from '../fields/SearchFractionValueField'
+    import SearchFieldValueField from '../fields/SearchFieldValueField'
     import TemplateEditor from '../construct/TemplateEditor'
 
     export default {
@@ -744,12 +752,12 @@
             SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
-            SearchFractionValueField, RadioField,
+            SearchFractionValueField, RadioField, SearchFieldValueField,
         },
         data() {
             return {
                 pk: '',
-                data: {ok: false},
+                data: {ok: false, direction: {}},
                 date: moment().format('DD.MM.YYYY'),
                 td: moment().format('YYYY-MM-DD'),
                 tnd: moment().add(1, 'day').format('YYYY-MM-DD'),

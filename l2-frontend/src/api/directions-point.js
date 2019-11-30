@@ -81,6 +81,9 @@ export default generator({
   lastFractionResult: {
     url: 'directions/last-fraction-result',
   },
+  lastFieldResult: {
+    url: 'directions/last-field-result',
+  },
   sendAMD: {
     url: 'directions/send-amd',
   },

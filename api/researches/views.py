@@ -397,3 +397,9 @@ def fraction_title(request):
     request_data = json.loads(request.body)
     fraction = Fractions.objects.get(pk=request_data["pk"])
     return JsonResponse({"fraction": fraction.title, "research": fraction.research.title, "units": fraction.units})
+
+
+def field_title(request):
+    request_data = json.loads(request.body)
+    field = ParaclinicInputField.objects.get(pk=request_data["pk"])
+    return JsonResponse({"field": field.get_title(), "group": field.group.title, "research": field.group.research.title})
