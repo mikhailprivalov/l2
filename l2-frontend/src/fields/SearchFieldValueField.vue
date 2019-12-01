@@ -8,7 +8,7 @@
                 v-tippy="{ placement : 'bottom', arrow: true }">
             {{title}}&nbsp;&nbsp;<i class="fa fa-circle"></i>
         </button>
-        <div v-else class="input-group-addon">{{title}}</div>
+        <div v-else class="btn btn-block" style="white-space: normal;text-align: left;">{{title}}</div>
       </div>
       <div class="col-xs-9 base">
         <textarea :readonly="readonly" :rows="lines" class="form-control"
@@ -103,5 +103,9 @@
 <style scoped>
   .base input, .base textarea {
     z-index: 1;
+  }
+
+  div.btn:hover {
+    cursor: default;
   }
 </style>
