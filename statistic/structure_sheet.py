@@ -247,7 +247,8 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         n = issled[23] or empty
         p = issled[24] or empty
         current_napr = str(issled[6])
-        current_patient_napr = f'{f} {n} {p}\n{current_napr}'
+       # current_patient_napr = f'{f} {n} {p}\n{current_napr}'
+        current_patient_napr = f'{current_napr}'
         current_born = issled[25]
         current_card = issled[21]
         polis_n = issled[3] or ''

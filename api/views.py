@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import api.models as models
 import directions.models as directions
-import users.models as usersа
+import users.models as users
 from api import fias
 from api.ws import emit
 from appconf.manager import SettingManager
