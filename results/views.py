@@ -593,6 +593,7 @@ def result_print(request):
     client_prev = -1
     # cl = Client()
     link_result = []
+    fwb = []
     for direction in sorted(Napravleniya.objects.filter(pk__in=pk).distinct(),
                             key=lambda dir: dir.client.individual_id * 100000000 + Result.objects.filter(
                                 issledovaniye__napravleniye=dir).count() * 10000000 + dir.pk):
@@ -1200,7 +1201,7 @@ def result_print(request):
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.field_type == 11:
+                                if r.field.field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                 if r.field.get_title() != "":
                                     fwb.append(Paragraph(
@@ -1237,7 +1238,7 @@ def result_print(request):
                                     vv = v.split('-')
                                     if len(vv) == 3:
                                         v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.field_type == 11:
+                                if r.field.field_type in [11, 13]:
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                 if r.field.get_title() != "":
                                     vals.append("{}:&nbsp;{}".format(

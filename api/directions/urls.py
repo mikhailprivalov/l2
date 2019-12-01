@@ -23,4 +23,7 @@ urlpatterns = [
     path('patient-history', views.directions_patient_history),
     path('data-by-fields', views.directions_data_by_fields),
     path('last-fraction-result', views.last_fraction_result),
+    path('last-field-result', views.last_field_result),
+    path('send-amd', views.send_amd),
+    path('reset-amd', views.reset_amd),
 ]

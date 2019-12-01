@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.utils import dateformat, timezone
 
 from api.dicom import search_dicom_study
-from api.sql_func import get_fraction_result
+from api.sql_func import get_fraction_result, get_field_result
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -768,6 +768,8 @@ def directions_paraclinic_form(request):
                 "fin_source": "" if not d.istochnik_f else d.istochnik_f.title,
                 "fin_source_id": d.istochnik_f_id,
                 "tube": None,
+                "amd": d.amd_status,
+                "amd_number": d.amd_number,
             }
 
             response["researches"] = []
@@ -877,7 +879,7 @@ def directions_paraclinic_form(request):
                             "hide": field.hide,
                             "values_to_input": ([] if not field.required or field.field_type not in [10, 12] else
                                                 ['- Не выбрано']) + json.loads(field.input_templates),
-                            "value": (field.default_value if field.field_type not in [3, 11] else '')
+                            "value": (field.default_value if field.field_type not in [3, 11, 13] else '')
                             if not ParaclinicResult.objects.filter(
                                 issledovaniye=i, field=field).exists() else
                             ParaclinicResult.objects.filter(issledovaniye=i, field=field)[0].value,
@@ -1023,6 +1025,8 @@ def directions_paraclinic_result(request):
         Issledovaniya.objects.filter(parent=iss).exclude(pk__in=h).delete()
 
         response["ok"] = True
+        response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
@@ -1052,6 +1056,8 @@ def directions_paraclinic_confirm(request):
             i.time_confirmation = t
             i.save()
         response["ok"] = True
+        response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
@@ -1089,6 +1095,8 @@ def directions_paraclinic_confirm_reset(request):
         else:
             response["message"] = "Сброс подтверждения разрешен в течении %s минут" % (
                 str(SettingManager.get("lab_reset_confirm_time_min")))
+        response["amd"] = iss.napravleniye.amd_status
+        response["amd_number"] = iss.napravleniye.amd_number
     return JsonResponse(response)
 
 
@@ -1098,6 +1106,7 @@ def directions_paraclinic_history(request):
     request_data = json.loads(request.body)
     date_start, date_end = try_parse_range(request_data["date"])
     has_dirs = []
+
     for direction in Napravleniya.objects.filter(Q(issledovaniya__doc_save=request.user.doctorprofile) |
                                                  Q(issledovaniya__doc_confirmation=request.user.doctorprofile)) \
             .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) |
@@ -1113,7 +1122,9 @@ def directions_paraclinic_history(request):
             "card": direction.client.number_with_type(),
             "iss": [],
             "all_confirmed": True,
-            "all_saved": True
+            "all_saved": True,
+            "amd": direction.amd_status,
+            "amd_number": direction.amd_number,
         }
         for i in Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
             iss = {"title": i.research.get_title(),
@@ -1174,3 +1185,43 @@ def last_fraction_result(request):
             "value": row[5]
         }
     return JsonResponse({"result": result})
+
+
+@login_required
+def last_field_result(request):
+    request_data = json.loads(request.body)
+    client_pk = request_data["clientPk"]
+    field_pk = int(request_data["fieldPk"])
+    rows = get_field_result(client_pk, field_pk)
+    result = None
+    if rows:
+        row = rows[0]
+        result = {
+            "direction": row[1],
+            "date": row[4],
+            "value": row[5]
+        }
+    return JsonResponse({"result": result})
+
+
+@group_required("Врач параклиники", "Врач консультаций")
+def send_amd(request):
+    request_data = json.loads(request.body)
+    for direction in Napravleniya.objects.filter(pk__in=request_data["pks"]):
+        if direction.amd_status in ['error', 'need']:
+            direction.need_resend_amd = True
+            direction.amd_number = None
+            direction.error_amd = False
+            direction.save()
+    return JsonResponse({"ok": True})
+
+
+@group_required("Управление отправкой в АМД")
+def reset_amd(request):
+    request_data = json.loads(request.body)
+    for direction in Napravleniya.objects.filter(pk__in=request_data["pks"]):
+        direction.need_resend_amd = False
+        direction.amd_number = None
+        direction.error_amd = False
+        direction.save()
+    return JsonResponse({"ok": True})

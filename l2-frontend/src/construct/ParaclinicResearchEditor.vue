@@ -116,6 +116,10 @@
                   <strong>ID фракции:</strong>
                   <input v-model="row.default" class="form-control"/>
                 </div>
+                <div v-else-if="row.field_type === 13">
+                  <strong>ID поля:</strong>
+                  <input v-model="row.default" class="form-control"/>
+                </div>
                 <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10 || row.field_type === 12">
                   <div class="header" v-collapse-toggle>
                     <a href="#" @click.prevent v-if="row.field_type === 0">
@@ -176,7 +180,7 @@
                 <label>
                   <input type="checkbox" v-model="row.for_talon" /> в талон
                 </label>
-                <label style="line-height: 1" v-show="row.field_type === 0">
+                <label style="line-height: 1" v-show="row.field_type === 0 || row.field_type === 13">
                   Число строк:<br/>
                   <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
                 </label>
@@ -190,6 +194,7 @@
                     <option value="10">Справочник</option>
                     <option value="11">Фракция</option>
                     <option value="12">Радио</option>
+                    <option value="13">Поле описательного результата</option>
                   </select>
                 </label>
               </div>

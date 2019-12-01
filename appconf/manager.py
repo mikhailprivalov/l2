@@ -1,3 +1,6 @@
+import simplejson
+from django.core.cache import cache
+
 import appconf.models as appconf
 
 
@@ -5,11 +8,16 @@ class SettingManager:
 
     @staticmethod
     def get(key, default=None, default_type='s'):
+        k = 'setting_manager_' + key
+        cv = cache.get(k)
+        if cv:
+            return simplejson.loads(cv)
         row = appconf.Setting.objects.filter(name=key).first()
         if not row:
             row = appconf.Setting.objects.create(name=key, value=key if default is None else default,
                                                  value_type=default_type)
         value = row.get_value()
+        cache.set(k, simplejson.dumps(value), 20)
         return value
 
     @staticmethod
@@ -28,6 +36,7 @@ class SettingManager:
             "rmis_queue",
             "benefit",
             "microbiology",
+            "amd",
         ]}, "consults_module": SettingManager.get("consults_module", default='false', default_type='b')}
 
     @staticmethod

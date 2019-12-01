@@ -30,4 +30,7 @@ export default generator({
   fractionTitle: {
     url: 'researches/fraction-title'
   },
+  fieldTitle: {
+    url: 'researches/field-title'
+  },
 })

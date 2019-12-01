@@ -1,15 +1,20 @@
 <template>
   <div>
-    <div class="input-group base">
-        <span class="input-group-btn" v-if="!readonly">
-            <button class="btn" title="Загрузить последний результат"
-                    @click="loadLast"
-                    v-tippy="{ placement : 'bottom', arrow: true }">
-                {{title}}&nbsp;&nbsp;<i class="fa fa-circle"></i>
-            </button>
-        </span>
-      <span v-else class="input-group-addon">{{title}}</span>
-      <input type="text" :readonly="readonly" v-model="val" class="form-control"/>
+    <div class="row">
+      <div class="col-xs-3" style="padding-right: 0">
+        <button class="btn btn-block" style="white-space: normal;text-align: left;" title="Загрузить последний результат"
+                v-if="!readonly"
+                @click="loadLast"
+                v-tippy="{ placement : 'bottom', arrow: true }">
+            {{title}}&nbsp;&nbsp;<i class="fa fa-circle"></i>
+        </button>
+        <div v-else class="btn btn-block" style="white-space: normal;text-align: left;">{{title}}</div>
+      </div>
+      <div class="col-xs-9 base">
+        <textarea :readonly="readonly" :rows="lines" class="form-control"
+                  v-if="lines > 1" v-model="val"></textarea>
+        <input :readonly="readonly" class="form-control" v-else v-model="val"/>
+      </div>
     </div>
     <a v-if="direction" href="#" @click="print_results">печать результатов направления {{direction}}</a>
   </div>
@@ -20,12 +25,12 @@
     import directions_point from '../api/directions-point'
 
     export default {
-        name: 'SearchFractionValueField',
+        name: 'SearchFieldValueField',
         props: {
             readonly: {
                 type: Boolean
             },
-            fractionPk: {
+            fieldPk: {
                 type: String,
                 required: true,
             },
@@ -36,20 +41,21 @@
             value: {
                 required: true,
             },
+            lines: {
+                type: Number,
+            },
         },
         data() {
             return {
                 val: this.value,
                 title: '',
-                units: '',
                 direction: null,
             }
         },
         mounted() {
-            researches_point.fractionTitle({pk: this.fractionPk}).then(data => {
-                const titles = new Set([data.research, data.fraction])
-                this.title = [...titles].join(' – ')
-                this.units = data.units
+            researches_point.fieldTitle({pk: this.fieldPk}).then(data => {
+                const titles = new Set([data.research, data.group, data.field])
+                this.title = [...titles].filter(t => !!t).join(' – ')
                 this.checkDirection()
 
                 setTimeout(() => {
@@ -77,12 +83,12 @@
                 this.$emit('modified', newVal)
             },
             async loadLast() {
-                const {result} = await directions_point.lastFractionResult(this, [
-                    'fractionPk',
+                const {result} = await directions_point.lastFieldResult(this, [
+                    'fieldPk',
                     'clientPk',
                 ])
                 if (result) {
-                    this.val = `${result.value}${this.units === '' ? '' : ' ' + this.units} (${result.date}, направление ${result.direction})`
+                    this.val = `${result.value} (${result.date}, направление ${result.direction})`
                 } else {
                     errmessage(`Результат не найден (${this.title})!`)
                 }
@@ -95,7 +101,11 @@
 </script>
 
 <style scoped>
-  .base input {
+  .base input, .base textarea {
     z-index: 1;
+  }
+
+  div.btn:hover {
+    cursor: default;
   }
 </style>

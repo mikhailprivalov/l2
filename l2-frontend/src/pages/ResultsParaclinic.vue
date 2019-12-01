@@ -27,6 +27,13 @@
               </div>
             </div>
             <hr/>
+            <template v-if="direction.amd !== 'not_need'">
+              <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
+              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено ({{data.direction.amd_number}})</div>
+              <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
+              <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
+              <hr/>
+            </template>
             <div class="row">
               <div class="col-xs-4"><a href="#" @click.prevent="load_pk(direction.pk)">Просмотр</a></div>
               <div class="col-xs-4 text-center">
@@ -86,9 +93,19 @@
             </table>
           </div>
         </div>
-        <a v-if="directions_history.length > 0 && stat_btn"
-           class="btn btn-blue-nb stat"
-           :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
+        <div v-if="directions_history.length > 0 && (stat_btn || amd)"
+             class="side-bottom"
+             :class="{
+                'side-bottom_all': stat_btn && amd,
+                'side-bottom_stat': stat_btn && !amd,
+                'side-bottom_amd': !stat_btn && amd
+             }"
+        >
+          <a v-if="stat_btn" class="btn btn-blue-nb"
+             :href="`/forms/preview?type=105.01&date=${date_to_form}`" target="_blank">печать статталонов</a>
+          <a v-if="amd" class="btn btn-blue-nb"
+             href="#" @click.prevent="send_amd" target="_blank">отправить в амд</a>
+        </div>
       </div>
     </div>
     <div class="results-content" v-if="data.ok">
@@ -348,6 +365,13 @@
                         v-model="field.value"
                       />
                     </div>
+                    <div class="field-value" v-else-if="field.field_type === 13">
+                      <search-field-value-field :readonly="row.confirmed"
+                                                :field-pk="field.default_value"
+                                                :client-pk="data.patient.card_pk"
+                                                :lines="field.lines"
+                                                v-model="field.value"/>
+                    </div>
                     <div :title="field.helper" class="field-helper" v-if="field.helper"
                          v-tippy="{ placement : 'left', arrow: true, followCursor: true }">
                       <i class="fa fa-question"></i>
@@ -536,7 +560,21 @@
                     v-if="row.confirmed && row.allow_reset_confirm && can_confirm">
               Сброс подтверждения
             </button>
-            <div class="status-list" v-if="!r(row)">
+            <template v-if="amd">
+              <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
+              <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
+              <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
+              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{data.direction.amd_number}})</div>
+              <button class="btn btn-blue-nb" @click="reset_amd([data.direction.pk])"
+                      v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'">
+                Сброс статуса АМД
+              </button>
+              <button class="btn btn-blue-nb" @click="send_to_amd([data.direction.pk])"
+                      v-if="data.direction.amd === 'need' || data.direction.amd === 'error'">
+                Отправить в АМД
+              </button>
+            </template>
+            <div class="status-list" v-if="!r(row) && !row.confirmed">
               <div class="status status-none">Не заполнено:</div>
               <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
             </div>
@@ -704,19 +742,22 @@
     import SelectField from '../fields/SelectField'
     import RadioField from '../fields/RadioField'
     import SearchFractionValueField from '../fields/SearchFractionValueField'
+    import SearchFieldValueField from '../fields/SearchFieldValueField'
+    import TemplateEditor from '../construct/TemplateEditor'
 
     export default {
         name: 'results-paraclinic',
         components: {
+            TemplateEditor,
             SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
             LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
-            SearchFractionValueField, RadioField,
+            SearchFractionValueField, RadioField, SearchFieldValueField,
         },
         data() {
             return {
                 pk: '',
-                data: {ok: false},
+                data: {ok: false, direction: {}},
                 date: moment().format('DD.MM.YYYY'),
                 td: moment().format('YYYY-MM-DD'),
                 tnd: moment().add(1, 'day').format('YYYY-MM-DD'),
@@ -1053,6 +1094,8 @@
                     if (data.ok) {
                         okmessage('Сохранено')
                         iss.saved = true
+                        this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1082,6 +1125,8 @@
                         iss.saved = true
                         iss.allow_reset_confirm = true
                         iss.confirmed = true
+                        this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1102,6 +1147,8 @@
                         okmessage('Подтверждено')
                         iss.confirmed = true
                         iss.allow_reset_confirm = true
+                        this.data.direction.amd = data.amd
+                        this.data.direction.amd_number = data.amd_number
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1126,6 +1173,7 @@
                     if (data.ok) {
                         okmessage('Подтверждение сброшено')
                         iss.confirmed = false
+                        this.data.direction.amd = 'not_need'
                         this.reload_if_need()
                         this.changed = false
                     } else {
@@ -1297,7 +1345,37 @@
             },
             show_results(pk) {
                 this.$root.$emit('print:results', pk)
-            }
+            },
+            async send_amd() {
+                await this.$store.dispatch(action_types.INC_LOADING)
+                const toSend = this.directions_history.filter(d => ['error', 'need'].includes(d.amd)).map(d => d.pk)
+                if (toSend.length > 0) {
+                    await directions_point.sendAMD({pks: toSend})
+                    okmessage('Отправка запланирована')
+                    this.reload_if_need()
+                } else {
+                    errmessage('Не найдены подходящие направления')
+                }
+                await this.$store.dispatch(action_types.DEC_LOADING)
+            },
+            async reset_amd(pks) {
+                try {
+                  await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`)
+                  await this.$store.dispatch(action_types.INC_LOADING)
+                  await directions_point.resetAMD({pks})
+                  this.load_pk(this.data.direction.pk)
+                  this.reload_if_need()
+                  await this.$store.dispatch(action_types.DEC_LOADING)
+                } catch (e) {}
+            },
+            async send_to_amd(pks) {
+                await this.$store.dispatch(action_types.INC_LOADING)
+                await directions_point.sendAMD({pks})
+                this.load_pk(this.data.direction.pk)
+                this.reload_if_need()
+                okmessage('Отправка запланирована')
+                await this.$store.dispatch(action_types.DEC_LOADING)
+            },
         },
         computed: {
             date_to_form() {
@@ -1320,6 +1398,9 @@
             },
             rmis_queue() {
                 return this.$store.getters.modules.l2_rmis_queue
+            },
+            amd() {
+                return this.$store.getters.modules.l2_amd
             },
             pk_c() {
                 let lpk = this.pk.trim()
@@ -1380,6 +1461,14 @@
                     }
                 }
                 return true
+            },
+            can_reset_amd() {
+                for (let g of (this.$store.getters.user_data.groups || [])) {
+                    if (g === 'Управление отправкой в АМД') {
+                        return true
+                    }
+                }
+                return false
             },
         }
     }
@@ -1916,12 +2005,35 @@
       }
     }
 
-    .stat {
+    .side-bottom {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       border-radius: 0;
+      display: flex;
+      flex-direction: row;
+
+      .btn {
+        height: 34px;
+        border-radius: 0;
+      }
+
+      &_all {
+        .btn:first-child {
+          width: 163px;
+        }
+
+        .btn:last-child {
+          width: 140px;
+        }
+      }
+
+      &_amd, &_stat {
+        .btn {
+          width: 100%;
+        }
+      }
     }
   }
 
@@ -2076,8 +2188,11 @@
     }
   }
 
-  .status {
+  .status, .control-row .amd {
     padding: 5px;
+  }
+
+  .status {
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
@@ -2086,5 +2201,21 @@
 
   .status-none {
     color: #CF3A24
+  }
+
+  .amd {
+    font-weight: bold;
+
+    &-need, &-error {
+      color: #CF3A24
+    }
+
+    &-planned {
+      color: #d9be00
+    }
+
+    &-ok {
+      color: #049372
+    }
   }
 </style>
