@@ -305,6 +305,7 @@ def patients_card_save(request):
     request_data = json.loads(request.body)
     result = "fail"
     message = ""
+    messages = []
     card_pk = -1
     individual_pk = -1
 
@@ -335,8 +336,11 @@ def patients_card_save(request):
         i.sex = request_data["sex"]
         i.save()
         if Card.objects.filter(individual=i, base__is_rmis=True).exists() and changed:
-            c = Client(modules=["individuals", "patients"])
-            c.patients.send_patient(Card.objects.filter(individual=i, base__is_rmis=True)[0])
+            try:
+                c = Client(modules=["individuals", "patients"])
+                c.patients.send_patient(Card.objects.filter(individual=i, base__is_rmis=True)[0])
+            except:
+                messages.append("Синхронизация с РМИС не удалась")
 
     individual_pk = i.pk
 
@@ -376,9 +380,13 @@ def patients_card_save(request):
     c.phone = request_data["phone"]
     c.save()
     if c.individual.primary_for_rmis:
-        c.individual.sync_with_rmis()
+        try:
+            c.individual.sync_with_rmis()
+        except:
+            messages.append("Синхронизация с РМИС не удалась")
     result = "ok"
-    return JsonResponse({"result": result, "message": message, "card_pk": card_pk, "individual_pk": individual_pk})
+    return JsonResponse({"result": result, "message": message, "messages": messages,
+                         "card_pk": card_pk, "individual_pk": individual_pk})
 
 
 def individual_search(request):

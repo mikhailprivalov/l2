@@ -479,7 +479,9 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
-                                          localizations=None, service_locations=None):
+                                          localizations=None, service_locations=None, visited=None):
+        if not visited:
+            visited = []
         if counts is None:
             counts = {}
 
@@ -491,6 +493,8 @@ class Napravleniya(models.Model):
 
         if rmis_data is None:
             rmis_data = {}
+
+        childrens = {}
         researches_grouped_by_lab = []  # Лист с выбранными исследованиями по лабораториям
         i = 0
         result = {"r": False, "list_id": []}
@@ -528,9 +532,6 @@ class Napravleniya(models.Model):
                     # {5:[0,2,5,7],6:[8]}
 
             if not no_attach:
-                for r in res:
-                    research = directory.Researches.objects.get(pk=r)
-                    res.extend([x.pk for x in research.auto_add_hidden.all()])
                 directions_for_researches = {}  # Словарь для временной записи направлений.
                 # Исследования привязываются к направлению по группе
 
@@ -611,6 +612,17 @@ class Napravleniya(models.Model):
                         issledovaniye.service_location = s
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
                     issledovaniye.save()
+                    if issledovaniye.pk not in childrens:
+                        childrens[issledovaniye.pk] = {}
+
+                    for raa in research.auto_add_hidden.all():
+                        if raa.pk in visited:
+                            continue
+                        visited.append(raa.pk)
+                        if raa.reversed_type not in childrens[issledovaniye.pk]:
+                            childrens[issledovaniye.pk][raa.reversed_type] = []
+                        childrens[issledovaniye.pk][raa.reversed_type].append(raa.pk)
+
                     FrequencyOfUseResearches.inc(research, doc_current)
                 for k, v in directions_for_researches.items():
                     if Issledovaniya.objects.filter(napravleniye=v, research__need_vich_code=True).exists():
@@ -632,6 +644,19 @@ class Napravleniya(models.Model):
             else:
                 result["r"] = False
                 result["message"] = "Следующие исследования не могут быть назначены вместе: " + ", ".join(conflict_list)
+        for iss_parent_pk in childrens:
+            if not childrens[iss_parent_pk]:
+                continue
+            res_children = Napravleniya.gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource.pk, history_num,
+                                                                          ofname_id, doc_current,
+                                                                          childrens[iss_parent_pk], comments, for_rmis,
+                                                                          rmis_data, vich_code, count, discount,
+                                                                          iss_parent_pk, rmis_slot, counts,
+                                                                          localizations, service_locations,
+                                                                          visited=visited)
+            if not res_children["r"]:
+                return res_children
+            result['list_id'].extend(res_children['list_id'])
         return result
 
     def has_confirm(self):

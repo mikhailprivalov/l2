@@ -1,5 +1,5 @@
 <template>
-  <div class="base">
+  <div class="base" :class="{fullWidth}">
     <a href="#" @click.prevent="changeValue(v)" :class="{ active: v === val, disabled }"
        v-for="v in variants">
       <span>{{ v }}</span>
@@ -22,6 +22,23 @@
                 default: false,
                 type: Boolean,
             },
+            fullWidth: {
+                required: false,
+                default: false,
+                type: Boolean,
+            },
+        },
+        watch: {
+            value: {
+                handler() {
+                    setTimeout(() => {
+                        if (this.value !== this.val) {
+                            this.val = this.value
+                        }
+                    }, 0)
+                },
+                immediate: true,
+            }
         },
         data() {
             return {
@@ -58,6 +75,10 @@
     align-content: stretch;
     align-items: stretch;
     overflow-y: auto;
+
+    &.fullWidth {
+      width: calc(100% - 119px);
+    }
 
     a {
       align-self: stretch;
