@@ -37,7 +37,3 @@ class Command(BaseCommand):
                             dr = DispensaryRouteSheet(age_client=age, sex_client=sex, research=research_object)
                             dr.save()
                             print(dr)
-
-            count += 1
-            if count > 30:
-                break
