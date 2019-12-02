@@ -2,13 +2,12 @@ from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 from directory.models import DispensaryRouteSheet
 from directory.models import Researches
-import openpyxl
 
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
         """
-        :param path - файл с кодами МКБ10.2019 + расшифровка
+        :param path - файл
         """
         parser.add_argument('path', type=str)
 
@@ -20,7 +19,6 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         row_count = ws.max_row
         column_count = ws.max_column
-        count = 0
         sex = ws.cell(row=2, column=1).value
         for r in range(2, row_count+1):
             value_pk = ws.cell(row=r, column=4).value
