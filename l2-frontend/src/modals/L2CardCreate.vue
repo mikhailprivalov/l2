@@ -42,7 +42,7 @@
           </div>
           <div class="form-row">
             <div class="row-t">Пол</div>
-            <input class="form-control" maxlength="2" type="text" v-model="card.sex">
+            <radio-field v-model="card.sex" :variants="sexes" fullWidth />
           </div>
         </div>
       </form>
@@ -441,6 +441,7 @@
   import patients_point from '../api/patients-point'
   import PatientSmallPicker from '../ui-cards/PatientSmallPicker'
   import * as action_types from '../store/action-types'
+  import RadioField from '../fields/RadioField'
   import TypeAhead from 'vue2-typeahead'
   import moment from 'moment'
   import forms from '../forms'
@@ -518,7 +519,7 @@
 
   export default {
     name: 'l2-card-create',
-    components: {Modal, TypeAhead, PatientSmallPicker},
+    components: {Modal, TypeAhead, PatientSmallPicker, RadioField},
     props: {
       card_pk: {
         type: Number,
@@ -531,6 +532,10 @@
     },
     data() {
       return {
+        sexes: [
+            'м',
+            'ж',
+        ],
         card: {
           number: '',
           number_poli: '',
@@ -734,8 +739,15 @@
               base_pk: this.base_pk,
             })
           if (data.result !== 'ok') {
+              errmessage('Сохранение прошло не удачно')
             return
           }
+          if (Array.isArray(data.messages)) {
+              for (const msg of data.messages) {
+                  wrnmessage('Warning', msg)
+              }
+          }
+          okmessage('Данные сохранены')
           if (hide_after) {
             this.hide_modal()
           }

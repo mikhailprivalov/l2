@@ -258,28 +258,36 @@
                 </div>
               </dropdown>
             </div>
-            <div class="research-right" v-if="!data.has_microbiology">
-              <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"
-                 target="_blank"
-                 title="Снимок" v-tippy>
-                &nbsp;<i class="fa fa-camera"></i>&nbsp;
-              </a>
-              <template v-if="!row.confirmed">
-                <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
-                        title="Сохранить без подтверждения" v-tippy>
-                  &nbsp;<i class="fa fa-save"></i>&nbsp;
-                </button>
-                <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
-                  &nbsp;<i class="fa fa-times"></i>&nbsp;
-                </button>
-                <div class="right-f" v-if="fte">
-                  <select-picker-m v-model="templates[row.pk]"
-                                   :search="true"
-                                   :options="row.templates.map(x => ({label: x.title, value: x.pk}))"/>
-                </div>
-                <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
-                  Загрузить шаблон
-                </button>
+            <div class="research-right">
+              <template v-if="row.confirmed">
+                <a :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
+                   class="btn btn-blue-nb" target="_blank" v-if="stat_btn">Статталон</a>
+                <a href="#" class="btn btn-blue-nb"
+                   @click.prevent="print_results(data.direction.pk)">Печать</a>
+              </template>
+              <template v-if="!data.has_microbiology">
+                <a :href="row.pacs" class="btn btn-blue-nb" v-if="!!row.pacs"
+                   target="_blank"
+                   title="Снимок" v-tippy>
+                  &nbsp;<i class="fa fa-camera"></i>&nbsp;
+                </a>
+                <template v-if="!row.confirmed">
+                  <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed"
+                          title="Сохранить без подтверждения" v-tippy>
+                    &nbsp;<i class="fa fa-save"></i>&nbsp;
+                  </button>
+                  <button class="btn btn-blue-nb" @click="clear_vals(row)" title="Очистить протокол" v-tippy>
+                    &nbsp;<i class="fa fa-times"></i>&nbsp;
+                  </button>
+                  <div class="right-f" v-if="fte">
+                    <select-picker-m v-model="templates[row.pk]"
+                                     :search="true"
+                                     :options="row.templates.map(x => ({label: x.title, value: x.pk}))"/>
+                  </div>
+                  <button class="btn btn-blue-nb" @click="load_template(row, templates[row.pk])" v-if="fte">
+                    Загрузить шаблон
+                  </button>
+                </template>
               </template>
             </div>
           </div>
