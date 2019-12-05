@@ -363,6 +363,7 @@ def statistic_xls(request):
                     for col_num in range(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
                     row_num += 1
+                    row = []
 
 
     if tp == "statistics-visits":
