@@ -100,7 +100,7 @@ def statistic_xls(request):
     borders.bottom = xlwt.Borders.THIN
 
     # Отчет по динамике анализов
-    if tp == "directions_list":
+    if tp == "directions_list_dynamic":
         from collections import OrderedDict
         pk = json.loads(pk)
         dn = Napravleniya.objects.filter(pk__in=pk)
@@ -281,134 +281,90 @@ def statistic_xls(request):
                 row_num += 1
             row_num += 1
 
-    # row = [
-    #     ("Пациент", 7000),
-    #     ("Карта", 6000),
-    #     ("Направление", 4000),
-    #     ("Дата", 4000),
-    #     ("Назначение", 7000),
-    # ]
-    # for col_num in range(len(row)):
-    #     ws.write(row_num, col_num, row[col_num][0], font_style_b)
-    #     ws.col(col_num).width = row[col_num][1]
-    # row_num += 1
-    # for ck in cards.keys():
-    #     c = cards[ck]
-    #     started = False
-    #     for dk in c["d"].keys():
-    #         if not started:
-    #             row = [
-    #                 "{} {}".format(c["fio"], c["bd"]),
-    #                 c["card"],
-    #             ]
-    #             started = True
-    #         else:
-    #             row = ["", ""]
-    #         s2 = False
-    #         for r in c["d"][dk]["r"]:
-    #             if not s2:
-    #                 s2 = True
-    #                 row.append(str(dk))
-    #                 row.append(c["d"][dk]["dn"])
-    #             else:
-    #                 row.append("")
-    #                 row.append("")
-    #                 row.append("")
-    #                 row.append("")
-    #             row.append(r["title"])
-    #             for col_num in range(len(row)):
-    #                 ws.write(row_num, col_num, row[col_num], font_style)
-    #             row_num += 1
-    #             row = []
 
-    #
-    # Вывести окончательную структуру в нужный формат: эксель (pdf, word, html, др.)
-    #
-    #
-    #
+    if tp == "directions_list":
+        pk = json.loads(pk)
 
-    # if tp == "directions_list":
-    #     pk = json.loads(pk)
-    #
-    #     dn = Napravleniya.objects.filter(pk__in=pk)
-    #
-    #     cards = {}
-    #
-    #     for d in dn:
-    #         c = d.client
-    #         if c.pk not in cards:
-    #             cards[c.pk] = {
-    #                 "card": c.number_with_type(),
-    #                 "fio": c.individual.fio(),
-    #                 "bd": c.individual.bd(),
-    #                 "hn": d.history_num,
-    #                 "d": {},
-    #             }
-    #         cards[c.pk]["d"][d.pk] = {
-    #             "r": [],
-    #             "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
-    #         }
-    #         for i in Issledovaniya.objects.filter(napravleniye=d):
-    #             cards[c.pk]["d"][d.pk]["r"].append({
-    #                 "title": i.research.title,
-    #             })
-    #
-    #     response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
-    #     font_style = xlwt.XFStyle()
-    #     font_style.alignment.wrap = 1
-    #     font_style.borders = borders
-    #
-    #     font_style_b = xlwt.XFStyle()
-    #     font_style_b.alignment.wrap = 1
-    #     font_style_b.font.bold = True
-    #     font_style_b.borders = borders
-    #
-    #     ws = wb.add_sheet("Вакцинация")
-    #     row_num = 0
-    #     row = [
-    #         ("Пациент", 7000),
-    #         ("Карта", 6000),
-    #         ("Направление", 4000),
-    #         ("Дата", 4000),
-    #         ("Назначение", 7000),
-    #     ]
-    #
-    #     for col_num in range(len(row)):
-    #         ws.write(row_num, col_num, row[col_num][0], font_style_b)
-    #         ws.col(col_num).width = row[col_num][1]
-    #     row_num += 1
-    #
-    #     for ck in cards.keys():
-    #         c = cards[ck]
-    #         started = False
-    #         for dk in c["d"].keys():
-    #             if not started:
-    #                 row = [
-    #                     "{} {}".format(c["fio"], c["bd"]),
-    #                     c["card"],
-    #                 ]
-    #                 started = True
-    #             else:
-    #                 row = ["", ""]
-    #
-    #             s2 = False
-    #
-    #             for r in c["d"][dk]["r"]:
-    #                 if not s2:
-    #                     s2 = True
-    #                     row.append(str(dk))
-    #                     row.append(c["d"][dk]["dn"])
-    #                 else:
-    #                     row.append("")
-    #                     row.append("")
-    #                     row.append("")
-    #                     row.append("")
-    #                 row.append(r["title"])
-    #
-    #                 for col_num in range(len(row)):
-    #                     ws.write(row_num, col_num, row[col_num], font_style)
-    #                 row_num += 1
-    #
+        dn = Napravleniya.objects.filter(pk__in=pk)
+
+        cards = {}
+
+        for d in dn:
+            c = d.client
+            if c.pk not in cards:
+                cards[c.pk] = {
+                    "card": c.number_with_type(),
+                    "fio": c.individual.fio(),
+                    "bd": c.individual.bd(),
+                    "hn": d.history_num,
+                    "d": {},
+                }
+            cards[c.pk]["d"][d.pk] = {
+                "r": [],
+                "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
+            }
+            for i in Issledovaniya.objects.filter(napravleniye=d):
+                cards[c.pk]["d"][d.pk]["r"].append({
+                    "title": i.research.title,
+                })
+
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Назначения.xls\"", tr)
+        font_style = xlwt.XFStyle()
+        font_style.alignment.wrap = 1
+        font_style.borders = borders
+
+        font_style_b = xlwt.XFStyle()
+        font_style_b.alignment.wrap = 1
+        font_style_b.font.bold = True
+        font_style_b.borders = borders
+
+        ws = wb.add_sheet("Вакцинация")
+        row_num = 0
+        row = [
+            ("Пациент", 7000),
+            ("Карта", 6000),
+            ("Направление", 4000),
+            ("Дата", 4000),
+            ("Назначение", 7000),
+        ]
+
+        for col_num in range(len(row)):
+            ws.write(row_num, col_num, row[col_num][0], font_style_b)
+            ws.col(col_num).width = row[col_num][1]
+        row_num += 1
+
+        for ck in cards.keys():
+            c = cards[ck]
+            started = False
+            for dk in c["d"].keys():
+                if not started:
+                    row = [
+                        "{} {}".format(c["fio"], c["bd"]),
+                        c["card"],
+                    ]
+                    started = True
+                else:
+                    row = ["", ""]
+
+                s2 = False
+
+                for r in c["d"][dk]["r"]:
+                    if not s2:
+                        s2 = True
+                        row.append(str(dk))
+                        row.append(c["d"][dk]["dn"])
+                    else:
+                        row.append("")
+                        row.append("")
+                        row.append("")
+                        row.append("")
+                    row.append(r["title"])
+
+                    for col_num in range(len(row)):
+                        ws.write(row_num, col_num, row[col_num], font_style)
+                    row_num += 1
+                    row = []
+
 
     if tp == "statistics-visits":
         date_start, date_end = try_parse_range(date_start_o, date_end_o)
