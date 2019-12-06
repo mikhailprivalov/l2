@@ -219,7 +219,7 @@ class HospitalSection(models.Model):
     )
 
     main_research = models.ForeignKey(Researches, on_delete=models.CASCADE)
-    type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела для стационарно карты", db_index=True)
+    type_section = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела для стационарно карты", db_index=True)
     type_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
                                       blank=True, null=True, default=None, on_delete=models.CASCADE)
 
@@ -270,7 +270,7 @@ class ParaclinicInputField(models.Model):
     for_talon = models.BooleanField(default=False, blank=True)
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
-    for_extract_card = models.BooleanField(default=False, blank=True)
+    for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
 
     def get_title(self, recursive=False):
         titles = ['']
