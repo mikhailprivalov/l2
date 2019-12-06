@@ -214,18 +214,19 @@ class Researches(models.Model):
 class HospitalSite(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
-        (1, 'Дневник'),
-        (2, 'Врачебная комиссия'),
-        (3, 'Фармакотерапия'),
-        (4, 'Физиотерапия'),
-        (5, 'Эпикриз'),
-        (6, 'Выписка'),
-        (7, 'Операционные документы'),
+        (1, 'Дневники'),
+        (2, 'ВК'),
+        (3, 'Операции'),
+        (4, 'Фармакотерапия'),
+        (5, 'Физиотерапия'),
+        (6, 'Эпикриз'),
+        (7, 'Выписка'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Ти подраздела в стационарной карте", db_index=True)
     title = models.CharField(max_length=255, help_text='Подраздел')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
 
     def __str__(self):
         return "%s" % self.title

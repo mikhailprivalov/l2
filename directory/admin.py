@@ -81,4 +81,5 @@ admin.site.register(models.Antibiotic, TitleHide)
 
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
-admin.site.register(models.HospitalSection)
+admin.site.register(models.HospitalResearch)
+admin.site.register(models.HospitalSite)
