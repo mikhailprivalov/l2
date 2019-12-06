@@ -224,7 +224,7 @@ class HospitalSection(models.Model):
     )
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE)
-    type_section = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела для стационарно карты", db_index=True)
+    type_section = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела для стационарной карты", db_index=True)
     slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
                                       blank=True, null=True, default=None, on_delete=models.CASCADE)
 
