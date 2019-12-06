@@ -211,33 +211,6 @@ class Researches(models.Model):
         verbose_name_plural = 'Виды исследований'
 
 
-class HospitalResearch(models.Model):
-    TYPES = (
-        (0, 'Первичный прием'),
-        (1, 'Дневники'),
-        (2, 'ВК'),
-        (3, 'Операции'),
-        (4, 'Фармакотерапия'),
-        (5, 'Физиотерапия'),
-        (6, 'Эпикриз'),
-        (7, 'Выписка'),
-    )
-
-    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE)
-    site_type = models.SmallIntegerField(choices=TYPES, help_text="Ти подраздела в стационарной карте", db_index=True)
-    slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
-                                       blank=True, null=True, default=None, on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
-
-
-    def __str__(self):
-        return f"{self.main_research.title} - {self.site_type} - {self.slave_research.title} -{self.hide}"
-
-    class Meta:
-        verbose_name = 'Стационарная карта'
-        verbose_name_plural = 'Стационарная карта связи'
-
-
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text='Название группы')
     show_title = models.BooleanField()
@@ -277,7 +250,6 @@ class ParaclinicInputField(models.Model):
     for_talon = models.BooleanField(default=False, blank=True)
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
-    for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
 
     def get_title(self, recursive=False):
         titles = ['']
