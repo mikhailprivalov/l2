@@ -162,7 +162,6 @@ class Researches(models.Model):
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
     auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
 
-
     @staticmethod
     def filter_type(t):
         ts = {
