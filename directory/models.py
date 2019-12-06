@@ -211,7 +211,7 @@ class Researches(models.Model):
         verbose_name_plural = 'Виды исследований'
 
 
-class HospitalSite(models.Model):
+class HospitalResearch(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
         (1, 'Дневники'),
@@ -223,31 +223,15 @@ class HospitalSite(models.Model):
         (7, 'Выписка'),
     )
 
-    site_type = models.SmallIntegerField(choices=TYPES, help_text="Ти подраздела в стационарной карте", db_index=True)
-    title = models.CharField(max_length=255, help_text='Подраздел')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес соритировки')
-
-    def __str__(self):
-        return "%s" % self.title
-
-    class Meta:
-        verbose_name = 'Стационарная карта - подраздел'
-        verbose_name_plural = 'Стационарная карта - подразделы'
-
-
-class HospitalResearch(models.Model):
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE)
-    site_type = models.ForeignKey(HospitalSite, default=None, null=True, blank=True, help_text='Место услуги',
-                                  on_delete=models.SET_NULL, db_index=True)
-    slave_research = models.ForeignKey(Researches, related_name='research_protocol',
-                                       help_text="Протокол для вида услуги",
+    site_type = models.SmallIntegerField(choices=TYPES, help_text="Ти подраздела в стационарной карте", db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
                                        blank=True, null=True, default=None, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
 
 
     def __str__(self):
-        return f"{self.main_research.title} - {self.site_type.title} - {self.slave_research.title} -{self.hide}"
+        return f"{self.main_research.title} - {self.site_type} - {self.slave_research.title} -{self.hide}"
 
     class Meta:
         verbose_name = 'Стационарная карта'
