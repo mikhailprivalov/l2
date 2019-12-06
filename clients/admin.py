@@ -55,4 +55,3 @@ class DispensaryRegAdmin(admin.ModelAdmin):
 @admin.register(models.BenefitReg)
 class DispensaryRegAdmin(admin.ModelAdmin):
     raw_id_fields = ('card',)
-
