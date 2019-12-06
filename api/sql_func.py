@@ -100,3 +100,5 @@ def get_field_result(client_id, field_id, count=1):
 
         row = cursor.fetchall()
     return row
+
+
