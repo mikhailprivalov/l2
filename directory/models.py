@@ -213,18 +213,23 @@ class Researches(models.Model):
 
 class HospitalSection(models.Model):
     TYPES = (
-        (0, 'Дневник'),
-        (1, 'Эпикриз'),
-        (2, 'Первичный прием'),
+        (0, 'Первичный прием'),
+        (1, 'Дневник'),
+        (2, 'Врачебная комиссия'),
+        (3, 'Фармакотерапия'),
+        (4, 'Физиотерапия'),
+        (5, 'Эпикриз'),
+        (6, 'Выписка'),
+        (7, 'Операционные документы'),
     )
 
-    main_research = models.ForeignKey(Researches, on_delete=models.CASCADE)
+    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE)
     type_section = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела для стационарно карты", db_index=True)
-    type_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
+    slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги",
                                       blank=True, null=True, default=None, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.main_research.title} - {self.type} - {self.type_research.title}"
+        return f"{self.main_research.title} - {self.type_section} - {self.slave_research.title}"
 
     class Meta:
         verbose_name = 'Стационарная карта'
