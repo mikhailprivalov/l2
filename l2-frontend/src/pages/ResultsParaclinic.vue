@@ -373,11 +373,12 @@
                         v-model="field.value"
                       />
                     </div>
-                    <div class="field-value" v-else-if="field.field_type === 13">
+                    <div class="field-value" v-else-if="field.field_type === 13 || field.field_type === 14">
                       <search-field-value-field :readonly="row.confirmed"
                                                 :field-pk="field.default_value"
                                                 :client-pk="data.patient.card_pk"
                                                 :lines="field.lines"
+                                                :raw="field.field_type === 14"
                                                 v-model="field.value"/>
                     </div>
                     <div :title="field.helper" class="field-helper" v-if="field.helper"
