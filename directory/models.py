@@ -223,7 +223,8 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
     )
 
-    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE)
+    main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
+                                      db_index=True)
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип подраздела в стационарной карте", db_index=True)
     slave_research = models.ForeignKey(Researches, related_name='research_protocol',
                                        help_text="Протокол для вида услуги", on_delete=models.CASCADE)
