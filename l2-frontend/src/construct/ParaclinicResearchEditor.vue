@@ -180,6 +180,9 @@
                 <label>
                   <input type="checkbox" v-model="row.for_talon" /> в талон
                 </label>
+                <label>
+                  <input type="checkbox" v-model="row.for_extract_card" /> в выписку
+                </label>
                 <label style="line-height: 1" v-show="row.field_type === 0 || row.field_type === 13">
                   Число строк:<br/>
                   <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
