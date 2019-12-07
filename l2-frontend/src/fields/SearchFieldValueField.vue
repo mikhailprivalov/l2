@@ -44,6 +44,11 @@
             lines: {
                 type: Number,
             },
+            raw: {
+                type: Boolean,
+                required: false,
+                default: false,
+            },
         },
         data() {
             return {
@@ -68,7 +73,6 @@
         watch: {
             val() {
                 this.changeValue(this.val)
-                this.checkDirection()
             },
         },
         model: {
@@ -83,12 +87,19 @@
                 this.$emit('modified', newVal)
             },
             async loadLast() {
+                this.direction = null;
                 const {result} = await directions_point.lastFieldResult(this, [
                     'fieldPk',
                     'clientPk',
                 ])
                 if (result) {
-                    this.val = `${result.value} (${result.date}, направление ${result.direction})`
+                    this.direction = result.direction;
+                    if (this.raw) {
+                        this.val = result.value;
+                    }
+                    else {
+                        this.val = `${result.value} (${result.date}, направление ${result.direction})`;
+                    }
                 } else {
                     errmessage(`Результат не найден (${this.title})!`)
                 }

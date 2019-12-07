@@ -116,7 +116,7 @@
                   <strong>ID фракции:</strong>
                   <input v-model="row.default" class="form-control"/>
                 </div>
-                <div v-else-if="row.field_type === 13">
+                <div v-else-if="row.field_type === 13 || row.field_type === 14">
                   <strong>ID поля:</strong>
                   <input v-model="row.default" class="form-control"/>
                 </div>
@@ -180,7 +180,11 @@
                 <label>
                   <input type="checkbox" v-model="row.for_talon" /> в талон
                 </label>
-                <label style="line-height: 1" v-show="row.field_type === 0 || row.field_type === 13">
+                <label>
+                  <input type="checkbox" v-model="row.for_extract_card" /> в выписку
+                </label>
+                <label style="line-height: 1"
+                       v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
                   Число строк:<br/>
                   <input class="form-control" type="number" min="1" v-model.int="row.lines"/>
                 </label>
@@ -195,6 +199,7 @@
                     <option value="11">Фракция</option>
                     <option value="12">Радио</option>
                     <option value="13">Поле описательного результата</option>
+                    <option value="14">Поле описательного результата без заголовка</option>
                   </select>
                 </label>
               </div>

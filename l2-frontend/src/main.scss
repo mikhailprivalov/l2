@@ -1334,3 +1334,8 @@ body > .container-fluid {
       text-align: left;
     }
 }
+
+.tippy-tooltip.longread-theme .tippy-content {
+  text-align: left;
+  white-space: pre !important;
+}

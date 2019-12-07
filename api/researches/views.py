@@ -215,6 +215,7 @@ def researches_update(request):
                                                          group=g,
                                                          order=field["order"],
                                                          lines=field["lines"],
+                                                         for_extract_card=field.get("for_extract_card", False),
                                                          hide=field["hide"],
                                                          default_value=field["default"],
                                                          visibility=field.get("visibility", ""),
@@ -228,6 +229,7 @@ def researches_update(request):
                                 f.group = g
                                 f.order = field["order"]
                                 f.lines = field["lines"]
+                                f.for_extract_card = field.get("for_extract_card", False)
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
@@ -276,6 +278,7 @@ def researches_details(request):
                     "pk": field.pk,
                     "order": field.order,
                     "lines": field.lines,
+                    "for_extract_card": field.for_extract_card,
                     "title": field.title,
                     "default": field.default_value,
                     "visibility": field.visibility,
