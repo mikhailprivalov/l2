@@ -112,8 +112,12 @@ def hospital_get_direction(iss):
     """
     парам: услуга
 
-    Вернуть стуркутру Направлений:
-    id-направления, дата создания, id-услуг(и) относящейся к данному направлению, уровень поиска. 1(корень)
+    Вернуть стуркутру в след порядке:
+    № направление, date_creat, time_create, parent_iss, направление,
+    issled, date_confirm, time_confirm, id_research, title_research,
+    diagnos, Level-подчинения, id_research,	id_podrazde, is_paraclinic,
+    is_doc,	is_stom, is_hospital, is_micrbiology, title_podr
+
     в SQL:
     nn - directions_napravleniya
     ii - directions_issledovaniya
