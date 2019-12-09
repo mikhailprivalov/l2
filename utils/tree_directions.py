@@ -108,15 +108,16 @@ def tree_direction(iss):
     return row
 
 
-def hospital_get_direction(iss):
+def hospital_get_direction(iss, main_research):
     """
     парам: услуга
 
     Вернуть стуркутру в след порядке:
-    № направление, date_creat, time_create, parent_iss, направление,
+    num_dir, date_creat, time_create, parent_iss, num_dir,
     issled, date_confirm, time_confirm, id_research, title_research,
     diagnos, Level-подчинения, id_research,	id_podrazde, is_paraclinic,
-    is_doc,	is_stom, is_hospital, is_micrbiology, title_podr
+    is_doc,	is_stom, is_hospital, is_micrbiology, title_podr,
+    p_type_podr, site_type, slave_research_id
 
     в SQL:
     nn - directions_napravleniya
@@ -164,16 +165,40 @@ def hospital_get_direction(iss):
             JOIN r
             ON r.iss = n.parent_id
             ),
-            t_podrazdeleniye AS (SELECT podrazdeleniya_podrazdeleniya.id, title FROM podrazdeleniya_podrazdeleniya),
-            t_research AS (SELECT directory_researches.id as research_id, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom,
-			   is_hospital, is_microbiology, t_podrazdeleniye.title FROM directory_researches
-			  LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id)
+            t_podrazdeleniye AS (SELECT podrazdeleniya_podrazdeleniya.id, title, p_type FROM podrazdeleniya_podrazdeleniya),
+            t_research AS (SELECT directory_researches.id as research_id, podrazdeleniye_id, is_paraclinic, is_doc_refferal, 
+            is_stom, is_hospital, is_microbiology, t_podrazdeleniye.title, t_podrazdeleniye.p_type FROM directory_researches
+			    LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
+			t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
+            WHERE main_research_id = %(main_research)s)
 
             SELECT * FROM r
-            LEFT JOIN t_research ON r.research_id = t_research.research_id;""",
-                       params={'num_issledovaniye': iss, 'tz': TIME_ZONE})
+            LEFT JOIN t_research ON r.research_id = t_research.research_id
+            LEFT JOIN t_hospital_service ON r.research_id = t_hospital_service.slave_research_id  
+			ORDER BY p_type, site_type, napravleniye_id;""",
+                       params={'num_issledovaniye': iss, 'main_research': main_research, 'tz': TIME_ZONE})
 
         row = cursor.fetchall()
     return row
+
+
+def get_research_by_dir(numdir):
+    """выход стр-ра:
+    research_id, issledovaniya.id
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT directions_issledovaniya.research_id, directions_issledovaniya.id 
+            FROM directions_issledovaniya where napravleniye_id = %(num_dir)s
+            """, params={'num_dir': numdir })
+
+        row = cursor.fetchall()
+    return row
+
+
+
+
+
+
 
 
