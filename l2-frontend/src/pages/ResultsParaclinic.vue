@@ -838,18 +838,7 @@
                 this.research_open_history = null
             },
             r(research) {
-                if (research.confirmed) {
-                    return true
-                }
-
-                for (const g of research.research.groups) {
-                    for (const f of g.fields) {
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
-                            return false
-                        }
-                    }
-                }
-                return true
+                return this.r_list(research).length === 0
             },
             r_list(research) {
                 const l = []
@@ -864,7 +853,9 @@
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
+                              (f.field_type !== 3 ||
+                                  vField(g, research.research.groups, f.visibility, this.data.patient))) {
                             l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
                         }
                     }
