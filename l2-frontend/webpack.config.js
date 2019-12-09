@@ -18,7 +18,7 @@ module.exports = {
     new BundleTracker({filename: '../webpack-stats.json'}),
     new CleanWebpackPlugin(['../assets/webpack_bundles/*.*', '../static/webpack_bundles/*.*'], {allowExternal: true}),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /ru/),
-    new ExtractTextPlugin({filename: '[name].css', allChunks: true,}),
+    new ExtractTextPlugin({filename: '[name]-[hash].css', allChunks: true,}),
   ],
   module: {
     rules: [

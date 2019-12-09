@@ -48,6 +48,7 @@ new Vue({
     'RmisConfirm': () => import('./pages/RmisConfirm'),
     'Profiles': () => import('./pages/Profiles'),
     'EmployeeJobs': () => import('./pages/EmployeeJobs'),
+    'Stationar': () => import('./pages/Stationar'),
     RmisLocation,
     // loading,
   },

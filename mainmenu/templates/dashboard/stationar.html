@@ -1,0 +1,33 @@
+{% extends "dbase.html" %}
+{% block title %}Стационар{% endblock %}
+{% block container %}container-fluid{% endblock %}
+
+{% block navbar_classes %}fluid-nav-cont{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <stationar style="position: absolute;top: 36px; right: 0; bottom: 0; left: 0;"/>
+{% endblock %}
+
+{% block head_cn %}
+    <script src="{% static 'js/split.js' %}"></script>
+    <style>
+        body, html {
+            height: 100%;
+        }
+
+        body {
+            padding-bottom: 0;
+        }
+
+        .container-fluid {
+            height: 100%;
+            width: 100%;
+        }
+
+        .navbar {
+            margin-bottom: 3px;
+        }
+    </style>
+{% endblock %}

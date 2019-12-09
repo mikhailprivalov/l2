@@ -9,10 +9,10 @@
 
   export default {
     name: 'VisibilityFieldWrapper',
-    props: ['groups', 'formula', 'patient'],
+    props: ['group', 'groups', 'formula', 'patient'],
     computed: {
       visible() {
-        return vField(this.groups, this.formula, this.patient);
+        return vField(this.group, this.groups, this.formula, this.patient);
       },
     },
   }

@@ -39,7 +39,7 @@
                 required: true,
             },
             value: {
-                required: true,
+                required: false,
             },
             lines: {
                 type: Number,
