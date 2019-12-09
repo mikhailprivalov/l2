@@ -222,6 +222,8 @@ class HospitalService(models.Model):
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
         (7, 'Выписка'),
+        (8, 'Больничный лист'),
+
     )
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
