@@ -194,11 +194,3 @@ def get_research_by_dir(numdir):
 
         row = cursor.fetchall()
     return row
-
-
-
-
-
-
-
-

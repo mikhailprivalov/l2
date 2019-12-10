@@ -141,7 +141,6 @@ class Researches(models.Model):
     is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
-    not_visible_dir = models.BooleanField(default=False, blank=True, help_text="Не отображать в списке направлений")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
