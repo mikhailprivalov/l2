@@ -114,8 +114,8 @@ def send(request):
             else:
                 resdict["pk"] = False
         result["A"] = appkey
-        if resdict["pk"] and models.Application.objects.filter(key=appkey).exists() and models.Application.objects.get(
-                key=appkey).active and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
+        app = models.Application.objects.filter(key=appkey, active=True).first()
+        if resdict["pk"] and app and directions.TubesRegistration.objects.filter(pk=resdict["pk"]).exists():
             tubei = directions.TubesRegistration.objects.get(pk=resdict["pk"])
             direction = tubei.issledovaniya_set.first().napravleniye
             pks = []
@@ -132,7 +132,7 @@ def send(request):
                                                                              doc_confirmation__isnull=True).order_by(
                                 "pk")[0]
                             if directions.Result.objects.filter(issledovaniye=issled,
-                                                                fraction=fraction).exists():  # Если результат для фракции существует
+                                                                fraction=fraction).exists():
                                 fraction_result = directions.Result.objects.filter(issledovaniye=issled,
                                                                                    fraction__pk=fraction.pk).order_by(
                                     "-pk")[0]
@@ -143,14 +143,10 @@ def send(request):
                             if fraction_result.value.isdigit():
                                 fraction_result.value = "%s.0" % fraction_result.value
                             import re
-                            find = re.findall("\d+.\d+", fraction_result.value)
+                            find = re.findall(r"\d+.\d+", fraction_result.value)
                             if len(find) > 0:
                                 val = float(find[0]) * fractionRel.get_multiplier_display()
-                                if fractionRel.full_round:
-                                    val = round(val)
-
-                                if fractionRel.signs_after_point:
-                                    val = f'{val:.{fractionRel.signs_after_point}f}'
+                                val = app.auto_set_places(fractionRel, val)
 
                                 fraction_result.value = fraction_result.value.replace(find[0], str(val))
 
@@ -162,7 +158,7 @@ def send(request):
                                 fraction_result.ref_m = ref.m
                                 fraction_result.ref_f = ref.f
                             fraction_result.save()  # Сохранение
-                            issled.api_app = models.Application.objects.get(key=appkey)
+                            issled.api_app = app
                             issled.save()
                             fraction_result.get_ref(re_save=True)
                             fraction_result.issledovaniye.doc_save = astm_user  # Кто сохранил
@@ -243,11 +239,12 @@ def endpoint(request):
                                                                                 fraction=fraction_rel.fraction)
                                         fraction_result.value = str(results[key]).strip()
                                         import re
-                                        find = re.findall("\d+.\d+", fraction_result.value)
+                                        find = re.findall(r"\d+.\d+", fraction_result.value)
                                         if len(find) > 0:
                                             val_str = fraction_result.value
                                             for f in find:
-                                                val = app.truncate(float(f) * fraction_rel.get_multiplier_display())
+                                                val = float(f) * fraction_rel.get_multiplier_display()
+                                                val = app.auto_set_places(fraction_rel, val)
                                                 val_str = val_str.replace(f, str(val))
                                             fraction_result.value = val_str
 

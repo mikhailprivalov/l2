@@ -8,13 +8,38 @@ class Application(models.Model):
     """
     Модель rest приложений для безопасного доступа по ключам
     """
+    PLACES_FRACTION = 'fraction'
+    PLACES_APP = 'app'
+    PLACES_BOTH_MIN = 'both-min'
+    PLACES_AS_IS = 'as-is'
+    PLACES = (
+        (PLACES_FRACTION, 'Брать из RelationFractionASTM.signs_after_point'),
+        (PLACES_APP, 'Брать из Application.decimal_places'),
+        (PLACES_BOTH_MIN, 'Брать минимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
+        (PLACES_AS_IS, 'Не модифицировать'),
+    )
+
     key = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
     name = models.CharField(max_length=255, help_text="Название приложения")
     active = models.BooleanField(default=True, help_text="Флаг активности")
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
+    places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
     is_superuser = False
 
+    def auto_set_places(self, rel: "RelationFractionASTM", value: [str, float, int]) -> str:
+        if rel.full_round:
+            return str(round(value))
+        if self.places_type != Application.PLACES_AS_IS:
+            if self.places_type == Application.PLACES_FRACTION and rel.signs_after_point:
+                return f'{value:.{rel.signs_after_point}f}'
+            elif self.places_type == Application.PLACES_APP or\
+                    (self.places_type in [Application.PLACES_BOTH_MIN, Application.PLACES_FRACTION] and
+                        not rel.signs_after_point):
+                return f'{value:.{self.decimal_places}f}'
+            elif self.places_type == Application.PLACES_BOTH_MIN:
+                return f'{value:.{min(self.decimal_places, rel.signs_after_point)}f}'
+        return value
 
     @property
     def is_authenticated(self):
