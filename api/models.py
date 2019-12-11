@@ -11,11 +11,13 @@ class Application(models.Model):
     PLACES_FRACTION = 'fraction'
     PLACES_APP = 'app'
     PLACES_BOTH_MIN = 'both-min'
+    PLACES_BOTH_MAX = 'both-max'
     PLACES_AS_IS = 'as-is'
     PLACES = (
         (PLACES_FRACTION, 'Брать из RelationFractionASTM.signs_after_point'),
         (PLACES_APP, 'Брать из Application.decimal_places'),
         (PLACES_BOTH_MIN, 'Брать минимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
+        (PLACES_BOTH_MAX, 'Брать максимальное между RelationFractionASTM.signs_after_point и Application.decimal_places'),
         (PLACES_AS_IS, 'Не модифицировать'),
     )
 
@@ -34,11 +36,12 @@ class Application(models.Model):
             if self.places_type == Application.PLACES_FRACTION and rel.signs_after_point:
                 return f'{value:.{rel.signs_after_point}f}'
             elif self.places_type == Application.PLACES_APP or\
-                    (self.places_type in [Application.PLACES_BOTH_MIN, Application.PLACES_FRACTION] and
-                        not rel.signs_after_point):
+                    (self.places_type == Application.PLACES_FRACTION and not rel.signs_after_point):
                 return f'{value:.{self.decimal_places}f}'
             elif self.places_type == Application.PLACES_BOTH_MIN:
-                return f'{value:.{min(self.decimal_places, rel.signs_after_point)}f}'
+                return f'{value:.{min(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'
+            elif self.places_type == Application.PLACES_BOTH_MAX:
+                return f'{value:.{max(self.decimal_places, rel.signs_after_point or self.decimal_places)}f}'
         return value
 
     @property
