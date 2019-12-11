@@ -28,8 +28,8 @@
             </div>
           </div>
           <div class="results-editor">
-            <div class="group" v-for="group in groups">
-              <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
+            <div class="ft-group" v-for="group in groups">
+              <div class="ft-group-title" v-if="group.title !== ''">{{group.title}}</div>
               <div class="ft-fields">
                 <div class="ft-field" v-for="field in group.fields"
                      :class="{disabled: template_data.readonly, required: field.required}">
@@ -486,12 +486,12 @@
     overflow-x: hidden;
   }
 
-  .group {
+  .ft-group {
     margin: 5px;
     border: 1px solid #c1c1c1;
   }
 
-  .group-title {
+  .ft-group-title {
     background-color: #eaeaea;
     padding: 5px;
     font-weight: bold;

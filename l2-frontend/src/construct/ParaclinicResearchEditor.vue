@@ -58,7 +58,7 @@
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
       <template v-if="ex_dep !== 7">
-        <div v-for="group in ordered_groups" class="group">
+        <div v-for="group in ordered_groups" class="ed-group">
           <div class="input-group">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
@@ -626,7 +626,7 @@
     overflow-y: auto;
   }
 
-  .group {
+  .ed-group {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
