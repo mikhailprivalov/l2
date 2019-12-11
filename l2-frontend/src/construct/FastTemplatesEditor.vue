@@ -30,21 +30,21 @@
           <div class="results-editor">
             <div class="group" v-for="group in groups">
               <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
-              <div class="fields">
-                <div class="field" v-for="field in group.fields"
+              <div class="ft-fields">
+                <div class="ft-field" v-for="field in group.fields"
                      :class="{disabled: template_data.readonly, required: field.required}">
-                  <div v-if="field.title !== ''" class="field-title">
+                  <div v-if="field.title !== ''" class="ft-field-title">
                     {{field.title}}
                   </div>
-                  <div class="field-value" v-if="field.field_type === 0">
+                  <div class="ft-field-value" v-if="field.field_type === 0">
                     <textarea v-model="template_data.fields[field.pk]" :rows="field.lines" class="form-control"
                               v-if="field.lines > 1" :readonly="template_data.readonly"></textarea>
                     <input v-model="template_data.fields[field.pk]" class="form-control" :readonly="template_data.readonly" v-else/>
                   </div>
-                  <div class="field-value mkb10" v-else-if="field.field_type === 2 && !template_data.readonly">
+                  <div class="ft-field-value mkb10" v-else-if="field.field_type === 2 && !template_data.readonly">
                     <m-k-b-field v-model="template_data.fields[field.pk]" :short="false" />
                   </div>
-                  <div class="field-value" v-else-if="field.field_type === 2 && template_data.readonly">
+                  <div class="ft-field-value" v-else-if="field.field_type === 2 && template_data.readonly">
                     <input v-model="template_data.fields[field.pk]" readonly class="form-control" :readonly="true" />
                   </div>
                   <div v-else>не доступно для заполнения</div>
@@ -522,11 +522,11 @@
     }
   }
 
-  .fields {
+  .ft-fields {
     padding: 5px 5px 5px 10px;
   }
 
-  .field {
+  .ft-field {
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -566,13 +566,13 @@
     }
   }
 
-  .field-title {
+  .ft-field-title {
     flex: 1 0 150px;
     padding-left: 5px;
     padding-top: 5px;
   }
 
-  .field-value {
+  .ft-field-value {
     flex-basis: 100%;
     textarea {
       resize: none;
@@ -583,7 +583,7 @@
     }
   }
 
-  .field-inputs {
+  .ft-field-inputs {
     flex: 1 0 250px;
     position: relative;
     overflow: visible;
