@@ -948,7 +948,7 @@
                     } else {
                         groups[group.pk] = true
                         for (const field of group.fields) {
-                            fields[field.pk] = vField(igroups, field.visibility, this.data.patient)
+                            fields[field.pk] = vField(igroups, groups, field.visibility, this.data.patient)
                         }
                     }
                 }
