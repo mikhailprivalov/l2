@@ -20,6 +20,7 @@ from laboratory.settings import FONTS_FOLDER
 from users.models import DoctorProfile
 from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
+from reportlab.graphics import renderPDF
 
 pdfmetrics.registerFont(
     TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
@@ -242,10 +243,10 @@ def gen_band_pdf(request):
     c.setFont('PTAstraSerifBold', 12)
     c.drawString(3.5 * mm, 18 * mm, '{}, {}'.format(individual_fio, individual_birthday))
     c.setFont('PTAstraSerifBold', 13)
-    c.drawString(52 * mm, 12 * mm, '№: {}'.format(napr_id[0]))
+    c.drawString(50 * mm, 12 * mm, '№: {}'.format(napr_id[0]))
     c.setFont('PTAstraSerifReg', 11)
-    c.drawString(52 * mm, 8 * mm, '{}'.format(iss['research__title']))
-    c.drawString(52 * mm, 4 * mm, 'поступил: {}'.format(dir_create))
+    c.drawString(50 * mm, 8 * mm, '{}'.format(iss['research__title']))
+    c.drawString(50 * mm, 4 * mm, 'поступил: {}'.format(dir_create))
 
     barcodeEAN = eanbc.Ean13BarcodeWidget(napr_id[0] + 460000000000, humanReadable=0, barHeight=11 * mm, barWidth=1.25)
     d = Drawing()
