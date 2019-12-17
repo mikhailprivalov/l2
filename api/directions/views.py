@@ -32,6 +32,7 @@ def directions_generate(request):
     result = {"ok": False, "directions": [], "message": ""}
     if request.method == "POST":
         p = json.loads(request.body)
+        print(p.get("history_num"))
         type_card = Card.objects.get(pk=p.get("card_pk"))
         if type_card.base.forbidden_create_napr:
             result["message"] = "Для данного типа карт нельзя создать направления"
