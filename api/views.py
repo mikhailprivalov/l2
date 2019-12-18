@@ -28,6 +28,7 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Statistic
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
 from directory.models import Researches as DResearches
+from utils import tree_directions
 
 
 def translit(locallangstring):
@@ -1048,3 +1049,27 @@ def job_cancel(request):
             j.canceled_at = j.who_do_cancel = None
         j.save()
     return JsonResponse({"ok": True})
+
+
+def hosp_get_data(main_direction, site_type=-1, is_paraclinic=False, is_doc_refferal=True, is_lab=False):
+    # получить данные по разделу Стационарной карты
+    # hosp_site_type=-1 - не получать ничего.
+    result = tree_directions.get_research_by_dir(main_direction)
+    iss = result[0][0]
+    main_research = result[0][1]
+
+    hosp_is_paraclinic, hosp_is_doc_refferal = is_paraclinic, is_doc_refferal
+    hosp_is_lab, hosp_site_type = is_lab, site_type
+
+    hosp_dirs = tree_directions.hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic,
+                                                       hosp_is_doc_refferal, hosp_is_lab)
+
+    data = []
+    if hosp_dirs:
+        for i in hosp_dirs:
+            data.append({'direction' : i[0], 'date_create' : i[1], 'time_create' : i[2], 'iss' : i[5], 'date_confirm' : i[6],
+                         'time_confirm' : i[7], 'research_id' : i[8], 'research_title' : i[9], 'podrazdeleniye_id' : i[13],
+                         'is_paraclinic' : i[14], 'is_doc_refferal' : i[15], 'is_stom' : i[16], 'is_hospital' : i[17],
+                         'is_microbiology' : i[18], 'podrazdeleniye_title' : i[19], 'site_type' : i[21]})
+
+    return data
