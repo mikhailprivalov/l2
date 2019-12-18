@@ -38,4 +38,5 @@ urlpatterns = [
     path('researches/', include('api.researches.urls')),
     path('patients/', include('api.patients.urls')),
     path('directions/', include('api.directions.urls')),
+    path('stationar/', include('api.stationar.urls')),
 ]
