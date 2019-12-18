@@ -108,7 +108,8 @@ def tree_direction(iss):
     return row
 
 
-def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab):
+def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal,
+                           hosp_is_lab, hosp_is_hosp, hosp_level):
     """
     парам: услуга
     Вернуть стуркутру в след порядке:
@@ -168,9 +169,9 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 			    LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
 			
 			t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
-            WHERE main_research_id = %(main_research)s)
+            WHERE main_research_id = %(main_research)s),
             
-            SELECT * FROM r
+            t_all AS (SELECT * FROM r
             LEFT JOIN t_research ON r.research_id = t_research.research_id
             LEFT JOIN t_hospital_service ON r.research_id = t_hospital_service.slave_research_id
             WHERE 
@@ -178,16 +179,27 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             site_type = %(hosp_site_type)s
             when %(hosp_is_paraclinic)s = TRUE THEN
             is_paraclinic = true
+            when %(hosp_is_hosp)s = TRUE THEN
+            is_hospital = true
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
-            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE        
-            END 
-            
-			ORDER BY p_type, site_type, napravleniye_id;""",
+            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE
+            END       
+         
+			ORDER BY p_type, site_type, napravleniye_id)
+			
+			SELECT * FROM t_all WHERE 
+			    CASE 
+			    WHEN %(hosp_level)s > -1 THEN 
+                    level = %(hosp_level)s
+                WHEN %(hosp_level)s = -1 THEN 
+                    EXISTS (SELECT id FROM r)
+                END
+	       ;""",
         params={'num_issledovaniye': iss, 'main_research': main_research, 'hosp_site_type':hosp_site_type,
                 'hosp_is_paraclinic':hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,
-                'hosp_is_lab': hosp_is_lab, 'tz': TIME_ZONE})
+                'hosp_is_lab': hosp_is_lab, 'hosp_is_hosp': hosp_is_hosp, 'hosp_level': hosp_level, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
 

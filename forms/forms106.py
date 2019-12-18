@@ -134,9 +134,12 @@ def form_01(request_data):
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
+        # Paragraph(
+        #     '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} - <u>{}</u>, <br/> стационарного больного</font>'.format(
+        #         p_card_num, num_dir), styleCenter),
         Paragraph(
             '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} - <u>{}</u>, <br/> стационарного больного</font>'.format(
-                p_card_num, num_dir), styleCenter),
+                p_card_num, '0123456-0123456-0123456-0123456-0123456'), styleCenter),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
@@ -144,19 +147,19 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('Дата и время выписки: {}'.format('Из Выписки'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Отделение: {}'.format('Из услуги'), style),
+        Paragraph('Отделение: {}'.format('Из услуги самого главного направления'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Палата №: {}'.format('Из первичного приема'), style),
+        Paragraph('Палата №: {}'.format('Из первичного приема. В разных отделениях разные!! Указываем последнее отделение?'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Переведен в отделение: {}'.format('Из выписки'), style),
+        Paragraph('Переведен в отделение: {}'.format('Из куда (дата перевода)'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Проведено койко-дней: {}'.format('Дата выписки - дата поступлени(из первичного приема/главного направления'), style),
+        Paragraph('Проведено койко-дней: {}'.format('в отделении Х - 10дн, в отделенииY - 15 дн'), style),
         Spacer(1, 2 * mm),
         Paragraph('Виды транспортировки: на каталке, на кресле, может идти: {}'.format('из первичного приема'), style),
         Spacer(1, 2 * mm),
         Paragraph('Группа крови: {} Резус-принадлежность {}'.format('из анализа(по показаниям)','из анализа'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Побочное действие лекарств(непереносимость): {} '.format('из первичного приема'), style),
+        Paragraph('Побочное действие лекарств(непереносимость): {} '.format('из первичного приема самого главного направления'), style),
 
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
@@ -183,7 +186,7 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('9. Диагноз при поступлении: {}'.format('из первичного приема'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Диагноз клинический: {}'.format('Из диагностического эпикриза'), style),
+        Paragraph('Диагноз клинический: {}'.format('Из диагностических эпикризов всех направлений(отделений)'), style),
         PageBreak(),
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический: {}'.format('Из выписки'), style),
@@ -197,7 +200,7 @@ def form_01(request_data):
         Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: впервые, повторно (подчеркнуть),'
                   'всего  - ___раз.:{}'.format('Из выписки'), style),
         Spacer(1, 2 * mm),
-        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения.:{}'.format('Из про-токола операции'), style),
+        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения.:{}'.format('Из про-токолов операции всех направлений-отделений'), style),
         Spacer(1, 2 * mm),
         Paragraph('14. Другие виды лечения:___________________________________________'.format('Из '), style),
         Spacer(1, 2 * mm),
@@ -214,7 +217,7 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('3. Симптоматическое лечение.', style),
         Spacer(1, 2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format('из протокола БЛ'), style),
+        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format('из протоколов БЛ всех направлений-отделений'), style),
         Spacer(1, 2 * mm),
         Paragraph('16. Исход заболевания: {}'.format('из выписки'), style),
         Spacer(1, 2 * mm),
@@ -243,7 +246,6 @@ def form_01(request_data):
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
-
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
