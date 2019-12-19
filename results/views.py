@@ -32,6 +32,7 @@ from collections import OrderedDict
 import os
 from pdfrw import PdfReader, PdfWriter
 import random
+from decimal import Decimal
 
 
 @login_required
@@ -314,7 +315,7 @@ def result_confirm_list(request):
                 if not request.user.doctorprofile.has_group("Врач-лаборант"):
                     issledovaniye.co_executor = request.user.doctorprofile
                     for r in Result.objects.filter(issledovaniye=issledovaniye):
-                        issledovaniye.def_uet += r.fraction.uet_co_executor_1
+                        issledovaniye.def_uet += Decimal(r.fraction.uet_co_executor_1)
                 issledovaniye.save()
                 slog.Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         result["ok"] = True

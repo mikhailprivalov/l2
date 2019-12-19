@@ -6,6 +6,7 @@ class DocAdmin(admin.ModelAdmin):
     list_filter = ('isLDAP_user', 'podrazdeleniye', 'specialities', 'user__is_staff')
     list_display = ('fio', 'podrazdeleniye', 'isLDAP_user')
     list_display_links = ('fio',)
+    search_fields = ('fio',)
 
 
 admin.site.register(DoctorProfile, DocAdmin)  # Активация редактирования профилей врачей в админке

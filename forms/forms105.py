@@ -392,8 +392,13 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
-        personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
-        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
+        personal_code = ''
+        doc_fio = ''
+        if obj_iss.doc_confirmation:
+            personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
+            doc_fio = obj_iss.doc_confirmation.get_fio()
+
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(doc_fio,
              42 * space_symbol, personal_code),style))
 
         objs.append(Spacer(1, 5 * mm))
@@ -421,14 +426,21 @@ def form_02(request_data):
                 final_tree[j[5]] = Node(temp_s, parent=final_tree.get(j[3]))
 
         counter = 0
-        s = u'\u2063'
+        opinion = []
         for row in RenderTree(node_dir):
             counter += 1
             result = pattern.search(row.node.name)
             current_style = styleBold if result else styleT
-            count_space = len(row.pre) // 2
-            para = Paragraph('{}{}'.format(s * count_space , row.node.name), current_style)
-            objs.append(para)
+            count_space = len(row.pre) // 2 * 2
+            para = [Paragraph('{}{}'.format(space_symbol * count_space,  row.node.name), current_style)]
+            opinion.append(para)
+
+        tbl = Table(opinion, colWidths=(190 * mm))
+        tbl.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.white),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1 * mm),
+        ]))
+        objs.append(tbl)
 
         objs.append(PageBreak())
 

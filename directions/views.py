@@ -484,7 +484,7 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
             service_locations[service_location_title].append(n)
         values.append({"title": v.research.get_title(), "full_title": v.research.title, "sw": v.research.sort_weight,
                        "count": v.how_many,
-                       "comment": v.comment,
+                       "comment": v.localization.title if v.localization else v.comment,
                        "n": n,
                        "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                        "info": v.research.paraclinic_info})
