@@ -134,9 +134,6 @@ def form_01(request_data):
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
-        # Paragraph(
-        #     '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} - <u>{}</u>, <br/> стационарного больного</font>'.format(
-        #         p_card_num, num_dir), styleCenter),
         Paragraph(
             '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} - <u>{}</u>, <br/> стационарного больного</font>'.format(
                 p_card_num, '0123456-0123456-0123456-0123456-0123456'), styleCenter),
@@ -229,10 +226,6 @@ def form_01(request_data):
         Paragraph('___________________________________________________________________', style),
         Spacer(1, 2 * mm),
         Paragraph('19. Особые отметки', style),
-
-
-
-
     ]
 
     objs.extend(content_title)
