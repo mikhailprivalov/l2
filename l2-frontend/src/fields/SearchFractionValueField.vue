@@ -34,7 +34,7 @@
                 required: true,
             },
             value: {
-                required: true,
+                required: false,
             },
         },
         data() {

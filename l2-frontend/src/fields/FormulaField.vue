@@ -23,6 +23,12 @@
                 deep: true,
                 immediate: true,
             },
+            fields: {
+                handler() {
+                    this.content = this.calc()
+                },
+                deep: true,
+            },
             value() {
                 this.content = this.value
             },

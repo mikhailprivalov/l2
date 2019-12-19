@@ -72,6 +72,7 @@ def menu(request):
             {"url": "/mainmenu/direction_visit", "title": "Регистрация направлений", "nt": False, "access": ["Посещения по направлениям", "Врач параклиники", "Врач консультаций", "Заборщик биоматериала микробиологии", "Получатель биоматериала микробиологии"], "module": "paraclinic_module"},
             {"url": "/mainmenu/results/paraclinic", "title": "Ввод описательных результатов", "nt": False, "access": ["Врач параклиники", "Врач консультаций"], "module": "paraclinic_module"},
             {"url": '/mainmenu/hosp', "title": "Госпитализация", "nt": True, "access": ["Госпитализация"], "module": "hosp_module"},
+            {"url": '/mainmenu/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара"], "module": "l2_hosp"},
             {"url": '/mainmenu/rmis_confirm', "title": "Подтверждение отправки результатов в РМИС", "nt": False, "access": ["Подтверждение отправки результатов в РМИС"]},
             # {"url": '/cases/', "title": "Случаи обслуживания", "nt": False, "access": []},
         ]

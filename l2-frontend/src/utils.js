@@ -9,6 +9,8 @@ export const CalculateFormula = (fields, formula, patient={}, strict = false) =>
   try {
     return (new Function(s)()) || 0
   } catch (e) {
+    console.log(s);
+    console.error(e);
     return ''
   }
 }
@@ -45,6 +47,8 @@ export const PrepareFormula = (fields, formula, patient={}, strict = false) => {
     const r = new RegExp(`\\[_${prop}_\\]`, 'g')
     s = s.replace(r, patient[prop] || '')
   }
+
+  s = s.replace(/\n/g, '\\n');
 
   return `return (${s});`
 }
