@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -10,7 +11,7 @@ from researches.models import Tubes
 from slog.models import Log
 import users.models as users
 from directory.models import Researches as DResearches, AutoAdd, ParaclinicInputGroups, Fractions, \
-    ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField
+    ParaclinicTemplateName, ParaclinicInputField, ParaclinicTemplateField, HospitalService
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 
@@ -87,7 +88,17 @@ def researches_by_department(request):
     response = {"researches": []}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
-    if department_pk != -1:
+    if -500 >= department_pk > -600:
+        for hospital_service in HospitalService.objects.filter(site_type=-department_pk - 500):
+            response["researches"].append({
+                "pk": hospital_service.pk,
+                "slave_research_id": hospital_service.slave_research_id,
+                "main_research_id": hospital_service.main_research_id,
+                "is_hospital_service": True,
+                "title": hospital_service.get_title(),
+                "hide": hospital_service.hide,
+            })
+    elif department_pk != -1:
         if department_pk == -2:
             q = DResearches.objects.filter(is_doc_refferal=True).order_by("title")
         elif department_pk == -3:
@@ -135,6 +146,7 @@ def researches_params(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@transaction.atomic
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
@@ -150,9 +162,14 @@ def researches_update(request):
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
         tube = request_data.get("tube", -1)
+        is_simple = request_data.get("simple", False)
+        main_service_pk = request_data.get("main_service_pk", -1)
+        hs_pk = request_data.get("hs_pk", -1)
+        hide_main = request_data.get("hide_main", False)
         if tube == -1:
             tube = None
-        desc = department_pk in [-2, -3, -4, -5, -6]
+        stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
+        desc = stationar_slave or department_pk in [-2, -3, -4, -5, -6]
         if len(title) > 0 and (desc or Podrazdeleniya.objects.filter(pk=department_pk).exists()):
             department = None if desc else Podrazdeleniya.objects.filter(pk=department_pk)[0]
             res = None
@@ -165,6 +182,7 @@ def researches_update(request):
                                   is_stom=department_pk == -4,
                                   is_hospital=department_pk == -5,
                                   is_microbiology=department_pk == -6,
+                                  is_slave_hospital=stationar_slave,
                                   microbiology_tube_id=tube if department_pk == -6 else None,
                                   site_type_id=site_type, internal_code=internal_code)
             elif DResearches.objects.filter(pk=pk).exists():
@@ -178,6 +196,7 @@ def researches_update(request):
                 res.is_treatment = department_pk == -3
                 res.is_stom = department_pk == -4
                 res.is_hospital = department_pk == -5
+                res.is_slave_hospital = stationar_slave
                 res.is_microbiology = department_pk == -6
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
@@ -186,6 +205,23 @@ def researches_update(request):
                 res.internal_code = internal_code
             if res:
                 res.save()
+                if main_service_pk != 1 and stationar_slave:
+                    if hs_pk == -1:
+                        hs = HospitalService(
+                            main_research_id=main_service_pk,
+                            hide=hide_main,
+                            site_type=-department_pk - 500,
+                            slave_research=res
+                        )
+                        hs.save()
+                    else:
+                        hs = HospitalService.objects.get(pk=hs_pk)
+                        hs.main_research_id = main_service_pk
+                        hs.hide = hide_main
+                        hs.site_type = -department_pk - 500
+                        hs.slave_research = res
+                        hs.save()
+
                 templat_obj = ParaclinicTemplateName.make_default(res)
                 for group in groups:
                     g = None
@@ -406,3 +442,15 @@ def field_title(request):
     request_data = json.loads(request.body)
     field = ParaclinicInputField.objects.get(pk=request_data["pk"])
     return JsonResponse({"field": field.get_title(), "group": field.group.title, "research": field.group.research.title})
+
+
+def hospital_service_details(request):
+    request_data = json.loads(request.body)
+    hs = HospitalService.objects.get(pk=request_data["pk"])
+    return JsonResponse({
+        "pk": hs.pk,
+        "department": -500 - hs.site_type,
+        "hide": hs.hide,
+        "main_service_pk": hs.main_research_id,
+        "slave_service_pk": hs.slave_research_id,
+    })

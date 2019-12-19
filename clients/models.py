@@ -251,13 +251,11 @@ class Individual(models.Model):
         cards = Card.objects.filter(individual=self, base__is_rmis=True, is_archive=False)
         n = False
         if not cards.exists() or not self.rmis_uid or force_new:
-            # ind_uid = c.individuals.createIndividual(self)
             ind_uid, rmis_uid = c.patients.send_new_patient(self)
             self.rmis_uid = ind_uid
             self.save()
             c.patients.create_rmis_card(self, rmis_uid)
             cards = Card.objects.filter(number=rmis_uid)
-            # print('rdp', rdp)
             n = True
         card = cards[0]
         pat_data = c.patients.extended_data(card.number)
