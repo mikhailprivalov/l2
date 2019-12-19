@@ -72,6 +72,8 @@ def tubes(request, direction_implict_id=None):
         direction_id = set([x.napravleniye_id for x in Issledovaniya.objects.filter(tubes__id__in=tubes_id)])
 
     for d in direction_id:
+        if not Napravleniya.objects.filter(pk=int(d)).exists():
+            continue
         tmp2 = Napravleniya.objects.get(pk=int(d))
         tmp = Issledovaniya.objects.filter(napravleniye=tmp2).order_by("research__title")
         tubes_buffer = {}
