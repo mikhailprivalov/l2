@@ -34,7 +34,7 @@
             }
         },
         mounted() {
-
+            this.check_init();
         },
         watch: {
             options() {
