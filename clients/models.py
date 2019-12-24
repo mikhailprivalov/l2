@@ -4,7 +4,7 @@ from datetime import date, datetime
 import simplejson
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import OutputWrapper
-from django.db import models
+from django.db import models, transaction
 
 import slog.models as slog
 from appconf.manager import SettingManager
@@ -275,9 +275,8 @@ class Individual(models.Model):
     def bd(self):
         return "{:%d.%m.%Y}".format(self.birthday)
 
-
+    # подсчет возраста в рамках года
     def age_for_year(self):
-    #подсчет возраста в рамках года
         year_today = current_year()
         last_date = datetime.strptime(f'31.12.{year_today}', '%d.%m.%Y').date()
         born_date = self.birthday
@@ -609,7 +608,6 @@ class District(models.Model):
     code_poliklinika = models.CharField(max_length=8, default='', help_text="Краткий код участка", db_index=True,
                                         blank=True)
 
-
     def __str__(self):
         return self.title
 
@@ -803,18 +801,20 @@ class Card(models.Model):
     def add_l2_card(individual: [Individual, None] = None, card_orig: ['Card', None] = None, distinct=True):
         if distinct and card_orig \
                 and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
-            return
-        cb = CardBase.objects.filter(internal_type=True).first()
-        if (not card_orig and not individual) or not cb:
-            return
-        c = Card(number=Card.next_l2_n(), base=cb,
-                 individual=individual if individual else card_orig.individual,
-                 polis=None if not card_orig else card_orig.polis,
-                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
-                 main_address='' if not card_orig else card_orig.main_address,
-                 fact_address='' if not card_orig else card_orig.fact_address)
-        c.save()
-        return c
+            return None
+
+        with transaction.atomic:
+            cb = CardBase.objects.select_for_update().filter(internal_type=True).first()
+            if (not card_orig and not individual) or not cb:
+                return
+            c = Card(number=Card.next_l2_n(), base=cb,
+                     individual=individual if individual else card_orig.individual,
+                     polis=None if not card_orig else card_orig.polis,
+                     main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
+                     main_address='' if not card_orig else card_orig.main_address,
+                     fact_address='' if not card_orig else card_orig.fact_address)
+            c.save()
+            return c
 
     class Meta:
         verbose_name = 'Карта'
