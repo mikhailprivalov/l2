@@ -432,7 +432,7 @@ def form_02(request_data):
             result = pattern.search(row.node.name)
             current_style = styleBold if result else styleT
             count_space = len(row.pre) // 2 * 2
-            para = [Paragraph('{}{}'.format(space_symbol * count_space,  row.node.name), current_style)]
+            para = [Paragraph('{}{}'.format(space_symbol * count_space, row.node.name), current_style)]
             opinion.append(para)
 
         tbl = Table(opinion, colWidths=(190 * mm))
