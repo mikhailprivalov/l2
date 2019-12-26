@@ -1,5 +1,4 @@
 from openpyxl.utils.cell import get_column_letter
-from openpyxl.styles import Font, NamedStyle
 from collections import OrderedDict
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font, NamedStyle, Color, Fill, colors
 import openpyxl
@@ -21,7 +20,7 @@ def job_total_base(ws1, month, type_fin):
     ws1.column_dimensions[get_column_letter(1)].width = 22
     for i in range(1, 32):
         ws1.column_dimensions[get_column_letter(1 + i)].width = 4
-        ws1.cell(row=4, column=1 + i).value = i
+        ws1.cell(row=4, column=1 + i).value = str(i)
 
     ws1.cell(row=1, column=1).value = 'Месяц'
     ws1.cell(row=1, column=2).value = month_dict.get(month)
@@ -52,7 +51,7 @@ def job_total_data(ws1, titles, data):
     for k, v in data.items():
         for res, uet in v.items():
             r = titles.get(res)
-            ws1.cell(row=r, column=k + 1).value = uet
+            ws1.cell(row=r, column=k + 1).value = str(uet)
 
 
 def passed_research_base(ws1, data_date):
@@ -211,8 +210,8 @@ def statistics_tickets_base(ws1, i_obj, type_fin, d1, d2, style_border, style_o)
     ws1.cell(row=1, column=6).value = i_obj.personal_code
     ws1.cell(row=3, column=5).value = 'Источник'
     ws1.cell(row=3, column=5).style = style_o
-    fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
-    ws1.cell(row=3, column=6).value = fin_obj[0]
+    fin_obj = IstochnikiFinansirovaniya.objects.get(pk=type_fin)
+    ws1.cell(row=3, column=6).value = fin_obj.title
 
     return ws1
 
@@ -288,7 +287,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
 
         r = r + 1
         ws1.cell(row=r, column=1).value = current_date
-        ws1.cell(row=r, column=2).value = 1
+        ws1.cell(row=r, column=2).value = "1"
         ws1.cell(row=r, column=3).value = current_research_title
         sum_uet = 0
         co_exec = ''
@@ -314,7 +313,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
 
         ws1.cell(row=r, column=8).value = current_polis
         ws1.cell(row=r, column=9).value = current_code_reserch
-        ws1.cell(row=r, column=10).value = sum_uet
+        ws1.cell(row=r, column=10).value = str(sum_uet)
         ws1.cell(row=r, column=11).value = current_time_confirm
 
         ws1.cell(row=r, column=12).value = current_onko
@@ -384,7 +383,7 @@ def inderect_job_base(ws1, doc_obj, d1, d2):
 
 def inderect_job_data(ws1, indirect_job):
     r = 4
-    for k,v in indirect_job.items():
+    for k, v in indirect_job.items():
         for k_job, v_job in v.items():
             r = r + 1
             ws1.cell(row=r, column=1).value = k
