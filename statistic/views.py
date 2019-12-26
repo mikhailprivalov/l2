@@ -563,8 +563,8 @@ def statistic_xls(request):
                             key_type_job = r_j[1]
                             key_date = utils.strfdatetime(r_j[0], "%d.%m.%Y")
                             value_total = r_j[2]
-                            temp_dict = dict_job.get(key_date,{})
-                            temp_dict.update({key_type_job : value_total})
+                            temp_dict = dict_job.get(key_date, {})
+                            temp_dict.update({key_type_job: value_total})
                             dict_job[key_date] = temp_dict
                         structure_sheet.inderect_job_data(ws, dict_job)
 
