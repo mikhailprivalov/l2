@@ -26,8 +26,8 @@ def job_total_base(ws1, month, type_fin):
     ws1.cell(row=1, column=1).value = 'Месяц'
     ws1.cell(row=1, column=2).value = month_dict.get(month)
     ws1.cell(row=4, column=1).value = 'Вид работы'
-    fin_obj = IstochnikiFinansirovaniya.objects.values_list('title').get(pk=type_fin)
-    ws1.cell(row=2, column=1).value = fin_obj[0]
+    fin_obj = IstochnikiFinansirovaniya.objects.get(pk=type_fin)
+    ws1.cell(row=2, column=1).value = fin_obj.title
 
     return ws1
 

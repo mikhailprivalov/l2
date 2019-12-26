@@ -573,7 +573,6 @@ def statistic_xls(request):
                     ws = structure_sheet.statistics_tickets_data(ws, res_oq, i, styles_obj[2])
 
                     if month_obj:
-                        date, res, title, title2 = None, None, None, None
                         # issledovaniye_id(0), research_id(1), date_confirm(2), doc_confirmation_id(3), def_uet(4),
                         # co_executor_id(5), co_executor_uet(6), co_executor2_id(7), co_executor2_uet(8), research_id(9),
                         # research_title(10), research - co_executor_2_title(11)
@@ -584,15 +583,14 @@ def statistic_xls(request):
                         for n in r_sql:
                             titles_set[n[10]] = ''
                             titles_set[n[11]] = ''
-                            temp_dict = {}
                             temp_uet, temp_uet2 = 0, 0
-                            if (i.pk == n[3]):
+                            if i.pk == n[3]:
                                 temp_uet = n[4] if n[4] else 0
-                            if (i.pk == n[5]) and (n[5] != n[3]):
+                            if i.pk == n[5] and n[5] != n[3]:
                                 temp_uet = n[6] if n[6] else 0
                             if i.pk == n[7]:
                                 temp_uet2 = n[8] if n[8] else 0
-                            #попытка получить значения за дату
+                            # попытка получить значения за дату
                             if total_report_dict.get(n[2]):
                                 temp_d = total_report_dict.get(n[2])
                                 # попытка получить такие же анализы
@@ -600,12 +598,11 @@ def statistic_xls(request):
                                 current_uet2 = temp_d.get(n[11], 0)
                                 current_uet = current_uet + temp_uet
                                 current_uet2 = current_uet2 + temp_uet2
-                                temp_dict = {n[10]:current_uet, n[11]:current_uet2}
+                                temp_dict = {n[10]: current_uet, n[11]: current_uet2}
                                 total_report_dict[int(n[2])].update(temp_dict)
                             else:
-                                total_report_dict[int(n[2])] = {n[10]:temp_uet, n[11]:temp_uet2}
+                                total_report_dict[int(n[2])] = {n[10]: temp_uet, n[11]: temp_uet2}
 
-                        # titles_list = [tk for tk in titles_set.keys()]
                         titles_list = list(titles_set.keys())
                         ws = wb.create_sheet(i.get_fio() + ' - Итог')
                         ws = structure_sheet.job_total_base(ws, month_obj, type_fin)
