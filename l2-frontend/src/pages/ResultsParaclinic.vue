@@ -29,7 +29,9 @@
             <hr/>
             <template v-if="direction.amd !== 'not_need'">
               <div v-if="direction.amd === 'need'" class="amd amd-need">АМД: не отправлено</div>
-              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено ({{data.direction.amd_number}})</div>
+              <div v-else-if="direction.amd === 'ok'" class="amd amd-ok">АМД: отправлено
+                ({{data.direction.amd_number}})
+              </div>
               <div v-else-if="direction.amd === 'error'" class="amd amd-error">АМД: ошибка</div>
               <div v-else-if="direction.amd === 'planned'" class="amd amd-planned">АМД: запланировано</div>
               <hr/>
@@ -291,110 +293,12 @@
               </template>
             </div>
           </div>
-          <visibility-group-wrapper :group="group"
-                                    :groups="row.research.groups"
-                                    :patient="data.patient"
-                                    v-for="group in row.research.groups">
-            <div class="group">
-              <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
-              <div class="fields">
-                <visibility-field-wrapper :formula="field.visibility" :groups="row.research.groups"
-                                          :patient="data.patient"
-                                          v-for="field in group.fields">
-
-                  <div class="wide-field-title" v-if="field.title !== '' && row.research.wide_headers">
-                    <template v-if="field.title.endsWith('?')">{{field.title}}</template>
-                    <template v-else>{{field.title}}:</template>
-                  </div>
-                  <div :class="{disabled: row.confirmed,
-                  empty: r_list_pk(row).includes(field.pk),
-                  required: field.required}" :title="field.required && 'обязательно для заполнения'"
-                       @mouseenter="enter_field"
-                       @mouseleave="leave_field" class="field">
-                    <div class="field-title" v-if="field.title !== '' && !row.research.wide_headers">
-                      {{field.title}}
-                    </div>
-                    <longpress :confirm-time="0"
-                               :duration="400"
-                               :on-confirm="clear_val" :value="field"
-                               action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                               v-if="!row.confirmed && ![3, 10, 12].includes(field.field_type)">
-                      ×
-                    </longpress>
-                    <div class="field-inputs"
-                         v-if="field.values_to_input.length > 0 && !row.confirmed && field.field_type !== 10 && field.field_type !== 12">
-                      <div class="input-values-wrap">
-                        <div class="input-values">
-                          <div class="inner-wrap">
-                            <div @click="append_value(field, val)" class="input-value"
-                                 v-for="val in field.values_to_input">
-                              {{val}}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="field-value" v-if="field.field_type === 0">
-                      <textarea :readonly="row.confirmed" :rows="field.lines" class="form-control"
-                                v-if="field.lines > 1" v-model="field.value"></textarea>
-                      <input :readonly="row.confirmed" class="form-control" v-else v-model="field.value"/>
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 1">
-                      <input :readonly="row.confirmed" class="form-control" style="width: 160px" type="date"
-                             v-model="field.value"/>
-                    </div>
-                    <div class="field-value mkb10" v-else-if="field.field_type === 2 && !row.confirmed">
-                      <m-k-b-field :short="false" @input="change_mkb(row, field)" v-model="field.value"/>
-                    </div>
-                    <div class="field-value mkb10" v-else-if="field.field_type === 3">
-                      <formula-field :fields="row.research.groups.reduce((a, b) => [...a, ...b.fields], [])"
-                                     :formula="field.default_value"
-                                     :patient="data.patient"
-                                     v-model="field.value"/>
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 2 && row.confirmed">
-                      <input :readonly="true" class="form-control" v-model="field.value"/>
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 10">
-                      <select-field
-                        :disabled="row.confirmed" :variants="field.values_to_input" class="form-control fw"
-                        v-model="field.value"
-                      />
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 11">
-                      <search-fraction-value-field :readonly="row.confirmed"
-                                                   :fraction-pk="field.default_value"
-                                                   :client-pk="data.patient.card_pk"
-                                                   v-model="field.value"/>
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 12">
-                      <radio-field
-                        :disabled="row.confirmed" :variants="field.values_to_input"
-                        v-model="field.value"
-                      />
-                    </div>
-                    <div class="field-value" v-else-if="field.field_type === 13 || field.field_type === 14">
-                      <search-field-value-field :readonly="row.confirmed"
-                                                :field-pk="field.default_value"
-                                                :client-pk="data.patient.card_pk"
-                                                :lines="field.lines"
-                                                :raw="field.field_type === 14"
-                                                v-model="field.value"/>
-                    </div>
-                    <div :title="field.helper" class="field-helper" v-if="field.helper"
-                         v-tippy="{
-                          placement : 'left',
-                          arrow: true,
-                          interactive: true,
-                          theme: 'dark longread',
-                        }">
-                      <i class="fa fa-question"></i>
-                    </div>
-                  </div>
-                </visibility-field-wrapper>
-              </div>
-            </div>
-          </visibility-group-wrapper>
+          <DescriptiveForm
+            :research="row.research"
+            :confirmed="row.confirmed"
+            :patient="data.patient"
+            :change_mkb="change_mkb(row)"
+          />
           <div class="group" v-if="!data.has_microbiology && (!row.confirmed || row.more.length > 0)">
             <div class="group-title">Дополнительные услуги</div>
             <div class="row">
@@ -578,7 +482,9 @@
               <div class="amd amd-planned" v-if="data.direction.amd === 'planned'">АМД: запланировано</div>
               <div class="amd amd-error" v-if="data.direction.amd === 'error' && row.confirmed">АМД: ошибка</div>
               <div class="amd amd-need" v-if="data.direction.amd === 'need' && row.confirmed">АМД: не отправлено</div>
-              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено ({{data.direction.amd_number}})</div>
+              <div class="amd amd-ok" v-if="data.direction.amd === 'ok'">АМД: отправлено
+                ({{data.direction.amd_number}})
+              </div>
               <button class="btn btn-blue-nb" @click="reset_amd([data.direction.pk])"
                       v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'">
                 Сброс статуса АМД
@@ -731,11 +637,9 @@
     import SelectPickerM from '../fields/SelectPickerM'
     import SelectPickerB from '../fields/SelectPickerB'
     import researches_point from '../api/researches-point'
-    import Longpress from 'vue-longpress'
     import Modal from '../ui-cards/Modal'
     import MKBField from '../fields/MKBField'
     import DateFieldNav from '../fields/DateFieldNav'
-    import FormulaField from '../fields/FormulaField'
     import DReg from '../modals/DReg'
     import dropdown from 'vue-my-dropdown'
     import ResearchesPicker from '../ui-cards/ResearchesPicker'
@@ -750,23 +654,18 @@
     import ResultsViewer from '../modals/ResultsViewer'
     import LastResult from '../ui-cards/LastResult'
     import IssStatus from '../ui-cards/IssStatus'
-    import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
-    import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
     import {vField, vGroup} from '../components/visibility-triggers'
-    import SelectField from '../fields/SelectField'
-    import RadioField from '../fields/RadioField'
-    import SearchFractionValueField from '../fields/SearchFractionValueField'
-    import SearchFieldValueField from '../fields/SearchFieldValueField'
     import TemplateEditor from '../construct/TemplateEditor'
+    import DescriptiveForm from '../forms/DescriptiveForm'
 
     export default {
         name: 'results-paraclinic',
         components: {
+            DescriptiveForm,
             TemplateEditor,
-            SelectField, DateFieldNav, Longpress, Modal, MKBField, FormulaField, ResearchesPicker, SelectedResearches,
+            DateFieldNav, Modal, MKBField, ResearchesPicker, SelectedResearches,
             dropdown, SelectPickerM, SelectPickerB, DReg, ResearchPick, Benefit, DirectionsHistory, ResultsViewer,
-            LastResult, VisibilityFieldWrapper, VisibilityGroupWrapper, RecipeInput, CultureInput, IssStatus,
-            SearchFractionValueField, RadioField, SearchFieldValueField,
+            LastResult, RecipeInput, CultureInput, IssStatus,
         },
         data() {
             return {
@@ -909,13 +808,14 @@
                     this.anamnesis_loading = false
                 })().then()
             },
-            change_mkb(row, field) {
-                console.log(row, field)
-                if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
-                    const ndiagnos = field.value.split(' ')[0] || ''
-                    if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
-                        okmessage('Диагноз в данных статталона обновлён', ndiagnos)
-                        row.diagnos = ndiagnos
+            change_mkb(row) {
+                return field => {
+                    if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
+                        const ndiagnos = field.value.split(' ')[0] || ''
+                        if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
+                            okmessage('Диагноз в данных статталона обновлён', ndiagnos)
+                            row.diagnos = ndiagnos
+                        }
                     }
                 }
             },
@@ -938,18 +838,7 @@
                 this.research_open_history = null
             },
             r(research) {
-                if (research.confirmed) {
-                    return true
-                }
-
-                for (const g of research.research.groups) {
-                    for (const f of g.fields) {
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
-                            return false
-                        }
-                    }
-                }
-                return true
+                return this.r_list(research).length === 0
             },
             r_list(research) {
                 const l = []
@@ -958,32 +847,20 @@
                 }
 
                 for (const g of research.research.groups) {
+                    if (!vGroup(g, research.research.groups, this.data.patient)) {
+                        continue
+                    }
                     let n = 0
                     for (const f of g.fields) {
                         n++
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
+                              (f.field_type !== 3 ||
+                                  vField(g, research.research.groups, f.visibility, this.data.patient))) {
                             l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
                         }
                     }
                 }
                 return l.slice(0, 2)
-            },
-            r_list_pk(research) {
-                const l = []
-                if (research.confirmed) {
-                    return []
-                }
-
-                for (const g of research.research.groups) {
-                    let n = 0
-                    for (const f of g.fields) {
-                        n++
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
-                            l.push(f.pk)
-                        }
-                    }
-                }
-                return l
             },
             hide_modal_anamnesis_edit() {
                 this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
@@ -1005,18 +882,6 @@
                     this.$store.dispatch(action_types.DEC_LOADING).then()
                     this.anamnesis_edit = true
                 })
-            },
-            enter_field($e) {
-                this.prev_scroll = $('.results-editor').scrollTop()
-                let $elem = $($e.target)
-                $elem.addClass('open-field')
-            },
-            leave_field($e) {
-                let {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0]
-                if (sh > oh)
-                    $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
-                let $elem = $($e.target)
-                $elem.removeClass('open-field')
             },
             load_history() {
                 this.directions_history = []
@@ -1078,12 +943,12 @@
                 const fields = {}
                 const {groups: igroups} = iss.research
                 for (const group of iss.research.groups) {
-                    if (!vGroup(group, igroups)) {
+                    if (!vGroup(group, igroups, this.data.patient)) {
                         groups[group.pk] = false
                     } else {
                         groups[group.pk] = true
                         for (const field of group.fields) {
-                            fields[field.pk] = vField(igroups, field.visibility)
+                            fields[field.pk] = vField(group, igroups, field.visibility, this.data.patient)
                         }
                     }
                 }
@@ -1374,13 +1239,14 @@
             },
             async reset_amd(pks) {
                 try {
-                  await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`)
-                  await this.$store.dispatch(action_types.INC_LOADING)
-                  await directions_point.resetAMD({pks})
-                  this.load_pk(this.data.direction.pk)
-                  this.reload_if_need()
-                  await this.$store.dispatch(action_types.DEC_LOADING)
-                } catch (e) {}
+                    await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`)
+                    await this.$store.dispatch(action_types.INC_LOADING)
+                    await directions_point.resetAMD({pks})
+                    this.load_pk(this.data.direction.pk)
+                    this.reload_if_need()
+                    await this.$store.dispatch(action_types.DEC_LOADING)
+                } catch (e) {
+                }
             },
             async send_to_amd(pks) {
                 await this.$store.dispatch(action_types.INC_LOADING)
@@ -1630,21 +1496,6 @@
     overflow-x: hidden;
   }
 
-  .group {
-    margin: 5px;
-    border: 1px solid #c1c1c1;
-    background: #fff;
-  }
-
-  .group-title {
-    background-color: #eaeaea;
-    padding: 5px;
-    font-weight: bold;
-    position: sticky;
-    top: 30px;
-    z-index: 1;
-  }
-
   .sidebar-bottom-top {
     background-color: #eaeaea;
     flex: 0 0 34px;
@@ -1665,170 +1516,6 @@
       padding-left: 5px;
       width: 130px;
     }
-  }
-
-  .fields {
-    padding: 5px 5px 5px 10px;
-  }
-
-  .wide-field-title {
-    margin-top: 10px;
-    margin-bottom: -5px;
-    background-color: #fafafa;
-    font-weight: bold;
-    padding-left: 5px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    justify-content: stretch;
-
-    & > div {
-      align-self: stretch;
-    }
-
-    margin-top: 5px;
-    margin-bottom: 5px;
-    background-color: #fafafa;
-    position: relative;
-
-    overflow: visible;
-
-    &.open-field:not(.disabled) {
-      background-color: #efefef;
-
-      &.required {
-        background-color: #e3e3e3;
-      }
-
-      .input-values {
-        overflow: visible !important;
-      }
-
-      .input-values-wrap {
-        z-index: 3;
-      }
-
-      .inner-wrap {
-        background-color: #cfd9db;
-        box-shadow: 0 3px 3px rgba(0, 0, 0, .4);
-      }
-
-      .form-control {
-        border-color: #00a1cb;
-      }
-    }
-
-    &.required {
-      background-color: #e6e6e6;
-      border-right: 3px solid #00a1cb;
-
-      &.empty {
-        input, textarea, /deep/ input, /deep/ select {
-          border-color: #f00;
-        }
-
-        border-right: 3px solid #f00;
-      }
-    }
-  }
-
-  .field-helper {
-    position: absolute;
-    top: 0;
-    right: 6px;
-    bottom: 0;
-    font-size: 18px;
-    padding: 3px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #049372;
-    text-shadow: 0 0 4px rgba(#049372, .5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .field-title {
-    flex: 1 0 150px;
-    padding-left: 5px;
-    padding-top: 5px;
-  }
-
-  .field-value {
-    flex-basis: 100%;
-
-    textarea {
-      resize: none;
-    }
-
-    .form-control {
-      width: 100%;
-      border-radius: 0;
-      padding-right: 15px;
-    }
-
-    select {
-      width: 100%;
-
-      &:not(.fw) {
-        max-width: 370px;
-      }
-    }
-
-    input[type="checkbox"] {
-      margin-top: 8px;
-    }
-  }
-
-  .field-inputs {
-    flex: 1 0 250px;
-    position: relative;
-    overflow: visible;
-  }
-
-  .input-values-wrap {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    overflow: visible;
-  }
-
-  .input-values {
-    width: 250px;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .inner-wrap {
-    white-space: normal;
-    padding: 3px;
-    background-color: #ECF0F1;
-  }
-
-  .input-value {
-    padding: 3px;
-    background-color: #ECF0F1;
-    border-radius: 2px;
-    border: 1px solid #95A5A6;
-    color: #656D78;
-    display: inline-block;
-    margin-bottom: 4px;
-    margin-right: 4px;
-    cursor: pointer;
-    min-width: 20px;
-    text-align: center;
-    word-break: break-word;
-  }
-
-  .input-value:hover {
-    background-color: #049372;
-    border: 1px solid #03614b;
-    color: #ffffff;
   }
 
   .control-row {
@@ -1866,33 +1553,11 @@
     }
   }
 
-  .text-ell {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .research-row {
     margin-top: 3px;
     margin-bottom: 3px;
     padding: 3px;
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
-  }
-
-  .btn-field, .btn-field:focus {
-    align-self: stretch;
-    border-radius: 0;
-    border-left: 0;
-    border-right: 0;
-    background: rgba(0, 0, 0, .06);
-    border: none;
-    margin-right: 5px;
-    color: #000;
-  }
-
-  .btn-field:hover {
-    background: rgba(0, 0, 0, .2);
-    color: #fff;
   }
 
   .anamnesis {
@@ -1903,39 +1568,6 @@
     display: flex;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .mkb10 {
-    margin-right: -1px;
-    z-index: 0;
-  }
-
-  .mkb10 /deep/ .input-group {
-    border-radius: 0;
-    width: 100%;
-  }
-
-  .mkb10 /deep/ input {
-    border-radius: 0 !important;
-  }
-
-  .mkb10 /deep/ ul {
-    position: relative;
-    width: auto;
-    right: -250px;
-    font-size: 13px;
-    z-index: 1000;
-  }
-
-  .mkb10 /deep/ ul li {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 2px .25rem;
-    margin: 0 .2rem;
-
-    a {
-      padding: 2px 10px;
-    }
   }
 
   @keyframes rotating {

@@ -11,7 +11,7 @@
     export default {
         props: {
             value: {
-                required: true,
+                required: false,
             },
             variants: {
                 required: true,

@@ -1,7 +1,7 @@
 <template>
-  <select :disabled="disabled" v-model="val">
-    <option :value="v" v-for="v in variants">
-      {{v}}
+  <select :disabled="disabled" v-model="val" class="form-control">
+    <option :value="v.pk" v-for="v in variants">
+      {{v.title}}
     </option>
   </select>
 </template>
@@ -27,11 +27,12 @@
             }
         },
         mounted() {
-            if ((!this.val || this.val === '' || !this.variants.includes(this.val)) && this.variants.length > 0) {
-                this.val = this.variants[0]
-            }
+            this.fixVal()
         },
         watch: {
+            value() {
+                this.val = this.value
+            },
             val() {
                 this.changeValue(this.val)
             },
@@ -42,6 +43,11 @@
         methods: {
             changeValue(newVal) {
                 this.$emit('modified', newVal)
+            },
+            fixVal() {
+              if ((!this.val || !this.variants.map(v => v.pk).includes(this.val)) && this.variants.length > 0) {
+                  this.val = this.variants[0].pk
+              }
             }
         }
     }

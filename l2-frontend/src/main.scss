@@ -9,7 +9,7 @@
 
 .dash-btn {
   overflow: visible;
-  margin-bottom: 4px!important
+  margin-bottom: 4px !important
 }
 
 .dash-btn .panel-body {
@@ -1311,12 +1311,12 @@ body > .container-fluid {
 }
 
 .tippy-tooltip {
-  font-size: 14px!important;
+  font-size: 14px !important;
 }
 
 
 .cl-td {
-  padding: 0!important;
+  padding: 0 !important;
 
   button {
     border-radius: 0;
@@ -1330,12 +1330,251 @@ body > .container-fluid {
 }
 
 @media (max-width: 991px) {
-    .text-left-xs {
-      text-align: left;
-    }
+  .text-left-xs {
+    text-align: left;
+  }
 }
 
 .tippy-tooltip.longread-theme .tippy-content {
   text-align: left;
   white-space: pre !important;
+}
+
+.text-ell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/** DESCRIPTIVE FORM */
+
+.group {
+  margin: 5px;
+  border: 1px solid #c1c1c1;
+  background: #fff;
+}
+
+.group-title {
+  background-color: #eaeaea;
+  padding: 5px;
+  font-weight: bold;
+  position: sticky;
+  top: 30px;
+  z-index: 1;
+}
+
+
+.fields {
+  padding: 5px 5px 5px 10px;
+}
+
+.wide-field-title {
+  margin-top: 10px;
+  margin-bottom: -5px;
+  background-color: #fafafa;
+  font-weight: bold;
+  padding-left: 5px;
+}
+
+.field {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: stretch;
+
+  & > div {
+    align-self: stretch;
+  }
+
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #fafafa;
+  position: relative;
+
+  overflow: visible;
+
+  &.open-field:not(.disabled) {
+    background-color: #efefef;
+
+    &.required {
+      background-color: #e3e3e3;
+    }
+
+    .input-values {
+      overflow: visible !important;
+    }
+
+    .input-values-wrap {
+      z-index: 3;
+    }
+
+    .inner-wrap {
+      background-color: #cfd9db;
+      box-shadow: 0 3px 3px rgba(0, 0, 0, .4);
+    }
+
+    .form-control {
+      border-color: #00a1cb;
+    }
+  }
+
+  &.required {
+    background-color: #e6e6e6;
+    border-right: 3px solid #00a1cb;
+
+    &.empty {
+      input, textarea, input, select {
+        border-color: #f00;
+      }
+
+      border-right: 3px solid #f00;
+    }
+  }
+}
+
+.field-helper {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  bottom: 0;
+  font-size: 18px;
+  padding: 3px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #049372;
+  text-shadow: 0 0 4px rgba(#049372, .5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.field-title {
+  flex: 1 0 150px;
+  padding-left: 5px;
+  padding-top: 5px;
+}
+
+.field-value {
+  flex-basis: 100%;
+
+  textarea {
+    resize: none;
+  }
+
+  .form-control {
+    width: 100%;
+    border-radius: 0;
+    padding-right: 15px;
+  }
+
+  select {
+    width: 100%;
+
+    &:not(.fw) {
+      max-width: 370px;
+    }
+  }
+
+  input[type="checkbox"] {
+    margin-top: 8px;
+  }
+}
+
+.field-inputs {
+  flex: 1 0 250px;
+  position: relative;
+  overflow: visible;
+}
+
+.input-values-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: visible;
+}
+
+.input-values {
+  width: 250px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.inner-wrap {
+  white-space: normal;
+  padding: 3px;
+  background-color: #ECF0F1;
+}
+
+.input-value {
+  padding: 3px;
+  background-color: #ECF0F1;
+  border-radius: 2px;
+  border: 1px solid #95A5A6;
+  color: #656D78;
+  display: inline-block;
+  margin-bottom: 4px;
+  margin-right: 4px;
+  cursor: pointer;
+  min-width: 20px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.input-value:hover {
+  background-color: #049372;
+  border: 1px solid #03614b;
+  color: #ffffff;
+}
+
+
+.btn-field, .btn-field:focus {
+  align-self: stretch;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  background: rgba(0, 0, 0, .06);
+  border: none;
+  margin-right: 5px;
+  color: #000;
+}
+
+.btn-field:hover {
+  background: rgba(0, 0, 0, .2);
+  color: #fff;
+}
+
+
+.mkb10 {
+  margin-right: -1px;
+  z-index: 0;
+}
+
+.mkb10 .input-group {
+  border-radius: 0;
+  width: 100%;
+}
+
+.mkb10 input {
+  border-radius: 0 !important;
+}
+
+.mkb10 ul {
+  position: relative;
+  width: auto;
+  right: -250px;
+  font-size: 13px;
+  z-index: 1000;
+}
+
+.mkb10 ul li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px .25rem;
+  margin: 0 .2rem;
+
+  a {
+    padding: 2px 10px;
+  }
 }

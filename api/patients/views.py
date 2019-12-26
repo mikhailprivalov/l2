@@ -520,7 +520,7 @@ def edit_agent(request):
 
     parent_card.update(**upd)
 
-    Log.log(parent_card.pk, 30005, request.user.doctorprofile, request_data)
+    Log.log(request_data["parent_card_pk"], 30005, request.user.doctorprofile, request_data)
 
     return JsonResponse({"ok": True})
 

@@ -48,6 +48,7 @@ new Vue({
     'RmisConfirm': () => import('./pages/RmisConfirm'),
     'Profiles': () => import('./pages/Profiles'),
     'EmployeeJobs': () => import('./pages/EmployeeJobs'),
+    'Stationar': () => import('./pages/Stationar'),
     RmisLocation,
     // loading,
   },
@@ -150,8 +151,6 @@ new Vue({
         errmessage('Не выбрано, от чьего имени выписываются направления')
         return
       }
-      if (!operator && history_num !== '')
-        history_num = ''
       vm.$store.dispatch(action_types.INC_LOADING).then()
       directions_point.sendDirections({
         card_pk, diagnos, fin_source: fin_source_pk, history_num,

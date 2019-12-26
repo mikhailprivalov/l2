@@ -140,6 +140,7 @@ class Researches(models.Model):
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение")
     is_stom = models.BooleanField(default=False, blank=True, help_text="Это стоматология")
     is_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационар")
+    is_slave_hospital = models.BooleanField(default=False, blank=True, help_text="Это стационарный протокол")
     is_microbiology = models.BooleanField(default=False, blank=True, help_text="Это микробиологическое исследование")
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
 
@@ -214,9 +215,9 @@ class Researches(models.Model):
 class HospitalService(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
-        (1, 'Дневники'),
+        (1, 'Дневник'),
         (2, 'ВК'),
-        (3, 'Операции'),
+        (3, 'Операция'),
         (4, 'Фармакотерапия'),
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
@@ -230,6 +231,8 @@ class HospitalService(models.Model):
                                        help_text="Протокол для вида услуги", on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
 
+    def get_title(self):
+        return f"{self.main_research.title} – {self.slave_research.title}"
 
     def __str__(self):
         return f"{self.main_research.title} - {self.site_type} - {self.slave_research.title} - {self.hide}"

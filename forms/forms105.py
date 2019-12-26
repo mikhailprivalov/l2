@@ -392,8 +392,13 @@ def form_02(request_data):
         objs.append(Paragraph('<font size=11>Лечащий врач:</font>', styleBold))
         objs.append(Spacer(1, 1 * mm))
 
-        personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
-        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(obj_iss.doc_confirmation.get_fio(),
+        personal_code = ''
+        doc_fio = ''
+        if obj_iss.doc_confirmation:
+            personal_code = empty if not obj_iss.doc_confirmation.personal_code else obj_iss.doc_confirmation.personal_code
+            doc_fio = obj_iss.doc_confirmation.get_fio()
+
+        objs.append(Paragraph('{} /_____________________/ {} Код врача: {} '. format(doc_fio,
              42 * space_symbol, personal_code),style))
 
         objs.append(Spacer(1, 5 * mm))

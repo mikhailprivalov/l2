@@ -1,17 +1,26 @@
 <template>
   <div class="root">
-    <div class="top-editor">
+    <div class="top-editor" :class="{simpleEditor: simple}">
       <div class="left">
         <div class="input-group">
           <span class="input-group-addon">Полное наименование</span>
           <input type="text" class="form-control" v-model="title">
+          <span class="input-group-btn" v-if="simple && fte">
+            <button class="btn btn-blue-nb"
+                    type="button"
+                    style="border-radius: 0;width: 100%;"
+                    :disabled="has_unsaved || loaded_pk < 0"
+                    @click="f_templates()">
+              Шаблоны быстрого ввода
+            </button>
+          </span>
         </div>
-        <div class="input-group">
+        <div class="input-group" v-if="!simple">
           <span class="input-group-addon">Краткое <small>(для создания направлений)</small></span>
           <input type="text" class="form-control" v-model="short_title">
         </div>
       </div>
-      <div class="right">
+      <div class="right" v-if="!simple">
         <div class="row" style="margin-right: 0;" v-if="department < -1">
           <div class="col-xs-6" style="padding-right: 0">
             <div class="input-group" style="margin-right: -1px">
@@ -53,12 +62,12 @@
       </div>
     </div>
     <div class="content-editor">
-      <div class="input-group">
+      <div class="input-group" v-if="!simple">
         <span class="input-group-addon">Информация на направлении</span>
         <textarea class="form-control noresize" v-autosize="info" v-model="info"></textarea>
       </div>
       <template v-if="ex_dep !== 7">
-        <div v-for="group in ordered_groups" class="group">
+        <div v-for="group in ordered_groups" class="ed-group">
           <div class="input-group">
             <span class="input-group-btn">
               <button class="btn btn-blue-nb lob" :disabled="is_first_group(group)" @click="dec_group_order(group)">
@@ -86,8 +95,8 @@
           <div>
             <strong>Поля ввода</strong>
           </div>
-          <div v-for="row in ordered_fields(group)" class="field">
-            <div class="field-inner">
+          <div v-for="row in ordered_fields(group)" class="ed-field">
+            <div class="ed-field-inner">
               <div>
                 <button class="btn btn-default btn-sm btn-block" :disabled="is_first_field(group, row)"
                         @click="dec_order(group, row)">
@@ -105,7 +114,8 @@
                 </div>
                 <div v-if="row.field_type === 0">
                   <strong>Значение по умолчанию:</strong>
-                  <textarea v-model="row.default" :rows="row.lines" class="form-control" v-if="row.lines > 1"></textarea>
+                  <textarea v-model="row.default" :rows="row.lines" class="form-control"
+                            v-if="row.lines > 1"></textarea>
                   <input v-model="row.default" class="form-control" v-else/>
                 </div>
                 <div v-else-if="row.field_type === 3">
@@ -141,7 +151,8 @@
                     <div>
                       <div class="input-group" v-for="(v, i) in row.values_to_input" style="margin-bottom: 1px">
                     <span class="input-group-btn">
-                    <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)" @click="up_template(row, i)">
+                    <button class="btn btn-blue-nb lob" :disabled="is_first_in_template(i)"
+                            @click="up_template(row, i)">
                       <i class="glyphicon glyphicon-arrow-up"></i>
                     </button>
                     </span>
@@ -178,10 +189,10 @@
                   <input type="checkbox" v-model="row.required"/> запрет пустого
                 </label>
                 <label>
-                  <input type="checkbox" v-model="row.for_talon" /> в талон
+                  <input type="checkbox" v-model="row.for_talon"/> в талон
                 </label>
                 <label>
-                  <input type="checkbox" v-model="row.for_extract_card" /> в выписку
+                  <input type="checkbox" v-model="row.for_extract_card"/> в выписку
                 </label>
                 <label style="line-height: 1"
                        v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14">
@@ -227,314 +238,350 @@
 </template>
 
 <script>
-  import construct_point from '../api/construct-point'
-  import FastTemplatesEditor from './FastTemplatesEditor';
-  import * as action_types from '../store/action-types'
+    import construct_point from '../api/construct-point'
+    import FastTemplatesEditor from './FastTemplatesEditor'
+    import * as action_types from '../store/action-types'
 
-  export default {
-    name: 'paraclinic-research-editor',
-    components: {FastTemplatesEditor},
-    props: {
-      pk: {
-        type: Number,
-        required: true
-      },
-      department: {
-        type: Number,
-        required: true
-      },
-    },
-    created() {
-      this.load()
-    },
-    data() {
-      return {
-        title: '',
-        short_title: '',
-        code: '',
-        internal_code: '',
-        info: '',
-        hide: false,
-        cancel_do: false,
-        loaded_pk: -2,
-        site_type: null,
-        groups: [],
-        template_add_types: [
-          {sep: ' ', title: 'Пробел'},
-          {sep: ', ', title: 'Запятая и пробел'},
-          {sep: '; ', title: 'Точка с запятой (;) и пробел'},
-          {sep: '. ', title: 'Точка и пробел'},
-          {sep: '\n', title: 'Перенос строки'},
-        ],
-        has_unsaved: false,
-        f_templates_open: false,
-        templates: [],
-        opened_template_data: {},
-      }
-    },
-    watch: {
-      pk() {
-        this.load()
-      },
-      loaded_pk(n) {
-        this.has_unsaved = false
-      },
-      groups: {
-        handler(n, o) {
-          if (o && o.length > 0) {
-            this.has_unsaved = true
-          }
-        },
-        deep: true
-      }
-    },
-    mounted() {
-      $(window).on('beforeunload', () => {
-        if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
-          return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
-      })
-      this.$root.$on('hide_fte', () => this.f_templates_hide())
-    },
-    computed: {
-      fte() {
-        return this.$store.getters.modules.l2_fast_templates;
-      },
-      valid() {
-        return this.norm_title.length > 0 && !this.cancel_do
-      },
-      norm_title() {
-        return this.title.trim()
-      },
-      ordered_groups() {
-        return this.groups.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      min_max_order_groups() {
-        let min = 0
-        let max = 0
-        for (let row of this.groups) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
-      ex_dep() {
-        return {
-          '-2': 4,
-          '-3': 5,
-          '-4': 6,
-          '-5': 7,
-        }[this.department] || this.department;
-      },
-      ex_deps() {
-        return this.$store.getters.ex_dep[this.ex_dep] || [];
-      },
-    },
-    methods: {
-      f_templates() {
-        this.f_templates_open = true;
-      },
-      f_templates_hide() {
-        this.f_templates_open = false;
-      },
-      is_first_in_template(i) {
-        return i === 0
-      },
-      is_last_in_template(row, i) {
-        return i === row.values_to_input.length - 1
-      },
-      up_template(row, i) {
-        if (this.is_first_in_template(i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i - 1], values[i]] = [values[i], values[i - 1]]
-        row.values_to_input = values
-      },
-      down_template(row, i) {
-        if (this.is_last_in_template(row, i))
-          return
-        let values = JSON.parse(JSON.stringify(row.values_to_input));
-        [values[i + 1], values[i]] = [values[i], values[i + 1]]
-        row.values_to_input = values
-      },
-      remove_template(row, i) {
-        if (row.values_to_input.length - 1 < i)
-          return
-        row.values_to_input.splice(i, 1)
-      },
-      add_template_value(row) {
-        if (row.new_value === '')
-          return
-        row.values_to_input.push(row.new_value)
-        row.new_value = ''
-      },
-      drag(row, ev) {
-        // console.log(row, ev)
-      },
-      min_max_order(group) {
-        let min = 0
-        let max = 0
-        for (let row of group.fields) {
-          if (min === 0) {
-            min = row.order
-          } else {
-            min = Math.min(min, row.order)
-          }
-          max = Math.max(max, row.order)
-        }
-        return {min, max}
-      },
-      ordered_fields(group) {
-        return group.fields.slice().sort(function (a, b) {
-          return a.order === b.order ? 0 : +(a.order > b.order) || -1
-        })
-      },
-      inc_group_order(row) {
-        if (row.order === this.min_max_order_groups.max)
-          return
-        let next_row = this.find_group_by_order(row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_group_order(row) {
-        if (row.order === this.min_max_order_groups.min)
-          return
-        let prev_row = this.find_group_by_order(row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      inc_order(group, row) {
-        if (row.order === this.min_max_order(group).max)
-          return
-        let next_row = this.find_by_order(group, row.order + 1)
-        if (next_row) {
-          next_row.order--
-        }
-        row.order++
-      },
-      dec_order(group, row) {
-        if (row.order === this.min_max_order(group).min)
-          return
-        let prev_row = this.find_by_order(group, row.order - 1)
-        if (prev_row) {
-          prev_row.order++
-        }
-        row.order--
-      },
-      find_by_order(group, order) {
-        for (let row of group.fields) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      find_group_by_order(order) {
-        for (let row of this.groups) {
-          if (row.order === order) {
-            return row
-          }
-        }
-        return false
-      },
-      is_first_group(group) {
-        return group.order === this.min_max_order_groups.min
-      },
-      is_last_group(group) {
-        return group.order === this.min_max_order_groups.max
-      },
-      is_first_field(group, row) {
-        return row.order === this.min_max_order(group).min
-      },
-      is_last_field(group, row) {
-        return row.order === this.min_max_order(group).max
-      },
-      add_field(group) {
-        let order = 0
-        for (let row of group.fields) {
-          order = Math.max(order, row.order)
-        }
-        group.fields.push({
-          pk: -1,
-          order: order + 1,
-          title: '',
-          default: '',
-          values_to_input: [],
-          new_value: '',
-          hide: false,
-          lines: 3,
-          field_type: 0,
-        })
-      },
-      add_group() {
-        let order = 0
-        for (let row of this.groups) {
-          order = Math.max(order, row.order)
-        }
-        let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
-        this.add_field(g)
-        this.groups.push(g)
-      },
-      load() {
-        this.title = ''
-        this.short_title = ''
-        this.code = ''
-        this.info = ''
-        this.hide = false
-        this.site_type = null
-        this.groups = []
-        if (this.pk >= 0) {
-          this.$store.dispatch(action_types.INC_LOADING).then()
-          construct_point.researchDetails(this, 'pk').then(data => {
-            this.title = data.title
-            this.short_title = data.short_title
-            this.code = data.code
-            this.internal_code = data.internal_code
-            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
-            this.hide = data.hide
-            this.site_type = data.site_type
-            this.loaded_pk = this.pk
-            this.groups = data.groups
-            if (this.groups.length === 0) {
-              this.add_group()
+    export default {
+        name: 'paraclinic-research-editor',
+        components: {FastTemplatesEditor},
+        props: {
+            pk: {
+                type: Number,
+                required: true
+            },
+            department: {
+                type: Number,
+                required: true
+            },
+            simple: {
+                type: Boolean,
+                required: false,
+                default: false,
+            },
+            main_service_pk: {
+                type: Number,
+                required: false,
+                default: -1,
+            },
+            hs_pk: {
+                type: Number,
+                required: false,
+                default: -1,
+            },
+            hide_main: {
+                type: Boolean,
+                required: false,
+                default: false,
             }
-          }).finally(() => {
-            this.$store.dispatch(action_types.DEC_LOADING).then()
-          })
-        } else {
-          this.add_group()
+        },
+        created() {
+            this.load()
+        },
+        data() {
+            return {
+                title: '',
+                short_title: '',
+                code: '',
+                internal_code: '',
+                info: '',
+                hide: false,
+                cancel_do: false,
+                loaded_pk: -2,
+                site_type: null,
+                groups: [],
+                template_add_types: [
+                    {sep: ' ', title: 'Пробел'},
+                    {sep: ', ', title: 'Запятая и пробел'},
+                    {sep: '; ', title: 'Точка с запятой (;) и пробел'},
+                    {sep: '. ', title: 'Точка и пробел'},
+                    {sep: '\n', title: 'Перенос строки'},
+                ],
+                has_unsaved: false,
+                f_templates_open: false,
+                templates: [],
+                opened_template_data: {},
+            }
+        },
+        watch: {
+            pk() {
+                this.load()
+            },
+            loaded_pk(n) {
+                this.has_unsaved = false
+            },
+            groups: {
+                handler(n, o) {
+                    if (o && o.length > 0) {
+                        this.has_unsaved = true
+                    }
+                },
+                deep: true
+            }
+        },
+        mounted() {
+            $(window).on('beforeunload', () => {
+                if (this.has_unsaved && this.loaded_pk > -2 && !this.cancel_do)
+                    return 'Изменения, возможно, не сохранены. Вы уверены, что хотите покинуть страницу?'
+            })
+            this.$root.$on('hide_fte', () => this.f_templates_hide())
+        },
+        computed: {
+            fte() {
+                return this.$store.getters.modules.l2_fast_templates
+            },
+            valid() {
+                return this.norm_title.length > 0 && !this.cancel_do && (!this.simple || this.main_service_pk !== -1)
+            },
+            norm_title() {
+                return this.title.trim()
+            },
+            ordered_groups() {
+                return this.groups.slice().sort(function (a, b) {
+                    return a.order === b.order ? 0 : +(a.order > b.order) || -1
+                })
+            },
+            min_max_order_groups() {
+                let min = 0
+                let max = 0
+                for (let row of this.groups) {
+                    if (min === 0) {
+                        min = row.order
+                    } else {
+                        min = Math.min(min, row.order)
+                    }
+                    max = Math.max(max, row.order)
+                }
+                return {min, max}
+            },
+            ex_dep() {
+                return {
+                    '-2': 4,
+                    '-3': 5,
+                    '-4': 6,
+                    '-5': 7,
+                }[this.department] || this.department
+            },
+            ex_deps() {
+                return this.$store.getters.ex_dep[this.ex_dep] || []
+            },
+        },
+        methods: {
+            f_templates() {
+                this.f_templates_open = true
+            },
+            f_templates_hide() {
+                this.f_templates_open = false
+            },
+            is_first_in_template(i) {
+                return i === 0
+            },
+            is_last_in_template(row, i) {
+                return i === row.values_to_input.length - 1
+            },
+            up_template(row, i) {
+                if (this.is_first_in_template(i))
+                    return
+                let values = JSON.parse(JSON.stringify(row.values_to_input));
+                [values[i - 1], values[i]] = [values[i], values[i - 1]]
+                row.values_to_input = values
+            },
+            down_template(row, i) {
+                if (this.is_last_in_template(row, i))
+                    return
+                let values = JSON.parse(JSON.stringify(row.values_to_input));
+                [values[i + 1], values[i]] = [values[i], values[i + 1]]
+                row.values_to_input = values
+            },
+            remove_template(row, i) {
+                if (row.values_to_input.length - 1 < i)
+                    return
+                row.values_to_input.splice(i, 1)
+            },
+            add_template_value(row) {
+                if (row.new_value === '')
+                    return
+                row.values_to_input.push(row.new_value)
+                row.new_value = ''
+            },
+            drag(row, ev) {
+                // console.log(row, ev)
+            },
+            min_max_order(group) {
+                let min = 0
+                let max = 0
+                for (let row of group.fields) {
+                    if (min === 0) {
+                        min = row.order
+                    } else {
+                        min = Math.min(min, row.order)
+                    }
+                    max = Math.max(max, row.order)
+                }
+                return {min, max}
+            },
+            ordered_fields(group) {
+                return group.fields.slice().sort(function (a, b) {
+                    return a.order === b.order ? 0 : +(a.order > b.order) || -1
+                })
+            },
+            inc_group_order(row) {
+                if (row.order === this.min_max_order_groups.max)
+                    return
+                let next_row = this.find_group_by_order(row.order + 1)
+                if (next_row) {
+                    next_row.order--
+                }
+                row.order++
+            },
+            dec_group_order(row) {
+                if (row.order === this.min_max_order_groups.min)
+                    return
+                let prev_row = this.find_group_by_order(row.order - 1)
+                if (prev_row) {
+                    prev_row.order++
+                }
+                row.order--
+            },
+            inc_order(group, row) {
+                if (row.order === this.min_max_order(group).max)
+                    return
+                let next_row = this.find_by_order(group, row.order + 1)
+                if (next_row) {
+                    next_row.order--
+                }
+                row.order++
+            },
+            dec_order(group, row) {
+                if (row.order === this.min_max_order(group).min)
+                    return
+                let prev_row = this.find_by_order(group, row.order - 1)
+                if (prev_row) {
+                    prev_row.order++
+                }
+                row.order--
+            },
+            find_by_order(group, order) {
+                for (let row of group.fields) {
+                    if (row.order === order) {
+                        return row
+                    }
+                }
+                return false
+            },
+            find_group_by_order(order) {
+                for (let row of this.groups) {
+                    if (row.order === order) {
+                        return row
+                    }
+                }
+                return false
+            },
+            is_first_group(group) {
+                return group.order === this.min_max_order_groups.min
+            },
+            is_last_group(group) {
+                return group.order === this.min_max_order_groups.max
+            },
+            is_first_field(group, row) {
+                return row.order === this.min_max_order(group).min
+            },
+            is_last_field(group, row) {
+                return row.order === this.min_max_order(group).max
+            },
+            add_field(group) {
+                let order = 0
+                for (let row of group.fields) {
+                    order = Math.max(order, row.order)
+                }
+                group.fields.push({
+                    pk: -1,
+                    order: order + 1,
+                    title: '',
+                    default: '',
+                    values_to_input: [],
+                    new_value: '',
+                    hide: false,
+                    lines: 3,
+                    field_type: 0,
+                })
+            },
+            add_group() {
+                let order = 0
+                for (let row of this.groups) {
+                    order = Math.max(order, row.order)
+                }
+                let g = {pk: -1, order: order + 1, title: '', fields: [], show_title: true, hide: false}
+                this.add_field(g)
+                this.groups.push(g)
+            },
+            load() {
+                this.title = ''
+                this.short_title = ''
+                this.code = ''
+                this.info = ''
+                this.hide = false
+                this.site_type = null
+                this.groups = []
+                if (this.pk >= 0) {
+                    this.$store.dispatch(action_types.INC_LOADING).then()
+                    construct_point.researchDetails(this, 'pk').then(data => {
+                        this.title = data.title
+                        this.short_title = data.short_title
+                        this.code = data.code
+                        this.internal_code = data.internal_code
+                        this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n')
+                        this.hide = data.hide
+                        this.site_type = data.site_type
+                        this.loaded_pk = this.pk
+                        this.groups = data.groups
+                        if (this.groups.length === 0) {
+                            this.add_group()
+                        }
+                    }).finally(() => {
+                        this.$store.dispatch(action_types.DEC_LOADING).then()
+                    })
+                } else {
+                    this.add_group()
+                }
+            },
+            cancel() {
+                if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
+                    return
+                }
+                this.cancel_do = true
+                this.$root.$emit('research-editor:cancel')
+            },
+            save() {
+                this.$store.dispatch(action_types.INC_LOADING).then()
+                const props = [
+                    'pk',
+                    'department',
+                    'title',
+                    'short_title',
+                    'code',
+                    'hide',
+                    'groups',
+                    'site_type',
+                    'internal_code'
+                ]
+                const moreData = {
+                    info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
+                    simple: this.simple,
+                };
+                if (this.simple) {
+                    props.push('main_service_pk', 'hide_main', 'hs_pk')
+                }
+                construct_point.updateResearch(this, props, moreData).then(() => {
+                    this.has_unsaved = false
+                    okmessage('Сохранено')
+                    this.cancel()
+                }).finally(() => {
+                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                })
+            },
         }
-      },
-      cancel() {
-        if (this.has_unsaved && !confirm('Изменения, возможно, не сохранены. Вы уверены, что хотите отменить редактирование?')) {
-          return
-        }
-        this.cancel_do = true
-        this.$root.$emit('research-editor:cancel')
-      },
-      save() {
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        construct_point.updateResearch(this, ['pk', 'department', 'title', 'short_title', 'code', 'hide', 'groups', 'site_type', 'internal_code'], {
-          info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>')
-        }).then(() => {
-          this.has_unsaved = false
-          okmessage('Сохранено')
-          this.cancel()
-        }).finally(() => {
-          this.$store.dispatch(action_types.DEC_LOADING).then()
-        })
-      },
     }
-  }
 </script>
 
 <style scoped lang="scss">
@@ -568,6 +615,18 @@
 
     .right {
       flex: 0 0 55%
+    }
+
+    &.simpleEditor {
+      flex: 0 0 34px;
+
+      .left {
+        flex: 0 0 100%
+      }
+
+      .right {
+        display: none;
+      }
     }
 
     .left {
@@ -626,14 +685,14 @@
     overflow-y: auto;
   }
 
-  .group {
+  .ed-group {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
     background: #f0f0f0;
   }
 
-  .field {
+  .ed-field {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
@@ -641,14 +700,15 @@
     color: #000;
   }
 
-  .field-inner {
+  .ed-field-inner {
     display: flex;
     flex-direction: row;
     align-items: stretch;
   }
 
-  .field-inner > div {
+  .ed-field-inner > div {
     align-self: stretch;
+
     textarea {
       resize: none;
     }
@@ -657,6 +717,7 @@
       flex: 0 0 35px;
       padding-right: 5px;
     }
+
     &:nth-child(2) {
       width: calc(100% - 530px);
     }
@@ -666,10 +727,12 @@
       padding-left: 5px;
       padding-right: 5px;
       white-space: nowrap;
+
       label {
         display: block;
         margin-bottom: 2px;
         width: 100%;
+
         input[type="number"] {
           width: 100%;
         }

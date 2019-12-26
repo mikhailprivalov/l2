@@ -34,7 +34,7 @@ class FrequencyOfUseResearches(models.Model):
         if not FrequencyOfUseResearches.objects.filter(research=research, user=user).exists():
             FrequencyOfUseResearches(research=research, user=user, cnt=0).save()
 
-        f = FrequencyOfUseResearches.objects.get(research=research, user=user)
+        f = FrequencyOfUseResearches.objects.filter(research=research, user=user)[0]
         f.cnt += 1
         f.save()
 
@@ -607,7 +607,7 @@ class Napravleniya(models.Model):
                         l = directory.Localization.objects.get(pk=localizations[str(research.pk)]["code"])
                         issledovaniye.localization = l
                         loc = l.barcode
-                    if str(research.pk) in service_locations:
+                    if str(research.pk) in service_locations and service_locations[str(research.pk)]:
                         s = directory.ServiceLocation.objects.get(pk=service_locations[str(research.pk)]["code"])
                         issledovaniye.service_location = s
                     issledovaniye.comment = loc or (comments.get(str(research.pk), "") or "")[:40]
