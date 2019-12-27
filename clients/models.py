@@ -803,7 +803,7 @@ class Card(models.Model):
                 and Card.objects.filter(individual=card_orig.individual, base__internal_type=True).exists():
             return None
 
-        with transaction.atomic:
+        with transaction.atomic():
             cb = CardBase.objects.select_for_update().filter(internal_type=True).first()
             if (not card_orig and not individual) or not cb:
                 return
