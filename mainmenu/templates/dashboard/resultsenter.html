@@ -1953,6 +1953,13 @@
         function make_refs(r, bordered) {
             let out = ''
             bordered = bordered || false
+            if (typeof r === "string") {
+                try {
+                    r = JSON.parse(r)
+                } catch (e) {
+
+                }
+            }
             for (let prop in r) {
                 if (((prop !== 'Все' && r[prop] !== '') || (prop === 'Все' && r[prop] !== '')) && r.hasOwnProperty(prop)) {
                     out += `<tr>
