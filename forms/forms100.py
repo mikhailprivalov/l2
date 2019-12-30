@@ -474,4 +474,16 @@ def form_02(request_data):
 
     pdf = buffer.getvalue()
     buffer.close()
+
+    from utils import tree_directions
+    # list_a = [90,46,99]
+    # a = tree_directions.test_get_iss(list_a)
+    # for i in a:
+    #     print(i)
+    from api.stationar.views import hosp_get_data_direction
+    a = hosp_get_data_direction(105, level=2, type_service='is_lab')
+    for i in a:
+        print(i)
+
+
     return pdf

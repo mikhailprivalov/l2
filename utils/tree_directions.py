@@ -53,7 +53,7 @@ def tree_direction(iss):
     парам: услуга
 
     Вернуть стуркутру Направлений:
-    id-направления, дата создания, id-услуг(и) относящейся к данному направлению, уровень поиска. 1(корень)
+    id-направления, дата создания, id-услуг(и) относящейся к данному направлению, уровень поиска.
     в SQL:
     nn - directions_napravleniya
     ii - directions_issledovaniya
@@ -217,3 +217,29 @@ def get_research_by_dir(numdir):
 
         row = cursor.fetchall()
     return row
+
+
+def hosp_get_iss(list_numdir):
+    """
+
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        t_podr AS (
+	        SELECT id as podr_id, title as podr_title FROM public.podrazdeleniya_podrazdeleniya),
+	    t_research AS (
+	        SELECT id as research_id, title as research_title, vertical_result_display, podrazdeleniye_id FROM public.directory_researches),
+	    select * from t_research
+        LEFT JOIN t_podr
+        ON t_research.podrazdeleniye_id=t_podr.podr_id
+        WHERE podr_title ILIKE '%кдл%'
+
+
+        SELECT *
+        FROM directions_issledovaniya where napravleniye_id = ANY(ARRAY[%(num_dir)s])
+            """, params={'num_dir': list_numdir })
+
+        row = cursor.fetchall()
+    return row
+
+
