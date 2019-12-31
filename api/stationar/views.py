@@ -3,9 +3,11 @@ from django.http import JsonResponse
 
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
+from podrazdeleniya.models import Podrazdeleniya
 from laboratory.decorators import group_required
 import simplejson as json
 from utils import tree_directions
+from collections import OrderedDict
 
 
 @login_required
@@ -116,8 +118,31 @@ def hosp_get_lab_iss(current_iss, extract=False):
     if not extract:
         hosp_dirs = [i for i in hosp_dirs if i < current_dir]
 
+    #Получить титл подразделений типа Лаборатория
+    departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
+    departs = OrderedDict()
+    results = OrderedDict()
+    from .sql_func import get_research, get_iss
+    for i in departs_obj:
+        departs[i.pk] = i.title
+        #получить research_id по лаборатории и vertical_result_display = True
+        print(i.title)
+        vertical_research = get_research(i.title, True)
+        id_research_vertical = [i[0] for i in vertical_research]
+        if len(id_research_vertical) > 0:
+            get_iss_id = get_iss(id_research_vertical, [106, 108, 107])
+            iss_id_vertical = [i[0] for i in get_iss_id]
+            print(iss_id_vertical)
+        #получить фракции для вертикал
+
+        horizontal_research = get_research(i.title, False)
+        id_research_horizontal = [i[0] for i in horizontal_research]
+        if len(id_research_horizontal) > 0:
+            get_iss_id = get_iss(id_research_horizontal, [106, 108, 107])
+            iss_id_horizontal = [i[0] for i in get_iss_id]
+            print(iss_id_horizontal)
+        # получить фракции для хоризонтал
+
     #получить исследования лаб. для КДЛ, Биохимии, Иммунологии каждое по vertical_result_display по направлениям типа hosp
-
-
 
     # получить результаты фракци по исследованиям

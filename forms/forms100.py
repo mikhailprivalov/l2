@@ -480,10 +480,7 @@ def form_02(request_data):
     # a = tree_directions.test_get_iss(list_a)
     # for i in a:
     #     print(i)
-    from api.stationar.views import hosp_get_data_direction
-    a = hosp_get_data_direction(105, level=2, type_service='is_lab')
-    for i in a:
-        print(i)
-
+    from api.stationar.views import hosp_get_data_direction, hosp_get_lab_iss
+    a = hosp_get_lab_iss(1428648, extract=False)
 
     return pdf
