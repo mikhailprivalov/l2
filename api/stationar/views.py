@@ -118,10 +118,12 @@ def hosp_get_lab_iss(current_iss, extract=False):
     if not extract:
         hosp_dirs = [i for i in hosp_dirs if i < current_dir]
 
+    #получить по каждому hosp_dirs Дочерние направления
+    #TODO:
+
     #Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
     departs = OrderedDict()
-    results = OrderedDict()
     from .sql_func import get_research, get_iss
     for i in departs_obj:
         departs[i.pk] = i.title
@@ -130,15 +132,16 @@ def hosp_get_lab_iss(current_iss, extract=False):
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
-            get_iss_id = get_iss(id_research_vertical, [106, 108, 107])
+            get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107])
             iss_id_vertical = [i[0] for i in get_iss_id]
             print(iss_id_vertical)
-        #получить фракции для вертикал
+
+        #TODO получить уникальные фрации для каждого исследования построить стр-ру
 
         horizontal_research = get_research(i.title, False)
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
-            get_iss_id = get_iss(id_research_horizontal, [106, 108, 107])
+            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107])
             iss_id_horizontal = [i[0] for i in get_iss_id]
             print(iss_id_horizontal)
         # получить фракции для хоризонтал
