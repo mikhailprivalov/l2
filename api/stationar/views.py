@@ -8,6 +8,7 @@ from laboratory.decorators import group_required
 import simplejson as json
 from utils import tree_directions
 from collections import OrderedDict
+from copy import deepcopy
 
 
 @login_required
@@ -149,7 +150,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
             # получить исследования по направлениям и соответсвующим research_id для horizontal
-            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107])
+            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107,110,111])
             iss_id_horizontal = [i[0] for i in get_iss_id]
             print(iss_id_horizontal)
             #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
@@ -165,15 +166,26 @@ def hosp_get_lab_iss(current_iss, extract=False):
                 fraction_result = get_result_fraction(iss_id_horizontal)
 
                 temp_results = {}
+                print(fraction_title)
                 for f in fraction_result:
                     print(f)
-                    dir_str = f[4]
-                    if not temp_results.get(f'{f[4]},{f[5]}'):
-                        temp_results[f'{f[4]},{f[5]}'] = fraction_template
+                    key = f'{f[4]} {str(f[5])}'
+                    if key in temp_results.keys():
+                        position_element = fraction_title.index(f[2])
+                        tmp_list = temp_results.get(key)
+                        tmp_list2 = deepcopy(tmp_list)
+                        tmp_list2[position_element] = f[3]
+                        temp_results[key] = tmp_list2
                     else:
-                        tmp_list = temp_results.get(f'{f[4]},{f[5]}')
+                        temp_results[key] = fraction_template
+                        position_element = fraction_title.index(f[2])
+                        tmp_list = temp_results.get(key)
+                        tmp_list2 = deepcopy(tmp_list)
+                        tmp_list2[position_element] = f[3]
+                        temp_results[key] = tmp_list2
 
+                result[i.title] = temp_results
 
-
-
+    for k, v in result.items():
+        print(k, ':', v)
     # получить результаты фракци по исследованиям

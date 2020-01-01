@@ -78,7 +78,7 @@ def get_result_fraction(list_iss):
         LEFT JOIN t_fraction ON directions_result.fraction_id = t_fraction.id_frac
         LEFT JOIN t_iss ON directions_result.issledovaniye_id = t_iss.iss_id
         WHERE issledovaniye_id = ANY(ARRAY[%(id_iss)s])
-        ORDER by fraction_id, date_confirm
+        ORDER by napravleniye_id, date_confirm
         """, params={'id_iss': list_iss, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
