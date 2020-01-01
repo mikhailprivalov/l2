@@ -268,6 +268,7 @@ class ParaclinicInputField(models.Model):
         (12, 'Radio'),
         (13, 'Protocol field'),
         (14, 'Protocol raw field'),
+        (15, 'Rich text'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')

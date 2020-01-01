@@ -3,12 +3,14 @@
     <visibility-group-wrapper :group="group"
                               :groups="research.groups"
                               :patient="patient"
+                              :key="group.pk"
                               v-for="group in research.groups">
       <div class="group">
         <div class="group-title" v-if="group.title !== ''">{{group.title}}</div>
         <div class="fields">
           <visibility-field-wrapper :formula="field.visibility" :group="group" :groups="research.groups"
                                     :patient="patient"
+                                    :key="field.pk"
                                     v-for="field in group.fields">
 
             <div class="wide-field-title" v-if="field.title !== '' && research.wide_headers">
@@ -27,7 +29,7 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
@@ -90,6 +92,11 @@
                                        :raw="field.field_type === 14"
                                        v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 15">
+                <RichTextEditor :readonly="confirmed"
+                                :disabled="confirmed"
+                                v-model="field.value"/>
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -117,10 +124,12 @@
     import RadioField from '../fields/RadioField'
     import SearchFieldValueField from '../fields/SearchFieldValueField'
     import SearchFractionValueField from '../fields/SearchFractionValueField'
+    import RichTextEditor from '../fields/RichTextEditor'
 
     export default {
         name: 'DescriptiveForm',
         components: {
+            RichTextEditor,
             SearchFractionValueField,
             SearchFieldValueField,
             RadioField,
