@@ -45,20 +45,16 @@ def get_iss(list_research_id, list_dirs):
     return row
 
 
-def get_fraction(list_iss):
+def get_fraction_horizontal(list_iss):
     """
-    Возврат: id-iss
-    добавить: AND time_confirmation IS NOT NULL
+    возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
     """
     with connection.cursor() as cursor:
         cursor.execute("""WITH
-        t_reseach AS (SELECT id as id_research, title as title_research from FROM public.directory_researches),
-        
-        t_iss AS (SELECT * FROM public.directions_issledovaniya 
-        WHERE id = ANY(ARRAY[%(list_iss)s]) AND time_confirmation IS NOT NULL),
-        
-        
-        SELECT * FROM public.directions_result
+        t_fraction AS (SELECT id as id_frac, title as title_frac FROM public.directory_fractions ORDER BY id)
+
+        SELECT DISTINCT ON (fraction_id) fraction_id, title_frac, units FROM directions_result
+        LEFT JOIN t_fraction ON directions_result.fraction_id = t_fraction.id_frac
         WHERE issledovaniye_id = ANY(ARRAY[%(id_iss)s])
         ORDER by fraction_id
         """, params={'id_iss': list_iss})
@@ -66,5 +62,23 @@ def get_fraction(list_iss):
     return row
 
 
+def get_result_fraction(list_iss):
+    """
+    возвращает результат: дата, фракция, значение(value)
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("""WITH
+        t_fraction AS (SELECT id as id_frac, title as title_frac FROM public.directory_fractions ORDER BY id),
+        
+        t_iss AS (SELECT id as iss_id, napravleniye_id, to_char(time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_confirm
+        FROM public.directions_issledovaniya 
+        WHERE id = ANY(ARRAY[%(id_iss)s]) AND time_confirmation IS NOT NULL)
 
-
+        SELECT fraction_id, issledovaniye_id, title_frac, value, date_confirm, napravleniye_id FROM directions_result
+        LEFT JOIN t_fraction ON directions_result.fraction_id = t_fraction.id_frac
+        LEFT JOIN t_iss ON directions_result.issledovaniye_id = t_iss.iss_id
+        WHERE issledovaniye_id = ANY(ARRAY[%(id_iss)s])
+        ORDER by fraction_id, date_confirm
+        """, params={'id_iss': list_iss, 'tz': TIME_ZONE})
+        row = cursor.fetchall()
+    return row

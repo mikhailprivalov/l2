@@ -104,7 +104,10 @@ def hosp_get_lab_iss(current_iss, extract=False):
     """
     агрегация результатов исследований
     возврат:  Если extract=True(выписка), то берем по всем hosp-dirs. Если эпикриз, то берем все исследования
-    до текущего hosp-dirs"""
+    до текущего hosp-dirs
+    Выход: {КДЛ:{vert:[{titile:'',fractions:[],results:[{date:"",values:[]}]}]},
+        {horizont:[{titile:'', results:[{date:'',value:''},{date:'',value:''}]}]}}
+    """
 
     iss_obj = Issledovaniya.objects.values('napravleniye_id').filter(pk=current_iss)
     num_dir = iss_obj[0]['napravleniye_id']
@@ -124,7 +127,8 @@ def hosp_get_lab_iss(current_iss, extract=False):
     #Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
     departs = OrderedDict()
-    from .sql_func import get_research, get_iss
+    result = OrderedDict()
+    from .sql_func import get_research, get_iss, get_fraction_horizontal, get_result_fraction
     for i in departs_obj:
         departs[i.pk] = i.title
         #получить research_id по лаборатории и vertical_result_display = True
@@ -132,20 +136,44 @@ def hosp_get_lab_iss(current_iss, extract=False):
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
+            #получить исследования по направлениям и соответсвующим research_id
             get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107])
             iss_id_vertical = [i[0] for i in get_iss_id]
             print(iss_id_vertical)
 
         #TODO получить уникальные фрации для каждого исследования построить стр-ру
 
+        #получить research_id по лаборатории и vertical_result_display = False
+        horizontal = OrderedDict()
         horizontal_research = get_research(i.title, False)
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
+            # получить исследования по направлениям и соответсвующим research_id для horizontal
             get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107])
             iss_id_horizontal = [i[0] for i in get_iss_id]
             print(iss_id_horizontal)
-        # получить фракции для хоризонтал
+            #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
+            if iss_id_horizontal:
+                fraction_horizontal = get_fraction_horizontal(iss_id_horizontal)
+                fraction_title = []
+                fraction_units = []
+                for f in fraction_horizontal:
+                    fraction_title.append(f[1])
+                    fraction_units.append(f[2])
 
-    #получить исследования лаб. для КДЛ, Биохимии, Иммунологии каждое по vertical_result_display по направлениям типа hosp
+                fraction_template = ['' for t in range(0, len(fraction_title))] # заготовка для value-резульлтатов
+                fraction_result = get_result_fraction(iss_id_horizontal)
+
+                temp_results = {}
+                for f in fraction_result:
+                    print(f)
+                    dir_str = f[4]
+                    if not temp_results.get(f'{f[4]},{f[5]}'):
+                        temp_results[f'{f[4]},{f[5]}'] = fraction_template
+                    else:
+                        tmp_list = temp_results.get(f'{f[4]},{f[5]}')
+
+
+
 
     # получить результаты фракци по исследованиям
