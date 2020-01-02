@@ -1256,6 +1256,7 @@ h3 {
     <head>
         <meta name="imgkit-format" content="png"/>
         <meta name="imgkit-quality" content="100"/>
+        <meta name="imgkit-zoom" content="3"/>
         <meta charset="utf-8">
         <style>
             {size_css}
