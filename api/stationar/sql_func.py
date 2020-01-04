@@ -34,18 +34,33 @@ def get_iss(list_research_id, list_dirs):
     добавить:
     """
     with connection.cursor() as cursor:
-        cursor.execute("""WITH
-        t_iss AS (SELECT id, research_id FROM public.directions_issledovaniya
+        cursor.execute("""
+        SELECT id, research_id FROM public.directions_issledovaniya
         WHERE napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) 
-        AND time_confirmation IS NOT NULL) 
-        
-        SELECT * FROM t_iss
+        AND time_confirmation IS NOT NULL
         """, params={'id_researches': list_research_id, 'num_dirs': list_dirs})
         row = cursor.fetchall()
     return row
 
 
-def get_fraction_horizontal(list_iss):
+def get_distinct_research(list_research_id, list_dirs):
+    """
+    Возврат: уникальных research
+    добавить:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("""WITH
+        t_iss AS (SELECT id, research_id FROM public.directions_issledovaniya
+        WHERE napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) 
+        AND time_confirmation IS NOT NULL) 
+
+        SELECT DISTINCT ON (research_id) research_id FROM t_iss
+
+        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs})
+        row = cursor.fetchall()
+    return row
+
+def get_distinct_fraction(list_iss):
     """
     возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
     """

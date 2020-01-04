@@ -3,6 +3,7 @@ from django.http import JsonResponse
 
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
+from directory.models import Researches
 from podrazdeleniya.models import Podrazdeleniya
 from laboratory.decorators import group_required
 import simplejson as json
@@ -86,18 +87,15 @@ def hosp_get_hosp_direction(num_dir):
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level)
 
-    for i in hosp_dirs:
-        print(i)
+
     data = [{'direction' : i[0], 'research_title' : i[9]} for i in hosp_dirs]
 
     return data
 
 
 def hosp_get_curent_hosp_dir(current_iss):
-    iss_obj = Issledovaniya.objects.values('napravleniye_id').filter(pk=current_iss)
-    num_dir = iss_obj[0]['napravleniye_id']
-    obj_dir = Napravleniya.objects.filter(pk=num_dir).first()
-    hosp_dir = obj_dir.parent.napravleniye_id
+    current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
+    hosp_dir = current_dir.parent.napravleniye_id
     return hosp_dir
 
 
@@ -110,8 +108,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         {horizont:[{titile:'', results:[{date:'',value:''},{date:'',value:''}]}]}}
     """
 
-    iss_obj = Issledovaniya.objects.values('napravleniye_id').filter(pk=current_iss)
-    num_dir = iss_obj[0]['napravleniye_id']
+    num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
     #получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
@@ -129,46 +126,79 @@ def hosp_get_lab_iss(current_iss, extract=False):
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
     departs = OrderedDict()
     result = OrderedDict()
-    from .sql_func import get_research, get_iss, get_fraction_horizontal, get_result_fraction
+    from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction
     for i in departs_obj:
         departs[i.pk] = i.title
         #получить research_id по лаборатории и vertical_result_display = True
-        print(i.title)
+        vertical = {}
+        vertical_result = []
+        horizontal_result = []
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
-            #получить исследования по направлениям и соответсвующим research_id
-            get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107])
-            iss_id_vertical = [i[0] for i in get_iss_id]
-            print(iss_id_vertical)
+            #получить уникальные research_id по направления
+            get_research_id = get_distinct_research(id_research_vertical, [106, 108,109, 107,112])
+            research_distinct = [d[0] for d in get_research_id]
+            if research_distinct:
+                for id_research_vertical in research_distinct:
+                    # получить исследования по направлениям и соответсвующим research_id
+                    get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107, 112])
+                    iss_id_vertical = [i[0] for i in get_iss_id]
 
-        #TODO получить уникальные фрации для каждого исследования построить стр-ру
+                    research_fraction_vertical = get_distinct_fraction(iss_id_vertical)
+                    fraction_title = []
+                    fraction_units = []
+                    for f in research_fraction_vertical:
+                        fraction_title.append(f[1])
+                        fraction_units.append(f[2])
+                    fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
+                    fraction_result = get_result_fraction(iss_id_vertical)
+                    vertical_temp_results = {}
+                    for f in fraction_result:
+                        key = f'{f[4]} {str(f[5])}'
+                        if key in vertical_temp_results.keys():
+                            position_element = fraction_title.index(f[2])
+                            tmp_list = vertical_temp_results.get(key)
+                            tmp_list2 = deepcopy(tmp_list)
+                            tmp_list2[position_element] = f[3]
+                            vertical_temp_results[key] = tmp_list2
+                        else:
+                            vertical_temp_results[key] = fraction_template
+                            position_element = fraction_title.index(f[2])
+                            tmp_list = vertical_temp_results.get(key)
+                            tmp_list2 = deepcopy(tmp_list)
+                            tmp_list2[position_element] = f[3]
+                            vertical_temp_results[key] = tmp_list2
+                    vertical['title_research'] = Researches.objects.get(pk=id_research_vertical).title
+                    vertical['title_fracions'] = fraction_title
+                    vertical['result'] = vertical_temp_results
+                    vertical1 = deepcopy(vertical)
+                    vertical_result.append(vertical1)
+                temp_vertical = {'vertical' : vertical_result}
+                result[i.title] = temp_vertical
 
         #получить research_id по лаборатории и vertical_result_display = False
-        horizontal = OrderedDict()
+        horizontal = {}
         horizontal_research = get_research(i.title, False)
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
             # получить исследования по направлениям и соответсвующим research_id для horizontal
-            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107,110,111])
+            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107, 112])
             iss_id_horizontal = [i[0] for i in get_iss_id]
-            print(iss_id_horizontal)
             #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
             if iss_id_horizontal:
-                fraction_horizontal = get_fraction_horizontal(iss_id_horizontal)
+                fraction_horizontal = get_distinct_fraction(iss_id_horizontal)
                 fraction_title = []
                 fraction_units = []
                 for f in fraction_horizontal:
                     fraction_title.append(f[1])
                     fraction_units.append(f[2])
 
-                fraction_template = ['' for t in range(0, len(fraction_title))] # заготовка для value-резульлтатов
+                fraction_template = [''] * len(fraction_title) # заготовка для value-резульлтатов
                 fraction_result = get_result_fraction(iss_id_horizontal)
 
                 temp_results = {}
-                print(fraction_title)
                 for f in fraction_result:
-                    print(f)
                     key = f'{f[4]} {str(f[5])}'
                     if key in temp_results.keys():
                         position_element = fraction_title.index(f[2])
@@ -184,7 +214,13 @@ def hosp_get_lab_iss(current_iss, extract=False):
                         tmp_list2[position_element] = f[3]
                         temp_results[key] = tmp_list2
 
-                result[i.title] = temp_results
+                horizontal['title_fracions'] = fraction_title
+                horizontal['result'] = temp_results
+                horizontal_result.append(horizontal)
+
+                temp_horizontal = {'horizontal' : horizontal_result}
+                result[i.title] = temp_horizontal
+
 
     for k, v in result.items():
         print(k, ':', v)
