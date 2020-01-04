@@ -117,7 +117,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
     current_dir = hosp_get_curent_hosp_dir(current_iss)
 
     if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i < current_dir]
+        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
 
     #получить по каждому hosp_dirs Дочерние направления
     #TODO:
@@ -132,17 +132,19 @@ def hosp_get_lab_iss(current_iss, extract=False):
         #получить research_id по лаборатории и vertical_result_display = True
         vertical = {}
         vertical_result = []
+        result[i.title] = {'vertical' :{}}
+        result[i.title] = {'horizontal' :{}}
         horizontal_result = []
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
             #получить уникальные research_id по направления
-            get_research_id = get_distinct_research(id_research_vertical, [106, 108,109, 107,112])
+            get_research_id = get_distinct_research(id_research_vertical, [106, 108,109, 107,112,113,114])
             research_distinct = [d[0] for d in get_research_id]
             if research_distinct:
                 for id_research_vertical in research_distinct:
                     # получить исследования по направлениям и соответсвующим research_id
-                    get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107, 112])
+                    get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107, 112,113,114])
                     iss_id_vertical = [i[0] for i in get_iss_id]
 
                     research_fraction_vertical = get_distinct_fraction(iss_id_vertical)
@@ -159,23 +161,22 @@ def hosp_get_lab_iss(current_iss, extract=False):
                         if key in vertical_temp_results.keys():
                             position_element = fraction_title.index(f[2])
                             tmp_list = vertical_temp_results.get(key)
-                            tmp_list2 = deepcopy(tmp_list)
-                            tmp_list2[position_element] = f[3]
-                            vertical_temp_results[key] = tmp_list2
+                            tmp_list_vert = deepcopy(tmp_list)
+                            tmp_list_vert[position_element] = f[3]
+                            vertical_temp_results[key] = tmp_list_vert
                         else:
                             vertical_temp_results[key] = fraction_template
                             position_element = fraction_title.index(f[2])
                             tmp_list = vertical_temp_results.get(key)
-                            tmp_list2 = deepcopy(tmp_list)
-                            tmp_list2[position_element] = f[3]
-                            vertical_temp_results[key] = tmp_list2
+                            tmp_list_vert = deepcopy(tmp_list)
+                            tmp_list_vert[position_element] = f[3]
+                            vertical_temp_results[key] = tmp_list_vert
                     vertical['title_research'] = Researches.objects.get(pk=id_research_vertical).title
                     vertical['title_fracions'] = fraction_title
                     vertical['result'] = vertical_temp_results
                     vertical1 = deepcopy(vertical)
                     vertical_result.append(vertical1)
-                temp_vertical = {'vertical' : vertical_result}
-                result[i.title] = temp_vertical
+                result[i.title]['vertical'] = vertical_result
 
         #получить research_id по лаборатории и vertical_result_display = False
         horizontal = {}
@@ -183,7 +184,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
             # получить исследования по направлениям и соответсвующим research_id для horizontal
-            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107, 112])
+            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107, 112,113,114])
             iss_id_horizontal = [i[0] for i in get_iss_id]
             #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
             if iss_id_horizontal:
@@ -217,11 +218,6 @@ def hosp_get_lab_iss(current_iss, extract=False):
                 horizontal['title_fracions'] = fraction_title
                 horizontal['result'] = temp_results
                 horizontal_result.append(horizontal)
+                result[i.title]['horizontal'] = horizontal_result
 
-                temp_horizontal = {'horizontal' : horizontal_result}
-                result[i.title] = temp_horizontal
-
-
-    for k, v in result.items():
-        print(k, ':', v)
-    # получить результаты фракци по исследованиям
+    return result
