@@ -10,7 +10,8 @@ import simplejson as json
 from utils import tree_directions
 from collections import OrderedDict
 from copy import deepcopy
-from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
+    get_result_text_research
 
 
 @login_required
@@ -147,7 +148,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
             #получить уникальные research_id по направления
-            get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs)
+            get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs, is_text_research=False)
             research_distinct = [d[0] for d in get_research_id]
             if research_distinct:
                 for id_research_vertical in research_distinct:
@@ -255,10 +256,14 @@ def hosp_get_text_iss(current_iss, extract=False):
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
-    get_research_id = get_distinct_research([], num_paraclinic_dirs, True)
+    num_paraclinic_dirs = [16, 116, 117, 118, 119, 120]
+    get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
+    print(get_research_id)
     research_distinct = [d[0] for d in get_research_id]
 
-
+    for research in research_distinct:
+        field_result = get_result_text_research(research, num_paraclinic_dirs)
+        print(field_result)
 
     result = OrderedDict()
     #для каждого направления типа is_paraclinic получить все подтвержденные исследования
