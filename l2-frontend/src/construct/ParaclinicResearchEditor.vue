@@ -130,6 +130,10 @@
                   <strong>ID поля:</strong>
                   <input v-model="row.default" class="form-control"/>
                 </div>
+                <div v-if="row.field_type === 15">
+                  <strong>Значение по умолчанию:</strong>
+                  <rich-text-editor v-model="row.default" />
+                </div>
                 <v-collapse-wrapper v-show="row.field_type === 0 || row.field_type === 10 || row.field_type === 12">
                   <div class="header" v-collapse-toggle>
                     <a href="#" @click.prevent v-if="row.field_type === 0">
@@ -211,6 +215,7 @@
                     <option value="12">Радио</option>
                     <option value="13">Поле описательного результата</option>
                     <option value="14">Поле описательного результата без заголовка</option>
+                    <option value="15">Текст с форматированием</option>
                   </select>
                 </label>
               </div>
@@ -241,10 +246,11 @@
     import construct_point from '../api/construct-point'
     import FastTemplatesEditor from './FastTemplatesEditor'
     import * as action_types from '../store/action-types'
+    import RichTextEditor from '../fields/RichTextEditor'
 
     export default {
         name: 'paraclinic-research-editor',
-        components: {FastTemplatesEditor},
+        components: {RichTextEditor, FastTemplatesEditor},
         props: {
             pk: {
                 type: Number,

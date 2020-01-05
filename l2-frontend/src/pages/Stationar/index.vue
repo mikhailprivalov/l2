@@ -20,6 +20,7 @@
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
                     v-if="menuNeedPlus[key]"
+                    @click="plus(key)"
             >
               <i class="fa fa-plus"></i>
             </button>
@@ -73,6 +74,9 @@
                     errmessage(message)
                 }
                 this.$store.dispatch(action_types.DEC_LOADING).then()
+            },
+            plus(key) {
+                alert(key)
             },
         },
         computed: {

@@ -19,6 +19,7 @@ export default {
     return {
       menuItems,
       menuNeedPlus: {
+        'primary receptions': true,
         laboratory: true,
         paraclinical: true,
         consultation: true,

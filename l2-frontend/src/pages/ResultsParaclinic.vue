@@ -596,6 +596,7 @@
                            @click.native="select_research(row.pk)"
                            class="research-select"
                            v-for="row in user_services"
+                           :key="row.pk"
                            v-if="!slot.data.direction || row.pk === slot.data.direction_service"/>
             <div v-if="user_services.length === 0">нет данных</div>
           </div>

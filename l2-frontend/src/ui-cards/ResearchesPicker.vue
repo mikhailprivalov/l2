@@ -30,6 +30,7 @@
     </div>
     <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}" v-if="researches_display.length > 0">
       <research-pick @click.native="select_research(row.pk)" class="research-select"
+                     :key="row.pk"
                      :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
                      v-for="row in researches_display" :research="row"/>
     </div>
