@@ -271,35 +271,54 @@ def hosp_get_text_iss(current_iss, extract=False):
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
+    num_paraclinic_dirs = [16, 116, 117, 119, 120]
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
 
     for research in research_distinct:
         temp_result = {}
         temp_result['title_research'] = ''
-        temp_result['results'] = ''
+        temp_result['results'] = []
         title_research = Researches.objects.get(pk=research).title
-        field_result = get_result_text_research(research, num_paraclinic_dirs)
-        temp_result['title_research'] = title_research
 
-        temp_date_result = {}
-        current_date = ''
-        current_group = ''
-        temp_group = {}
-        temp_fields = []
+
+        field_result = get_result_text_research(research, num_paraclinic_dirs)
+
+        # temp_result['title_research'] = title_research
+        #
+        # temp_date_result = {}
+        # current_date = ''
+        # current_group = ''
+        # temp_group = {}
+        # temp_fields = []
 
         for i in field_result:
             print(i)
-            if f'{i[1]} {i[2]}' != current_date:
-                current_date = f'{i[1]} {i[2]}'
-                temp_date_result['date'] = current_date
-            if f'{i[3]}' != current_group:
-                temp_fields = []
-                current_group = f'{i[3]}'
-                temp_group['group'] = current_group
-            current_field = {i[4] : i[5]}
-            temp_fields.append(current_field)
-            temp_fields.append(current_field)
+        #     if f'{i[1]} {i[2]}' != current_date:
+        #         if temp_result.get('results'):
+        #             results_list = temp_result.get('results')
+        #             results_list.append(temp_date_result)
+        #             copy_results_list = deepcopy(results_list)
+        #             temp_result['results'] = copy_results_list
+        #
+        #         current_date = f'{i[1]} {i[2]}'
+        #         temp_date_result['date'] = current_date
+        #     if f'{i[3]}' != current_group:
+        #         copy_temp_fields = deepcopy(temp_fields)
+        #         temp_group['fields'] = copy_temp_fields
+        #
+        #         temp_list = temp_date_result.get('data')
+        #         temp_list.append(temp_group)
+        #         copy_temp_list = deepcopy(temp_list)
+        #         temp_date_result['data'] = copy_temp_list
+        #
+        #         current_group = f'{i[3]}'
+        #         temp_fields = []
+        #         temp_group['group'] = current_group
+        #     current_field = {i[4] : i[5]}
+        #     copy_current_field = deepcopy(current_field)
+        #     temp_fields.append(copy_current_field)
+        # print(temp_result)
 
 
     return ''
