@@ -235,17 +235,17 @@ def hosp_get_lab_iss(current_iss, extract=False):
 def hosp_get_text_iss(current_iss, extract=False):
     # Возврат стр-ра:
     # Параклиника: [
-    #               {title: "Услуга", результаты: [{Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
-    #                                                                {группа:''}
+    #               {title_research: "Услуга", results: [{date:"", data:[{группа:'', fields:[{название:рез-тат},{название:рез-тат}]},
+    #                                                                {группа:'', fields:[{название:рез-тат},{название:рез-тат}]}
     #                                                                ]},
-    #                                              {Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
-    #                                                                {группа:''}
+    #                                              {date:"", data:[{группа:'', fields:[{название:рез-тат},{название:рез-тат}]},
+    #                                                                {группа:'', fields:[{название:рез-тат},{название:рез-тат}]}
     #                                                               ]},
     #                                             ]},
-    #               {title: "Услуга", результаты: [{Дата: "", Группы: [{группа: '', fields: [{название: рез - тат}, {}]},
+    #               {title_research: "Услуга", results: [{date: "", data: [{группа: '', fields: [{название: рез - тат}, {}]},
     #                                                                {группа:''}
     #                                                                ]},
-    #                                              {Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
+    #                                              {date:"", data:[{группа:'', fields:[{название:рез-тат},{}]},
     #                                                                {группа:''}
     #                                                               ]},
     #                                             ]}
@@ -271,31 +271,35 @@ def hosp_get_text_iss(current_iss, extract=False):
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
-    num_paraclinic_dirs = [16, 116, 117, 118, 119, 120]
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
-    print(get_research_id)
     research_distinct = [d[0] for d in get_research_id]
-
-    paraclinic_result = OrderedDict()
 
     for research in research_distinct:
         temp_result = {}
         temp_result['title_research'] = ''
-        temp_result['date'] = ''
-        temp_result_data = {}
-        temp_result_data['group'] = {}
-        temp_result_data['fields'] = {}
-        temp_result['result'] = temp_result_data
+        temp_result['results'] = ''
         title_research = Researches.objects.get(pk=research).title
-
-
         field_result = get_result_text_research(research, num_paraclinic_dirs)
-        print('#############')
         temp_result['title_research'] = title_research
+
+        temp_date_result = {}
+        current_date = ''
+        current_group = ''
+        temp_group = {}
+        temp_fields = []
+
         for i in field_result:
-            temp_result['date'] = f'{i[1]} {i[2]}'
-
-
+            print(i)
+            if f'{i[1]} {i[2]}' != current_date:
+                current_date = f'{i[1]} {i[2]}'
+                temp_date_result['date'] = current_date
+            if f'{i[3]}' != current_group:
+                temp_fields = []
+                current_group = f'{i[3]}'
+                temp_group['group'] = current_group
+            current_field = {i[4] : i[5]}
+            temp_fields.append(current_field)
+            temp_fields.append(current_field)
 
 
     return ''
