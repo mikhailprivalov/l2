@@ -234,8 +234,23 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
 def hosp_get_text_iss(current_iss, extract=False):
     # Возврат стр-ра:
-    # Параклиника: {title: "Услуга": [{Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]},
-    #                                  {Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]}
+    # Параклиника: [
+    #               {title: "Услуга", результаты: [{Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
+    #                                                                {группа:''}
+    #                                                                ]},
+    #                                              {Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
+    #                                                                {группа:''}
+    #                                                               ]},
+    #                                             ]},
+    #               {title: "Услуга", результаты: [{Дата: "", Группы: [{группа: '', fields: [{название: рез - тат}, {}]},
+    #                                                                {группа:''}
+    #                                                                ]},
+    #                                              {Дата:"", Группы:[{группа:'', fields:[{название:рез-тат},{}]},
+    #                                                                {группа:''}
+    #                                                               ]},
+    #                                             ]}
+    #               ]
+    #
     # Консультации: -//-//-//-
 
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
@@ -261,15 +276,27 @@ def hosp_get_text_iss(current_iss, extract=False):
     print(get_research_id)
     research_distinct = [d[0] for d in get_research_id]
 
+    paraclinic_result = OrderedDict()
+
     for research in research_distinct:
+        temp_result = {}
+        temp_result['title_research'] = ''
+        temp_result['date'] = ''
+        temp_result_data = {}
+        temp_result_data['group'] = {}
+        temp_result_data['fields'] = {}
+        temp_result['result'] = temp_result_data
+        title_research = Researches.objects.get(pk=research).title
+
+
         field_result = get_result_text_research(research, num_paraclinic_dirs)
-        print(field_result)
-
-    result = OrderedDict()
-    #для каждого направления типа is_paraclinic получить все подтвержденные исследования
-
-    #для каждого исследования получить
+        print('#############')
+        temp_result['title_research'] = title_research
+        for i in field_result:
+            temp_result['date'] = f'{i[1]} {i[2]}'
 
 
-    return result
+
+
+    return ''
 

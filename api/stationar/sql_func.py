@@ -127,12 +127,12 @@ def get_result_text_research(research_pk, listdirs):
                 LEFT JOIN t_research on t_research.research_id = directions_issledovaniya.research_id
                 WHERE directions_issledovaniya.research_id=%(id_research)s and napravleniye_id = ANY(ARRAY[%(id_dirs)s]))
                      
-            SELECT * FROM directions_paraclinicresult
+            SELECT research_title, date_confirm, napravleniye_id, group_title, title, "value" FROM directions_paraclinicresult
             LEFT JOIN t_iss on directions_paraclinicresult.issledovaniye_id = t_iss.iss_id
             LEFT JOIN t_fields on directions_paraclinicresult.field_id = t_fields.field_id
             WHERE issledovaniye_id in (SELECT iss_id from t_iss) and 
             directions_paraclinicresult.field_id in (SELECT field_id from t_fields)
-            order by time_confirmation DESC, group_order, field_order
+            order by time_confirmation, group_order, field_order
 
          """, params={'id_research':research_pk,'id_dirs': listdirs, 'tz': TIME_ZONE})
         row = cursor.fetchall()
