@@ -251,11 +251,13 @@ def hosp_get_text_iss(current_iss, extract=False):
     for h in hosp_dirs:
         obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_paraclinic', level=2)
         for k in obj_hosp_dirs:
-            lab_dir = k.get('direction')
-            num_paraclinic_dirs.add(lab_dir)
+            paraclinic_dir = k.get('direction')
+            num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
     get_research_id = get_distinct_research([], num_paraclinic_dirs, True)
+    research_distinct = [d[0] for d in get_research_id]
+
 
 
     result = OrderedDict()

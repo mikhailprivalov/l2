@@ -101,3 +101,42 @@ def get_result_fraction(list_iss):
         """, params={'id_iss': list_iss, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
+
+
+def get_result_text_research(research_id, text_dirs):
+    """
+    возвращает результат: дата, фракция, значение(value)
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("""WITH
+            t_research AS (SELECT id as research_id, title as research_title FROM directory_researches
+			    WHERE id in (314)),
+						   
+            t_groups AS (SELECT id as group_id, title as group_title FROM public.directory_paraclinicinputgroups
+                WHERE research_id in (297,314)),
+
+            t_fields AS (SELECT id as field_id, title, directory_paraclinicinputfield.group_id, group_title
+			    FROM directory_paraclinicinputfield
+                LEFT JOIN t_groups on directory_paraclinicinputfield.group_id = t_groups.group_id			 
+                WHERE (directory_paraclinicinputfield.group_id in (select group_id from t_groups) and 
+                for_extract_card=true) or
+		        (directory_paraclinicinputfield.group_id in (select group_id from t_groups) and 
+		        title ILIKE '%Заключение%')),
+
+            t_iss AS (SELECT id as iss_id, time_confirmation,
+                                to_char(time_confirmation AT TIME ZONE '%(tz)s', 'DD.MM.YY') as date_confirm, 
+                                t_research.research_title 
+                FROM directions_issledovaniya
+                LEFT JOIN t_research on t_research.research_id = directions_issledovaniya.research_id
+                WHERE directions_issledovaniya.research_id=314 and napravleniye_id in (117,119,120,16))
+		 
+            SELECT * FROM directions_paraclinicresult
+                LEFT JOIN t_iss on directions_paraclinicresult.issledovaniye_id = t_iss.iss_id
+                LEFT JOIN t_fields on directions_paraclinicresult.field_id = t_fields.field_id
+                WHERE issledovaniye_id in (select iss_id from t_iss) and 
+                    directions_paraclinicresult.field_id in (select field_id from t_fields)
+                ORDER BY time_confirmation DESC
+        """, params={'research_id': research_id, 'text_dirs': text_dirs, 'tz': TIME_ZONE})
+        row = cursor.fetchall()
+    return row
+
