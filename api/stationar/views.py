@@ -10,6 +10,7 @@ import simplejson as json
 from utils import tree_directions
 from collections import OrderedDict
 from copy import deepcopy
+from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction
 
 
 @login_required
@@ -120,13 +121,20 @@ def hosp_get_lab_iss(current_iss, extract=False):
         hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
 
     #получить по каждому hosp_dirs Дочерние направления
-    #TODO:
+    num_lab_dirs = set()
+    for h in hosp_dirs:
+        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_lab', level=2)
+        for k in obj_hosp_dirs:
+            lab_dir = k.get('direction')
+            num_lab_dirs.add(lab_dir)
+
+    num_lab_dirs = list(num_lab_dirs)
 
     #Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
     departs = OrderedDict()
     result = OrderedDict()
-    from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction
+
     for i in departs_obj:
         departs[i.pk] = i.title
         #получить research_id по лаборатории и vertical_result_display = True
@@ -139,12 +147,12 @@ def hosp_get_lab_iss(current_iss, extract=False):
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
             #получить уникальные research_id по направления
-            get_research_id = get_distinct_research(id_research_vertical, [106, 108,109, 107,112,113,114])
+            get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs)
             research_distinct = [d[0] for d in get_research_id]
             if research_distinct:
                 for id_research_vertical in research_distinct:
                     # получить исследования по направлениям и соответсвующим research_id
-                    get_iss_id = get_iss(id_research_vertical, [106, 108,109, 107, 112,113,114])
+                    get_iss_id = get_iss(id_research_vertical, num_lab_dirs)
                     iss_id_vertical = [i[0] for i in get_iss_id]
 
                     research_fraction_vertical = get_distinct_fraction(iss_id_vertical)
@@ -184,7 +192,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         id_research_horizontal = [i[0] for i in horizontal_research]
         if len(id_research_horizontal) > 0:
             # получить исследования по направлениям и соответсвующим research_id для horizontal
-            get_iss_id = get_iss(id_research_horizontal, [106, 108, 109, 107, 112,113,114])
+            get_iss_id = get_iss(id_research_horizontal, num_lab_dirs)
             iss_id_horizontal = [i[0] for i in get_iss_id]
             #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
             if iss_id_horizontal:
@@ -221,3 +229,39 @@ def hosp_get_lab_iss(current_iss, extract=False):
                 result[i.title]['horizontal'] = horizontal_result
 
     return result
+
+
+def hosp_get_text_iss(current_iss, extract=False):
+
+    # Возврат стр-ра:
+    # Параклиника: {title: "Услуга": [{Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]},
+    #                                  {Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]}
+    # Консультации: -//-//-//-
+
+    num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
+
+    # получить все направления в истории по типу hosp
+    hosp_dirs = hosp_get_hosp_direction(num_dir)
+
+    # получить текущее направление типа hosp из текущего эпикриза
+    current_dir = hosp_get_curent_hosp_dir(current_iss)
+
+    if not extract:
+        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
+
+    # получить по каждому hosp_dirs Дочерние направления
+    # TODO:
+
+    result = OrderedDict()
+    #получить все напрввления тип hosp
+
+    #получить для каждого направления типа hosp направления is_paraclinic
+    #для каждого направления типа is_paraclinic получить все подтвержденные исследования
+    #для каждого исследования получить
+
+
+    #получить для каждого направления типа hosp направления is_docrefferal
+
+
+    return result
+
