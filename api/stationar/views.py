@@ -120,7 +120,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
     if not extract:
         hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
 
-    #получить по каждому hosp_dirs Дочерние направления
+    #получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
     for h in hosp_dirs:
         obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_lab', level=2)
@@ -232,35 +232,36 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
 
 def hosp_get_text_iss(current_iss, extract=False):
-
     # Возврат стр-ра:
     # Параклиника: {title: "Услуга": [{Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]},
     #                                  {Дата:"дата подтверждения", "Группа:название", Поля: [названия поля":"результат", "названия поля":"результат"]}
     # Консультации: -//-//-//-
 
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
-
     # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
 
     # получить текущее направление типа hosp из текущего эпикриза
     current_dir = hosp_get_curent_hosp_dir(current_iss)
-
     if not extract:
         hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
 
-    # получить по каждому hosp_dirs Дочерние направления
-    # TODO:
+    # получить по каждому hosp_dirs Дочерние направления по типу is_paraclinic, is_doc_refferal
+    num_paraclinic_dirs = set()
+    for h in hosp_dirs:
+        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_paraclinic', level=2)
+        for k in obj_hosp_dirs:
+            lab_dir = k.get('direction')
+            num_paraclinic_dirs.add(lab_dir)
+
+    num_paraclinic_dirs = list(num_paraclinic_dirs)
+    get_research_id = get_distinct_research([], num_paraclinic_dirs, True)
+
 
     result = OrderedDict()
-    #получить все напрввления тип hosp
-
-    #получить для каждого направления типа hosp направления is_paraclinic
     #для каждого направления типа is_paraclinic получить все подтвержденные исследования
+
     #для каждого исследования получить
-
-
-    #получить для каждого направления типа hosp направления is_docrefferal
 
 
     return result

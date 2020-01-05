@@ -43,7 +43,7 @@ def get_iss(list_research_id, list_dirs):
     return row
 
 
-def get_distinct_research(list_research_id, list_dirs):
+def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
     """
     Возврат: уникальных research
     добавить:
@@ -51,12 +51,16 @@ def get_distinct_research(list_research_id, list_dirs):
     with connection.cursor() as cursor:
         cursor.execute("""WITH
         t_iss AS (SELECT id, research_id FROM public.directions_issledovaniya
-        WHERE napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) 
-        AND time_confirmation IS NOT NULL) 
+        WHERE CASE 
+        WHEN  %(is_text_reseacrh)s = TRUE THEN 
+          napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND time_confirmation IS NOT NULL         
+        ELSE  
+          napravleniye_id = ANY(ARRAY[%(num_dirs)s]) AND research_id = ANY(ARRAY[%(id_researches)s]) AND time_confirmation IS NOT NULL) 
+        END
 
         SELECT DISTINCT ON (research_id) research_id FROM t_iss
 
-        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs})
+        """, params={'id_researches': list_research_id, 'num_dirs': list_dirs, 'is_text_reseacrh' : is_text_research})
         row = cursor.fetchall()
     return row
 
