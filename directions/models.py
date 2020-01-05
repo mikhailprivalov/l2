@@ -377,9 +377,9 @@ class Napravleniya(models.Model):
         return localtime(self.visit_date)
 
     def __str__(self):
-        return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s)" % (
+        return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (
             self.pk, self.client.individual.fio(), "" if not self.doc else self.doc.get_fio(), self.doc_who_create,
-            self.rmis_number, self.rmis_case_id, self.rmis_hosp_id)
+            self.rmis_number, self.rmis_case_id, self.rmis_hosp_id, str(self.parent))
 
     def get_instructions(self):
         r = []
@@ -846,7 +846,7 @@ class Issledovaniya(models.Model):
         pass
 
     def __str__(self):
-        return "%d %s" % (self.napravleniye.pk, self.research.title)
+        return "%s %s" % (str(self.napravleniye), self.research.title)
 
     def is_get_material(self):
         """

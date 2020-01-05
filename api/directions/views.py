@@ -563,15 +563,19 @@ def directions_last_result(request):
     request_data = json.loads(request.body)
     individual = request_data.get("individual", -1)
     research = request_data.get("research", -1)
-    i = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    parent_iss = request_data.get("parentIss", None)
+    filter = {
+        "napravleniye__client__individual__pk": individual,
+        "research__pk": research,
+    }
+    if parent_iss:
+        filter["napravleniye__parent__pk"] = parent_iss
+    i = Issledovaniya.objects.filter(**filter,
                                      time_confirmation__isnull=False).order_by("-time_confirmation").first()
-    u = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    u = Issledovaniya.objects.filter(**filter,
                                      time_confirmation__isnull=True).order_by(
         "-napravleniye__data_sozdaniya").first()
-    v = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    v = Issledovaniya.objects.filter(**filter,
                                      research__is_paraclinic=True,
                                      time_confirmation__isnull=True,
                                      napravleniye__visit_date__isnull=False).order_by(
