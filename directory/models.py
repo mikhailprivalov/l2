@@ -225,6 +225,17 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
     )
 
+    TYPES_BY_KEYS = {
+        'primary receptions': 0,
+        'diaries': 1,
+        'vc': 2,
+        'operation': 3,
+        'pharmacotherapy': 4,
+        'physiotherapy': 5,
+        'epicrisis': 6,
+        'extracts': 7,
+    }
+
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
                                       db_index=True)
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип подраздела в стационарной карте", db_index=True)
