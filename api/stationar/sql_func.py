@@ -112,16 +112,18 @@ def get_result_text_research(research_id, text_dirs):
             t_research AS (SELECT id as research_id, title as research_title FROM directory_researches
 			    WHERE id = %(research_id)s),
 						   
-            t_groups AS (SELECT id as group_id, title as group_title FROM public.directory_paraclinicinputgroups
-                WHERE research_id = %(research_id)s),
+            t_groups AS (SELECT id as group_id, title as group_title, "order" as group_order
+			    FROM public.directory_paraclinicinputgroups
+			    WHERE research_id %(research_id)s),
 
-            t_fields AS (SELECT id as field_id, title, directory_paraclinicinputfield.group_id, group_title
-			    FROM directory_paraclinicinputfield
+            t_fields AS (SELECT id as field_id, title, "order" as field_order, directory_paraclinicinputfield.group_id, 
+                    group_title, group_order
+			    FROM public.directory_paraclinicinputfield
                 LEFT JOIN t_groups on directory_paraclinicinputfield.group_id = t_groups.group_id			 
                 WHERE (directory_paraclinicinputfield.group_id IN (SELECT group_id FROM t_groups) AND 
-                for_extract_card=TRUE) OR
-		        (directory_paraclinicinputfield.group_id IN (SELECT group_id FROM t_groups) AND 
-		        title ILIKE '%Заключение%')),
+                            for_extract_card=true) or
+		              (directory_paraclinicinputfield.group_id IN (SELECT group_id FROM t_groups) AND
+		                  title ILIKE '%Заключение%')),
 
             t_iss AS (SELECT id as iss_id, time_confirmation,
                                 to_char(time_confirmation AT TIME ZONE '%(tz)s', 'DD.MM.YY') as date_confirm, 
@@ -136,7 +138,7 @@ def get_result_text_research(research_id, text_dirs):
                 LEFT JOIN t_fields ON directions_paraclinicresult.field_id = t_fields.field_id
                 WHERE issledovaniye_id IN (SELECT iss_id FROM t_iss) AND 
                     directions_paraclinicresult.field_id IN (SELECT field_id FROM t_fields)
-                ORDER BY time_confirmation DESC
+                ORDER BY time_confirmation DESC, group_order, field_order
         """, params={'research_id': research_id, 'text_dirs': text_dirs, 'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
