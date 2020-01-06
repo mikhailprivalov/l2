@@ -950,6 +950,8 @@
 
   .tp {
     text-align: left;
+    line-height: 1.1;
+
     ul {
       padding-left: 20px;
       margin: 0;
