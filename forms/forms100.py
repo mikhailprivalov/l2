@@ -475,4 +475,8 @@ def form_02(request_data):
     pdf = buffer.getvalue()
     buffer.close()
 
+    from api.stationar.stationar_func import get_direction_attrs
+    a =get_direction_attrs(143,site_type=-1, type_service='is_lab', level=2)
+    print(a)
+
     return pdf

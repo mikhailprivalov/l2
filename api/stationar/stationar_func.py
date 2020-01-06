@@ -39,11 +39,11 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     return data
 
-def get_direction_attrs(dir, site_type=-1, type_service='None', level=-1):
+def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
     #Возврат: [{pk:№, date_create:'', confirm:'', researches:[]}, {pk:№, date_create:'', confirm:'', researches:[]}]
     data = []
 
-    main_direction = dir
+    main_direction = direction
     type_serv = type_service
     site_type_num = site_type
     level_get = level
@@ -56,19 +56,17 @@ def get_direction_attrs(dir, site_type=-1, type_service='None', level=-1):
         num_dir = dir_attr.get('direction')
         if dict_temp.get(num_dir):
             dict_by_dir = dict_temp.get(num_dir)
-            list_researches = dict_by_dir.get('researches')
-            list_researches.append(dir_attr.get('research_title'))
-            dict_by_dir['researches'] = list_researches.copy()
+            dict_by_dir['researches'] = [*list_researches, dir_attr.get('research_title')]
             dict_temp[num_dir] = dict_by_dir.copy()
         else:
-            confirm = True if dir_attr.get('date_confirm') else False
+            confirm = bool(dir_attr.get('date_confirm'))
             dict_temp[num_dir] = {'date_create' : dir_attr.get('date_create'),
                                   'confirm' : confirm,
                                   'researches' : [dir_attr.get('research_title')]}
 
     for k,v in dict_temp.items():
         dict_result = {'pk' : k, 'date_create' : v['date_create'], 'confirm' : v['confirm'], 'researches' : v['researches']}
-        data.append(dict_result.copy())
+        data.append(dict_result)
 
     return data
 

@@ -41,8 +41,6 @@ def load(request):
     return JsonResponse(result)
 
 
-
-
 @login_required
 @group_required("Врач стационара")
 def counts(request):
