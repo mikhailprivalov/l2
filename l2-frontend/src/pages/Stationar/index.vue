@@ -415,11 +415,15 @@
         this.$store.dispatch(action_types.INC_LOADING).then()
         this.counts = await stationar_point.counts(this, ['direction'])
         this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.reload_if_need(true)
       },
       print_results(pk) {
         this.$root.$emit('print:results', [pk])
       },
       reload_if_need(no_close = false) {
+        if (!this.opened_list_key) {
+          return
+        }
         this.load_directions(this.opened_list_key, no_close)
       },
       save(iss) {
