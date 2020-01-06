@@ -39,8 +39,39 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     return data
 
+def get_direction_attrs(dir, site_type=-1, type_service='None', level=-1):
+    #Возврат: [{pk:№, date_create:'', confirm:'', researches:[]}, {pk:№, date_create:'', confirm:'', researches:[]}]
+    data = []
 
-#TODO агрегация по направления (Дата создания, статус)-> исследованиям [{pk:№, date_create:'', confirm:'', researches:[]},]
+    main_direction = dir
+    type_serv = type_service
+    site_type_num = site_type
+    level_get = level
+    data_direction = hosp_get_data_direction(main_direction, site_type=site_type_num, type_service=type_serv, level=level_get)
+    dict_temp = {}
+
+    for dir_attr in data_direction:
+        list_researches = []
+        dict_by_dir = {}
+        num_dir = dir_attr.get('direction')
+        if dict_temp.get(num_dir):
+            dict_by_dir = dict_temp.get(num_dir)
+            list_researches = dict_by_dir.get('researches')
+            list_researches.append(dir_attr.get('research_title'))
+            dict_by_dir['researches'] = list_researches.copy()
+            dict_temp[num_dir] = dict_by_dir.copy()
+        else:
+            confirm = True if dir_attr.get('date_confirm') else False
+            dict_temp[num_dir] = {'date_create' : dir_attr.get('date_create'),
+                                  'confirm' : confirm,
+                                  'researches' : [dir_attr.get('research_title')]}
+
+    for k,v in dict_temp.items():
+        dict_result = {'pk' : k, 'date_create' : v['date_create'], 'confirm' : v['confirm'], 'researches' : v['researches']}
+        data.append(dict_result.copy())
+
+    return data
+
 
 def hosp_get_hosp_direction(num_dir):
     #возвращает дерево направлений-отделений, у к-рых тип улуги только is_hosp
