@@ -3,7 +3,7 @@ from django.http import JsonResponse
 
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
-from directory.models import Researches, HospitalService
+from directory.models import HospitalService
 from laboratory.decorators import group_required
 import simplejson as json
 
