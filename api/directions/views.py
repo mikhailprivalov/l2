@@ -201,7 +201,8 @@ def directions_results(request):
         for iss in Issledovaniya.objects.filter(napravleniye=napr):
             if iss.research.desc:
                 result["desc"] = True
-                return JsonResponse(result)
+                if not request_data.get("force", False):
+                    return JsonResponse(result)
         for iss in Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))

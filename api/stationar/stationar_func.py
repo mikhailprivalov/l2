@@ -53,12 +53,10 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
     dict_temp = {}
 
     for dir_attr in data_direction:
-        list_researches = []
-        dict_by_dir = {}
         num_dir = dir_attr.get('direction')
         if dict_temp.get(num_dir):
             dict_by_dir = dict_temp.get(num_dir)
-            dict_by_dir['researches'] = [*list_researches, dir_attr.get('research_title')]
+            dict_by_dir['researches'] = [*dict_by_dir['researches'], dir_attr.get('research_title')]
             dict_temp[num_dir] = dict_by_dir.copy()
         else:
             confirm = bool(dir_attr.get('date_confirm'))

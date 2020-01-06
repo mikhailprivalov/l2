@@ -43,12 +43,36 @@
         <div class="top-block direction-block"
              :class="{confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk}"
              @click="open_form(opened_list_key, d.pk)"
+             v-tippy="{
+                html: '#tp-' + d.pk,
+                reactive: true,
+                arrow: true,
+                animation: 'fade',
+                duration: 0,
+                theme: 'light',
+                placement: 'bottom',
+                popperOptions: {
+                  modifiers: {
+                    preventOverflow: {
+                      enabled: false
+                    },
+                    hide: {
+                      enabled: false
+                    }
+                  }
+                },
+             }"
              :key="d.pk" v-for="d in list_directions">
           <span>
             {{d.pk}}
             <br/>
             {{d.date_create}}
           </span>
+          <div :id="`tp-${d.pk}`" class="tp">
+            <ul>
+              <li v-for="r in d.researches" :key="r">{{r}}</li>
+            </ul>
+          </div>
         </div>
       </div>
       <div class="inner results-editor">
@@ -209,7 +233,7 @@
         </div>
       </div>
     </modal>
-    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1"/>
+    <results-viewer :pk="show_results_pk" v-if="show_results_pk > -1" no_desc/>
   </div>
 </template>
 
@@ -713,8 +737,8 @@
         }
 
         &.active {
-          background-image: linear-gradient(#6C7A89, #56616c)!important;
-          color: #fff!important;
+          background-image: linear-gradient(#6C7A89, #56616c) !important;
+          color: #fff !important;
         }
       }
     }
@@ -921,6 +945,13 @@
       border-radius: 0;
       padding-top: 5px;
       padding-bottom: 5px;
+    }
+  }
+
+  .tp {
+    ul {
+      padding-left: 20px;
+      margin: 0;
     }
   }
 </style>
