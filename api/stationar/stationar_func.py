@@ -201,25 +201,13 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
 
 def hosp_get_text_iss(current_iss, extract=False):
-    # Возврат стр-ра:
-    # Параклиника: [
-    #               {title_research: "Услуга", results: [{date:"", data:[{группа:'', fields:[{title:название, result:рез-тат},
-    #                                                                    {группа:'', fields:[{title:название, result:рез-тат}]}
-    #                                                                ]},
-    #                                              {date:"", data:[{group_title:'', fields:[{title:название, result:рез-тат}]},
-    #                                                                {group_title:'', fields:[{title:название, result:рез-тат}]}
-    #                                                               ]},
-    #                                             ]},
-    #               {title_research: "Услуга", results: [{date: "", data: [{группа: '', fields: [{название: рез - тат}, {}]},
-    #                                                                {группа:''}
-    #                                                                ]},
-    #                                              {date:"", data:[{группа:'', fields:[{название:рез-тат},{}]},
-    #                                                                {группа:''}
-    #                                                               ]},
-    #                                             ]}
-    #               ]
-    #
-    # Консультации: -//-//-//-
+    # # Возврат стр-ра:
+    # {'paraclinic': [{'title_research': 'Проведение электрокардиографических исследований ( ЭКГ )', 'result': [
+    #                 {'date': '05.01.20 117', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
+    #                       'value': 'Повышение пучка Гиса'}]}]},
+    #                 {'date': '05.01.20 119', 'data': [{'group_title': '', 'fields': [{'title_field': 'Заключение',
+    #                       'value': 'Диффузные нарушения'}]}]}]} ]}]
+    #                                                                                                                     ]}
 
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
     # получить все направления в истории по типу hosp
