@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+from api.stationar.stationar_func import get_direction_attrs
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -120,57 +121,14 @@ def directions_by_key(request):
     data = json.loads(request.body)
     base_direction_pk = int(data["direction"])
     r_type = data["r_type"]
-    result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
-    for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
-        if r_type == "laboratory":
-            nested = Napravleniya.objects.filter(parent=i,
-                                                 issledovaniya__research__podrazdeleniye__p_type=2)
-        elif r_type == "paraclinical":
-            nested = Napravleniya.objects.filter(parent=i,
-                                                 issledovaniya__research__is_paraclinic=True)
-        elif r_type == "consultation":
-            nested = Napravleniya.objects.filter(parent=i,
-                                                 issledovaniya__research__is_doc_refferal=True)
-        else:
-            hss = HospitalService.objects.filter(
-                main_research=i.research,
-                site_type=type_by_key
-            )
-            nested = Napravleniya.objects.filter(
-                parent=i,
-                issledovaniya__research__in=[x.slave_research for x in hss]
-            )
-        for d in nested.distinct():
-            r = {
-                "pk": d.pk,
-                "date": strdate(d.data_sozdaniya),
-                "services": [],
-                "status": 2,
-            }
-            has_conf = False
-            for iss in Issledovaniya.objects.filter(napravleniye=d):
-                iss_obj = {
-                    "title": iss.research.title,
-                    "status": 1,
-                }
-
-                if not iss.doc_confirmation and not iss.doc_save and not iss.deferred:
-                    iss_obj["status"] = 1
-                    if iss.tubes.count() == 0:
-                        iss_obj["status"] = 0
-                    else:
-                        for t in iss.tubes.all():
-                            if not t.time_recive:
-                                iss_obj["status"] = 0
-                elif iss.doc_confirmation or iss.deferred:
-                    iss_obj["status"] = 2
-                if iss.doc_confirmation and not has_conf:
-                    has_conf = True
-                r["status"] = min(r["status"], iss_obj["status"])
-                r["services"].append(iss_obj)
-            if r["status"] == 2 and not has_conf:
-                r["status"] = 1
-            r["status"] = -1 if r["status"] == 0 and d.cancel else r["status"]
-            result.append(r)
-    return JsonResponse({"data": result})
+    if type_by_key == -1:
+        type_service = {
+            "paraclinical": "is_paraclinic",
+            "laboratory": "is_lab",
+            "consultation": "is_doc_refferal",
+        }.get(r_type, "None")
+        result = get_direction_attrs(base_direction_pk, type_service=type_service)
+    else:
+        result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
+    return JsonResponse({"data": list(reversed(result))})

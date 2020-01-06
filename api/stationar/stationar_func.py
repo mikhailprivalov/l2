@@ -32,22 +32,24 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
     data = []
     if hosp_dirs:
         for i in hosp_dirs:
-            data.append({'direction' : i[0], 'date_create' : i[1], 'time_create' : i[2], 'iss' : i[5], 'date_confirm' : i[6],
-                         'time_confirm' : i[7], 'research_id' : i[8], 'research_title' : i[9], 'podrazdeleniye_id' : i[13],
-                         'is_paraclinic' : i[14], 'is_doc_refferal' : i[15], 'is_stom' : i[16], 'is_hospital' : i[17],
-                         'is_microbiology' : i[18], 'podrazdeleniye_title' : i[19], 'site_type' : i[21]})
+            data.append({'direction': i[0], 'date_create': i[1], 'time_create': i[2], 'iss': i[5], 'date_confirm': i[6],
+                         'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
+                         'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
+                         'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21]})
 
     return data
 
+
 def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
-    #Возврат: [{pk:№, date_create:'', confirm:'', researches:[]}, {pk:№, date_create:'', confirm:'', researches:[]}]
+    # Возврат: [{pk:№, date_create:'', confirm:'', researches:[]}, {pk:№, date_create:'', confirm:'', researches:[]}]
     data = []
 
     main_direction = direction
     type_serv = type_service
     site_type_num = site_type
     level_get = level
-    data_direction = hosp_get_data_direction(main_direction, site_type=site_type_num, type_service=type_serv, level=level_get)
+    data_direction = hosp_get_data_direction(main_direction, site_type=site_type_num, type_service=type_serv,
+                                             level=level_get)
     dict_temp = {}
 
     for dir_attr in data_direction:
@@ -60,20 +62,20 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
             dict_temp[num_dir] = dict_by_dir.copy()
         else:
             confirm = bool(dir_attr.get('date_confirm'))
-            dict_temp[num_dir] = {'date_create' : dir_attr.get('date_create'),
-                                  'confirm' : confirm,
-                                  'researches' : [dir_attr.get('research_title')]}
+            dict_temp[num_dir] = {'date_create': dir_attr.get('date_create'),
+                                  'confirm': confirm,
+                                  'researches': [dir_attr.get('research_title')]}
 
-    for k,v in dict_temp.items():
-        dict_result = {'pk' : k, 'date_create' : v['date_create'], 'confirm' : v['confirm'], 'researches' : v['researches']}
+    for k, v in dict_temp.items():
+        dict_result = {'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches']}
         data.append(dict_result)
 
     return data
 
 
 def hosp_get_hosp_direction(num_dir):
-    #возвращает дерево направлений-отделений, у к-рых тип улуги только is_hosp
-    #[{'direction': номер направления, 'research_title': значение}, {'direction': номер направления, 'research_title': значение}]
+    # возвращает дерево направлений-отделений, у к-рых тип улуги только is_hosp
+    # [{'direction': номер направления, 'research_title': значение}, {'direction': номер направления, 'research_title': значение}]
     root_dir = tree_directions.root_direction(num_dir)
     num_root_dir = root_dir[-1][-3]
     result = tree_directions.get_research_by_dir(num_root_dir)
@@ -86,8 +88,7 @@ def hosp_get_hosp_direction(num_dir):
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
                                                        hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level)
 
-
-    data = [{'direction' : i[0], 'research_title' : i[9]} for i in hosp_dirs]
+    data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs]
 
     return data
 
@@ -109,16 +110,16 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
     num_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye_id
 
-    #получить все направления в истории по типу hosp
+    # получить все направления в истории по типу hosp
     hosp_dirs = hosp_get_hosp_direction(num_dir)
 
-    #получить текущее направление типа hosp из текущего эпикриза
+    # получить текущее направление типа hosp из текущего эпикриза
     current_dir = hosp_get_curent_hosp_dir(current_iss)
 
     if not extract:
         hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
 
-    #получить по каждому hosp_dirs Дочерние направления по типу лаборатория
+    # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
     for h in hosp_dirs:
         obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_lab', level=2)
@@ -128,23 +129,23 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
     num_lab_dirs = list(num_lab_dirs)
 
-    #Получить титл подразделений типа Лаборатория
+    # Получить титл подразделений типа Лаборатория
     departs_obj = Podrazdeleniya.objects.filter(p_type=2).order_by('title')
     departs = OrderedDict()
     result = OrderedDict()
 
     for i in departs_obj:
         departs[i.pk] = i.title
-        #получить research_id по лаборатории и vertical_result_display = True
+        # получить research_id по лаборатории и vertical_result_display = True
         vertical = {}
         vertical_result = []
-        result[i.title] = {'vertical' :{}}
-        result[i.title] = {'horizontal' :{}}
+        result[i.title] = {'vertical': {}}
+        result[i.title] = {'horizontal': {}}
         horizontal_result = []
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
         if len(id_research_vertical) > 0:
-            #получить уникальные research_id по направления
+            # получить уникальные research_id по направления
             get_research_id = get_distinct_research(id_research_vertical, num_lab_dirs, is_text_research=False)
             research_distinct = [d[0] for d in get_research_id]
             if research_distinct:
@@ -184,7 +185,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
                     vertical_result.append(vertical1)
                 result[i.title]['vertical'] = vertical_result
 
-        #получить research_id по лаборатории и vertical_result_display = False
+        # получить research_id по лаборатории и vertical_result_display = False
         horizontal = {}
         horizontal_research = get_research(i.title, False)
         id_research_horizontal = [i[0] for i in horizontal_research]
@@ -192,7 +193,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
             # получить исследования по направлениям и соответсвующим research_id для horizontal
             get_iss_id = get_iss(id_research_horizontal, num_lab_dirs)
             iss_id_horizontal = [i[0] for i in get_iss_id]
-            #получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
+            # получить уникальные фракции по исследованиям для хоризонтал fraction_title: [], units: []
             if iss_id_horizontal:
                 fraction_horizontal = get_distinct_fraction(iss_id_horizontal)
                 fraction_title = []
@@ -201,7 +202,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
                     fraction_title.append(f[1])
                     fraction_units.append(f[2])
 
-                fraction_template = [''] * len(fraction_title) # заготовка для value-резульлтатов
+                fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
                 fraction_result = get_result_fraction(iss_id_horizontal)
 
                 temp_results = {}
@@ -270,7 +271,7 @@ def hosp_get_text_iss(current_iss, extract=False):
             fields.append({'title_field': i[4], 'value': i[5]})
             date = f'{i[1]} {i[2]}'
             group = i[3]
-            group_fields = {'group_title' : group, 'fields' : fields.copy()}
+            group_fields = {'group_title': group, 'fields': fields.copy()}
 
             if group != last_group:
                 if date != last_date:
@@ -289,7 +290,7 @@ def hosp_get_text_iss(current_iss, extract=False):
 
             if date != last_date:
                 data_in.append(group_fields.copy())
-                data.append({'date' : date, 'data' : data_in.copy()})
+                data.append({'date': date, 'data': data_in.copy()})
                 fields = []
                 data_in = []
 
@@ -302,4 +303,4 @@ def hosp_get_text_iss(current_iss, extract=False):
         temp_result['result'] = data
         result.append(temp_result.copy())
 
-    return {'paraclinic' : result}
+    return {'paraclinic': result}

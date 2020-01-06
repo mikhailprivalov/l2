@@ -184,7 +184,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
-            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE
+            is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL
             END       
          
 			ORDER BY p_type, site_type, napravleniye_id)
@@ -197,9 +197,11 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                     EXISTS (SELECT id FROM r)
                 END
 	       ;""",
-        params={'num_issledovaniye': iss, 'main_research': main_research, 'hosp_site_type':hosp_site_type,
-                'hosp_is_paraclinic':hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,
-                'hosp_is_lab': hosp_is_lab, 'hosp_is_hosp': hosp_is_hosp, 'hosp_level': hosp_level, 'tz': TIME_ZONE})
+                       params={'num_issledovaniye': iss, 'main_research': main_research,
+                               'hosp_site_type': hosp_site_type,
+                               'hosp_is_paraclinic': hosp_is_paraclinic, 'hosp_is_doc_refferal': hosp_is_doc_refferal,
+                               'hosp_is_lab': hosp_is_lab, 'hosp_is_hosp': hosp_is_hosp, 'hosp_level': hosp_level,
+                               'tz': TIME_ZONE})
         row = cursor.fetchall()
     return row
 
@@ -213,7 +215,7 @@ def get_research_by_dir(numdir):
         cursor.execute("""
             SELECT directions_issledovaniya.id, directions_issledovaniya.research_id 
             FROM directions_issledovaniya where napravleniye_id = %(num_dir)s
-            """, params={'num_dir': numdir })
+            """, params={'num_dir': numdir})
 
         row = cursor.fetchall()
     return row

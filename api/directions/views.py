@@ -724,12 +724,13 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_form(request):
     import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
+    force_form = request_data.get("force", False)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -742,9 +743,10 @@ def directions_paraclinic_form(request):
     if dn.exists():
         d = dn[0]
         df = Issledovaniya.objects.filter(napravleniye=d)
-        df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
-                       | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(research__is_microbiology=True))
-        df = df.distinct()
+        if not force_form:
+            df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
+                           | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(research__is_microbiology=True))
+            df = df.distinct()
 
         if df.exists():
             response["ok"] = True
@@ -826,16 +828,17 @@ def directions_paraclinic_form(request):
                 if i.research.is_microbiology:
                     pass  # TODO: Fill microbiology results
 
-                for sd in Napravleniya.objects.filter(parent=i):
-                    iss["sub_directions"].append({
-                        "pk": sd.pk,
-                        "cancel": sd.cancel,
-                        "researches": [
-                            x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)
-                        ],
-                    })
+                if not force_form:
+                    for sd in Napravleniya.objects.filter(parent=i):
+                        iss["sub_directions"].append({
+                            "pk": sd.pk,
+                            "cancel": sd.cancel,
+                            "researches": [
+                                x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)
+                            ],
+                        })
 
-                if iss["research"]["is_doc_refferal"]:
+                if not force_form and iss["research"]["is_doc_refferal"]:
                     iss = {
                         **iss,
                         "purpose": i.purpose_id,
@@ -853,13 +856,14 @@ def directions_paraclinic_form(request):
                                          Outcomes.objects.filter(hide=False).order_by("pk")]
                     }
 
-                    for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
-                        iss["recipe"].append({
-                            "pk": rp.pk,
-                            "prescription": rp.drug_prescription,
-                            "taking": rp.method_of_taking,
-                            "comment": rp.comment,
-                        })
+                    if not force_form:
+                        for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
+                            iss["recipe"].append({
+                                "pk": rp.pk,
+                                "prescription": rp.drug_prescription,
+                                "taking": rp.method_of_taking,
+                                "comment": rp.comment,
+                            })
 
                 ParaclinicTemplateName.make_default(i.research)
 
@@ -895,7 +899,7 @@ def directions_paraclinic_form(request):
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
-            if response["has_doc_referral"]:
+            if not force_form and response["has_doc_referral"]:
                 response["anamnesis"] = d.client.anamnesis_of_life
 
                 d1, d2 = start_end_year()

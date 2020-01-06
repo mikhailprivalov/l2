@@ -1579,6 +1579,10 @@ body > .container-fluid {
   }
 }
 
+.table > tbody + tbody {
+  border-top: 1px solid #000!important;
+}
+
 @import "./variables";
 @import "./editor";
 @import "./menubar";
