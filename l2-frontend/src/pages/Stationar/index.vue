@@ -668,7 +668,7 @@
 
     .top {
       border-bottom: 1px solid #b1b1b1;
-      height: 63px;
+      height: 80px;
       padding: 5px;
       overflow-x: auto;
       overflow-y: visible;
@@ -744,7 +744,7 @@
     }
 
     .inner {
-      height: calc(100% - 63px);
+      height: calc(100% - 80px);
       overflow-y: auto;
       overflow-x: hidden;
     }
