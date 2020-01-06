@@ -44,7 +44,11 @@
              :class="{confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk}"
              @click="open_form(opened_list_key, d.pk)"
              :key="d.pk" v-for="d in list_directions">
-          <span>{{d.pk}}</span>
+          <span>
+            {{d.pk}}
+            <br/>
+            {{d.date_create}}
+          </span>
         </div>
       </div>
       <div class="inner results-editor">
@@ -653,6 +657,8 @@
 
         span {
           align-self: center;
+          display: inline-block;
+          text-align: center;
         }
 
         vertical-align: top;
