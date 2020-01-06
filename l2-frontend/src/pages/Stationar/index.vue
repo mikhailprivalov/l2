@@ -949,6 +949,7 @@
   }
 
   .tp {
+    text-align: left;
     ul {
       padding-left: 20px;
       margin: 0;
