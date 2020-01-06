@@ -258,7 +258,6 @@ def hosp_get_text_iss(current_iss, extract=False):
             num_paraclinic_dirs.add(paraclinic_dir)
 
     num_paraclinic_dirs = list(num_paraclinic_dirs)
-    num_paraclinic_dirs = [16, 116, 117, 119, 120]
     get_research_id = get_distinct_research([0], num_paraclinic_dirs, is_text_research=True)
     research_distinct = [d[0] for d in get_research_id]
     result = []
