@@ -264,15 +264,12 @@ def hosp_get_text_iss(current_iss, extract=False):
     result = []
     for research in research_distinct:
         field_result = get_result_text_research(research, num_paraclinic_dirs)
-        print('########')
-
         fields = []
         last_group = None
         last_date = None
         data = []
         data_in = []
         for i in field_result:
-            print(i)
             fields.append({'title_field': i[4], 'value': i[5]})
             date = f'{i[1]} {i[2]}'
             group = i[3]
