@@ -189,7 +189,6 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
          
 			ORDER BY napravleniye_id,p_type, site_type )
 			
---			SELECT * FROM t_all WHERE
 			SELECT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
 			diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
 			is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title FROM t_all WHERE 
