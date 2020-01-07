@@ -160,7 +160,17 @@ def form_01(request_data):
     #Получить отделение - из названия услуги изи самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
 
+    ############################################################################################################
+    #Получить данные из первичного приема (самого первого hosp-направления)
+    hosp_first_num = hosp_nums_obj[0].get('direction')
+    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
+    if hosp_primary_receptions:
+        hosp_primary_iss = hosp_primary_receptions[0].get('iss')
+        primary_research_id = hosp_primary_receptions[0].get('research_id')
 
+    titles_field = []
+    if titles_field and hosp_primary_receptions:
+        list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
     content_title = [
         Indenter(left=0 * mm),
