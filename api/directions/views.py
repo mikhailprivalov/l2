@@ -101,7 +101,12 @@ def directions_history(request):
                 researches_pks = []
                 has_descriptive = False
                 has_hosp = False
+                has_slave_hospital = False
                 for v in iss_list:
+                    if v.research.is_slave_hospital:
+                        has_slave_hospital = True
+                        break
+
                     if not has_descriptive and v.research.desc:
                         has_descriptive = True
                     if not has_hosp and v.research.is_hospital:
@@ -122,6 +127,8 @@ def directions_history(request):
                     if v.doc_confirmation and not has_conf:
                         has_conf = True
                     status = min(iss_status, status)
+                if has_slave_hospital:
+                    continue
                 if status == 2 and not has_conf:
                     status = 1
                 if req_status in [3, 4] or req_status == status or iss_pk:
