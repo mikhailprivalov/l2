@@ -187,7 +187,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE and site_type is NULL
             END       
          
-			ORDER BY napravleniye_id,p_type, site_type )
+			ORDER BY napravleniye_id, p_type, site_type)
 			
 			SELECT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
 			diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
