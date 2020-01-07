@@ -43,36 +43,10 @@
         <div class="top-block direction-block"
              :class="{confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk}"
              @click="open_form(opened_list_key, d.pk)"
-             v-tippy="{
-                html: '#tp-' + d.pk,
-                reactive: true,
-                arrow: true,
-                animation: 'fade',
-                duration: 0,
-                theme: 'light',
-                placement: 'bottom',
-                popperOptions: {
-                  modifiers: {
-                    preventOverflow: {
-                      enabled: false
-                    },
-                    hide: {
-                      enabled: false
-                    }
-                  }
-                },
-             }"
              :key="d.pk" v-for="d in list_directions">
           <span>
-            {{d.pk}}
-            <br/>
-            {{d.date_create}}
+            <display-direction :direction="d"/>
           </span>
-          <div :id="`tp-${d.pk}`" class="tp">
-            <ul>
-              <li v-for="r in d.researches" :key="r">{{r}}</li>
-            </ul>
-          </div>
         </div>
       </div>
       <div class="inner results-editor">
@@ -256,10 +230,12 @@
   import SelectPickerM from '../../fields/SelectPickerM'
   import DescriptiveForm from '../../forms/DescriptiveForm'
   import ResultsViewer from '../../modals/ResultsViewer'
+  import DisplayDirection from './DisplayDirection'
 
   export default {
     mixins: [menuMixin],
     components: {
+      DisplayDirection,
       ResultsViewer,
       DescriptiveForm,
       SelectPickerM,
@@ -721,10 +697,20 @@
       .direction-block {
         cursor: pointer;
         transition: all .2s cubic-bezier(.25, .8, .25, 1);
+        position: relative;
 
-        &:not(.confirmed):hover {
+        span {
+          display: block;
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+        }
+
+        &:hover {
           z-index: 1;
-          transform: scale(1.008);
+          transform: translateY(-1px);
         }
 
         &:not(.confirmed):hover {
@@ -949,16 +935,6 @@
       border-radius: 0;
       padding-top: 5px;
       padding-bottom: 5px;
-    }
-  }
-
-  .tp {
-    text-align: left;
-    line-height: 1.1;
-
-    ul {
-      padding-left: 20px;
-      margin: 0;
     }
   }
 </style>
