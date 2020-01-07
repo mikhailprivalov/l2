@@ -138,24 +138,31 @@ def form_01(request_data):
 
     # взять самое последнее направленеие из hosp_dirs
     hosp_last_num = hosp_nums_obj[-1].get('direction')
-    # Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
+    ############################################################################################################
+    #Получение данных из выписки
+    #Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
-    hosp_extract_iss = hosp_extract[0].get('iss')
-    extract_research_id = hosp_extract[0].get('research_id')
+    hosp_extract_iss, extract_research_id = None, None
+    if hosp_extract:
+        hosp_extract_iss = hosp_extract[0].get('iss')
+        extract_research_id = hosp_extract[0].get('research_id')
     titles_field = ['Время выписки', 'Дата выписки']
-    list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
+    list_values = None
+    if titles_field and hosp_extract:
+        list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
     date_value = None
     time_value = None
-    for i in list_values:
-        if i[3] == 'Дата выписки':
-            date_value = i[2]
-        if i[3] == 'Время выписки':
-            time_value = i[2]
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата выписки':
+                date_value = i[2]
+            if i[3] == 'Время выписки':
+                time_value = i[2]
 
-    if date_value:
-        vv = date_value.split('-')
-        if len(vv) == 3:
-            date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+        if date_value:
+            vv = date_value.split('-')
+            if len(vv) == 3:
+                date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
 
     #Получить отделение - из названия услуги изи самого главного направления
     hosp_depart = hosp_nums_obj[0].get('research_title')
@@ -164,14 +171,18 @@ def form_01(request_data):
     #Получить данные из первичного приема (самого первого hosp-направления)
     hosp_first_num = hosp_nums_obj[0].get('direction')
     hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
+    hosp_primary_iss, primary_research_id = None, None
     if hosp_primary_receptions:
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
         primary_research_id = hosp_primary_receptions[0].get('research_id')
 
     titles_field = []
+
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
+    ###########################################################################################################
+    #Заполнить данный Формы из Первичного приема и из Выписки
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
