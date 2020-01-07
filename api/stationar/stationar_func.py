@@ -69,7 +69,8 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
                                   'podrazdeleniye': dir_attr.get('podrazdeleniye_title'),}
 
     for k, v in dict_temp.items():
-        dict_result = {'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches']}
+        dict_result = {'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
+                       'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
         data.append(dict_result)
 
     return data
