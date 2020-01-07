@@ -15,7 +15,7 @@ from reportlab.lib.colors import black
 
 from appconf.manager import SettingManager
 from clients.models import Card, Document
-from directions.models import Napravleniya, Issledovaniya
+from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
 from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
@@ -25,6 +25,8 @@ import os.path
 from io import BytesIO
 from . import forms_func
 from reportlab.pdfgen import canvas
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
+from api.stationar.sql_func import get_result_value_iss
 
 
 def form_01(request_data):
@@ -35,14 +37,16 @@ def form_01(request_data):
     num_dir = request_data["dir_pk"]
     direction_obj = Napravleniya.objects.get(pk=num_dir)
     history_num = direction_obj.history_num
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_nums = ''
+    for i in hosp_nums_obj:
+        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
 
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
 
-    # hospital_name = SettingManager.get("org_title")
-    hospital_name = "ОГАУЗ ГИМДКБ"
-    hospital_address = "г. Иркутск ул. Советская,57"
-    # hospital_address = SettingManager.get("org_address")
+    hospital_name = SettingManager.get("org_title")
+    hospital_address = SettingManager.get("org_address")
     hospital_kod_ogrn = SettingManager.get("org_ogrn")
 
     if sys.platform == 'win32':
@@ -58,7 +62,7 @@ def form_01(request_data):
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
                             bottomMargin=6 * mm, allowSplitting=1,
-                            title="Форма {}".format("025/у"))
+                            title="Форма {}".format("003/у"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -131,20 +135,70 @@ def form_01(request_data):
         p_card_type = '('+ str(card_num_obj[1]) + ')'
     else:
         p_card_type =''
+
+    # взять самое последнее направленеие из hosp_dirs
+    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    ############################################################################################################
+    #Получение данных из выписки
+    #Взять услугу типа выписка. Из полей "Дата выписки" - взять дату. Из поля "Время выписки" взять время
+    hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
+    hosp_extract_iss, extract_research_id = None, None
+    if hosp_extract:
+        hosp_extract_iss = hosp_extract[0].get('iss')
+        extract_research_id = hosp_extract[0].get('research_id')
+    titles_field = ['Время выписки', 'Дата выписки']
+    list_values = None
+    if titles_field and hosp_extract:
+        list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
+    date_value = None
+    time_value = None
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата выписки':
+                date_value = i[2]
+            if i[3] == 'Время выписки':
+                time_value = i[2]
+
+        if date_value:
+            vv = date_value.split('-')
+            if len(vv) == 3:
+                date_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+
+    #Получить отделение - из названия услуги изи самого главного направления
+    hosp_depart = hosp_nums_obj[0].get('research_title')
+
+    ############################################################################################################
+    #Получить данные из первичного приема (самого первого hosp-направления)
+    hosp_first_num = hosp_nums_obj[0].get('direction')
+    hosp_primary_receptions = hosp_get_data_direction(hosp_first_num, site_type=0, type_service='None', level=2)
+    hosp_primary_iss, primary_research_id = None, None
+    if hosp_primary_receptions:
+        hosp_primary_iss = hosp_primary_receptions[0].get('iss')
+        primary_research_id = hosp_primary_receptions[0].get('research_id')
+
+    titles_field = []
+
+    if titles_field and hosp_primary_receptions:
+        list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
+
+    ###########################################################################################################
+    #Заполнить данный Формы из Первичного приема и из Выписки
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
         Paragraph(
-            '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} - <u>{}</u>, <br/> стационарного больного</font>'.format(
-                p_card_num, '0123456-0123456-0123456-0123456-0123456'), styleCenter),
+            '<font fontname="PTAstraSerifBold" size=15>МЕДИЦИНСКАЯ КАРТА № {} <u>{}</u>, <br/> стационарного больного</font>'.format(
+                p_card_num, hosp_nums), styleCenter),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
+
         Paragraph('Дата и время поступления: {}'.format('из первичного осмотра'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Дата и время выписки: {}'.format('Из Выписки'), style),
+
+        Paragraph('Дата и время выписки: {} - {}'.format(date_value, time_value), style),
         Spacer(1, 2 * mm),
-        Paragraph('Отделение: {}'.format('Из услуги самого главного направления'), style),
+        Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 2 * mm),
         Paragraph('Палата №: {}'.format('Из первичного приема. В разных отделениях разные!! Указываем последнее отделение?'), style),
         Spacer(1, 2 * mm),

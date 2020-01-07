@@ -131,4 +131,4 @@ def directions_by_key(request):
         result = get_direction_attrs(base_direction_pk, type_service=type_service)
     else:
         result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
-    return JsonResponse({"data": list(reversed(result))})
+    return JsonResponse({"data": list(result)})

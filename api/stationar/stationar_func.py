@@ -35,7 +35,8 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
             data.append({'direction': i[0], 'date_create': i[1], 'time_create': i[2], 'iss': i[5], 'date_confirm': i[6],
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
-                         'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21]})
+                         'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
+                         'research_short_title': i[23] })
 
     return data
 
@@ -57,15 +58,19 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
         if dict_temp.get(num_dir):
             dict_by_dir = dict_temp.get(num_dir)
             dict_by_dir['researches'] = [*dict_by_dir['researches'], dir_attr.get('research_title')]
+            dict_by_dir['researches_short'] = [*dict_by_dir['researches_short'], dir_attr.get('researches_short')]
             dict_temp[num_dir] = dict_by_dir.copy()
         else:
             confirm = bool(dir_attr.get('date_confirm'))
             dict_temp[num_dir] = {'date_create': dir_attr.get('date_create'),
                                   'confirm': confirm,
-                                  'researches': [dir_attr.get('research_title')]}
+                                  'researches': [dir_attr.get('research_title')],
+                                  'researches_short': [dir_attr.get('research_short_title')],
+                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'),}
 
     for k, v in dict_temp.items():
-        dict_result = {'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches']}
+        dict_result = {'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
+                       'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
         data.append(dict_result)
 
     return data
