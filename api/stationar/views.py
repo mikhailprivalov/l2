@@ -68,6 +68,7 @@ def counts(request):
             "consultation": Napravleniya.objects.filter(parent=i,
                                                         issledovaniya__research__is_doc_refferal=True).distinct().count(),
             **by_keys,
+            "all": Napravleniya.objects.filter(parent=i).count(),
         }
     return JsonResponse(result)
 
@@ -127,6 +128,7 @@ def directions_by_key(request):
             "paraclinical": "is_paraclinic",
             "laboratory": "is_lab",
             "consultation": "is_doc_refferal",
+            "all": "None",
         }.get(r_type, "None")
         result = get_direction_attrs(base_direction_pk, type_service=type_service)
     else:

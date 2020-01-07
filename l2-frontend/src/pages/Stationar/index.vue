@@ -37,12 +37,16 @@
     <div class="content">
       <div class="top">
         <div class="top-block title-block" v-if="opened_list_key">
-          <span>{{menuItems[opened_list_key]}}</span>
-          <i class="fa fa-times" @click="close_list_directions"/>
+          <span>
+            {{menuItems[opened_list_key]}}
+            <br/>
+            <a href="#" @click.prevent="print_all_list"><i class="fa fa-print"/> результатов</a>
+          </span>
+          <i class="top-right fa fa-times" @click="close_list_directions"/>
         </div>
         <div class="top-block direction-block"
              :class="{confirmed: Boolean(d.confirm), active: opened_form_pk === d.pk}"
-             @click="open_form(opened_list_key, d.pk)"
+             @click="open_form(d)"
              :key="d.pk" v-for="d in list_directions">
           <span>
             <display-direction :direction="d"/>
@@ -258,7 +262,6 @@
         show_results_pk: -1,
         list_directions: [],
         opened_list_key: null,
-        opened_form_key: null,
         opened_form_pk: null,
         researches_forms: [],
         patient_form: {},
@@ -283,7 +286,7 @@
           main_direction: this.direction,
         })
         await this.load_directions(this.openPlusId)
-        await this.open_form(this.openPlusId, pk)
+        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
         await this.closePlus()
         this.counts = await stationar_point.counts(this, ['direction'])
         await this.$store.dispatch(action_types.DEC_LOADING)
@@ -291,23 +294,21 @@
       select_research(pk) {
         this.direction_service = pk
       },
-      async open_form(key, pk) {
-        const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar'
+      async open_form(d) {
+        const mode = d.type
         if (mode === 'stationar') {
           this.close_form()
-          this.opened_form_key = key
-          this.opened_form_pk = pk
+          this.opened_form_pk = d.pk
           await this.$store.dispatch(action_types.INC_LOADING)
-          const {researches, patient} = await directions_point.getParaclinicForm({pk, force: true})
+          const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true})
           this.researches_forms = researches
           this.patient_form = patient
           await this.$store.dispatch(action_types.DEC_LOADING)
         } else {
-          this.show_results_pk = pk
+          this.show_results_pk = d.pk
         }
       },
       close_form() {
-        this.opened_form_key = null
         this.opened_form_pk = null
         this.researches_forms = null
         this.patient_form = null
@@ -337,6 +338,9 @@
           errmessage(message)
         }
         await this.$store.dispatch(action_types.DEC_LOADING)
+      },
+      print_all_list() {
+        this.$root.$emit('print:results', this.list_directions.map(d => d.pk))
       },
       close_list_directions() {
         this.close_form()
@@ -680,7 +684,7 @@
         position: relative;
         margin-right: 0;
 
-        i {
+        .top-right {
           position: absolute;
           top: 0;
           right: 0;

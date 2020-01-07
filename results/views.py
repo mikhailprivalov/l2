@@ -615,6 +615,8 @@ def result_print(request):
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
                 not_lab = True
+            if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
+                has_paraclinic = True
             if iss.link_file:
                 link_result.append(iss.link_file)
                 link_files = True
