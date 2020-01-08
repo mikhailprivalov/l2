@@ -37,6 +37,9 @@ export default {
         paraclinical: true,
         consultation: true,
       },
+      allowedOnlyOneEntry: {
+        'primary receptions': true,
+      }
     }
   }
 }

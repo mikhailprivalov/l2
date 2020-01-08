@@ -25,7 +25,7 @@
               <span v-if="Boolean(counts[key])" class="counts">{{counts[key]}} шт.</span> {{title}}
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="menuNeedPlus[key]"
+                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key]))"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
