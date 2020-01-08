@@ -43,7 +43,8 @@
           <tr>
             <th colspan="4"
                 style="color: #000;padding: 2px; border: 1px solid rgb(0, 0, 0);line-height: 1.15; font-size: 12pt; font-family: 'Times New Roman', 'Liberation Serif', Times, serif;margin: 0;">
-              {{row.title}} <template v-if="!data.desc">(дата забора б/м: {{row.tube_time_get}})</template>
+              {{row.title}}
+              <template v-if="!data.desc">(дата забора б/м: {{row.tube_time_get}})</template>
             </th>
           </tr>
           <tr v-for="fraction of row.fractions">
@@ -99,6 +100,10 @@
           <button type="button" @click="printDirection" class="btn btn-primary-nb print-b">Печать направления</button>
         </div>
         <div class="col-xs-4">
+          <a :href="data.pacs" target="_blank" class="btn btn-primary-nb btn-blue-nb" v-if="!!data.pacs">
+            Снимок
+          </a>
+          <br><br>
           <button type="button" @click="hide_modal" class="btn btn-primary-nb btn-blue-nb">Закрыть</button>
         </div>
       </div>
