@@ -468,7 +468,7 @@
           if (data.ok) {
             okmessage('Подтверждение сброшено')
             iss.confirmed = false
-            this.reload_if_need()
+            this.reload_if_need(true)
           } else {
             errmessage(data.message)
           }
