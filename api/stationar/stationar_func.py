@@ -92,11 +92,11 @@ def hosp_get_hosp_direction(num_dir):
     num_iss = result[0][0]
     main_research = result[0][1]
     hosp_site_type = -1
-    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab = False, False, False
+    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_all = False, False, False, False
     hosp_is_hosp = True
     hosp_level = -1
     hosp_dirs = tree_directions.hospital_get_direction(num_iss, main_research, hosp_site_type, hosp_is_paraclinic,
-                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level)
+                                                       hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all)
 
     data = [{'direction': i[0], 'research_title': i[9]} for i in hosp_dirs]
 
