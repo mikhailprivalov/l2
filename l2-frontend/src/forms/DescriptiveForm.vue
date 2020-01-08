@@ -31,7 +31,7 @@
                          :duration="400"
                          :on-confirm="clear_val" :value="field"
                          action-text="×" class="btn btn-default btn-field" pressing-text="×"
-                         v-if="!confirmed && ![3, 10, 12, 15].includes(field.field_type)">
+                         v-if="!confirmed && ![3, 10, 12, 15, 16].includes(field.field_type)">
                 ×
               </longpress>
               <div class="field-inputs"
@@ -99,6 +99,9 @@
                                 :disabled="confirmed"
                                 v-model="field.value"/>
               </div>
+              <div class="field-value" v-else-if="field.field_type === 16 && pk">
+                <AggregateLaboratory :pk="pk" extract/>
+              </div>
               <div :title="field.helper" class="field-helper" v-if="field.helper"
                    v-tippy="{
                     placement : 'left',
@@ -106,7 +109,7 @@
                     interactive: true,
                     theme: 'dark longread',
                   }">
-                <i class="fa fa-question"></i>
+                <i class="fa fa-question"/>
               </div>
             </div>
           </visibility-field-wrapper>
@@ -127,10 +130,12 @@
   import SearchFieldValueField from '../fields/SearchFieldValueField'
   import SearchFractionValueField from '../fields/SearchFractionValueField'
   import RichTextEditor from '../fields/RichTextEditor'
+  import AggregateLaboratory from '../fields/AggregateLaboratory'
 
   export default {
     name: 'DescriptiveForm',
     components: {
+      AggregateLaboratory,
       RichTextEditor,
       SearchFractionValueField,
       SearchFieldValueField,
@@ -141,6 +146,10 @@
       research: {
         type: Object,
         required: true,
+      },
+      pk: {
+        type: Number,
+        required: false,
       },
       patient: {
         type: Object,

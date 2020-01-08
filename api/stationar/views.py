@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -134,3 +134,13 @@ def directions_by_key(request):
     else:
         result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
     return JsonResponse({"data": list(result)})
+
+
+@login_required
+@group_required("Врач стационара")
+def aggregate_laboratory(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+    extract = data.get('extract', False)
+    result = hosp_get_lab_iss(pk, extract)
+    return JsonResponse(result)

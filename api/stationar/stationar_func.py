@@ -105,7 +105,7 @@ def hosp_get_hosp_direction(num_dir):
 
 def hosp_get_curent_hosp_dir(current_iss):
     current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
-    hosp_dir = current_dir.parent.napravleniye_id
+    hosp_dir = current_dir.parent.napravleniye_id if current_dir.parent else current_dir.pk
     return hosp_dir
 
 
@@ -127,12 +127,12 @@ def hosp_get_lab_iss(current_iss, extract=False):
     current_dir = hosp_get_curent_hosp_dir(current_iss)
 
     if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
+        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
     # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
     for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_lab', level=2)
+        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
         for k in obj_hosp_dirs:
             lab_dir = k.get('direction')
             num_lab_dirs.add(lab_dir)
@@ -149,8 +149,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         # получить research_id по лаборатории и vertical_result_display = True
         vertical = {}
         vertical_result = []
-        result[i.title] = {'vertical': {}}
-        result[i.title] = {'horizontal': {}}
+        result[i.title] = {'vertical': {}, 'horizontal': {}}
         horizontal_result = []
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
@@ -236,8 +235,11 @@ def hosp_get_lab_iss(current_iss, extract=False):
                 horizontal['result'] = temp_results
                 horizontal_result.append(horizontal)
                 result[i.title]['horizontal'] = horizontal_result
-
-    return result
+    result_filtered = {}
+    for k in result:
+        if result[k]['horizontal'] or result[k]['vertical']:
+            result_filtered[k] = result[k]
+    return result_filtered
 
 
 def hosp_get_text_iss(current_iss, extract=False):

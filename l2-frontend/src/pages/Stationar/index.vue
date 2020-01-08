@@ -93,6 +93,7 @@
           </div>
           <DescriptiveForm
             :research="row.research"
+            :pk="row.pk"
             :confirmed="row.confirmed"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
@@ -117,6 +118,9 @@
               <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
             </div>
           </div>
+        </div>
+        <div style="padding: 5px">
+          <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss"/>
         </div>
       </div>
     </div>
@@ -235,10 +239,12 @@
   import DescriptiveForm from '../../forms/DescriptiveForm'
   import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
+  import AggregateLaboratory from '../../fields/AggregateLaboratory'
 
   export default {
     mixins: [menuMixin],
     components: {
+      AggregateLaboratory,
       DisplayDirection,
       ResultsViewer,
       DescriptiveForm,
