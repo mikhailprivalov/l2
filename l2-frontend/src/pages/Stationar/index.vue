@@ -409,6 +409,7 @@
       save(iss) {
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
+          force: true,
           data: {
             ...iss,
             direction: {
@@ -422,7 +423,6 @@
             okmessage('Сохранено')
             iss.saved = true
             this.reload_if_need(true)
-            this.changed = false
           } else {
             errmessage(data.message)
           }
@@ -433,6 +433,7 @@
       save_and_confirm(iss) {
         this.$store.dispatch(action_types.INC_LOADING).then()
         directions_point.paraclinicResultSave({
+          force: true,
           data: {
             ...iss,
             direction: {
@@ -449,7 +450,6 @@
             iss.allow_reset_confirm = true
             iss.confirmed = true
             this.reload_if_need(true)
-            this.changed = false
           } else {
             errmessage(data.message)
           }
@@ -469,7 +469,6 @@
             okmessage('Подтверждение сброшено')
             iss.confirmed = false
             this.reload_if_need()
-            this.changed = false
           } else {
             errmessage(data.message)
           }

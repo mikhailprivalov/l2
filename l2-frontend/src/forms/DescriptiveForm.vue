@@ -20,8 +20,10 @@
             <div :class="{disabled: confirmed,
             empty: notFilled.includes(field.pk),
             required: field.required}" :title="field.required && 'обязательно для заполнения'"
-                 @mouseenter="enter_field"
-                 @mouseleave="leave_field" class="field">
+                 v-on="{
+                  mouseenter: enter_field(field.values_to_input.length > 0),
+                  mouseleave: leave_field(field.values_to_input.length > 0),
+                 }" class="field">
               <div class="field-title" v-if="field.title !== '' && !research.wide_headers">
                 {{field.title}}
               </div>
@@ -115,97 +117,117 @@
 </template>
 
 <script>
-    import Longpress from 'vue-longpress'
-    import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
-    import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
-    import MKBField from '../fields/MKBField'
-    import FormulaField from '../fields/FormulaField'
-    import SelectField from '../fields/SelectField'
-    import RadioField from '../fields/RadioField'
-    import SearchFieldValueField from '../fields/SearchFieldValueField'
-    import SearchFractionValueField from '../fields/SearchFractionValueField'
-    import RichTextEditor from '../fields/RichTextEditor'
+  import Longpress from 'vue-longpress'
+  import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper'
+  import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper'
+  import MKBField from '../fields/MKBField'
+  import FormulaField from '../fields/FormulaField'
+  import SelectField from '../fields/SelectField'
+  import RadioField from '../fields/RadioField'
+  import SearchFieldValueField from '../fields/SearchFieldValueField'
+  import SearchFractionValueField from '../fields/SearchFractionValueField'
+  import RichTextEditor from '../fields/RichTextEditor'
 
-    export default {
-        name: 'DescriptiveForm',
-        components: {
-            RichTextEditor,
-            SearchFractionValueField,
-            SearchFieldValueField,
-            RadioField,
-            SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
+  export default {
+    name: 'DescriptiveForm',
+    components: {
+      RichTextEditor,
+      SearchFractionValueField,
+      SearchFieldValueField,
+      RadioField,
+      SelectField, VisibilityGroupWrapper, VisibilityFieldWrapper, Longpress, MKBField, FormulaField
+    },
+    props: {
+      research: {
+        type: Object,
+        required: true,
+      },
+      patient: {
+        type: Object,
+        required: true,
+      },
+      confirmed: {
+        type: Boolean,
+        required: true,
+      },
+      change_mkb: {
+        type: Function,
+        default: () => {
         },
-        props: {
-            research: {
-                type: Object,
-                required: true,
-            },
-            patient: {
-                type: Object,
-                required: true,
-            },
-            confirmed: {
-                type: Boolean,
-                required: true,
-            },
-            change_mkb: {
-                type: Function,
-                default: () => {
-                },
-                required: false,
-            }
-        },
-        computed: {
-            notFilled() {
-                const l = []
-                if (this.confirmed) {
-                    return []
-                }
-
-                for (const g of this.research.groups) {
-                    let n = 0
-                    for (const f of g.fields) {
-                        n++
-                        if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
-                            l.push(f.pk)
-                        }
-                    }
-                }
-                return l
-            },
-        },
-        methods: {
-            enter_field($e) {
-                this.prev_scroll = $('.results-editor').scrollTop()
-                let $elem = $($e.target)
-                $elem.addClass('open-field')
-            },
-            leave_field($e) {
-                let {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0]
-                if (sh > oh)
-                    $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
-                let $elem = $($e.target)
-                $elem.removeClass('open-field')
-            },
-            append_value(field, value) {
-                let add_val = value
-                if (add_val !== ',' && add_val !== '.') {
-                    if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
-                        if (field.value[field.value.length - 1] === '.') {
-                            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
-                        }
-                        add_val = ' ' + add_val
-                    } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
-                        add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
-                    }
-                }
-                field.value += add_val
-            },
-            clear_val(field) {
-                field.value = ''
-            },
+        required: false,
+      },
+    },
+    data() {
+      return {
+        prev_scroll: 0,
+        prev_scrollHeightTop: 0,
+      }
+    },
+    computed: {
+      notFilled() {
+        const l = []
+        if (this.confirmed) {
+          return []
         }
+
+        for (const g of this.research.groups) {
+          let n = 0
+          for (const f of g.fields) {
+            n++
+            if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value)) {
+              l.push(f.pk)
+            }
+          }
+        }
+        return l
+      },
+    },
+    methods: {
+      enter_field(skip) {
+        if (!skip) {
+          return () => {
+          }
+        }
+        return $e => {
+          this.prev_scroll = $('.results-editor').scrollTop()
+          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor')[0]
+          this.prev_scrollHeightTop = sh - oh
+          const $elem = $($e.target)
+          $elem.addClass('open-field')
+        }
+      },
+      leave_field(skip) {
+        if (!skip) {
+          return () => {
+          }
+        }
+        return $e => {
+          const {offsetHeight: oh, scrollHeight: sh} = $('.results-editor > div')[0]
+          if (sh > oh && this.prev_scrollHeightTop < $('.results-editor').scrollTop())
+            $('.results-editor').scrollTo(this.prev_scroll).scrollLeft(0)
+          let $elem = $($e.target)
+          $elem.removeClass('open-field')
+        }
+      },
+      append_value(field, value) {
+        let add_val = value
+        if (add_val !== ',' && add_val !== '.') {
+          if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
+            if (field.value[field.value.length - 1] === '.') {
+              add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+            }
+            add_val = ' ' + add_val
+          } else if ((field.value.length === 0 || (field.value.length >= 2 && field.value[field.value.length - 2] === '.' && field.value[field.value.length - 1] === '\n')) && field.title === '') {
+            add_val = add_val.replace(/./, add_val.charAt(0).toUpperCase())
+          }
+        }
+        field.value += add_val
+      },
+      clear_val(field) {
+        field.value = ''
+      },
     }
+  }
 </script>
 
 <style scoped lang="scss">

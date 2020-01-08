@@ -216,6 +216,7 @@
                     <option value="13">Поле описательного результата</option>
                     <option value="14">Поле описательного результата без заголовка</option>
                     <option value="15">Текст с форматированием</option>
+                    <option value="16">(Стационар) агрегация по лаборатории</option>
                   </select>
                 </label>
               </div>

@@ -103,7 +103,7 @@ def directions_history(request):
                 has_hosp = False
                 has_slave_hospital = False
                 for v in iss_list:
-                    if v.research.is_slave_hospital:
+                    if v.research.is_slave_hospital and not v.research.is_doc_refferal:
                         has_slave_hospital = True
                         break
 
@@ -228,8 +228,8 @@ def directions_results(request):
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
-            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or\
-                not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
+            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or \
+                                     not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
             if iss_list.filter(doc_confirmation__isnull=False).exists():
                 result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
                     0].doc_confirmation.get_fio()
@@ -946,10 +946,11 @@ def directions_paraclinic_result(request):
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
     tube = request_data.get("direction", {}).get("tube", {})
+    force = request_data.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
-    if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                   | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                   | Q(research__is_stom=True)).exists() or request.user.is_staff:
+    if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                            | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
 
         if tube:
