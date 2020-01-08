@@ -101,7 +101,12 @@ def directions_history(request):
                 researches_pks = []
                 has_descriptive = False
                 has_hosp = False
+                has_slave_hospital = False
                 for v in iss_list:
+                    if v.research.is_slave_hospital:
+                        has_slave_hospital = True
+                        break
+
                     if not has_descriptive and v.research.desc:
                         has_descriptive = True
                     if not has_hosp and v.research.is_hospital:
@@ -122,6 +127,8 @@ def directions_history(request):
                     if v.doc_confirmation and not has_conf:
                         has_conf = True
                     status = min(iss_status, status)
+                if has_slave_hospital:
+                    continue
                 if status == 2 and not has_conf:
                     status = 1
                 if req_status in [3, 4] or req_status == status or iss_pk:
@@ -201,7 +208,8 @@ def directions_results(request):
         for iss in Issledovaniya.objects.filter(napravleniye=napr):
             if iss.research.desc:
                 result["desc"] = True
-                return JsonResponse(result)
+                if not request_data.get("force", False):
+                    return JsonResponse(result)
         for iss in Issledovaniya.objects.filter(napravleniye=napr, time_save__isnull=False):
             if iss.time_save:
                 dt = str(dateformat.format(iss.time_save, settings.DATE_FORMAT))
@@ -220,6 +228,8 @@ def directions_results(request):
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
+            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or\
+                not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
             if iss_list.filter(doc_confirmation__isnull=False).exists():
                 result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
                     0].doc_confirmation.get_fio()
@@ -563,15 +573,19 @@ def directions_last_result(request):
     request_data = json.loads(request.body)
     individual = request_data.get("individual", -1)
     research = request_data.get("research", -1)
-    i = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    parent_iss = request_data.get("parentIss", None)
+    filter = {
+        "napravleniye__client__individual__pk": individual,
+        "research__pk": research,
+    }
+    if parent_iss:
+        filter["napravleniye__parent__pk"] = parent_iss
+    i = Issledovaniya.objects.filter(**filter,
                                      time_confirmation__isnull=False).order_by("-time_confirmation").first()
-    u = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    u = Issledovaniya.objects.filter(**filter,
                                      time_confirmation__isnull=True).order_by(
         "-napravleniye__data_sozdaniya").first()
-    v = Issledovaniya.objects.filter(napravleniye__client__individual__pk=individual,
-                                     research__pk=research,
+    v = Issledovaniya.objects.filter(**filter,
                                      research__is_paraclinic=True,
                                      time_confirmation__isnull=True,
                                      napravleniye__visit_date__isnull=False).order_by(
@@ -720,12 +734,13 @@ def directions_results_report(request):
     return JsonResponse({"data": data})
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_form(request):
     import time
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -1) or -1
+    force_form = request_data.get("force", False)
     if pk >= 4600000000000:
         pk -= 4600000000000
         pk //= 10
@@ -738,9 +753,11 @@ def directions_paraclinic_form(request):
     if dn.exists():
         d = dn[0]
         df = Issledovaniya.objects.filter(napravleniye=d)
-        df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
-                       | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(research__is_microbiology=True))
-        df = df.distinct()
+        if not force_form:
+            df = df.filter(Q(research__is_paraclinic=True, **add_fr) | Q(research__is_doc_refferal=True)
+                           | Q(research__is_treatment=True) | Q(research__is_stom=True) | Q(
+                research__is_microbiology=True))
+            df = df.distinct()
 
         if df.exists():
             response["ok"] = True
@@ -822,16 +839,17 @@ def directions_paraclinic_form(request):
                 if i.research.is_microbiology:
                     pass  # TODO: Fill microbiology results
 
-                for sd in Napravleniya.objects.filter(parent=i):
-                    iss["sub_directions"].append({
-                        "pk": sd.pk,
-                        "cancel": sd.cancel,
-                        "researches": [
-                            x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)
-                        ],
-                    })
+                if not force_form:
+                    for sd in Napravleniya.objects.filter(parent=i):
+                        iss["sub_directions"].append({
+                            "pk": sd.pk,
+                            "cancel": sd.cancel,
+                            "researches": [
+                                x.research.title for x in Issledovaniya.objects.filter(napravleniye=sd)
+                            ],
+                        })
 
-                if iss["research"]["is_doc_refferal"]:
+                if not force_form and iss["research"]["is_doc_refferal"]:
                     iss = {
                         **iss,
                         "purpose": i.purpose_id,
@@ -849,13 +867,14 @@ def directions_paraclinic_form(request):
                                          Outcomes.objects.filter(hide=False).order_by("pk")]
                     }
 
-                    for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
-                        iss["recipe"].append({
-                            "pk": rp.pk,
-                            "prescription": rp.drug_prescription,
-                            "taking": rp.method_of_taking,
-                            "comment": rp.comment,
-                        })
+                    if not force_form:
+                        for rp in Recipe.objects.filter(issledovaniye=i).order_by('pk'):
+                            iss["recipe"].append({
+                                "pk": rp.pk,
+                                "prescription": rp.drug_prescription,
+                                "taking": rp.method_of_taking,
+                                "comment": rp.comment,
+                            })
 
                 ParaclinicTemplateName.make_default(i.research)
 
@@ -891,7 +910,7 @@ def directions_paraclinic_form(request):
                         })
                     iss["research"]["groups"].append(g)
                 response["researches"].append(iss)
-            if response["has_doc_referral"]:
+            if not force_form and response["has_doc_referral"]:
                 response["anamnesis"] = d.client.anamnesis_of_life
 
                 d1, d2 = start_end_year()

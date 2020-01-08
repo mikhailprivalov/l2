@@ -29,117 +29,121 @@
 </template>
 
 <script>
-  import directions_point from '../api/directions-point'
-  import moment from 'moment'
+    import directions_point from '../api/directions-point'
+    import moment from 'moment'
 
-  moment.updateLocale('ru', {
-    relativeTime: {
-      s: 'только что',
-      m: 'только что',
-      mm: '%d мин. назад',
-      h: 'час назад',
-      hh: '%d ч. назад',
-      d: '1 д. назад',
-      dd: '%d д. назад',
-      M: '1 м. назад',
-      MM: '%d м. назад',
-      y: '1 г. назад',
-      yy: '%d г. назад'
-    }
-  })
+    moment.updateLocale('ru', {
+        relativeTime: {
+            s: 'только что',
+            m: 'только что',
+            mm: '%d мин. назад',
+            h: 'час назад',
+            hh: '%d ч. назад',
+            d: '1 д. назад',
+            dd: '%d д. назад',
+            M: '1 м. назад',
+            MM: '%d м. назад',
+            y: '1 г. назад',
+            yy: '%d г. назад'
+        }
+    })
 
-  export default {
-    name: 'last-result',
-    props: {
-      individual: {
-        type: Number
-      },
-      research: {
-        type: Number
-      },
-      noScroll: {
-        default: false,
-        type: Boolean,
-        required: false,
-      }
-    },
-    data() {
-      return {
-        in_load: true,
-        ok: true,
-        direction: -1,
-        ms: 0,
-        days: -1,
-        days_str: -1,
-        date: '',
-        date_orig: '',
-        type: 'result',
-        last_result: {},
-        has_last_result: false,
-        is_paraclinic: false,
-      }
-    },
-    mounted() {
-      this.load()
-    },
-    watch: {
-      individual() {
-        this.load()
-      }
-    },
-    computed: {
-      researche_title() {
-        for (let pk of Object.keys(this.$store.getters.researches_obj)) {
-          let res = this.$store.getters.researches_obj[pk]
-          if (res.pk === this.research) {
-            return res.title
-          }
-        }
-        return ''
-      },
-      warn() {
-        return this.days <= 10 && this.ok && !this.in_load
-      }
-    },
-    methods: {
-      show_result() {
-        if (this.is_paraclinic) {
-          this.$root.$emit('print:results', [this.has_last_result ? this.last_result.direction : this.direction])
-          return
-        }
-        this.$root.$emit('show_results', this.direction)
-      },
-      show_direction() {
-        this.$root.$emit('print:directions', [this.direction])
-      },
-      load() {
-        !this.noScroll && $('.scrolldown').scrollDown()
-        let vm = this
-        directions_point.lastResult(this, ['individual', 'research']).then(data => {
-          vm.in_load = false
-          vm.ok = data.ok
-          if (data.ok) {
-            vm.type = data.type
-            vm.date = data.data.datetime
-            if (data.has_last_result) {
-              vm.last_result = data.last_result
-              vm.has_last_result = data.has_last_result
+    export default {
+        name: 'last-result',
+        props: {
+            individual: {
+                type: Number
+            },
+            research: {
+                type: Number
+            },
+            parentIss: {
+                type: Number,
+                default: null
+            },
+            noScroll: {
+                default: false,
+                type: Boolean,
+                required: false,
             }
-            vm.is_paraclinic = data.data.is_desc
-            let m = moment.unix(data.data.ts)
-            let n = moment()
-            vm.ms = n.diff(m)
-            vm.days = n.diff(m, 'days')
-            vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
-            vm.direction = data.data.direction
-          }
-          !this.noScroll && setTimeout(() => {
-            $('.scrolldown').scrollDown()
-          }, 10)
-        })
-      },
-    },
-  }
+        },
+        data() {
+            return {
+                in_load: true,
+                ok: true,
+                direction: -1,
+                ms: 0,
+                days: -1,
+                days_str: -1,
+                date: '',
+                date_orig: '',
+                type: 'result',
+                last_result: {},
+                has_last_result: false,
+                is_paraclinic: false,
+            }
+        },
+        mounted() {
+            this.load()
+        },
+        watch: {
+            individual() {
+                this.load()
+            }
+        },
+        computed: {
+            researche_title() {
+                for (let pk of Object.keys(this.$store.getters.researches_obj)) {
+                    let res = this.$store.getters.researches_obj[pk]
+                    if (res.pk === this.research) {
+                        return res.title
+                    }
+                }
+                return ''
+            },
+            warn() {
+                return this.days <= 10 && this.ok && !this.in_load
+            }
+        },
+        methods: {
+            show_result() {
+                if (this.is_paraclinic) {
+                    this.$root.$emit('print:results', [this.has_last_result ? this.last_result.direction : this.direction])
+                    return
+                }
+                this.$root.$emit('show_results', this.direction)
+            },
+            show_direction() {
+                this.$root.$emit('print:directions', [this.direction])
+            },
+            load() {
+                !this.noScroll && $('.scrolldown').scrollDown()
+                let vm = this
+                directions_point.lastResult(this, ['individual', 'research', 'parentIss']).then(data => {
+                    vm.in_load = false
+                    vm.ok = data.ok
+                    if (data.ok) {
+                        vm.type = data.type
+                        vm.date = data.data.datetime
+                        if (data.has_last_result) {
+                            vm.last_result = data.last_result
+                            vm.has_last_result = data.has_last_result
+                        }
+                        vm.is_paraclinic = data.data.is_desc
+                        let m = moment.unix(data.data.ts)
+                        let n = moment()
+                        vm.ms = n.diff(m)
+                        vm.days = n.diff(m, 'days')
+                        vm.days_str = moment.duration(vm.ms).locale('ru').humanize()
+                        vm.direction = data.data.direction
+                    }
+                    !this.noScroll && setTimeout(() => {
+                        $('.scrolldown').scrollDown()
+                    }, 10)
+                })
+            },
+        },
+    }
 </script>
 
 <style scoped lang="scss">
@@ -151,11 +155,14 @@
 
   .warn {
     background-color: #ffa04d;
+
     &.direction {
       background-color: #ff391a;
+
       td {
         color: #fff;
       }
+
       a {
         color: #fff !important;
       }

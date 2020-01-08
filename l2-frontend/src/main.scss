@@ -1578,3 +1578,12 @@ body > .container-fluid {
     padding: 2px 10px;
   }
 }
+
+.table > tbody + tbody {
+  border-top: 1px solid #000!important;
+}
+
+@import "./variables";
+@import "./editor";
+@import "./menubar";
+@import "./menububble";

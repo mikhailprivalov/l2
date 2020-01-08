@@ -18,9 +18,9 @@
       </button>
       <div class="top-inner">
         <div @click="select_dep(row.pk)" class="top-inner-select" :class="{active: row.pk === dep}"
-                :title="row.title"
-                v-tippy="{ placement : 'bottom', arrow: true }"
-                v-for="row in departments_of_type">
+             :title="row.title"
+             v-tippy="{ placement : 'bottom', arrow: true }"
+             v-for="row in departments_of_type">
           <span>
             {{ row.title }}
             <span v-if="researches_selected_in_department(row.pk).length > 0"> ({{researches_selected_in_department(row.pk).length}})</span>
@@ -28,8 +28,10 @@
         </div>
       </div>
     </div>
-    <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}" v-if="researches_display.length > 0">
+    <div class="content-picker" :class="{hidetemplates: hidetemplates && !just_search}"
+         v-if="researches_display.length > 0">
       <research-pick @click.native="select_research(row.pk)" class="research-select"
+                     :key="row.pk"
                      :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
                      v-for="row in researches_display" :research="row"/>
     </div>
@@ -59,7 +61,7 @@
             </div>
           </div>
           <input type="text" placeholder="Поиск шаблона" id="template-search"
-                 v-model="search_template" class="form-control" style="width: calc(100% - 35px);max-width: 300px;" />
+                 v-model="search_template" class="form-control" style="width: calc(100% - 35px);max-width: 300px;"/>
           <button class="btn btn-blue-nb bottom-inner-btn" @click="clear_search_template"
                   v-tippy="{ placement : 'top', arrow: true }"
                   style="width: 35px" title="Очистить поиск">
@@ -142,15 +144,15 @@
         required: false,
       },
       filter_types: {
-        default(){
-          return [];
+        default() {
+          return []
         },
         type: Array,
         required: false,
       },
       filter_researches: {
-        default(){
-          return [];
+        default() {
+          return []
         },
         type: Array,
         required: false,
@@ -158,6 +160,12 @@
       kk: {
         type: String,
         default: '',
+      },
+      typesOnly: {
+        type: Array,
+        default() {
+          return []
+        }
       },
     },
     data() {
@@ -230,23 +238,27 @@
         this.check_template()
       },
       checked_researches() {
-        if(this.oneselect) {
-          this.$emit('input', this.checked_researches.length === 0? -1 : this.checked_researches[0])
-          return;
+        if (this.oneselect) {
+          this.$emit('input', this.checked_researches.length === 0 ? -1 : this.checked_researches[0])
+          return
         }
         this.$emit('input', this.checked_researches)
       },
       search() {
         this.check_found_tip()
       },
-      search_template: debounce(function(nv) { this.do_search_template(nv) }, 80)
+      search_template: debounce(function (nv) {
+        this.do_search_template(nv)
+      }, 80)
     },
     computed: {
       types() {
         let t = []
         for (let row of this.$store.getters.allTypes) {
           if (row.pk !== '0' && row.pk !== '1' && !this.filter_types.includes(parseInt(row.pk))) {
-            t.push(row)
+            if (this.typesOnly.length === 0 || this.typesOnly.includes(parseInt(row.pk))) {
+              t.push(row)
+            }
           }
         }
         return t
@@ -270,10 +282,10 @@
         return i
       },
       t() {
-        return parseInt(this.type || 0);
+        return parseInt(this.type || 0)
       },
       rev_t() {
-        return this.is_doc_ref ? 2 - this.t : this.t;
+        return this.is_doc_ref ? 2 - this.t : this.t
       },
       is_doc_ref() {
         return parseInt(this.type || 0) > 3
@@ -304,7 +316,7 @@
         return this.$store.getters.templates
       },
       researches_display() {
-        return this.researches_dep_display();
+        return this.researches_dep_display()
       },
       founded_n() {
         let r = 'Не найдено'
@@ -324,24 +336,24 @@
       load_templates() {
 
       },
-      researches_dep_display(dep=this.dep) {
-        let r = [];
-        if(this.rev_t === -2) {
-          for(const d of Object.keys(this.$store.getters.researches)) {
-            for(const row of (this.$store.getters.researches[d] || [])) {
-              if(row.doc_refferal && row.site_type === dep) {
-                r.push(row);
+      researches_dep_display(dep = this.dep) {
+        let r = []
+        if (this.rev_t === -2) {
+          for (const d of Object.keys(this.$store.getters.researches)) {
+            for (const row of (this.$store.getters.researches[d] || [])) {
+              if (row.doc_refferal && row.site_type === dep) {
+                r.push(row)
               }
             }
           }
-        } else if(this.rev_t < -2) {
-          for(const row of (this.$store.getters.researches[this.rev_t] || [])) {
-            if(row.site_type === dep || (dep === -1 && !row.site_type)) {
-              r.push(row);
+        } else if (this.rev_t < -2) {
+          for (const row of (this.$store.getters.researches[this.rev_t] || [])) {
+            if (row.site_type === dep || (dep === -1 && !row.site_type)) {
+              r.push(row)
             }
           }
         } else if (this.dep in this.$store.getters.researches) {
-          r = this.$store.getters.researches[dep];
+          r = this.$store.getters.researches[dep]
         }
         return r.filter(x => !this.filter_researches.includes(x.pk))
       },
@@ -411,7 +423,7 @@
       },
       load_template(pk) {
         if (this.readonly) {
-          return;
+          return
         }
         let last_dep = -1
         let last_type = -1
@@ -430,15 +442,21 @@
             return t
           }
         }
-        return {title: 'Не выбран шаблон', pk: '-1', for_current_user: false, for_users_department: false, values: []}
+        return {
+          title: 'Не выбран шаблон',
+          pk: '-1',
+          for_current_user: false,
+          for_users_department: false,
+          values: []
+        }
       },
       select_research(pk) {
         if (this.readonly) {
-          return;
+          return
         }
-        if(this.oneselect) {
+        if (this.oneselect) {
           this.checked_researches = [pk]
-          return;
+          return
         }
         if (this.research_selected(pk)) {
           this.deselect_research_ignore(pk)
@@ -448,7 +466,7 @@
       },
       select_research_ignore(pk) {
         if (this.readonly) {
-          return;
+          return
         }
         if (!this.research_selected(pk)) {
           this.checked_researches.push(pk)
@@ -462,7 +480,7 @@
       },
       deselect_research_ignore(pk) {
         if (this.readonly) {
-          return;
+          return
         }
         if (this.research_selected(pk)) {
           this.checked_researches = this.checked_researches.filter(item => item !== pk)
@@ -476,7 +494,7 @@
       },
       deselect_department(pk) {
         if (this.readonly) {
-          return;
+          return
         }
         for (let rpk of this.researches_selected_in_department(pk, true)) {
           this.deselect_research_ignore(rpk)
@@ -519,7 +537,7 @@
         return {}
       },
       researches_selected_in_department(pk, prim) {
-        let r = [];
+        let r = []
         if (prim) {
           for (let rpk of this.checked_researches) {
             let res = this.research_data(rpk)
@@ -543,41 +561,41 @@
         return r
       },
       researches_selected_in_type(pk) {
-        let l = 0;
+        let l = 0
         for (let rpk of this.checked_researches) {
           let res = this.research_data(rpk)
           if (
             (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
-            (pk === "4" && res.doc_refferal) ||
-            (pk === "5" && res.treatment) ||
-            (pk === "6" && res.stom) ||
-            (pk === "7" && res.is_hospital)
+            (pk === '4' && res.doc_refferal) ||
+            (pk === '5' && res.treatment) ||
+            (pk === '6' && res.stom) ||
+            (pk === '7' && res.is_hospital)
           ) {
-            l++;
+            l++
           }
         }
-        return l > 0 ? ` (${l})` : '';
+        return l > 0 ? ` (${l})` : ''
       },
       researches_selected_in_type_list(pk) {
-        let l = [];
+        let l = []
         for (let rpk of this.checked_researches) {
           let res = this.research_data(rpk)
           if (
             (res.type === pk && !res.doc_refferal && !res.treatment && !res.stom) ||
-            (pk === "4" && res.doc_refferal) ||
-            (pk === "5" && res.treatment) ||
-            (pk === "6" && res.stom) ||
-            (pk === "7" && res.is_hospital)
+            (pk === '4' && res.doc_refferal) ||
+            (pk === '5' && res.treatment) ||
+            (pk === '6' && res.stom) ||
+            (pk === '7' && res.is_hospital)
           ) {
-            l.push(res);
+            l.push(res)
           }
         }
-        return l;
+        return l
       },
       do_search_template(nv) {
         this.founded_templates = []
         const t = this
-        if (nv === "")
+        if (nv === '')
           return
         fetch('/api/search-template?q=' + encodeURIComponent(nv)).then(q => {
           return q.json()
@@ -596,13 +614,13 @@
 
         const d = this.research_data(pks[pks.length - 1])
         this.select_type(d.type)
-        if (d.type !== "4") {
+        if (d.type !== '4') {
           this.select_dep(d.department_pk)
         }
         this.clear_search_template()
       },
       clear_search_template() {
-        this.search_template = ""
+        this.search_template = ''
       }
     }
   }
@@ -711,12 +729,15 @@
   .content-picker, .content-none {
     position: absolute;
     top: 34px;
+
     &:not(.hidetemplates) {
       bottom: 34px;
     }
+
     &.hidetemplates {
       bottom: 0;
     }
+
     left: 0;
     right: 0;
     overflow-y: auto;
@@ -727,6 +748,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 11px;
+
     input {
       max-width: 350px;
       width: 100%;
@@ -751,13 +773,14 @@
     background: #fff;
     border-radius: 5px 5px 0 0;
     overflow: hidden;
-    box-shadow: 0 -2px 2px rgba(0,0,0,.4);
+    box-shadow: 0 -2px 2px rgba(0, 0, 0, .4);
   }
 
   .founded-template {
     padding: 6px 12px;
     font-size: 14px;
     cursor: pointer;
+
     &:hover {
       background: #049372;
       color: #fff;

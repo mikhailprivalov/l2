@@ -33,6 +33,7 @@
           <td>{{row.title}}</td>
           <td class="pb0">
             <research-display v-for="(res, idx) in row.researches" :simple="simple"
+                              :key="res.pk"
                               :title="res.title" :pk="res.pk" :n="idx"
                               :kk="kk"
                               :comment="(localizations[res.pk] || {}).label || comments[res.pk]"

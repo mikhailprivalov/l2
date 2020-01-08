@@ -116,7 +116,7 @@
                         d.push({value: -504, label: '– Фармакотерапия'})
                         d.push({value: -505, label: '– Физиотерапия'})
                         d.push({value: -506, label: '– Эпикриз'})
-                        d.push({value: -506, label: '– Выписка'})
+                        d.push({value: -507, label: '– Выписка'})
                     }
                 }
 

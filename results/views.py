@@ -12,12 +12,10 @@ from django.utils import dateformat
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.pdfbase import pdfdoc
 from reportlab.platypus import PageBreak, Spacer, KeepInFrame, KeepTogether
-from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.colors import white, black
 from reportlab.lib.enums import TA_JUSTIFY
 import directory.models as directory
 import slog.models as slog
-import users.models as users
 from appconf.manager import SettingManager
 from clients.models import CardBase
 from directions.models import TubesRegistration, Issledovaniya, Result, Napravleniya, IstochnikiFinansirovaniya, \
@@ -28,8 +26,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_parse_range
 from utils.pagenum import PageNumCanvas
-from collections import OrderedDict
-import os
+import imgkit
 from pdfrw import PdfReader, PdfWriter
 import random
 from decimal import Decimal
@@ -432,7 +429,6 @@ def result_print(request):
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.lib.units import mm
-    from django.utils import timezone
     import os.path
 
     pdfmetrics.registerFont(
@@ -464,6 +460,7 @@ def result_print(request):
     split = request.GET.get("split", "1") == "1"
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
     sick_document = request.GET.get("sick_list", "0") == "1"
+    leftnone = request.GET.get("leftnone", "0") == "0"
 
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, PTOContainer, Image
     from reportlab.platypus.flowables import HRFlowable
@@ -474,7 +471,7 @@ def result_print(request):
     # w, h = A4
 
     doc = SimpleDocTemplate(buffer, pagesize=A4,
-                            leftMargin=(54 if request.GET.get("leftnone", "0") == "0" else 5) * mm,
+                            leftMargin=(54 if leftnone else 5) * mm,
                             rightMargin=5 * mm, topMargin=5 * mm,
                             bottomMargin=16 * mm, allowSplitting=1,
                             title="Результаты для направлений {}".format(", ".join([str(x) for x in pk])))
@@ -618,6 +615,8 @@ def result_print(request):
             if iss.research.is_paraclinic or iss.research.is_doc_refferal or iss.research.is_treatment:
                 has_paraclinic = True
                 not_lab = True
+            if directory.HospitalService.objects.filter(slave_research=iss.research).exists():
+                has_paraclinic = True
             if iss.link_file:
                 link_result.append(iss.link_file)
                 link_files = True
@@ -1193,27 +1192,112 @@ def result_print(request):
                                 fwb.append(Spacer(1, 0.25 * mm))
                                 group_title = True
                             for r in results:
-                                v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
-                                v = v.replace('&lt;sub&gt;', '<sub>')
-                                v = v.replace('&lt;/sub&gt;', '</sub>')
-                                v = v.replace('&lt;sup&gt;', '<sup>')
-                                v = v.replace('&lt;/sup&gt;', '</sup>')
-                                if r.field.field_type == 1:
-                                    vv = v.split('-')
-                                    if len(vv) == 3:
-                                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-                                if r.field.field_type in [11, 13]:
-                                    v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
-                                if r.field.get_title() != "":
-                                    fwb.append(Paragraph(
-                                        "<font face=\"OpenSansBold\">{}:</font> {}".format(
-                                            r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v),
-                                        style_ml if group_title else style))
+                                if r.field.field_type == 15:
+                                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+
+                                    size_css = f"""
+html, body {{
+    width: {1000 if leftnone else 1300}px;
+}}
+"""
+
+                                    css = """
+html, body, div,
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+body {
+    padding-left: 15px;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    word-break: break-word;
+    white-space: normal;
+}
+
+td {
+    padding: 2px;
+}
+
+td p, li p {
+    margin: 0;
+}
+
+h1 {
+    font-size: 24px;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+h3 {
+    font-size: 18px;
+}
+                                    """
+
+                                    imgkit.from_string(f"""
+<html>
+    <head>
+        <meta name="imgkit-format" content="png"/>
+        <meta name="imgkit-quality" content="100"/>
+        <meta name="imgkit-zoom" content="3"/>
+        <meta charset="utf-8">
+        <style>
+            {size_css}
+            {css}
+        </style>
+    </head>
+    <body>
+        {r.value}
+    </body>
+</html>
+                                    """, file_tmp)
+
+                                    i = Image(file_tmp)
+                                    i.drawHeight = i.drawHeight * (pw / i.drawWidth)
+                                    i.drawWidth = pw
+                                    fwb.append(i)
+                                    os.remove(file_tmp)
                                 else:
-                                    fwb.append(Paragraph(v, style))
-                                # чтобы вывести в будущем дополнительно сведения о листке нетрудоспособности (квиток, талон, корешок)
-                                if sick_title:
-                                    sick_result[r.field.get_title()] = v
+                                    v = r.value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                                    v = v.replace('&lt;sub&gt;', '<sub>')
+                                    v = v.replace('&lt;/sub&gt;', '</sub>')
+                                    v = v.replace('&lt;sup&gt;', '<sup>')
+                                    v = v.replace('&lt;/sup&gt;', '</sup>')
+                                    if r.field.field_type == 1:
+                                        vv = v.split('-')
+                                        if len(vv) == 3:
+                                            v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                                    if r.field.field_type in [11, 13]:
+                                        v = '<font face="ChampB" size="8">{}</font>'.format(
+                                            v.replace("&lt;br/&gt;", " "))
+                                    if r.field.get_title() != "":
+                                        fwb.append(Paragraph(
+                                            "<font face=\"OpenSansBold\">{}:</font> {}".format(
+                                                r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v),
+                                            style_ml if group_title else style))
+                                    else:
+                                        fwb.append(Paragraph(v, style))
+                                    if sick_title:
+                                        sick_result[r.field.get_title()] = v
                 else:
                     txt = ""
                     sick_result = None
@@ -1243,7 +1327,7 @@ def result_print(request):
                                     v = '<font face="ChampB" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
                                 if r.field.get_title() != "":
                                     vals.append("{}:&nbsp;{}".format(
-                                            r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
+                                        r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
                                 else:
                                     vals.append(v)
                                 if sick_title:

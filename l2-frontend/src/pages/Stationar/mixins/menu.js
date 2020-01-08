@@ -19,6 +19,7 @@ export default {
     return {
       menuItems,
       menuNeedPlus: {
+        'primary receptions': true,
         laboratory: true,
         paraclinical: true,
         consultation: true,
@@ -30,6 +31,14 @@ export default {
         't, ad, p sheet': true,
         epicrisis: true,
         extracts: true,
+      },
+      plusDirectionsMode: {
+        laboratory: true,
+        paraclinical: true,
+        consultation: true,
+      },
+      allowedOnlyOneEntry: {
+        'primary receptions': true,
       }
     }
   }

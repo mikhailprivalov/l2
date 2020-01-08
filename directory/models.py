@@ -162,6 +162,7 @@ class Researches(models.Model):
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
     auto_add_hidden = models.ManyToManyField('directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)")
+    vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
     @staticmethod
     def filter_type(t):
@@ -224,6 +225,17 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
     )
 
+    TYPES_BY_KEYS = {
+        'primary receptions': 0,
+        'diaries': 1,
+        'vc': 2,
+        'operation': 3,
+        'pharmacotherapy': 4,
+        'physiotherapy': 5,
+        'epicrisis': 6,
+        'extracts': 7,
+    }
+
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
                                       db_index=True)
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип подраздела в стационарной карте", db_index=True)
@@ -268,6 +280,7 @@ class ParaclinicInputField(models.Model):
         (12, 'Radio'),
         (13, 'Protocol field'),
         (14, 'Protocol raw field'),
+        (15, 'Rich text'),
     )
 
     title = models.CharField(max_length=400, help_text='Название поля ввода')
