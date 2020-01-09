@@ -165,10 +165,11 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
                     research_fraction_vertical = get_distinct_fraction(iss_id_vertical)
                     fraction_title = []
-                    fraction_units = []
+                    fraction_title_units = []
                     for f in research_fraction_vertical:
                         fraction_title.append(f[1])
-                        fraction_units.append(f[2])
+                        title_unit = f', {f[2]}' if f[2] else ''
+                        fraction_title_units.append(f'{f[1]}{title_unit}')
                     fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
                     fraction_result = get_result_fraction(iss_id_vertical)
                     vertical_temp_results = {}
@@ -188,7 +189,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
                             tmp_list_vert[position_element] = f[3]
                             vertical_temp_results[key] = tmp_list_vert
                     vertical['title_research'] = Researches.objects.get(pk=id_research_vertical).title
-                    vertical['title_fracions'] = fraction_title
+                    vertical['title_fracions'] = fraction_title_units
                     vertical['result'] = vertical_temp_results
                     vertical1 = deepcopy(vertical)
                     vertical_result.append(vertical1)
@@ -206,10 +207,11 @@ def hosp_get_lab_iss(current_iss, extract=False):
             if iss_id_horizontal:
                 fraction_horizontal = get_distinct_fraction(iss_id_horizontal)
                 fraction_title = []
-                fraction_units = []
+                fraction_title_units = []
                 for f in fraction_horizontal:
                     fraction_title.append(f[1])
-                    fraction_units.append(f[2])
+                    title_unit = f', {f[2]}' if f[2] else ''
+                    fraction_title_units.append(f'{f[1]}{title_unit}')
 
                 fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
                 fraction_result = get_result_fraction(iss_id_horizontal)
@@ -231,7 +233,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
                         tmp_list2[position_element] = f[3]
                         temp_results[key] = tmp_list2
 
-                horizontal['title_fracions'] = fraction_title
+                horizontal['title_fracions'] = fraction_title_units
                 horizontal['result'] = temp_results
                 horizontal_result.append(horizontal)
                 result[i.title]['horizontal'] = horizontal_result
