@@ -16,6 +16,7 @@ from reportlab.lib.colors import black
 from appconf.manager import SettingManager
 from clients.models import Card, Document
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
@@ -27,6 +28,7 @@ from . import forms_func
 from reportlab.pdfgen import canvas
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
 from api.stationar.sql_func import get_result_value_iss
+from api.sql_func import get_fraction_result
 
 
 def form_01(request_data):
@@ -176,13 +178,54 @@ def form_01(request_data):
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
         primary_research_id = hosp_primary_receptions[0].get('research_id')
 
-    titles_field = []
+    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
+                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+                    'Вид госпитализации',
+                    'Время через, которое доставлен после начала заболевания, получения травмы']
 
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
+    date_entered_value, time_entered_value, type_transport, medicament_allergy  = '', '', '', ''
+    who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill = '', '', '', '', ''
+
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата поступления':
+                date_entered_value = i[2]
+                continue
+            if i[3] == 'Время поступления':
+                time_entered_value = i[2]
+                continue
+            if i[3] == 'Виды транспортировки':
+                type_transport = i[2]
+                continue
+            if i[3] == 'Побочное действие лекарств (непереносимость)':
+                medicament_allergy = i[2]
+                continue
+            if i[3] == 'Кем направлен больной':
+                who_directed = i[2]
+                continue
+            if i[3] == 'Вид госпитализации':
+                type_hospital = i[2]
+            if type_hospital == 'Экстренная':
+                time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
+                if time_start_ill_obj:
+                    time_start_ill = time_start_ill_obj[0][2]
+                extra_hospital = "Да"
+                plan_hospital = "Нет"
+
+        if date_entered_value:
+            vv = date_entered_value.split('-')
+            if len(vv) == 3:
+                date_entered_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+
     ###########################################################################################################
-    #Заполнить данный Формы из Первичного приема и из Выписки
+
+    fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
+    fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
+    group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
+    group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
@@ -193,24 +236,24 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
 
-        Paragraph('Дата и время поступления: {}'.format('из первичного осмотра'), style),
+        Paragraph('Дата и время поступления: {} - {}'.format(date_entered_value, time_entered_value), style),
         Spacer(1, 2 * mm),
 
         Paragraph('Дата и время выписки: {} - {}'.format(date_value, time_value), style),
         Spacer(1, 2 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 2 * mm),
-        Paragraph('Палата №: {}'.format('руками'), style),
+        Paragraph('Палата №: {}'.format('_________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Переведен в отделение: {}'.format('Из куда (дата перевода)'), style),
+        Paragraph('Переведен в отделение: {}'.format('______________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Проведено койко-дней: {}'.format('в отделении Х - 10дн, в отделенииY - 15 дн. Из дельты м/д направлениями'), style),
+        Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Виды транспортировки: на каталке, на кресле, может идти: {}'.format('из первичного приема'), style),
+        Paragraph('Виды транспортировки: на каталке, на кресле, может идти: {}'.format(type_transport), style),
         Spacer(1, 2 * mm),
-        Paragraph('Группа крови: {} Резус-принадлежность {}'.format('из анализа(по показаниям)','из анализа'), style),
+        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo[0][5],group_blood_rezus[0][5]), style),
         Spacer(1, 2 * mm),
-        Paragraph('Побочное действие лекарств(непереносимость): {} '.format('из первичного приема самого главного направления'), style),
+        Paragraph('Побочное действие лекарств(непереносимость): {} '.format(medicament_allergy), style),
 
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
@@ -225,13 +268,13 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('5. Место работы, профессия или должность', style),
         Spacer(1, 2 * mm),
-        Paragraph('6. Кем направлен больной: {}'.format('из первичного приема'), style),
+        Paragraph('6. Кем направлен больной: {}'.format(who_directed), style),
         Spacer(1, 2 * mm),
-        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format('из первичного приема'), style),
+        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(extra_hospital), style),
         Spacer(1, 2 * mm),
-        Paragraph(' через: {} '.format('часов после начала заболевания, получения травмы;'), style),
+        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(time_start_ill), style),
         Spacer(1, 2 * mm),
-        Paragraph(' госпитализирован в плановом порядке (подчеркнуть).'.format('из первичного приема'), style),
+        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(plan_hospital), style),
         Spacer(1, 2 * mm),
         Paragraph('8. Диагноз направившего учреждения: {}'.format('из первичного приема'), style),
         Spacer(1, 2 * mm),
