@@ -223,6 +223,7 @@ class HospitalService(models.Model):
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
         (7, 'Выписка'),
+        (8, 'Больничный лист'),
     )
 
     TYPES_BY_KEYS = {
@@ -234,6 +235,7 @@ class HospitalService(models.Model):
         'physiotherapy': 5,
         'epicrisis': 6,
         'extracts': 7,
+        'bl': 8,
     }
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
