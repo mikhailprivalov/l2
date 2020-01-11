@@ -1,7 +1,7 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle
+    TableStyle, Frame, KeepInFrame
 from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
@@ -26,7 +26,7 @@ import os.path
 from io import BytesIO
 from . import forms_func
 from reportlab.pdfgen import canvas
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
 
@@ -63,7 +63,7 @@ def form_01(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=6 * mm, allowSplitting=1,
+                            bottomMargin=4 * mm, allowSplitting=1,
                             title="Форма {}".format("003/у"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -181,13 +181,15 @@ def form_01(request_data):
     titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
                     'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
                     'Вид госпитализации',
-                    'Время через, которое доставлен после начала заболевания, получения травмы']
-
+                    'Время через, которое доставлен после начала заболевания, получения травмы',
+                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
-    date_entered_value, time_entered_value, type_transport, medicament_allergy  = '', '', '', ''
-    who_directed, plan_hospital, extra_hospital, type_hospital, time_start_ill = '', '', '', '', ''
+
+    date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
+    who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
+    time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
 
     if list_values:
         for i in list_values:
@@ -214,6 +216,16 @@ def form_01(request_data):
                     time_start_ill = time_start_ill_obj[0][2]
                 extra_hospital = "Да"
                 plan_hospital = "Нет"
+            else:
+                plan_hospital = "Да"
+                extra_hospital = "Нет"
+                time_start_ill = ''
+            if i[3] == 'Диагноз направившего учреждения':
+                diagnos_who_directed = i[2]
+                continue
+            if i[3] =='Диагноз при поступлении':
+                diagnos_entered = i[2]
+                continue
 
         if date_entered_value:
             vv = date_entered_value.split('-')
@@ -226,7 +238,40 @@ def form_01(request_data):
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
     group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
-    content_title = [
+    group_rezus_value = group_blood_rezus[0][5].replace('<br/>',' ')
+    ###########################################################################################################
+    #получение данных клинического диагноза
+    hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
+    day_entries_iss = []
+    day_entries_research_id = None
+    if hosp_day_entries:
+        for i in hosp_day_entries:
+            #найти дневники совместно с заведующим
+            if i.get('research_title').find('заведующ') != -1:
+                day_entries_iss.append(i.get('iss'))
+                if not day_entries_research_id:
+                    day_entries_research_id = i.get('research_id')
+
+    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+    list_values = []
+    if titles_field and day_entries_iss:
+        for i in day_entries_iss:
+            print(i)
+            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
+    print(list_values)
+    s = ''
+    for i in list_values:
+        date_diag = i[0][2]
+        if date_diag:
+            vv = date_diag.split('-')
+            if len(vv) == 3:
+                date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                s = s + '<br/>'+ i[1][2] + '; дата:' + date_diag
+                print(s)
+
+
+
+    title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
         Paragraph(
@@ -249,14 +294,12 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Виды транспортировки: на каталке, на кресле, может идти: {}'.format(type_transport), style),
+        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(type_transport), style),
         Spacer(1, 2 * mm),
-        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo[0][5],group_blood_rezus[0][5]), style),
+        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo[0][5], group_rezus_value), style),
         Spacer(1, 2 * mm),
-        Paragraph('Побочное действие лекарств(непереносимость): {} '.format(medicament_allergy), style),
-
-        Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
+        Paragraph('Побочное действие лекарств(непереносимость):', style),
+        Spacer(1, 12 * mm),
         Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
         Spacer(1, 2 * mm),
         Paragraph(
@@ -276,12 +319,14 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(plan_hospital), style),
         Spacer(1, 2 * mm),
-        Paragraph('8. Диагноз направившего учреждения: {}'.format('из первичного приема'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('9. Диагноз при поступлении: {}'.format('из первичного приема'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('Диагноз клинический: {}'.format('Из диагностических эпикризов всех направлений(отделений)'), style),
-        PageBreak(),
+        Paragraph('8. Диагноз направившего учреждения:', style),
+        Spacer(1, 8 * mm),
+        Paragraph('9. Диагноз при поступлении:', style),
+        Spacer(1, 10 * mm),
+        Paragraph('10. Диагноз клинический:', style),
+        PageBreak()]
+
+    second_page = [
         Spacer(1, 2 * mm),
         Paragraph('11. Диагноз заключительный клинический: {}'.format('Из выписки'), style),
         Spacer(1, 2 * mm),
@@ -322,13 +367,43 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('___________________________________________________________________', style),
         Spacer(1, 2 * mm),
-        Paragraph('19. Особые отметки', style),
+        Paragraph('19. Особые отметки', style)
     ]
 
-    objs.extend(content_title)
+    objs.extend(title_page)
+    objs.extend(second_page)
+
 
     def first_pages(canvas, document):
         canvas.saveState()
+        #Побочное действие лекарств(непереносимость) координаты
+        medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
+        medicament_frame = Frame(27 * mm, 163 * mm, 175 * mm, 12 * mm, leftPadding=0, bottomPadding=0,
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
+        medicament_frame.addFromList([medicament_inframe], canvas)
+
+        #Диагноз направившего учреждения координаты
+        diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
+        diagnos_directed_frame = Frame(27 * mm, 81 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
+        diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
+
+        # Диагноз при поступлении координаты
+        diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
+        diagnos_entered_frame = Frame(27 * mm, 67 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
+                                               vAlign='TOP', )
+        diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
+
+        #клинический диагноз координаты
+        diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
+        diagnos_frame = Frame(27 * mm, 5 * mm, 175 * mm, 60 * mm, leftPadding=0, bottomPadding=0,
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_inframe = KeepInFrame(175 * mm, 60 * mm, diagnos_text)
+        diagnos_frame.addFromList([diagnos_inframe], canvas)
         canvas.restoreState()
 
     def later_pages(canvas, document):
