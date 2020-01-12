@@ -117,6 +117,7 @@
                         d.push({value: -505, label: '– Физиотерапия'})
                         d.push({value: -506, label: '– Эпикриз'})
                         d.push({value: -507, label: '– Выписка'})
+                        d.push({value: -508, label: '– Больничный лист'})
                     }
                 }
 

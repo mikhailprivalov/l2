@@ -36,10 +36,10 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     can_has_pacs = models.BooleanField(default=False, blank=True)
 
     def get_title(self):
-        return self.short_title if self.short_title != '' else self.title
+        return self.short_title or self.title
 
-    def __str__(self):  # Функция перевода экземпляра класса Podrazdeleniya в строку
-        return self.title  # Возврат поля Podrazdeleniya.title
+    def __str__(self):
+        return self.title
 
     class Meta:
         verbose_name = 'Подразделение'

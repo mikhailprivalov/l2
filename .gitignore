@@ -224,3 +224,4 @@ assets/static/img/logo*
 static/*
 !/static/.gitkeep
 .DS_Store
+venv*

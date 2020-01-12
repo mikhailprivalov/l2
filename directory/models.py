@@ -58,8 +58,8 @@ class ResearchSite(models.Model):
         (0, 'Консультация врача'),
         (1, 'Лечение'),
         (2, 'Стоматалогия'),
-        (3, 'Микробиология'),
-        (4, 'Стационар'),
+        (3, 'Стационар'),
+        (4, 'Микробиология'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -171,7 +171,8 @@ class Researches(models.Model):
             5: dict(is_doc_refferal=True),
             6: dict(is_treatment=True),
             7: dict(is_stom=True),
-            8: dict(is_microbiology=True),
+            8: dict(is_hospital=True),
+            9: dict(is_microbiology=True),
         }
         return ts.get(t, {})
 
@@ -223,6 +224,7 @@ class HospitalService(models.Model):
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
         (7, 'Выписка'),
+        (8, 'Больничный лист'),
     )
 
     TYPES_BY_KEYS = {
@@ -234,6 +236,7 @@ class HospitalService(models.Model):
         'physiotherapy': 5,
         'epicrisis': 6,
         'extracts': 7,
+        'bl': 8,
     }
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE,
