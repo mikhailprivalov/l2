@@ -463,24 +463,7 @@ def form_01(request_data):
 
     for fields_operation in list_values:
         for field in fields_operation:
-            print(field)
-
-    # for i in list_values:
-    #     if (i[1][3]).find('Дата установления диагноза') != -1:
-    #         date_diag = i[1][2]
-    #         if date_diag:
-    #             vv = date_diag.split('-')
-    #             if len(vv) == 3:
-    #                 date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-    #                 s = s + i[0][2] + '; дата:' + date_diag + '<br/>'
-    #     elif (i[0][3]).find('Дата установления диагноза') != -1:
-    #         date_diag = i[0][2]
-    #         if date_diag:
-    #             vv = date_diag.split('-')
-    #             if len(vv) == 3:
-    #                 date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
-    #                 s = s + i[1][2] + '; дата:' + date_diag + '<br/>'
-    #
+            pass
 
     def later_pages(canvas, document):
         canvas.saveState()
