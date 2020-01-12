@@ -485,7 +485,6 @@ def form_01(request_data):
             operation_template[0] = Paragraph(str(x), styleTO)
             operation_template[2] = Paragraph(date_time.get('date') + '<br/>' + date_time.get('time_start') + '-' +
                                               date_time.get('time_end'), styleTO)
-            iss_obj = Issledovaniya.objects.filter(pk=field[1]).first()
             doc_fio = iss_obj.doc_confirmation.get_fio()
             operation_template[5] = Paragraph(doc_fio, styleTO)
             operation_result.append(operation_template.copy())
