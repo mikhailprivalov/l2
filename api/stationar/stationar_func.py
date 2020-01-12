@@ -324,15 +324,13 @@ def forbidden_edit_dir(num_dir):
     """
     Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
     """
-    allow_edit = True
-
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
-    if hosp_extract:
-        if hosp_extract[0].get('date_confirm'):
-            allow_edit = False
-    else:
+    if hosp_extract and hosp_extract[0].get('date_confirm'):
+        return False
+
+    if not hosp_extract:
         #Проверить подтверждение переводного эпикриза
         #Получить hosp_dir для текужего направления
         current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
@@ -343,7 +341,5 @@ def forbidden_edit_dir(num_dir):
             for i in epicrisis_data:
                 if i.get("research_title").lower().find('перевод') != -1:
                     if i.get('date_confirm'):
-                        allow_edit = False
-                        break
-
-    return allow_edit
+                        return False
+    return True
