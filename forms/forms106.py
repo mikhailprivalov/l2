@@ -443,12 +443,11 @@ def form_01(request_data):
 
     # Получить все услуги из категории операции
     hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
-    # hosp_extract_iss, extract_research_id = None, None
     operation_iss = []
     operation_research_id = None
     if hosp_operation:
         for i in hosp_operation:
-            # найти дневники совместно с заведующим
+            # найти протоколы по типу операции
             if i.get('research_title').lower().find('операци') != -1:
                 operation_iss.append(i.get('iss'))
                 if not operation_research_id:
