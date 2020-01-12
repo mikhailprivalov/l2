@@ -343,7 +343,7 @@ def forbidden_edit_dir(num_dir):
         epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             for i in epicrisis_data:
-                if i.get("research_title").find('перевод') != -1:
+                if i.get("research_title").lower().find('перевод') != -1:
                     if i.get('date_confirm'):
                         allow_edit = False
                         break
