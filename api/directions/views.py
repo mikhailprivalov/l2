@@ -10,6 +10,7 @@ from django.utils import dateformat, timezone
 
 from api.dicom import search_dicom_study
 from api.sql_func import get_fraction_result, get_field_result
+from api.stationar.stationar_func import forbidden_edit_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -103,7 +104,7 @@ def directions_history(request):
                 has_hosp = False
                 has_slave_hospital = False
                 for v in iss_list:
-                    if v.research.is_slave_hospital:
+                    if v.research.is_slave_hospital and not v.research.is_doc_refferal:
                         has_slave_hospital = True
                         break
 
@@ -228,8 +229,8 @@ def directions_results(request):
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
-            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or\
-                not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
+            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or \
+                                     not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
             if iss_list.filter(doc_confirmation__isnull=False).exists():
                 result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
                     0].doc_confirmation.get_fio()
@@ -786,7 +787,7 @@ def directions_paraclinic_form(request):
                 "fin_source_id": d.istochnik_f_id,
                 "tube": None,
                 "amd": d.amd_status,
-                "amd_number": d.amd_number,
+                "amd_number": d.amd_number
             }
 
             response["researches"] = []
@@ -807,6 +808,7 @@ def directions_paraclinic_form(request):
                 ctime = int(time.time())
                 cdid = -1 if not i.doc_confirmation else i.doc_confirmation_id
                 rt = SettingManager.get("lab_reset_confirm_time_min") * 60
+                transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
                 iss = {
                     "pk": i.pk,
                     "research": {
@@ -818,6 +820,12 @@ def directions_paraclinic_form(request):
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
                         "groups": [],
+                        "can_transfer": i.research.can_transfer,
+                        "transfer_direction": None if not transfer_d else transfer_d.pk,
+                        "transfer_direction_iss": [] if not transfer_d else [r.research.title for r in
+                                                                             Issledovaniya.objects.filter(
+                                                                                 napravleniye=transfer_d.pk)
+                                                                             ],
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else
                     search_dicom_study(d.pk),
@@ -834,6 +842,7 @@ def directions_paraclinic_form(request):
                     "recipe": [],
                     "microbiology": [],
                     "lab_comment": i.lab_comment,
+                    "forbidden_edit": forbidden_edit_dir(d.pk)
                 }
 
                 if i.research.is_microbiology:
@@ -934,23 +943,29 @@ def directions_paraclinic_form(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
+    stationar_research = request_data.get("stationar_research", -1)
     with_confirm = rb.get("with_confirm", False)
     visibility_state = rb.get("visibility_state", {})
     v_g = visibility_state.get("groups", {})
     v_f = visibility_state.get("fields", {})
     recipe = request_data.get("recipe", [])
     tube = request_data.get("direction", {}).get("tube", {})
+    force = request_data.get("force", False)
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
-    if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-                   | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
-                   | Q(research__is_stom=True)).exists() or request.user.is_staff:
+    if force or diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+                            | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                            | Q(research__is_stom=True)).exists() or request.user.is_staff:
         iss = Issledovaniya.objects.get(pk=pk)
+
+        if forbidden_edit_dir(iss.napravleniye_id):
+            response["message"] = "Редактирование запрещено"
+            return JsonResponse(response)
 
         if tube:
             iss.napravleniye.microbiology_n = tube.get("n", "")
@@ -1016,6 +1031,9 @@ def directions_paraclinic_result(request):
         iss.diagnos = request_data.get("diagnos", "")
         iss.lab_comment = request_data.get("lab_comment", "")
 
+        if stationar_research != -1:
+            iss.gen_direction_with_research_after_confirm_id = stationar_research
+
         iss.save()
 
         more = request_data.get("more", [])
@@ -1048,11 +1066,19 @@ def directions_paraclinic_result(request):
         response["amd_number"] = iss.napravleniye.amd_number
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
+            iss.gen_after_confirm(request.user)
+            transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
+            response["transfer_direction"] = None if not transfer_d else transfer_d.pk
+            response["transfer_direction_iss"] = [] if not transfer_d else [r.research.title for r in
+                                                                            Issledovaniya.objects.filter(
+                                                                                napravleniye=transfer_d.pk)
+                                                                            ]
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
+        response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye.pk)
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_confirm(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1060,8 +1086,12 @@ def directions_paraclinic_confirm(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                   | Q(research__is_slave_hospital=True)
                    | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
+        if forbidden_edit_dir(iss.napravleniye_id):
+            response["message"] = "Редактирование запрещено"
+            return JsonResponse(response)
         t = timezone.now()
         if not iss.napravleniye.visit_who_mark or not iss.napravleniye.visit_date:
             iss.napravleniye.visit_who_mark = request.user.doctorprofile
@@ -1070,6 +1100,7 @@ def directions_paraclinic_confirm(request):
         iss.doc_confirmation = request.user.doctorprofile
         iss.time_confirmation = t
         iss.save()
+        iss.gen_after_confirm(request.user)
         for i in Issledovaniya.objects.filter(parent=iss):
             i.doc_confirmation = request.user.doctorprofile
             i.time_confirmation = t
@@ -1081,7 +1112,7 @@ def directions_paraclinic_confirm(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций")
+@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_confirm_reset(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1089,6 +1120,9 @@ def directions_paraclinic_confirm_reset(request):
 
     if Issledovaniya.objects.filter(pk=pk).exists():
         iss = Issledovaniya.objects.get(pk=pk)
+        if forbidden_edit_dir(iss.napravleniye_id):
+            response["message"] = "Редактирование запрещено"
+            return JsonResponse(response)
 
         import time
         ctp = int(
@@ -1102,6 +1136,10 @@ def directions_paraclinic_confirm_reset(request):
                       "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.time_confirmation = None
             iss.save()
+            transfer_d = Napravleniya.objects.filter(parent_auto_gen=iss, cancel=False).first()
+            if transfer_d:
+                transfer_d.cancel = True
+                transfer_d.save()
             if iss.napravleniye.result_rmis_send:
                 c = Client()
                 c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)

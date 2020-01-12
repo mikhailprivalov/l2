@@ -3,6 +3,7 @@ import unicodedata
 from datetime import date
 
 import simplejson as json
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from jsonfield import JSONField
@@ -353,6 +354,10 @@ class Napravleniya(models.Model):
     polis_n = models.CharField(max_length=62, blank=True, null=True, default=None, help_text="Полис")
     parent = models.ForeignKey('Issledovaniya', related_name='parent_iss', help_text="Протокол-основание", blank=True,
                                null=True, default=None, on_delete=models.SET_NULL)
+    parent_auto_gen = models.ForeignKey('Issledovaniya', related_name='parent_auto_gen',
+                                        help_text="Авто сгенерированное",
+                                        db_index=True,
+                                        blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='',
                                       help_text="Номер в микробиологической лаборатории")
@@ -364,7 +369,7 @@ class Napravleniya(models.Model):
                                                  on_delete=models.SET_NULL)
     need_resend_amd = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в АМД?')
     amd_number = models.CharField(max_length=15, default=None, blank=True, null=True, db_index=True,
-                                   help_text='Номер документа в  АМД')
+                                  help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
 
@@ -415,6 +420,7 @@ class Napravleniya(models.Model):
                          for_rmis: bool = False,
                          rmis_data: [dict, None] = None,
                          parent_id=None,
+                         parent_auto_gen_id=None,
                          rmis_slot=None) -> 'Napravleniya':
         """
         Генерация направления
@@ -431,6 +437,7 @@ class Napravleniya(models.Model):
         :param for_rmis:
         :param rmis_data:
         :param parent_id:
+        :param parent_auto_gen_id:
         :return: Созданное направление
         """
         if rmis_data is None:
@@ -441,7 +448,8 @@ class Napravleniya(models.Model):
                            doc=doc if not for_rmis else None,
                            istochnik_f=istochnik_f,
                            data_sozdaniya=timezone.now(),
-                           diagnos=diagnos, cancel=False, parent_id=parent_id, rmis_slot_id=rmis_slot)
+                           diagnos=diagnos, cancel=False, parent_id=parent_id, parent_auto_gen_id=parent_auto_gen_id,
+                           rmis_slot_id=rmis_slot)
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
@@ -479,7 +487,8 @@ class Napravleniya(models.Model):
     def gen_napravleniya_by_issledovaniya(client_id, diagnos, finsource, history_num, ofname_id, doc_current,
                                           researches, comments, for_rmis=None, rmis_data=None, vich_code='',
                                           count=1, discount=0, parent_iss=None, rmis_slot=None, counts=None,
-                                          localizations=None, service_locations=None, visited=None):
+                                          localizations=None, service_locations=None, visited=None,
+                                          parent_auto_gen=None):
         if not visited:
             visited = []
         if counts is None:
@@ -565,6 +574,7 @@ class Napravleniya(models.Model):
                                                                                              for_rmis=for_rmis,
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
+                                                                                             parent_auto_gen_id=parent_auto_gen,
                                                                                              rmis_slot=rmis_slot)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
@@ -581,6 +591,7 @@ class Napravleniya(models.Model):
                                                                                              for_rmis=for_rmis,
                                                                                              rmis_data=rmis_data,
                                                                                              parent_id=parent_iss,
+                                                                                             parent_auto_gen_id=parent_auto_gen,
                                                                                              rmis_slot=rmis_slot)
 
                         result["list_id"].append(directions_for_researches[dir_group].pk)
@@ -794,7 +805,8 @@ class Issledovaniya(models.Model):
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True,
                                              help_text='Время подтверждения результата')
     deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
-    comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
+    comment = models.CharField(max_length=255, default="", blank=True,
+                               help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None,
                                 help_text='Приложение API, через которое результаты были сохранены',
@@ -833,6 +845,11 @@ class Issledovaniya(models.Model):
                                          help_text="Место оказания услуги", on_delete=models.SET_NULL)
     link_file = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл")
     study_instance_uid = models.CharField(max_length=55, blank=True, null=True, default=None, help_text="uuid снимка")
+    gen_direction_with_research_after_confirm = models.ForeignKey(directory.Researches,
+                                                                  related_name='research_after_confirm',
+                                                                  null=True, blank=True,
+                                                                  help_text='Авто назначаемое при подтверждении',
+                                                                  on_delete=models.SET_NULL)
 
     @property
     def time_save_local(self):
@@ -844,6 +861,29 @@ class Issledovaniya(models.Model):
 
     def get_stat_diagnosis(self):
         pass
+
+    def gen_after_confirm(self, user: User):
+        if not self.time_confirmation or not self.gen_direction_with_research_after_confirm:
+            return
+        if Napravleniya.objects.filter(parent_auto_gen=self, cancel=False).exists():
+            return
+        Napravleniya.gen_napravleniya_by_issledovaniya(self.napravleniye.client.pk,
+                                                       "",
+                                                       self.napravleniye.parent.napravleniye.istochnik_f_id
+                                                       if self.napravleniye.parent
+                                                       else self.napravleniye.istochnik_f_id,
+                                                       "",
+                                                       None,
+                                                       user.doctorprofile,
+                                                       {-1: [self.gen_direction_with_research_after_confirm.pk]},
+                                                       {},
+                                                       False,
+                                                       {},
+                                                       vich_code="",
+                                                       count=1,
+                                                       discount=0,
+                                                       parent_iss=self.napravleniye.parent_id or self.pk,
+                                                       parent_auto_gen=self.pk)
 
     def __str__(self):
         return "%s %s" % (str(self.napravleniye), self.research.title)

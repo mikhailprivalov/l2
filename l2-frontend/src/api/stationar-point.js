@@ -21,4 +21,8 @@ export default generator({
     url: 'stationar/directions-by-key',
     onReject: {data: []}
   },
+  aggregateLaboratory: {
+    url: 'stationar/aggregate-laboratory',
+    onReject: {}
+  },
 })

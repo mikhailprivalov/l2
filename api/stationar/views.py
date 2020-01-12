@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs
+from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -25,11 +25,15 @@ def load(request):
         card: Card = direction.client
         result["ok"] = True
         result["message"] = ""
+        if direction.cancel:
+            result["message"] = "Направление было отменено"
         result["data"] = {
             "direction": direction.pk,
-            "fin_pk": direction.istochnik_f.pk,
+            "cancel": direction.cancel,
+            "fin_pk": direction.istochnik_f_id,
             "iss": i.pk,
             "iss_title": i.research.title,
+            "forbidden_edit": forbidden_edit_dir(direction.pk),
             "patient": {
                 "fio_age": card.individual.fio(full=True),
                 "card": card.number_with_type(),
@@ -133,4 +137,14 @@ def directions_by_key(request):
         result = get_direction_attrs(base_direction_pk, type_service=type_service)
     else:
         result = get_direction_attrs(base_direction_pk, site_type=type_by_key)
-    return JsonResponse({"data": list(result)})
+    return JsonResponse({"data": list(reversed(result))})
+
+
+@login_required
+@group_required("Врач стационара")
+def aggregate_laboratory(request):
+    data = json.loads(request.body)
+    pk = data.get('pk', -1)
+    extract = data.get('extract', False)
+    result = hosp_get_lab_iss(pk, extract)
+    return JsonResponse(result)

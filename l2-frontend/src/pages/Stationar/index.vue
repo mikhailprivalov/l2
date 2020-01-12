@@ -7,13 +7,16 @@
         <button class="btn btn-blue-nb" @click="load" :disabled="pk === ''">Загрузить</button>
       </div>
       <div class="sidebar-content">
-        <div class="inner" v-if="direction !== null && patient !== null">
+        <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" style="float: right">форма 003/у</a>
             История/б №{{direction}}
           </div>
           <div class="inner-card">
             {{issTitle}}
+          </div>
+          <div class="inner-card" v-if="cancel">
+            <strong>Направление отменено</strong>
           </div>
           <patient-card :patient="patient" class="inner-card"/>
           <div class="sidebar-btn-wrapper"
@@ -25,7 +28,7 @@
               <span v-if="Boolean(counts[key])" class="counts">{{counts[key]}} шт.</span> {{title}}
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key]))"
+                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) && !forbidden_edit"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
@@ -62,6 +65,8 @@
             </div>
             <div class="research-right">
               <template v-if="row.confirmed">
+                <a :href="`/forms/pdf?type=105.02&napr_id=[${opened_form_pk}]`"
+                   class="btn btn-blue-nb" target="_blank" v-if="stat_btn">Статталон</a>
                 <a href="#" class="btn btn-blue-nb"
                    @click.prevent="print_results(opened_form_pk)">Печать</a>
               </template>
@@ -93,20 +98,45 @@
           </div>
           <DescriptiveForm
             :research="row.research"
-            :confirmed="row.confirmed"
+            :pk="row.pk"
+            :confirmed="row.confirmed || row.forbidden_edit"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
           />
+          <div class="group" v-if="r_is_transfer(row)">
+            <div class="group-title">Отделение перевода</div>
+            <div class="fields">
+              <div class="content-picker" v-if="!row.confirmed">
+                <research-pick :class="{ active: r.pk === stationar_research }" :research="r"
+                               @click.native="stationar_research = r.pk"
+                               class="research-select"
+                               v-for="r in stationar_researches_filtered"
+                               :key="r.pk"/>
+              </div>
+              <div v-else-if="row.research.transfer_direction">
+                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)"><i class="fa fa-barcode"/></a>
+                История болезни <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">
+                  №{{row.research.transfer_direction}}
+                </a>
+                <br/>
+                {{row.research.transfer_direction_iss[0]}}
+              </div>
+            </div>
+          </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed"
+            <button class="btn btn-blue-nb" @click="save(row)"
+                    v-if="!row.confirmed && !row.forbidden_edit">
+              Сохранить
+            </button>
+            <button class="btn btn-blue-nb" @click="save_and_confirm(row)"
+                    v-if="!row.confirmed && !row.forbidden_edit"
                     :disabled="!r(row)">
               Сохранить и подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="reset_confirm(row)"
-                    v-if="row.confirmed && row.allow_reset_confirm">
+                    v-if="row.confirmed && row.allow_reset_confirm && !row.forbidden_edit">
               Сброс подтверждения
             </button>
             <button class="btn btn-blue-nb" @click="close_form">
@@ -117,6 +147,9 @@
               <div class="status status-none" v-for="rl in r_list(row)">{{rl}};</div>
             </div>
           </div>
+        </div>
+        <div style="padding: 5px">
+          <AggregateLaboratory v-if="opened_list_key === 'laboratory'" :pk="iss"/>
         </div>
       </div>
     </div>
@@ -235,10 +268,12 @@
   import DescriptiveForm from '../../forms/DescriptiveForm'
   import ResultsViewer from '../../modals/ResultsViewer'
   import DisplayDirection from './DisplayDirection'
+  import AggregateLaboratory from '../../fields/AggregateLaboratory'
 
   export default {
     mixins: [menuMixin],
     components: {
+      AggregateLaboratory,
       DisplayDirection,
       ResultsViewer,
       DescriptiveForm,
@@ -249,6 +284,8 @@
       return {
         pk: '',
         direction: null,
+        forbidden_edit: null,
+        cancel: false,
         iss: null,
         issTitle: null,
         finId: null,
@@ -266,6 +303,8 @@
         researches_forms: [],
         patient_form: {},
         templates: {},
+        stationar_researches: [],
+        stationar_research: -1,
       }
     },
     watch: {
@@ -273,67 +312,78 @@
         this.pk = this.pk.replace(/\D/g, '')
       }
     },
-    mounted() {
+    async mounted() {
+      await this.$store.dispatch(action_types.INC_LOADING);
+      const {researches} = await researches_point.getResearchesByDepartment({department: -5});
+      this.stationar_researches = researches;
+      await this.$store.dispatch(action_types.DEC_LOADING);
       this.$root.$on('hide_results', () => {
         this.show_results_pk = -1
       })
     },
     methods: {
       async confirm_service() {
-        await this.$store.dispatch(action_types.INC_LOADING)
+        await this.$store.dispatch(action_types.INC_LOADING);
         const {pk} = await stationar_point.makeService({
           service: this.direction_service,
           main_direction: this.direction,
-        })
-        await this.load_directions(this.openPlusId)
-        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'})
-        await this.closePlus()
-        this.counts = await stationar_point.counts(this, ['direction'])
+        });
+        await this.load_directions(this.openPlusId);
+        await this.open_form({pk, type: this.plusDirectionsMode[this.openPlusId] ? 'directions' : 'stationar'});
+        await this.closePlus();
+        this.counts = await stationar_point.counts(this, ['direction']);
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       select_research(pk) {
         this.direction_service = pk
       },
       async open_form(d) {
-        const mode = d.type
+        const mode = d.type;
         if (mode === 'stationar') {
-          this.close_form()
-          this.opened_form_pk = d.pk
-          await this.$store.dispatch(action_types.INC_LOADING)
-          const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true})
-          this.researches_forms = researches
-          this.patient_form = patient
+          this.close_form();
+          this.opened_form_pk = d.pk;
+          await this.$store.dispatch(action_types.INC_LOADING);
+          const {researches, patient} = await directions_point.getParaclinicForm({pk: d.pk, force: true});
+          this.researches_forms = researches;
+          this.patient_form = patient;
           await this.$store.dispatch(action_types.DEC_LOADING)
         } else {
           this.show_results_pk = d.pk
         }
       },
       close_form() {
-        this.opened_form_pk = null
-        this.researches_forms = null
-        this.patient_form = null
+        this.opened_form_pk = null;
+        this.researches_forms = null;
+        this.patient_form = null;
+        this.stationar_research = -1;
       },
       async load() {
-        this.close_list_directions()
-        this.direction = null
-        this.iss = null
-        this.issTitle = null
-        this.finId = null
-        this.counts = {}
-        this.patient = new Patient({})
-        this.openPlusId = null
-        this.openPlusMode = null
-        this.create_directions_data = []
-        await this.$store.dispatch(action_types.INC_LOADING)
-        const {ok, data, message} = await stationar_point.load(this, ['pk'])
+        this.close_list_directions();
+        this.direction = null;
+        this.cancel = false;
+        this.iss = null;
+        this.issTitle = null;
+        this.finId = null;
+        this.counts = {};
+        this.patient = new Patient({});
+        this.openPlusId = null;
+        this.openPlusMode = null;
+        this.create_directions_data = [];
+        await this.$store.dispatch(action_types.INC_LOADING);
+        const {ok, data, message} = await stationar_point.load(this, ['pk']);
         if (ok) {
-          this.pk = ''
-          this.direction = data.direction
-          this.iss = data.iss
-          this.issTitle = data.iss_title
-          this.finId = data.fin_pk
-          this.patient = new Patient(data.patient)
-          this.counts = await stationar_point.counts(this, ['direction'])
+          this.pk = '';
+          this.direction = data.direction;
+          this.cancel = data.cancel;
+          this.iss = data.iss;
+          this.issTitle = data.iss_title;
+          this.finId = data.fin_pk;
+          this.forbidden_edit = data.forbidden_edit;
+          this.patient = new Patient(data.patient);
+          this.counts = await stationar_point.counts(this, ['direction']);
+          if (message && message.length > 0) {
+            wrnmessage(message)
+          }
         } else {
           errmessage(message)
         }
@@ -343,46 +393,46 @@
         this.$root.$emit('print:results', this.list_directions.map(d => d.pk))
       },
       close_list_directions() {
-        this.close_form()
-        this.list_directions = []
+        this.close_form();
+        this.list_directions = [];
         this.opened_list_key = null
       },
       async load_directions(key, no_close = false) {
-        await this.$store.dispatch(action_types.INC_LOADING)
+        await this.$store.dispatch(action_types.INC_LOADING);
         if (!no_close) {
           this.close_list_directions()
         }
         const {data} = await stationar_point.directionsByKey({
           direction: this.direction,
           r_type: key,
-        })
-        this.list_directions = data
-        this.opened_list_key = key
+        });
+        this.list_directions = data;
+        this.opened_list_key = key;
         await this.$store.dispatch(action_types.DEC_LOADING)
       },
       async plus(key) {
-        const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar'
+        const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
         if (mode === 'stationar') {
-          await this.$store.dispatch(action_types.INC_LOADING)
+          await this.$store.dispatch(action_types.INC_LOADING);
           const {data} = await stationar_point.hospServicesByType({
             direction: this.direction,
             r_type: key,
-          })
-          this.hosp_services = data
+          });
+          this.hosp_services = data;
           if (data.length === 1) {
             this.direction_service = data[0].pk
           }
           await this.$store.dispatch(action_types.DEC_LOADING)
         }
-        this.openPlusMode = mode
+        this.openPlusMode = mode;
         this.openPlusId = key
       },
       async closePlus() {
-        this.openPlusMode = null
-        this.openPlusId = null
-        this.create_directions_data = []
-        this.hosp_services = []
-        this.direction_service = -1
+        this.openPlusMode = null;
+        this.openPlusId = null;
+        this.create_directions_data = [];
+        this.hosp_services = [];
+        this.direction_service = -1;
 
         if (this.$refs.modalStationar && this.$refs.modalStationar.$el) {
           this.$refs.modalStationar.$el.style.display = 'none'
@@ -392,9 +442,9 @@
           this.$refs.modalStationar2.$el.style.display = 'none'
         }
 
-        this.$store.dispatch(action_types.INC_LOADING).then()
-        this.counts = await stationar_point.counts(this, ['direction'])
-        this.$store.dispatch(action_types.DEC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then();
+        this.counts = await stationar_point.counts(this, ['direction']);
+        this.$store.dispatch(action_types.DEC_LOADING).then();
         this.reload_if_need(true)
       },
       print_results(pk) {
@@ -407,22 +457,24 @@
         this.load_directions(this.opened_list_key, no_close)
       },
       save(iss) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then();
         directions_point.paraclinicResultSave({
+          force: true,
           data: {
             ...iss,
             direction: {
               pk: this.opened_form_pk
             },
+            stationar_research: this.stationar_research,
           },
           with_confirm: false,
           visibility_state: this.visibility_state(iss)
         }).then(data => {
           if (data.ok) {
-            okmessage('Сохранено')
-            iss.saved = true
+            okmessage('Сохранено');
+            iss.saved = true;
+            iss.direction.transfer_direction_iss = data.forbidden_edit;
             this.reload_if_need(true)
-            this.changed = false
           } else {
             errmessage(data.message)
           }
@@ -431,25 +483,29 @@
         })
       },
       save_and_confirm(iss) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then();
         directions_point.paraclinicResultSave({
+          force: true,
           data: {
             ...iss,
             direction: {
               pk: this.opened_form_pk
             },
+            stationar_research: this.stationar_research,
           },
           with_confirm: true,
           visibility_state: this.visibility_state(iss)
         }).then(data => {
           if (data.ok) {
-            okmessage('Сохранено')
-            okmessage('Подтверждено')
-            iss.saved = true
-            iss.allow_reset_confirm = true
-            iss.confirmed = true
+            okmessage('Сохранено');
+            okmessage('Подтверждено');
+            iss.saved = true;
+            iss.allow_reset_confirm = true;
+            iss.confirmed = true;
+            iss.research.transfer_direction = data.transfer_direction;
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            iss.direction.transfer_direction_iss = data.forbidden_edit;
             this.reload_if_need(true)
-            this.changed = false
           } else {
             errmessage(data.message)
           }
@@ -458,18 +514,17 @@
         })
       },
       reset_confirm(iss) {
-        let msg = `Сбросить подтверждение исследования ${iss.research.title}?`
-        let doreset = confirm(msg)
+        let msg = `Сбросить подтверждение исследования ${iss.research.title}?`;
+        let doreset = confirm(msg);
         if (doreset === false || doreset === null) {
           return
         }
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then();
         directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
           if (data.ok) {
-            okmessage('Подтверждение сброшено')
-            iss.confirmed = false
-            this.reload_if_need()
-            this.changed = false
+            okmessage('Подтверждение сброшено');
+            iss.confirmed = false;
+            this.reload_if_need(true)
           } else {
             errmessage(data.message)
           }
@@ -477,11 +532,14 @@
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      r_is_transfer({research}) {
+        return research.can_transfer
+      },
       r(research) {
         return this.r_list(research).length === 0
       },
       r_list(research) {
-        const l = []
+        const l = [];
         if (research.confirmed) {
           return []
         }
@@ -490,15 +548,18 @@
           if (!vGroup(g, research.research.groups, this.patient_form)) {
             continue
           }
-          let n = 0
+          let n = 0;
           for (const f of g.fields) {
-            n++
+            n++;
             if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
               (f.field_type !== 3 ||
                 vField(g, research.research.groups, f.visibility, this.patient_form))) {
               l.push((g.title !== '' ? g.title + ' ' : '') + (f.title === '' ? 'поле ' + n : f.title))
             }
           }
+        }
+        if (this.r_is_transfer(research) && this.stationar_research === -1) {
+          l.push('Отделение перевода');
         }
         return l.slice(0, 2)
       },
@@ -537,7 +598,7 @@
         this.$dialog
           .confirm('Вы действительно хотите очистить результаты?')
           .then(() => {
-            okmessage('Очищено')
+            okmessage('Очищено');
             for (const g of row.research.groups) {
               for (const f of g.fields) {
                 if (![3].includes(f.field_type)) {
@@ -551,7 +612,7 @@
         field.value = ''
       },
       append_value(field, value) {
-        let add_val = value
+        let add_val = value;
         if (add_val !== ',' && add_val !== '.') {
           if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
             if (field.value[field.value.length - 1] === '.') {
@@ -565,7 +626,7 @@
         field.value += add_val
       },
       load_template(row, pk) {
-        this.$store.dispatch(action_types.INC_LOADING).then()
+        this.$store.dispatch(action_types.INC_LOADING).then();
         researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
           this.template_fields_values(row, data, title)
         }).finally(() => {
@@ -573,14 +634,14 @@
         })
       },
       visibility_state(iss) {
-        const groups = {}
-        const fields = {}
-        const {groups: igroups} = iss.research
+        const groups = {};
+        const fields = {};
+        const {groups: igroups} = iss.research;
         for (const group of iss.research.groups) {
           if (!vGroup(group, igroups, this.patient_form)) {
             groups[group.pk] = false
           } else {
-            groups[group.pk] = true
+            groups[group.pk] = true;
             for (const field of group.fields) {
               fields[field.pk] = vField(group, igroups, field.visibility, this.patient_form)
             }
@@ -592,6 +653,12 @@
           fields,
         }
       },
+      print_direction(pk) {
+        this.$root.$emit('print:directions', [pk])
+      },
+      print_hosp(pk) {
+        this.$root.$emit('print:hosp', [pk])
+      },
     },
     computed: {
       ...mapGetters({
@@ -599,11 +666,20 @@
         researches: 'researches',
         bases: 'bases',
       }),
+      stationar_researches_filtered() {
+        return [{
+          pk: -1,
+          title: 'Не выбрано'
+        }, ...this.stationar_researches.filter(r => r.title !== this.issTitle && !r.hide)];
+      },
       bases_obj() {
         return this.bases.reduce((a, b) => ({
           ...a,
           [b.pk]: b,
         }), {})
+      },
+      stat_btn() {
+        return this.$store.getters.modules.l2_stat_btn
       },
       pickerTypesOnly() {
         if (this.openPlusId === 'laboratory') {
@@ -940,5 +1016,26 @@
       padding-top: 5px;
       padding-bottom: 5px;
     }
+  }
+
+  .status-list {
+    display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status, .control-row .amd {
+    padding: 5px;
+  }
+
+  .status {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-none {
+    color: #CF3A24
   }
 </style>

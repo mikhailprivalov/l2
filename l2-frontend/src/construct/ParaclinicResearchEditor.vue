@@ -216,6 +216,7 @@
                     <option value="13">Поле описательного результата</option>
                     <option value="14">Поле описательного результата без заголовка</option>
                     <option value="15">Текст с форматированием</option>
+                    <option value="16">(Стационар) агрегация по лаборатории</option>
                   </select>
                 </label>
               </div>
@@ -366,6 +367,7 @@
                     '-3': 5,
                     '-4': 6,
                     '-5': 7,
+                    '-6': 8,
                 }[this.department] || this.department
             },
             ex_deps() {

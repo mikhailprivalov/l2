@@ -105,7 +105,7 @@ def hosp_get_hosp_direction(num_dir):
 
 def hosp_get_curent_hosp_dir(current_iss):
     current_dir = Issledovaniya.objects.get(pk=current_iss).napravleniye
-    hosp_dir = current_dir.parent.napravleniye_id
+    hosp_dir = current_dir.parent.napravleniye_id if current_dir.parent else current_dir.pk
     return hosp_dir
 
 
@@ -127,12 +127,12 @@ def hosp_get_lab_iss(current_iss, extract=False):
     current_dir = hosp_get_curent_hosp_dir(current_iss)
 
     if not extract:
-        hosp_dirs = [i for i in hosp_dirs if i <= current_dir]
+        hosp_dirs = [i for i in hosp_dirs if i["direction"] <= current_dir]
 
     # получить по каждому hosp_dirs Дочерние направления по типу лаборатория
     num_lab_dirs = set()
     for h in hosp_dirs:
-        obj_hosp_dirs = hosp_get_data_direction(h, site_type=-1, type_service='is_lab', level=2)
+        obj_hosp_dirs = hosp_get_data_direction(h["direction"], site_type=-1, type_service='is_lab', level=2)
         for k in obj_hosp_dirs:
             lab_dir = k.get('direction')
             num_lab_dirs.add(lab_dir)
@@ -149,8 +149,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
         # получить research_id по лаборатории и vertical_result_display = True
         vertical = {}
         vertical_result = []
-        result[i.title] = {'vertical': {}}
-        result[i.title] = {'horizontal': {}}
+        result[i.title] = {'vertical': {}, 'horizontal': {}}
         horizontal_result = []
         vertical_research = get_research(i.title, True)
         id_research_vertical = [i[0] for i in vertical_research]
@@ -166,10 +165,11 @@ def hosp_get_lab_iss(current_iss, extract=False):
 
                     research_fraction_vertical = get_distinct_fraction(iss_id_vertical)
                     fraction_title = []
-                    fraction_units = []
+                    fraction_title_units = []
                     for f in research_fraction_vertical:
                         fraction_title.append(f[1])
-                        fraction_units.append(f[2])
+                        title_unit = f', {f[2]}' if f[2] else ''
+                        fraction_title_units.append(f'{f[1]}{title_unit}')
                     fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
                     fraction_result = get_result_fraction(iss_id_vertical)
                     vertical_temp_results = {}
@@ -189,7 +189,7 @@ def hosp_get_lab_iss(current_iss, extract=False):
                             tmp_list_vert[position_element] = f[3]
                             vertical_temp_results[key] = tmp_list_vert
                     vertical['title_research'] = Researches.objects.get(pk=id_research_vertical).title
-                    vertical['title_fracions'] = fraction_title
+                    vertical['title_fracions'] = fraction_title_units
                     vertical['result'] = vertical_temp_results
                     vertical1 = deepcopy(vertical)
                     vertical_result.append(vertical1)
@@ -207,10 +207,11 @@ def hosp_get_lab_iss(current_iss, extract=False):
             if iss_id_horizontal:
                 fraction_horizontal = get_distinct_fraction(iss_id_horizontal)
                 fraction_title = []
-                fraction_units = []
+                fraction_title_units = []
                 for f in fraction_horizontal:
                     fraction_title.append(f[1])
-                    fraction_units.append(f[2])
+                    title_unit = f', {f[2]}' if f[2] else ''
+                    fraction_title_units.append(f'{f[1]}{title_unit}')
 
                 fraction_template = [''] * len(fraction_title)  # заготовка для value-резульлтатов
                 fraction_result = get_result_fraction(iss_id_horizontal)
@@ -232,12 +233,15 @@ def hosp_get_lab_iss(current_iss, extract=False):
                         tmp_list2[position_element] = f[3]
                         temp_results[key] = tmp_list2
 
-                horizontal['title_fracions'] = fraction_title
+                horizontal['title_fracions'] = fraction_title_units
                 horizontal['result'] = temp_results
                 horizontal_result.append(horizontal)
                 result[i.title]['horizontal'] = horizontal_result
-
-    return result
+    result_filtered = {}
+    for k in result:
+        if result[k]['horizontal'] or result[k]['vertical']:
+            result_filtered[k] = result[k]
+    return result_filtered
 
 
 def hosp_get_text_iss(current_iss, extract=False):
@@ -314,3 +318,28 @@ def hosp_get_text_iss(current_iss, extract=False):
         result.append(temp_result.copy())
 
     return {'paraclinic': result}
+
+
+def forbidden_edit_dir(num_dir):
+    """
+    Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
+    """
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
+    if hosp_extract and hosp_extract[0].get('date_confirm'):
+        return True
+
+    if not hosp_extract:
+        #Проверить подтверждение переводного эпикриза
+        #Получить hosp_dir для текужего направления
+        current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
+        current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
+        #получить для текущего hosp_dir эпикриз с title - перевод.....
+        epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
+        if epicrisis_data:
+            for i in epicrisis_data:
+                if i.get("research_title").lower().find('перевод') != -1:
+                    if i.get('date_confirm'):
+                        return True
+    return False
