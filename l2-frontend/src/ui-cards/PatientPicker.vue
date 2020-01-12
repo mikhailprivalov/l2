@@ -131,24 +131,24 @@
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Льготы пациента" @click="open_benefit()"
-                        v-if="l2_benefit && selected_card.pk"><i class="fa fa-cubes"></i></button>
+                        v-if="l2_benefit && selected_card.pk"><i class="fa fa-cubes"/></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Диспансерный учёт" @click="open_dreg()"
-                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-database"></i></button>
+                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-database"/></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Анамнез жизни" @click="open_anamnesis()"
-                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"></i></button>
+                        v-if="is_l2_cards && selected_card.pk"><i class="fa fa-book"/></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Новая L2 карта" @click="open_editor(true)"
-                        v-if="is_l2_cards && allow_l2_card_edit"><i class="fa fa-plus"></i></button>
+                        v-if="is_l2_cards && allow_l2_card_edit"><i class="fa fa-plus"/></button>
                 <button class="btn last btn-blue-nb nbr" type="button"
                         v-tippy="{ placement : 'bottom', arrow: true }"
                         title="Редактирование карты" style="margin-left: -1px" :disabled="!selected_card.pk"
                         @click="open_editor()"
-                        v-if="is_l2_cards && allow_l2_card_edit"><i class="glyphicon glyphicon-pencil"></i></button>
+                        v-if="is_l2_cards && allow_l2_card_edit"><i class="glyphicon glyphicon-pencil"/></button>
               </div>
               <div class="internal_type" v-else-if="l2_cards && allow_l2_card_edit">
                 <button class="btn last btn-blue-nb nbr" type="button"
@@ -171,10 +171,10 @@
           </tbody>
         </table>
         <div v-if="phones.length > 0" class="hovershow">
-          <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"></i> Позвонить</a></div>
+          <div class="fastlinks hovershow1"><a href="#"><i class="glyphicon glyphicon-phone"/> Позвонить</a></div>
           <div class="fastlinks hovershow2" style="margin-top: 1px">
             <a :href="'sip:' + p" v-for="p in phones" style="display: inline-block">
-              <i class="glyphicon glyphicon-phone"></i> {{format_number(p)}}
+              <i class="glyphicon glyphicon-phone"/> {{format_number(p)}}
             </a>
           </div>
         </div>
@@ -241,541 +241,545 @@
 </template>
 
 <script>
-    import SelectPickerB from '../fields/SelectPickerB'
-    import L2CardCreate from '../modals/L2CardCreate'
-    import DReg from '../modals/DReg'
-    import Benefit from '../modals/Benefit'
-    import LinkSelector from '../fields/LinkSelector'
-    import PatientCard from './PatientCard'
-    import Modal from './Modal'
-    import * as action_types from '../store/action-types'
-    import patients_point from '../api/patients-point'
-    import {mapGetters} from 'vuex'
+  import SelectPickerB from '../fields/SelectPickerB'
+  import L2CardCreate from '../modals/L2CardCreate'
+  import DReg from '../modals/DReg'
+  import Benefit from '../modals/Benefit'
+  import LinkSelector from '../fields/LinkSelector'
+  import PatientCard from './PatientCard'
+  import Modal from './Modal'
+  import * as action_types from '../store/action-types'
+  import patients_point from '../api/patients-point'
+  import {mapGetters} from 'vuex'
 
-    export default {
-        name: 'patient-picker',
-        components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
-        props: {
-            directive_from_need: {
-                default: 'false',
-                type: String
-            },
-            search_results: {
-                default: 'false',
-                type: String
-            },
-            bottom_picker: {
-                default: 'false',
-                type: String
-            },
-            history_n: {
-                default: 'true',
-                type: String
-            },
-            value: {},
+  export default {
+    name: 'patient-picker',
+    components: {LinkSelector, PatientCard, SelectPickerB, Modal, L2CardCreate, DReg, Benefit},
+    props: {
+      directive_from_need: {
+        default: 'false',
+        type: String
+      },
+      search_results: {
+        default: 'false',
+        type: String
+      },
+      bottom_picker: {
+        default: 'false',
+        type: String
+      },
+      history_n: {
+        default: 'true',
+        type: String
+      },
+      value: {},
+    },
+    data() {
+      return {
+        base: -1,
+        query: '',
+        directive_department: '-1',
+        directive_doc: '-1',
+        ofname_to_set: '-1',
+        ofname_to_set_dep: '-1',
+        local_directive_departments: [],
+        directive_departments_select: [],
+        showModal: false,
+        founded_cards: [],
+        selected_card: {},
+        loaded: false,
+        history_num: '',
+        search_after_loading: false,
+        editor_pk: -2,
+        inc_rmis: false,
+        anamnesis: false,
+        anamnesis_data: {},
+        an_state: {
+          tab: 'text',
         },
-        data() {
-            return {
-                base: -1,
-                query: '',
-                directive_department: '-1',
-                directive_doc: '-1',
-                ofname_to_set: '-1',
-                ofname_to_set_dep: '-1',
-                local_directive_departments: [],
-                directive_departments_select: [],
-                showModal: false,
-                founded_cards: [],
-                selected_card: {},
-                loaded: false,
-                history_num: '',
-                search_after_loading: false,
-                editor_pk: -2,
-                inc_rmis: false,
-                anamnesis: false,
-                anamnesis_data: {},
-                an_state: {
-                    tab: 'text',
-                },
-                dreg: false,
-                benefit: false,
-            }
-        },
-        created() {
-            this.$store.dispatch(action_types.INC_LOADING).then()
-            this.$store.dispatch(action_types.GET_DIRECTIVE_FROM).then(() => {
-                this.local_directive_departments = this.$store.getters.directive_from
-                this.directive_departments_select = []
-                for (let dep of this.local_directive_departments) {
-                    this.directive_departments_select.push({label: dep.title, value: dep.pk})
-                }
-
-                if (this.$store.getters.user_data &&
-                    this.$store.getters.user_data.department &&
-                    this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
-                    for (let dep of this.local_directive_departments) {
-                        if (dep.pk === this.$store.getters.user_data.department.pk) {
-                            this.directive_department = dep.pk + ''
-                            this.check_base()
-                            return
-                        }
-                    }
-                    this.directive_department = this.local_directive_departments[0].pk.toString()
-                }
-
-                this.check_base()
-            }).finally(() => {
-                this.$store.dispatch(action_types.DEC_LOADING).then()
-            })
-
-            this.$store.watch(state => state.bases, (oldValue, newValue) => {
-                this.check_base()
-            })
-            this.$root.$on('search', () => {
-                this.search()
-            })
-            this.$root.$on('select_card', data => {
-                this.base = data.base_pk
-                this.query = `card_pk:${data.card_pk}`
-                this.search_after_loading = true
-                $(this.$refs.q).focus()
-                this.emit_input()
-                if (!data.hide) {
-                    this.editor_pk = data.card_pk
-                } else {
-                    this.editor_pk = -2
-                }
-                setTimeout(() => {
-                    this.search()
-                    if (!data.hide) {
-                        setTimeout(() => {
-                            this.$root.$emit('reload_editor')
-                        }, 5)
-                    }
-                }, 5)
-            })
-            this.$root.$on('hide_l2_card_create', () => {
-                this.editor_pk = -2
-            })
-            this.$root.$on('hide_dreg', () => {
-                this.dreg = false
-            })
-            this.$root.$on('hide_benefit', () => {
-                this.benefit = false
-            })
-        },
-        watch: {
-            query() {
-                this.query = this.query.split(' ')
-                    .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
-                    .join(' ')
-            },
-            bases() {
-                this.check_base()
-            },
-            directive_department() {
-                this.update_ofname()
-            },
-            directive_doc() {
-                this.emit_input()
-            },
-            is_operator() {
-                this.emit_input()
-            },
-            history_num() {
-                this.emit_input(true)
-            },
-            inLoading() {
-                if (!this.inLoading && (this.directive_department === '-1' || this.directive_doc === '-1')) {
-                    this.update_ofname()
-                }
-                if (!this.inLoading && this.search_after_loading) {
-                    this.search()
-                }
-            }
-        },
-        computed: {
-            bases() {
-                return this.$store.getters.bases.filter(b => !b.hide)
-            },
-            selected_base() {
-                for (let b of this.bases) {
-                    if (b.pk === this.base) {
-                        return b
-                    }
-                }
-                return {
-                    title: 'Не выбрана база',
-                    pk: -1,
-                    hide: false,
-                    history_number: false,
-                    fin_sources: [],
-                    internal_type: false,
-                }
-            },
-            normalized_query() {
-                return this.query.trim()
-            },
-            query_valid() {
-                return this.normalized_query.length > 0
-            },
-            l2_cards() {
-                return this.$store.getters.modules.l2_cards_module
-            },
-            l2_benefit() {
-                return this.$store.getters.modules.l2_benefit
-            },
-            is_operator() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Оператор лечащего врача') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-            is_doc() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Лечащий врач') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-            is_l2_cards() {
-                if ('groups' in this.$store.getters.user_data) {
-                    for (let g of this.$store.getters.user_data.groups) {
-                        if (g === 'Картотека L2' || g === 'Admin' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
-                            return true
-                        }
-                    }
-                }
-                return false
-            },
-            directive_from_departments() {
-                let r = {}
-                for (let dep of this.local_directive_departments) {
-                    r[dep.pk] = dep
-                }
-                return r
-            },
-            directive_docs_select() {
-                let o = []
-                if (this.directive_department in this.directive_from_departments) {
-                    for (let d of this.directive_from_departments[this.directive_department].docs) {
-                        o.push({label: d.fio, value: d.pk})
-                    }
-                }
-                if (!this.is_doc && o.length > 0) {
-                    o = [{label: 'Выберите врача', value: -2}, ...o]
-                }
-                return o
-            },
-            inLoading() {
-                return this.$store.getters.inLoading
-            },
-            phones() {
-                if ('phones' in this.selected_card) {
-                    return this.selected_card.phones
-                }
-                return []
-            },
-            ...mapGetters(['user_data']),
-            allow_l2_card_edit() {
-                return this.user_data.su || this.user_data.groups.includes('Картотека L2')
-            },
-        },
-        methods: {
-            open_anamnesis() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
-                patients_point.loadAnamnesis({card_pk: this.selected_card.pk}).then(data => {
-                    this.an_tab('text')
-                    this.anamnesis_data = data
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.anamnesis = true
-                })
-            },
-            hide_modal_anamnesis() {
-                this.$refs.modalAnamnesis.$el.style.display = 'none'
-                this.anamnesis_data = {}
-                this.anamnesis = false
-            },
-            an_tab(tab) {
-                this.an_state.tab = tab
-            },
-            open_dreg() {
-                this.dreg = true
-            },
-            open_benefit() {
-                this.benefit = true
-            },
-            open_editor(isnew) {
-                if (isnew) {
-                    this.editor_pk = -1
-                } else {
-                    this.editor_pk = this.selected_card.pk
-                }
-            },
-            format_number(a) {
-                if (a.length === 6) {
-                    return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
-                } else if (a.length === 11) {
-                    if (a.charAt(1) !== '9' && a.charAt(1) !== '8') {
-                        return `${a.slice(0, 1)}-${a.slice(1, 5)}-${a.slice(5, 7)}-${a.slice(7, 9)}-${a.slice(9, 11)}`
-                    }
-                    return `${a.slice(0, 1)}-${a.slice(1, 4)}-${a.slice(4, 6)}-${a.slice(6, 8)}-${a.slice(8, 10)}-${a.slice(10, 11)}`
-                }
-                return a
-            },
-            hide_modal() {
-                this.showModal = false
-                if (this.$refs.modal)
-                    this.$refs.modal.$el.style.display = 'none'
-            },
-            update_ofname() {
-                if (this.ofname_to_set === '-2' || this.inLoading)
-                    return
-                if (this.ofname_to_set !== '-1') {
-                    if (this.ofname_to_set_dep !== '-1') {
-                        this.directive_department = this.ofname_to_set_dep
-                        this.directive_doc = this.ofname_to_set
-                        this.$root.$emit('resync')
-                        this.emit_input()
-                        this.ofname_to_set = '-2'
-                        return
-                    }
-                    let dps = Object.keys(this.directive_from_departments)
-                    if (dps.length > 0 && !this.inLoading) {
-                        let onts = this.ofname_to_set
-                        this.ofname_to_set = '-1'
-                        for (let d of dps) {
-                            let users = this.directive_from_departments[d].docs
-                            for (let u of users) {
-                                if (u.pk.toString() === onts) {
-                                    this.directive_department = d.toString()
-                                    this.directive_doc = onts
-                                    this.emit_input()
-                                    this.ofname_to_set = '-2'
-                                    return
-                                }
-                            }
-                        }
-                    }
-                    return
-                }
-                let dpk = -1
-                if (this.directive_department !== '-1') {
-                    for (let d of this.directive_docs_select) {
-                        if (d.value === this.$store.getters.user_data.doc_pk) {
-                            dpk = d.value
-                            break
-                        }
-                    }
-                    if (dpk === -1 && this.directive_docs_select.length > 0) {
-                        dpk = this.directive_docs_select[0].value
-                    }
-                }
-                this.directive_doc = dpk.toString()
-            },
-            select_base(pk) {
-                this.base = pk
-                this.emit_input()
-                this.search()
-            },
-            select_card(index) {
-                this.hide_modal()
-                this.selected_card = this.founded_cards[index]
-                if (this.selected_card.base_pk) {
-                    if (this.base && this.base !== this.selected_card.base_pk) {
-                        this.query = ''
-                    }
-                    this.base = this.selected_card.base_pk
-                }
-                setTimeout(() => {
-                    if (this.selected_card.status_disp === 'need' && this.$refs.disp) {
-                        $(this.$refs.disp).click()
-                    }
-                }, 10)
-                this.emit_input()
-                this.loaded = true
-                this.$root.$emit('patient-picker:select_card')
-            },
-            check_base() {
-                if (this.base === -1 && this.bases.length > 0) {
-                    let params = new URLSearchParams(window.location.search)
-                    let rmis_uid = params.get('rmis_uid')
-                    let base_pk = params.get('base_pk')
-                    let card_pk = params.get('card_pk')
-                    let ofname = params.get('ofname')
-                    let ofname_dep = params.get('ofname_dep')
-                    if (rmis_uid) {
-                        window.history.pushState('', '', window.location.href.split('?')[0])
-                        let has_internal = false
-                        for (let row of this.bases) {
-                            if (row.internal_type) {
-                                this.base = row.pk
-                                this.query = rmis_uid
-                                this.search_after_loading = true
-                                has_internal = true
-                                break
-                            }
-                        }
-                        if (!has_internal) {
-                            for (let row of this.bases) {
-                                if (row.code === 'Р') {
-                                    this.base = row.pk
-                                    this.query = rmis_uid
-                                    this.search_after_loading = true
-                                    break
-                                }
-                            }
-                        }
-                        if (this.base === -1) {
-                            this.base = this.bases[0].pk
-                        }
-                    } else if (base_pk) {
-                        window.history.pushState('', '', window.location.href.split('?')[0])
-                        if (ofname) {
-                            this.ofname_to_set = ofname
-                        }
-                        if (ofname_dep) {
-                            this.ofname_to_set_dep = ofname_dep
-                        }
-                        for (let row of this.bases) {
-                            if (row.pk === parseInt(base_pk)) {
-                                this.base = row.pk
-                                break
-                            }
-                        }
-                        if (this.base === -1) {
-                            this.base = this.bases[0].pk
-                        }
-                        if (card_pk) {
-                            this.query = `card_pk:${card_pk}`
-                            this.search_after_loading = true
-                        }
-                    } else {
-                        this.base = this.bases[0].pk
-                    }
-                    $(this.$refs.q).focus()
-                    this.emit_input()
-                }
-            },
-            emit_input(from_hn = false) {
-                let pk = -1
-                if ('pk' in this.selected_card)
-                    pk = this.selected_card.pk
-                let individual_pk = -1
-                if ('individual_pk' in this.selected_card)
-                    individual_pk = this.selected_card.individual_pk
-                this.$emit('input', {
-                    pk: pk,
-                    individual_pk: individual_pk,
-                    base: this.selected_base,
-                    ofname_dep: parseInt(this.directive_department),
-                    ofname: parseInt(this.directive_doc),
-                    operator: this.is_operator,
-                    history_num: this.history_num,
-                    is_rmis: this.selected_card.is_rmis,
-                    family: this.selected_card.family,
-                    name: this.selected_card.name,
-                    twoname: this.selected_card.twoname,
-                    birthday: this.selected_card.birthday,
-                    age: this.selected_card.age,
-                    main_diagnosis: this.selected_card.main_diagnosis,
-                })
-                if (pk !== -1 && !from_hn) {
-                    $('#fndsrc').focus()
-                }
-            },
-            clear() {
-                this.loaded = false
-                this.selected_card = {}
-                this.history_num = ''
-                this.founded_cards = []
-                if (this.query.toLowerCase().includes('card_pk:')) {
-                    this.query = ''
-                }
-                this.emit_input()
-            },
-            open_as_l2_card() {
-                this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then()
-                patients_point.searchL2Card({card_pk: this.selected_card.pk}).then((result) => {
-                    this.clear()
-                    if (result.results) {
-                        this.founded_cards = result.results
-                        if (this.founded_cards.length > 1) {
-                            this.showModal = true
-                        } else if (this.founded_cards.length === 1) {
-                            this.select_card(0)
-                        }
-                    } else {
-                        errmessage('Ошибка на сервере')
-                    }
-                }).catch((error) => {
-                    errmessage('Ошибка на сервере', error.message)
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DISABLE_LOADING).then()
-                })
-            },
-            search() {
-                if (!this.query_valid || this.inLoading)
-                    return
-                const q = this.query
-                this.check_base()
-                $('input').each(function () {
-                    $(this).trigger('blur')
-                })
-                this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then()
-                patients_point.searchCard({
-                    type: this.base,
-                    query: q,
-                    list_all_cards: false,
-                    inc_rmis: this.inc_rmis || this.search_after_loading
-                }).then((result) => {
-                    this.clear()
-                    if (result.results) {
-                        this.founded_cards = result.results
-                        if (this.founded_cards.length > 1) {
-                            this.showModal = true
-                        } else if (this.founded_cards.length === 1) {
-                            this.select_card(0)
-                        } else {
-                            errmessage('Не найдено', 'Карт по такому запросу не найдено')
-                        }
-                    } else {
-                        errmessage('Ошибка на сервере')
-                    }
-                    if (this.search_after_loading) {
-                        this.search_after_loading = false
-                        this.query = ''
-                    }
-                }).catch((error) => {
-                    errmessage('Ошибка на сервере', error.message)
-                }).finally(() => {
-                    this.$store.dispatch(action_types.DISABLE_LOADING).then()
-                })
-            },
-            add_researches(pks, full = false) {
-                for (const pk of pks) {
-                    this.$root.$emit('researches-picker:add_research', pk)
-                }
-                if (full) {
-                    if (this.$refs.disp) {
-                        $(this.$refs.disp).click()
-                        $(this.$refs.disp).blur()
-                    }
-                }
-            },
-            show_results(pk) {
-                this.$root.$emit('print:results', pk)
-            }
+        dreg: false,
+        benefit: false,
+      }
+    },
+    created() {
+      this.$store.watch(state => state.bases, (oldValue, newValue) => {
+        this.check_base()
+      });
+      this.$root.$on('search', () => {
+        this.search()
+      });
+      this.$root.$on('select_card', data => {
+        this.base = data.base_pk;
+        this.query = `card_pk:${data.card_pk}`;
+        this.search_after_loading = true;
+        $(this.$refs.q).focus();
+        this.emit_input();
+        if (!data.hide) {
+          this.editor_pk = data.card_pk
+        } else {
+          this.editor_pk = -2
         }
+        setTimeout(() => {
+          this.search();
+          if (!data.hide) {
+            setTimeout(() => {
+              this.$root.$emit('reload_editor')
+            }, 5)
+          }
+        }, 5)
+      });
+      this.$root.$on('hide_l2_card_create', () => {
+        this.editor_pk = -2
+      });
+      this.$root.$on('hide_dreg', () => {
+        this.dreg = false
+      });
+      this.$root.$on('hide_benefit', () => {
+        this.benefit = false
+      });
+      this.inited();
+    },
+    watch: {
+      query() {
+        this.query = this.query.split(' ')
+          .map((s) => s.split('-').map(x => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase()).join('-'))
+          .join(' ')
+      },
+      bases() {
+        this.check_base()
+      },
+      directive_department() {
+        this.update_ofname()
+      },
+      directive_doc() {
+        this.emit_input()
+      },
+      is_operator() {
+        this.emit_input()
+      },
+      history_num() {
+        this.emit_input(true)
+      },
+      inLoading() {
+        if (!this.inLoading && (this.directive_department === '-1' || this.directive_doc === '-1')) {
+          this.update_ofname()
+        }
+        if (!this.inLoading && this.search_after_loading) {
+          this.search()
+        }
+      }
+    },
+    computed: {
+      bases() {
+        return this.$store.getters.bases.filter(b => !b.hide)
+      },
+      selected_base() {
+        for (let b of this.bases) {
+          if (b.pk === this.base) {
+            return b
+          }
+        }
+        return {
+          title: 'Не выбрана база',
+          pk: -1,
+          hide: false,
+          history_number: false,
+          fin_sources: [],
+          internal_type: false,
+        }
+      },
+      normalized_query() {
+        return this.query.trim()
+      },
+      query_valid() {
+        return this.normalized_query.length > 0
+      },
+      l2_cards() {
+        return this.$store.getters.modules.l2_cards_module
+      },
+      l2_benefit() {
+        return this.$store.getters.modules.l2_benefit
+      },
+      is_operator() {
+        if ('groups' in this.$store.getters.user_data) {
+          for (let g of this.$store.getters.user_data.groups) {
+            if (g === 'Оператор лечащего врача') {
+              return true
+            }
+          }
+        }
+        return false
+      },
+      is_doc() {
+        if ('groups' in this.$store.getters.user_data) {
+          for (let g of this.$store.getters.user_data.groups) {
+            if (g === 'Лечащий врач') {
+              return true
+            }
+          }
+        }
+        return false
+      },
+      is_l2_cards() {
+        if ('groups' in this.$store.getters.user_data) {
+          for (let g of this.$store.getters.user_data.groups) {
+            if (g === 'Картотека L2' || g === 'Admin' || g === 'Лечащий врач' || g === 'Оператор лечащего врача') {
+              return true
+            }
+          }
+        }
+        return false
+      },
+      directive_from_departments() {
+        let r = {};
+        for (let dep of this.local_directive_departments) {
+          r[dep.pk] = dep
+        }
+        return r
+      },
+      directive_docs_select() {
+        let o = [];
+        if (this.directive_department in this.directive_from_departments) {
+          for (let d of this.directive_from_departments[this.directive_department].docs) {
+            o.push({label: d.fio, value: d.pk})
+          }
+        }
+        if (!this.is_doc && o.length > 0) {
+          o = [{label: 'Выберите врача', value: -2}, ...o]
+        }
+        return o
+      },
+      inLoading() {
+        return this.$store.getters.inLoading
+      },
+      phones() {
+        if ('phones' in this.selected_card) {
+          return this.selected_card.phones
+        }
+        return []
+      },
+      ...mapGetters(['user_data']),
+      allow_l2_card_edit() {
+        return this.user_data.su || this.user_data.groups.includes('Картотека L2')
+      },
+    },
+    methods: {
+      async inited() {
+        await this.$store.dispatch(action_types.INC_LOADING);
+        await this.$store.dispatch(action_types.GET_DIRECTIVE_FROM);
+
+        (() => {
+          this.local_directive_departments = this.$store.getters.directive_from;
+          this.directive_departments_select = [];
+          for (let dep of this.local_directive_departments) {
+            this.directive_departments_select.push({label: dep.title, value: dep.pk})
+          }
+
+          if (this.$store.getters.user_data &&
+            this.$store.getters.user_data.department &&
+            this.local_directive_departments.length > 0 && this.ofname_to_set === '-1') {
+            for (let dep of this.local_directive_departments) {
+              if (dep.pk === this.$store.getters.user_data.department.pk) {
+                this.directive_department = dep.pk + '';
+                this.check_base();
+                return
+              }
+            }
+            this.directive_department = this.local_directive_departments[0].pk.toString()
+          }
+
+          this.check_base();
+        })();
+
+        await this.$store.dispatch(action_types.DEC_LOADING);
+      },
+      open_anamnesis() {
+        this.$store.dispatch(action_types.INC_LOADING).then();
+        patients_point.loadAnamnesis({card_pk: this.selected_card.pk}).then(data => {
+          this.an_tab('text');
+          this.anamnesis_data = data
+        }).finally(() => {
+          this.$store.dispatch(action_types.DEC_LOADING).then();
+          this.anamnesis = true
+        })
+      },
+      hide_modal_anamnesis() {
+        this.$refs.modalAnamnesis.$el.style.display = 'none';
+        this.anamnesis_data = {};
+        this.anamnesis = false
+      },
+      an_tab(tab) {
+        this.an_state.tab = tab
+      },
+      open_dreg() {
+        this.dreg = true
+      },
+      open_benefit() {
+        this.benefit = true
+      },
+      open_editor(isnew) {
+        if (isnew) {
+          this.editor_pk = -1
+        } else {
+          this.editor_pk = this.selected_card.pk
+        }
+      },
+      format_number(a) {
+        if (a.length === 6) {
+          return `${a.slice(0, 2)}-${a.slice(2, 4)}-${a.slice(4, 6)}`
+        } else if (a.length === 11) {
+          if (a.charAt(1) !== '9' && a.charAt(1) !== '8') {
+            return `${a.slice(0, 1)}-${a.slice(1, 5)}-${a.slice(5, 7)}-${a.slice(7, 9)}-${a.slice(9, 11)}`
+          }
+          return `${a.slice(0, 1)}-${a.slice(1, 4)}-${a.slice(4, 6)}-${a.slice(6, 8)}-${a.slice(8, 10)}-${a.slice(10, 11)}`
+        }
+        return a
+      },
+      hide_modal() {
+        this.showModal = false;
+        if (this.$refs.modal)
+          this.$refs.modal.$el.style.display = 'none'
+      },
+      update_ofname() {
+        if (this.ofname_to_set === '-2' || this.inLoading)
+          return;
+        if (this.ofname_to_set !== '-1') {
+          if (this.ofname_to_set_dep !== '-1') {
+            this.directive_department = this.ofname_to_set_dep;
+            this.directive_doc = this.ofname_to_set;
+            this.$root.$emit('resync');
+            this.emit_input();
+            this.ofname_to_set = '-2';
+            return
+          }
+          let dps = Object.keys(this.directive_from_departments);
+          if (dps.length > 0 && !this.inLoading) {
+            let onts = this.ofname_to_set;
+            this.ofname_to_set = '-1';
+            for (let d of dps) {
+              let users = this.directive_from_departments[d].docs;
+              for (let u of users) {
+                if (u.pk.toString() === onts) {
+                  this.directive_department = d.toString();
+                  this.directive_doc = onts;
+                  this.emit_input();
+                  this.ofname_to_set = '-2';
+                  return
+                }
+              }
+            }
+          }
+          return
+        }
+        let dpk = -1;
+        if (this.directive_department !== '-1') {
+          for (let d of this.directive_docs_select) {
+            if (d.value === this.$store.getters.user_data.doc_pk) {
+              dpk = d.value;
+              break
+            }
+          }
+          if (dpk === -1 && this.directive_docs_select.length > 0) {
+            dpk = this.directive_docs_select[0].value
+          }
+        }
+        this.directive_doc = dpk.toString()
+      },
+      select_base(pk) {
+        this.base = pk;
+        this.emit_input();
+        this.search()
+      },
+      select_card(index) {
+        this.hide_modal();
+        this.selected_card = this.founded_cards[index];
+        if (this.selected_card.base_pk) {
+          if (this.base && this.base !== this.selected_card.base_pk) {
+            this.query = ''
+          }
+          this.base = this.selected_card.base_pk
+        }
+        setTimeout(() => {
+          if (this.selected_card.status_disp === 'need' && this.$refs.disp) {
+            $(this.$refs.disp).click()
+          }
+        }, 10);
+        this.emit_input();
+        this.loaded = true;
+        this.$root.$emit('patient-picker:select_card')
+      },
+      check_base() {
+        if (this.base === -1 && this.bases.length > 0) {
+          let params = new URLSearchParams(window.location.search);
+          let rmis_uid = params.get('rmis_uid');
+          let base_pk = params.get('base_pk');
+          let card_pk = params.get('card_pk');
+          let ofname = params.get('ofname');
+          let ofname_dep = params.get('ofname_dep');
+          if (rmis_uid) {
+            window.history.pushState('', '', window.location.href.split('?')[0]);
+            let has_internal = false;
+            for (let row of this.bases) {
+              if (row.internal_type) {
+                this.base = row.pk;
+                this.query = rmis_uid;
+                this.search_after_loading = true;
+                has_internal = true;
+                break
+              }
+            }
+            if (!has_internal) {
+              for (let row of this.bases) {
+                if (row.code === 'Р') {
+                  this.base = row.pk;
+                  this.query = rmis_uid;
+                  this.search_after_loading = true;
+                  break
+                }
+              }
+            }
+            if (this.base === -1) {
+              this.base = this.bases[0].pk
+            }
+          } else if (base_pk) {
+            window.history.pushState('', '', window.location.href.split('?')[0]);
+            if (ofname) {
+              this.ofname_to_set = ofname
+            }
+            if (ofname_dep) {
+              this.ofname_to_set_dep = ofname_dep
+            }
+            for (let row of this.bases) {
+              if (row.pk === parseInt(base_pk)) {
+                this.base = row.pk;
+                break
+              }
+            }
+            if (this.base === -1) {
+              this.base = this.bases[0].pk
+            }
+            if (card_pk) {
+              this.query = `card_pk:${card_pk}`;
+              this.search_after_loading = true
+            }
+          } else {
+            this.base = this.bases[0].pk
+          }
+          $(this.$refs.q).focus();
+          this.emit_input()
+        }
+      },
+      emit_input(from_hn = false) {
+        let pk = -1;
+        if ('pk' in this.selected_card)
+          pk = this.selected_card.pk;
+        let individual_pk = -1;
+        if ('individual_pk' in this.selected_card)
+          individual_pk = this.selected_card.individual_pk;
+        this.$emit('input', {
+          pk: pk,
+          individual_pk: individual_pk,
+          base: this.selected_base,
+          ofname_dep: parseInt(this.directive_department),
+          ofname: parseInt(this.directive_doc),
+          operator: this.is_operator,
+          history_num: this.history_num,
+          is_rmis: this.selected_card.is_rmis,
+          family: this.selected_card.family,
+          name: this.selected_card.name,
+          twoname: this.selected_card.twoname,
+          birthday: this.selected_card.birthday,
+          age: this.selected_card.age,
+          main_diagnosis: this.selected_card.main_diagnosis,
+        });
+        if (pk !== -1 && !from_hn) {
+          $('#fndsrc').focus()
+        }
+      },
+      clear() {
+        this.loaded = false;
+        this.selected_card = {};
+        this.history_num = '';
+        this.founded_cards = [];
+        if (this.query.toLowerCase().includes('card_pk:')) {
+          this.query = ''
+        }
+        this.emit_input()
+      },
+      open_as_l2_card() {
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Загрузка...'}).then();
+        patients_point.searchL2Card({card_pk: this.selected_card.pk}).then((result) => {
+          this.clear();
+          if (result.results) {
+            this.founded_cards = result.results;
+            if (this.founded_cards.length > 1) {
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
+            }
+          } else {
+            errmessage('Ошибка на сервере')
+          }
+        }).catch((error) => {
+          errmessage('Ошибка на сервере', error.message)
+        }).finally(() => {
+          this.$store.dispatch(action_types.DISABLE_LOADING).then()
+        })
+      },
+      search() {
+        if (!this.query_valid || this.inLoading)
+          return;
+        const q = this.query;
+        this.check_base();
+        $('input').each(function () {
+          $(this).trigger('blur')
+        });
+        this.$store.dispatch(action_types.ENABLE_LOADING, {loadingLabel: 'Поиск карты...'}).then();
+        patients_point.searchCard({
+          type: this.base,
+          query: q,
+          list_all_cards: false,
+          inc_rmis: this.inc_rmis || this.search_after_loading
+        }).then((result) => {
+          this.clear();
+          if (result.results) {
+            this.founded_cards = result.results;
+            if (this.founded_cards.length > 1) {
+              this.showModal = true
+            } else if (this.founded_cards.length === 1) {
+              this.select_card(0)
+            } else {
+              errmessage('Не найдено', 'Карт по такому запросу не найдено')
+            }
+          } else {
+            errmessage('Ошибка на сервере')
+          }
+          if (this.search_after_loading) {
+            this.search_after_loading = false;
+            this.query = ''
+          }
+        }).catch((error) => {
+          errmessage('Ошибка на сервере', error.message)
+        }).finally(() => {
+          this.$store.dispatch(action_types.DISABLE_LOADING).then()
+        })
+      },
+      add_researches(pks, full = false) {
+        for (const pk of pks) {
+          this.$root.$emit('researches-picker:add_research', pk)
+        }
+        if (full) {
+          if (this.$refs.disp) {
+            $(this.$refs.disp).click();
+            $(this.$refs.disp).blur()
+          }
+        }
+      },
+      show_results(pk) {
+        this.$root.$emit('print:results', pk)
+      }
     }
+  }
 </script>
 
 <style scoped lang="scss">

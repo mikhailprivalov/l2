@@ -934,12 +934,13 @@ def directions_paraclinic_form(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_result(request):
     response = {"ok": False, "message": ""}
     rb = json.loads(request.body)
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
+    stationar_research = request_data.get("stationar_research", -1)
     with_confirm = rb.get("with_confirm", False)
     visibility_state = rb.get("visibility_state", {})
     v_g = visibility_state.get("groups", {})
@@ -1053,7 +1054,7 @@ def directions_paraclinic_result(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Врач консультаций")
+@group_required("Врач параклиники", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_confirm(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
@@ -1082,7 +1083,7 @@ def directions_paraclinic_confirm(request):
     return JsonResponse(response)
 
 
-@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций")
+@group_required("Врач параклиники", "Сброс подтверждений результатов", "Врач консультаций", "Врач стационара")
 def directions_paraclinic_confirm_reset(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
