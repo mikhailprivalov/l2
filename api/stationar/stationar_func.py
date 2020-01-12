@@ -328,18 +328,18 @@ def forbidden_edit_dir(num_dir):
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
     if hosp_extract and hosp_extract[0].get('date_confirm'):
-        return False
+        return True
 
     if not hosp_extract:
         #Проверить подтверждение переводного эпикриза
         #Получить hosp_dir для текужего направления
         current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
-        current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss)
+        current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
         #получить для текущего hosp_dir эпикриз с title - перевод.....
         epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             for i in epicrisis_data:
                 if i.get("research_title").lower().find('перевод') != -1:
                     if i.get('date_confirm'):
-                        return False
-    return True
+                        return True
+    return False

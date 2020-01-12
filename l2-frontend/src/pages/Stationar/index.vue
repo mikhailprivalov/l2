@@ -7,13 +7,16 @@
         <button class="btn btn-blue-nb" @click="load" :disabled="pk === ''">Загрузить</button>
       </div>
       <div class="sidebar-content">
-        <div class="inner" v-if="direction !== null && patient !== null">
+        <div class="inner" v-if="direction !== null && !!patient.fio_age">
           <div class="inner-card">
             <a :href="`/forms/pdf?type=106.01&dir_pk=${direction}`" target="_blank" style="float: right">форма 003/у</a>
             История/б №{{direction}}
           </div>
           <div class="inner-card">
             {{issTitle}}
+          </div>
+          <div class="inner-card" v-if="cancel">
+            <strong>Направление отменено</strong>
           </div>
           <patient-card :patient="patient" class="inner-card"/>
           <div class="sidebar-btn-wrapper"
@@ -25,7 +28,7 @@
               <span v-if="Boolean(counts[key])" class="counts">{{counts[key]}} шт.</span> {{title}}
             </button>
             <button class="btn btn-blue-nb sidebar-btn"
-                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key]))"
+                    v-if="menuNeedPlus[key] && (!allowedOnlyOneEntry[key] || !Boolean(counts[key])) && !forbidden_edit"
                     @click="plus(key)"
             >
               <i class="fa fa-plus"/>
@@ -96,32 +99,44 @@
           <DescriptiveForm
             :research="row.research"
             :pk="row.pk"
-            :confirmed="row.confirmed"
+            :confirmed="row.confirmed || row.forbidden_edit"
             :patient="patient_form"
             :change_mkb="change_mkb(row)"
           />
-          <div class="group" v-if="row.research.title === 'Переводной эпикриз'">
+          <div class="group" v-if="r_is_transfer(row)">
             <div class="group-title">Отделение перевода</div>
             <div class="fields">
-              <div class="content-picker">
+              <div class="content-picker" v-if="!row.confirmed">
                 <research-pick :class="{ active: r.pk === stationar_research }" :research="r"
                                @click.native="stationar_research = r.pk"
                                class="research-select"
                                v-for="r in stationar_researches_filtered"
                                :key="r.pk"/>
               </div>
+              <div v-else-if="row.research.transfer_direction">
+                <a href="#" @click.prevent="print_hosp(row.research.transfer_direction)"><i class="fa fa-barcode"/></a>
+                История болезни <a href="#" @click.prevent="print_direction(row.research.transfer_direction)">
+                  №{{row.research.transfer_direction}}
+                </a>
+                <br/>
+                {{row.research.transfer_direction_iss[0]}}
+              </div>
             </div>
           </div>
           <div class="control-row">
             <div class="res-title">{{row.research.title}}:</div>
             <iss-status :i="row"/>
-            <button class="btn btn-blue-nb" @click="save(row)" v-if="!row.confirmed">Сохранить</button>
-            <button class="btn btn-blue-nb" @click="save_and_confirm(row)" v-if="!row.confirmed"
+            <button class="btn btn-blue-nb" @click="save(row)"
+                    v-if="!row.confirmed && !row.forbidden_edit">
+              Сохранить
+            </button>
+            <button class="btn btn-blue-nb" @click="save_and_confirm(row)"
+                    v-if="!row.confirmed && !row.forbidden_edit"
                     :disabled="!r(row)">
               Сохранить и подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="reset_confirm(row)"
-                    v-if="row.confirmed && row.allow_reset_confirm">
+                    v-if="row.confirmed && row.allow_reset_confirm && !row.forbidden_edit">
               Сброс подтверждения
             </button>
             <button class="btn btn-blue-nb" @click="close_form">
@@ -269,6 +284,8 @@
       return {
         pk: '',
         direction: null,
+        forbidden_edit: null,
+        cancel: false,
         iss: null,
         issTitle: null,
         finId: null,
@@ -343,6 +360,7 @@
       async load() {
         this.close_list_directions();
         this.direction = null;
+        this.cancel = false;
         this.iss = null;
         this.issTitle = null;
         this.finId = null;
@@ -356,11 +374,16 @@
         if (ok) {
           this.pk = '';
           this.direction = data.direction;
+          this.cancel = data.cancel;
           this.iss = data.iss;
           this.issTitle = data.iss_title;
           this.finId = data.fin_pk;
+          this.forbidden_edit = data.forbidden_edit;
           this.patient = new Patient(data.patient);
-          this.counts = await stationar_point.counts(this, ['direction'])
+          this.counts = await stationar_point.counts(this, ['direction']);
+          if (message && message.length > 0) {
+            wrnmessage(message)
+          }
         } else {
           errmessage(message)
         }
@@ -450,6 +473,7 @@
           if (data.ok) {
             okmessage('Сохранено');
             iss.saved = true;
+            iss.direction.transfer_direction_iss = data.forbidden_edit;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -467,6 +491,7 @@
             direction: {
               pk: this.opened_form_pk
             },
+            stationar_research: this.stationar_research,
           },
           with_confirm: true,
           visibility_state: this.visibility_state(iss)
@@ -477,6 +502,9 @@
             iss.saved = true;
             iss.allow_reset_confirm = true;
             iss.confirmed = true;
+            iss.research.transfer_direction = data.transfer_direction;
+            iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            iss.direction.transfer_direction_iss = data.forbidden_edit;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -504,6 +532,9 @@
           this.$store.dispatch(action_types.DEC_LOADING).then()
         })
       },
+      r_is_transfer({research}) {
+        return research.can_transfer
+      },
       r(research) {
         return this.r_list(research).length === 0
       },
@@ -527,7 +558,7 @@
             }
           }
         }
-        if (research.research.title === 'Переводной эпикриз' && this.stationar_research === -1) {
+        if (this.r_is_transfer(research) && this.stationar_research === -1) {
           l.push('Отделение перевода');
         }
         return l.slice(0, 2)
@@ -621,6 +652,12 @@
           groups,
           fields,
         }
+      },
+      print_direction(pk) {
+        this.$root.$emit('print:directions', [pk])
+      },
+      print_hosp(pk) {
+        this.$root.$emit('print:hosp', [pk])
       },
     },
     computed: {

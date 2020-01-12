@@ -197,6 +197,12 @@ class Researches(models.Model):
         return self.is_treatment or self.is_stom or self.is_doc_refferal or self.is_paraclinic or self.is_microbiology \
             or self.is_hospital
 
+    @property
+    def can_transfer(self):
+        if self.desc:
+            return False
+        return 'перевод' in self.title.lower()
+
     def __str__(self):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.podrazdeleniye, self.hide)
 
