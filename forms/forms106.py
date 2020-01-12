@@ -29,7 +29,8 @@ from reportlab.pdfgen import canvas
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
-
+from utils.dates import normaliz_date
+from users.models import DoctorProfile
 
 def form_01(request_data):
     """
@@ -366,7 +367,7 @@ def form_01(request_data):
         Spacer(1, 0.2 * mm),
         Paragraph('3. Симптоматическое лечение.', style),
         Spacer(1, 0.2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format('из протоколов БЛ всех направлений-отделений'), style),
+        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), style),
         Spacer(1, 1 * mm),
         Paragraph('16. Исход заболевания: {}'.format(''), style),
         Spacer(1, 1 * mm),
@@ -415,14 +416,16 @@ def form_01(request_data):
         diagnos_frame.addFromList([diagnos_inframe], canvas)
         canvas.restoreState()
 
+    # Получить все услуги из категории операции
     styleTO = deepcopy(style)
     styleTO.alignment = TA_LEFT
     styleTO.firstLineIndent = 0
-    styleTO.fontSize = 9
-    styleTO.leading = 6
+    styleTO.fontSize = 9.5
+    styleTO.leading = 10
     styleTO.spaceAfter = 0.2 * mm
+
     # Таблица для операции
-    opinion = [
+    opinion_oper = [
         [Paragraph('№', styleTO),
          Paragraph('Название операции', styleTO),
          Paragraph('Дата, &nbsp час', styleTO),
@@ -432,16 +435,6 @@ def form_01(request_data):
          ]
     ]
 
-    t_opinion = opinion.copy()
-    tbl = Table(t_opinion,
-                colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
-    tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2 * mm),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
-
-    # Получить все услуги из категории операции
     hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
     operation_iss = []
     operation_research_id = None
@@ -460,9 +453,52 @@ def form_01(request_data):
         for i in operation_iss:
             list_values.append(get_result_value_iss(i, operation_research_id, titles_field))
 
-    for fields_operation in list_values:
-        for field in fields_operation:
-            pass
+        operation_result = []
+        x = 0
+        operation_template = [''] * len(titles_field)
+        for fields_operation in list_values:
+            date_time = {}
+            field = None
+            iss_obj = Issledovaniya.objects.filter(pk=fields_operation[0][1]).first()
+            if not iss_obj.doc_confirmation:
+                continue
+            x += 1
+            for field in fields_operation:
+                if field[3] == 'Название операции':
+                    operation_template[1] = Paragraph(field[2], styleTO)
+                    continue
+                if field[3] == 'Дата проведения':
+                    date_time['date'] = normaliz_date(field[2])
+                    continue
+                if field[3] == 'Время начала':
+                    date_time['time_start'] = field[2]
+                    continue
+                if field[3] == 'Время окончания':
+                    date_time['time_end'] = field[2]
+                    continue
+                if field[3] == 'Метод обезболивания':
+                    operation_template[3] = Paragraph(field[2], styleTO)
+                    continue
+                if field[3] == 'Осложнения':
+                    operation_template[4] = Paragraph(field[2], styleTO)
+                    continue
+            operation_template[0] = Paragraph(str(x), styleTO)
+            operation_template[2] = Paragraph(date_time.get('date') + '<br/>' + date_time.get('time_start') + '-' +
+                                              date_time.get('time_end'), styleTO)
+            iss_obj = Issledovaniya.objects.filter(pk=field[1]).first()
+            doc_fio = iss_obj.doc_confirmation.get_fio()
+            operation_template[5] = Paragraph(doc_fio, styleTO)
+            operation_result.append(operation_template.copy())
+        opinion_oper.extend(operation_result)
+
+        t_opinion_oper = opinion_oper.copy()
+        tbl_o = Table(t_opinion_oper,
+                      colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
 
     def later_pages(canvas, document):
         canvas.saveState()
@@ -489,16 +525,15 @@ def form_01(request_data):
         near_diagnos_frame.addFromList([near_diagnos_inframe], canvas)
 
         #Таблица операции
-        operation_text = [tbl]
+        operation_text = [tbl_o]
         operation_frame = Frame(27 * mm, 123 * mm, 175 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
                                    rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
-        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, vAlign='TOP', fakeWidth=False )
+        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False )
         operation_frame.addFromList([operation_inframe], canvas)
-
-
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
+
     return pdf
