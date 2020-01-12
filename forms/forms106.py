@@ -29,7 +29,7 @@ from reportlab.pdfgen import canvas
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
 from api.stationar.sql_func import get_result_value_iss
 from api.sql_func import get_fraction_result
-from utils.dates import normaliz_date
+from utils.dates import normalize_date
 from users.models import DoctorProfile
 
 def form_01(request_data):
@@ -468,7 +468,7 @@ def form_01(request_data):
                     operation_template[1] = Paragraph(field[2], styleTO)
                     continue
                 if field[3] == 'Дата проведения':
-                    date_time['date'] = normaliz_date(field[2])
+                    date_time['date'] = normalize_date(field[2])
                     continue
                 if field[3] == 'Время начала':
                     date_time['time_start'] = field[2]

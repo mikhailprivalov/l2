@@ -28,7 +28,7 @@ def now():
     return timezone.now()
 
 
-def normaliz_date(date_value:str):
+def normalize_date(date_value:str):
     if date_value:
         vv = date_value.split('-')
         if len(vv) == 3:
