@@ -329,10 +329,8 @@ def forbidden_edit_dir(num_dir):
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_last_num = hosp_nums_obj[-1].get('direction')
     hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
-    date_confirm = None
     if hosp_extract:
-        date_confirm = hosp_extract[0].get('date_confirm')
-        if date_confirm:
+        if hosp_extract[0].get('date_confirm'):
             allow_edit = False
     else:
         #Проверить подтверждение переводного эпикриза
