@@ -318,3 +318,34 @@ def hosp_get_text_iss(current_iss, extract=False):
         result.append(temp_result.copy())
 
     return {'paraclinic': result}
+
+
+def forbidden_edit_dir(num_dir):
+    """
+    Проверяет подтверждена ли выписка, или переводной эпикриз. И возвращает True|False - для редактирвоания протколов
+    """
+    allow_edit = True
+
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_last_num = hosp_nums_obj[-1].get('direction')
+    hosp_extract = hosp_get_data_direction(hosp_last_num, site_type=7, type_service='None', level=2)
+    date_confirm = None
+    if hosp_extract:
+        date_confirm = hosp_extract[0].get('date_confirm')
+        if date_confirm:
+            allow_edit = False
+    else:
+        #Проверить подтверждение переводного эпикриза
+        #Получить hosp_dir для текужего направления
+        current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
+        current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss)
+        #получить для текущего hosp_dir эпикриз с title - перевод.....
+        epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
+        if epicrisis_data:
+            for i in epicrisis_data:
+                if i.get("research_title").find('перевод') != -1:
+                    if i.get('date_confirm'):
+                        allow_edit = False
+                        break
+
+    return allow_edit
