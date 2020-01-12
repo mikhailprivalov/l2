@@ -1062,6 +1062,7 @@ def directions_paraclinic_confirm(request):
     diss = Issledovaniya.objects.filter(pk=pk, time_confirmation__isnull=True)
     if diss.filter(Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
                    | Q(research__is_doc_refferal=True) | Q(research__is_treatment=True)
+                   | Q(research__is_slave_hospital=True)
                    | Q(research__is_stom=True)).exists():
         iss = Issledovaniya.objects.get(pk=pk)
         t = timezone.now()

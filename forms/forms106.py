@@ -1,7 +1,7 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Frame, PageTemplate, FrameBreak, Table, \
-    TableStyle
+    TableStyle, Frame, KeepInFrame
 from reportlab.platypus import PageBreak, NextPageTemplate, Indenter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle, StyleSheet1
 from reportlab.lib import colors
@@ -16,6 +16,7 @@ from reportlab.lib.colors import black
 from appconf.manager import SettingManager
 from clients.models import Card, Document
 from directions.models import Napravleniya, Issledovaniya, ParaclinicResult
+from directory.models import Fractions
 from laboratory.settings import FONTS_FOLDER
 import datetime
 import locale
@@ -25,9 +26,11 @@ import os.path
 from io import BytesIO
 from . import forms_func
 from reportlab.pdfgen import canvas
-from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction
+from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_data_direction, get_direction_attrs
 from api.stationar.sql_func import get_result_value_iss
-
+from api.sql_func import get_fraction_result
+from utils.dates import normalize_date
+from users.models import DoctorProfile
 
 def form_01(request_data):
     """
@@ -61,7 +64,7 @@ def form_01(request_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4,
                             leftMargin=25 * mm,
                             rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=6 * mm, allowSplitting=1,
+                            bottomMargin=4 * mm, allowSplitting=1,
                             title="Форма {}".format("003/у"))
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
@@ -146,18 +149,27 @@ def form_01(request_data):
     if hosp_extract:
         hosp_extract_iss = hosp_extract[0].get('iss')
         extract_research_id = hosp_extract[0].get('research_id')
-    titles_field = ['Время выписки', 'Дата выписки']
+    titles_field = ['Время выписки', 'Дата выписки', 'Основной диагноз (описание)',
+                    'Осложнение основного диагноза (описание)','Сопутствующий диагноз (описание)'
+                    ]
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
-    date_value = None
-    time_value = None
+    date_value, time_value = None, None
+    final_diagnos, other_diagnos, near_diagnos = None, None, None,
+
     if list_values:
         for i in list_values:
             if i[3] == 'Дата выписки':
                 date_value = i[2]
             if i[3] == 'Время выписки':
                 time_value = i[2]
+            if i[3] == 'Основной диагноз (описание)':
+                final_diagnos = i[2]
+            if i[3] == 'Осложнение основного диагноза (описание)':
+                other_diagnos = i[2]
+            if i[3] == 'Сопутствующий диагноз (описание)':
+                near_diagnos = i[2]
 
         if date_value:
             vv = date_value.split('-')
@@ -176,14 +188,103 @@ def form_01(request_data):
         hosp_primary_iss = hosp_primary_receptions[0].get('iss')
         primary_research_id = hosp_primary_receptions[0].get('research_id')
 
-    titles_field = []
-
+    titles_field = ['Дата поступления', 'Время поступления', 'Виды транспортировки',
+                    'Побочное действие лекарств (непереносимость)', 'Кем направлен больной',
+                    'Вид госпитализации',
+                    'Время через, которое доставлен после начала заболевания, получения травмы',
+                    'Диагноз направившего учреждения', 'Диагноз при поступлении']
     if titles_field and hosp_primary_receptions:
         list_values = get_result_value_iss(hosp_primary_iss, primary_research_id, titles_field)
 
+
+    date_entered_value, time_entered_value, type_transport, medicament_allergy = '', '', '', ''
+    who_directed, plan_hospital, extra_hospital, type_hospital = '', '', '', ''
+    time_start_ill, diagnos_who_directed, diagnos_entered = '', '', ''
+
+    if list_values:
+        for i in list_values:
+            if i[3] == 'Дата поступления':
+                date_entered_value = i[2]
+                continue
+            if i[3] == 'Время поступления':
+                time_entered_value = i[2]
+                continue
+            if i[3] == 'Виды транспортировки':
+                type_transport = i[2]
+                continue
+            if i[3] == 'Побочное действие лекарств (непереносимость)':
+                medicament_allergy = i[2]
+                continue
+            if i[3] == 'Кем направлен больной':
+                who_directed = i[2]
+                continue
+            if i[3] == 'Вид госпитализации':
+                type_hospital = i[2]
+            if type_hospital == 'Экстренная':
+                time_start_ill_obj = get_result_value_iss(hosp_primary_iss, primary_research_id, ['Время через, которое доставлен после начала заболевания, получения травмы'])
+                if time_start_ill_obj:
+                    time_start_ill = time_start_ill_obj[0][2]
+                extra_hospital = "Да"
+                plan_hospital = "Нет"
+            else:
+                plan_hospital = "Да"
+                extra_hospital = "Нет"
+                time_start_ill = ''
+            if i[3] == 'Диагноз направившего учреждения':
+                diagnos_who_directed = i[2]
+                continue
+            if i[3] =='Диагноз при поступлении':
+                diagnos_entered = i[2]
+                continue
+
+        if date_entered_value:
+            vv = date_entered_value.split('-')
+            if len(vv) == 3:
+                date_entered_value = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+
     ###########################################################################################################
-    #Заполнить данный Формы из Первичного приема и из Выписки
-    content_title = [
+
+    fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
+    fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
+    group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
+    group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
+    group_rezus_value = group_blood_rezus[0][5].replace('<br/>',' ')
+    ###########################################################################################################
+    #получение данных клинического диагноза
+    hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
+    day_entries_iss = []
+    day_entries_research_id = None
+    if hosp_day_entries:
+        for i in hosp_day_entries:
+            #найти дневники совместно с заведующим
+            if i.get('research_title').find('заведующ') != -1:
+                day_entries_iss.append(i.get('iss'))
+                if not day_entries_research_id:
+                    day_entries_research_id = i.get('research_id')
+
+    titles_field = ['Диагноз клинический', 'Дата установления диагноза']
+    list_values = []
+    if titles_field and day_entries_iss:
+        for i in day_entries_iss:
+            list_values.append(get_result_value_iss(i, day_entries_research_id, titles_field))
+    s = ''
+    for i in list_values:
+        if (i[1][3]).find('Дата установления диагноза') != -1:
+            date_diag = i[1][2]
+            if date_diag:
+                vv = date_diag.split('-')
+                if len(vv) == 3:
+                    date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                    s = s + i[0][2] + '; дата:' + date_diag + '<br/>'
+        elif (i[0][3]).find('Дата установления диагноза') != -1:
+            date_diag = i[0][2]
+            if date_diag:
+                vv = date_diag.split('-')
+                if len(vv) == 3:
+                    date_diag = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                    s = s + i[1][2] + '; дата:' + date_diag + '<br/>'
+
+    title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
         Paragraph(
@@ -193,27 +294,25 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Spacer(1, 2 * mm),
 
-        Paragraph('Дата и время поступления: {}'.format('из первичного осмотра'), style),
+        Paragraph('Дата и время поступления: {} - {}'.format(date_entered_value, time_entered_value), style),
         Spacer(1, 2 * mm),
 
         Paragraph('Дата и время выписки: {} - {}'.format(date_value, time_value), style),
         Spacer(1, 2 * mm),
         Paragraph('Отделение: {}'.format(hosp_depart), style),
         Spacer(1, 2 * mm),
-        Paragraph('Палата №: {}'.format('Из первичного приема. В разных отделениях разные!! Указываем последнее отделение?'), style),
+        Paragraph('Палата №: {}'.format('_________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Переведен в отделение: {}'.format('Из куда (дата перевода)'), style),
+        Paragraph('Переведен в отделение: {}'.format('______________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Проведено койко-дней: {}'.format('в отделении Х - 10дн, в отделенииY - 15 дн'), style),
+        Paragraph('Проведено койко-дней: {}'.format('______________________________________________'), style),
         Spacer(1, 2 * mm),
-        Paragraph('Виды транспортировки: на каталке, на кресле, может идти: {}'.format('из первичного приема'), style),
+        Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(type_transport), style),
         Spacer(1, 2 * mm),
-        Paragraph('Группа крови: {} Резус-принадлежность {}'.format('из анализа(по показаниям)','из анализа'), style),
+        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo[0][5], group_rezus_value), style),
         Spacer(1, 2 * mm),
-        Paragraph('Побочное действие лекарств(непереносимость): {} '.format('из первичного приема самого главного направления'), style),
-
-        Spacer(1, 2 * mm),
-        Spacer(1, 2 * mm),
+        Paragraph('Побочное действие лекарств(непереносимость):', style),
+        Spacer(1, 12 * mm),
         Paragraph("1. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
         Spacer(1, 2 * mm),
         Paragraph(
@@ -225,74 +324,215 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('5. Место работы, профессия или должность', style),
         Spacer(1, 2 * mm),
-        Paragraph('6. Кем направлен больной: {}'.format('из первичного приема'), style),
+        Paragraph('6. Кем направлен больной: {}'.format(who_directed), style),
         Spacer(1, 2 * mm),
-        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format('из первичного приема'), style),
+        Paragraph('7. Доставлен в стационар по экстренным показаниям: {}'.format(extra_hospital), style),
+        Spacer(1, 1 * mm),
+        Paragraph(' через: {} часов после начала заболевания, получения травмы; '.format(time_start_ill), style),
+        Spacer(1, 1 * mm),
+        Paragraph(' госпитализирован в плановом порядке (подчеркнуть) {}.'.format(plan_hospital), style),
+        Spacer(1, 3 * mm),
+        Paragraph('8. Диагноз направившего учреждения:', style),
+        Spacer(1, 8 * mm),
+        Paragraph('9. Диагноз при поступлении:', style),
+        Spacer(1, 10 * mm),
+        Paragraph('10. Диагноз клинический:', style),
+        PageBreak()]
+
+    second_page = [
         Spacer(1, 2 * mm),
-        Paragraph(' через: {} '.format('часов после начала заболевания, получения травмы;'), style),
-        Spacer(1, 2 * mm),
-        Paragraph(' госпитализирован в плановом порядке (подчеркнуть).'.format('из первичного приема'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('8. Диагноз направившего учреждения: {}'.format('из первичного приема'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('9. Диагноз при поступлении: {}'.format('из первичного приема'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('Диагноз клинический: {}'.format('Из диагностических эпикризов всех направлений(отделений)'), style),
-        PageBreak(),
-        Spacer(1, 2 * mm),
-        Paragraph('11. Диагноз заключительный клинический: {}'.format('Из выписки'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('а) основной: {}'.format('Из выписки'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('б) осложнение основного: {}'.format('Из выписки'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('в) сопутствующий: {}'.format('Из выписки'), style),
-        Spacer(1, 2 * mm),
+        Paragraph('11. Диагноз заключительный клинический:', style),
+        Spacer(1, 0.5 * mm),
+        Paragraph('а) основной:', style),
+        Spacer(1, 45 * mm),
+        Paragraph('б) осложнение основного:', style),
+        Spacer(1, 18 * mm),
+        Paragraph('в) сопутствующий:', style),
+        Spacer(1, 19 * mm),
         Paragraph('12. Госпитализирован в данном году по поводу данного заболевания: впервые, повторно (подчеркнуть),'
-                  'всего  - ___раз.:{}'.format('Из выписки'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения.:{}'.format('Из про-токолов операции всех направлений-отделений'), style),
-        Spacer(1, 2 * mm),
+                  'всего  - ___раз.:{}'.format(''), style),
+        Spacer(1, 1 * mm),
+        Paragraph('13. Хирургические операции, методы обезболивания и послеоперационные осложнения:', style),
+        Spacer(1, 40 * mm),
         Paragraph('14. Другие виды лечения:___________________________________________'.format('Из '), style),
-        Spacer(1, 2 * mm),
-        Paragraph('_________________________________________________________________', style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 0.2 * mm),
         Paragraph('для больных злокачественными новообразованиями.', style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 0.2 * mm),
         Paragraph(' 1.Специальное лечение: хирургическое(дистанционная гамматерапия, рентгенотерапия, быстрые '
                   'электроны, контактная и дистанционная гамматерапия, контактная гамматерапия и глубокая '
                   'рентгенотерапия); комбинированное(хирургическое и гамматерапия, хирургическое и рентгено - '
                   'терапия, хирургическое и сочетанное лучевое); химиопрепаратами, гормональными препаратами.', style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 1 * mm),
         Paragraph('2. Паллиативное', style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 0.2 * mm),
         Paragraph('3. Симптоматическое лечение.', style),
-        Spacer(1, 2 * mm),
-        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format('из протоколов БЛ всех направлений-отделений'), style),
-        Spacer(1, 2 * mm),
-        Paragraph('16. Исход заболевания: {}'.format('из выписки'), style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 0.2 * mm),
+        Paragraph('15. Отметка о выдаче листка нетрудоспособности: {}'.format(''), style),
+        Spacer(1, 1 * mm),
+        Paragraph('16. Исход заболевания: {}'.format(''), style),
+        Spacer(1, 1 * mm),
         Paragraph('17.  Трудоспособность восстановлена полностью, снижена, временно утрачена, стойко утрачена в связи '
-                  'с данным заболеванием, с другими причинами(подчеркнуть): {}'.format('из выписки'), style),
-        Spacer(1, 2 * mm),
+                  'с данным заболеванием, с другими причинами(подчеркнуть): {}'.format(''), style),
+        Spacer(1, 1 * mm),
         Paragraph('18. Для поступивших на экспертизу - заключение:___________________', style),
-        Spacer(1, 2 * mm),
+        Spacer(1, 1 * mm),
         Paragraph('___________________________________________________________________', style),
-        Spacer(1, 2 * mm),
-        Paragraph('19. Особые отметки', style),
+        Spacer(1, 1 * mm),
+        Paragraph('19. Особые отметки', style)
     ]
 
-    objs.extend(content_title)
+    objs.extend(title_page)
+    objs.extend(second_page)
 
     def first_pages(canvas, document):
         canvas.saveState()
+        #Побочное действие лекарств(непереносимость) координаты
+        medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
+        medicament_frame = Frame(27 * mm, 163 * mm, 175 * mm, 12 * mm, leftPadding=0, bottomPadding=0,
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
+        medicament_frame.addFromList([medicament_inframe], canvas)
+
+        #Диагноз направившего учреждения координаты
+        diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
+        diagnos_directed_frame = Frame(27 * mm, 81 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
+        diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
+
+        # Диагноз при поступлении координаты
+        diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
+        diagnos_entered_frame = Frame(27 * mm, 67 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
+                                               vAlign='TOP', )
+        diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
+
+        #клинический диагноз координаты
+        diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
+        diagnos_frame = Frame(27 * mm, 5 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0,
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        diagnos_inframe = KeepInFrame(175 * mm, 55 * mm, diagnos_text)
+        diagnos_frame.addFromList([diagnos_inframe], canvas)
         canvas.restoreState()
+
+    # Получить все услуги из категории операции
+    styleTO = deepcopy(style)
+    styleTO.alignment = TA_LEFT
+    styleTO.firstLineIndent = 0
+    styleTO.fontSize = 9.5
+    styleTO.leading = 10
+    styleTO.spaceAfter = 0.2 * mm
+
+    # Таблица для операции
+    opinion_oper = [
+        [Paragraph('№', styleTO),
+         Paragraph('Название операции', styleTO),
+         Paragraph('Дата, &nbsp час', styleTO),
+         Paragraph('Метод обезболивания', styleTO),
+         Paragraph('Осложнения', styleTO),
+         Paragraph('Оперировал', styleTO),
+         ]
+    ]
+
+    hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
+    operation_iss = []
+    operation_research_id = None
+    if hosp_operation:
+        for i in hosp_operation:
+            # найти протоколы по типу операции
+            if i.get('research_title').lower().find('операци') != -1:
+                operation_iss.append(i.get('iss'))
+                if not operation_research_id:
+                    operation_research_id = i.get('research_id')
+
+    titles_field = ['Название операции', 'Дата проведения',
+                    'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
+    list_values = []
+    if titles_field and operation_research_id:
+        for i in operation_iss:
+            list_values.append(get_result_value_iss(i, operation_research_id, titles_field))
+
+        operation_result = []
+        x = 0
+        operation_template = [''] * len(titles_field)
+        for fields_operation in list_values:
+            date_time = {}
+            field = None
+            iss_obj = Issledovaniya.objects.filter(pk=fields_operation[0][1]).first()
+            if not iss_obj.doc_confirmation:
+                continue
+            x += 1
+            for field in fields_operation:
+                if field[3] == 'Название операции':
+                    operation_template[1] = Paragraph(field[2], styleTO)
+                    continue
+                if field[3] == 'Дата проведения':
+                    date_time['date'] = normalize_date(field[2])
+                    continue
+                if field[3] == 'Время начала':
+                    date_time['time_start'] = field[2]
+                    continue
+                if field[3] == 'Время окончания':
+                    date_time['time_end'] = field[2]
+                    continue
+                if field[3] == 'Метод обезболивания':
+                    operation_template[3] = Paragraph(field[2], styleTO)
+                    continue
+                if field[3] == 'Осложнения':
+                    operation_template[4] = Paragraph(field[2], styleTO)
+                    continue
+            operation_template[0] = Paragraph(str(x), styleTO)
+            operation_template[2] = Paragraph(date_time.get('date') + '<br/>' + date_time.get('time_start') + '-' +
+                                              date_time.get('time_end'), styleTO)
+            doc_fio = iss_obj.doc_confirmation.get_fio()
+            operation_template[5] = Paragraph(doc_fio, styleTO)
+            operation_result.append(operation_template.copy())
+        opinion_oper.extend(operation_result)
+
+        t_opinion_oper = opinion_oper.copy()
+        tbl_o = Table(t_opinion_oper,
+                      colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
+        tbl_o.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
 
     def later_pages(canvas, document):
         canvas.saveState()
+        #Заключительные диагнозы
+        #Основной заключительный диагноз
+        final_diagnos_text = [Paragraph('{}'.format(final_diagnos), styleJustified)]
+        final_diagnos_frame = Frame(27 * mm, 230 * mm, 175 * mm, 45 * mm, leftPadding=0, bottomPadding=0,
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        final_diagnos_inframe = KeepInFrame(175 * mm, 50 * mm, final_diagnos_text, hAlign='LEFT', vAlign='TOP', )
+        final_diagnos_frame.addFromList([final_diagnos_inframe], canvas)
+
+        # Осложнения основного заключительного диагноза
+        other_diagnos_text = [Paragraph('{}'.format(other_diagnos), styleJustified)]
+        other_diagnos_frame = Frame(27 * mm, 205 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        other_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, other_diagnos_text, hAlign='LEFT', vAlign='TOP', )
+        other_diagnos_frame.addFromList([other_diagnos_inframe], canvas)
+
+        # Сопутствующие основного заключительного диагноза
+        near_diagnos_text = [Paragraph('{}'.format(near_diagnos), styleJustified)]
+        near_diagnos_frame = Frame(27 * mm, 181 * mm, 175 * mm, 20 * mm, leftPadding=0, bottomPadding=0,
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        near_diagnos_inframe = KeepInFrame(175 * mm, 20 * mm, near_diagnos_text, vAlign='TOP',)
+        near_diagnos_frame.addFromList([near_diagnos_inframe], canvas)
+
+        #Таблица операции
+        operation_text = [tbl_o]
+        operation_frame = Frame(27 * mm, 123 * mm, 175 * mm, 40 * mm, leftPadding=0, bottomPadding=0,
+                                   rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+        operation_inframe = KeepInFrame(175 * mm, 40 * mm, operation_text, hAlign='CENTRE', vAlign='TOP', fakeWidth=False )
+        operation_frame.addFromList([operation_inframe], canvas)
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
+
     return pdf
