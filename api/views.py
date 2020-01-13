@@ -737,32 +737,32 @@ def autocomplete(request):
         if t == "fias":
             data = fias.suggest(v)
         if t == "name":
-            p = Individual.objects.filter(name__istartswith=v).distinct('name')[:l]
+            p = Individual.objects.filter(name__istartswith=v).distinct('name')[:limit]
             if p.exists():
                 data = [x.name for x in p]
         if t == "family":
-            p = Individual.objects.filter(family__istartswith=v).distinct('family')[:l]
+            p = Individual.objects.filter(family__istartswith=v).distinct('family')[:limit]
             if p.exists():
                 data = [x.family for x in p]
         if t == "patronymic":
-            p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:l]
+            p = Individual.objects.filter(patronymic__istartswith=v).distinct('patronymic')[:limit]
             if p.exists():
                 data = [x.patronymic for x in p]
         if t == "work_place":
-            p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:l]
+            p = Card.objects.filter(work_place__istartswith=v).distinct('work_place')[:limit]
             if p.exists():
                 data = [x.work_place for x in p]
         if t == "main_diagnosis":
-            p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:l]
+            p = Card.objects.filter(main_diagnosis__istartswith=v).distinct('main_diagnosis')[:limit]
             if p.exists():
                 data = [x.main_diagnosis for x in p]
         if t == "work_position":
-            p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:l]
+            p = Card.objects.filter(work_position__istartswith=v).distinct('work_position')[:limit]
             if p.exists():
                 data = [x.work_position for x in p]
         if "who_give:" in t:
             tpk = t.split(":")[1]
-            p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:l]
+            p = Document.objects.filter(document_type__pk=tpk, who_give__istartswith=v).distinct('who_give')[:limit]
             if p.exists():
                 data = [x.who_give for x in p]
     return JsonResponse({"data": data})

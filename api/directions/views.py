@@ -143,8 +143,7 @@ def directions_history(request):
                              0].research.is_doc_refferal
                          else iss_list[0].research.get_podrazdeleniye().title, "cancel": napr["cancel"],
                          "checked": False,
-                         "pacs": None if not iss_list[0].research.podrazdeleniye or
-                                         not iss_list[0].research.podrazdeleniye.can_has_pacs else
+                         "pacs": None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else
                          search_dicom_study(int(napr["pk"])),
                          "has_hosp": has_hosp,
                          "has_descriptive": has_descriptive})
@@ -229,8 +228,7 @@ def directions_results(request):
             result["direction"]["pk"] = napr.pk
             result["full"] = False
             result["ok"] = True
-            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or \
-                                     not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
+            result["pacs"] = None if not iss_list[0].research.podrazdeleniye or not iss_list[0].research.podrazdeleniye.can_has_pacs else search_dicom_study(pk)
             if iss_list.filter(doc_confirmation__isnull=False).exists():
                 result["direction"]["doc"] = iss_list.filter(doc_confirmation__isnull=False)[
                     0].doc_confirmation.get_fio()
@@ -452,8 +450,7 @@ def directions_mark_visit(request):
     f = False
     if dn.exists():
         n = dn[0]
-        if Issledovaniya.objects.filter(
-            Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
+        if Issledovaniya.objects.filter(Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True)).exists():
             if not cancel:
                 n.visit_date = timezone.now()
                 n.visit_who_mark = request.user.doctorprofile

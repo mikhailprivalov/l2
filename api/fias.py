@@ -15,8 +15,8 @@ def suggest(query, resource='address', count=5):
     if not k:
         return []
     key = get_md5('{}{}{}'.format(k, resource, query))
-    l = cache.get(key)
-    if not l:
+    result = cache.get(key)
+    if not result:
         url = BASE_URL.format(resource)
         headers = {"Authorization": "Token {}".format(k),
                    "Content-Type": "application/json"}
@@ -27,8 +27,8 @@ def suggest(query, resource='address', count=5):
                 }
         r = requests.post(url, data=json.dumps(data), headers=headers)
         result = list(map(lambda x: x.get('value', ''), r.json().get('suggestions', [])))
-        cache.set(key, pickle.dumps(l, protocol=4), 24 * 3600)
+        cache.set(key, pickle.dumps(result, protocol=4), 24 * 3600)
     else:
-        result = pickle.loads(l, encoding="utf8")
+        result = pickle.loads(result, encoding="utf8")
 
     return result

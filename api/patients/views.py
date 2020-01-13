@@ -82,11 +82,9 @@ def patients_search_card(request):
             if len(split) > 3:
                 objects = Individual.objects.filter(family__istartswith=f, name__istartswith=n,
                                                     patronymic__istartswith=p, card__base=card_type,
-                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[
-                          :10]
+                                                    birthday=datetime.datetime.strptime(split[3], "%d.%m.%Y").date())[:10]
 
-            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) \
-                or (card_type.internal_type and inc_rmis):
+            if (card_type.is_rmis and (len(objects) == 0 or (len(split) < 4 and len(objects) < 10))) or (card_type.internal_type and inc_rmis):
                 objects = list(objects)
                 try:
                     if not c:
@@ -95,9 +93,7 @@ def patients_search_card(request):
                 except ConnectionError:
                     pass
 
-        if (re.search(p3, query) and not card_type.is_rmis) \
-            or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) \
-            or (card_type.is_rmis and not re.search(p3, query)):
+        if (re.search(p3, query) and not card_type.is_rmis) or (len(list(objects)) == 0 and len(query) == 16 and card_type.internal_type) or (card_type.is_rmis and not re.search(p3, query)):
             resync = True
             if len(list(objects)) == 0:
                 resync = False
@@ -119,15 +115,15 @@ def patients_search_card(request):
                 sema = threading.BoundedSemaphore(10)
                 threads = list()
 
-                def sync_i(o: Individual, client: Client):
+                def sync_i(ind_local: Individual, client: Client):
                     sema.acquire()
                     try:
-                        o.sync_with_rmis(c=client)
+                        ind_local.sync_with_rmis(c=client)
                     finally:
                         sema.release()
 
-                for o in objects:
-                    thread = threading.Thread(target=sync_i, args=(o, c))
+                for obj in objects:
+                    thread = threading.Thread(target=sync_i, args=(obj, c))
                     threads.append(thread)
                     thread.start()
 
@@ -305,8 +301,7 @@ def patients_card_save(request):
     message = ""
     messages = []
 
-    if "new_individual" in request_data and (
-        request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
+    if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
         i = Individual(family=request_data["family"],
                        name=request_data["name"],
                        patronymic=request_data["patronymic"],
@@ -319,7 +314,7 @@ def patients_card_save(request):
             pk=request_data["individual_pk"] if request_data["card_pk"] < 0 else Card.objects.get(
                 pk=request_data["card_pk"]).individual_id)
         if i.family != request_data["family"] \
-            or i.name != request_data["name"] or i.patronymic != request_data["patronymic"] or str(i.birthday) != request_data["birthday"] or i.sex != request_data["sex"]:
+                or i.name != request_data["name"] or i.patronymic != request_data["patronymic"] or str(i.birthday) != request_data["birthday"] or i.sex != request_data["sex"]:
             changed = True
         i.family = request_data["family"]
         i.name = request_data["name"]
