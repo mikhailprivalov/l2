@@ -247,8 +247,13 @@ def form_01(request_data):
     fcaction_avo_id = Fractions.objects.filter(title='Групповая принадлежность крови по системе АВО').first()
     fcaction_rezus_id = Fractions.objects.filter(title='Резус').first()
     group_blood_avo = get_fraction_result(ind_card.pk, fcaction_avo_id.pk, count=1)
+    group_blood_avo_value = ''
+    if group_blood_avo:
+        group_blood_avo_value = group_blood_avo[0][5]
     group_blood_rezus = get_fraction_result(ind_card.pk, fcaction_rezus_id.pk, count=1)
-    group_rezus_value = group_blood_rezus[0][5].replace('<br/>',' ')
+    group_rezus_value = ''
+    if group_blood_rezus:
+        group_rezus_value = group_blood_rezus[0][5].replace('<br/>',' ')
     ###########################################################################################################
     #получение данных клинического диагноза
     hosp_day_entries = hosp_get_data_direction(hosp_first_num, site_type=1, type_service='None', level=-1)
@@ -309,7 +314,7 @@ def form_01(request_data):
         Spacer(1, 2 * mm),
         Paragraph('Виды транспортировки(на каталке, на кресле, может идти): {}'.format(type_transport), style),
         Spacer(1, 2 * mm),
-        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo[0][5], group_rezus_value), style),
+        Paragraph('Группа крови: {}. Резус-принадлежность: {}'.format(group_blood_avo_value, group_rezus_value), style),
         Spacer(1, 2 * mm),
         Paragraph('Побочное действие лекарств(непереносимость):', style),
         Spacer(1, 12 * mm),
@@ -389,21 +394,21 @@ def form_01(request_data):
         #Побочное действие лекарств(непереносимость) координаты
         medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
         medicament_frame = Frame(27 * mm, 163 * mm, 175 * mm, 12 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         #Диагноз направившего учреждения координаты
         diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 81 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
         diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 67 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
                                                vAlign='TOP', )
         diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
@@ -411,7 +416,7 @@ def form_01(request_data):
         #клинический диагноз координаты
         diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
         diagnos_frame = Frame(27 * mm, 5 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
         diagnos_inframe = KeepInFrame(175 * mm, 55 * mm, diagnos_text)
         diagnos_frame.addFromList([diagnos_inframe], canvas)
         canvas.restoreState()
@@ -449,7 +454,7 @@ def form_01(request_data):
     titles_field = ['Название операции', 'Дата проведения',
                     'Время начала', 'Время окончания', 'Метод обезболивания', 'Осложнения']
     list_values = []
-    if titles_field and operation_research_id:
+    if titles_field and operation_research_id and hosp_operation:
         for i in operation_iss:
             list_values.append(get_result_value_iss(i, operation_research_id, titles_field))
 
@@ -490,14 +495,14 @@ def form_01(request_data):
             operation_result.append(operation_template.copy())
         opinion_oper.extend(operation_result)
 
-        t_opinion_oper = opinion_oper.copy()
-        tbl_o = Table(t_opinion_oper,
-                      colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
-        tbl_o.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
+    t_opinion_oper = opinion_oper.copy()
+    tbl_o = Table(t_opinion_oper,
+                  colWidths=(7 * mm, 62 * mm, 25 * mm, 30 * mm, 15 * mm, 45 * mm,))
+    tbl_o.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2.1 * mm),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
 
     def later_pages(canvas, document):
         canvas.saveState()
