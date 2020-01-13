@@ -5,8 +5,11 @@ matrix:
       python: 3.6
       os: linux
       fail_fast: true
+      env:
+        - SKIP_INTERPRETER=true
       before_install:
         - git clone https://github.com/TravisToolbox/pycodestyle-travis.git
+        - mv requirements.txt req.txt
       install:
         - ./pycodestyle-travis/install.sh
       script:
