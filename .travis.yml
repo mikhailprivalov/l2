@@ -10,6 +10,7 @@ matrix:
       before_install:
         - git clone https://github.com/TravisToolbox/pycodestyle-travis.git
         - mv requirements.txt req.txt
+        - touch requirements.txt
       install:
         - ./pycodestyle-travis/install.sh
       script:
