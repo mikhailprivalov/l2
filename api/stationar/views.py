@@ -1,3 +1,4 @@
+import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
@@ -6,9 +7,6 @@ from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
 from laboratory.decorators import group_required
-import simplejson as json
-
-from laboratory.utils import strdate
 
 
 @login_required

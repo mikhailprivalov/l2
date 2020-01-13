@@ -19,6 +19,7 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from clients.models import CardBase, Individual, Card, Document
 from directory.models import Fractions, ParaclinicInputField, ResearchSite
+from directory.models import Researches as DResearches
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
@@ -27,7 +28,6 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, \
     ExcludePurposes
 from utils.dates import try_parse_range, try_strptime
-from directory.models import Researches as DResearches
 
 
 def translit(locallangstring):
@@ -483,8 +483,8 @@ def statistics_tickets_get(request):
     date_start, date_end = try_parse_range(request_data["date"])
     n = 0
     for row in StatisticsTicket.objects.filter(
-            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-            date__range=(date_start, date_end,)).order_by('pk'):
+        Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
+        date__range=(date_start, date_end,)).order_by('pk'):
         if not row.invalid_ticket:
             n += 1
         response["data"].append({
@@ -500,8 +500,8 @@ def statistics_tickets_get(request):
             "primary": row.primary_visit,
             "info": row.info,
             "disp": row.get_dispensary_registration_display()
-            + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
-            + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
+                    + (" (" + row.dispensary_diagnos + ")" if row.dispensary_diagnos != "" else "")
+                    + (" (" + row.dispensary_exclude_purpose.title + ")" if row.dispensary_exclude_purpose else ""),
             "result": row.result.title if row.result else "",
             "outcome": row.outcome.title if row.outcome else "",
             "invalid": row.invalid_ticket,
@@ -515,8 +515,8 @@ def statistics_tickets_invalidate(request):
     response = {"ok": False, "message": ""}
     request_data = json.loads(request.body)
     if StatisticsTicket.objects.filter(
-            Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
-            pk=request_data.get("pk", -1)).exists():
+        Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile)).filter(
+        pk=request_data.get("pk", -1)).exists():
         if StatisticsTicket.objects.get(pk=request_data["pk"]).can_invalidate():
             for s in StatisticsTicket.objects.filter(pk=request_data["pk"]):
                 s.invalid_ticket = request_data.get("invalid", False)
@@ -659,7 +659,7 @@ def search_template(request):
     q = request.GET.get('q', '')
     if q != '':
         for r in users.AssignmentTemplates.objects.filter(title__istartswith=q, global_template=False).order_by(
-                'title')[:10]:
+            'title')[:10]:
             result.append({"pk": r.pk, "title": r.title, "researches": [x.research.pk for x in
                                                                         users.AssignmentResearches.objects.filter(
                                                                             template=r, research__hide=False)]})
@@ -988,8 +988,8 @@ def job_types(request):
     is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
     users_list = [request.user.doctorprofile.get_data()]
     if is_zav_lab:
-        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
-                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"]) \
+            .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
             users_list.append(user.get_data())
     return JsonResponse({"types": types, "is_zav_lab": is_zav_lab, "users": users_list})
 
@@ -1012,8 +1012,8 @@ def job_list(request):
     is_zav_lab = (g and g in request.user.groups.all()) or request.user.is_superuser
     users_list = [request.user.doctorprofile]
     if is_zav_lab:
-        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"])\
-                .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
+        for user in users.DoctorProfile.objects.filter(user__groups__name__in=["Лаборант", "Врач-лаборант"]) \
+            .exclude(pk=request.user.doctorprofile.pk).order_by("fio").distinct():
             users_list.append(user)
     result = []
     for j in directions.EmployeeJob.objects.filter(doc_execute__in=users_list, date_job=date).order_by("doc_execute", "-time_save"):

@@ -13,5 +13,5 @@ admin.site.register(models.RelationFractionASTM)
 
 
 @admin.register(models.Analyzer)
-class ApplicationAdmin(AjaxSelectAdmin):
+class AnalyzerAdmin(AjaxSelectAdmin):
     list_display = ('__str__', 'protocol', 'mode', 'connection_string')

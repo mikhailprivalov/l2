@@ -193,40 +193,40 @@ def passed_research(d_s, d_e):
 def statistics_research(research_id, d_s, d_e):
     """
     на входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
-    выход: Физлицо, Дата рождения, Возраст, Карта, Исследование,	Источник финансирования,	Стоимость,	Исполнитель,
-    	Направление, создано направление(дата),	Дата подтверждения услуги,	Время подтверждения.
+    выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
+        Направление, создано направление(дата), Дата подтверждения услуги, Время подтверждения.
     :return:
     """
     with connection.cursor() as cursor:
         cursor.execute(""" WITH
     t_iss AS
-	    (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, 
-	    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
-	    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_confirm,
-	    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS create_date_napr,
-	    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS create_time_napr, 
-	    directions_issledovaniya.doc_confirmation_id as doc, users_doctorprofile.fio as doc_fio,
-	    directions_issledovaniya.coast, directions_issledovaniya.discount,
-	    directions_issledovaniya.how_many, directions_napravleniya.data_sozdaniya, directions_napravleniya.istochnik_f_id,
-	    directions_istochnikifinansirovaniya.title as ist_f,
-	    directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation
-	    FROM directions_issledovaniya
-	    LEFT JOIN directions_napravleniya 
-		   ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
-	    LEFT JOIN users_doctorprofile
-		   ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
-	    LEFT JOIN directions_istochnikifinansirovaniya
-		ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id 
-	    WHERE directions_issledovaniya.time_confirmation BETWEEN %(d_start)s AND %(d_end)s
-	    AND directions_issledovaniya.research_id=%(research_id)s),
+        (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, 
+        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_confirm,
+        to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS create_date_napr,
+        to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS create_time_napr, 
+        directions_issledovaniya.doc_confirmation_id as doc, users_doctorprofile.fio as doc_fio,
+        directions_issledovaniya.coast, directions_issledovaniya.discount,
+        directions_issledovaniya.how_many, directions_napravleniya.data_sozdaniya, directions_napravleniya.istochnik_f_id,
+        directions_istochnikifinansirovaniya.title as ist_f,
+        directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation
+        FROM directions_issledovaniya
+        LEFT JOIN directions_napravleniya 
+           ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+        LEFT JOIN users_doctorprofile
+           ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+        LEFT JOIN directions_istochnikifinansirovaniya
+        ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id 
+        WHERE directions_issledovaniya.time_confirmation BETWEEN %(d_start)s AND %(d_end)s
+        AND directions_issledovaniya.research_id=%(research_id)s),
     t_card AS
-	   (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
+       (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
         clients_individual.family as ind_family,
-	    clients_individual.name AS ind_name, clients_individual.patronymic, 
-	    to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
-	    clients_individual.birthday as date_born
-	    FROM clients_individual
-	    LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id)
+        clients_individual.name AS ind_name, clients_individual.patronymic, 
+        to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
+        clients_individual.birthday as date_born
+        FROM clients_individual
+        LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id)
 
         SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
         how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 

@@ -1,4 +1,5 @@
 from django.db import connection
+
 from laboratory.settings import TIME_ZONE
 
 
@@ -11,13 +12,13 @@ def get_research(title_podr, vertical_result_display):
     with connection.cursor() as cursor:
         cursor.execute("""WITH
         t_podr AS (
-	        SELECT id as podr_id, title as podr_title FROM public.podrazdeleniya_podrazdeleniya),
-	    
-	    t_research AS (
-	        SELECT id as research_id, title as research_title, vertical_result_display, podrazdeleniye_id 
-	        FROM public.directory_researches)
-	    
-	    SELECT research_id, research_title FROM t_research
+            SELECT id as podr_id, title as podr_title FROM public.podrazdeleniya_podrazdeleniya),
+
+        t_research AS (
+            SELECT id as research_id, title as research_title, vertical_result_display, podrazdeleniye_id 
+            FROM public.directory_researches)
+
+        SELECT research_id, research_title FROM t_research
         LEFT JOIN t_podr
         ON t_research.podrazdeleniye_id=t_podr.podr_id
         WHERE podr_title = %(title_podr)s and vertical_result_display = %(vertical)s
@@ -117,7 +118,7 @@ def get_result_text_research(research_pk, listdirs):
             t_fields AS (SELECT id as field_id, title, "order" as field_order, 
                          directory_paraclinicinputfield.group_id, group_title, group_order
                          FROM public.directory_paraclinicinputfield
-            LEFT JOIN t_groups on directory_paraclinicinputfield.group_id = t_groups.group_id			 
+            LEFT JOIN t_groups on directory_paraclinicinputfield.group_id = t_groups.group_id
             WHERE (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and for_extract_card=true) or
                     (directory_paraclinicinputfield.group_id in (SELECT group_id from t_groups) and title ILIKE 'Заключение')),
             
@@ -143,12 +144,12 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
     with connection.cursor() as cursor:
         cursor.execute("""
         WITH
-           t_field AS (SELECT "id", title FROM directory_paraclinicinputfield  
-           WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s) 
-			 AND title = ANY(ARRAY[%(titles_field)s]))
+           t_field AS (SELECT "id", title FROM directory_paraclinicinputfield
+           WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s)
+             AND title = ANY(ARRAY[%(titles_field)s]))
 
             SELECT field_id, issledovaniye_id, "value", title FROM public.directions_paraclinicresult
-            LEFT JOIN t_field ON directions_paraclinicresult.field_id = t_field.id								   
+            LEFT JOIN t_field ON directions_paraclinicresult.field_id = t_field.id
             where field_id in (SELECT "id" FROM t_field)  and issledovaniye_id = %(id_iss)s
 
 

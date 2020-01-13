@@ -1,9 +1,10 @@
-from podrazdeleniya.models import Podrazdeleniya
-from directory.models import Researches
-from directions.models import Issledovaniya, Napravleniya
-from utils import tree_directions
 from collections import OrderedDict
 from copy import deepcopy
+
+from directions.models import Issledovaniya
+from directory.models import Researches
+from podrazdeleniya.models import Podrazdeleniya
+from utils import tree_directions
 from .sql_func import get_research, get_iss, get_distinct_research, get_distinct_fraction, get_result_fraction, \
     get_result_text_research
 
@@ -39,7 +40,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
                          'time_confirm': i[7], 'research_id': i[8], 'research_title': i[9], 'podrazdeleniye_id': i[13],
                          'is_paraclinic': i[14], 'is_doc_refferal': i[15], 'is_stom': i[16], 'is_hospital': i[17],
                          'is_microbiology': i[18], 'podrazdeleniye_title': i[19], 'site_type': i[21],
-                         'research_short_title': i[23], 'is_slave_hospital' : i[24]})
+                         'research_short_title': i[23], 'is_slave_hospital': i[24]})
 
     return data
 
@@ -68,15 +69,15 @@ def get_direction_attrs(direction, site_type=-1, type_service='None', level=-1):
             confirm = bool(dir_attr.get('date_confirm'))
             if dir_attr.get('is_slave_hospital'):
                 type_dir = 'stationar'
-            dict_temp[num_dir] = {'type' : type_dir,
+            dict_temp[num_dir] = {'type': type_dir,
                                   'date_create': dir_attr.get('date_create'),
                                   'confirm': confirm,
                                   'researches': [dir_attr.get('research_title')],
                                   'researches_short': [dir_attr.get('research_short_title')],
-                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'),}
+                                  'podrazdeleniye': dir_attr.get('podrazdeleniye_title'), }
 
     for k, v in dict_temp.items():
-        dict_result = {'type' : v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
+        dict_result = {'type': v['type'], 'pk': k, 'date_create': v['date_create'], 'confirm': v['confirm'], 'researches': v['researches'],
                        'researches_short': v['researches_short'], 'podrazdeleniye': v['podrazdeleniye']}
         data.append(dict_result)
 
@@ -331,11 +332,11 @@ def forbidden_edit_dir(num_dir):
         return True
 
     if not hosp_extract:
-        #Проверить подтверждение переводного эпикриза
-        #Получить hosp_dir для текужего направления
+        # Проверить подтверждение переводного эпикриза
+        # Получить hosp_dir для текужего направления
         current_iss = Issledovaniya.objects.get(napravleniye_id=num_dir)
         current_dir_hosp_dir = hosp_get_curent_hosp_dir(current_iss.pk)
-        #получить для текущего hosp_dir эпикриз с title - перевод.....
+        # получить для текущего hosp_dir эпикриз с title - перевод.....
         epicrisis_data = hosp_get_data_direction(current_dir_hosp_dir, site_type=6, type_service='None', level=2)
         if epicrisis_data:
             for i in epicrisis_data:
