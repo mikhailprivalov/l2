@@ -76,16 +76,18 @@
               :class="['status-' + row.status]">
             <strong>{{row.status}}</strong></td>
           <td class="button-td">
-            <div class="button-td-inner" :class="{has_pacs: !!row.pacs || row.has_hosp}">
+            <div class="button-td-inner" :class="{has_pacs: !!row.pacs}">
               <a :href="row.pacs" title="Снимок" v-tippy target="_blank" class="btn btn-blue-nb" v-if="!!row.pacs">
-                <i class="fa fa-camera"></i>
+                <i class="fa fa-camera"/>
               </a>
               <button class="btn btn-blue-nb" title="Штрих-код браслета" v-tippy
                       @click="print_hosp(row.pk)" v-if="row.has_hosp">
-                <i class="fa fa-barcode"></i>
+                <i class="fa fa-barcode"/> браслета
               </button>
-              <button class="btn btn-blue-nb" v-if="row.status <= 1" @click="cancel_direction(row.pk)">Отмена</button>
-              <button class="btn btn-blue-nb" v-else @click="show_results(row)">Результаты</button>
+              <button class="btn btn-blue-nb" v-if="row.status <= 1 && !row.has_hosp" @click="cancel_direction(row.pk)">
+                Отмена
+              </button>
+              <button class="btn btn-blue-nb" v-else-if="!row.has_hosp" @click="show_results(row)">Результаты</button>
               <button class="btn btn-blue-nb" @click="print_direction(row.pk)">Направление</button>
             </div>
           </td>
@@ -105,7 +107,7 @@
           </button>
           <ul class="dropdown-menu">
             <li v-for="f in forms" v-if="patient_pk !== -1 && (!f.need_dirs || checked.length > 0)">
-                <a :href="f.url" target="_blank">{{f.title}}</a>
+              <a :href="f.url" target="_blank">{{f.title}}</a>
             </li>
             <li><a href="#" @click.prevent="selected_do('directions_list')">Создать список назначений</a></li>
             <li v-if="!iss_pk">
@@ -189,10 +191,12 @@
     computed: {
       forms() {
         return forDirs.map(f => {
-          return {...f, url: f.url.kwf({
+          return {
+            ...f, url: f.url.kwf({
               card: this.patient_pk,
               dir: JSON.stringify(this.checked),
-            })}
+            })
+          }
         });
       },
       active_type_obj() {
@@ -230,8 +234,7 @@
       show_results(row) {
         if (row.has_descriptive) {
           this.$root.$emit('print:results', [row.pk])
-        }
-        else {
+        } else {
           this.$root.$emit('show_results', row.pk)
         }
       },
@@ -322,8 +325,7 @@
         let v = e.target.checked
         if (!v) {
           this.checked = this.checked.filter(e => e !== pk)
-        }
-        else if (!this.in_checked(pk)) {
+        } else if (!this.in_checked(pk)) {
           this.checked.push(pk)
         }
       }
@@ -436,6 +438,7 @@
     left: 0;
     right: 0;
     overflow-y: auto;
+
     .no_abs & {
       position: static;
     }
@@ -445,6 +448,7 @@
     bottom: 0;
     display: flex;
     align-items: center;
+
     .no_abs & {
       position: relative;
     }
@@ -556,6 +560,7 @@
         .btn {
           flex: 0 0 40%;
         }
+
         .btn:first-child {
           flex: 0 0 20%;
         }
