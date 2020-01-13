@@ -103,7 +103,7 @@ def receive_obo(request):
                             otd = n.doc_who_create.podrazdeleniye
                     else:
                         otd = ''
-                    result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye.pk}
+                    result = {"pk": p, "r": 4, "otd": str(otd), "direction": tube.issledovaniya_set.first().napravleniye_id}
             else:
                 result = {"pk": p, "r": 3}
             ret.append(result)

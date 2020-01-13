@@ -136,7 +136,7 @@
               Сохранить и подтвердить
             </button>
             <button class="btn btn-blue-nb" @click="reset_confirm(row)"
-                    v-if="row.confirmed && row.allow_reset_confirm && !row.forbidden_edit">
+                    v-if="row.confirmed && row.allow_reset_confirm && (!row.forbidden_edit || can_reset_transfer)">
               Сброс подтверждения
             </button>
             <button class="btn btn-blue-nb" @click="close_form">
@@ -368,6 +368,8 @@
         this.patient = new Patient({});
         this.openPlusId = null;
         this.openPlusMode = null;
+        this.forbidden_edit = false;
+        this.stationar_research = -1;
         this.create_directions_data = [];
         await this.$store.dispatch(action_types.INC_LOADING);
         const {ok, data, message} = await stationar_point.load(this, ['pk']);
@@ -473,7 +475,7 @@
           if (data.ok) {
             okmessage('Сохранено');
             iss.saved = true;
-            iss.direction.transfer_direction_iss = data.forbidden_edit;
+            iss.direction.transfer_direction_iss = data.transfer_direction_iss;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -500,11 +502,13 @@
             okmessage('Сохранено');
             okmessage('Подтверждено');
             iss.saved = true;
-            iss.allow_reset_confirm = true;
+            iss.allow_reset_confirm = !data.forbidden_edit || this.can_reset_transfer;
             iss.confirmed = true;
             iss.research.transfer_direction = data.transfer_direction;
             iss.research.transfer_direction_iss = data.transfer_direction_iss;
-            iss.direction.transfer_direction_iss = data.forbidden_edit;
+            iss.forbidden_edit = data.forbidden_edit;
+            this.forbidden_edit = data.forbidden_edit;
+            this.stationar_research = -1;
             this.reload_if_need(true)
           } else {
             errmessage(data.message)
@@ -525,6 +529,10 @@
             okmessage('Подтверждение сброшено');
             iss.confirmed = false;
             this.reload_if_need(true)
+            if (data.is_transfer) {
+              this.forbidden_edit = !!data.forbidden_edit
+            }
+            iss.forbidden_edit = data.forbidden_edit;
           } else {
             errmessage(data.message)
           }
@@ -695,6 +703,14 @@
       },
       fte() {
         return this.$store.getters.modules.l2_fast_templates
+      },
+      can_reset_transfer() {
+          for (let g of (this.$store.getters.user_data.groups || [])) {
+              if (g === 'Сброс подтверждения переводного эпикриза') {
+                  return true
+              }
+          }
+          return false
       },
     }
   }

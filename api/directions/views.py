@@ -809,6 +809,9 @@ def directions_paraclinic_form(request):
                 cdid = -1 if not i.doc_confirmation else i.doc_confirmation_id
                 rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                 transfer_d = Napravleniya.objects.filter(parent_auto_gen=i, cancel=False).first()
+                groups = [str(x) for x in request.user.groups.all()]
+                is_transfer = i.research.can_transfer
+                force_reset = not is_transfer or "Сброс подтверждения переводного эпикриза" in groups
                 iss = {
                     "pk": i.pk,
                     "research": {
@@ -833,10 +836,10 @@ def directions_paraclinic_form(request):
                     "templates": [],
                     "saved": i.time_save is not None,
                     "confirmed": i.time_confirmation is not None,
-                    "allow_reset_confirm": ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
-                                            or request.user.is_superuser or "Сброс подтверждений результатов" in [
-                                                str(x) for x in
-                                                request.user.groups.all()]) and i.time_confirmation is not None,
+                    "allow_reset_confirm": (not is_transfer or force_reset) and
+                                           ((ctime - ctp < rt and cdid == request.user.doctorprofile.pk)
+                                            or request.user.is_superuser or "Сброс подтверждений результатов" in groups
+                                            ) and i.time_confirmation is not None,
                     "more": [x.research_id for x in Issledovaniya.objects.filter(parent=i)],
                     "sub_directions": [],
                     "recipe": [],
@@ -1074,7 +1077,7 @@ def directions_paraclinic_result(request):
                                                                                 napravleniye=transfer_d.pk)
                                                                             ]
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
-        response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye.pk)
+        response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
     return JsonResponse(response)
 
 
@@ -1108,6 +1111,7 @@ def directions_paraclinic_confirm(request):
         response["ok"] = True
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
+        response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
         Log(key=pk, type=14, body=json.dumps(request_data), user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
@@ -1120,7 +1124,11 @@ def directions_paraclinic_confirm_reset(request):
 
     if Issledovaniya.objects.filter(pk=pk).exists():
         iss = Issledovaniya.objects.get(pk=pk)
-        if forbidden_edit_dir(iss.napravleniye_id):
+        groups = [str(x) for x in request.user.groups.all()]
+        is_transfer = iss.research.can_transfer
+        force_reset = "Сброс подтверждения переводного эпикриза" in groups
+
+        if (not is_transfer or not force_reset) and forbidden_edit_dir(iss.napravleniye_id):
             response["message"] = "Редактирование запрещено"
             return JsonResponse(response)
 
@@ -1154,6 +1162,9 @@ def directions_paraclinic_confirm_reset(request):
                 str(SettingManager.get("lab_reset_confirm_time_min")))
         response["amd"] = iss.napravleniye.amd_status
         response["amd_number"] = iss.napravleniye.amd_number
+        response["is_transfer"] = is_transfer
+        if is_transfer:
+            response["forbidden_edit"] = forbidden_edit_dir(iss.napravleniye_id)
     return JsonResponse(response)
 
 
