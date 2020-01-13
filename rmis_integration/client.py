@@ -881,8 +881,7 @@ class Directions(BaseRequester):
         return direction.rmis_number
 
     def fill_caseid_hospid(self, client_rmis, direction, stdout):
-        if client_rmis != "NONERMIS" and direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in [
-            "", None] and direction.rmis_hosp_id in ["", None]:
+        if client_rmis != "NONERMIS" and direction.rmis_resend_services and direction.client.base.is_rmis and direction.rmis_case_id in ["", None] and direction.rmis_hosp_id in ["", None]:
             case_id, h_id = self.main_client.hosp.search_last_opened_hosp_record(client_rmis)
             if stdout is not None:
                 stdout.write("Update case_id and hosp_id %s %s" % (case_id, h_id))
@@ -1224,11 +1223,11 @@ class Directions(BaseRequester):
                                                     issledovaniya__time_confirmation__lt=upload_lt,
                                                     rmis_number__isnull=False,
                                                     result_rmis_send=False) \
-            .exclude(rmis_number="NONERMIS") \
-            .exclude(rmis_number="") \
-            .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
-            .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False) \
-            .distinct()
+                .exclude(rmis_number="NONERMIS") \
+                .exclude(rmis_number="") \
+                .exclude(imported_from_rmis=True, imported_directions_rmis_send=False) \
+                .exclude(istochnik_f__rmis_auto_send=False, force_rmis_send=False) \
+                .distinct()
             cnt = to_upload.count()
             i = 0
             for d in to_upload:

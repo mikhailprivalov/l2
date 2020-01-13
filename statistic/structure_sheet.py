@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from datetime import timedelta
 
 import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle

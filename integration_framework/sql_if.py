@@ -1,4 +1,5 @@
 from django.db import connection
+
 from laboratory.settings import TIME_ZONE
 
 
@@ -43,8 +44,7 @@ def direction_collect(d_s, type_integration, limit):
             (SELECT * FROM t_iss LEFT JOIN t_iss_null ON t_iss.napravleniye_id = t_iss_null.napr_null)
             
             SELECT napravleniye_id, research_id, time_confirmation, t_confirm FROM t_all WHERE napr_null IS NULL
-            ORDER BY time_confirmation LIMIT %(limit)s """,
-                       params={'d_start': d_s, 'tz': TIME_ZONE, 'type_integration':type_integration, 'limit':limit})
+            ORDER BY time_confirmation LIMIT %(limit)s """, params={'d_start': d_s, 'tz': TIME_ZONE, 'type_integration': type_integration, 'limit': limit})
 
         row = cursor.fetchall()
     return row
@@ -61,8 +61,7 @@ def direction_resend_amd(limit):
         cursor.execute("""
         SELECT id FROM public.directions_napravleniya
             WHERE need_resend_amd = True
-            ORDER BY id DESC LIMIT %(limit)s """,
-        params={'limit': limit})
+            ORDER BY id DESC LIMIT %(limit)s """, params={'limit': limit})
 
         row = cursor.fetchall()
     return row

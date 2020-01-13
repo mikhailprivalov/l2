@@ -908,7 +908,7 @@ def result_print(request):
 
                                 norm = "none"
                                 # if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
-                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and f.print_title == False:
+                                if Result.objects.filter(issledovaniye=iss, fraction=f).exists() and not f.print_title:
                                     r = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0]
                                     if show_norm:
                                         norm = r.get_is_norm(recalc=True)
@@ -990,9 +990,9 @@ def result_print(request):
                         tmp = [Paragraph('<font face="OpenSansBold" size="8">%s</font>' % iss.research.title,
                                          styleSheet["BodyText"]),
                                Paragraph('<font face="OpenSans" size="8">%s%s</font>' % (
-                                   "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(
-                                       iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment,),
-                                         styleSheet["BodyText"]),
+                                   "" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get),
+                                   "" if not iss.comment else "<br/>" + iss.comment
+                               ), styleSheet["BodyText"]),
                                Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)),
                                          styleSheet["BodyText"]),
                                Paragraph('<font face="OpenSans" size="8">%s</font>' % ("Не подтверждено" if not iss.doc_confirmation else iss.doc_confirmation.get_fio()),
@@ -1830,8 +1830,7 @@ def result_journal_table_print(request):
                                                                             hide=False,
                                                                             research__hide=True,
                                                                             research__pk__in=researches_pks)):
-        k = (
-                9999 if not f.research.direction else f.research.direction_id) * 1000000 + f.relation_id * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
+        k = (9999 if not f.research.direction else f.research.direction_id) * 1000000 + f.relation_id * 100000 + f.research.sort_weight * 10000 + f.sort_weight * 100 + f.pk
         d = dict(pk=f.pk, title=f.title)
         ordered[k] = d
 
@@ -2014,7 +2013,7 @@ def result_journal_print(request):
                 "directions": {},
                 "ist_f": iss.napravleniye.istochnik_f.title,
                 "fio": iss.napravleniye.client.individual.fio(short=True, dots=True) + "<br/>Карта: " + iss.napravleniye.client.number_with_type() +
-                (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
+                       (("<br/>История: " + iss.napravleniye.history_num) if iss.napravleniye.history_num and iss.napravleniye.history_num != "" else "")
             }
         if iss.napravleniye_id not in clientresults[key]["directions"]:
             clientresults[key]["directions"][iss.napravleniye_id] = {"researches": {}}

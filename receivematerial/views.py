@@ -334,8 +334,8 @@ def tubes_get(request):
     """ Получение списка не принятых пробирок """
     result = []
     k = set()
-    if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit() and "from" in request.GET and request.GET[
-        "from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
+    if request.method == "GET" and "lab" in request.GET and request.GET["lab"].isdigit()\
+            and "from" in request.GET and request.GET["from"].isdigit() and "datestart" in request.GET and "dateend" in request.GET:
         filter_type = request.GET.get("type", "wait")
         lab = Podrazdeleniya.objects.get(pk=request.GET["lab"])
         podrazledeniye = Podrazdeleniya.objects.get(pk=request.GET["from"])
@@ -420,9 +420,10 @@ def receive_journal(request):
     n_dict = {}
 
     n = 1
-    for v in tubes:  # Перебор пробирок
+    for v in tubes:
         idv = v.id
-        if idv in vids: continue
+        if idv in vids:
+            continue
         vids.add(idv)
         iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
 

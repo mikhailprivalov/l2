@@ -89,12 +89,12 @@ class StatusQueueL2(models.Model):
         if num_last == let_num[1]:
             n = 1
             if let_last == let_list[-1]:
-                l = let_list[0]
+                ll = let_list[0]
             else:
                 index = let_list.index(let_last)
-                l = let_list[index + 1]
+                ll = let_list[index + 1]
         else:
             n = num_last + 1
-            l = let_last
+            ll = let_last
 
-        return (l, n)
+        return ll, n

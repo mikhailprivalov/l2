@@ -418,8 +418,7 @@ def statistic_xls(request):
             row_num += 1
             iss = {}
             for d in dirs:
-                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by(
-                    "napravleniye__istochnik_f"):
+                for i in Issledovaniya.objects.filter(napravleniye=d).order_by("research__title").order_by("napravleniye__istochnik_f"):
                     rt = i.research.title
                     istf = i.napravleniye.istochnik_f.base.title + " - " + i.napravleniye.istochnik_f.title
                     if rt not in iss:

@@ -295,7 +295,7 @@ def form_01(request_data):
     # Если Заказчик(Плательщик) другое физ лицо отдельный Заказчик, отдельно Представитель, отдельно пациент
     if p_payer and (p_payer != p_agent):
         client_side = ''
-        if p_agent == None:
+        if p_agent is None:
             client_side = ', с другой стороны, заключили в интересах Пациента (Потребителя)'
         is_payer = True
         payer_fio = payer_data['fio']
@@ -334,7 +334,7 @@ def form_01(request_data):
         p_doc_issued = patient_data['bc_issued']
 
     # Пациент==Заказчик
-    if (p_payer == None) and (p_agent == None):
+    if p_payer is None and p_agent is None:
         p_who = client_who + " - Пациент (потребитель)"
         client_side = ', с другой стороны, заключили настоящий договор о нижеследующем:'
         them_contract = ''

@@ -385,8 +385,7 @@ def individual_search(request):
             "fio": i.fio(full=True),
             "docs": [
                 {**model_to_dict(x), "type_title": x.document_type.title}
-                for x in Document.objects.filter(individual=i, is_active=True)
-                    .distinct("number", "document_type", "serial", "date_end", "date_start")
+                for x in Document.objects.filter(individual=i, is_active=True).distinct("number", "document_type", "serial", "date_end", "date_start")
             ],
             "l2_cards": [
                 x.number for x in Card.objects.filter(individual=i, base__internal_type=True, is_archive=False)
@@ -502,7 +501,7 @@ def edit_agent(request):
         upd[key] = card
         if need_doc:
             upd[key + "_doc_auth"] = doc
-        if not key in Card.AGENT_CANT_SELECT:
+        if key not in Card.AGENT_CANT_SELECT:
             upd["who_is_agent"] = key
 
     parent_card.update(**upd)
@@ -617,16 +616,13 @@ def save_dreg(request):
         return s
 
     if not a.date_start and d["date_start"] \
-        or str(a.date_start) != fd(d["date_start"]) \
-        or a.spec_reg != request.user.doctorprofile.specialities \
-        or a.doc_start_reg != request.user.doctorprofile:
+            or str(a.date_start) != fd(d["date_start"]) or a.spec_reg != request.user.doctorprofile.specialities or a.doc_start_reg != request.user.doctorprofile:
         a.date_start = fd(d["date_start"])
         a.doc_start_reg = request.user.doctorprofile
         a.spec_reg = request.user.doctorprofile.specialities
         c = True
 
-    if not a.date_end and d["close"] \
-        or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+    if not a.date_end and d["close"] or (d["close"] and str(a.date_end) != fd(d["date_end"])):
         a.date_end = fd(d["date_end"])
         a.why_stop = d["why_stop"]
         a.doc_end_reg = request.user.doctorprofile
@@ -689,9 +685,7 @@ def save_benefit(request):
             s = '{}-{}-{}'.format(s[2], s[1], s[0])
         return s
 
-    if not a.date_start and d["date_start"] \
-        or str(a.date_start) != fd(d["date_start"]) \
-        or a.doc_start_reg != request.user.doctorprofile:
+    if not a.date_start and d["date_start"] or str(a.date_start) != fd(d["date_start"]) or a.doc_start_reg != request.user.doctorprofile:
         a.date_start = fd(d["date_start"])
         a.doc_start_reg = request.user.doctorprofile
         c = True
@@ -700,9 +694,7 @@ def save_benefit(request):
         a.registration_basis = d["registration_basis"]
         c = True
 
-    if not a.date_end and d["close"] \
-        or (d["close"] and a.doc_end_reg != request.user.doctorprofile) \
-        or (d["close"] and str(a.date_end) != fd(d["date_end"])):
+    if not a.date_end and d["close"] or (d["close"] and a.doc_end_reg != request.user.doctorprofile) or (d["close"] and str(a.date_end) != fd(d["date_end"])):
         a.date_end = fd(d["date_end"])
         a.doc_end_reg = request.user.doctorprofile
         c = True

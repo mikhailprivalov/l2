@@ -20,7 +20,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, \
     TableStyle
 
 from clients.models import Card, Document
-from contracts.models import PriceName
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
 from laboratory.settings import FONTS_FOLDER
 from . import forms_func

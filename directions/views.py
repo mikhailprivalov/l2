@@ -440,8 +440,8 @@ def printDirection(c: Canvas, n, dir: Napravleniya):
                 -5: 'Стационар',
                 -6: 'Микробиология',
             }[rtp]
-            if rtp == -6:
-                has_micro = True
+            # if rtp == -6:
+            #     has_micro = True
         else:
             rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
