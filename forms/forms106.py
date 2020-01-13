@@ -155,8 +155,8 @@ def form_01(request_data):
     list_values = None
     if titles_field and hosp_extract:
         list_values = get_result_value_iss(hosp_extract_iss, extract_research_id, titles_field)
-    date_value, time_value = None, None
-    final_diagnos, other_diagnos, near_diagnos = None, None, None,
+    date_value, time_value = '', ''
+    final_diagnos, other_diagnos, near_diagnos = '', '', ''
 
     if list_values:
         for i in list_values:
@@ -394,21 +394,21 @@ def form_01(request_data):
         #Побочное действие лекарств(непереносимость) координаты
         medicament_text = [Paragraph('{}'.format(medicament_allergy), styleJustified)]
         medicament_frame = Frame(27 * mm, 163 * mm, 175 * mm, 12 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         medicament_inframe = KeepInFrame(175 * mm, 12 * mm, medicament_text, hAlign='LEFT', vAlign='TOP', )
         medicament_frame.addFromList([medicament_inframe], canvas)
 
         #Диагноз направившего учреждения координаты
         diagnos_directed_text = [Paragraph('{}'.format(diagnos_who_directed), styleJustified)]
         diagnos_directed_frame = Frame(27 * mm, 81 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                                rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_directed_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_directed_text, hAlign='LEFT', vAlign='TOP', )
         diagnos_directed_frame.addFromList([diagnos_directed_inframe], canvas)
 
         # Диагноз при поступлении координаты
         diagnos_entered_text = [Paragraph('{}'.format(diagnos_entered), styleJustified)]
         diagnos_entered_frame = Frame(27 * mm, 67 * mm, 175 * mm, 10 * mm, leftPadding=0, bottomPadding=0,
-                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                                       rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_entered_inframe = KeepInFrame(175 * mm, 10 * mm, diagnos_entered_text, hAlign='LEFT',
                                                vAlign='TOP', )
         diagnos_entered_frame.addFromList([diagnos_entered_inframe], canvas)
@@ -416,7 +416,7 @@ def form_01(request_data):
         #клинический диагноз координаты
         diagnos_text = [Paragraph('{}'.format(s * 1), styleJustified)]
         diagnos_frame = Frame(27 * mm, 5 * mm, 175 * mm, 55 * mm, leftPadding=0, bottomPadding=0,
-                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=1)
+                              rightPadding=0, topPadding=0, id='diagnos_frame', showBoundary=0)
         diagnos_inframe = KeepInFrame(175 * mm, 55 * mm, diagnos_text)
         diagnos_frame.addFromList([diagnos_inframe], canvas)
         canvas.restoreState()
