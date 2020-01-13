@@ -55,16 +55,6 @@ fail()
 }
 
 # -------------------------------------------------------------------------------- #
-# Skip                                                                             #
-# -------------------------------------------------------------------------------- #
-# UX - Show the user that the processing of a specific file was skipped.           #
-# -------------------------------------------------------------------------------- #
-skip()
-{
-    printf ' [ \033[00;36mSkip\033[0m ] Skipping %s\n' "$1"
-}
-
-# -------------------------------------------------------------------------------- #
 # Check                                                                            #
 # -------------------------------------------------------------------------------- #
 # Check a specific file.                                                           #
@@ -91,19 +81,6 @@ find_relevant_files()
     git ls-files | grep -E '.*.py$'
 }
 
-# -------------------------------------------------------------------------------- #
-# Is Compatible                                                                    #
-# -------------------------------------------------------------------------------- #
-# The file is relevant but is it compatible with the testing we want to perform.   #
-# -------------------------------------------------------------------------------- #
-is_compatible()
-{
-    if [[ -z "${SKIP_INTERPRETER}" ]] || [[ "${SKIP_INTERPRETER}" != "true" ]]; then
-        head -n1 "$1" | grep -E -w "python" >/dev/null 2>&1
-    else
-	true
-    fi
-}
 
 # -------------------------------------------------------------------------------- #
 # Scan Files                                                                       #
@@ -114,19 +91,9 @@ scan_files()
 {
     echo 'Linting all *.py files'
 
-    if [[ -z "${SKIP_INTERPRETER}" ]] || [[ "${SKIP_INTERPRETER}" != "true" ]]; then
-        echo "We will test to ensure the script interpreter is set to python"
-    else
-        echo "We will NOT test for the existance of a script interpreter"
-    fi
-
     while IFS= read -r filename
     do
-        if is_compatible "$filename"; then
-            check "$filename"
-        else
-            skip "$filename"
-        fi
+        check "$filename"
     done < <(find_relevant_files)
 
     exit $EXIT_VALUE
