@@ -1,0 +1,15 @@
+language: python
+sudo: false
+cache: pip
+python:
+  - '3.6'
+matrix:
+  include:
+    - python: 3.6
+      dist: xenial
+      sudo: true
+fail_fast: true
+before_install:
+  - pip install pycodestyle
+script:
+  - pycodestyle
