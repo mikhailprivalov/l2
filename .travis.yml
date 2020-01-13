@@ -8,10 +8,11 @@ matrix:
       env:
         - SKIP_INTERPRETER=true
       before_install:
-        - git clone https://github.com/TravisToolbox/pycodestyle-travis.git
+        - chmod +x ./travis-pep8-install.sh
+        - chmod +x ./travis-pep8-scan.sh
         - mv requirements.txt req.txt
         - touch requirements.txt
       install:
-        - ./pycodestyle-travis/install.sh
+        - ./travis-pep8-install.sh
       script:
-        - ./pycodestyle-travis/scan.sh
+        - ./travis-pep8-scan.sh
