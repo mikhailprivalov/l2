@@ -389,7 +389,7 @@ class Napravleniya(models.Model):
     def get_instructions(self):
         r = []
         for i in Issledovaniya.objects.filter(napravleniye=self).exclude(research__instructions=""):
-            r.append({"pk": i.research.pk, "title": i.research.title, "text": i.research.instructions})
+            r.append({"pk": i.research_id, "title": i.research.title, "text": i.research.instructions})
         return r
 
     def set_polis(self):
@@ -560,7 +560,7 @@ class Napravleniya(models.Model):
 
                     dir_group = -1
                     if research.direction:
-                        dir_group = research.direction.pk
+                        dir_group = research.direction_id
 
                     if dir_group > -1 and dir_group not in directions_for_researches.keys():
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(client_id,
@@ -867,7 +867,7 @@ class Issledovaniya(models.Model):
             return
         if Napravleniya.objects.filter(parent_auto_gen=self, cancel=False).exists():
             return
-        Napravleniya.gen_napravleniya_by_issledovaniya(self.napravleniye.client.pk,
+        Napravleniya.gen_napravleniya_by_issledovaniya(self.napravleniye.client_id,
                                                        "",
                                                        self.napravleniye.parent.napravleniye.istochnik_f_id
                                                        if self.napravleniye.parent
@@ -875,7 +875,7 @@ class Issledovaniya(models.Model):
                                                        "",
                                                        None,
                                                        user.doctorprofile,
-                                                       {-1: [self.gen_direction_with_research_after_confirm.pk]},
+                                                       {-1: [self.gen_direction_with_research_after_confirm_id]},
                                                        {},
                                                        False,
                                                        {},

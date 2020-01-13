@@ -718,7 +718,7 @@
             user_data: {
                 async handler({rmis_location}) {
                     if (!this.location.init && rmis_location) {
-                        await this.load_location()
+                        await this.load_location();
                         this.location.init = true
                     }
                 },
@@ -727,8 +727,8 @@
             has_loc: {
                 async handler(h) {
                     if (h) {
-                        await this.$store.dispatch(action_types.INC_LOADING)
-                        await this.$store.dispatch(action_types.GET_RESEARCHES)
+                        await this.$store.dispatch(action_types.INC_LOADING);
+                        await this.$store.dispatch(action_types.GET_RESEARCHES);
                         await this.$store.dispatch(action_types.DEC_LOADING)
                     }
                 },
@@ -744,20 +744,20 @@
             $(window).on('beforeunload', () => {
                 if (this.has_changed)
                     return 'Возможно имеются несохраненные изменения! Вы уверены, что хотите покинуть страницу?'
-            })
-            this.load_history()
+            });
+            this.load_history();
             this.$root.$on('hide_dreg', () => {
-                this.load_dreg_rows()
+                this.load_dreg_rows();
                 this.dreg = false
-            })
+            });
             this.$root.$on('hide_benefit', () => {
-                this.load_benefit_rows()
+                this.load_benefit_rows();
                 this.benefit = false
-            })
+            });
 
             this.$root.$on('show_results', (pk) => {
                 this.show_results_pk = pk
-            })
+            });
 
             this.$root.$on('hide_results', () => {
                 this.show_results_pk = -1
@@ -771,14 +771,14 @@
                 if (!this.loc_timer) {
                     this.loc_timer = setInterval(() => this.load_location(), 120000)
                 }
-                this.location.loading = true
+                this.location.loading = true;
                 try {
                     this.location.data = (await users_point.loadLocation({date: this.td}).catch((e) => {
-                        console.error(e)
+                        console.error(e);
                         return {data: []}
                     })).data
                 } catch (e) {
-                    console.error(e)
+                    console.error(e);
                     this.location.data = []
                 }
                 this.location.loading = false
@@ -788,33 +788,33 @@
             },
             load_dreg_rows() {
                 (async () => {
-                    this.dreg_rows_loading = true
-                    this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end)
-                    this.data.patient.has_dreg = this.dreg_rows.length > 0
+                    this.dreg_rows_loading = true;
+                    this.dreg_rows = (await patients_point.loadDreg(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+                    this.data.patient.has_dreg = this.dreg_rows.length > 0;
                     this.dreg_rows_loading = false
                 })().then()
             },
             load_benefit_rows() {
                 (async () => {
-                    this.benefit_rows_loading = true
-                    this.benefit_rows = (await patients_point.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end)
-                    this.data.patient.has_benefit = this.benefit_rows.length > 0
+                    this.benefit_rows_loading = true;
+                    this.benefit_rows = (await patients_point.loadBenefit(this.data.patient, 'card_pk')).rows.filter(r => !r.date_end);
+                    this.data.patient.has_benefit = this.benefit_rows.length > 0;
                     this.benefit_rows_loading = false
                 })().then()
             },
             load_anamnesis() {
                 (async () => {
-                    this.anamnesis_loading = true
-                    this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk')
+                    this.anamnesis_loading = true;
+                    this.anamnesis_data = await patients_point.loadAnamnesis(this.data.patient, 'card_pk');
                     this.anamnesis_loading = false
                 })().then()
             },
             change_mkb(row) {
                 return field => {
                     if (field.value && !row.confirmed && row.research.is_doc_refferal && this.stat_btn) {
-                        const ndiagnos = field.value.split(' ')[0] || ''
+                        const ndiagnos = field.value.split(' ')[0] || '';
                         if (ndiagnos !== row.diagnos && ndiagnos.match(/^[A-Z]\d{1,2}(\.\d{1,2})?$/gm)) {
-                            okmessage('Диагноз в данных статталона обновлён', ndiagnos)
+                            okmessage('Диагноз в данных статталона обновлён', ndiagnos);
                             row.diagnos = ndiagnos
                         }
                     }
@@ -822,27 +822,27 @@
             },
             open_results(pk) {
                 if (this.research_open_history) {
-                    this.hide_results()
+                    this.hide_results();
                     return
                 }
-                this.$store.dispatch(action_types.INC_LOADING).then()
-                this.research_history = []
+                this.$store.dispatch(action_types.INC_LOADING).then();
+                this.research_history = [];
                 directions_point.paraclinicResultPatientHistory({pk}).then(({data}) => {
                     this.research_history = data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
                     this.research_open_history = pk
                 })
             },
             hide_results() {
-                this.research_history = []
+                this.research_history = [];
                 this.research_open_history = null
             },
             r(research) {
                 return this.r_list(research).length === 0
             },
             r_list(research) {
-                const l = []
+                const l = [];
                 if (research.confirmed) {
                     return []
                 }
@@ -851,9 +851,9 @@
                     if (!vGroup(g, research.research.groups, this.data.patient)) {
                         continue
                     }
-                    let n = 0
+                    let n = 0;
                     for (const f of g.fields) {
-                        n++
+                        n++;
                         if (f.required && (f.value === '' || f.value === '- Не выбрано' || !f.value) &&
                               (f.field_type !== 3 ||
                                   vField(g, research.research.groups, f.visibility, this.data.patient))) {
@@ -864,29 +864,29 @@
                 return l.slice(0, 2)
             },
             hide_modal_anamnesis_edit() {
-                this.$refs.modalAnamnesisEdit.$el.style.display = 'none'
+                this.$refs.modalAnamnesisEdit.$el.style.display = 'none';
                 this.anamnesis_edit = false
             },
             save_anamnesis() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 patients_point.saveAnamnesis(this.data.patient, 'card_pk', {text: this.anamnesis_data.text}).then().finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.new_anamnesis = this.anamnesis_data.text
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.new_anamnesis = this.anamnesis_data.text;
                     this.hide_modal_anamnesis_edit()
                 })
             },
             edit_anamnesis() {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 patients_point.loadAnamnesis(this.data.patient, 'card_pk').then(data => {
                     this.anamnesis_data = data
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
                     this.anamnesis_edit = true
                 })
             },
             load_history() {
-                this.directions_history = []
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.directions_history = [];
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicResultUserHistory(this, 'date').then(data => {
                     this.directions_history = data.directions
                 }).finally(() => {
@@ -899,25 +899,25 @@
                 }
             },
             load_pk(pk) {
-                this.pk = '' + pk
+                this.pk = '' + pk;
                 this.load()
             },
             load() {
                 if (this.has_changed && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')) {
                     return
                 }
-                this.clear(true)
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.clear(true);
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.getParaclinicForm({pk: this.pk_c}).then(data => {
                     if (data.ok) {
-                        this.tnd = moment().add(1, 'day').format('YYYY-MM-DD')
-                        this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD')
-                        this.dreg_rows_loading = false
-                        this.benefit_rows_loading = false
-                        this.dreg_rows = []
-                        this.benefit_rows = []
-                        this.pk = ''
-                        this.data = data
+                        this.tnd = moment().add(1, 'day').format('YYYY-MM-DD');
+                        this.td_m_year = moment().subtract(1, 'year').format('YYYY-MM-DD');
+                        this.dreg_rows_loading = false;
+                        this.benefit_rows_loading = false;
+                        this.dreg_rows = [];
+                        this.benefit_rows = [];
+                        this.pk = '';
+                        this.data = data;
                         if (data.card_internal && data.status_disp === 'need' && data.has_doc_referral) {
                             errmessage('Диспансеризация не пройдена')
                         }
@@ -930,24 +930,24 @@
                 })
             },
             hide_modal_create_directions() {
-                this.$refs.modalCD.$el.style.display = 'none'
-                this.create_directions_for = -1
-                this.create_directions_data = []
+                this.$refs.modalCD.$el.style.display = 'none';
+                this.create_directions_for = -1;
+                this.create_directions_data = [];
                 this.create_directions_diagnosis = ''
             },
             create_directions(iss) {
-                this.create_directions_diagnosis = iss.diagnos
+                this.create_directions_diagnosis = iss.diagnos;
                 this.create_directions_for = iss.pk
             },
             visibility_state(iss) {
-                const groups = {}
-                const fields = {}
-                const {groups: igroups} = iss.research
+                const groups = {};
+                const fields = {};
+                const {groups: igroups} = iss.research;
                 for (const group of iss.research.groups) {
                     if (!vGroup(group, igroups, this.data.patient)) {
                         groups[group.pk] = false
                     } else {
-                        groups[group.pk] = true
+                        groups[group.pk] = true;
                         for (const field of group.fields) {
                             fields[field.pk] = vField(group, igroups, field.visibility, this.data.patient)
                         }
@@ -960,9 +960,9 @@
                 }
             },
             save(iss) {
-                this.hide_results()
-                this.inserted = false
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.hide_results();
+                this.inserted = false;
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicResultSave({
                     data: {
                         ...iss,
@@ -972,25 +972,25 @@
                     visibility_state: this.visibility_state(iss)
                 }).then(data => {
                     if (data.ok) {
-                        okmessage('Сохранено')
-                        iss.saved = true
-                        this.data.direction.amd = data.amd
-                        this.data.direction.amd_number = data.amd_number
-                        this.reload_if_need()
+                        okmessage('Сохранено');
+                        iss.saved = true;
+                        this.data.direction.amd = data.amd;
+                        this.data.direction.amd_number = data.amd_number;
+                        this.reload_if_need();
                         this.changed = false
                     } else {
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.inserted = true
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.inserted = true;
                     this.load_location()
                 })
             },
             save_and_confirm(iss) {
-                this.hide_results()
-                this.inserted = false
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.hide_results();
+                this.inserted = false;
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicResultSave({
                     data: {
                         ...iss,
@@ -1000,86 +1000,86 @@
                     visibility_state: this.visibility_state(iss)
                 }).then(data => {
                     if (data.ok) {
-                        okmessage('Сохранено')
-                        okmessage('Подтверждено')
-                        iss.saved = true
-                        iss.allow_reset_confirm = true
-                        iss.confirmed = true
-                        this.data.direction.amd = data.amd
-                        this.data.direction.amd_number = data.amd_number
-                        this.reload_if_need()
+                        okmessage('Сохранено');
+                        okmessage('Подтверждено');
+                        iss.saved = true;
+                        iss.allow_reset_confirm = true;
+                        iss.confirmed = true;
+                        this.data.direction.amd = data.amd;
+                        this.data.direction.amd_number = data.amd_number;
+                        this.reload_if_need();
                         this.changed = false
                     } else {
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.inserted = true
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.inserted = true;
                     this.load_location()
                 })
             },
             confirm(iss) {
-                this.hide_results()
-                this.inserted = false
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.hide_results();
+                this.inserted = false;
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicResultConfirm({iss_pk: iss.pk}).then(data => {
                     if (data.ok) {
-                        okmessage('Подтверждено')
-                        iss.confirmed = true
-                        iss.allow_reset_confirm = true
-                        this.data.direction.amd = data.amd
-                        this.data.direction.amd_number = data.amd_number
-                        this.reload_if_need()
+                        okmessage('Подтверждено');
+                        iss.confirmed = true;
+                        iss.allow_reset_confirm = true;
+                        this.data.direction.amd = data.amd;
+                        this.data.direction.amd_number = data.amd_number;
+                        this.reload_if_need();
                         this.changed = false
                     } else {
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.inserted = true
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.inserted = true;
                     this.load_location()
                 })
             },
             reset_confirm(iss) {
-                this.hide_results()
-                let msg = `Сбросить подтверждение исследования ${iss.research.title}?`
-                let doreset = confirm(msg)
+                this.hide_results();
+                let msg = `Сбросить подтверждение исследования ${iss.research.title}?`;
+                let doreset = confirm(msg);
                 if (doreset === false || doreset === null) {
                     return
                 }
-                this.inserted = false
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.inserted = false;
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicResultConfirmReset({iss_pk: iss.pk}).then(data => {
                     if (data.ok) {
-                        okmessage('Подтверждение сброшено')
-                        iss.confirmed = false
-                        this.data.direction.amd = 'not_need'
-                        this.reload_if_need()
+                        okmessage('Подтверждение сброшено');
+                        iss.confirmed = false;
+                        this.data.direction.amd = 'not_need';
+                        this.reload_if_need();
                         this.changed = false
                     } else {
                         errmessage(data.message)
                     }
                 }).finally(() => {
-                    this.$store.dispatch(action_types.DEC_LOADING).then()
-                    this.inserted = true
+                    this.$store.dispatch(action_types.DEC_LOADING).then();
+                    this.inserted = true;
                     this.load_location()
                 })
             },
             clear(ignore) {
-                ignore = ignore || false
+                ignore = ignore || false;
                 if (!ignore && this.has_changed && !confirm('Возможно имеются несохраненные изменения! Вы действительно хотите закрыть текущий протокол?')) {
                     return
                 }
 
-                this.inserted = false
-                this.changed = false
-                this.anamnesis_edit = false
-                this.new_anamnesis = null
-                this.data = {ok: false}
-                this.research_open_history = null
-                this.dreg_rows_loading = false
-                this.dreg_rows = []
-                this.benefit_rows_loading = false
+                this.inserted = false;
+                this.changed = false;
+                this.anamnesis_edit = false;
+                this.new_anamnesis = null;
+                this.data = {ok: false};
+                this.research_open_history = null;
+                this.dreg_rows_loading = false;
+                this.dreg_rows = [];
+                this.benefit_rows_loading = false;
                 this.benefit_rows = []
             },
             print_direction(pk) {
@@ -1089,16 +1089,16 @@
                 this.$root.$emit('print:results', [pk])
             },
             copy_results(row, pk) {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 directions_point.paraclinicDataByFields({pk}).then(({data}) => {
-                    this.hide_results()
+                    this.hide_results();
                     this.replace_fields_values(row, data)
                 }).finally(() => {
                     this.$store.dispatch(action_types.DEC_LOADING).then()
                 })
             },
             load_template(row, pk) {
-                this.$store.dispatch(action_types.INC_LOADING).then()
+                this.$store.dispatch(action_types.INC_LOADING).then();
                 researches_point.getTemplateData({pk: parseInt(pk)}).then(({data: {fields: data, title}}) => {
                     this.template_fields_values(row, data, title)
                 }).finally(() => {
@@ -1106,47 +1106,47 @@
                 })
             },
             async open_slot(row) {
-                await this.$store.dispatch(action_types.INC_LOADING)
-                this.slot.id = row.slot
-                this.slot.data = await users_point.getReserve({pk: row.slot, patient: row.uid})
+                await this.$store.dispatch(action_types.INC_LOADING);
+                this.slot.id = row.slot;
+                this.slot.data = await users_point.getReserve({pk: row.slot, patient: row.uid});
                 await this.$store.dispatch(action_types.DEC_LOADING)
             },
             async close_slot() {
                 if (!this.$refs.modalSlot) {
                     return
                 }
-                this.$refs.modalSlot.$el.style.display = 'none'
-                this.slot.id = null
+                this.$refs.modalSlot.$el.style.display = 'none';
+                this.slot.id = null;
                 this.slot.data = {}
             },
             async fill_slot() {
-                let s = ''
+                let s = '';
                 for (const r of this.user_services) {
                     if (r.pk === this.slot.data.direction_service) {
-                        s = r.title
+                        s = r.title;
                         break
                     }
                 }
                 try {
-                    await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`)
-                    await this.$store.dispatch(action_types.INC_LOADING)
+                    await this.$dialog.confirm(`Подтвердите назначение услуги ${s}`);
+                    await this.$store.dispatch(action_types.INC_LOADING);
                     const cards = await patients_point.searchCard({
                         type: this.internal_base,
                         query: this.slot.data.patient_uid,
                         list_all_cards: false,
                         inc_rmis: true
-                    })
-                    let card_pk = cards.results[0].pk
-                    const {direction} = await users_point.fillSlot({slot: {...this.slot, card_pk}})
-                    await this.$store.dispatch(action_types.DEC_LOADING)
-                    this.load_location()
+                    });
+                    let card_pk = cards.results[0].pk;
+                    const {direction} = await users_point.fillSlot({slot: {...this.slot, card_pk}});
+                    await this.$store.dispatch(action_types.DEC_LOADING);
+                    this.load_location();
                     this.open_fill_slot(direction)
                 } catch (_) {
                     await this.$store.dispatch(action_types.DEC_LOADING)
                 }
             },
             open_fill_slot(direction) {
-                this.close_slot()
+                this.close_slot();
                 this.load_pk(direction)
             },
             template_fields_values(row, dataTemplate, title) {
@@ -1182,7 +1182,7 @@
                 this.$dialog
                     .confirm('Вы действительно хотите очистить результаты?')
                     .then(() => {
-                        okmessage('Очищено')
+                        okmessage('Очищено');
                         for (const g of row.research.groups) {
                             for (const f of g.fields) {
                                 if (![3].includes(f.field_type)) {
@@ -1196,7 +1196,7 @@
                 field.value = ''
             },
             append_value(field, value) {
-                let add_val = value
+                let add_val = value;
                 if (add_val !== ',' && add_val !== '.') {
                     if (field.value.length > 0 && field.value[field.value.length - 1] !== ' ' && field.value[field.value.length - 1] !== '\n') {
                         if (field.value[field.value.length - 1] === '.') {
@@ -1216,7 +1216,7 @@
                 this.slot.data.direction_service = pk
             },
             add_researches(row, pks) {
-                this.create_directions(row)
+                this.create_directions(row);
                 setTimeout(() => {
                     for (const pk of pks) {
                         this.$root.$emit('researches-picker:add_researchcd', pk)
@@ -1227,11 +1227,11 @@
                 this.$root.$emit('print:results', pk)
             },
             async send_amd() {
-                await this.$store.dispatch(action_types.INC_LOADING)
-                const toSend = this.directions_history.filter(d => ['error', 'need'].includes(d.amd)).map(d => d.pk)
+                await this.$store.dispatch(action_types.INC_LOADING);
+                const toSend = this.directions_history.filter(d => ['error', 'need'].includes(d.amd)).map(d => d.pk);
                 if (toSend.length > 0) {
-                    await directions_point.sendAMD({pks: toSend})
-                    okmessage('Отправка запланирована')
+                    await directions_point.sendAMD({pks: toSend});
+                    okmessage('Отправка запланирована');
                     this.reload_if_need()
                 } else {
                     errmessage('Не найдены подходящие направления')
@@ -1240,21 +1240,21 @@
             },
             async reset_amd(pks) {
                 try {
-                    await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`)
-                    await this.$store.dispatch(action_types.INC_LOADING)
-                    await directions_point.resetAMD({pks})
-                    this.load_pk(this.data.direction.pk)
-                    this.reload_if_need()
+                    await this.$dialog.confirm(`Подтвердите сброс статуса отправки в АМД`);
+                    await this.$store.dispatch(action_types.INC_LOADING);
+                    await directions_point.resetAMD({pks});
+                    this.load_pk(this.data.direction.pk);
+                    this.reload_if_need();
                     await this.$store.dispatch(action_types.DEC_LOADING)
                 } catch (e) {
                 }
             },
             async send_to_amd(pks) {
-                await this.$store.dispatch(action_types.INC_LOADING)
-                await directions_point.sendAMD({pks})
-                this.load_pk(this.data.direction.pk)
-                this.reload_if_need()
-                okmessage('Отправка запланирована')
+                await this.$store.dispatch(action_types.INC_LOADING);
+                await directions_point.sendAMD({pks});
+                this.load_pk(this.data.direction.pk);
+                this.reload_if_need();
+                okmessage('Отправка запланирована');
                 await this.$store.dispatch(action_types.DEC_LOADING)
             },
         },
@@ -1284,9 +1284,9 @@
                 return this.$store.getters.modules.l2_amd
             },
             pk_c() {
-                let lpk = this.pk.trim()
+                let lpk = this.pk.trim();
                 if (lpk === '')
-                    return -1
+                    return -1;
                 try {
                     return parseInt(lpk)
                 } catch (e) {
@@ -1325,7 +1325,7 @@
                 if (!this.user_data || !this.user_data.user_services) {
                     return []
                 }
-                const r = [{pk: -1, title: 'Не выбрано', full_title: 'Не выбрано'}]
+                const r = [{pk: -1, title: 'Не выбрано', full_title: 'Не выбрано'}];
                 for (const d of Object.keys(this.researches)) {
                     for (const row of (this.$store.getters.researches[d] || [])) {
                         if (this.user_data.user_services.includes(row.pk)) {

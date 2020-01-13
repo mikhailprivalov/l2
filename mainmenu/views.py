@@ -102,7 +102,7 @@ def change_password(request):
             docs = docs.filter(user__is_superuser=False)
         for y in docs:
             otds[x.title].append(
-                {"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye.pk})
+                {"pk": y.pk, "fio": y.get_fio(), "username": y.user.username, "podr": y.podrazdeleniye_id})
     return render(request, 'dashboard/change_password.html', {"otds": otds, "podrs": podr, "g": Group.objects.all()})
 
 
@@ -689,7 +689,7 @@ def researches_from_directions(request):
     pk = json.loads(request.GET.get("pk", "[]"))
     data = defaultdict(list)
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=pk, research__hide=False):
-        data[i.research.podrazdeleniye_id or -2].append(i.research.pk)
+        data[i.research.podrazdeleniye_id or -2].append(i.research_id)
     return JsonResponse(data)
 
 

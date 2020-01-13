@@ -88,7 +88,7 @@ def directory_researches(request):
                 resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
             for fraction in fractions:
-                if fraction.relation.pk not in resdict["tubes"].keys():
+                if fraction.relation_id not in resdict["tubes"].keys():
                     resdict["tubes_c"] += 1
                     resdict["tubes"][fraction.relation_id] = {"id": fraction.relation_id,
                                                               "color": fraction.relation.tube.color,

@@ -691,7 +691,7 @@ def get_one_dir(request):
                         rel = val.relation
                         if val.research_id in fresearches and val.pk in flowers:
                             absor = directory.Absorption.objects.filter(flower__pk=val.pk).first()
-                            if absor.fupper.pk in fuppers:
+                            if absor.fupper_id in fuppers:
                                 vrpk = absor.fupper.relation_id
                                 rel = absor.fupper.relation
 
@@ -1173,7 +1173,7 @@ def get_issledovaniya(request):
                             cdid = issledovaniye.doc_confirmation_id or -1
                             rt = SettingManager.get("lab_reset_confirm_time_min") * 60
                             res["issledovaniya"].append({"pk": issledovaniye.pk, "title": issledovaniye.research.title,
-                                                         "research_pk": issledovaniye.research.pk,
+                                                         "research_pk": issledovaniye.research_id,
                                                          "sort": issledovaniye.research.sort_weight,
                                                          "saved": saved,
                                                          "is_norm": isnorm,

@@ -102,13 +102,13 @@ def make_service(request):
     main_direction = Napravleniya.objects.get(pk=data["main_direction"])
     parent_iss = Issledovaniya.objects.filter(napravleniye=main_direction, research__is_hospital=True).first()
     service = HospitalService.objects.get(pk=data["service"])
-    result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client.pk,
+    result = Napravleniya.gen_napravleniya_by_issledovaniya(main_direction.client_id,
                                                             "",
                                                             None,
                                                             "",
                                                             None,
                                                             request.user.doctorprofile,
-                                                            {-1: [service.slave_research.pk]},
+                                                            {-1: [service.slave_research_id]},
                                                             {},
                                                             False,
                                                             {},
