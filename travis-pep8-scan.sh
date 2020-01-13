@@ -64,7 +64,7 @@ check()
     local filename="$1"
 
     start "$filename"
-    if pycodestyle "$filename"; then
+    if flake8 "$filename"; then
         success "$filename"
     else
         fail "$filename"

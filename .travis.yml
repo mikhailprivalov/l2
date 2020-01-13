@@ -5,13 +5,9 @@ matrix:
       python: 3.6
       os: linux
       fail_fast: true
-      env:
-        - SKIP_INTERPRETER=true
       before_install:
         - chmod +x ./travis-pep8-install.sh
         - chmod +x ./travis-pep8-scan.sh
-        - mv requirements.txt req.txt
-        - touch requirements.txt
       install:
         - ./travis-pep8-install.sh
       script:
